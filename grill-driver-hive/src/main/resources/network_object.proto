@@ -1,0 +1,282 @@
+ option java_package = "com.inmobi.dw.yoda.proto";
+ option optimize_for = SPEED;
+ option java_generate_equals_and_hash = true;
+
+enum UDIDType {
+	MISSING = 0;
+	HASHED = 1;
+	IOS_PLAIN = 2;
+	ANDROID_PLAIN = 3;
+	INVALID = 4;
+}
+
+ message KeyLessNetworkObject {
+    // Next free field number = 216
+
+    // ********** RR Log Fields **********
+    optional string impid = 1 [default = "NULL"];  // impression id which uniquely identify an impression
+    optional string rq_ad_formatter = 2 [default = "NULL"];
+    optional string rq_ad_logic = 3 [default = "NULL"];
+    optional string rq_adformat = 4 [default = "NULL"];
+    optional string rq_adgrpidbig = 5 [default = "NULL"];
+    optional string rq_adid = 6 [default = "NULL"];
+    optional string rq_adversion = 8 [default = "NULL"];
+    optional string rq_advid = 9 [default = "NULL"];
+    optional string rq_campgnidbig = 10 [default = "NULL"];
+    optional string rq_ccid = 11 [default = "0"];  // request's country_carrier_id
+    optional string rq_ccode = 12 [default = "0"];  // country code like IN,DE
+    optional string rq_code_ver = 14 [default = "999999"];
+    optional string rq_h_user_agent = 15 [default = "NULL"];
+    optional string rq_handsetid = 16 [default = "0"];  // in case of opera mini it contains the id for opera mini. Look at rq_orig_handset
+    optional string rq_host = 17 [default = "NULL"];
+    optional string rq_ltime = 18 [default = "NULL"];
+    optional string rq_market = 19 [default = "NULL"];
+    optional string rq_nfr = 20 [default = "NULL"];
+    optional string rq_nodeinfo = 21 [default = "NULL"];
+    optional string rq_orig_handset = 22 [default = "NULL"];  //This field notes the actual handset on which opera mini is running
+    optional string rq_pgurl = 23 [default = "NULL"];
+    optional string rq_siteid = 24 [default = "NULL"];
+    optional string rq_time = 25 [default = "NULL"];
+    optional string rq_uage = 26 [default = "NULL"];
+    optional string rq_ugender = 27 [default = "NULL"];
+    optional string rq_ver = 28 [default = "NULL"];
+    optional string rq_wsip = 29 [default = "NULL"];  // IP from where Ad was requested
+    optional string rq_x_ua = 30 [default = "NULL"];
+    optional string rq_xheaders = 31 [default = "NULL"];
+    optional string rq_mk_ad_slot = 69 [default = "-"];  // information of Banner size requested from Site
+    optional string rq_slot_served = 70 [default = "-"];	// information of Banner size served by system
+    optional string rq_udid = 71 [default = "NULL"];
+    optional string rq_is_3d = 73 [default = "0"];
+    optional string rq_loc_src = 74 [default = "ip"];
+    optional string rq_geo_city = 75 [default = "NULL"];
+    optional string rq_geo_region = 76 [default = "NULL"];
+    optional string rq_nearest_city = 77 [default = "NULL"];
+    optional string rq_nearest_region = 78 [default = "NULL"];
+    optional string rq_distance_latlon = 79 [default = "NULL"];
+    optional string rq_intg_method = 84 [default = "NULL"];
+    optional string rq_intg_version = 85 [default = "NULL"];
+    optional string rq_intg_origin = 86 [default = "NULL"];
+    optional string rq_intg_family = 87 [default = "NULL"];
+    optional string rq_intg_direct = 88 [default = "NULL"];
+    optional string rq_udid_type = 102 [default = "NULL"];
+    optional string rq_adtype = 103 [default = "NULL"];
+    optional string rq_format = 113 [default = "NULL"];
+    optional string rq_rtaid = 114 [default = "NULL"];
+    optional string rq_is_geo_enabled = 174[default = "NULL"];
+    optional string rq_geo_fence = 175[default = "NULL"];
+    optional string rq_is_geo_targeted = 178[default = "NULL"];
+    optional string rq_geo_targeting_constituent = 179[default = "NULL"];
+    optional string rq_sys_latlon = 180[default = "NULL"];
+    optional string rq_served_city = 181 [default = "NULL"];
+    optional string rq_geo_state = 182[default = "NULL"];
+    optional string rq_geo_zip = 183[default = "NULL"];
+    optional string rq_ref_tag = 185[default = "NULL"];
+    optional string rq_selected_uid_type = 188[default = "NULL"];
+    optional string rq_all_uid_type = 189[default = "NULL"];
+    optional string rq_uparams = 190[default = "NULL"];
+    optional string rq_u_id_params = 191[default = "NULL"];
+
+    // ---- Measures -----
+    optional string rq_pgreq = 33 [default = "0"];  // Page Requests
+    optional string rq_mkvldpgreq = 34 [default = "0"]; // Valid Page Requests
+    optional string rq_adreq = 35 [default = "0"];  // Ad Requests
+    optional string rq_mkvldadreq = 36 [default = "0"]; // Valid Ad Requests
+    optional string rq_adimp = 37 [default = "0"];  // Ad Impressions
+    optional string rq_pgimp = 38 [default = "0"]; // Page Impressions
+    optional string rq_mkcpcadserved = 39 [default = "0"];
+
+    optional string rq_unbilled_cpm_adimp = 95 [default = "0"];
+    optional string rq_overbill_cpm_adimp = 96 [default = "0"];
+
+   // Interaction Dimension
+    optional string rm_time = 139 [default = "NULL"];
+    optional string rm_page_num = 140 [default = "NULL"];
+    optional string rm_interaction_type = 141 [default = "NULL"];
+    optional string rm_sprout_id = 142 [default = "NULL"];
+    optional string rm_cta_type = 143 [default = "NULL"];
+    optional string rm_cta_id = 144 [default = "NULL"];
+    optional string rm_media_id = 145 [default = "NULL"];
+    optional string rm_adhoc_action = 146 [default = "NULL"];
+    optional string rm_adhoc_cat = 147 [default = "NULL"];
+    optional string rm_adhoc_label = 148 [default = "NULL"];
+    optional string rm_adhoc_value = 173 [default = "NULL"];
+    optional string rm_source = 150 [default = "NULL"];
+
+   // Interaction Measures
+    optional string rm_view_count = 151 [default = "0"];
+    optional string rm_expand_count = 152 [default = "0"];
+    optional string rm_dismiss_count = 153 [default = "0"];
+    optional string rm_auto_dismiss_count = 154 [default = "0"];
+    optional string rm_engagement_duration = 155 [default = "0"];
+    optional string rm_dismiss_duration = 156 [default = "0"];
+    optional string rm_auto_dismiss_duration = 157 [default = "0"];
+    optional string rm_interaction_count = 158 [default = "0"];
+    optional string rm_cta_count = 159 [default = "0"];
+    optional string rm_page_view_count = 160 [default = "0"];
+    optional string rm_page_view_duration = 161 [default = "0"];
+    optional string rm_media_play_count = 162 [default = "0"];
+    optional string rm_media_auto_play_count = 163 [default = "0"];
+    optional string rm_media_start_count = 164 [default = "0"];
+    optional string rm_media_q1_count = 165 [default = "0"];
+    optional string rm_media_q2_count = 166 [default = "0"];
+    optional string rm_media_q3_count = 167 [default = "0"];
+    optional string rm_media_end_count = 168 [default = "0"];
+    optional string rm_media_stop_count = 169 [default = "0"];
+    optional string rm_media_duration = 170 [default = "0"];
+    optional string rm_adhoc_value_count = 171 [default = "0"];
+    optional string rm_engagement_count = 172 [default = "0"];
+
+    // ********** Click Log Fields **********
+    optional string cl_x_real_ip = 32 [default = "NULL"];  // IP from where add was clicked
+    optional string cl_ccid = 40 [default = "NULL"];  // Click's country_carrier_id
+    optional string cl_ccode = 41 [default = "NULL"];
+    optional string cl_fraud = 42 [default = "NULL"];  // It contains value "YES" if fraud is detected by our system else contains "NO"
+    optional string cl_fraudset = 43 [default = "NULL"];  // Fraud reasons
+    optional string cl_handset = 44 [default = "NULL"];
+    optional string cl_jc = 45 [default = "NULL"];
+    optional string cl_rq_ccid = 46 [default = "NULL"];
+    optional string cl_rq_device_id = 47 [default = "NULL"];
+    optional string cl_rq_site_inc_id = 48 [default = "NULL"];
+    optional string cl_rq_ua = 49 [default = "NULL"];
+    optional string cl_ter = 50 [default = "NULL"];
+    optional string cl_time = 51 [default = "NULL"];
+    optional string cl_ver = 52 [default = "NULL"];
+    optional string cl_udid = 53 [default = "NULL"];  // Device Id that identifies the User
+    optional string cl_id = 112 [default = "NULL"]; // unique id associated with the click
+    optional string cl_udid_type = 110 [default = "NULL"];
+
+    // ------------- Measures --------------------
+    optional string cl_overbill_cpc_clicks = 81 [default = "0"];
+    optional string cl_unbilled_cpc_clicks = 97 [default = "0"];
+    optional string cl_terminated_clicks = 98 [default = "0"];
+    optional string cl_fraud_clicks = 99 [default = "0"];
+
+
+    // ********** Billing Log Fields **********
+    optional string bl_billedstatus = 54 [default = "NULL"];  // It contains value "BILLED" if billing happened else contains "NOFUND"
+    optional string bl_createdon = 55 [default = "NULL"];
+    optional string bl_engineid = 56 [default = "NULL"];
+    optional string bl_id = 57 [default = "NULL"];
+    optional string bl_imptype = 58 [default = "NULL"];  // It contains values "cpc" or "cpm"
+    optional string bl_ip = 59 [default = "NULL"];
+    optional string bl_isbannerad = 60 [default = "NULL"];
+    optional string bl_loggingtime = 61 [default = "NULL"];
+    optional string bl_logversion = 62 [default = "NULL"];
+    optional string bl_siteid = 63 [default = "NULL"];
+    optional string bl_adgrpid = 64 [default = "NULL"];
+
+    // ---- Measures ----
+    optional string bl_billedcount = 65 [default = "0"];  // Billed click count
+    optional string bl_cpc = 66 [default = "0"];  // Revenue
+    optional string bl_agencycpc = 67 [default = "0"];  // Agency revenue share
+    optional string bl_pubcpc = 68 [default = "0"];  // Publisher share
+    optional string bl_overbill_revenue = 80 [default = "0"];
+    optional string bl_nofund_burn = 100 [default = "0"];
+    optional string bl_nondiscounted_burn = 184 [default = "0"];
+
+
+    // ********** Download Log Fields **************
+    optional string dl_time = 82 [default = "NULL"];
+    optional string dl_app_id = 89 [default = "NULL"];
+    optional string dl_udid = 90 [default = "NULL"];
+    optional string dl_udid_applied_hashing = 93 [default = "NULL"]; // Hash(Md5/sha1)/Clear nature of Download UDID
+    optional string dl_cl_udid_applied_hashing = 94 [default = "NULL"]; // Hash(Md5/sha1)/Clear nature of Click UDID
+    optional string dl_source = 101 [default = "NULL"]; // Source of the download ping received(like Inmobi or Ad-X etc)
+    optional string dl_goal = 104 [default = "NULL"]; // goal of conversion (like signup, downloads, payment)
+    optional string dl_impid = 105 [default = "NULL"]; // impression id received at the time of download
+    // new fields for download funnel
+    optional string dl_udid_type = 109 [default = "NULL"];
+    optional string dl_terminated = 111 [default = "NULL"];
+    optional string dl_carrier_region_id = 186 [default = "NULL"];
+    optional string dl_carrier_city_id = 187 [default = "NULL"];
+
+    // -- Measures -----------
+    optional string dl_matched_count = 83 [default = "0"]; // this field was dl_count before.
+    // new measures for download funnel
+    optional string dl_joined_count = 106 [default = "0"]; // being populated in downloadNotation itself.
+    optional string dl_unjoined_count = 107 [default = "0"];
+    optional string dl_duplicate_count = 108 [default = "0"]; // being populated in downloadNotation itself.
+
+
+    //***************DCP Log Measures *****************
+    optional string dcp_pgreq = 115 [default = "0"];
+    optional string dcp_mkvldpgreq = 116 [default = "0"];
+    optional string dcp_adreq = 117 [default = "0"];
+    optional string dcp_mkvldadreq = 118 [default = "0"];
+    optional string dcp_pgimp = 119 [default = "0"];
+    optional string dcp_mkcpcadserved = 120 [default = "0"];
+    optional string dcp_total_click_count = 121 [default = "0"];
+    optional string dcp_fraud_clicks = 122 [default = "0"];
+    optional string dcp_billed_cpc_click = 123 [default = "0"];
+    optional string dcp_nonbillable_cpc_click = 124 [default = "0"];
+    optional string dcp_cpm_impression = 125 [default = "0"];
+    optional string dcp_non_billable_cpm_impression = 126 [default = "0"];
+    optional string dcp_spend = 127 [default = "0.0"];
+    optional string dcp_publisher_revenue = 128 [default = "0.0"];
+    optional string dcp_agency_revenue = 129 [default = "0.0"];
+    optional string dcp_cpm_clicks = 130 [default = "0"];
+    optional string dcp_cpc_beacon = 131 [default = "0"];
+    optional string dcp_cpm_beacon = 132 [default = "0"];
+
+    //***************USER Log Dimensions *****************
+    optional string user_optout = 133 [default = "NULL"];
+
+    //***************USER Log Measures *****************
+    optional string user_unique_count = 134 [default = "NULL"];
+    optional string user_mkvldpgreq = 135 [default = "0"];
+    optional string user_mkvldadreq = 136 [default = "0"];
+    optional string user_adimp = 137 [default = "0"];
+    optional string user_pgimp = 138 [default = "0"];
+
+	//***************CAMPAIGN ANALYSIS Log Dimension *****************
+	optional string cp_user_frequency = 176 [default = "NULL"];
+
+	//***************CAMPAIGN ANALYSIS Log Measure *****************
+	optional string cp_user_unique_count = 177 [default = "NULL"];
+
+    //******************* Retargeting Log Dimensions ******************
+    optional string user_ret_engagetype = 193 [default = "NULL"];
+    optional string user_ret_adgrpid = 194 [default = "NULL"];
+    optional string user_ret_installappid=200 [default = "NULL"];
+
+    //******************* Click and Impression Based Retargeting Log Measures *****************
+    optional string user_ci_ret_unique_user_count= 195 [default = "NULL"];
+    optional string user_ci_ret_vldadreq= 196 [default = "0"];
+    optional string user_ci_ret_adimp= 197 [default = "0"];
+    optional string user_ci_ret_vldpgreq= 198 [default = "0"];
+    optional string user_ci_ret_pgimp= 199 [default = "0"];
+
+    //******************* App owner Retargeting Log Measures *****************
+    optional string user_app_ret_unique_user_count= 201 [default = "NULL"];
+    optional string user_app_ret_vldadreq= 202 [default = "0"];
+    optional string user_app_ret_adimp= 203 [default = "0"];
+    optional string user_app_ret_vldpgreq= 204 [default = "0"];
+    optional string user_app_ret_pgimp= 205 [default = "0"];
+
+	//******************* User Insight All Signals Measures *****************
+    optional string user_sig_unique_user_count=206 [default = "NULL"];
+    optional string user_sig_adimp=207 [default = "0"];
+    optional string user_sig_click_count=208 [default = "0"];
+    optional string user_sig_download_conversions=209 [default = "0"];
+    optional string user_sig_spend=210 [default = "0"];
+    optional string user_sig_publisher_revenue=211 [default = "0"];
+    optional string user_sig_agency_revenue=212 [default = "0"];
+
+    //******************* User Insight All Signals Dimensions *****************
+    optional string user_sig_state=213 [default = "NULL"];
+
+    //******************* User Insight Life Span Distribution Dimensions *****************
+    optional string user_life_lifespan=214 [default = "0"];
+
+    //******************* User Insight Life Span Distribution Measures *****************
+    optional string user_life_unique_user_count=215 [default = "NULL"];
+
+    //Internal field
+    optional int32 udid_encryption_type = 99998 [default = 0];
+    optional string log_type = 99999;
+
+    //deprecated fields
+    optional string deprecated_donot_use_dl_ter = 100000 [default = "NULL"];
+    optional string deprecated_donot_use_dl_uid_match_type = 100001 [default="NULL"];
+    optional string do_not_use_cl_total_bad_clicks = 100002 [default = "0"];
+ }
