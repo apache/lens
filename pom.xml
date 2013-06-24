@@ -7,7 +7,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <powermock.version>1.4.12</powermock.version>
     <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
-    <hive.version>0.10.0</hive.version>
+    <hive.version>0.12.0-SNAPSHOT</hive.version>
     <yoda.version>0.6.27</yoda.version>
   </properties>
 

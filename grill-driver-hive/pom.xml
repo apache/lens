@@ -38,13 +38,9 @@
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-cli</artifactId>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-builtins</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-    </dependency>
+    </dependency> -->
   </dependencies>
 </project>    
