@@ -33,6 +33,11 @@
       <artifactId>grill-driver-hive</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-yoda</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
