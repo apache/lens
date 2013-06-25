@@ -13,17 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
+THISSERVICE=hiveserver
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "$@"
+hiveserver() {
+  echo "Starting Hive Thrift Server"
+  CLASS=org.apache.hadoop.hive.service.HiveServer
+  if $cygwin; then
+    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
+  fi
+  JAR=${HIVE_LIB}/hive-service-*.jar
+
+  # hadoop 20 or newer - skip the aux_jars option and hiveconf
+
+  exec $HADOOP jar $JAR $CLASS "$@"
 }
 
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "--help"
-} 
+hiveserver_help() {
+  hiveserver -h
+}
 

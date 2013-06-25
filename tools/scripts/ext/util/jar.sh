@@ -13,17 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
+THISSERVICE=jar
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "$@"
+jar () {
+  RUNJAR=$1
+  shift
+
+  RUNCLASS=$1
+  shift
+
+  if $cygwin; then
+    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
+  fi
+
+  if [ -z "$RUNJAR" ] ; then
+    echo "RUNJAR not specified"
+    exit 3
+  fi
+
+  if [ -z "$RUNCLASS" ] ; then
+    echo "RUNCLASS not specified"
+    exit 3
+  fi
+
+  # hadoop 20 or newer - skip the aux_jars option and hiveconf
+  exec $HADOOP jar $RUNJAR $RUNCLASS $HIVE_OPTS "$@"
 }
 
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "--help"
-} 
-
+jar_help () {
+  echo "Used for applications that require Hadoop and Hive classpath and environment."
+  echo "./hive --service jar <yourjar> <yourclass> HIVE_OPTS <your_args>"
+}

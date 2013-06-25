@@ -38,6 +38,10 @@ while [ $# -gt 0 ]; do
       SERVICE=rcfilecat
       shift
       ;;
+    --orcfiledump)
+      SERVICE=orcfiledump
+      shift
+      ;;
     --help)
       HELP=_help
       shift
@@ -71,11 +75,6 @@ HIVE_LIB=${HIVE_HOME}/lib
 # needed for execution
 if [ ! -f ${HIVE_LIB}/hive-exec-*.jar ]; then
   echo "Missing Hive Execution Jar: ${HIVE_LIB}/hive-exec-*.jar"
-  exit 1;
-fi
-
-if [ ! -f ${HIVE_LIB}/hive-builtins-*.jar ]; then
-  echo "Missing Hive Builtins Jar: ${HIVE_LIB}/hive-builtins-*.jar"
   exit 1;
 fi
 
