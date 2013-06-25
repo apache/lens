@@ -176,12 +176,9 @@
   <modules>
     <module>grill-api</module>
     <module>grill-cli</module>
-    <module>grill-storage-es</module>
     <module>grill-driver-cube</module>
-    <module>grill-driver-es</module>
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
-    <module>grill-es-plugin</module>
     <module>grill-yoda</module>
     <module>grill-dist</module>
   </modules>
