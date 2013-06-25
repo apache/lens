@@ -10,7 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimension;
@@ -25,7 +26,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 
 
 public class DimensionDDL {
-
+  private static final Log LOG = LogFactory.getLog(
+      DimensionDDL.class);
   public static final String metadata_field_info_file = "field_info.csv";
   public static final String join_chain_info_file = "join_chain_info.csv";
   public static final UpdatePeriod dimension_dump_period = UpdatePeriod.HOURLY;
@@ -102,7 +104,7 @@ public class DimensionDDL {
       }
       line = fieldInforeader.readLine();
     }
-    System.out.println("No columns for tables :" + noColTables);
+    LOG.warn("No columns available for tables :" + noColTables);
 
     // start reading the fields from joininfo
     line = joinInforeader.readLine();
@@ -118,7 +120,7 @@ public class DimensionDDL {
       if (fi != null) {
         fieldMap.get(lhsid).references.add(rhsid);
       } else {
-        System.out.println("field not found for id:" + lhsid);
+        LOG.warn("Field not found for id:" + lhsid + " in join chain");
       }
       line = joinInforeader.readLine();
     }
@@ -158,7 +160,8 @@ public class DimensionDDL {
       columns.add(new FieldSchema(fi.name, CubeDDL.DIM_TYPE, fi.desc));
       if (dimReferences.get(fi.name) != null) {
         dimensionReferences.put(fi.name, dimReferences.get(fi.name));
-        System.out.println("Dimension " + fi.name + " with references:" + dimReferences.get(fi.name));
+        LOG.info("Dimension " + fi.name + " with references:" 
+            + dimReferences.get(fi.name));
       }
     }
     Map<Storage, UpdatePeriod> snapshotDumpPeriods = 
@@ -169,7 +172,8 @@ public class DimensionDDL {
     }
 
     Map<String, String> properties = new HashMap<String, String>();
-    client.createCubeDimensionTable(dimName, columns, 0L, dimensionReferences,
+    client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
+        dimensionReferences,
         snapshotDumpPeriods, properties);
   }
 
