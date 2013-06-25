@@ -13,17 +13,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
+THISSERVICE=help
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "$@"
+help() {
+  echo "Usage ./hive <parameters> --service serviceName <service parameters>"
+  echo "Service List: $SERVICE_LIST"
+  echo "Parameters parsed:"
+  echo "  --auxpath : Auxillary jars "
+  echo "  --config : Hive configuration directory"
+  echo "  --service : Starts specific service/component. cli is default"
+  echo "Parameters used:"
+  echo "  HADOOP_HOME or HADOOP_PREFIX : Hadoop install directory"
+  echo "  HIVE_OPT : Hive options"
+  echo "For help on a particular service:"
+  echo "  ./hive --service serviceName --help"
+  echo "Debug help:  ./hive --debug --help"
 }
 
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "--help"
-} 
+help_help(){
+  help
+}
 

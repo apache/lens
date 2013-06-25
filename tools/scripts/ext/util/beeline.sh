@@ -18,12 +18,13 @@ THISSERVICE=beeline
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
 beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
+
+  CLASS=org.apache.hive.jdbc.beeline.HiveBeeline;
   execHiveCmd $CLASS "$@"
 }
 
 beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
+  CLASS=org.apache.hive.jdbc.beeline.HiveBeeline;
   execHiveCmd $CLASS "--help"
 } 
 

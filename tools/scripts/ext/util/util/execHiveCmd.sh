@@ -13,17 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
-export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
+execHiveCmd () {
+  CLASS=$1;
+  shift;
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "$@"
+  # cli specific code
+  if [ ! -f ${HIVE_LIB}/hive-cli-*.jar ]; then
+    echo "Missing Hive CLI Jar"
+    exit 3;
+  fi
+
+  if $cygwin; then
+    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
+  fi
+
+  # hadoop 20 or newer - skip the aux_jars option. picked up from hiveconf
+  exec $HADOOP jar ${HIVE_LIB}/hive-cli-*.jar $CLASS $HIVE_OPTS "$@"
 }
-
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "--help"
-} 
-

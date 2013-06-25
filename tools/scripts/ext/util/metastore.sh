@@ -13,17 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
+THISSERVICE=metastore
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "$@"
+metastore() {
+  echo "Starting Hive Metastore Server"
+  CLASS=org.apache.hadoop.hive.metastore.HiveMetaStore
+  if $cygwin; then
+    HIVE_LIB=`cygpath -w "$HIVE_LIB"`
+  fi
+  JAR=${HIVE_LIB}/hive-service-*.jar
+
+  # hadoop 20 or newer - skip the aux_jars option and hiveconf
+
+  export HADOOP_OPTS="$HIVE_METASTORE_HADOOP_OPTS $HADOOP_OPTS"
+  exec $HADOOP jar $JAR $CLASS "$@"
 }
 
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
-  execHiveCmd $CLASS "--help"
-} 
+metastore_help() {
+  metastore -h
+}
 

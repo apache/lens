@@ -13,17 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Need arguments [host [port [db]]]
-THISSERVICE=beeline
+THISSERVICE=cli
 export SERVICE_LIST="${SERVICE_LIST}${THISSERVICE} "
 
-beeline () {
-  CLASS=org.apache.hive.beeline.BeeLine;
+cli () {
+  CLASS=org.apache.hadoop.hive.cli.CliDriver
   execHiveCmd $CLASS "$@"
 }
 
-beeline_help () {
-  CLASS=org.apache.hive.beeline.BeeLine;
+cli_help () {
+  CLASS=org.apache.hadoop.hive.cli.CliDriver
   execHiveCmd $CLASS "--help"
 } 
 
