@@ -60,17 +60,20 @@ public class LazyNOBColumnarSerde implements SerDe {
     List<TypeInfo> columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
         columnTypeProperty);
     int numColumns = columnNames.size();
-    String[] readColStr = conf.getStrings("hive.io.file.readcolumn.ids");
+    String[] readColStr = conf.getStrings("hive.io.file.nob.group.ids");
     if (readColStr != null) {
       referedCols = new int[readColStr.length];
       for (int i=0; i< readColStr.length; i++) {
         referedCols[i] = Integer.valueOf(readColStr[i]);
       }
     } else {
+      String[] refCols = new String[fieldGroups.size()];
       referedCols = new int[fieldGroups.size()];
       for (int i=0; i< fieldGroups.size(); i++) {
         referedCols[i] = i;
+        refCols[i] = String.valueOf(i);
       }
+      conf.setStrings("hive.io.file.readcolumn.ids", refCols);
     }
     // Create the ObjectInspectors for the fields. 
     List<ObjectInspector> columnObjectInspectors = 
