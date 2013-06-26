@@ -7,7 +7,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <powermock.version>1.4.12</powermock.version>
     <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
-    <hive.version>0.10.0</hive.version>
+    <hive.version>0.12.0-SNAPSHOT</hive.version>
+    <yoda.version>0.6.27</yoda.version>
   </properties>
 
   <groupId>com.inmobi.grill</groupId>
@@ -158,6 +159,17 @@
        <artifactId>slf4j-api</artifactId>
        <version>1.6.4</version>
       </dependency>
+      <dependency>
+        <groupId>com.inmobi.dw.yoda</groupId>
+        <artifactId>yoda-commons</artifactId>
+        <version>${yoda.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.hadoop.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
     </dependencies>
  </dependencyManagement>
 
@@ -167,6 +179,7 @@
     <module>grill-driver-cube</module>
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
+    <module>grill-yoda</module>
     <module>grill-dist</module>
   </modules>
   

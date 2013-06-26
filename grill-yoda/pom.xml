@@ -9,7 +9,7 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>grill-driver-hive</artifactId>
+  <artifactId>grill-yoda</artifactId>
   <packaging>jar</packaging>
 
   <dependencies>
@@ -23,6 +23,10 @@
       <artifactId>hadoop-core</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.inmobi.dw.yoda</groupId>
+      <artifactId>yoda-commons</artifactId>
+    </dependency> 
+    <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-common</artifactId>
     </dependency>
@@ -35,12 +39,8 @@
       <artifactId>hive-service</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-cli</artifactId>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
     </dependency>
-    <!--<dependency>
-      <groupId>org.apache.hive</groupId>
-      <artifactId>hive-builtins</artifactId>
-    </dependency> -->
   </dependencies>
 </project>    

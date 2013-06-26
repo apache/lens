@@ -46,6 +46,7 @@
         <include>com.inmobi.grill:grill-driver</include>
         <include>com.inmobi.grill:grill-driver-hive</include>
         <include>com.inmobi.grill:grill-driver-impala</include>
+        <include>com.inmobi.grill:grill-yoda</include>
       </includes>
 
       <binaries>
