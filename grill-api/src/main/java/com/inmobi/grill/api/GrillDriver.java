@@ -68,7 +68,7 @@ public interface GrillDriver {
    * 
    * @return query status
    */
-  public QueryStatus getStatus(QueryHandle handle);
+  public QueryStatus getStatus(QueryHandle handle) throws GrillException;
 
   /**
    * Fetch the results of the query, specified by the handle
@@ -77,7 +77,7 @@ public interface GrillDriver {
    * 
    * @return returns the result set
    */
-  public GrillResultSet fetchResultSet(QueryHandle handle);
+  public GrillResultSet fetchResultSet(QueryHandle handle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -86,5 +86,5 @@ public interface GrillDriver {
    * 
    * @return true if cancel was successful, false otherwise
    */
-  public boolean cancelQuery(QueryHandle handle);
+  public boolean cancelQuery(QueryHandle handle) throws GrillException;
 }
