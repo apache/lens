@@ -76,11 +76,11 @@ public class CubeGrillDriver implements GrillDriver {
     return handle;
   }
 
-  public QueryStatus getStatus(QueryHandle handle) {
+  public QueryStatus getStatus(QueryHandle handle) throws GrillException {
     return selectedDrivers.get(handle).getStatus(handle);
   }
 
-  public GrillResultSet fetchResults(QueryHandle handle) {
+  public GrillResultSet fetchResults(QueryHandle handle) throws GrillException {
     return selectedDrivers.get(handle).fetchResultSet(handle);
   }
 
@@ -144,7 +144,7 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public GrillResultSet fetchResultSet(QueryHandle handle) {
+  public GrillResultSet fetchResultSet(QueryHandle handle) throws GrillException {
     return selectedDrivers.get(handle).fetchResultSet(handle);
   }
 
@@ -154,7 +154,7 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public boolean cancelQuery(QueryHandle handle) {
+  public boolean cancelQuery(QueryHandle handle) throws GrillException {
     return selectedDrivers.get(handle).cancelQuery(handle);
   }
 }
