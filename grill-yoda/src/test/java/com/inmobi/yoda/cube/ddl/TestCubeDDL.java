@@ -77,7 +77,7 @@ public class TestCubeDDL {
     // campaign is not a cube table name
     Assert.assertFalse(cubes.contains("campaign"));
 
-    Assert.assertEquals(cc.getAllCubeNames().size(), 13);
+    Assert.assertEquals(cc.getAllCubeNames().size(), 14);
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
