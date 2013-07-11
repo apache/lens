@@ -1,11 +1,15 @@
 package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -14,31 +18,35 @@ import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
+import org.apache.hadoop.hive.ql.cube.metadata.Storage;
+import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestCubeDDL {
+public class TestDDL {
 
   HiveConf conf = new HiveConf(this.getClass());
 
   DimensionDDL dimDDL;
+
   @BeforeTest
   public void setup() throws AlreadyExistsException, HiveException, IOException {
     Hive client = Hive.get(conf);
     Database database = new Database();
-    database.setName(TestCubeDDL.class.getSimpleName());
+    database.setName(TestDDL.class.getSimpleName());
     client.createDatabase(database);
-    client.setCurrentDatabase(TestCubeDDL.class.getSimpleName());    
+    client.setCurrentDatabase(TestDDL.class.getSimpleName());    
     dimDDL = new DimensionDDL(conf);
   }
 
   @AfterTest
   public void tearDown() throws HiveException, NoSuchObjectException {
     Hive client = Hive.get(conf);
-    client.dropDatabase(TestCubeDDL.class.getSimpleName(), true, true,
+    client.dropDatabase(TestDDL.class.getSimpleName(), true, true,
         true);
   }
 
@@ -99,5 +107,46 @@ public class TestCubeDDL {
         }
       }
     }
+  }
+
+  @Test
+  public void testPartitions() throws HiveException {
+    Calendar cal = Calendar.getInstance();
+    Date now = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, -2);
+    Date before = cal.getTime();
+    PopulatePartitions pp = new PopulatePartitions("request", before, now,
+        UpdatePeriod.DAILY, conf, new Path("file:////tmp/hive/warehouse/parts"),
+        new SimpleDateFormat(UpdatePeriod.DAILY.format()));
+    pp.run();
+    CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    String storageTableName1 = MetastoreUtil.getFactStorageTableName(
+        "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName2 = MetastoreUtil.getFactStorageTableName(
+        "request_summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName3 = MetastoreUtil.getFactStorageTableName(
+        "request_summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+
+    cal.setTime(before);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+        cal.getTime()));
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+        cal.getTime()));
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+        cal.getTime()));
   }
 }

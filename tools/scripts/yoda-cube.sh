@@ -26,6 +26,7 @@
 
 CLIENT_DIMENSIONDDL_CLASS="com.inmobi.yoda.cube.ddl.DimensionDDL"
 CLIENT_CUBEDDL_CLASS="com.inmobi.yoda.cube.ddl.CubeDDL"
+CLIENT_POPULATE_PARTS_CLASS="com.inmobi.yoda.cube.ddl.PopulatePartitions"
 
 ################################
 # functions
@@ -59,6 +60,7 @@ display_help() {
   cat <<EOF
 Usage: $0 dimensionddl --conf <confdir>
        $0 cubeddl [cubename] --conf <confdir>
+       $0 populateParts cubename startPartition endPartition UpdatePeriod basePath pathDateFormat --conf <confdir>
 EOF
 }
 
@@ -101,6 +103,9 @@ case "$mode" in
     ;;
   cubeddl)
     opt_cube=1
+    ;;
+  populateParts)
+    opt_pp=1
     ;;
   *)
     error "Unknown or unspecified command '$mode'"
@@ -168,6 +173,8 @@ if [ -n "$opt_dim" ] ; then
   run_client $CLIENT_DIMENSIONDDL_CLASS $args
 elif [ -n "$opt_cube" ] ; then
   run_client $CLIENT_CUBEDDL_CLASS $args
+elif [ -n "$opt_pp" ] ; then
+  run_client $CLIENT_POPULATE_PARTS_CLASS $args
 else
   error "This message should never appear" 1
 fi

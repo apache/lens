@@ -42,6 +42,7 @@ public class CubeDDL {
   public static final String DIM_TYPE = "string";    
   public static final String MEASURE_DEFAULT_AGGREGATE = "sum";
   public static final String YODA_STORAGE = "ua2";
+  public static final String CUBE_NAME_PFX = "cube_";
 
   public static String cubeStorageSchema = "network_object.proto";
   private Map<String, Cube> cubes = new HashMap<String, Cube>();
@@ -87,7 +88,7 @@ public class CubeDDL {
 
   private void loadCubeDefinition() {
     for (String cubeName : cubeReader.getCubeNames()) {
-      String cubeTableName = "cube_" + cubeName;
+      String cubeTableName = CUBE_NAME_PFX + cubeName;
 
       Set<CubeDimension> dimensions = new HashSet<CubeDimension>();
       Set<CubeMeasure> measures = new HashSet<CubeMeasure>();
@@ -193,7 +194,7 @@ public class CubeDDL {
         storageAggregatePeriods + "columns:" + columns + " cost:" + 
         cubeReader.getAvgSummaryCost(cubeName, summary));
 
-    String cubeTableName = "cube_" + cubeName;
+    String cubeTableName = CUBE_NAME_PFX + cubeName;
     client.createCubeFactTable(cubeTableName, cubeName + "_" + summary, columns,
         storageAggregatePeriods,
         cubeReader.getAvgSummaryCost(cubeName, summary),
