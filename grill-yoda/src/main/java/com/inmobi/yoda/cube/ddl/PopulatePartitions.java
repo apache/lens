@@ -2,14 +2,11 @@ package com.inmobi.yoda.cube.ddl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -33,23 +30,43 @@ public class PopulatePartitions {
   private final HiveConf conf;
   private final Path basePath;
   private final SimpleDateFormat dateFormat;
+  private final boolean skipRaw;
+  private boolean populateOnlyRaw;
 
   PopulatePartitions(String cubeName, Date startPos, Date endPos,
       UpdatePeriod updatePeriod, HiveConf conf, Path basePath,
-      SimpleDateFormat dateFormat) {
+      SimpleDateFormat dateFormat, boolean skipRaw, boolean populateOnlyRaw) {
     this.cubeName = cubeName;
     this.start = startPos;
     this.end = endPos;
     this.updatePeriod = updatePeriod;
     this.conf = conf;
+    // cubes.warehouse.path=/user/yoda/warehouse
     this.basePath = basePath;
     this.dateFormat = dateFormat;
+    this.skipRaw = skipRaw;
+    this.populateOnlyRaw = populateOnlyRaw;
   }
 
   public void run() throws HiveException {
     final CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
 
     Cube cube = client.getCube(CubeDDL.CUBE_NAME_PFX + cubeName);
+
+    // cube.request.path=rrcube/transformationoutput2
+    Path rawFactPath = new Path(basePath, cube.getProperties().get(
+        "cube." + cubeName + ".path"));
+    //cube.request.summaries.path=rrcube
+    String sumPath = cube.getProperties().get(
+        "cube." + cubeName + ".summaries.path");
+    Path summariesPath = null;
+    if (sumPath != null) {
+      summariesPath = new Path(basePath, cube.getProperties().get(
+        "cube." + cubeName + ".summaries.path"));
+    } else {
+      populateOnlyRaw = true;
+    }
+
     List<CubeFactTable> facts = client.getAllFactTables(cube);
     Calendar cal = Calendar.getInstance();
     cal.setTime(start);
@@ -57,14 +74,26 @@ public class PopulatePartitions {
     while (!dt.after(end)) {
       // for each fact add the partition for dt
       for (CubeFactTable fact : facts) {
+        String factPathName = fact.getName().substring(cubeName.length() + 1);
+        if (factPathName.equalsIgnoreCase(CubeDDL.RAW_FACT_NAME) && skipRaw) {
+          continue;
+        }
+        if ((!factPathName.equalsIgnoreCase(CubeDDL.RAW_FACT_NAME)) && populateOnlyRaw) {
+          continue;
+        }
         for (Map.Entry<String, List<UpdatePeriod>> entry : 
             fact.getUpdatePeriods().entrySet()) {
           if (!entry.getValue().contains(updatePeriod)) {
             continue;
           }
-          String factPathName = fact.getName().substring(cubeName.length() + 1);
-          Path partPath = new Path(new Path(new Path(basePath, factPathName),
+          
+          Path partPath;
+          if (factPathName.equalsIgnoreCase(CubeDDL.RAW_FACT_NAME)) {
+            partPath = new Path(rawFactPath, dateFormat.format(dt));
+          } else {
+            partPath = new Path(new Path(new Path(summariesPath, factPathName),
               updatePeriod.name().toLowerCase()), dateFormat.format(dt));
+          }
           System.out.println("Adding partition at Path" + partPath);
           HDFSStorage storage = new HDFSStorage(entry.getKey(),
               RCFileInputFormat.class.getCanonicalName(),
@@ -85,7 +114,7 @@ public class PopulatePartitions {
   public static void main(String[] args) throws HiveException, ParseException {
     if (args.length < 4) {
       System.out.println("Usage: cubeName startPartition endPartition" +
-          " UpdatePeriod basePath pathDateFormat");
+          " UpdatePeriod basePath pathDateFormat skipRaw populateOnlyRaw");
       return;
     }
     String cubeName = args[0];
@@ -94,6 +123,8 @@ public class PopulatePartitions {
     String updatePeriod = args[3];
     String basePath = args[4];
     String pathDateFormat = args[5];
+    String skipRaw = args[6];
+    String populateRaw = args[7];
     HiveConf conf = new HiveConf(PopulatePartitions.class);
 
     UpdatePeriod p = UpdatePeriod.valueOf(updatePeriod.toUpperCase());
@@ -102,7 +133,8 @@ public class PopulatePartitions {
     Date end = dateFormat.parse(endPos);
 
     PopulatePartitions pp = new PopulatePartitions(cubeName, start, end, p,
-        conf, new Path(basePath), dateFormat);
+        conf, new Path(basePath), dateFormat, Boolean.parseBoolean(skipRaw),
+        Boolean.parseBoolean(populateRaw));
     pp.run();
   }
 }

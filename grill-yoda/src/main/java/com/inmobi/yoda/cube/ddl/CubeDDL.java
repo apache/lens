@@ -43,6 +43,7 @@ public class CubeDDL {
   public static final String MEASURE_DEFAULT_AGGREGATE = "sum";
   public static final String YODA_STORAGE = "ua2";
   public static final String CUBE_NAME_PFX = "cube_";
+  public static final String RAW_FACT_NAME = "raw";
 
   public static String cubeStorageSchema = "network_object.proto";
   private Map<String, Cube> cubes = new HashMap<String, Cube>();
@@ -159,6 +160,11 @@ public class CubeDDL {
     for (String summary : cubeReader.getSummaryNames(cubeName)) {
       createSummary(cubeName, summary);
     }
+    // create raw fact
+    Set<Grain> rawGrain = new HashSet<Grain>();
+    rawGrain.add(cubeReader.getCubeGrain(cubeName));
+    createFactTable(cubeName, RAW_FACT_NAME, cubeReader.getCost(cubeName),
+        null, rawGrain);
   }
 
   public static List<FieldSchema> getNobColList() {
@@ -186,23 +192,29 @@ public class CubeDDL {
 
   public void createSummary(String cubeName, String summary)
       throws HiveException {
+    createFactTable(cubeName, summary,
+        cubeReader.getAvgSummaryCost(cubeName, summary),
+        summaryProperties.get(cubeName).get(summary),
+        cubeReader.getSummaryGrains(cubeName, summary));
+  }
+
+  private void createFactTable(String cubeName, String summary, double cost,
+      Map<String, String> props, Set<Grain> grains) throws HiveException {
     Map<Storage, List<UpdatePeriod>> storageAggregatePeriods = createStorages(
-        cubeName, summary);
+        cubeName, summary, grains);
     List<FieldSchema> columns = getNobColList();
 
-    LOG.info("Creating summary " + summary + " with storageAggregatePeriods:" +
-        storageAggregatePeriods + "columns:" + columns + " cost:" + 
-        cubeReader.getAvgSummaryCost(cubeName, summary));
+    LOG.info("Creating fact table " + cubeName + "_" + summary +
+        " with storageAggregatePeriods:" + storageAggregatePeriods +
+        "columns:" + columns + " cost:" + cost);
 
     String cubeTableName = CUBE_NAME_PFX + cubeName;
     client.createCubeFactTable(cubeTableName, cubeName + "_" + summary, columns,
-        storageAggregatePeriods,
-        cubeReader.getAvgSummaryCost(cubeName, summary),
-        summaryProperties.get(cubeName).get(summary));
+        storageAggregatePeriods, cost, props);
   }
 
   public Map<Storage, List<UpdatePeriod>> createStorages(String cubeName,
-      String summary) {
+      String summary, Set<Grain> grains) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
     Map<Storage, List<UpdatePeriod>> storageAggregatePeriods = 
@@ -213,17 +225,16 @@ public class CubeDDL {
         LazyNOBColumnarSerde.class.getCanonicalName(),
         true, null, null, null);
     storage.addToPartCols(new FieldSchema("dt", "string", "date partition"));
-    Set<Grain> grains = cubeReader.getSummaryGrains(cubeName, summary);
     List<UpdatePeriod> updatePeriods = new ArrayList<UpdatePeriod>();
     for (Grain g : grains) {
-      if (!g.getFileSystemPrefix().equals("none")) {
-        if (g.getFileSystemPrefix().equals(
-            Grain.quarter.getFileSystemPrefix())) {
-          updatePeriods.add(UpdatePeriod.QUARTERLY);
-        } else {
-          updatePeriods.add(UpdatePeriod.valueOf(g.getFileSystemPrefix()
-              .toUpperCase()));          
-        }
+      if (g.getFileSystemPrefix().equals("none")) {
+        updatePeriods.add(UpdatePeriod.HOURLY);
+      } else if (g.getFileSystemPrefix().equals(
+          Grain.quarter.getFileSystemPrefix())) {
+        updatePeriods.add(UpdatePeriod.QUARTERLY);
+      } else {
+        updatePeriods.add(UpdatePeriod.valueOf(g.getFileSystemPrefix()
+            .toUpperCase()));          
       }
     }
     storageAggregatePeriods.put(storage, updatePeriods);

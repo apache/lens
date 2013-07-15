@@ -92,18 +92,18 @@ public class TestDDL {
       Assert.assertFalse(cube.getTimedDimensions().isEmpty());
 
       List<CubeFactTable> facts = cc.getAllFactTables(cube);
-      if (cube.getName().equals("cube_downloadmatch")) {
-        Assert.assertTrue(facts.isEmpty());
-      } else {
-        Assert.assertFalse(facts.isEmpty());
-        for (CubeFactTable fact : facts) {
-          Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_STORAGE));
-          Assert.assertNotNull(fact.getProperties());
-          Assert.assertEquals(cube.getName(), fact.getCubeName());
-          Assert.assertEquals(fact.getColumns().size(),
-              CubeDDL.getNobColList().size());
-          // Assert.assertEquals(fact.getColumns(), CubeDDL.getNobColList());
-          Assert.assertNotNull(fact.getValidColumns()); 
+      Assert.assertFalse(facts.isEmpty());
+      for (CubeFactTable fact : facts) {
+        Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_STORAGE));
+        Assert.assertNotNull(fact.getProperties());
+        Assert.assertEquals(cube.getName(), fact.getCubeName());
+        Assert.assertEquals(fact.getColumns().size(),
+            CubeDDL.getNobColList().size());
+        // Assert.assertEquals(fact.getColumns(), CubeDDL.getNobColList());
+        if (fact.getName().contains(CubeDDL.RAW_FACT_NAME)) {
+          Assert.assertNull(fact.getValidColumns()); 
+        } else {
+          Assert.assertNotNull(fact.getValidColumns());             
         }
       }
     }
@@ -117,7 +117,7 @@ public class TestDDL {
     Date before = cal.getTime();
     PopulatePartitions pp = new PopulatePartitions("request", before, now,
         UpdatePeriod.DAILY, conf, new Path("file:////tmp/hive/warehouse/parts"),
-        new SimpleDateFormat(UpdatePeriod.DAILY.format()));
+        new SimpleDateFormat(UpdatePeriod.DAILY.format()), false, false);
     pp.run();
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
@@ -126,6 +126,8 @@ public class TestDDL {
         "request_summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName3 = MetastoreUtil.getFactStorageTableName(
         "request_summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName4 = MetastoreUtil.getFactStorageTableName(
+        "request_raw", Storage.getPrefix(CubeDDL.YODA_STORAGE));
 
     cal.setTime(before);
     Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
@@ -134,12 +136,7 @@ public class TestDDL {
         cal.getTime()));
     Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
         cal.getTime()));
-    cal.add(Calendar.DAY_OF_MONTH, 1);
-    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
-        cal.getTime()));
-    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
-        cal.getTime()));
-    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+    Assert.assertFalse(cc.partitionExists(storageTableName4, UpdatePeriod.DAILY,
         cal.getTime()));
     cal.add(Calendar.DAY_OF_MONTH, 1);
     Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
@@ -147,6 +144,67 @@ public class TestDDL {
     Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
         cal.getTime()));
     Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertFalse(cc.partitionExists(storageTableName4, UpdatePeriod.DAILY,
+        cal.getTime()));
+    cal.add(Calendar.DAY_OF_MONTH, 1);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.DAILY,
+        cal.getTime()));
+    Assert.assertFalse(cc.partitionExists(storageTableName4, UpdatePeriod.DAILY,
         cal.getTime()));
   }
+
+  @Test
+  public void testHourltPartitions() throws HiveException {
+    Calendar cal = Calendar.getInstance();
+    Date now = cal.getTime();
+    cal.add(Calendar.HOUR_OF_DAY, -2);
+    Date before = cal.getTime();
+    PopulatePartitions pp = new PopulatePartitions("request", before, now,
+        UpdatePeriod.HOURLY, conf, new Path("file:////tmp/hive/warehouse/parts"),
+        new SimpleDateFormat(UpdatePeriod.HOURLY.format()), false, false);
+    pp.run();
+    CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    String storageTableName1 = MetastoreUtil.getFactStorageTableName(
+        "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName2 = MetastoreUtil.getFactStorageTableName(
+        "request_summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName3 = MetastoreUtil.getFactStorageTableName(
+        "request_summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+    String storageTableName4 = MetastoreUtil.getFactStorageTableName(
+        "request_raw", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+
+    cal.setTime(before);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName4, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    cal.add(Calendar.HOUR_OF_DAY, 1);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName4, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    cal.add(Calendar.HOUR_OF_DAY, 1);
+    Assert.assertTrue(cc.partitionExists(storageTableName1, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName2, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName3, UpdatePeriod.HOURLY,
+        cal.getTime()));
+    Assert.assertTrue(cc.partitionExists(storageTableName4, UpdatePeriod.HOURLY,
+        cal.getTime()));
+  }
+
 }
