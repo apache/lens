@@ -110,15 +110,33 @@ public class TestDDL {
   }
 
   @Test
+  public void testDimPartitions() throws HiveException, IOException {
+    Calendar cal = Calendar.getInstance();
+    Date now = cal.getTime();
+    PopulatePartitions pp = new PopulatePartitions(conf);
+    pp.populateAllDimParts(new Path("file:///tmp/hive/warehouse/parts/metadata"),
+        new SimpleDateFormat(UpdatePeriod.HOURLY.format()),
+        now, false);
+    CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    for (String dimName : cc.getAllDimensionTableNames()) {
+      String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
+          Storage.getPrefix(CubeDDL.YODA_STORAGE));
+      Assert.assertTrue(cc.partitionExists(storageTableName,
+          UpdatePeriod.HOURLY, cal.getTime()));
+    }
+  }
+
+  @Test
   public void testPartitions() throws HiveException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
     Date before = cal.getTime();
-    PopulatePartitions pp = new PopulatePartitions("request", before, now,
-        UpdatePeriod.DAILY, conf, new Path("file:////tmp/hive/warehouse/parts"),
-        new SimpleDateFormat(UpdatePeriod.DAILY.format()), false, false);
-    pp.run();
+    PopulatePartitions pp = new PopulatePartitions(conf);
+    pp.populateCubeParts("request", before, now,
+        UpdatePeriod.DAILY, new Path("file:////tmp/hive/warehouse/parts"),
+        new SimpleDateFormat(UpdatePeriod.DAILY.format()), "all");
+
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
         "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
@@ -159,15 +177,15 @@ public class TestDDL {
   }
 
   @Test
-  public void testHourltPartitions() throws HiveException {
+  public void testHourlyPartitions() throws HiveException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.HOUR_OF_DAY, -2);
     Date before = cal.getTime();
-    PopulatePartitions pp = new PopulatePartitions("request", before, now,
-        UpdatePeriod.HOURLY, conf, new Path("file:////tmp/hive/warehouse/parts"),
-        new SimpleDateFormat(UpdatePeriod.HOURLY.format()), false, false);
-    pp.run();
+    PopulatePartitions pp = new PopulatePartitions(conf);
+    pp.populateCubeParts("request", before, now,
+        UpdatePeriod.HOURLY, new Path("file:////tmp/hive/warehouse/parts"),
+        new SimpleDateFormat(UpdatePeriod.HOURLY.format()), "all");
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
         "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
