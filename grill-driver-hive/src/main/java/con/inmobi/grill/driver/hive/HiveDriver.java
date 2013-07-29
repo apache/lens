@@ -17,8 +17,16 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
+import org.apache.hive.service.cli.TableSchema;
+import org.apache.hive.service.cli.thrift.TCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.transport.TMemoryBuffer;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.apache.thrift.transport.TTransportException;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -39,15 +47,17 @@ public class HiveDriver implements GrillDriver {
 	public static final String GRILL_PASSWORD_KEY = "grill.hs2.password";
 	public static final String GRILL_RESULT_SET_TYPE_KEY = "grill.result.type";
 	private static final String PERSISTENT = "persistent";
-
 	private static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
+	public static final String HS2_HOST = "hive.hs2.host";
+	public static final String HS2_PORT = "hive.hs2.port";
+	public static final int HS2_DEFAULT_PORT = 8080;
 	
 	private HiveConf conf;
 	private ThriftCLIServiceClient client;
+	private TTransport transport;
 	private SessionHandle session;
 	
 	private Map<QueryHandle, QueryContext> queryToHiveOperation;
-	
 	
 	private class QueryContext {
 		final QueryHandle queryHandle;
@@ -77,19 +87,12 @@ public class HiveDriver implements GrillDriver {
 	
 	public HiveDriver() throws GrillException {
 		this.queryToHiveOperation = new ConcurrentHashMap<QueryHandle, QueryContext>();
-		try {
-			client = getClient();
-			session = getSession();
-		} catch (HiveSQLException exc) {
-			throw new GrillException("Error initializing hive driver", exc);
-		}
-		
 	}
 	
 	
 	@Override
-	public List<String> getSupportedStorages() {
-		return null;
+	public Configuration getConf() {
+		return conf;
 	}
 
 	@Override
@@ -101,8 +104,18 @@ public class HiveDriver implements GrillDriver {
 	public QueryPlan explain(String query, Configuration conf) throws GrillException {
 		QueryContext ctx = createQueryContext(query, conf);
 		
-		
-		return null;
+		TMemoryBuffer tmb = null;
+		try {
+			String planJson = 
+					getClient().getQueryPlan(getSession(), ctx.hiveQuery, conf.getValByRegex(".*"));
+	    return new HiveQueryPlan(planJson);
+		} catch (HiveSQLException e) {
+			throw new GrillException("Error getting explain on query", e);
+		} finally {
+			if (tmb != null) {
+				tmb.close();
+			}
+		}
 	}
 
 	@Override
@@ -114,7 +127,7 @@ public class HiveDriver implements GrillDriver {
 			OperationHandle op = getClient().executeStatement(getSession(), ctx.hiveQuery, 
 					conf.getValByRegex(".*"));
 			ctx.hiveHandle = op;
-			OperationStatus status = client.getOperationStatus(op);
+			OperationStatus status = getClient().getOperationStatus(op);
 			queryToHiveOperation.put(ctx.queryHandle, ctx);
 			
 			if (status.getState() == OperationState.ERROR) {
@@ -183,8 +196,8 @@ public class HiveDriver implements GrillDriver {
 			String jsonTaskStatus = opStatus.getTaskStatus();
 			ObjectMapper mapper = new ObjectMapper();
 			in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-			List<TaskStatus> taskStatuses = mapper.readValue(in, 
-					new TypeReference<List<TaskStatus>>() {});
+			List<TaskStatus> taskStatuses = 
+					mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
 			int completedTasks = 0;
 			StringBuilder message = new StringBuilder();
 			for (TaskStatus taskStat : taskStatuses) {
@@ -219,7 +232,17 @@ public class HiveDriver implements GrillDriver {
 	
 	@Override
 	public GrillResultSet fetchResultSet(QueryHandle handle)  throws GrillException {
-		return null;
+		// This should be applicable only for a async query
+		QueryContext ctx = queryToHiveOperation.get(handle);
+		if (ctx == null) {
+			throw new GrillException("Query not found " + ctx); 
+		}
+		
+		try {
+			return createResultSet(ctx);
+		} catch (HiveSQLException e) {
+			throw new GrillException("Error getting result set");
+		}
 	}
 	
 	public void closeQuery(QueryHandle handle) throws GrillException {
@@ -264,16 +287,35 @@ public class HiveDriver implements GrillDriver {
 		} catch(HiveSQLException exc) {
 			LOG.warn("Could not close hive session", exc);
 		}
+		
+		transport.close();
 	}
 	
-	private ThriftCLIServiceClient getClient() {
-		//TODO Write logic to construct client
-		return null;
+	private ThriftCLIServiceClient getClient() throws HiveSQLException {
+		synchronized (client) {
+			if (client == null) {
+				transport = new TSocket(conf.get(HS2_HOST), conf.getInt(HS2_PORT, HS2_DEFAULT_PORT));
+				try {
+					transport.open();
+				} catch (TTransportException e) {
+					throw new HiveSQLException(e);
+				}
+				TProtocol protocol = new TBinaryProtocol(transport);
+				TCLIService.Client svcClient = new TCLIService.Client(protocol);
+				client = new ThriftCLIServiceClient(svcClient);
+			}
+			return client;
+		}
 	}
 
-	private GrillResultSet createResultSet(QueryContext options) {
-		// TODO Auto-generated method stub
-		return null;
+	private GrillResultSet createResultSet(QueryContext context) throws HiveSQLException {
+		TableSchema hiveResultSetMetadata = getClient().getResultSetMetadata(context.hiveHandle);
+		
+		if (context.isPersistent) {
+			return new HivePersistentResultSet(context.resultSetPath, hiveResultSetMetadata);
+		} else {
+			throw new HiveSQLException("In memory hive result set not supported");
+		}
 	}
 
 	private QueryContext createQueryContext(String query, Configuration conf) {
@@ -300,7 +342,12 @@ public class HiveDriver implements GrillDriver {
 	}
 	
 	private SessionHandle getSession() throws HiveSQLException {
-		return client.openSession(getUserName(), getPassword());
+		synchronized (session) {
+			if (session == null) {
+				session = getClient().openSession(getUserName(), getPassword());
+			}
+			return session;
+		}
 	}
 	
 	private String getUserName() {
