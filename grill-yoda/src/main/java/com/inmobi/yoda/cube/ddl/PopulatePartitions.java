@@ -149,12 +149,10 @@ public class PopulatePartitions {
   public static void main(String[] args)
       throws HiveException, ParseException, IOException {
     if (args.length < 4) {
-      System.out.println("Usage: cubeName startPartition endPartition" +
-          " UpdatePeriod basePath pathDateFormat skipRaw populateOnlyRaw");
       System.out.println("Usage:" +
-          "\t -dims basepath timestamp pathDateFormat \n" +
-          "\t cubeName startPartition endPartition" +
-          " UpdatePeriod basePath pathDateFormat [summarylist|raw|all]");
+          "\t [-dims basepath timestamp pathDateFormat]\n" +
+          "\t [cubeName startPartition endPartition" +
+          " UpdatePeriod basePath pathDateFormat (summarylist|raw|all) ]");
       return;
     }
     HiveConf conf = new HiveConf(PopulatePartitions.class);

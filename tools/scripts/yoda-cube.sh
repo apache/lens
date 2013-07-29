@@ -60,7 +60,9 @@ display_help() {
   cat <<EOF
 Usage: $0 dimensionddl --conf <confdir>
        $0 cubeddl [cubename] --conf <confdir>
-       $0 populateParts cubename startPartition endPartition UpdatePeriod basePath pathDateFormat --conf <confdir>
+       $0 populateParts
+           [-dims basepath timestamp pathDateFormat ]
+           [cubename startPartition endPartition UpdatePeriod basePath pathDateFormat (summarylist|raw|all) --conf <confdir>]
 EOF
 }
 
