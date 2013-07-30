@@ -29,6 +29,6 @@ public interface InMemoryResultSet extends GrillResultSet {
    * 
    * @param size
    */
-  public void setFetchSize(int size);
+  public void setFetchSize(int size) throws GrillException;
 
 }

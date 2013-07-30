@@ -2,11 +2,10 @@ package con.inmobi.grill.driver.hive;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -18,17 +17,9 @@ import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.TableSchema;
-import org.apache.hive.service.cli.thrift.TCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
-import org.apache.thrift.protocol.TBinaryProtocol;
-import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
-import org.apache.thrift.transport.TSocket;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TTransportException;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -48,17 +39,16 @@ public class HiveDriver implements GrillDriver {
 	public static final String GRILL_RESULT_SET_TYPE_KEY = "grill.result.type";
 	private static final String PERSISTENT = "persistent";
 	private static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
-	public static final String HS2_HOST = "hive.hs2.host";
-	public static final String HS2_PORT = "hive.hs2.port";
-	public static final int HS2_DEFAULT_PORT = 8080;
+	public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
 	
 	private HiveConf conf;
-	private ThriftCLIServiceClient client;
-	private TTransport transport;
 	private SessionHandle session;
+	private Map<QueryHandle, QueryContext> handleToContext;
+	private ThriftConnection connection;
 	
-	private Map<QueryHandle, QueryContext> queryToHiveOperation;
-	
+	/**
+	 * Internal class to hold query related info
+	 */
 	private class QueryContext {
 		final QueryHandle queryHandle;
 		OperationHandle hiveHandle;
@@ -83,10 +73,15 @@ public class HiveDriver implements GrillDriver {
 		public int hashCode() {
 			return queryHandle.hashCode();
 		}
+		
+		@Override
+		public String toString() {
+			return queryHandle + "/" + userQuery;
+		}
 	}
 	
 	public HiveDriver() throws GrillException {
-		this.queryToHiveOperation = new ConcurrentHashMap<QueryHandle, QueryContext>();
+		this.handleToContext = new HashMap<QueryHandle, QueryContext>();
 	}
 	
 	
@@ -110,7 +105,7 @@ public class HiveDriver implements GrillDriver {
 					getClient().getQueryPlan(getSession(), ctx.hiveQuery, conf.getValByRegex(".*"));
 	    return new HiveQueryPlan(planJson);
 		} catch (HiveSQLException e) {
-			throw new GrillException("Error getting explain on query", e);
+			throw new GrillException("Error getting explain on query " + ctx.userQuery, e);
 		} finally {
 			if (tmb != null) {
 				tmb.close();
@@ -128,7 +123,7 @@ public class HiveDriver implements GrillDriver {
 					conf.getValByRegex(".*"));
 			ctx.hiveHandle = op;
 			OperationStatus status = getClient().getOperationStatus(op);
-			queryToHiveOperation.put(ctx.queryHandle, ctx);
+			handleToContext.put(ctx.queryHandle, ctx);
 			
 			if (status.getState() == OperationState.ERROR) {
 				throw new GrillException("Unknown error while running query " + query);
@@ -147,7 +142,7 @@ public class HiveDriver implements GrillDriver {
 			
 			ctx.hiveHandle = getClient().executeStatementAsync(getSession(), ctx.hiveQuery, 
 					conf.getValByRegex(".*"));
-			queryToHiveOperation.put(ctx.queryHandle, ctx);
+			handleToContext.put(ctx.queryHandle, ctx);
 			return ctx.queryHandle;
 		} catch (HiveSQLException hiveErr) {
 			throw new GrillException("Error executing async query", hiveErr);
@@ -156,7 +151,7 @@ public class HiveDriver implements GrillDriver {
 	
 	@Override
 	public QueryStatus getStatus(QueryHandle handle)  throws GrillException {
-		QueryContext ctx = queryToHiveOperation.get(handle);
+		QueryContext ctx = handleToContext.get(handle);
 		
 		if (ctx == null) {
 			throw new GrillException("Could not find query " + ctx);
@@ -209,15 +204,7 @@ public class HiveDriver implements GrillDriver {
 			}
 			progress = taskStatuses.size() == 0 ? 0 : (float)completedTasks/taskStatuses.size();
 			return new QueryStatus(progress, stat, message.toString(), false);
-		} catch (HiveSQLException e) {
-			throw new GrillException("Error getting query status", e);
-		} catch (UnsupportedEncodingException e) {
-			throw new GrillException("Error getting query status", e);
-		} catch (JsonParseException e) {
-			throw new GrillException("Error getting query status", e);
-		} catch (JsonMappingException e) {
-			throw new GrillException("Error getting query status", e);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw new GrillException("Error getting query status", e);
 		} finally {
 			if (in != null) {
@@ -233,20 +220,15 @@ public class HiveDriver implements GrillDriver {
 	@Override
 	public GrillResultSet fetchResultSet(QueryHandle handle)  throws GrillException {
 		// This should be applicable only for a async query
-		QueryContext ctx = queryToHiveOperation.get(handle);
+		QueryContext ctx = handleToContext.get(handle);
 		if (ctx == null) {
 			throw new GrillException("Query not found " + ctx); 
 		}
-		
-		try {
-			return createResultSet(ctx);
-		} catch (HiveSQLException e) {
-			throw new GrillException("Error getting result set");
-		}
+		return createResultSet(ctx);
 	}
 	
 	public void closeQuery(QueryHandle handle) throws GrillException {
-		QueryContext options = queryToHiveOperation.remove(handle);
+		QueryContext options = handleToContext.remove(handle);
 		if (options != null) {
 			OperationHandle opHandle = options.hiveHandle;
 			try {
@@ -259,7 +241,7 @@ public class HiveDriver implements GrillDriver {
 
 	@Override
 	public boolean cancelQuery(QueryHandle handle)  throws GrillException {
-		QueryContext ctx = queryToHiveOperation.get(handle);
+		QueryContext ctx = handleToContext.get(handle);
 		if (ctx == null) {
 			throw new GrillException("Query not found " + ctx);
 		}
@@ -274,7 +256,7 @@ public class HiveDriver implements GrillDriver {
 	
 	public void close() {
 		// Close this driver and release all resources
-		for (QueryHandle query : queryToHiveOperation.keySet()) {
+		for (QueryHandle query : handleToContext.keySet()) {
 			try {
 				closeQuery(query);
 			} catch (GrillException exc) {
@@ -284,37 +266,32 @@ public class HiveDriver implements GrillDriver {
 		
 		try {
 			getClient().closeSession(session);
-		} catch(HiveSQLException exc) {
-			LOG.warn("Could not close hive session", exc);
+		} catch (Exception e) {
+			LOG.error("Unable to close connection", e);
 		}
-		
-		transport.close();
 	}
 	
-	private ThriftCLIServiceClient getClient() throws HiveSQLException {
-		synchronized (client) {
-			if (client == null) {
-				transport = new TSocket(conf.get(HS2_HOST), conf.getInt(HS2_PORT, HS2_DEFAULT_PORT));
+	protected ThriftCLIServiceClient getClient() throws GrillException {
+		synchronized (connection) {
+			if (connection == null) {
+				Class<? extends ThriftConnection> clazz = conf.getClass(GRILL_HIVE_CONNECTION_CLASS, 
+						EmbeddedThriftConnection.class, 
+						ThriftConnection.class);
 				try {
-					transport.open();
-				} catch (TTransportException e) {
-					throw new HiveSQLException(e);
+					this.connection = (ThriftConnection) clazz.newInstance();
+				} catch (Exception e) {
+					throw new GrillException(e);
 				}
-				TProtocol protocol = new TBinaryProtocol(transport);
-				TCLIService.Client svcClient = new TCLIService.Client(protocol);
-				client = new ThriftCLIServiceClient(svcClient);
 			}
-			return client;
+			return connection.getClient(conf);
 		}
 	}
 
-	private GrillResultSet createResultSet(QueryContext context) throws HiveSQLException {
-		TableSchema hiveResultSetMetadata = getClient().getResultSetMetadata(context.hiveHandle);
-		
+	private GrillResultSet createResultSet(QueryContext context) throws GrillException {
 		if (context.isPersistent) {
-			return new HivePersistentResultSet(context.resultSetPath, hiveResultSetMetadata);
+			return new HivePersistentResultSet(context.resultSetPath, context.hiveHandle, getClient());
 		} else {
-			throw new HiveSQLException("In memory hive result set not supported");
+			return new HiveInMemoryResultSet(context.hiveHandle, getClient());
 		}
 	}
 
@@ -341,10 +318,14 @@ public class HiveDriver implements GrillDriver {
 		return ctx;
 	}
 	
-	private SessionHandle getSession() throws HiveSQLException {
+	private SessionHandle getSession() throws GrillException {
 		synchronized (session) {
 			if (session == null) {
-				session = getClient().openSession(getUserName(), getPassword());
+				try {
+					session = getClient().openSession(getUserName(), getPassword());
+				} catch (Exception e) {
+					throw new GrillException(e);
+				}
 			}
 			return session;
 		}

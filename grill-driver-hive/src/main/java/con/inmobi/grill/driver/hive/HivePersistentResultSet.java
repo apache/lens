@@ -5,38 +5,66 @@ import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.TableSchema;
+import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
+
 import com.inmobi.grill.api.GrillResultSetMetadata;
 import com.inmobi.grill.api.PersistentResultSet;
+import com.inmobi.grill.exception.GrillException;
 
 public class HivePersistentResultSet implements PersistentResultSet {
 	private final Path path;
-	private final TableSchema metadata;
+	private final OperationHandle opHandle;
+	private final ThriftCLIServiceClient client;
+	private TableSchema metadata;
 	
-  public HivePersistentResultSet(Path resultSetPath, TableSchema hiveResultSetMetadata) {
+  public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
+  		ThriftCLIServiceClient client) {
   	this.path = resultSetPath;
-  	this.metadata = hiveResultSetMetadata;
+  	this.client = client;
+  	this.opHandle = opHandle;
 	}
 
+  private TableSchema getTableSchema() throws HiveSQLException {
+  	if (metadata == null) {
+  		metadata = client.getResultSetMetadata(opHandle);
+  	}
+  	return metadata;
+  }
+  
 	@Override
-  public int size() {
-  	return metadata.getSize();
+  public int size() throws GrillException {
+  	try {
+			return getTableSchema().getSize();
+		} catch (HiveSQLException e) {
+			throw new GrillException(e);
+		}
   }
 
   @Override
-  public String getOutputPath() {
+  public String getOutputPath() throws GrillException {
   	return path.toString();
   }
 
   @Override
-  public GrillResultSetMetadata getMetadata() {
-  	final List<ColumnDescriptor> descriptors = metadata.getColumnDescriptors();
-  	if (descriptors == null) {
-  		return null;
-  	}
+  public GrillResultSetMetadata getMetadata() throws GrillException {
   	return new GrillResultSetMetadata() {
 			@Override
 			public List<Column> getColumns() {
+				List<ColumnDescriptor> descriptors;
+				
+				try {
+					descriptors = getTableSchema().getColumnDescriptors();
+				} catch (HiveSQLException e) {
+					return null;
+				}
+				
+				if (descriptors == null) {
+					return null;
+				}
+				
 				List<Column> columns = new ArrayList<Column>(descriptors.size());
 				for (ColumnDescriptor colDesc : descriptors) {
 					columns.add(new Column(colDesc.getName(), colDesc.getTypeName()));
