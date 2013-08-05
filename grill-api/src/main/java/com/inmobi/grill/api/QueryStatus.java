@@ -59,4 +59,12 @@ public class QueryStatus {
   public boolean hasResultSet() {
     return hasResultSet;
   }
+  
+  @Override
+  public String toString() {
+  	return new StringBuilder(status.toString()).append(':')
+  			.append(progress).append(':')
+  			.append(hasResultSet).append(':').
+  			append(statusMessage).toString();
+  }
 }

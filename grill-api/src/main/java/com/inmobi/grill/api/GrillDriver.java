@@ -85,4 +85,10 @@ public interface GrillDriver {
    * @return true if cancel was successful, false otherwise
    */
   public boolean cancelQuery(QueryHandle handle) throws GrillException;
+  
+  /**
+   * Close the driver, releasing all resouces used up by the driver
+   * @throws GrillException
+   */
+  public void close() throws GrillException;
 }

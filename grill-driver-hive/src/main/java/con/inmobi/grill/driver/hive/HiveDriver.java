@@ -2,11 +2,15 @@ package con.inmobi.grill.driver.hive;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -16,7 +20,6 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
-import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
 import org.apache.thrift.transport.TMemoryBuffer;
@@ -36,15 +39,19 @@ public class HiveDriver implements GrillDriver {
 	
 	public static final String GRILL_USER_NAME_KEY = "grill.hs2.user";
 	public static final String GRILL_PASSWORD_KEY = "grill.hs2.password";
-	public static final String GRILL_RESULT_SET_TYPE_KEY = "grill.result.type";
-	private static final String PERSISTENT = "persistent";
-	private static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
+	public static final String GRILL_RESULT_SET_TYPE_KEY = "grill.persistent.resultset";
+	public static final String PERSISTENT = "persistent";
+	public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
 	public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
+	private static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
 	
 	private HiveConf conf;
 	private SessionHandle session;
 	private Map<QueryHandle, QueryContext> handleToContext;
 	private ThriftConnection connection;
+	private final Lock connectionLock;
+	private final Lock sessionLock;
+
 	
 	/**
 	 * Internal class to hold query related info
@@ -80,7 +87,10 @@ public class HiveDriver implements GrillDriver {
 		}
 	}
 	
-	public HiveDriver() throws GrillException {
+	public HiveDriver(Configuration conf) throws GrillException {
+		this.conf = new HiveConf(conf, HiveDriver.class);
+		this.connectionLock = new ReentrantLock();
+		this.sessionLock = new ReentrantLock();
 		this.handleToContext = new HashMap<QueryHandle, QueryContext>();
 	}
 	
@@ -123,12 +133,10 @@ public class HiveDriver implements GrillDriver {
 					conf.getValByRegex(".*"));
 			ctx.hiveHandle = op;
 			OperationStatus status = getClient().getOperationStatus(op);
-			handleToContext.put(ctx.queryHandle, ctx);
 			
 			if (status.getState() == OperationState.ERROR) {
 				throw new GrillException("Unknown error while running query " + query);
 			}
-			
 			return createResultSet(ctx);
 		} catch (HiveSQLException hiveErr) {
 			throw new GrillException("Error executing query" , hiveErr);
@@ -189,21 +197,27 @@ public class HiveDriver implements GrillDriver {
 			
 			float progress = 0f;
 			String jsonTaskStatus = opStatus.getTaskStatus();
-			ObjectMapper mapper = new ObjectMapper();
-			in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-			List<TaskStatus> taskStatuses = 
-					mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
-			int completedTasks = 0;
-			StringBuilder message = new StringBuilder();
-			for (TaskStatus taskStat : taskStatuses) {
-				String state = taskStat.getTaskState();
-				if ("FINISHED_STATE".equalsIgnoreCase(state)) {
-					completedTasks++;
+			String msg = "";
+			if (StringUtils.isNotBlank(jsonTaskStatus)) {
+				ObjectMapper mapper = new ObjectMapper();
+				in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
+				List<TaskStatus> taskStatuses = 
+						mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
+				int completedTasks = 0;
+				StringBuilder message = new StringBuilder();
+				for (TaskStatus taskStat : taskStatuses) {
+					String state = taskStat.getTaskState();
+					if ("FINISHED_STATE".equalsIgnoreCase(state)) {
+						completedTasks++;
+					}
+					message.append(taskStat.getExternalHandle()).append(":").append(state).append(" ");
 				}
-				message.append(taskStat.getExternalHandle()).append(":").append(state).append(" ");
+				progress = taskStatuses.size() == 0 ? 0 : (float)completedTasks/taskStatuses.size();
+				msg = message.toString();
+			} else {
+				LOG.warn("Empty task statuses");
 			}
-			progress = taskStatuses.size() == 0 ? 0 : (float)completedTasks/taskStatuses.size();
-			return new QueryStatus(progress, stat, message.toString(), false);
+			return new QueryStatus(progress, stat, msg, false);
 		} catch (Exception e) {
 			throw new GrillException("Error getting query status", e);
 		} finally {
@@ -256,7 +270,7 @@ public class HiveDriver implements GrillDriver {
 	
 	public void close() {
 		// Close this driver and release all resources
-		for (QueryHandle query : handleToContext.keySet()) {
+		for (QueryHandle query : new ArrayList<QueryHandle>(handleToContext.keySet())) {
 			try {
 				closeQuery(query);
 			} catch (GrillException exc) {
@@ -265,14 +279,15 @@ public class HiveDriver implements GrillDriver {
 		}
 		
 		try {
-			getClient().closeSession(session);
+			getClient().closeSession(getSession());
 		} catch (Exception e) {
 			LOG.error("Unable to close connection", e);
 		}
 	}
 	
 	protected ThriftCLIServiceClient getClient() throws GrillException {
-		synchronized (connection) {
+		connectionLock.lock();
+		try {
 			if (connection == null) {
 				Class<? extends ThriftConnection> clazz = conf.getClass(GRILL_HIVE_CONNECTION_CLASS, 
 						EmbeddedThriftConnection.class, 
@@ -283,8 +298,10 @@ public class HiveDriver implements GrillDriver {
 					throw new GrillException(e);
 				}
 			}
-			return connection.getClient(conf);
+		} finally {
+			connectionLock.unlock();
 		}
+		return connection.getClient(conf);
 	}
 
 	private GrillResultSet createResultSet(QueryContext context) throws GrillException {
@@ -298,18 +315,30 @@ public class HiveDriver implements GrillDriver {
 	private QueryContext createQueryContext(String query, Configuration conf) {
 		QueryContext ctx = new QueryContext();
 		
-		String resultSetType = conf.get(GRILL_RESULT_SET_TYPE_KEY, PERSISTENT);
+		boolean resultSetType = conf.getBoolean(GRILL_RESULT_SET_TYPE_KEY, true);
 		
-		ctx.isPersistent = PERSISTENT.equalsIgnoreCase(resultSetType);
+		ctx.isPersistent = resultSetType;
 		ctx.userQuery = query;
 		
 		if (ctx.isPersistent) {
 			// store persistent data into user specified location
-			String resultSetParentDir = this.conf.get(GRILL_RESULT_SET_PARENT_DIR);
-			ctx.resultSetPath = new Path(resultSetParentDir, ctx.queryHandle.toString());
-			// create query
-			StringBuilder builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
-			builder.append(ctx.resultSetPath).append(ctx.userQuery).append(' ');
+			// If absent, take default home directory
+			String resultSetParentDir = conf.get(GRILL_RESULT_SET_PARENT_DIR);
+			StringBuilder builder;
+			
+			if (StringUtils.isNotBlank(resultSetParentDir)) {
+				ctx.resultSetPath = new Path(resultSetParentDir, ctx.queryHandle.toString());
+				// create query
+				builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
+			} else {
+				// Write to /tmp/grillreports
+				ctx.resultSetPath = new 
+						Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ctx.queryHandle.toString());
+				builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
+			}
+			
+			builder.append('"').append(ctx.resultSetPath).append('"')
+			.append(' ').append(ctx.userQuery).append(' ');
 			ctx.hiveQuery =  builder.toString();
 		} else {
 			ctx.hiveQuery = ctx.userQuery;
@@ -319,7 +348,8 @@ public class HiveDriver implements GrillDriver {
 	}
 	
 	private SessionHandle getSession() throws GrillException {
-		synchronized (session) {
+		sessionLock.lock();
+		try {
 			if (session == null) {
 				try {
 					session = getClient().openSession(getUserName(), getPassword());
@@ -327,8 +357,10 @@ public class HiveDriver implements GrillDriver {
 					throw new GrillException(e);
 				}
 			}
-			return session;
+		} finally {
+			sessionLock.unlock();
 		}
+		return session;
 	}
 	
 	private String getUserName() {
