@@ -141,4 +141,10 @@ public class ImpalaDriver implements GrillDriver {
 		return null;
 	}
 
+	@Override
+	public void close() throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
