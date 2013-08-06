@@ -1,16 +1,15 @@
 package com.inmobi.grill.driver.hive;
 
-import static org.junit.Assert.*;
-
+import static org.testng.Assert.*;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.hadoop.conf.Configuration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -29,7 +28,7 @@ public class TestHiveDriver {
 	private Configuration conf;
 	private HiveDriver driver;
 	
-	@Before
+	@BeforeTest
 	public void beforeTest() throws Exception {
 		conf = new Configuration();
 		conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, 
@@ -42,7 +41,7 @@ public class TestHiveDriver {
 		System.out.println("Driver created");
 	}
 	
-	@After
+	@AfterTest
 	public void afterTest() throws Exception {
 		driver.close();
 	}
@@ -58,11 +57,11 @@ public class TestHiveDriver {
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
 		GrillResultSet resultSet = driver.execute(dropTable, conf);
 		assertNotNull(resultSet);
-		assertTrue("expecting in-memory result set", resultSet instanceof HiveInMemoryResultSet);
+		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 		
 		resultSet = driver.execute(createTable, conf);
 		assertNotNull(resultSet);
-		assertTrue("expecting in-memory result set", resultSet instanceof HiveInMemoryResultSet);
+		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 		
 		// Load some data into the table
 		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
@@ -81,11 +80,11 @@ public class TestHiveDriver {
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
 		GrillResultSet resultSet = driver.execute(dropTable, conf);
 		assertNotNull(resultSet);
-		assertTrue("expecting in-memory result set", resultSet instanceof HiveInMemoryResultSet);
+		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 		
 		resultSet = driver.execute(createTable, conf);
 		assertNotNull(resultSet);
-		assertTrue("expecting in-memory result set", resultSet instanceof HiveInMemoryResultSet);
+		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 		
 		// Load some data into the table
 		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
@@ -112,7 +111,7 @@ public class TestHiveDriver {
 		// This should throw error now
 		try {
 			QueryStatus status = driver.getStatus(handle);
-			assertTrue("Should have thrown exception", false);
+			assertTrue(false, "Should have thrown exception");
 		} catch (GrillException exc) {
 			assertTrue(true);
 		}
@@ -121,7 +120,7 @@ public class TestHiveDriver {
 		handle = driver.executeAsync(dataLoad, conf);
 		assertTrue(driver.cancelQuery(handle));
 		QueryStatus status = driver.getStatus(handle);
-		assertEquals("Query should be cancelled now", Status.CANCELED, status.getStatus());
+		assertEquals(status.getStatus(), Status.CANCELED, "Query should be cancelled now");
 		driver.closeQuery(handle);
 		
 		// Now run a command that would fail
@@ -145,7 +144,7 @@ public class TestHiveDriver {
 		}
 		
 		status = driver.getStatus(handle);
-		assertEquals("Expecting query to fail", Status.FAILED, status.getStatus());
+		assertEquals(status.getStatus(), Status.FAILED, "Expecting query to fail");
 		driver.closeQuery(handle);
 	}
 	

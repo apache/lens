@@ -157,4 +157,9 @@ public class CubeGrillDriver implements GrillDriver {
 	public Configuration getConf() {
 		return conf;
 	}
+
+	@Override
+	public void close() throws GrillException {
+		
+	}
 }
