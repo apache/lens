@@ -1,12 +1,15 @@
 package com.inmobi.grill.driver.hive;
 
 import static org.testng.Assert.*;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.*;
+
+import com.inmobi.grill.api.GrillResultSetMetadata;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hive.service.cli.thrift.TStringValue;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -94,13 +97,38 @@ public class TestHiveDriver {
 			resultSet = driver.execute(select, conf);
       assertNotNull(resultSet);
       assertTrue(resultSet instanceof HiveInMemoryResultSet);
-		} catch (GrillException e) {
+      HiveInMemoryResultSet inmemrs = (HiveInMemoryResultSet) resultSet;
+
+      // check metadata
+      GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
+      List<GrillResultSetMetadata.Column>  columns = rsMeta.getColumns();
+      assertNotNull(columns);
+      assertEquals(columns.size(), 1);
+      assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
+      assertEquals("STRING".toLowerCase(), columns.get(0).getType().toLowerCase());
+
+      List<String> expectedRows = new ArrayList<String>();
+      // Read data from the test file into expectedRows
+      BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(TEST_DATA_FILE)));
+      String line = "";
+      while ((line = br.readLine()) != null) {
+        expectedRows.add(line.trim());
+      }
+
+      List<String> actualRows = new ArrayList<String>();
+      while (inmemrs.hasNext()) {
+        List<Object> row = inmemrs.next();
+        TStringValue thriftString = (TStringValue) row.get(0);
+        actualRows.add(thriftString.getValue());
+      }
+      System.out.print(actualRows);
+      assertEquals(actualRows, expectedRows);
+		} catch (Exception e) {
 			e.printStackTrace();
 			fail(e.getMessage());
 		}
 	}
-	
-	// Check query is executed, and print results. verify results
+
 	// executeAsync
 	@Test
 	public void testExecuteQueryAsync()  throws Exception {
@@ -128,7 +156,6 @@ public class TestHiveDriver {
 		assertEquals(expectedStates, actualStates);
 		
 		driver.closeQuery(handle);
-		
 		// This should throw error now
 		try {
 			QueryStatus status = driver.getStatus(handle);

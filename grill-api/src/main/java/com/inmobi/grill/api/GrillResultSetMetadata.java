@@ -26,6 +26,11 @@ public interface GrillResultSetMetadata {
     public String getType() {
       return type;
     }
+
+    @Override
+    public String toString() {
+      return new StringBuilder(name).append(':').append(type).toString();
+    }
   }
 
   public List<Column> getColumns();

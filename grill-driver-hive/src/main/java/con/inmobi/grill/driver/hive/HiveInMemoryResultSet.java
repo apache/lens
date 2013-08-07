@@ -9,6 +9,7 @@ import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.TableSchema;
+import org.apache.hive.service.cli.thrift.TColumnValue;
 import org.apache.hive.service.cli.thrift.TRow;
 import org.apache.hive.service.cli.thrift.TRowSet;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
@@ -97,8 +98,9 @@ public class HiveInMemoryResultSet implements InMemoryResultSet {
 		TRow row = rowItr.next();
 		
 		List<Object> results = new ArrayList<Object>(row.getColValsSize());
+    List<TColumnValue> thriftRow = row.getColVals();
 		for (int i = 0 ; i < row.getColValsSize(); i++) {
-			results.add(row.getColVals().get(i).getFieldValue());
+			results.add(thriftRow.get(i).getFieldValue());
 		}
 		
 		return results;
