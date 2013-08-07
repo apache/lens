@@ -30,6 +30,9 @@ public class TestHiveDriver {
 	
 	@BeforeTest
 	public void beforeTest() throws Exception {
+    // Check if hadoop property set
+    System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
+    assertNotNull(System.getProperty("hadoop.bin.path"));
 		conf = new Configuration();
 		conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, 
 				ThriftConnection.class);
@@ -48,31 +51,59 @@ public class TestHiveDriver {
 	
 	// Tests
 	@Test
-	public void testExecuteQuery()  throws Exception {
+	public void testExecuteQuery() {
 		System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
 		final String TBL = "HIVE_DRIVER_TEST";
 		
 		String dropTable = "DROP TABLE IF EXISTS " + TBL;
 		String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
-		GrillResultSet resultSet = driver.execute(dropTable, conf);
+		GrillResultSet resultSet = null;
+		try {
+			resultSet = driver.execute(dropTable, conf);
+		} catch (GrillException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+		
 		assertNotNull(resultSet);
 		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 		
-		resultSet = driver.execute(createTable, conf);
-		assertNotNull(resultSet);
-		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
+		try {
+			resultSet = driver.execute(createTable, conf);
+			assertNotNull(resultSet);
+			assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
+		} catch (GrillException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
 		
 		// Load some data into the table
 		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
-		resultSet = driver.execute(dataLoad, conf);
+		try {
+			resultSet = driver.execute(dataLoad, conf);
+		} catch (GrillException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
+		
+		// Execute a select query
+		System.err.println("Execute select");
+		String select = "SELECT ID FROM " + TBL;
+		try {
+			resultSet = driver.execute(select, conf);
+      assertNotNull(resultSet);
+      assertTrue(resultSet instanceof HiveInMemoryResultSet);
+		} catch (GrillException e) {
+			e.printStackTrace();
+			fail(e.getMessage());
+		}
 	}
 	
 	// Check query is executed, and print results. verify results
 	// executeAsync
 	@Test
 	public void testExecuteQueryAsync()  throws Exception {
-		System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
 		final String TBL = "HIVE_DRIVER_TEST";
 		
 		String dropTable = "DROP TABLE IF EXISTS " + TBL;
@@ -93,13 +124,15 @@ public class TestHiveDriver {
 		Set<Status> expected = 
 				new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
 		Set<Status> actualStates = new LinkedHashSet<Status>();
-		
-		while (true) {
+    Set<Status> terminationStates =
+      EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED, Status.SUCCESSFUL);
+
+    while (true) {
 			QueryStatus status = driver.getStatus(handle);
 			actualStates.add(status.getStatus());
 			assertNotNull(status);
 			System.err.println("Status " + status);
-			if (status.getStatus() == Status.SUCCESSFUL) {
+			if (terminationStates.contains(status.getStatus())) {
 				break;
 			}
 			Thread.sleep(100);
@@ -111,7 +144,7 @@ public class TestHiveDriver {
 		// This should throw error now
 		try {
 			QueryStatus status = driver.getStatus(handle);
-			assertTrue(false, "Should have thrown exception");
+			fail("Should have thrown exception");
 		} catch (GrillException exc) {
 			assertTrue(true);
 		}
@@ -127,17 +160,13 @@ public class TestHiveDriver {
 		String expectFail = "SELECT * FROM FOO_BAR";
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
 		handle = driver.executeAsync(expectFail, conf);
-		
-		Set<Status> terminationStates = 
-				EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED, Status.SUCCESSFUL);
-		
+
 		while (true) {
 			status = driver.getStatus(handle);
 			actualStates.add(status.getStatus());
 			assertNotNull(status);
-			System.err.println("Status " + status);
-			Status currStatus = status.getStatus();
-			if (terminationStates.contains(currStatus)) {
+			System.err.println("Status>> " + status);
+			if (terminationStates.contains(status.getStatus())) {
 				break;
 			}
 			Thread.sleep(100);

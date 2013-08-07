@@ -8,6 +8,7 @@
     <powermock.version>1.4.12</powermock.version>
     <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
     <hive.version>0.12.0-SNAPSHOT</hive.version>
+    <hadoop.version>0.20.2-cdh3u5</hadoop.version>
     <yoda.version>0.6.27</yoda.version>
   </properties>
 
@@ -52,6 +53,14 @@
                </execution>
              </executions>
            </plugin>
+           <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-surefire-plugin</artifactId>
+               <version>2.15</version>
+               <configuration>
+                    <failIfNoTests>false</failIfNoTests>
+               </configuration>
+           </plugin>
         </plugins>
     </pluginManagement>
   </build>
@@ -89,7 +98,7 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-core</artifactId>
-        <version>0.20.2-cdh3u5</version>
+        <version>${hadoop.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
@@ -116,6 +125,12 @@
         <artifactId>hive-service</artifactId>
         <version>${hive.version}</version>
       </dependency>
+       <dependency>
+           <groupId>org.apache.hive</groupId>
+           <artifactId>hive-shims</artifactId>
+           <version>${hive.version}</version>
+       </dependency>
+
       <dependency>
         <groupId>com.google.protobuf</groupId>
         <artifactId>protobuf-java</artifactId>
