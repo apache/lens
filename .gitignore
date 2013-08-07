@@ -2,9 +2,11 @@
 *.class
 *\.project
 *\.classpath
+*\.idea
 */\.settings/*
 
 */target/*
+*/test-output/*
 ## generic files to ignore
 *~
 *.lock
@@ -12,3 +14,4 @@
 *.swp
 *.out
 *.iml
+*.log

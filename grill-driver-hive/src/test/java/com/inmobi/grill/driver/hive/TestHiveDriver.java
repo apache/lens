@@ -121,23 +121,11 @@ public class TestHiveDriver {
 		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
 		QueryHandle handle = driver.executeAsync(dataLoad, conf);
 		
-		Set<Status> expected = 
+		Set<Status> expectedStates =
 				new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
 		Set<Status> actualStates = new LinkedHashSet<Status>();
-    Set<Status> terminationStates =
-      EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED, Status.SUCCESSFUL);
-
-    while (true) {
-			QueryStatus status = driver.getStatus(handle);
-			actualStates.add(status.getStatus());
-			assertNotNull(status);
-			System.err.println("Status " + status);
-			if (terminationStates.contains(status.getStatus())) {
-				break;
-			}
-			Thread.sleep(100);
-		}
-		assertEquals(expected, actualStates);
+    waitForAsyncQuery(handle, actualStates, driver);
+		assertEquals(expectedStates, actualStates);
 		
 		driver.closeQuery(handle);
 		
@@ -160,23 +148,40 @@ public class TestHiveDriver {
 		String expectFail = "SELECT * FROM FOO_BAR";
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
 		handle = driver.executeAsync(expectFail, conf);
-
-		while (true) {
-			status = driver.getStatus(handle);
-			actualStates.add(status.getStatus());
-			assertNotNull(status);
-			System.err.println("Status>> " + status);
-			if (terminationStates.contains(status.getStatus())) {
-				break;
-			}
-			Thread.sleep(100);
-		}
-		
+    actualStates.clear();
+    waitForAsyncQuery(handle, actualStates, driver);
 		status = driver.getStatus(handle);
 		assertEquals(status.getStatus(), Status.FAILED, "Expecting query to fail");
 		driver.closeQuery(handle);
+
+
+    //  Async select query
+    String select = "SELECT ID FROM " + TBL;
+    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    handle = driver.executeAsync(select, conf);
+    actualStates.clear();
+    waitForAsyncQuery(handle, actualStates, driver);
+    status = driver.getStatus(handle);
+    assertEquals(status.getStatus(), Status.SUCCESSFUL, "Expected query to finish successfully");
+    assertEquals(actualStates, expectedStates);
+    driver.closeQuery(handle);
 	}
-	
+
+  private void waitForAsyncQuery(QueryHandle handle, Set<Status> actualStates, HiveDriver driver) throws Exception {
+    Set<Status> terminationStates =
+      EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED, Status.SUCCESSFUL);
+
+    while (true) {
+      QueryStatus status = driver.getStatus(handle);
+      actualStates.add(status.getStatus());
+      assertNotNull(status);
+      if (terminationStates.contains(status.getStatus())) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
+  }
+
 	// explain
 	
  
