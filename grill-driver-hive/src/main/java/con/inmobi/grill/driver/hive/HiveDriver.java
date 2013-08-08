@@ -306,7 +306,7 @@ public class HiveDriver implements GrillDriver {
 
 	private GrillResultSet createResultSet(QueryContext context) throws GrillException {
 		if (context.isPersistent) {
-			return new HivePersistentResultSet(context.resultSetPath, context.hiveHandle, getClient());
+			return new HivePersistentResultSet(context.resultSetPath, context.hiveHandle, getClient(), context.queryHandle);
 		} else {
 			return new HiveInMemoryResultSet(context.hiveHandle, getClient());
 		}

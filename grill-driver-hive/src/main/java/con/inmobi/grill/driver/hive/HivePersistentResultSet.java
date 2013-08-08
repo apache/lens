@@ -3,6 +3,7 @@ package con.inmobi.grill.driver.hive;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.inmobi.grill.api.QueryHandle;
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.HiveSQLException;
@@ -18,13 +19,15 @@ public class HivePersistentResultSet implements PersistentResultSet {
 	private final Path path;
 	private final OperationHandle opHandle;
 	private final ThriftCLIServiceClient client;
+  private final QueryHandle queryHandle;
 	private TableSchema metadata;
 	
   public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
-  		ThriftCLIServiceClient client) {
+  		ThriftCLIServiceClient client, QueryHandle queryHandle) {
   	this.path = resultSetPath;
   	this.client = client;
   	this.opHandle = opHandle;
+    this.queryHandle = queryHandle;
 	}
 
   private TableSchema getTableSchema() throws HiveSQLException {
@@ -32,6 +35,10 @@ public class HivePersistentResultSet implements PersistentResultSet {
   		metadata = client.getResultSetMetadata(opHandle);
   	}
   	return metadata;
+  }
+
+  public QueryHandle getQueryHandle() {
+    return queryHandle;
   }
   
 	@Override

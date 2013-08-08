@@ -2,13 +2,16 @@ package com.inmobi.grill.driver.hive;
 
 import static org.testng.Assert.*;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 import com.inmobi.grill.api.GrillResultSetMetadata;
+import con.inmobi.grill.driver.hive.*;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -20,14 +23,11 @@ import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.exception.GrillException;
 
-import con.inmobi.grill.driver.hive.EmbeddedThriftConnection;
-import con.inmobi.grill.driver.hive.HiveDriver;
-import con.inmobi.grill.driver.hive.HiveInMemoryResultSet;
-import con.inmobi.grill.driver.hive.ThriftConnection;
-
 
 public class TestHiveDriver {
 	private static final String TEST_DATA_FILE = "testdata/testdata1.txt";
+  private static final String TEST_OUTPUT_DIR = "test-output";
+  private static final String TBL = "HIVE_TEST_TABLE";
 	private Configuration conf;
 	private HiveDriver driver;
 	
@@ -52,44 +52,30 @@ public class TestHiveDriver {
 		driver.close();
 	}
 	
+	private void createTestTable() throws Exception {
+    System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
+    String dropTable = "DROP TABLE IF EXISTS " + TBL;
+    String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
+    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    GrillResultSet resultSet = driver.execute(dropTable, conf);
+
+    assertNotNull(resultSet);
+    assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
+    // Craete again
+    resultSet = driver.execute(createTable, conf);
+    assertNotNull(resultSet);
+    assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
+
+    // Load some data into the table
+    String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
+    resultSet = driver.execute(dataLoad, conf);
+  }
+
 	// Tests
 	@Test
-	public void testExecuteQuery() {
-		System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
-		final String TBL = "HIVE_DRIVER_TEST";
-		
-		String dropTable = "DROP TABLE IF EXISTS " + TBL;
-		String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
-		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+	public void testExecuteQuery() throws Exception {
+    createTestTable();
 		GrillResultSet resultSet = null;
-		try {
-			resultSet = driver.execute(dropTable, conf);
-		} catch (GrillException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		
-		assertNotNull(resultSet);
-		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
-		
-		try {
-			resultSet = driver.execute(createTable, conf);
-			assertNotNull(resultSet);
-			assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
-		} catch (GrillException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		
-		// Load some data into the table
-		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
-		try {
-			resultSet = driver.execute(dataLoad, conf);
-		} catch (GrillException e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-		
 		// Execute a select query
 		System.err.println("Execute select");
 		String select = "SELECT ID FROM " + TBL;
@@ -114,6 +100,7 @@ public class TestHiveDriver {
       while ((line = br.readLine()) != null) {
         expectedRows.add(line.trim());
       }
+      br.close();
 
       List<String> actualRows = new ArrayList<String>();
       while (inmemrs.hasNext()) {
@@ -132,52 +119,20 @@ public class TestHiveDriver {
 	// executeAsync
 	@Test
 	public void testExecuteQueryAsync()  throws Exception {
-		final String TBL = "HIVE_DRIVER_TEST";
-		
-		String dropTable = "DROP TABLE IF EXISTS " + TBL;
-		String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
-		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
-		GrillResultSet resultSet = driver.execute(dropTable, conf);
-		assertNotNull(resultSet);
-		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
-		
-		resultSet = driver.execute(createTable, conf);
-		assertNotNull(resultSet);
-		assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
-		
+    createTestTable();
 		// Load some data into the table
-		String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
-		QueryHandle handle = driver.executeAsync(dataLoad, conf);
-		
+		QueryHandle handle = null;
 		Set<Status> expectedStates =
 				new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
 		Set<Status> actualStates = new LinkedHashSet<Status>();
-    waitForAsyncQuery(handle, actualStates, driver);
-		assertEquals(expectedStates, actualStates);
-		
-		driver.closeQuery(handle);
-		// This should throw error now
-		try {
-			QueryStatus status = driver.getStatus(handle);
-			fail("Should have thrown exception");
-		} catch (GrillException exc) {
-			assertTrue(true);
-		}
-		
-		// Run the command again, this time cancelling immediately
-		handle = driver.executeAsync(dataLoad, conf);
-		assertTrue(driver.cancelQuery(handle));
-		QueryStatus status = driver.getStatus(handle);
-		assertEquals(status.getStatus(), Status.CANCELED, "Query should be cancelled now");
-		driver.closeQuery(handle);
-		
+
 		// Now run a command that would fail
 		String expectFail = "SELECT * FROM FOO_BAR";
 		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
 		handle = driver.executeAsync(expectFail, conf);
     actualStates.clear();
     waitForAsyncQuery(handle, actualStates, driver);
-		status = driver.getStatus(handle);
+		QueryStatus status = driver.getStatus(handle);
 		assertEquals(status.getStatus(), Status.FAILED, "Expecting query to fail");
 		driver.closeQuery(handle);
 
@@ -193,6 +148,78 @@ public class TestHiveDriver {
     assertEquals(actualStates, expectedStates);
     driver.closeQuery(handle);
 	}
+
+  @Test
+  public void testCancelAsyncQuery() throws Exception {
+    createTestTable();
+    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    QueryHandle handle = driver.executeAsync("SELECT ID FROM " + TBL, conf);
+    driver.cancelQuery(handle);
+    QueryStatus status = driver.getStatus(handle);
+    assertEquals(status.getStatus(), Status.CANCELED, "Expecting query to be cancelled");
+    driver.closeQuery(handle);
+
+    try {
+      driver.cancelQuery(handle);
+      fail("Cancel on closed query should throw error");
+    } catch (GrillException exc) {
+      assertTrue(exc.getMessage().startsWith("Query not found"));
+    }
+  }
+
+  @Test
+  public void testPersistentResultSet() throws Exception {
+    createTestTable();
+    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
+    conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
+    GrillResultSet resultSet = driver.execute("SELECT ID FROM " + TBL, conf);
+    assertTrue(resultSet instanceof HivePersistentResultSet);
+    HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
+    String path = persistentResultSet.getOutputPath();
+    QueryHandle handle = persistentResultSet.getQueryHandle();
+
+    Path actualPath = new Path(path);
+    assertEquals(actualPath, new Path(TEST_OUTPUT_DIR, handle.toString()));
+    assertTrue(FileSystem.get(conf).exists(actualPath));
+
+    // read in data from output
+    FileSystem fs = FileSystem.get(conf);
+    Set<String> actualRows = new HashSet<String>();
+    for (FileStatus stat : fs.listStatus(actualPath)) {
+      FSDataInputStream in = fs.open(stat.getPath());
+      BufferedReader br = null;
+      try {
+        br = new BufferedReader(new InputStreamReader(in));
+        String line = "";
+
+        while ((line = br.readLine()) != null) {
+          actualRows.add(line.trim());
+        }
+      } finally {
+        if (br != null) {
+          br.close();
+        }
+      }
+    }
+
+
+    BufferedReader br = null;
+    Set<String> expectedRows = new HashSet<String>();
+
+    try {
+      br = new BufferedReader(new FileReader(new File(TEST_DATA_FILE)));
+      String line = "";
+      while ((line = br.readLine()) != null) {
+        expectedRows.add(line.trim());
+      }
+    } finally {
+      if (br != null) {
+        br.close();
+      }
+    }
+    assertEquals(actualRows, expectedRows);
+    fs.delete(actualPath, true);
+  }
 
   private void waitForAsyncQuery(QueryHandle handle, Set<Status> actualStates, HiveDriver driver) throws Exception {
     Set<Status> terminationStates =
