@@ -5,7 +5,7 @@ import static org.testng.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import com.inmobi.grill.api.GrillResultSetMetadata;
+import com.inmobi.grill.api.*;
 import con.inmobi.grill.driver.hive.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -17,9 +17,6 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.exception.GrillException;
 
@@ -237,6 +234,12 @@ public class TestHiveDriver {
   }
 
 	// explain
-	
+	@Test
+  public void testExplain() throws Exception {
+    createTestTable();
+    QueryPlan plan = driver.explain("SELECT ID FROM " + TBL, conf);
+    assertTrue(plan instanceof  HiveQueryPlan);
+    System.out.println("#####\n" + plan.getPlan());
+  }
  
 }
