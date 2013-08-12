@@ -22,11 +22,11 @@ import com.inmobi.grill.exception.GrillException;
 
 
 public class TestHiveDriver {
-	private static final String TEST_DATA_FILE = "testdata/testdata1.txt";
-  private static final String TEST_OUTPUT_DIR = "test-output";
-  private static final String TBL = "HIVE_TEST_TABLE";
-	private Configuration conf;
-	private HiveDriver driver;
+	public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
+  public static final String TEST_OUTPUT_DIR = "test-output";
+  public static final String TBL = "HIVE_TEST_TABLE";
+	protected Configuration conf;
+  protected HiveDriver driver;
 	
 	@BeforeTest
 	public void beforeTest() throws Exception {

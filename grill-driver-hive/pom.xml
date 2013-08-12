@@ -94,7 +94,8 @@
       </dependency>
       <dependency>
           <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
+          <artifactId>hadoop-test</artifactId>
+          <scope>test</scope>
       </dependency>
   </dependencies>
 </project>    
