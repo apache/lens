@@ -9,6 +9,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.server.HiveServer2;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 
 import static org.testng.Assert.assertNotNull;
@@ -36,7 +37,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     server.stop();
   }
 
-  @BeforeTest
+  @BeforeMethod
   @Override
   public void beforeTest() throws Exception {
     // Check if hadoop property set

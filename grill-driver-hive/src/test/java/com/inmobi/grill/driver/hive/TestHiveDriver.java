@@ -13,9 +13,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.thrift.TStringValue;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.exception.GrillException;
@@ -28,7 +26,7 @@ public class TestHiveDriver {
 	protected Configuration conf;
   protected HiveDriver driver;
 	
-	@BeforeTest
+	@BeforeMethod
 	public void beforeTest() throws Exception {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
@@ -44,11 +42,12 @@ public class TestHiveDriver {
 		System.out.println("Driver created");
 	}
 	
-	@AfterTest
+	@AfterMethod
 	public void afterTest() throws Exception {
 		driver.close();
 	}
-	
+
+
 	private void createTestTable() throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String dropTable = "DROP TABLE IF EXISTS " + TBL;
