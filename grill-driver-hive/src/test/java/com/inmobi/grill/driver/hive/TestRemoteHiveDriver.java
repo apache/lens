@@ -49,6 +49,5 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf.set("hive.server2.thrift.bind.host", HS2_HOST);
     conf.setInt("hive.server2.thrift.port", HS2_PORT);
     driver = new HiveDriver(conf);
-    driver = new HiveDriver(conf);
   }
 }

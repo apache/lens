@@ -352,7 +352,8 @@ public class HiveDriver implements GrillDriver {
 		try {
 			if (session == null) {
 				try {
-					session = getClient().openSession(getUserName(), getPassword());
+          String userName = conf.getUser();
+					session = getClient().openSession(userName, "");
 				} catch (Exception e) {
 					throw new GrillException(e);
 				}
@@ -362,13 +363,5 @@ public class HiveDriver implements GrillDriver {
 		}
 		return session;
 	}
-	
-	private String getUserName() {
-		return conf.get(GRILL_USER_NAME_KEY);
-	}
-	
-	private String getPassword() {
-		return conf.get(GRILL_PASSWORD_KEY);
-	}
-	
+
 }
