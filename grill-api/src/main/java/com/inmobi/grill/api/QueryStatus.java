@@ -11,10 +11,10 @@ public class QueryStatus {
     UNKNOWN
   }
   
-  private final float progress;
-  private final String statusMessage;
-  private final Status status;
-  private boolean hasResultSet = false;
+	private final float progress;
+	private final String statusMessage;
+	private final Status status;
+	private boolean hasResultSet = false;
 
   public QueryStatus(float progress, Status status, String statusMessage,
       boolean hasResultSet) {
@@ -23,7 +23,7 @@ public class QueryStatus {
     this.statusMessage = statusMessage;
     this.hasResultSet = hasResultSet;
   }
-
+  
   /**
    * Get status of the query
    * 
@@ -58,5 +58,13 @@ public class QueryStatus {
    */
   public boolean hasResultSet() {
     return hasResultSet;
+  }
+  
+  @Override
+  public String toString() {
+  	return new StringBuilder(status.toString()).append(':')
+  			.append(progress).append(':')
+  			.append(hasResultSet).append(':').
+  			append(statusMessage).toString();
   }
 }

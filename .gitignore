@@ -2,12 +2,16 @@
 *.class
 *\.project
 *\.classpath
+*\.idea
 */\.settings/*
 
 */target/*
+*/test-output/*
 ## generic files to ignore
 *~
 *.lock
 *.DS_Store
 *.swp
 *.out
+*.iml
+*.log

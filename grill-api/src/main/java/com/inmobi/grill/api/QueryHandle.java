@@ -42,4 +42,9 @@ public class QueryHandle {
     }
     return true;
   }
+  
+  @Override
+  public String toString() {
+  	return handleId.toString();
+  }
 }

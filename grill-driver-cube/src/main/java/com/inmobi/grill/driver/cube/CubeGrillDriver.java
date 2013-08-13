@@ -130,11 +130,6 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public List<String> getSupportedStorages() {
-    return null;
-  }
-
-  @Override
   public QueryPlan explain(String query, Configuration conf) throws GrillException {
     Map<GrillDriver, String> driverQueries = 
         new HashMap<GrillDriver, String>();
@@ -157,4 +152,14 @@ public class CubeGrillDriver implements GrillDriver {
   public boolean cancelQuery(QueryHandle handle) throws GrillException {
     return selectedDrivers.get(handle).cancelQuery(handle);
   }
+
+	@Override
+	public Configuration getConf() {
+		return conf;
+	}
+
+	@Override
+	public void close() throws GrillException {
+		
+	}
 }

@@ -14,4 +14,8 @@ public class GrillException extends Exception {
   public GrillException() {
     super();
   }
+  
+  public GrillException(Throwable th) {
+  	super(th);
+  }
 }

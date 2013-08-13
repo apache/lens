@@ -111,11 +111,6 @@ public class ImpalaDriver implements GrillDriver {
   }
 
   @Override
-  public List<String> getSupportedStorages() {
-    return storages;
-  }
-
-  @Override
   public com.inmobi.grill.api.QueryHandle executeAsync(
       String breezeQueryContext, Configuration conf) {
     // TODO Auto-generated method stub
@@ -139,5 +134,17 @@ public class ImpalaDriver implements GrillDriver {
     // TODO Auto-generated method stub
     return false;
   }
+
+	@Override
+	public Configuration getConf() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void close() throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

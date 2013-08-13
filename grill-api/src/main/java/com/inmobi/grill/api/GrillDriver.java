@@ -1,6 +1,5 @@
 package com.inmobi.grill.api;
 
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -9,11 +8,10 @@ import com.inmobi.grill.exception.GrillException;
 public interface GrillDriver {
 
   /**
-   * Get the supported storage names for this driver
+   * Get driver configuration
    * 
-   * @return List of storage names
    */
-  public List<String> getSupportedStorages();
+  public Configuration getConf();
 
   /** 
    * Configure driver with {@link Configuration} passed
@@ -87,4 +85,10 @@ public interface GrillDriver {
    * @return true if cancel was successful, false otherwise
    */
   public boolean cancelQuery(QueryHandle handle) throws GrillException;
+  
+  /**
+   * Close the driver, releasing all resouces used up by the driver
+   * @throws GrillException
+   */
+  public void close() throws GrillException;
 }
