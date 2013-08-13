@@ -1,6 +1,7 @@
 package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -127,7 +128,7 @@ public class TestDDL {
   }
 
   @Test
-  public void testPartitions() throws HiveException {
+  public void testPartitions() throws HiveException, IOException, ParseException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
@@ -135,7 +136,7 @@ public class TestDDL {
     PopulatePartitions pp = new PopulatePartitions(conf);
     pp.populateCubeParts("request", before, now,
         UpdatePeriod.DAILY, new Path("file:////tmp/hive/warehouse/parts"),
-        new SimpleDateFormat(UpdatePeriod.DAILY.format()), "all");
+        new SimpleDateFormat(UpdatePeriod.DAILY.format()), "all", false);
 
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
@@ -177,7 +178,7 @@ public class TestDDL {
   }
 
   @Test
-  public void testHourlyPartitions() throws HiveException {
+  public void testHourlyPartitions() throws HiveException, IOException, ParseException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.HOUR_OF_DAY, -2);
@@ -185,7 +186,7 @@ public class TestDDL {
     PopulatePartitions pp = new PopulatePartitions(conf);
     pp.populateCubeParts("request", before, now,
         UpdatePeriod.HOURLY, new Path("file:////tmp/hive/warehouse/parts"),
-        new SimpleDateFormat(UpdatePeriod.HOURLY.format()), "all");
+        new SimpleDateFormat(UpdatePeriod.HOURLY.format()), "all", false);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
         "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));

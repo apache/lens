@@ -9,8 +9,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -21,7 +23,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
-import org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat;
+import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -57,7 +59,7 @@ public class PopulatePartitions {
       System.out.println("Adding partition at Path" + partPath);
       HDFSStorage storage = new HDFSStorage(CubeDDL.YODA_STORAGE,
           TextInputFormat.class.getCanonicalName(),
-          IgnoreKeyTextOutputFormat.class.getCanonicalName(),
+          HiveIgnoreKeyTextOutputFormat.class.getCanonicalName(),
           null, true, null, null, null);
       storage.setPartLocation(partPath);
       client.addPartition(dim, storage, partitionTimestamp);
@@ -66,11 +68,12 @@ public class PopulatePartitions {
 
   public void populateCubeParts(String cubeName, Date start, Date end,
       UpdatePeriod updatePeriod, Path basePath, SimpleDateFormat dateFormat,
-      String summaries)
-          throws HiveException {
+      String summaries, boolean checkExist)
+          throws HiveException, IOException, ParseException {
     final CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
 
     Cube cube = client.getCube(CubeDDL.CUBE_NAME_PFX + cubeName);
+    FileSystem fs = basePath.getFileSystem(conf);
 
     boolean populateOnlyRaw = false;
     boolean populateAll = false;
@@ -116,7 +119,7 @@ public class PopulatePartitions {
             CubeDDL.RAW_FACT_NAME))) {
           continue;
         }
-        for (Map.Entry<String, List<UpdatePeriod>> entry : 
+        for (Map.Entry<String, Set<UpdatePeriod>> entry : 
           fact.getUpdatePeriods().entrySet()) {
           if (!entry.getValue().contains(updatePeriod)) {
             continue;
@@ -129,16 +132,43 @@ public class PopulatePartitions {
             partPath = new Path(new Path(new Path(summariesPath, factPathName),
                 updatePeriod.name().toLowerCase()), dateFormat.format(dt));
           }
-          System.out.println("Adding partition at Path" + partPath);
-          HDFSStorage storage = new HDFSStorage(entry.getKey(),
-              RCFileInputFormat.class.getCanonicalName(),
-              RCFileOutputFormat.class.getCanonicalName(),
-              LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-              null);
-          storage.setPartLocation(partPath);
-          Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
-          partitionTimestamps.put(Storage.getDatePartitionKey(), dt);
-          client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
+          if (checkExist && !fs.exists(partPath)) {
+            System.out.println("Path" + partPath +" does not exist");
+            continue;
+          }
+          System.out.println("Adding partitions for Path" + partPath);
+          if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_STORAGE)) {
+            HDFSStorage storage = new HDFSStorage(entry.getKey(),
+                RCFileInputFormat.class.getCanonicalName(),
+                RCFileOutputFormat.class.getCanonicalName(),
+                LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
+                null);
+            storage.setPartLocation(partPath);
+            Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
+            partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
+            client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
+          } else if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
+            Date pt = dt;
+            FileStatus[] iStats = fs.listStatus(partPath);
+            for (FileStatus istat : iStats) {
+              Date it = dateFormat.parse(istat.getPath().getName());
+              FileStatus[] eStats = fs.listStatus(istat.getPath());
+              for (FileStatus estat : eStats) {
+                Date et = dateFormat.parse(estat.getPath().getName());
+                HDFSStorage storage = new HDFSStorage(entry.getKey(),
+                    RCFileInputFormat.class.getCanonicalName(),
+                    RCFileOutputFormat.class.getCanonicalName(),
+                    LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
+                    null);
+                storage.setPartLocation(estat.getPath());
+                Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
+                partitionTimestamps.put(CubeDDL.PART_KEY_PT, pt);
+                partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
+                partitionTimestamps.put(CubeDDL.PART_KEY_ET, et);
+                client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
+              }
+            }
+          }
         }
       }
       cal.add(updatePeriod.calendarField(), 1);
@@ -179,7 +209,7 @@ public class PopulatePartitions {
       Date end = dateFormat.parse(endPos);
 
       pp.populateCubeParts(cubeName, start, end, p, new Path(basePath),
-          dateFormat, summaries);
+          dateFormat, summaries, true);
     }
   }
 }

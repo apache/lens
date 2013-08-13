@@ -20,7 +20,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.cube.metadata.TableReference;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
-import org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat;
+import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.mapred.TextInputFormat;
 
@@ -181,7 +181,7 @@ public class DimensionDDL {
     Set<Storage> storages =  new HashSet<Storage>();
     Storage storage = new HDFSStorage(CubeDDL.YODA_STORAGE,
         TextInputFormat.class.getCanonicalName(),
-        IgnoreKeyTextOutputFormat.class.getCanonicalName(),
+        HiveIgnoreKeyTextOutputFormat.class.getCanonicalName(),
         null, true, null, null, null);
     storages.add(storage);
     return storages;
