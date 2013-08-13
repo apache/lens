@@ -1,9 +1,8 @@
-package con.inmobi.grill.driver.hive;
+package com.inmobi.grill.driver.hive;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.auth.KerberosSaslHelper;
 import org.apache.hive.service.auth.PlainSaslHelper;
 import org.apache.hive.service.cli.thrift.TCLIService;
@@ -17,7 +16,6 @@ import org.apache.thrift.transport.TTransportException;
 import com.inmobi.grill.exception.GrillException;
 
 import javax.security.sasl.SaslException;
-import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -72,7 +70,7 @@ public class RemoteThriftConnection implements ThriftConnection {
       try {
         if (sessConf.containsKey(HIVE_AUTH_PRINCIPAL)) {
           transport = KerberosSaslHelper.getKerberosTransport(
-            sessConf.get(HIVE_AUTH_PRINCIPAL), host, transport);
+            sessConf.get(HIVE_AUTH_PRINCIPAL), host, transport, sessConf);
         } else {
           String userName = sessConf.get(HIVE_AUTH_USER);
           if ((userName == null) || userName.isEmpty()) {

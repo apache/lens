@@ -6,7 +6,6 @@ import java.io.*;
 import java.util.*;
 
 import com.inmobi.grill.api.*;
-import con.inmobi.grill.driver.hive.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;

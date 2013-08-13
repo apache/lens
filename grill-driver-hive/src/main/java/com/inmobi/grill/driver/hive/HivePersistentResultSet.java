@@ -1,4 +1,4 @@
-package con.inmobi.grill.driver.hive;
+package com.inmobi.grill.driver.hive;
 
 import java.util.ArrayList;
 import java.util.List;
