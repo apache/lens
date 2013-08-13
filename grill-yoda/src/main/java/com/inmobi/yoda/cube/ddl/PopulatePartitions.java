@@ -165,6 +165,7 @@ public class PopulatePartitions {
                 partitionTimestamps.put(CubeDDL.PART_KEY_PT, pt);
                 partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
                 partitionTimestamps.put(CubeDDL.PART_KEY_ET, et);
+                System.out.println("Adding partitions for Path" + estat.getPath());
                 client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
               }
             }
