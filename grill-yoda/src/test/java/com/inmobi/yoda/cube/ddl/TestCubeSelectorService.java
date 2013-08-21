@@ -3,6 +3,7 @@ package com.inmobi.yoda.cube.ddl;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -10,10 +11,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.testng.Assert.*;
 
@@ -48,28 +46,24 @@ public class TestCubeSelectorService {
 
     CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
 
-    Map<Cube, List<String>> selected = selector.selectCubes(Arrays.asList(columns));
+    Map<List<String>, List<AbstractCubeTable>> selected = selector.selectCubes(Arrays.asList(columns));
 
     assertNotNull(selected);
-    assertEquals(selected.size(), 3);
+    assertEquals(selected.size(), 2);
 
     Cube click = metastore.getCube("cube_click");
     Cube dlUnMatch = metastore.getCube("cube_downloadunmatch");
     Cube dlMatch = metastore.getCube("cube_downloadmatch");
 
-    assertEquals(selected.keySet(), new HashSet<Cube>(Arrays.asList(click, dlMatch, dlUnMatch)));
-    assertEquals(selected.get(click), Arrays.asList("bl_billedcount"));
-    assertEquals(selected.get(dlUnMatch), Arrays.asList("dl_joined_count"));
-    assertEquals(selected.get(dlMatch), Arrays.asList("dl_joined_count"));
-  }
+    System.out.println("## result " + selected.toString());
+    List<AbstractCubeTable> clickList = selected.get(new ArrayList<String>(Arrays.asList("bl_billedcount")));
+    assertEquals(clickList.size(), 1, "Size mistmatch:" + clickList.toString());
+    assertEquals(clickList.get(0), click);
 
-  @Test
-  public void testMinCostSelect() throws Exception {
-    CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
-    Map<Cube, List<String>> selected = selector.selectCubes(Arrays.asList("rq_pgreq"));
-    System.out.println("## " + selected.toString());
-    assertNotNull(selected);
-    assertEquals(selected.size(), 1);
+    List<AbstractCubeTable> dlList = selected.get(new ArrayList<String>(Arrays.asList("dl_joined_count")));
+    assertEquals(dlList.size(), 2);
+    assertEquals(new HashSet<AbstractCubeTable>(dlList),
+      new HashSet<AbstractCubeTable>(Arrays.asList(dlUnMatch, dlMatch)));
   }
 
 }

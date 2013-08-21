@@ -1,7 +1,7 @@
 package com.inmobi.yoda.cube.ddl;
 
 
-import org.apache.hadoop.hive.ql.cube.metadata.Cube;
+import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
 
 import java.util.Collection;
 import java.util.List;
@@ -17,5 +17,5 @@ public interface CubeSelectorService {
    * @param columns
    * @return Map of Cube to the subset of columns contained in that cube
    */
-  public Map<Cube, List<String>> selectCubes(Collection<String> columns);
+  public Map<List<String>, List<AbstractCubeTable>> selectCubes(Collection<String> columns);
 }

@@ -3,19 +3,80 @@ package com.inmobi.yoda.cube.ddl;
 import com.inmobi.grill.exception.GrillException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.cube.metadata.Cube;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 import java.util.*;
 
 public class CubeSelectorServiceImpl implements CubeSelectorService {
-  private List<Cube> allCubes;
+  private List<Table> allTables;
+
+  private class Table {
+    String path;
+    int cost;
+    AbstractCubeTable table;
+    Set<String> columns;
+
+    @Override
+    public int hashCode() {
+      return table.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (o instanceof Table) {
+        return table.equals(((Table)o).table);
+      } else {
+        return false;
+      }
+    }
+
+    @Override
+    public String toString() {
+      return table.getName() + "|" + path + "|" + cost;
+    }
+  }
 
   public CubeSelectorServiceImpl(Configuration conf) throws GrillException {
     try {
+      allTables = new ArrayList<Table>();
       CubeMetastoreClient metastore = CubeMetastoreClient.getInstance(new HiveConf(conf, CubeSelectorService.class));
-      allCubes = metastore.getAllCubes();
+
+      for (Cube cube : metastore.getAllCubes()) {
+        Table tab = new Table();
+        tab.table = cube;
+        String costKey = "cube." + cube.getName().substring("cube_".length()) + ".cost";
+        String costStr = cube.getProperties().get(costKey);
+        tab.cost = costStr == null ? Integer.MAX_VALUE : Integer.valueOf(costStr);
+
+        String pathKey = "cube." + cube.getName().substring("cube_".length()) + ".path";
+        String pathStr = cube.getProperties().get(pathKey);
+        tab.path = pathStr;
+
+        tab.columns = new HashSet<String>();
+
+        for (CubeMeasure m : cube.getMeasures()) {
+          tab.columns.add(m.getName());
+        }
+
+        for (CubeDimension d : cube.getDimensions()) {
+          tab.columns.add(d.getName());
+        }
+        allTables.add(tab);
+      }
+
+      for (CubeDimensionTable dim : metastore.getAllDimensionTables()) {
+        Table tab = new Table();
+        tab.table = dim;
+        tab.columns = new HashSet<String>();
+
+        for (FieldSchema f : dim.getColumns()) {
+          tab.columns.add(f.getName());
+        }
+        allTables.add(tab);
+      }
+
     } catch (HiveException e) {
       throw new GrillException(e);
     }
@@ -23,17 +84,17 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
 
   @Override
-  public Map<Cube, List<String>> selectCubes(Collection<String> columns) {
-    Map<Cube, List<String>> selection = new HashMap<Cube, List<String>>();
+  public Map<List<String>, List<AbstractCubeTable>> selectCubes(Collection<String> columns) {
+    Map<Table, List<String>> selection = new HashMap<Table, List<String>>();
 
     // find all matching cubes
-    for (Cube cube : allCubes) {
+    for (Table table : allTables) {
       for (String column : columns) {
-        if (cube.getMeasureByName(column) != null || cube.getDimensionByName(column) != null) {
-          List<String> subset = selection.get(cube);
+        if (table.columns.contains(column)) {
+          List<String> subset = selection.get(table);
           if (subset == null) {
             subset = new ArrayList<String>();
-            selection.put(cube, subset);
+            selection.put(table, subset);
           }
           subset.add(column);
         }
@@ -41,52 +102,59 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
     }
 
     // Group cubes by column subset and paths
-    Map<String, List<Cube>> cubeGroup = new HashMap<String,  List<Cube>>();
-    for (Map.Entry<Cube, List<String>> entry : selection.entrySet()) {
-      Cube cube = entry.getKey();
+    Map<String, List<Table>> cubeGroup = new HashMap<String,  List<Table>>();
+    for (Map.Entry<Table, List<String>> entry : selection.entrySet()) {
+      Table table = entry.getKey();
       List<String> subset = entry.getValue();
 
       StringBuilder buf = new StringBuilder();
+      if (table.table instanceof Cube) {
+        buf.append("C");
+      } else if (table.table instanceof CubeDimensionTable) {
+        buf.append("D");
+      }
       for (String column : subset) {
         buf.append(column);
       }
 
-      String groupKey =
-        buf.append(cube.getProperties().get("cube." + cube.getName().replace("cube_", "") + ".path")).toString();
-
-      List<Cube> group = cubeGroup.get(groupKey);
+      String groupKey = buf.append(table.path == null? "" : table.path).toString();
+      List<Table> group = cubeGroup.get(groupKey);
       if (group == null) {
-        group = new ArrayList<Cube>();
+        group = new ArrayList<Table>();
         cubeGroup.put(groupKey, group);
       }
-      group.add(cube);
+      group.add(table);
     }
 
     // In each group retain only the min cost cube
-    for (List<Cube> group : cubeGroup.values()) {
-      Cube minCostCube = group.get(0);
-      String costKey = "cube." + minCostCube.getName().replace("cube_", "") + ".cost";
-      String costStr = minCostCube.getProperties().get(costKey);
-      int minCost = costStr == null ? Integer.MIN_VALUE : Integer.valueOf(costStr);
+    for (List<Table> group : cubeGroup.values()) {
+      Table minTable = group.get(0);
       for (int i = 1; i < group.size(); i++) {
-        Cube cube = group.get(i);
-        costKey = "cube." + cube.getName().replace("cube_", "") + ".cost";
-        costStr = cube.getProperties().get(costKey);
-        int cubeCost = costStr == null ? Integer.MIN_VALUE : Integer.valueOf(costStr);
-        if (cubeCost < minCost) {
-          minCostCube = cube;
-          minCost = cubeCost;
+        Table table = group.get(i);
+        if (table.cost < minTable.cost) {
+          minTable = table;
         }
       }
 
       // Remove cubes with higher costs and same paths from selection
-      for (Cube cube : group) {
-        if (cube != minCostCube) {
-          selection.remove(cube);
+      for (Table table : group) {
+        if (minTable != table) {
+          selection.remove(table);
         }
       }
     }
 
-    return selection;
+    // Invert the map
+    Map<List<String>, List<AbstractCubeTable>> result = new HashMap<List<String>, List<AbstractCubeTable>>();
+    for (Map.Entry<Table, List<String>> entry : selection.entrySet()) {
+      List<String> cols = entry.getValue();
+      List<AbstractCubeTable> tabs = result.get(cols);
+      if (tabs == null) {
+        tabs = new ArrayList<AbstractCubeTable>();
+        result.put(cols, tabs);
+      }
+      tabs.add(entry.getKey().table);
+    }
+    return result;
   }
 }
