@@ -92,7 +92,7 @@ public class TestDDL {
     List<String> cubesWithPISStorage = Arrays.asList("cube_request", "cube_click",
         "cube_impression", "cube_rrcube");
 
-    Assert.assertEquals(cc.getAllCubeNames().size(), 14);
+    Assert.assertEquals(15, cc.getAllCubeNames().size());
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
