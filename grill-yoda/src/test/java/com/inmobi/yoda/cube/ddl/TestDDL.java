@@ -46,6 +46,7 @@ public class TestDDL {
     client.createDatabase(database);
     client.setCurrentDatabase(TestDDL.class.getSimpleName());    
     dimDDL = new DimensionDDL(conf);
+    System.out.println("##setup testDDL");
   }
 
   @AfterTest
@@ -53,6 +54,7 @@ public class TestDDL {
     Hive client = Hive.get(conf);
     client.dropDatabase(TestDDL.class.getSimpleName(), true, true,
         true);
+    System.out.println("##teardown testDDL");
   }
 
   @Test
@@ -81,6 +83,7 @@ public class TestDDL {
     CubeDDL cubeDDL = new CubeDDL(dimDDL, conf);
     cubeDDL.createAllCubes();
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    cc.setCurrentDatabase(TestDDL.class.getSimpleName());
     List<String> cubes = cc.getAllCubeNames();
     // assert for some random cube table names
     Assert.assertTrue(cubes.contains("cube_request"));

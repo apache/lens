@@ -18,6 +18,7 @@ import java.util.*;
 import static org.testng.Assert.*;
 
 public class TestCubeSelectorService {
+  public static final String TEST_DB = "test_cube_selector_db";
   private DimensionDDL dimDDL;
   private HiveConf conf;
   private CubeMetastoreClient metastore;
@@ -53,20 +54,25 @@ public class TestCubeSelectorService {
     conf = new HiveConf(TestCubeSelectorService.class);
     Hive client = Hive.get(conf);
     Database database = new Database();
-    database.setName(TestDDL.class.getSimpleName());
+    database.setName(TEST_DB);
     client.createDatabase(database);
-    client.setCurrentDatabase(TestDDL.class.getSimpleName());
+
+    client.setCurrentDatabase(TEST_DB);
+    metastore = CubeMetastoreClient.getInstance(conf);
+    metastore.setCurrentDatabase(TEST_DB);
+
     dimDDL = new DimensionDDL(conf);
     CubeDDL cubeDDL = new CubeDDL(dimDDL, conf);
     cubeDDL.createAllCubes();
-    metastore = CubeMetastoreClient.getInstance(conf);
     createTestDim(metastore);
+    System.out.println("##setup test cubeselector service");
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    Hive.get(conf).dropDatabase(TestDDL.class.getSimpleName(), true, true,
+    Hive.get(conf).dropDatabase(TEST_DB, true, true,
       true);
+    System.out.println("##teardown cubeselector service");
   }
 
   @Test
