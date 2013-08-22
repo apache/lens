@@ -84,7 +84,7 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
 
   @Override
-  public Map<List<String>, List<AbstractCubeTable>> selectCubes(Collection<String> columns) {
+  public Map<List<String>, List<AbstractCubeTable>> select(Collection<String> columns) {
     Map<Table, List<String>> selection = new HashMap<Table, List<String>>();
 
     // find all matching cubes
