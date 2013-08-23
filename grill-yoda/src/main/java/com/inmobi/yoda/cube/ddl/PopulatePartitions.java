@@ -45,18 +45,18 @@ public class PopulatePartitions {
           throws HiveException, IOException {
     final CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
     List<CubeDimensionTable> dims = client.getAllDimensionTables();
-    
+
     // basePath = /user/yoda/warehouse/metadata/
     for (CubeDimensionTable dim : dims) {
       Path partPath = new Path(new Path(basePath, dim.getName()),
-            "rq_dt=" + pathDateFormat.format(partitionTimestamp));
+          "rq_dt=" + pathDateFormat.format(partitionTimestamp));
       if (checkExist) {
         FileSystem fs = partPath.getFileSystem(conf);
         if (!fs.exists(partPath)) {
           System.out.println("Path" + partPath +" does not exist");          
           continue;
         }
-        
+
       }
       System.out.println("Adding partition at Path" + partPath);
       HDFSStorage storage = new HDFSStorage(CubeDDL.YODA_STORAGE,
@@ -76,6 +76,12 @@ public class PopulatePartitions {
 
     Cube cube = client.getCube(CubeDDL.CUBE_NAME_PFX + cubeName);
     FileSystem fs = basePath.getFileSystem(conf);
+    Path piePath = new Path(cube.getProperties().get("cube." + cubeName + ".summaries.pie.path"));
+    boolean pieStorage = false;
+    if (new Path(basePath.toUri().getPath()).equals(piePath)) {
+      System.out.println("Its a PIE storage!");
+      pieStorage = true;
+    }
 
     boolean populateOnlyRaw = false;
     boolean populateAll = false;
@@ -138,57 +144,61 @@ public class PopulatePartitions {
             System.out.println("Path" + partPath +" does not exist");
             continue;
           }
-          System.out.println("Adding partitions for Path" + partPath);
-          if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_STORAGE)) {
-            HDFSStorage storage = new HDFSStorage(entry.getKey(),
-                RCFileInputFormat.class.getCanonicalName(),
-                RCFileOutputFormat.class.getCanonicalName(),
-                LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-                null);
-            storage.setPartLocation(partPath);
-            Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
-            partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
-            client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
-          } else if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
-            Date pt = dt;
-            FileStatus[] iStats = fs.listStatus(partPath, filter);
-            for (FileStatus istat : iStats) {
-              Date it = null;
-              try {
-                it = dateFormat.parse(istat.getPath().getName());
-              } catch (ParseException e) {
-                // ignore
-              }
-              FileStatus[] eStats = fs.listStatus(istat.getPath(), filter);
-              for (FileStatus estat : eStats) {
-                Date et = null;
+          if (!pieStorage) {
+            if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_STORAGE)) {
+              HDFSStorage storage = new HDFSStorage(entry.getKey(),
+                  RCFileInputFormat.class.getCanonicalName(),
+                  RCFileOutputFormat.class.getCanonicalName(),
+                  LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
+                  null);
+              storage.setPartLocation(partPath);
+              Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
+              partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
+              System.out.println("Adding partitions for Path" + partPath);
+              client.addPartition(fact, storage, updatePeriod, partitionTimestamps);
+            }
+          } else {
+            if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
+              Date pt = dt;
+              FileStatus[] iStats = fs.listStatus(partPath, filter);
+              for (FileStatus istat : iStats) {
+                Date it = null;
                 try {
-                  et = dateFormat.parse(estat.getPath().getName());
+                  it = dateFormat.parse(istat.getPath().getName());
                 } catch (ParseException e) {
-                  //ignore
+                  // ignore
                 }
-                HDFSStorage storage = new HDFSStorage(entry.getKey(),
-                    RCFileInputFormat.class.getCanonicalName(),
-                    RCFileOutputFormat.class.getCanonicalName(),
-                    LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-                    null);
-                storage.setPartLocation(estat.getPath());
-                Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
-                Map<String, String> partSpec = new HashMap<String, String>();
-                partitionTimestamps.put(CubeDDL.PART_KEY_PT, pt);
-                if (it != null) {
-                  partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
-                } else {
-                  partSpec.put(CubeDDL.PART_KEY_IT, istat.getPath().getName()); 
+                FileStatus[] eStats = fs.listStatus(istat.getPath(), filter);
+                for (FileStatus estat : eStats) {
+                  Date et = null;
+                  try {
+                    et = dateFormat.parse(estat.getPath().getName());
+                  } catch (ParseException e) {
+                    //ignore
+                  }
+                  HDFSStorage storage = new HDFSStorage(entry.getKey(),
+                      RCFileInputFormat.class.getCanonicalName(),
+                      RCFileOutputFormat.class.getCanonicalName(),
+                      LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
+                      null);
+                  storage.setPartLocation(estat.getPath());
+                  Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
+                  Map<String, String> partSpec = new HashMap<String, String>();
+                  partitionTimestamps.put(CubeDDL.PART_KEY_PT, pt);
+                  if (it != null) {
+                    partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
+                  } else {
+                    partSpec.put(CubeDDL.PART_KEY_IT, istat.getPath().getName()); 
+                  }
+
+                  if (et != null) {
+                    partitionTimestamps.put(CubeDDL.PART_KEY_ET, et);
+                  } else {
+                    partSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
+                  }
+                  System.out.println("Adding partitions for Path" + estat.getPath());
+                  client.addPartition(fact, storage, updatePeriod, partitionTimestamps, partSpec);
                 }
-                
-                if (et != null) {
-                  partitionTimestamps.put(CubeDDL.PART_KEY_ET, et);
-                } else {
-                  partSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
-                }
-                System.out.println("Adding partitions for Path" + estat.getPath());
-                client.addPartition(fact, storage, updatePeriod, partitionTimestamps, partSpec);
               }
             }
           }
