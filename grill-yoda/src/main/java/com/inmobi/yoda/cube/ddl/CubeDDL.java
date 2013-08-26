@@ -48,6 +48,7 @@ public class CubeDDL {
   public static final String PART_KEY_IT = "it";
   public static final String PART_KEY_ET = "et";
   public static final String PART_KEY_PT = "pt";
+  public static final String PART_KEY_COLO = "colo";
 
   public static String cubeStorageSchema = "network_object.proto";
   private Map<String, Cube> cubes = new HashMap<String, Cube>();
@@ -250,9 +251,14 @@ public class CubeDDL {
           RCFileOutputFormat.class.getCanonicalName(),
           LazyNOBColumnarSerde.class.getCanonicalName(),
           true, null, null, null);
-      piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
-      piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
-      piestorage.addToPartCols(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+      if (!summary.equals(RAW_FACT_NAME)) {
+        piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
+        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piestorage.addToPartCols(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+      } else {
+        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piestorage.addToPartCols(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
+      }
 
       storageAggregatePeriods.put(piestorage, updatePeriods);
     }
