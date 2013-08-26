@@ -19,9 +19,4 @@
   <description>JDBC connect string for a JDBC metastore</description>
 </property>
 
-<property>
-    <name>grill.yoda.udf.name.md5</name>
-    <value>com.inmobi.dw.yoda.udfs.generic.MD5</value>
-</property>
-
 </configuration>

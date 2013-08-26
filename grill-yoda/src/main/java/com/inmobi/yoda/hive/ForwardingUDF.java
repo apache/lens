@@ -6,53 +6,27 @@ import com.singularsys.jep.functions.NaryFunction;
 import com.singularsys.jep.functions.UnaryFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.Description;
-import org.apache.hadoop.hive.ql.exec.MapredContext;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBridge;
-import org.apache.hadoop.mapred.JobConf;
 
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 @Description(
   name = "yoda_udf",
   value = "_FUNC_(str, ...) - Call Yoda UDF")
 public class ForwardingUDF extends UDF {
   public static final Log LOG = LogFactory.getLog(ForwardingUDF.class);
-  static Map<String, Class<?>> udfToClass;
-  static boolean isMappingLoaded;
-  static HashMap<String, Object> udfObjects;
-  static boolean cacheUdfObjects;
+  HashMap<String, Object> udfObjects;
 
-  public static Map<String, Class<?>> loadUdfToClassMapping(Configuration conf)
-    throws IOException, ClassNotFoundException {
-    Map<String, Class<?>> udfToClassMap = new HashMap<String, Class<?>>();
-    Iterator<Map.Entry<String, String>> confEntries = conf.iterator();
-    while (confEntries.hasNext()) {
-      Map.Entry<String, String> entry = confEntries.next();
-      String keyStr = entry.getKey();
-      if (keyStr.startsWith("grill.yoda.udf.name.")) {
-        LOG.info("##@@ " + keyStr + "=" + entry.getValue());
-        udfToClassMap.put(keyStr.substring("grill.yoda.udf.name.".length()),
-          Class.forName(entry.getValue()));
-      }
-    }
-    return udfToClassMap;
-  }
-
-  public static synchronized Object getCachedInstance(String udfName) throws HiveException {
+  public synchronized Object getCachedInstance(String udfName) throws HiveException {
     Object udf = udfObjects.get(udfName);
     if (udf == null)  {
-      Class<?> udfClass = udfToClass.get(udfName);
-      if (udfClass == null) {
-        throw new HiveException("Could not find UDF class for name " + udfName);
+      Class<?> udfClass = null;
+      try {
+        udfClass = Class.forName(udfName);
+      } catch (ClassNotFoundException e) {
+        throw new HiveException(e);
       }
 
       try {
@@ -66,24 +40,8 @@ public class ForwardingUDF extends UDF {
     return udf;
   }
 
-  static void loadMapping(Configuration conf) {
-    if (!isMappingLoaded) {
-      LOG.info("## Loading mapping");
-      try {
-        udfToClass = loadUdfToClassMapping(conf);
-        isMappingLoaded = true;
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      } catch (ClassNotFoundException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  }
-
-
-
   public ForwardingUDF() {
-    loadMapping(new HiveConf());
+    udfObjects = new HashMap<String, Object>();
   }
 
 
@@ -92,22 +50,7 @@ public class ForwardingUDF extends UDF {
       throw new HiveException("UDF name mising");
     }
 
-    Class<?> udfClass = udfToClass.get(yodaUdfName.toLowerCase());
-    if (udfClass == null) {
-      throw new HiveException("Could not find UDF class for name " + yodaUdfName + " registry="
-        + udfToClass.toString());
-    }
-
-    Object udf;
-    if (cacheUdfObjects) {
-      udf = getCachedInstance(yodaUdfName);
-    } else {
-      try {
-        udf = udfClass.newInstance();
-      } catch (Exception e) {
-        throw new HiveException("Could not instantiate UDF " + yodaUdfName + " class: " + udfClass.getName(), e);
-      }
-    }
+    Object udf = getCachedInstance(yodaUdfName);
 
     try {
       Object result;
@@ -122,7 +65,7 @@ public class ForwardingUDF extends UDF {
       }
       return result == null ? null : result.toString();
     } catch (EvaluationException e) {
-      throw new HiveException("Error evaluating UDF " + yodaUdfName + " class: " + udfClass.getName(), e);
+      throw new HiveException("Error evaluating UDF " + yodaUdfName, e);
     }
   }
 
