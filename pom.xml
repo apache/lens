@@ -192,7 +192,19 @@
           </exclusion>
         </exclusions>
       </dependency>
+       <dependency>
+           <groupId>com.inmobi.dw.yoda</groupId>
+           <artifactId>yoda-udfs</artifactId>
+           <version>${yoda.version}</version>
+           <exclusions>
+               <exclusion>
+                   <groupId>org.apache.hadoop.hive</groupId>
+                   <artifactId>hive-exec</artifactId>
+               </exclusion>
+           </exclusions>
+       </dependency>
     </dependencies>
+
  </dependencyManagement>
 
   <modules>

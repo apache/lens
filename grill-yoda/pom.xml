@@ -12,6 +12,10 @@
   <artifactId>grill-yoda</artifactId>
   <packaging>jar</packaging>
 
+  <properties>
+     <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
+  </properties>
+
   <build>
       <plugins>
           <plugin>
@@ -23,6 +27,39 @@
                   </suiteXmlFiles>
               </configuration>
           </plugin>
+
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <version>2.15</version>
+              <configuration>
+                  <systemPropertyVariables>
+                      <hadoop.bin.path>${pom.basedir}/testutils/hadoop</hadoop.bin.path>
+                  </systemPropertyVariables>
+                  <environmentVariables>
+                      <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
+                      <GRILL_YODA_CLASSES>${pom.basedir}/target/classes</GRILL_YODA_CLASSES>
+                  </environmentVariables>
+              </configuration>
+          </plugin>
+          <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <version>2.8</version>
+              <executions>
+                  <execution>
+                      <id>build-classpath</id>
+                      <phase>compile</phase>
+                      <goals>
+                          <goal>build-classpath</goal>
+                      </goals>
+                      <configuration>
+                          <outputFile>${mvn.classpath.file}</outputFile>
+                      </configuration>
+                  </execution>
+              </executions>
+          </plugin>
+
       </plugins>
   </build>
 
@@ -39,7 +76,13 @@
     <dependency>
       <groupId>com.inmobi.dw.yoda</groupId>
       <artifactId>yoda-commons</artifactId>
-    </dependency> 
+    </dependency>
+
+      <dependency>
+          <groupId>com.inmobi.dw.yoda</groupId>
+          <artifactId>yoda-udfs</artifactId>
+      </dependency>
+
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-common</artifactId>

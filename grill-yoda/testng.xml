@@ -12,4 +12,10 @@
             <class name="com.inmobi.yoda.cube.ddl.TestCubeSelectorService"/>
         </classes>
     </test>
+
+    <test name="TestForwardingUDF">
+        <classes>
+            <class name="com.inmobi.yoda.hive.TestForwardingUDF"/>
+        </classes>
+    </test>
 </suite>
