@@ -75,7 +75,7 @@ public class TestForwardingUDF {
       confOverlay);
     //yoda_udf('md5', ID)
     OperationHandle opHandle = hiveClient.executeStatement(session,
-      "INSERT OVERWRITE LOCAL DIRECTORY 'target/udfTestOutput' SELECT yoda_udf('md5', ID) " + TEST_TBL,
+      "INSERT OVERWRITE LOCAL DIRECTORY 'target/udfTestOutput' SELECT yoda_udf('md5', ID) FROM " + TEST_TBL,
       confOverlay);
     File outputDir = new File("target/udfTestOutput");
     List<String> lines = new ArrayList<String>();
