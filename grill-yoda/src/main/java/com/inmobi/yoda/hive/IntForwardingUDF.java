@@ -16,6 +16,7 @@ import java.util.HashMap;
   name = "int_yoda_udf",
   value = "_FUNC_(str, ...) - Call Yoda UDF that returns value of Integer type")
 public class IntForwardingUDF extends UDF {
+
   public static final Log LOG = LogFactory.getLog(StringForwardingUDF.class);
   HashMap<String, Object> udfObjects;
 
