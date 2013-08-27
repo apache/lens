@@ -6,6 +6,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public interface CubeSelectorService {
   /**
@@ -17,5 +18,5 @@ public interface CubeSelectorService {
    * @param columns
    * @return Map of Cube to the subset of columns contained in that cube
    */
-  public Map<List<String>, List<AbstractCubeTable>> select(Collection<String> columns);
+  public Map<Set<String>, Set<AbstractCubeTable>> select(Collection<String> columns);
 }

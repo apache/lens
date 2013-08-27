@@ -84,16 +84,16 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
 
   @Override
-  public Map<List<String>, List<AbstractCubeTable>> select(Collection<String> columns) {
-    Map<Table, List<String>> selection = new HashMap<Table, List<String>>();
+  public Map<Set<String>, Set<AbstractCubeTable>> select(Collection<String> columns) {
+    Map<Table, Set<String>> selection = new HashMap<Table, Set<String>>();
 
     // find all matching cubes
     for (Table table : allTables) {
       for (String column : columns) {
         if (table.columns.contains(column)) {
-          List<String> subset = selection.get(table);
+          Set<String> subset = selection.get(table);
           if (subset == null) {
-            subset = new ArrayList<String>();
+            subset = new HashSet<String>();
             selection.put(table, subset);
           }
           subset.add(column);
@@ -103,9 +103,9 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
     // Group cubes by column subset and paths
     Map<String, List<Table>> cubeGroup = new HashMap<String,  List<Table>>();
-    for (Map.Entry<Table, List<String>> entry : selection.entrySet()) {
+    for (Map.Entry<Table, Set<String>> entry : selection.entrySet()) {
       Table table = entry.getKey();
-      List<String> subset = entry.getValue();
+      Set<String> subset = entry.getValue();
 
       StringBuilder buf = new StringBuilder();
       if (table.table instanceof Cube) {
@@ -145,12 +145,12 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
     }
 
     // Invert the map
-    Map<List<String>, List<AbstractCubeTable>> result = new HashMap<List<String>, List<AbstractCubeTable>>();
-    for (Map.Entry<Table, List<String>> entry : selection.entrySet()) {
-      List<String> cols = entry.getValue();
-      List<AbstractCubeTable> tabs = result.get(cols);
+    Map<Set<String>, Set<AbstractCubeTable>> result = new HashMap<Set<String>, Set<AbstractCubeTable>>();
+    for (Map.Entry<Table, Set<String>> entry : selection.entrySet()) {
+      Set<String> cols = entry.getValue();
+      Set<AbstractCubeTable> tabs = result.get(cols);
       if (tabs == null) {
-        tabs = new ArrayList<AbstractCubeTable>();
+        tabs = new HashSet<AbstractCubeTable>();
         result.put(cols, tabs);
       }
       tabs.add(entry.getKey().table);

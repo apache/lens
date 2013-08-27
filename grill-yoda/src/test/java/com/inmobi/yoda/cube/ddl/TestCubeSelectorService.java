@@ -81,7 +81,7 @@ public class TestCubeSelectorService {
 
     CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
 
-    Map<List<String>, List<AbstractCubeTable>> selected = selector.select(Arrays.asList(columns));
+    Map<Set<String>, Set<AbstractCubeTable>> selected = selector.select(Arrays.asList(columns));
 
     assertNotNull(selected);
     assertEquals(selected.size(), 2);
@@ -91,13 +91,13 @@ public class TestCubeSelectorService {
     Cube dlMatch = metastore.getCube("cube_downloadmatch");
 
     System.out.println("## result " + selected.toString());
-    List<AbstractCubeTable> clickList = selected.get(new ArrayList<String>(Arrays.asList("bl_billedcount")));
+    Set<AbstractCubeTable> clickList = selected.get(new HashSet<String>(Arrays.asList("bl_billedcount")));
     assertEquals(clickList.size(), 1, "Size mistmatch:" + clickList.toString());
-    assertEquals(clickList.get(0), click);
+    assertTrue(clickList.contains(click));
 
-    List<AbstractCubeTable> dlList = selected.get(new ArrayList<String>(Arrays.asList("dl_joined_count")));
+    Set<AbstractCubeTable> dlList = selected.get(new HashSet<String>(Arrays.asList("dl_joined_count")));
     assertEquals(dlList.size(), 2);
-    assertEquals(new HashSet<AbstractCubeTable>(dlList),
+    assertEquals(dlList,
       new HashSet<AbstractCubeTable>(Arrays.asList(dlUnMatch, dlMatch)));
   }
 
@@ -106,7 +106,7 @@ public class TestCubeSelectorService {
     String columns[] = {"bl_billedcount", "testdim_name"};
     CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
 
-    Map<List<String>, List<AbstractCubeTable>> selection = selector.select(Arrays.asList(columns));
+    Map<Set<String>, Set<AbstractCubeTable>> selection = selector.select(Arrays.asList(columns));
 
     assertNotNull(selection);
     assertEquals(selection.size(), 2);
@@ -114,15 +114,15 @@ public class TestCubeSelectorService {
     Cube click = metastore.getCube("cube_click");
     CubeDimensionTable testDim = metastore.getDimensionTable("testDim");
 
-    List<AbstractCubeTable> clickList = new ArrayList<AbstractCubeTable>();
+    Set<AbstractCubeTable> clickList = new HashSet<AbstractCubeTable>();
     clickList.add(click);
-    List<AbstractCubeTable> dimList = new ArrayList<AbstractCubeTable>();
+    Set<AbstractCubeTable> dimList = new HashSet<AbstractCubeTable>();
     dimList.add(testDim);
 
-    List<String> clickCols = new ArrayList<String>();
+    Set<String> clickCols = new HashSet<String>();
     clickCols.add("bl_billedcount");
 
-    List<String> dimCols = new ArrayList<String>();
+    Set<String> dimCols = new HashSet<String>();
     dimCols.add("testdim_name");
 
     assertEquals(selection.get(clickCols), clickList);
