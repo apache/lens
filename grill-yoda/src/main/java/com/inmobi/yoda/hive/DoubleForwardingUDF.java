@@ -13,10 +13,10 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import java.util.HashMap;
 
 @Description(
-  name = "yoda_udf",
-  value = "_FUNC_(str, ...) - Call Yoda UDF")
-public class ForwardingUDF extends UDF {
-  public static final Log LOG = LogFactory.getLog(ForwardingUDF.class);
+  name = "double_yoda_udf",
+  value = "_FUNC_(str, ...) - Call Yoda UDF that returns value of double type")
+public class DoubleForwardingUDF extends UDF {
+  public static final Log LOG = LogFactory.getLog(StringForwardingUDF.class);
   HashMap<String, Object> udfObjects;
 
   public synchronized Object getCachedInstance(String udfName) throws HiveException {
@@ -40,12 +40,12 @@ public class ForwardingUDF extends UDF {
     return udf;
   }
 
-  public ForwardingUDF() {
+  public DoubleForwardingUDF() {
     udfObjects = new HashMap<String, Object>();
   }
 
 
-  public String evaluate(String yodaUdfName, Object ... udfArgs) throws HiveException {
+  public Double evaluate(String yodaUdfName, Object ... udfArgs) throws HiveException {
     if (yodaUdfName == null || yodaUdfName.isEmpty()) {
       throw new HiveException("UDF name mising");
     }
@@ -63,7 +63,7 @@ public class ForwardingUDF extends UDF {
       } else {
         throw new HiveException("Unknown UDF type: " + udf.getClass());
       }
-      return result == null ? null : result.toString();
+      return result == null ? null : (Double) result;
     } catch (EvaluationException e) {
       throw new HiveException("Error evaluating UDF " + yodaUdfName, e);
     }

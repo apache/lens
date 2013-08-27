@@ -8,6 +8,8 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -15,10 +17,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.testng.Assert.assertEquals;
 
@@ -43,15 +42,20 @@ public class TestForwardingUDF {
     hiveClient.executeStatement(session, "SET hive.lock.manager=org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager",
       confOverlay);
     hiveClient.executeStatement(session, "DROP TABLE IF EXISTS " + TEST_TBL, confOverlay);
-    hiveClient.executeStatement(session, "CREATE TABLE " + TEST_TBL + "(ID STRING)", confOverlay);
+    hiveClient.executeStatement(session, "CREATE TABLE " + TEST_TBL + "(ID STRING, CSCDT STRING)" +
+      " ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'", confOverlay);
 
+    DateTimeFormatter dateFmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZoneUTC();
     // Create test input
     PrintWriter out = null;
     try {
-      testFile = File.createTempFile("grill_yoda_test", ".txt");
+      testFile = new File("target/grill_yoda_test.txt");
       out = new PrintWriter(testFile);
       for (int i = 0; i < NUM_LINES; i++) {
-        out.println(i);
+        out.print(i + "\t");
+        dateFmt.printTo(out, new Date().getTime());
+        dateFmt.print(new Date().getTime());
+        out.print('\n');
       }
     } catch (Exception ex) {
       throw ex;
@@ -71,12 +75,15 @@ public class TestForwardingUDF {
   @Test
   public void testUdfForward() throws Exception {
     hiveClient.executeStatement(session,
-      "CREATE TEMPORARY FUNCTION yoda_udf AS 'com.inmobi.yoda.hive.ForwardingUDF'",
+      "CREATE TEMPORARY FUNCTION str_yoda_udf AS 'com.inmobi.yoda.hive.StringForwardingUDF'",
       confOverlay);
-    //yoda_udf('md5', ID)
+    hiveClient.executeStatement(session,
+      "CREATE TEMPORARY FUNCTION bool_yoda_udf AS 'com.inmobi.yoda.hive.BooleanForwardingUDF'",
+      confOverlay);
     OperationHandle opHandle = hiveClient.executeStatement(session,
       "INSERT OVERWRITE LOCAL DIRECTORY 'target/udfTestOutput' " +
-        "SELECT yoda_udf('com.inmobi.dw.yoda.udfs.generic.MD5', ID) FROM " + TEST_TBL,
+        "SELECT str_yoda_udf('com.inmobi.dw.yoda.udfs.generic.MD5', ID), " +
+        "bool_yoda_udf('com.inmobi.dw.yoda.udfs.custom.csc.BeforeCSCDateUDF', CSCDT) FROM " + TEST_TBL,
       confOverlay);
     File outputDir = new File("target/udfTestOutput");
     List<String> lines = new ArrayList<String>();
@@ -93,6 +100,6 @@ public class TestForwardingUDF {
     if (testFile != null)  {
       testFile.delete();
     }
-    //hiveClient.closeSession(session);
+    hiveClient.closeSession(session);
   }
 }
