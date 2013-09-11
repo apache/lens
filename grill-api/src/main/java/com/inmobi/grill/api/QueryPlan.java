@@ -40,6 +40,7 @@ public abstract class QueryPlan {
   private Double havingWeight;
   private Double obyWeight;
   private Double selectWeight;
+  private QueryHandle handle;
 
   /**
    * Get the query plan
@@ -444,5 +445,19 @@ public abstract class QueryPlan {
    */
   protected void setSelectWeight(Double selectWeight) {
     this.selectWeight = selectWeight;
+  }
+
+  /**
+   * @return the handle
+   */
+  public QueryHandle getHandle() {
+    return handle;
+  }
+
+  /**
+   * @param handle the handle to set
+   */
+  protected void setHandle(QueryHandle handle) {
+    this.handle = handle;
   }
 }

@@ -147,4 +147,24 @@ public class ImpalaDriver implements GrillDriver {
 		
 	}
 
+  @Override
+  public void closeQuery(com.inmobi.grill.api.QueryHandle arg0)
+      throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public GrillResultSet executePrepare(com.inmobi.grill.api.QueryHandle arg0,
+      Configuration arg1) throws GrillException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public void executePrepareAsync(com.inmobi.grill.api.QueryHandle arg0,
+      Configuration arg1) throws GrillException {
+    // TODO Auto-generated method stub
+  }
+
 }

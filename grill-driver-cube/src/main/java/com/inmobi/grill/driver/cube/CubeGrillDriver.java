@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
 
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
@@ -39,7 +40,8 @@ public class CubeGrillDriver implements GrillDriver {
     this.driverSelector = driverSelector;
   }
 
-  public GrillResultSet execute(String query, Configuration conf) throws GrillException {
+  public GrillResultSet execute(String query, Configuration conf)
+      throws GrillException {
     Map<GrillDriver, String> driverQueries = 
         new HashMap<GrillDriver, String>();
     // 1. rewrite query to get summary tables and joins
@@ -55,33 +57,54 @@ public class CubeGrillDriver implements GrillDriver {
   private void rewriteQuery(String query,
       Map<GrillDriver, String> driverQueries)
           throws GrillException {
-    // TODO change the below code to use CubeDriver.compileCubeQuery in hive
-    /*String rewrittenQry = rewriter.rewrite(query);
-    for (grillDriver driver : drivers) {
-      grillQueryContext driverQuery = rewriter.rewritePhase2(rewrittenQry,
-          driver.getSupportedStorages());
-      driverQueries.put(driver, driverQuery);
-    }*/   
+    try {
+      for (GrillDriver driver : drivers) {
+        CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
+        driverQueries.put(driver, rewriter.rewrite(query).toHQL());
+      }
+    } catch (Exception e) {
+      throw new GrillException(e);
+    }
   }
 
-  private Map<QueryHandle, GrillDriver> selectedDrivers;
+  private Map<QueryHandle, QueryExecutionContext> executionContexts;
 
-  public QueryHandle executeAsync(String query, Configuration conf) throws GrillException {
+  public QueryHandle executeAsync(String query, Configuration conf)
+      throws GrillException {
     Map<GrillDriver, String> driverQueries = 
         new HashMap<GrillDriver, String>();
     rewriteQuery(query, driverQueries);
+    
     GrillDriver driver = selectDriver(driverQueries);
     QueryHandle handle = driver.executeAsync(driverQueries.get(driver), null);
-    selectedDrivers.put(handle, driver);
+    executionContexts.put(handle, new QueryExecutionContext(query, driver,
+        driverQueries.get(driver), ExecutionStatus.STARTED));
     return handle;
   }
 
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
-    return selectedDrivers.get(handle).getStatus(handle);
+    return executionContexts.get(handle).selectedDriver.getStatus(handle);
   }
 
   public GrillResultSet fetchResults(QueryHandle handle) throws GrillException {
-    return selectedDrivers.get(handle).fetchResultSet(handle);
+    return executionContexts.get(handle).selectedDriver.fetchResultSet(handle);
+  }
+
+  private enum ExecutionStatus {PREPARED, STARTED};
+
+  private static class QueryExecutionContext {
+    final String cubeQuery;
+    final GrillDriver selectedDriver;
+    final String driverQuery;
+    ExecutionStatus execStatus;
+    
+    QueryExecutionContext(String cubeQuery, GrillDriver selectedDriver,
+        String driverQuery, ExecutionStatus execStatus) {
+      this.cubeQuery = cubeQuery;
+      this.selectedDriver = selectedDriver;
+      this.driverQuery = driverQuery;
+      this.execStatus = execStatus;
+    }
   }
 
   private void loadDrivers() throws GrillException {
@@ -130,17 +153,39 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(String query, Configuration conf) throws GrillException {
+  public QueryPlan explain(String query, Configuration conf)
+      throws GrillException {
     Map<GrillDriver, String> driverQueries = 
         new HashMap<GrillDriver, String>();
     rewriteQuery(query, driverQueries);
     GrillDriver driver = selectDriver(driverQueries);
-    return driver.explain(driverQueries.get(driver), null);
+    QueryPlan plan = driver.explain(driverQueries.get(driver), null);
+    QueryExecutionContext context = new QueryExecutionContext(query,
+        driver, driverQueries.get(driver), ExecutionStatus.PREPARED) ;
+    executionContexts.put(plan.getHandle(), context);
+    return plan;
   }
 
   @Override
-  public GrillResultSet fetchResultSet(QueryHandle handle) throws GrillException {
-    return selectedDrivers.get(handle).fetchResultSet(handle);
+  public GrillResultSet executePrepare(QueryHandle handle, Configuration conf)
+      throws GrillException {
+    QueryExecutionContext context = executionContexts.get(handle);
+    context.execStatus = ExecutionStatus.STARTED;
+    return context.selectedDriver.executePrepare(handle, conf);
+  }
+
+  @Override
+  public void executePrepareAsync(QueryHandle handle, Configuration conf)
+      throws GrillException {
+    QueryExecutionContext context = executionContexts.get(handle);
+    context.execStatus = ExecutionStatus.STARTED;
+    context.selectedDriver.executePrepareAsync(handle, conf);
+  }
+
+  @Override
+  public GrillResultSet fetchResultSet(QueryHandle handle)
+      throws GrillException {
+    return executionContexts.get(handle).selectedDriver.fetchResultSet(handle);
   }
 
   @Override
@@ -150,7 +195,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   @Override
   public boolean cancelQuery(QueryHandle handle) throws GrillException {
-    return selectedDrivers.get(handle).cancelQuery(handle);
+    return executionContexts.get(handle).selectedDriver.cancelQuery(handle);
   }
 
 	@Override
@@ -160,6 +205,12 @@ public class CubeGrillDriver implements GrillDriver {
 
 	@Override
 	public void close() throws GrillException {
-		
+	  drivers.clear();
+	  executionContexts.clear();
 	}
+
+  @Override
+  public void closeQuery(QueryHandle handle) throws GrillException {
+    executionContexts.remove(handle);
+  }
 }
