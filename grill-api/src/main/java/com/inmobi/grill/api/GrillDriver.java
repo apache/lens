@@ -26,11 +26,37 @@ public interface GrillDriver {
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
-   * @return The query plan object
+   * @return The query plan object; Query plan also consists of query handle,
+   * if it should be used to executePrepare
    * 
    * @throws GrillException
    */
   public QueryPlan explain(String query, Configuration conf)
+      throws GrillException;
+
+  /**
+   * Execute already prepared query. Query can be prepared with explain
+   * 
+   * @param handle The {@link QueryHandle}
+   * @param conf The configuration for the query to execute
+   * 
+   * @return returns the result set
+   * 
+   * @throws GrillException
+   */
+  public GrillResultSet executePrepare(QueryHandle handle, Configuration conf) 
+      throws GrillException;
+
+  /**
+   * Execute already prepared query asynchronously. 
+   * Query can be prepared with explain
+   * 
+   * @param handle The {@link QueryHandle}
+   * @param conf The configuration for the query to execute
+   * 
+   * @throws GrillException
+   */
+  public void executePrepareAsync(QueryHandle handle, Configuration conf) 
       throws GrillException;
 
   /**
@@ -85,7 +111,18 @@ public interface GrillDriver {
    * @return true if cancel was successful, false otherwise
    */
   public boolean cancelQuery(QueryHandle handle) throws GrillException;
-  
+
+  /**
+   * Close the query specified by the handle, releases all the resources
+   * held by the query. Should be called in all the cases of user calling
+   * explain or executeAsync to free up resources.
+   * 
+   * @param handle The query handle
+   * 
+   * @throws GrillException
+   */
+  public void closeQuery(QueryHandle handle) throws GrillException;
+
   /**
    * Close the driver, releasing all resouces used up by the driver
    * @throws GrillException

@@ -8,13 +8,14 @@ import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.transport.TMemoryBuffer;
 
 import com.inmobi.grill.api.QueryCost;
+import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.exception.GrillException;
 
 public class HiveQueryPlan extends QueryPlan {
 	private Query plan;
 	private String jsonPlan;
-	public HiveQueryPlan(String planJson) throws GrillException {
+	public HiveQueryPlan(String planJson, QueryHandle handle) throws GrillException {
 		this.jsonPlan = planJson;
 		
 		// Read the object back from JSON
@@ -40,6 +41,7 @@ public class HiveQueryPlan extends QueryPlan {
 		// Partitions should be counted as partial scan
 		setScanMode(ScanMode.PARTIAL_SCAN);
 		extractPlanDetails(plan);
+		setHandle(handle);
 	}
 
 	private void extractPlanDetails(Query plan) {
