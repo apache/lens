@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
@@ -24,6 +26,7 @@ public class CubeGrillDriver implements GrillDriver {
   public static final String ENGINE_CONF_PREFIX = "grill.cube";
   public static final String ENGINE_DRIVER_CLASSES = "grill.cube.drivers";
 
+  Pattern cubePattern = Pattern.compile("^CUBE.*", Pattern.CASE_INSENSITIVE);
   private final List<GrillDriver> drivers;
   private final DriverSelector driverSelector;
   private Configuration conf;
@@ -35,8 +38,8 @@ public class CubeGrillDriver implements GrillDriver {
   public CubeGrillDriver(Configuration conf, DriverSelector driverSelector)
       throws GrillException {
     this.conf = conf;
-    loadDrivers();
     this.drivers = new ArrayList<GrillDriver>();
+    loadDrivers();
     this.driverSelector = driverSelector;
   }
 
@@ -58,16 +61,24 @@ public class CubeGrillDriver implements GrillDriver {
       Map<GrillDriver, String> driverQueries)
           throws GrillException {
     try {
+      Matcher m = cubePattern.matcher(query);
       for (GrillDriver driver : drivers) {
-        CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
-        driverQueries.put(driver, rewriter.rewrite(query).toHQL());
+        String driverQuery;
+        if (m.matches()) {
+          CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
+          driverQuery = rewriter.rewrite(query).toHQL();
+        } else {
+          driverQuery = query;
+        }
+        driverQueries.put(driver, driverQuery);
       }
     } catch (Exception e) {
       throw new GrillException(e);
     }
   }
 
-  private Map<QueryHandle, QueryExecutionContext> executionContexts;
+  private Map<QueryHandle, QueryExecutionContext> executionContexts =
+      new HashMap<QueryHandle, CubeGrillDriver.QueryExecutionContext>();
 
   public QueryHandle executeAsync(String query, Configuration conf)
       throws GrillException {
@@ -83,11 +94,11 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
-    return executionContexts.get(handle).selectedDriver.getStatus(handle);
+    return getContext(handle).selectedDriver.getStatus(handle);
   }
 
   public GrillResultSet fetchResults(QueryHandle handle) throws GrillException {
-    return executionContexts.get(handle).selectedDriver.fetchResultSet(handle);
+    return getContext(handle).selectedDriver.fetchResultSet(handle);
   }
 
   private enum ExecutionStatus {PREPARED, STARTED};
@@ -117,6 +128,7 @@ public class CubeGrillDriver implements GrillDriver {
           driver.configure(conf);
           drivers.add(driver);
         } catch (Exception e) {
+          e.printStackTrace();
           throw new GrillException ("Could not load driver " + driverClass, e);
         }
       }
@@ -185,7 +197,7 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public GrillResultSet fetchResultSet(QueryHandle handle)
       throws GrillException {
-    return executionContexts.get(handle).selectedDriver.fetchResultSet(handle);
+    return getContext(handle).selectedDriver.fetchResultSet(handle);
   }
 
   @Override
@@ -195,7 +207,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   @Override
   public boolean cancelQuery(QueryHandle handle) throws GrillException {
-    return executionContexts.get(handle).selectedDriver.cancelQuery(handle);
+    return getContext(handle).selectedDriver.cancelQuery(handle);
   }
 
 	@Override
@@ -211,6 +223,17 @@ public class CubeGrillDriver implements GrillDriver {
 
   @Override
   public void closeQuery(QueryHandle handle) throws GrillException {
+    getContext(handle).selectedDriver.closeQuery(handle);
     executionContexts.remove(handle);
   }
+
+  private QueryExecutionContext getContext(QueryHandle handle)
+      throws GrillException {
+    QueryExecutionContext ctx = executionContexts.get(handle);
+    if (ctx == null) {
+      throw new GrillException("Query not found " + ctx); 
+    }
+    return ctx;
+  }
+
 }

@@ -19,35 +19,36 @@ import com.inmobi.grill.exception.GrillException;
 
 
 public class TestHiveDriver {
-	public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
+  public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
   public static final String TEST_OUTPUT_DIR = "test-output";
   public static final String TBL = "HIVE_TEST_TABLE";
-	protected Configuration conf;
+  protected Configuration conf;
   protected HiveDriver driver;
-	
-	@BeforeMethod
-	public void beforeTest() throws Exception {
+
+  @BeforeMethod
+  public void beforeTest() throws Exception {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
-		conf = new Configuration();
-		conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, 
-				ThriftConnection.class);
-		conf.set(HiveDriver.GRILL_PASSWORD_KEY, "password");
-		conf.set(HiveDriver.GRILL_USER_NAME_KEY, "user");
-		conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-		
-		driver = new HiveDriver(conf);
-		System.out.println("Driver created");
-	}
-	
-	@AfterMethod
-	public void afterTest() throws Exception {
-		driver.close();
-	}
+    conf = new Configuration();
+    conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, 
+        ThriftConnection.class);
+    conf.set(HiveDriver.GRILL_PASSWORD_KEY, "password");
+    conf.set(HiveDriver.GRILL_USER_NAME_KEY, "user");
+    conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
+
+    driver = new HiveDriver();
+    driver.configure(conf);
+    System.out.println("Driver created");
+  }
+
+  @AfterMethod
+  public void afterTest() throws Exception {
+    driver.close();
+  }
 
 
-	private void createTestTable() throws Exception {
+  private void createTestTable() throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String dropTable = "DROP TABLE IF EXISTS " + TBL;
     String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
@@ -66,83 +67,88 @@ public class TestHiveDriver {
     resultSet = driver.execute(dataLoad, conf);
   }
 
-	// Tests
-	@Test
-	public void testExecuteQuery() throws Exception {
+  // Tests
+  @Test
+  public void testExecuteQuery() throws Exception {
     createTestTable();
-		GrillResultSet resultSet = null;
-		// Execute a select query
-		System.err.println("Execute select");
-		String select = "SELECT ID FROM " + TBL;
-		try {
-			resultSet = driver.execute(select, conf);
-      assertNotNull(resultSet);
-      assertTrue(resultSet instanceof HiveInMemoryResultSet);
-      HiveInMemoryResultSet inmemrs = (HiveInMemoryResultSet) resultSet;
+    GrillResultSet resultSet = null;
+    // Execute a select query
+    System.err.println("Execute select");
+    String select = "SELECT ID FROM " + TBL;
+    resultSet = driver.execute(select, conf);
+    validateExecuteSync(resultSet);
+  }
 
-      // check metadata
-      GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
-      List<GrillResultSetMetadata.Column>  columns = rsMeta.getColumns();
-      assertNotNull(columns);
-      assertEquals(columns.size(), 1);
-      assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
-      assertEquals("STRING".toLowerCase(), columns.get(0).getType().toLowerCase());
+  private void validateExecuteSync(GrillResultSet resultSet)
+      throws GrillException, IOException {
+    assertNotNull(resultSet);
+    assertTrue(resultSet instanceof HiveInMemoryResultSet);
+    HiveInMemoryResultSet inmemrs = (HiveInMemoryResultSet) resultSet;
 
-      List<String> expectedRows = new ArrayList<String>();
-      // Read data from the test file into expectedRows
-      BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(TEST_DATA_FILE)));
-      String line = "";
-      while ((line = br.readLine()) != null) {
-        expectedRows.add(line.trim());
-      }
-      br.close();
+    // check metadata
+    GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
+    List<GrillResultSetMetadata.Column>  columns = rsMeta.getColumns();
+    assertNotNull(columns);
+    assertEquals(columns.size(), 1);
+    assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
+    assertEquals("STRING".toLowerCase(), columns.get(0).getType().toLowerCase());
 
-      List<String> actualRows = new ArrayList<String>();
-      while (inmemrs.hasNext()) {
-        List<Object> row = inmemrs.next();
-        TStringValue thriftString = (TStringValue) row.get(0);
-        actualRows.add(thriftString.getValue());
-      }
-      System.out.print(actualRows);
-      assertEquals(actualRows, expectedRows);
-		} catch (Exception e) {
-			e.printStackTrace();
-			fail(e.getMessage());
-		}
-	}
+    List<String> expectedRows = new ArrayList<String>();
+    // Read data from the test file into expectedRows
+    BufferedReader br = new BufferedReader(new InputStreamReader(
+        new FileInputStream(TEST_DATA_FILE)));
+    String line = "";
+    while ((line = br.readLine()) != null) {
+      expectedRows.add(line.trim());
+    }
+    br.close();
 
-	// executeAsync
-	@Test
-	public void testExecuteQueryAsync()  throws Exception {
+    List<String> actualRows = new ArrayList<String>();
+    while (inmemrs.hasNext()) {
+      List<Object> row = inmemrs.next();
+      TStringValue thriftString = (TStringValue) row.get(0);
+      actualRows.add(thriftString.getValue());
+    }
+    System.out.print(actualRows);
+    assertEquals(actualRows, expectedRows);
+
+  }
+  // executeAsync
+  @Test
+  public void testExecuteQueryAsync()  throws Exception {
     createTestTable();
-		// Load some data into the table
-		QueryHandle handle = null;
-		Set<Status> expectedStates =
-				new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
-		Set<Status> actualStates = new LinkedHashSet<Status>();
+    // Load some data into the table
+    QueryHandle handle = null;
 
-		// Now run a command that would fail
-		String expectFail = "SELECT * FROM FOO_BAR";
-		conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
-		handle = driver.executeAsync(expectFail, conf);
-    actualStates.clear();
-    waitForAsyncQuery(handle, actualStates, driver);
-		QueryStatus status = driver.getStatus(handle);
-		assertEquals(status.getStatus(), Status.FAILED, "Expecting query to fail");
-		driver.closeQuery(handle);
+    // Now run a command that would fail
+    String expectFail = "SELECT * FROM FOO_BAR";
+    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
+    handle = driver.executeAsync(expectFail, conf);
+    Set<Status> expectedStates =
+        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.FAILED));
+    validateExecuteAsync(handle, expectedStates, Status.FAILED);
+    driver.closeQuery(handle);
 
 
     //  Async select query
     String select = "SELECT ID FROM " + TBL;
     conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
     handle = driver.executeAsync(select, conf);
-    actualStates.clear();
-    waitForAsyncQuery(handle, actualStates, driver);
-    status = driver.getStatus(handle);
-    assertEquals(status.getStatus(), Status.SUCCESSFUL, "Expected query to finish successfully");
-    assertEquals(actualStates, expectedStates);
+    expectedStates =
+        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
+    validateExecuteAsync(handle, expectedStates, Status.SUCCESSFUL);
     driver.closeQuery(handle);
-	}
+  }
+
+  private void validateExecuteAsync(QueryHandle handle,
+      Set<Status> expectedStates, Status finalState) throws Exception {
+    Set<Status> actualStates = new LinkedHashSet<Status>();
+    waitForAsyncQuery(handle, actualStates, driver);
+    QueryStatus status = driver.getStatus(handle);
+    assertEquals(status.getStatus(), finalState, "Expected query to finish with"
+        + finalState);
+    assertEquals(actualStates, expectedStates);
+  }
 
   @Test
   public void testCancelAsyncQuery() throws Exception {
@@ -216,9 +222,11 @@ public class TestHiveDriver {
     fs.delete(actualPath, true);
   }
 
-  private void waitForAsyncQuery(QueryHandle handle, Set<Status> actualStates, HiveDriver driver) throws Exception {
+  private void waitForAsyncQuery(QueryHandle handle, Set<Status> actualStates,
+      HiveDriver driver) throws Exception {
     Set<Status> terminationStates =
-      EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED, Status.SUCCESSFUL);
+        EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED,
+            Status.SUCCESSFUL);
 
     while (true) {
       QueryStatus status = driver.getStatus(handle);
@@ -231,13 +239,25 @@ public class TestHiveDriver {
     }
   }
 
-	// explain
-	@Test
+  // explain
+  @Test
   public void testExplain() throws Exception {
     createTestTable();
     QueryPlan plan = driver.explain("SELECT ID FROM " + TBL, conf);
     assertTrue(plan instanceof  HiveQueryPlan);
     System.out.println("#####\n" + plan.getPlan());
+
+    // test execute prepare
+    GrillResultSet result = driver.executePrepare(plan.getHandle(), conf);
+    validateExecuteSync(result);
+
+    // test execute prepare async
+    driver.executePrepareAsync(plan.getHandle(), conf);
+    Set<Status> expectedStates =
+        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
+    validateExecuteAsync(plan.getHandle(), expectedStates, Status.SUCCESSFUL);
+
+    driver.closeQuery(plan.getHandle());
   }
- 
+
 }

@@ -22,7 +22,6 @@ import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
-import org.apache.thrift.transport.TMemoryBuffer;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -51,7 +50,6 @@ public class HiveDriver implements GrillDriver {
   private ThriftConnection connection;
   private final Lock connectionLock;
   private final Lock sessionLock;
-
 
   /**
    * Internal class to hold query related info
@@ -87,8 +85,7 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  public HiveDriver(Configuration conf) throws GrillException {
-    this.conf = new HiveConf(conf, HiveDriver.class);
+  public HiveDriver() throws GrillException {
     this.connectionLock = new ReentrantLock();
     this.sessionLock = new ReentrantLock();
     this.handleToContext = new HashMap<QueryHandle, QueryContext>();
@@ -107,20 +104,16 @@ public class HiveDriver implements GrillDriver {
   @Override
   public QueryPlan explain(String query, Configuration conf) throws GrillException {
     QueryContext ctx = createQueryContext(query, conf);
-    handleToContext.put(ctx.queryHandle, ctx);
 
-    TMemoryBuffer tmb = null;
+    String planJson;
     try {
-      String planJson = 
+      planJson = 
           getClient().getQueryPlan(getSession(), ctx.hiveQuery, conf.getValByRegex(".*"));
-      return new HiveQueryPlan(planJson, ctx.queryHandle);
     } catch (HiveSQLException e) {
       throw new GrillException("Error getting explain on query " + ctx.userQuery, e);
-    } finally {
-      if (tmb != null) {
-        tmb.close();
-      }
     }
+    handleToContext.put(ctx.queryHandle, ctx);
+    return new HiveQueryPlan(planJson, ctx.queryHandle);
   }
 
   @Override

@@ -113,8 +113,9 @@ public interface GrillDriver {
   public boolean cancelQuery(QueryHandle handle) throws GrillException;
 
   /**
-   * Close the query specified by the handle, by releases all the resources
-   * held by the query
+   * Close the query specified by the handle, releases all the resources
+   * held by the query. Should be called in all the cases of user calling
+   * explain or executeAsync to free up resources.
    * 
    * @param handle The query handle
    * 

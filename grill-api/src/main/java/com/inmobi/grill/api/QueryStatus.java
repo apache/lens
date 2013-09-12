@@ -11,12 +11,12 @@ public class QueryStatus {
     UNKNOWN
   }
   
-	private final float progress;
+	private final double progress;
 	private final String statusMessage;
 	private final Status status;
 	private boolean hasResultSet = false;
 
-  public QueryStatus(float progress, Status status, String statusMessage,
+  public QueryStatus(double progress, Status status, String statusMessage,
       boolean hasResultSet) {
     this.progress = progress;
     this.status = status;
@@ -38,7 +38,7 @@ public class QueryStatus {
    * 
    * @return progress
    */
-  public float getProgress() {
+  public double getProgress() {
     return progress;
   }
 

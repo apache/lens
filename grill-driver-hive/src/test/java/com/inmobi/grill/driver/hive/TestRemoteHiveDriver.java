@@ -41,10 +41,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     assertNotNull(System.getProperty("hadoop.bin.path"));
     conf = new Configuration();
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, RemoteThriftConnection.class,
-      ThriftConnection.class);
+        ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     conf.set("hive.server2.thrift.bind.host", HS2_HOST);
     conf.setInt("hive.server2.thrift.port", HS2_PORT);
-    driver = new HiveDriver(conf);
+    driver = new HiveDriver();
+    driver.configure(conf);
   }
 }
