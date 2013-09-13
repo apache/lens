@@ -279,6 +279,13 @@ public class TestHiveDriver {
     System.out.println("@@Result Destination " + plan.getResultDestination());
     System.out.println("@@Tables Queried " + plan.getTablesQueried());
     assertEquals(plan.getTablesQueried().size(), 2);
+    assertNotNull(plan.getTableWeights());
+    assertTrue(plan.getTableWeights().containsKey("explain_test_1"));
+    assertTrue(plan.getTableWeights().containsKey("explain_test_2"));
+    assertEquals(plan.getNumJoins(), 1);
+    //assertEquals(plan.getNumGbys(), 1);
+    //assertEquals(plan.getNumDefaultAggrExprs(), 1);
+    //assertEquals(plan.getNumSels(), 1);
     //driver.closeQuery(plan.getHandle());
   }
 }

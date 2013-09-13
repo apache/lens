@@ -24,6 +24,10 @@ public class HiveQueryPlan extends QueryPlan {
     FILE_OUTPUT_OPERATOR,
     TABLE_SCAN,
     JOIN,
+    SELECT,
+    GROUPBY,
+    GROUPBY_KEYS,
+    GROUPBY_EXPRS,
   };
 
   public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle) {
@@ -37,12 +41,12 @@ public class HiveQueryPlan extends QueryPlan {
 
   private void extractPlanDetails(List<String> explainOutput) {
     ParserState state = ParserState.BEGIN;
+    ParserState prevState = state;
 
     for (String line : explainOutput) {
       System.out.println("@@" + line);
       String tr = line.trim();
       state = findState(tr, state);
-      System.out.println("@@############################################ STATE " + state);
       switch (state) {
         case FILE_OUTPUT_OPERATOR:
           if (tr.startsWith("directory:")) {
@@ -58,10 +62,27 @@ public class HiveQueryPlan extends QueryPlan {
           }
           break;
         case JOIN:
-          numJoins++;
+          if (prevState != ParserState.JOIN) {
+            numJoins++;
+          }
           break;
+        case SELECT:
+          if (tr.startsWith("expr:")) {
+            numSels++;
+          }
+          break;
+        case GROUPBY_EXPRS:
+          if (tr.startsWith("expr:")) {
+            numDefaultAggrExprs++;
+          }
+          break;
+        case GROUPBY_KEYS:
+          if (tr.startsWith("expr:")) {
+            numGbys++;
+          }
       }
 
+      prevState = state;
     }
 	}
 
@@ -72,6 +93,14 @@ public class HiveQueryPlan extends QueryPlan {
       return ParserState.TABLE_SCAN;
     } else if (tr.equals("Map Join Operator")) {
       return ParserState.JOIN;
+    } else if (tr.equals("Select Operator")) {
+      return ParserState.SELECT;
+    } else if (tr.equals("Group By Operator")) {
+      return ParserState.GROUPBY;
+    } else if (tr.startsWith("aggregations:") && state == ParserState.GROUPBY) {
+      return ParserState.GROUPBY_EXPRS;
+    } else if (tr.startsWith("keys:") && state == ParserState.GROUPBY_EXPRS) {
+      return ParserState.GROUPBY_KEYS;
     }
 
     return state;
