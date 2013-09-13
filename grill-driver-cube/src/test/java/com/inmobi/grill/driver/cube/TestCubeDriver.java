@@ -1,6 +1,7 @@
 package com.inmobi.grill.driver.cube;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -77,5 +78,29 @@ public class TestCubeDriver {
       th = e;
     }
     Assert.assertNotNull(th);
+  }
+
+  @Test
+  public void testCubeQuery() throws ParseException {
+    String q1 = "select name from table";
+    Assert.assertFalse(cubeDriver.isCubeQuery(q1));
+
+    String q2 = "cube select name from table";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+
+    q2 = "select * from (cube select name from table) a";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+
+    q2 = "select * from (cube select name from table) a join (cube select name2 from table2) b";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+
+    q2 = "select * from (cube select name from table) a join (select name2 from table2) b";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+
+    q2 = "select * from (cube select name from table union all cube select name2 from table2) u";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+
+    q2 = "select u.* from (select name from table union all cube select name2 from table2) u";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
   }
 }

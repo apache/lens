@@ -252,10 +252,12 @@ public class HiveDriver implements GrillDriver {
     QueryContext options = handleToContext.remove(handle);
     if (options != null) {
       OperationHandle opHandle = options.hiveHandle;
-      try {
-        getClient().closeOperation(opHandle);
-      } catch (HiveSQLException e) {
-        throw new GrillException("Unable to close query", e);
+      if (opHandle != null) {
+        try {
+          getClient().closeOperation(opHandle);
+        } catch (HiveSQLException e) {
+          throw new GrillException("Unable to close query", e);
+        }
       }
     }
   }

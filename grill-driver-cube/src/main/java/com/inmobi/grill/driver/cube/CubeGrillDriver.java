@@ -13,6 +13,11 @@ import org.apache.log4j.Logger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
+import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
@@ -26,10 +31,12 @@ public class CubeGrillDriver implements GrillDriver {
   public static final String ENGINE_CONF_PREFIX = "grill.cube";
   public static final String ENGINE_DRIVER_CLASSES = "grill.cube.drivers";
 
-  Pattern cubePattern = Pattern.compile("^CUBE.*", Pattern.CASE_INSENSITIVE);
+  Pattern cubePattern = Pattern.compile(".*CUBE(.*)",
+      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
   private final List<GrillDriver> drivers;
   private final DriverSelector driverSelector;
   private Configuration conf;
+  Matcher matcher = null;
 
   public CubeGrillDriver(Configuration conf) throws GrillException {
     this(conf, new MinQueryCostSelector());
@@ -54,17 +61,53 @@ public class CubeGrillDriver implements GrillDriver {
     GrillDriver driver = selectDriver(driverQueries);
 
     // 3. run query
-    return driver.execute(driverQueries.get(driver), null);
+    return driver.execute(driverQueries.get(driver), conf);
+  }
+
+  void rewriteQuery(String query, GrillDriver driver)
+      throws SemanticException, ParseException {
+    ASTNode ast = HQLParser.parseHQL(query);
+    LOG.info("User query AST:" + ast.dump());
+    CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
+    rewriteCubeQueries(ast, rewriter);
+    LOG.info("Final rewritten AST:" + ast.dump());
+  }
+
+  void rewriteCubeQueries(ASTNode ast, CubeQueryRewriter rewriter)
+      throws SemanticException {
+    int child_count = ast.getChildCount();
+    if (ast.getToken() != null) {
+      if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
+          ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
+        LOG.info("cube ast:" + ast.dump());
+       // ast = rewriter.rewrite(ast).toAST(rewriter.getQLContext());
+        LOG.info("Rewritten AST:" + ast);
+      }
+      else {
+        for (int child_pos = 0; child_pos < child_count; ++child_pos) {
+          rewriteCubeQueries((ASTNode)ast.getChild(child_pos), rewriter);
+        }
+      }
+    } 
+  }
+
+  public boolean isCubeQuery(String query) {
+    if (matcher == null) {
+      matcher = cubePattern.matcher(query);
+    } else {
+      matcher.reset(query);
+    }
+    return matcher.matches();
   }
 
   private void rewriteQuery(String query,
       Map<GrillDriver, String> driverQueries)
           throws GrillException {
     try {
-      Matcher m = cubePattern.matcher(query);
+      boolean cubeQuery = isCubeQuery(query);
       for (GrillDriver driver : drivers) {
         String driverQuery;
-        if (m.matches()) {
+        if (cubeQuery) {
           CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
           driverQuery = rewriter.rewrite(query).toHQL();
         } else {
@@ -87,7 +130,7 @@ public class CubeGrillDriver implements GrillDriver {
     rewriteQuery(query, driverQueries);
     
     GrillDriver driver = selectDriver(driverQueries);
-    QueryHandle handle = driver.executeAsync(driverQueries.get(driver), null);
+    QueryHandle handle = driver.executeAsync(driverQueries.get(driver), conf);
     executionContexts.put(handle, new QueryExecutionContext(query, driver,
         driverQueries.get(driver), ExecutionStatus.STARTED));
     return handle;
@@ -128,10 +171,12 @@ public class CubeGrillDriver implements GrillDriver {
           driver.configure(conf);
           drivers.add(driver);
         } catch (Exception e) {
-          e.printStackTrace();
-          throw new GrillException ("Could not load driver " + driverClass, e);
+          LOG.warn("Could not load the driver:" + driverClass, e);
+          throw new GrillException("Could not load driver " + driverClass, e);
         }
       }
+    } else {
+      throw new GrillException("No drivers specified");
     }
   }
 
@@ -171,7 +216,7 @@ public class CubeGrillDriver implements GrillDriver {
         new HashMap<GrillDriver, String>();
     rewriteQuery(query, driverQueries);
     GrillDriver driver = selectDriver(driverQueries);
-    QueryPlan plan = driver.explain(driverQueries.get(driver), null);
+    QueryPlan plan = driver.explain(driverQueries.get(driver), conf);
     QueryExecutionContext context = new QueryExecutionContext(query,
         driver, driverQueries.get(driver), ExecutionStatus.PREPARED) ;
     executionContexts.put(plan.getHandle(), context);

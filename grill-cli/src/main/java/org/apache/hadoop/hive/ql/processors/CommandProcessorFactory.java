@@ -36,7 +36,7 @@ public final class CommandProcessorFactory {
     // prevent instantiation
   }
 
-  static Map<HiveConf, Driver> mapDrivers = new HashMap<HiveConf, Driver>();
+  static Map<HiveConf, CubeCommandProcessor> mapDrivers = new HashMap<HiveConf, CubeCommandProcessor>();
 
   public static CommandProcessor get(String cmd) {
     return get(cmd, null);
@@ -56,16 +56,14 @@ public final class CommandProcessorFactory {
       return new AddResourceProcessor();
     } else if ("delete".equals(cmdl)) {
       return new DeleteResourceProcessor();
-    } else if ("cube".equals(cmdl)) {
-      return new CubeCommandProcessor(conf);
     } else if (!isBlank(cmd)) {
       if (conf == null) {
-        return new Driver();
+        return new CubeCommandProcessor();
       }
 
-      Driver drv = mapDrivers.get(conf);
+      CubeCommandProcessor drv = mapDrivers.get(conf);
       if (drv == null) {
-        drv = new Driver();
+        drv = new CubeCommandProcessor(conf);
         mapDrivers.put(conf, drv);
       }
       drv.init();
