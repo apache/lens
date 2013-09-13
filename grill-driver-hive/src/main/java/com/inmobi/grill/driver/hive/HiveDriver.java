@@ -20,6 +20,7 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
+import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -105,15 +106,15 @@ public class HiveDriver implements GrillDriver {
   public QueryPlan explain(String query, Configuration conf) throws GrillException {
     QueryContext ctx = createQueryContext(query, conf);
 
-    String planJson;
-    try {
-      planJson = 
-          getClient().getQueryPlan(getSession(), ctx.hiveQuery, conf.getValByRegex(".*"));
-    } catch (HiveSQLException e) {
-      throw new GrillException("Error getting explain on query " + ctx.userQuery, e);
+    conf.setBoolean(GRILL_RESULT_SET_TYPE_KEY, false);
+    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute("EXPLAIN EXTENDED " + query, conf);
+    List<String> explainOutput = new ArrayList<String>();
+    while (inMemoryResultSet.hasNext()) {
+      explainOutput.add(((TStringValue) inMemoryResultSet.next().get(0)).getValue());
     }
+
     handleToContext.put(ctx.queryHandle, ctx);
-    return new HiveQueryPlan(planJson, ctx.queryHandle);
+    return new HiveQueryPlan(explainOutput, ctx.queryHandle);
   }
 
   @Override

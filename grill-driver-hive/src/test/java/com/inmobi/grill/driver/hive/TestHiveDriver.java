@@ -49,9 +49,13 @@ public class TestHiveDriver {
 
 
   private void createTestTable() throws Exception {
+    createTestTable(TBL);
+  }
+
+  private void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
-    String dropTable = "DROP TABLE IF EXISTS " + TBL;
-    String createTable = "CREATE TABLE " + TBL  +"(ID STRING)";
+    String dropTable = "DROP TABLE IF EXISTS " + tableName;
+    String createTable = "CREATE TABLE " + tableName  +"(ID STRING)";
     conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
     GrillResultSet resultSet = driver.execute(dropTable, conf);
 
@@ -63,7 +67,7 @@ public class TestHiveDriver {
     assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 
     // Load some data into the table
-    String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + TBL;
+    String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
     resultSet = driver.execute(dataLoad, conf);
   }
 
@@ -244,8 +248,7 @@ public class TestHiveDriver {
   public void testExplain() throws Exception {
     createTestTable();
     QueryPlan plan = driver.explain("SELECT ID FROM " + TBL, conf);
-    assertTrue(plan instanceof  HiveQueryPlan);
-    System.out.println("#####\n" + plan.getPlan());
+    assertTrue(plan instanceof HiveQueryPlan);
 
     // test execute prepare
     GrillResultSet result = driver.executePrepare(plan.getHandle(), conf);
@@ -260,4 +263,22 @@ public class TestHiveDriver {
     driver.closeQuery(plan.getHandle());
   }
 
+  @Test
+  public void testExplainOutput() throws Exception {
+    createTestTable("explain_test_1");
+    createTestTable("explain_test_2");
+
+    QueryPlan plan = driver.explain("SELECT explain_test_1.ID, count(1) FROM " +
+      " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID" +
+      " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" +
+      " GROUP BY explain_test_1.ID", conf);
+
+    assertTrue(plan instanceof  HiveQueryPlan);
+    assertNotNull(plan.getResultDestination());
+    assertNotNull(plan.getTablesQueried());
+    System.out.println("@@Result Destination " + plan.getResultDestination());
+    System.out.println("@@Tables Queried " + plan.getTablesQueried());
+    assertEquals(plan.getTablesQueried().size(), 2);
+    //driver.closeQuery(plan.getHandle());
+  }
 }

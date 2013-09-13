@@ -19,28 +19,28 @@ public abstract class QueryPlan {
     FULL_SCAN
   }
   
-  private int numJoins = 0;
-  private int numGbys = 0;
-  private int numSels = 0;
-  private int numSelDi = 0;
-  private int numHaving = 0;
-  private int numObys = 0;
-  private int numNonDefaultAggrExprs = 0;
-  private int numDefaultAggrExprs = 0;
-  private int numFilters = 0;
-  private List<String> tablesQueried;
-  private boolean hasSubQuery = false;
-  private String resultDestination;
-  private ExecMode execMode;
-  private ScanMode scanMode;
-  private Map<String, Double> tableWeights = new HashMap<String, Double>();
-  private Double joinWeight;
-  private Double gbyWeight;
-  private Double filterWeight;
-  private Double havingWeight;
-  private Double obyWeight;
-  private Double selectWeight;
-  private QueryHandle handle;
+  protected int numJoins = 0;
+  protected int numGbys = 0;
+  protected int numSels = 0;
+  protected int numSelDi = 0;
+  protected int numHaving = 0;
+  protected int numObys = 0;
+  protected int numNonDefaultAggrExprs = 0;
+  protected int numDefaultAggrExprs = 0;
+  protected int numFilters = 0;
+  protected List<String> tablesQueried;
+  protected boolean hasSubQuery = false;
+  protected String resultDestination;
+  protected ExecMode execMode;
+  protected ScanMode scanMode;
+  protected Map<String, Double> tableWeights = new HashMap<String, Double>();
+  protected Double joinWeight;
+  protected Double gbyWeight;
+  protected Double filterWeight;
+  protected Double havingWeight;
+  protected Double obyWeight;
+  protected Double selectWeight;
+  protected QueryHandle handle;
 
   /**
    * Get the query plan
