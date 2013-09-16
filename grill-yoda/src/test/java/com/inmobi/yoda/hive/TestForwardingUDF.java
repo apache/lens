@@ -41,7 +41,7 @@ public class TestForwardingUDF {
     hiveClient.executeStatement(session, "CREATE DATABASE udfTest", confOverlay);
     hiveClient.executeStatement(session, "SET hive.lock.manager=org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager",
       confOverlay);
-    hiveClient.executeStatement(session, "DROP TABLE IF EXISTS " + TEST_TBL, confOverlay);
+    //hiveClient.executeStatement(session, "DROP TABLE IF EXISTS " + TEST_TBL, confOverlay);
     hiveClient.executeStatement(session, "CREATE TABLE " + TEST_TBL + "(ID STRING, CSCDT STRING)" +
       " ROW FORMAT DELIMITED FIELDS TERMINATED BY '\t'", confOverlay);
 
