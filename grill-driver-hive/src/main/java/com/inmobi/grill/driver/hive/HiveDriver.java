@@ -39,7 +39,7 @@ public class HiveDriver implements GrillDriver {
 
   public static final String GRILL_USER_NAME_KEY = "grill.hs2.user";
   public static final String GRILL_PASSWORD_KEY = "grill.hs2.password";
-  public static final String GRILL_RESULT_SET_TYPE_KEY = "grill.persistent.resultset";
+  public static final String GRILL_PERSISTENT_RESULT_SET = "grill.persistent.resultset";
   public static final String PERSISTENT = "persistent";
   public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
@@ -105,14 +105,19 @@ public class HiveDriver implements GrillDriver {
   @Override
   public QueryPlan explain(String query, Configuration conf) throws GrillException {
     QueryContext ctx = createQueryContext(query, conf);
-
-    conf.setBoolean(GRILL_RESULT_SET_TYPE_KEY, false);
-    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute("EXPLAIN EXTENDED " + query, conf);
+    String hiveQuery = ctx.hiveQuery;
+    boolean isPersistent = ctx.isPersistent;
+    // Get result set of explain
+    ctx.isPersistent = false;
+    ctx.hiveQuery = "EXPLAIN EXTENDED " + hiveQuery;
+    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(ctx);
     List<String> explainOutput = new ArrayList<String>();
     while (inMemoryResultSet.hasNext()) {
       explainOutput.add(((TStringValue) inMemoryResultSet.next().get(0)).getValue());
     }
 
+    ctx.hiveQuery = hiveQuery;
+    ctx.isPersistent = isPersistent;
     handleToContext.put(ctx.queryHandle, ctx);
     return new HiveQueryPlan(explainOutput, ctx.queryHandle);
   }
@@ -324,9 +329,7 @@ public class HiveDriver implements GrillDriver {
   private QueryContext createQueryContext(String query, Configuration conf) {
     QueryContext ctx = new QueryContext();
 
-    boolean resultSetType = conf.getBoolean(GRILL_RESULT_SET_TYPE_KEY, true);
-
-    ctx.isPersistent = resultSetType;
+    ctx.isPersistent = conf.getBoolean(GRILL_PERSISTENT_RESULT_SET, true);
     ctx.userQuery = query;
 
     if (ctx.isPersistent) {

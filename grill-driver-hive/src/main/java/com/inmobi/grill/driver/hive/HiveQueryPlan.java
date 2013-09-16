@@ -1,22 +1,12 @@
 package com.inmobi.grill.driver.hive;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.hadoop.hive.ql.plan.api.Operator;
-import org.apache.hadoop.hive.ql.plan.api.Query;
-import org.apache.hadoop.hive.ql.plan.api.Stage;
-import org.apache.hadoop.hive.ql.plan.api.Task;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TJSONProtocol;
-import org.apache.thrift.transport.TMemoryBuffer;
-
 import com.inmobi.grill.api.QueryCost;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.exception.GrillException;
 
 public class HiveQueryPlan extends QueryPlan {
   enum ParserState {
@@ -28,6 +18,8 @@ public class HiveQueryPlan extends QueryPlan {
     GROUPBY,
     GROUPBY_KEYS,
     GROUPBY_EXPRS,
+    MOVE,
+    MAP_REDUCE,
   };
 
   public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle) {
@@ -42,15 +34,22 @@ public class HiveQueryPlan extends QueryPlan {
   private void extractPlanDetails(List<String> explainOutput) {
     ParserState state = ParserState.BEGIN;
     ParserState prevState = state;
+    ArrayList<ParserState> states = new ArrayList<ParserState>();
 
     for (String line : explainOutput) {
-      System.out.println("@@" + line);
+      //System.out.println("@@ " + states + " [" +state + "] " + line);
       String tr = line.trim();
-      state = findState(tr, state);
+      prevState = state;
+      state = nextState(tr, state);
+
+      if (prevState != state) {
+        states.add(prevState);
+      }
+
       switch (state) {
-        case FILE_OUTPUT_OPERATOR:
-          if (tr.startsWith("directory:")) {
-            String outputPath = tr.replace("directory:", "").trim();
+        case MOVE:
+          if (tr.startsWith("destination:")) {
+            String outputPath = tr.replace("destination:", "").trim();
             resultDestination = outputPath;
           }
           break;
@@ -62,12 +61,12 @@ public class HiveQueryPlan extends QueryPlan {
           }
           break;
         case JOIN:
-          if (prevState != ParserState.JOIN) {
+          if (tr.equals("condition map:")) {
             numJoins++;
           }
           break;
         case SELECT:
-          if (tr.startsWith("expr:")) {
+          if (tr.startsWith("expr:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
             numSels++;
           }
           break;
@@ -80,15 +79,18 @@ public class HiveQueryPlan extends QueryPlan {
           if (tr.startsWith("expr:")) {
             numGbys++;
           }
+          break;
       }
-
-      prevState = state;
     }
 	}
 
-  private ParserState findState(String tr, ParserState state) {
+  private ParserState nextState(String tr, ParserState state) {
     if (tr.equals("File Output Operator")) {
       return ParserState.FILE_OUTPUT_OPERATOR;
+    } else if (tr.equals("Map Reduce")) {
+      return ParserState.MAP_REDUCE;
+    } else if (tr.equals("Move Operator")) {
+      return ParserState.MOVE;
     } else if (tr.equals("TableScan")) {
       return ParserState.TABLE_SCAN;
     } else if (tr.equals("Map Join Operator")) {

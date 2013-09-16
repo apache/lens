@@ -56,7 +56,7 @@ public class TestHiveDriver {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String dropTable = "DROP TABLE IF EXISTS " + tableName;
     String createTable = "CREATE TABLE " + tableName  +"(ID STRING)";
-    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     GrillResultSet resultSet = driver.execute(dropTable, conf);
 
     assertNotNull(resultSet);
@@ -126,7 +126,7 @@ public class TestHiveDriver {
 
     // Now run a command that would fail
     String expectFail = "SELECT * FROM FOO_BAR";
-    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
     handle = driver.executeAsync(expectFail, conf);
     Set<Status> expectedStates =
         new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.FAILED));
@@ -136,7 +136,7 @@ public class TestHiveDriver {
 
     //  Async select query
     String select = "SELECT ID FROM " + TBL;
-    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     handle = driver.executeAsync(select, conf);
     expectedStates =
         new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
@@ -157,7 +157,7 @@ public class TestHiveDriver {
   @Test
   public void testCancelAsyncQuery() throws Exception {
     createTestTable();
-    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, false);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     QueryHandle handle = driver.executeAsync("SELECT ID FROM " + TBL, conf);
     driver.cancelQuery(handle);
     QueryStatus status = driver.getStatus(handle);
@@ -175,7 +175,7 @@ public class TestHiveDriver {
   @Test
   public void testPersistentResultSet() throws Exception {
     createTestTable();
-    conf.setBoolean(HiveDriver.GRILL_RESULT_SET_TYPE_KEY, true);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
     conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
     GrillResultSet resultSet = driver.execute("SELECT ID FROM " + TBL, conf);
     assertTrue(resultSet instanceof HivePersistentResultSet);
@@ -274,7 +274,7 @@ public class TestHiveDriver {
       " GROUP BY explain_test_1.ID", conf);
 
     assertTrue(plan instanceof  HiveQueryPlan);
-    assertNotNull(plan.getResultDestination());
+    assertNull(plan.getResultDestination());
     assertNotNull(plan.getTablesQueried());
     System.out.println("@@Result Destination " + plan.getResultDestination());
     System.out.println("@@Tables Queried " + plan.getTablesQueried());
@@ -283,9 +283,24 @@ public class TestHiveDriver {
     assertTrue(plan.getTableWeights().containsKey("explain_test_1"));
     assertTrue(plan.getTableWeights().containsKey("explain_test_2"));
     assertEquals(plan.getNumJoins(), 1);
-    //assertEquals(plan.getNumGbys(), 1);
-    //assertEquals(plan.getNumDefaultAggrExprs(), 1);
-    //assertEquals(plan.getNumSels(), 1);
-    //driver.closeQuery(plan.getHandle());
+    driver.closeQuery(plan.getHandle());
+  }
+
+  @Test
+  public void testExplainOutputPersistent() throws Exception {
+    createTestTable("explain_test_1");
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    String query2 = "SELECT DISTINCT ID FROM explain_test_1";
+    QueryPlan plan2 = driver.explain(query2, conf);
+    assertNotNull(plan2.getResultDestination());
+    assertNotNull(plan2.getTablesQueried());
+    assertEquals(plan2.getTablesQueried().size(), 1);
+    assertTrue(plan2.getTableWeights().containsKey("explain_test_1"));
+    assertEquals(plan2.getNumSels(), 1);
+    GrillResultSet resultSet = driver.executePrepare(plan2.getHandle(), conf);
+    HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
+    String path = persistentResultSet.getOutputPath();
+    assertEquals(plan2.getResultDestination(), path);
+    driver.closeQuery(plan2.getHandle());
   }
 }
