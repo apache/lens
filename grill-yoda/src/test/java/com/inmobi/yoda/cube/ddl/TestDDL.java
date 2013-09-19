@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -40,11 +41,12 @@ public class TestDDL {
   @BeforeTest
   public void setup()
       throws AlreadyExistsException, HiveException, IOException {
+    SessionState.start(conf);
     Hive client = Hive.get(conf);
     Database database = new Database();
     database.setName(TestDDL.class.getSimpleName());
     client.createDatabase(database);
-    client.setCurrentDatabase(TestDDL.class.getSimpleName());    
+    SessionState.get().setCurrentDatabase(TestDDL.class.getSimpleName());
     dimDDL = new DimensionDDL(conf);
     System.out.println("##setup testDDL");
   }

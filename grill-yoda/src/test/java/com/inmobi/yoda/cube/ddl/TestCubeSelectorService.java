@@ -8,6 +8,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -52,12 +53,13 @@ public class TestCubeSelectorService {
   @BeforeTest
   public void setup() throws Exception {
     conf = new HiveConf(TestCubeSelectorService.class);
+    SessionState.start(conf);
     Hive client = Hive.get(conf);
     Database database = new Database();
     database.setName(TEST_DB);
     client.createDatabase(database);
 
-    client.setCurrentDatabase(TEST_DB);
+    SessionState.get().setCurrentDatabase(TEST_DB);
     metastore = CubeMetastoreClient.getInstance(conf);
     metastore.setCurrentDatabase(TEST_DB);
 

@@ -204,6 +204,9 @@ public class HiveDriver implements GrillDriver {
       case RUNNING:
         stat = Status.RUNNING;
         break;
+      case PENDING:
+        stat = Status.PENDING;
+        break;
       case UNKNOWN:
         stat = Status.UNKNOWN;
         break;

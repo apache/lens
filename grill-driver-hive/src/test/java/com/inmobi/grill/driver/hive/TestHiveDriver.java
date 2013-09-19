@@ -128,9 +128,7 @@ public class TestHiveDriver {
     String expectFail = "SELECT * FROM FOO_BAR";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
     handle = driver.executeAsync(expectFail, conf);
-    Set<Status> expectedStates =
-        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.FAILED));
-    validateExecuteAsync(handle, expectedStates, Status.FAILED);
+    validateExecuteAsync(handle, Status.FAILED);
     driver.closeQuery(handle);
 
 
@@ -138,20 +136,15 @@ public class TestHiveDriver {
     String select = "SELECT ID FROM " + TBL;
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     handle = driver.executeAsync(select, conf);
-    expectedStates =
-        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
-    validateExecuteAsync(handle, expectedStates, Status.SUCCESSFUL);
+    validateExecuteAsync(handle, Status.SUCCESSFUL);
     driver.closeQuery(handle);
   }
 
-  private void validateExecuteAsync(QueryHandle handle,
-      Set<Status> expectedStates, Status finalState) throws Exception {
-    Set<Status> actualStates = new LinkedHashSet<Status>();
-    waitForAsyncQuery(handle, actualStates, driver);
+  private void validateExecuteAsync(QueryHandle handle, Status finalState) throws Exception {
+    waitForAsyncQuery(handle, driver);
     QueryStatus status = driver.getStatus(handle);
     assertEquals(status.getStatus(), finalState, "Expected query to finish with"
         + finalState);
-    assertEquals(actualStates, expectedStates);
   }
 
   @Test
@@ -226,15 +219,13 @@ public class TestHiveDriver {
     fs.delete(actualPath, true);
   }
 
-  private void waitForAsyncQuery(QueryHandle handle, Set<Status> actualStates,
-      HiveDriver driver) throws Exception {
+  private void waitForAsyncQuery(QueryHandle handle, HiveDriver driver) throws Exception {
     Set<Status> terminationStates =
         EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED,
             Status.SUCCESSFUL);
 
     while (true) {
       QueryStatus status = driver.getStatus(handle);
-      actualStates.add(status.getStatus());
       assertNotNull(status);
       if (terminationStates.contains(status.getStatus())) {
         break;
@@ -256,9 +247,7 @@ public class TestHiveDriver {
 
     // test execute prepare async
     driver.executePrepareAsync(plan.getHandle(), conf);
-    Set<Status> expectedStates =
-        new LinkedHashSet<Status>(Arrays.asList(Status.RUNNING, Status.SUCCESSFUL));
-    validateExecuteAsync(plan.getHandle(), expectedStates, Status.SUCCESSFUL);
+    validateExecuteAsync(plan.getHandle(), Status.SUCCESSFUL);
 
     driver.closeQuery(plan.getHandle());
   }

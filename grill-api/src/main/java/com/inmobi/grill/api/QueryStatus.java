@@ -2,7 +2,7 @@ package com.inmobi.grill.api;
 
 public class QueryStatus {
   public enum Status {
-    QUEUED,
+    PENDING,
     RUNNING,
     SUCCESSFUL,
     FAILED,
