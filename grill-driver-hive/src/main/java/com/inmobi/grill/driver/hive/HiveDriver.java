@@ -166,16 +166,23 @@ public class HiveDriver implements GrillDriver {
     return ctx.queryHandle;
   }
 
+  private void copyConf(QueryContext ctx, Configuration conf) {
+    for (Map.Entry<String, String> entry : conf) {
+      ctx.conf.set(entry.getKey(), entry.getValue());
+    }
+  }
   @Override
   public GrillResultSet executePrepare(QueryHandle handle, Configuration conf)
       throws GrillException {
     QueryContext ctx = getContext(handle);
+    copyConf(ctx, conf);
     return execute(ctx);
   }
 
   public void executePrepareAsync(QueryHandle handle, Configuration conf)
       throws GrillException {
     QueryContext ctx = getContext(handle);
+    copyConf(ctx, conf);
     executeAsync(ctx);
   }
 
