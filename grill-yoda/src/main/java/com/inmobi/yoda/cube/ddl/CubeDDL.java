@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
@@ -287,6 +288,7 @@ public class CubeDDL {
 
   public static void main(String[] args) throws IOException, HiveException {
     HiveConf conf = new HiveConf(CubeDDL.class);
+    SessionState.start(conf);
 
     DimensionDDL dimDDL = new DimensionDDL(conf);
     CubeDDL cc = new CubeDDL(dimDDL, conf);

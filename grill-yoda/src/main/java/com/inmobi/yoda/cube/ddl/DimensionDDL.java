@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.TableReference;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 
@@ -188,7 +189,9 @@ public class DimensionDDL {
   }
 
   public static void main(String[] args) throws IOException, HiveException {
-    DimensionDDL cd = new DimensionDDL(new HiveConf(DimensionDDL.class));
+    HiveConf conf = new HiveConf(DimensionDDL.class);
+    SessionState.start(conf);
+    DimensionDDL cd = new DimensionDDL(conf);
     cd.createAllDimensions();
   }
 }

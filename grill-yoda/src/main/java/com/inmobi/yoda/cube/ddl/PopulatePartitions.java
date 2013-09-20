@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
 import org.apache.hadoop.mapred.TextInputFormat;
 
@@ -276,6 +277,7 @@ public class PopulatePartitions {
       return;
     }
     HiveConf conf = new HiveConf(PopulatePartitions.class);
+    SessionState.start(conf);
     PopulatePartitions pp = new PopulatePartitions(conf);
     if (args[0].equalsIgnoreCase("-dims")) {
       String baseDimPath = args[1];
