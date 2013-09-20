@@ -73,7 +73,7 @@ public class CubeGrillDriver implements GrillDriver {
     return cubeQueries;
   }
 
-  void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries)
+  private void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries)
       throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
@@ -135,10 +135,24 @@ public class CubeGrillDriver implements GrillDriver {
     return matcher.matches();
   }
 
-  Map<GrillDriver, String> rewriteQuery(final String query) throws GrillException {
+  /**
+   * Replaces new lines with spaces;
+   * '&&' with AND; '||' with OR // these two can be removed once HIVE-5326
+   *  gets resolved
+   * 
+   * @return
+   */
+  String getReplacedQuery(final String query) {
+    String finalQuery = query.replaceAll("[\\n\\r]", " ")
+        .replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ");
+    return finalQuery;
+  }
+
+  Map<GrillDriver, String> rewriteQuery(final String query)
+      throws GrillException {
     try {
-      String queryWithoutNewLines = query.replaceAll("[\\n\\r]", " ");
-      List<CubeQueryInfo> cubeQueries = findCubePositions(queryWithoutNewLines);
+      String replacedQuery = getReplacedQuery(query);
+      List<CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
       Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
       for (GrillDriver driver : drivers) {
         CubeQueryRewriter rewriter = getRewriter(driver);
@@ -146,13 +160,13 @@ public class CubeGrillDriver implements GrillDriver {
         int start = 0;
         for (CubeQueryInfo cqi : cubeQueries) {
           if (start != cqi.startPos) {
-            builder.append(queryWithoutNewLines.substring(start, cqi.startPos));
+            builder.append(replacedQuery.substring(start, cqi.startPos));
           }
           String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
           builder.append(hqlQuery);
           start = cqi.endPos;
         }
-        builder.append(queryWithoutNewLines.substring(start));
+        builder.append(replacedQuery.substring(start));
         LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
         driverQueries.put(driver, builder.toString());
       }

@@ -175,7 +175,17 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     mockedDriver.rewriteQuery(q2);
 
-    q2 = "select * from (cube select name from table) a join (cube select name2 from table2) b";
+    q2 = "select * from (cube select name from table where" +
+        " (name = 'ABC'||name = 'XYZ')&&(key=100)) a";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(mockedDriver.getReplacedQuery(q2));
+    Assert.assertEquals(cubeQueries.size(), 1);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from" +
+        " table where (name = 'ABC' OR name = 'XYZ') AND (key=100)");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from (cube select name from table) a join (cube select" +
+        " name2 from table2) b";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 2);
