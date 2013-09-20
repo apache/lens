@@ -62,6 +62,7 @@ public class HiveDriver implements GrillDriver {
     String hiveQuery;
     Path resultSetPath;
     boolean isPersistent;
+    Configuration conf;
 
     public QueryContext() {
       queryHandle = new QueryHandle(UUID.randomUUID());
@@ -131,8 +132,9 @@ public class HiveDriver implements GrillDriver {
 
   private GrillResultSet execute(QueryContext ctx) throws GrillException {
     try {
+      ctx.conf.set("mapred.job.name", ctx.queryHandle.toString());
       OperationHandle op = getClient().executeStatement(getSession(), ctx.hiveQuery, 
-          conf.getValByRegex(".*"));
+          ctx.conf.getValByRegex(".*"));
       ctx.hiveHandle = op;
       OperationStatus status = getClient().getOperationStatus(op);
 
@@ -155,8 +157,9 @@ public class HiveDriver implements GrillDriver {
   private QueryHandle executeAsync(QueryContext ctx)
       throws GrillException {
     try {
+      ctx.conf.set("mapred.job.name", ctx.queryHandle.toString());
       ctx.hiveHandle = getClient().executeStatementAsync(getSession(), ctx.hiveQuery, 
-          conf.getValByRegex(".*"));
+          ctx.conf.getValByRegex(".*"));
     } catch (HiveSQLException e) {
       throw new GrillException("Error executing async query", e);
     }
@@ -331,7 +334,7 @@ public class HiveDriver implements GrillDriver {
 
   private QueryContext createQueryContext(String query, Configuration conf) {
     QueryContext ctx = new QueryContext();
-
+    ctx.conf = conf;
     ctx.isPersistent = conf.getBoolean(GRILL_PERSISTENT_RESULT_SET, true);
     ctx.userQuery = query;
 
