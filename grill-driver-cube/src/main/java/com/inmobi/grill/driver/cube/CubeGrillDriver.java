@@ -52,10 +52,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   public GrillResultSet execute(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = 
-        new HashMap<GrillDriver, String>();
-    // 1. rewrite query to get summary tables and joins
-    rewriteQuery(query, driverQueries);
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries);
@@ -64,31 +61,69 @@ public class CubeGrillDriver implements GrillDriver {
     return driver.execute(driverQueries.get(driver), conf);
   }
 
-  void rewriteQuery(String query, GrillDriver driver)
+  List<CubeQueryInfo> findCubePositions(String query)
       throws SemanticException, ParseException {
     ASTNode ast = HQLParser.parseHQL(query);
-    LOG.info("User query AST:" + ast.dump());
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
-    rewriteCubeQueries(ast, rewriter);
-    LOG.info("Final rewritten AST:" + ast.dump());
+    LOG.debug("User query AST:" + ast.dump());
+    List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
+    findCubePositions(ast, cubeQueries);
+    for (CubeQueryInfo cqi : cubeQueries) {
+      cqi.query = query.substring(cqi.startPos, cqi.endPos);
+    }
+    return cubeQueries;
   }
 
-  void rewriteCubeQueries(ASTNode ast, CubeQueryRewriter rewriter)
+  void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries)
       throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
           ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
-        LOG.info("cube ast:" + ast.dump());
-       // ast = rewriter.rewrite(ast).toAST(rewriter.getQLContext());
-        LOG.info("Rewritten AST:" + ast);
+        CubeQueryInfo cqi = new CubeQueryInfo();
+        cqi.cubeAST = ast;
+        if (ast.getParent() != null) {
+          ASTNode parent = (ASTNode) ast.getParent();
+          cqi.startPos = ast.getCharPositionInLine();
+          int ci = ast.getChildIndex();
+          if (parent.getToken() == null) {
+            // Not a sub query
+            cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine();
+          } else if (parent.getChildCount() > ci + 1) {
+            if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
+              //one less for the next start and one for close parenthesis
+              cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine() - 2;
+            } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
+              //one less for the next start and less the size of string ' UNION ALL'
+              cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine() - 11;
+            } else {
+              // Not expected to reach here
+              LOG.warn("Unknown query pattern found with AST:" + ast.dump());
+              throw new SemanticException("Unknown query pattern");
+            }
+          } else {
+            // last child of union all query
+            cqi.endPos = parent.getParent().getChild(1).getCharPositionInLine() - 2;
+          }
+        }
+        cubeQueries.add(cqi);
       }
       else {
         for (int child_pos = 0; child_pos < child_count; ++child_pos) {
-          rewriteCubeQueries((ASTNode)ast.getChild(child_pos), rewriter);
+          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries);
         }
       }
     } 
+  }
+
+  CubeQueryRewriter getRewriter(GrillDriver driver) throws SemanticException {
+    return new CubeQueryRewriter(driver.getConf());
+  }
+
+  static class CubeQueryInfo {
+    int startPos;
+    int endPos;
+    String query;
+    ASTNode cubeAST;
   }
 
   public boolean isCubeQuery(String query) {
@@ -100,23 +135,30 @@ public class CubeGrillDriver implements GrillDriver {
     return matcher.matches();
   }
 
-  private void rewriteQuery(String query,
-      Map<GrillDriver, String> driverQueries)
-          throws GrillException {
+  Map<GrillDriver, String> rewriteQuery(final String query) throws GrillException {
     try {
-      boolean cubeQuery = isCubeQuery(query);
+      String queryWithoutNewLines = query.replaceAll("[\\n\\r]", " ");
+      List<CubeQueryInfo> cubeQueries = findCubePositions(queryWithoutNewLines);
+      Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
       for (GrillDriver driver : drivers) {
-        String driverQuery;
-        if (cubeQuery) {
-          CubeQueryRewriter rewriter = new CubeQueryRewriter(driver.getConf());
-          driverQuery = rewriter.rewrite(query).toHQL();
-        } else {
-          driverQuery = query;
+        CubeQueryRewriter rewriter = getRewriter(driver);
+        StringBuilder builder = new StringBuilder();
+        int start = 0;
+        for (CubeQueryInfo cqi : cubeQueries) {
+          if (start != cqi.startPos) {
+            builder.append(queryWithoutNewLines.substring(start, cqi.startPos));
+          }
+          String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
+          builder.append(hqlQuery);
+          start = cqi.endPos;
         }
-        driverQueries.put(driver, driverQuery);
+        builder.append(queryWithoutNewLines.substring(start));
+        LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
+        driverQueries.put(driver, builder.toString());
       }
+      return driverQueries;
     } catch (Exception e) {
-      throw new GrillException(e);
+      throw new GrillException("Rewriting failed", e);
     }
   }
 
@@ -125,10 +167,8 @@ public class CubeGrillDriver implements GrillDriver {
 
   public QueryHandle executeAsync(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = 
-        new HashMap<GrillDriver, String>();
-    rewriteQuery(query, driverQueries);
-    
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
+
     GrillDriver driver = selectDriver(driverQueries);
     QueryHandle handle = driver.executeAsync(driverQueries.get(driver), conf);
     executionContexts.put(handle, new QueryExecutionContext(query, driver,
@@ -151,7 +191,7 @@ public class CubeGrillDriver implements GrillDriver {
     final GrillDriver selectedDriver;
     final String driverQuery;
     ExecutionStatus execStatus;
-    
+
     QueryExecutionContext(String cubeQuery, GrillDriver selectedDriver,
         String driverQuery, ExecutionStatus execStatus) {
       this.cubeQuery = cubeQuery;
@@ -212,9 +252,7 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public QueryPlan explain(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = 
-        new HashMap<GrillDriver, String>();
-    rewriteQuery(query, driverQueries);
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
     GrillDriver driver = selectDriver(driverQueries);
     QueryPlan plan = driver.explain(driverQueries.get(driver), conf);
     QueryExecutionContext context = new QueryExecutionContext(query,
@@ -255,16 +293,16 @@ public class CubeGrillDriver implements GrillDriver {
     return getContext(handle).selectedDriver.cancelQuery(handle);
   }
 
-	@Override
-	public Configuration getConf() {
-		return conf;
-	}
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
 
-	@Override
-	public void close() throws GrillException {
-	  drivers.clear();
-	  executionContexts.clear();
-	}
+  @Override
+  public void close() throws GrillException {
+    drivers.clear();
+    executionContexts.clear();
+  }
 
   @Override
   public void closeQuery(QueryHandle handle) throws GrillException {
