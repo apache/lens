@@ -7,6 +7,7 @@ import com.singularsys.jep.functions.UnaryFunction;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.exec.Description;
+import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 
@@ -18,6 +19,10 @@ import java.util.HashMap;
 public class LongForwardingUDF extends UDF {
   public static final Log LOG = LogFactory.getLog(StringForwardingUDF.class);
   HashMap<String, Object> udfObjects;
+
+  static {
+    FunctionRegistry.registerTemporaryFunction("long_yoda_udf", LongForwardingUDF.class);
+  }
 
   public synchronized Object getCachedInstance(String udfName) throws HiveException {
     Object udf = udfObjects.get(udfName);

@@ -11,6 +11,7 @@ import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -29,6 +30,11 @@ public class TestForwardingUDF {
   private Map<String, String> confOverlay;
   private File testFile;
   public static final int NUM_LINES = 100;
+
+  @BeforeClass
+  public void registerUDFS() throws Exception {
+    UdfRegistry.registerUDFS();
+  }
 
   @BeforeTest
   public void setup() throws Exception {
@@ -74,12 +80,6 @@ public class TestForwardingUDF {
 
   @Test
   public void testUdfForward() throws Exception {
-    hiveClient.executeStatement(session,
-      "CREATE TEMPORARY FUNCTION str_yoda_udf AS 'com.inmobi.yoda.hive.StringForwardingUDF'",
-      confOverlay);
-    hiveClient.executeStatement(session,
-      "CREATE TEMPORARY FUNCTION bool_yoda_udf AS 'com.inmobi.yoda.hive.BooleanForwardingUDF'",
-      confOverlay);
     OperationHandle opHandle = hiveClient.executeStatement(session,
       "INSERT OVERWRITE LOCAL DIRECTORY 'target/udfTestOutput' " +
         "SELECT str_yoda_udf('com.inmobi.dw.yoda.udfs.generic.MD5', ID), " +
