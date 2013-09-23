@@ -73,6 +73,17 @@ public class TestHiveDriver {
 
   // Tests
   @Test
+  public void testInsertOverwriteConf() throws Exception {
+    createTestTable();
+    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    String query = "SELECT ID FROM " + TBL;
+    HiveDriver.QueryContext ctx = driver.createQueryContext(query, conf);
+    assertEquals(ctx.userQuery, query);
+    assertNotNull(ctx.hiveQuery);
+    assertEquals(ctx.hiveQuery, ctx.userQuery);
+  }
+
+  @Test
   public void testExecuteQuery() throws Exception {
     createTestTable();
     GrillResultSet resultSet = null;

@@ -43,7 +43,8 @@ public class HiveDriver implements GrillDriver {
   public static final String PERSISTENT = "persistent";
   public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
-  private static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
+  public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
+  public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
 
   private HiveConf conf;
   private SessionHandle session;
@@ -55,7 +56,7 @@ public class HiveDriver implements GrillDriver {
   /**
    * Internal class to hold query related info
    */
-  private class QueryContext {
+  class QueryContext {
     final QueryHandle queryHandle;
     OperationHandle hiveHandle;
     String userQuery;
@@ -339,7 +340,7 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  private QueryContext createQueryContext(String query, Configuration conf) {
+  QueryContext createQueryContext(String query, Configuration conf) {
     QueryContext ctx = new QueryContext();
     ctx.conf = conf;
     ctx.isPersistent = conf.getBoolean(GRILL_PERSISTENT_RESULT_SET, true);
@@ -354,7 +355,11 @@ public class HiveDriver implements GrillDriver {
       if (StringUtils.isNotBlank(resultSetParentDir)) {
         ctx.resultSetPath = new Path(resultSetParentDir, ctx.queryHandle.toString());
         // create query
-        builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
+        if (conf.getBoolean(GRILL_ADD_INSERT_OVEWRITE, true)) {
+          builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
+        } else {
+          builder = new StringBuilder();
+        }
       } else {
         // Write to /tmp/grillreports
         ctx.resultSetPath = new 
