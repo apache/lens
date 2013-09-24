@@ -4,9 +4,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
+
 import com.inmobi.grill.api.QueryCost;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
+import com.inmobi.grill.api.GrillConfUtil;
 
 public class HiveQueryPlan extends QueryPlan {
   enum ParserState {
@@ -22,19 +29,19 @@ public class HiveQueryPlan extends QueryPlan {
     MAP_REDUCE,
   };
 
-  public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle) {
-    tablesQueried = new ArrayList<String>();
-    tableWeights = new HashMap<String, Double>();
+  public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle,
+      HiveConf conf) throws HiveException {
     setHandle(queryHandle);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
-    extractPlanDetails(explainOutput);
+    extractPlanDetails(explainOutput, conf);
   }
 
-  private void extractPlanDetails(List<String> explainOutput) {
+  private void extractPlanDetails(List<String> explainOutput, HiveConf conf) throws HiveException {
     ParserState state = ParserState.BEGIN;
     ParserState prevState = state;
     ArrayList<ParserState> states = new ArrayList<ParserState>();
+    Hive metastore = Hive.get(conf);
 
     for (String line : explainOutput) {
       //System.out.println("@@ " + states + " [" +state + "] " + line);
@@ -57,7 +64,14 @@ public class HiveQueryPlan extends QueryPlan {
           if (tr.startsWith("alias:")) {
             String tableName = tr.replace("alias:", "").trim();
             tablesQueried.add(tableName);
-            tableWeights.put(tableName, 1d);
+            Table tbl = metastore.getTable(tableName);
+            String costStr = tbl.getParameters().get(GrillConfUtil.STORAGE_COST);
+            
+            Double weight = 1d;
+            if (costStr != null) {
+              weight = Double.parseDouble(costStr);
+            }
+            tableWeights.put(tableName, weight);
           }
           break;
         case JOIN:

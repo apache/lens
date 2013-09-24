@@ -16,7 +16,7 @@ import org.testng.annotations.*;
 
 import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.exception.GrillException;
-
+import com.inmobi.grill.api.GrillConfUtil;
 
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
@@ -31,7 +31,8 @@ public class TestHiveDriver {
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
     conf = new Configuration();
-    conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, 
+    conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
+        EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     conf.set(HiveDriver.GRILL_PASSWORD_KEY, "password");
     conf.set(HiveDriver.GRILL_USER_NAME_KEY, "user");
@@ -55,7 +56,8 @@ public class TestHiveDriver {
   private void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String dropTable = "DROP TABLE IF EXISTS " + tableName;
-    String createTable = "CREATE TABLE " + tableName  +"(ID STRING)";
+    String createTable = "CREATE TABLE " + tableName  +"(ID STRING)" +
+        " TBLPROPERTIES ('" + GrillConfUtil.STORAGE_COST + "'='500')";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     GrillResultSet resultSet = driver.execute(dropTable, conf);
 
@@ -251,6 +253,7 @@ public class TestHiveDriver {
     createTestTable();
     QueryPlan plan = driver.explain("SELECT ID FROM " + TBL, conf);
     assertTrue(plan instanceof HiveQueryPlan);
+    assertEquals(plan.getTableWeight(TBL.toLowerCase()), 500.0);
 
     // test execute prepare
     GrillResultSet result = driver.executePrepare(plan.getHandle(), conf);
@@ -269,9 +272,9 @@ public class TestHiveDriver {
     createTestTable("explain_test_2");
 
     QueryPlan plan = driver.explain("SELECT explain_test_1.ID, count(1) FROM " +
-      " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID" +
-      " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" +
-      " GROUP BY explain_test_1.ID", conf);
+        " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID" +
+        " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" +
+        " GROUP BY explain_test_1.ID", conf);
 
     assertTrue(plan instanceof  HiveQueryPlan);
     assertNull(plan.getResultDestination());

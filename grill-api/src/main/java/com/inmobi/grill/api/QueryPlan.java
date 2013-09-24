@@ -1,5 +1,6 @@
 package com.inmobi.grill.api;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +29,12 @@ public abstract class QueryPlan {
   protected int numNonDefaultAggrExprs = 0;
   protected int numDefaultAggrExprs = 0;
   protected int numFilters = 0;
-  protected List<String> tablesQueried;
+  protected final List<String> tablesQueried = new ArrayList<String>();
   protected boolean hasSubQuery = false;
   protected String resultDestination;
   protected ExecMode execMode;
   protected ScanMode scanMode;
-  protected Map<String, Double> tableWeights = new HashMap<String, Double>();
+  protected final Map<String, Double> tableWeights = new HashMap<String, Double>();
   protected Double joinWeight;
   protected Double gbyWeight;
   protected Double filterWeight;
@@ -214,8 +215,8 @@ public abstract class QueryPlan {
    * 
    * @param tablesQueried the tablesQueried to set
    */
-  protected void setTablesQueried(List<String> tablesQueried) {
-    this.tablesQueried = tablesQueried;
+  protected void addTablesQueries(String table) {
+    this.tablesQueried.add(table);
   }
 
   /**

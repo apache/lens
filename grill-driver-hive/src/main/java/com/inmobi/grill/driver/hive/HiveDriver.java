@@ -15,6 +15,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
@@ -40,7 +41,6 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_USER_NAME_KEY = "grill.hs2.user";
   public static final String GRILL_PASSWORD_KEY = "grill.hs2.password";
   public static final String GRILL_PERSISTENT_RESULT_SET = "grill.persistent.resultset";
-  public static final String PERSISTENT = "persistent";
   public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
   public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
@@ -63,7 +63,7 @@ public class HiveDriver implements GrillDriver {
     String hiveQuery;
     Path resultSetPath;
     boolean isPersistent;
-    Configuration conf;
+    HiveConf conf;
 
     public QueryContext() {
       queryHandle = new QueryHandle(UUID.randomUUID());
@@ -121,7 +121,11 @@ public class HiveDriver implements GrillDriver {
     ctx.hiveQuery = hiveQuery;
     ctx.isPersistent = isPersistent;
     handleToContext.put(ctx.queryHandle, ctx);
-    return new HiveQueryPlan(explainOutput, ctx.queryHandle);
+    try {
+      return new HiveQueryPlan(explainOutput, ctx.queryHandle, ctx.conf);
+    } catch (HiveException e) {
+      throw new GrillException("Unable to create hive query plan", e);
+    }
   }
 
   @Override
@@ -342,7 +346,7 @@ public class HiveDriver implements GrillDriver {
 
   QueryContext createQueryContext(String query, Configuration conf) {
     QueryContext ctx = new QueryContext();
-    ctx.conf = conf;
+    ctx.conf = new HiveConf(conf, HiveDriver.class);
     ctx.isPersistent = conf.getBoolean(GRILL_PERSISTENT_RESULT_SET, true);
     ctx.userQuery = query;
 

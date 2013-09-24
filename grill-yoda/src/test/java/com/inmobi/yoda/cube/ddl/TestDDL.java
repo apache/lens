@@ -26,11 +26,14 @@ import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.inmobi.grill.api.GrillConfUtil;
 
 public class TestDDL {
 
@@ -94,7 +97,7 @@ public class TestDDL {
     Assert.assertTrue(cubes.contains("cube_userappdistribution"));
     // campaign is not a cube table name
     Assert.assertFalse(cubes.contains("campaign"));
-    List<String> cubesWithPISStorage = Arrays.asList("cube_request", "cube_click",
+    List<String> cubesWithPIEStorage = Arrays.asList("cube_request", "cube_click",
         "cube_impression", "cube_rrcube");
 
     Assert.assertEquals(15, cc.getAllCubeNames().size());
@@ -117,8 +120,16 @@ public class TestDDL {
         } else {
           Assert.assertNotNull(fact.getValidColumns());             
         }
-        if (cubesWithPISStorage.contains(cube.getName())) {
+        if (cubesWithPIEStorage.contains(cube.getName())) {
           Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_PIE_STORAGE));
+        }
+        // storage cost validation
+        for (String storage : fact.getStorages()) {
+          String tableName = MetastoreUtil.getFactStorageTableName(
+              fact.getName(), Storage.getPrefix(storage));
+          Table tbl = cc.getHiveTable(tableName);
+          Assert.assertEquals(Double.toString(fact.weight()),
+              tbl.getParameters().get(GrillConfUtil.STORAGE_COST));
         }
       }
     }

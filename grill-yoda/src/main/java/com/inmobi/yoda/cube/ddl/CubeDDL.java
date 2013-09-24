@@ -35,6 +35,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
+import com.inmobi.grill.api.GrillConfUtil;
 
 public class CubeDDL {
   private static final Log LOG = LogFactory.getLog(
@@ -125,7 +126,7 @@ public class CubeDDL {
         measures.add(msr);
       }
       this.cubes.put(cubeName, new Cube(cubeTableName, measures, dimensions,
-          cubeProperties)); 
+          cubeProperties, cubeReader.getCost(cubeName))); 
 
 
       // Read summary definitions
@@ -207,7 +208,7 @@ public class CubeDDL {
   private void createFactTable(String cubeName, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
     Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
-        cubeName, summary, grains);
+        cubeName, summary, grains, cost);
     List<FieldSchema> columns = getNobColList();
 
     LOG.info("Creating fact table " + cubeName + "_" + summary +
@@ -220,16 +221,18 @@ public class CubeDDL {
   }
 
   public Map<Storage, Set<UpdatePeriod>> createStorages(String cubeName,
-      String summary, Set<Grain> grains) {
+      String summary, Set<Grain> grains, double cost) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
     Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = 
         new HashMap<Storage, Set<UpdatePeriod>>();
+    Map<String, String> tableParams = new HashMap<String, String>();
+    tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
     Storage storage = new HDFSStorage(YODA_STORAGE,
         RCFileInputFormat.class.getCanonicalName(),
         RCFileOutputFormat.class.getCanonicalName(),
         LazyNOBColumnarSerde.class.getCanonicalName(),
-        true, null, null, null);
+        true, tableParams, null, null);
     storage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
     Set<UpdatePeriod> updatePeriods = new HashSet<UpdatePeriod>();
     for (Grain g : grains) {
@@ -251,7 +254,7 @@ public class CubeDDL {
           RCFileInputFormat.class.getCanonicalName(),
           RCFileOutputFormat.class.getCanonicalName(),
           LazyNOBColumnarSerde.class.getCanonicalName(),
-          true, null, null, null);
+          true, tableParams, null, null);
       if (!summary.equals(RAW_FACT_NAME)) {
         piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
         piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
