@@ -9,7 +9,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import junit.framework.Assert;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -17,18 +16,13 @@ import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
-import org.apache.hadoop.hive.ql.cube.metadata.Cube;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
-import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
-import org.apache.hadoop.hive.ql.cube.metadata.Storage;
-import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
+import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -65,6 +59,7 @@ public class TestDDL {
   @Test
   public void testAllDimensions() throws HiveException, IOException {
     dimDDL.createAllDimensions();
+    conf.setBoolean(MetastoreConstants.METASTORE_NEEDS_REFRESH, true);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     List<String> dimTables = new ArrayList<String>();
     for (CubeDimensionTable dim : cc.getAllDimensionTables()) {
@@ -89,7 +84,10 @@ public class TestDDL {
     cubeDDL.createAllCubes();
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     cc.setCurrentDatabase(TestDDL.class.getSimpleName());
-    List<String> cubes = cc.getAllCubeNames();
+    List<String> cubes = new ArrayList<String>(cc.getAllCubes().size());
+    for (Cube cube : cc.getAllCubes()) {
+      cubes.add(cube.getName());
+    }
     // assert for some random cube table names
     Assert.assertTrue(cubes.contains("cube_request"));
     Assert.assertTrue(cubes.contains("cube_campaign"));
@@ -100,7 +98,7 @@ public class TestDDL {
     List<String> cubesWithPIEStorage = Arrays.asList("cube_request", "cube_click",
         "cube_impression", "cube_rrcube");
 
-    Assert.assertEquals(15, cc.getAllCubeNames().size());
+    Assert.assertEquals(15, cc.getAllCubes().size());
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
@@ -144,7 +142,8 @@ public class TestDDL {
         new SimpleDateFormat(UpdatePeriod.HOURLY.format()),
         now, false);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
-    for (String dimName : cc.getAllDimensionTableNames()) {
+    for (CubeDimensionTable dim : cc.getAllDimensionTables()) {
+      String dimName = dim.getName();
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
           Storage.getPrefix(CubeDDL.YODA_STORAGE));
       Assert.assertTrue(cc.partitionExists(storageTableName,

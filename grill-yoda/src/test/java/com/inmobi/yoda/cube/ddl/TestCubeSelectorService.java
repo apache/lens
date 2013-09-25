@@ -11,6 +11,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -72,8 +73,7 @@ public class TestCubeSelectorService {
 
   @AfterTest
   public void tearDown() throws Exception {
-    Hive.get(conf).dropDatabase(TEST_DB, true, true,
-      true);
+    Hive.get(conf).dropDatabase(TEST_DB, true, true, true);
     System.out.println("##teardown cubeselector service");
   }
 

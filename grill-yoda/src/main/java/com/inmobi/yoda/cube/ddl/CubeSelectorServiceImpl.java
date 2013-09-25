@@ -93,7 +93,7 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
         if (table.columns.contains(column)) {
           Set<String> subset = selection.get(table);
           if (subset == null) {
-            subset = new HashSet<String>();
+            subset = new LinkedHashSet<String>();
             selection.put(table, subset);
           }
           subset.add(column);
