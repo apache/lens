@@ -19,6 +19,7 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
@@ -200,8 +201,9 @@ public class TestDDL {
         filter.toString()));
     cal.add(Calendar.DAY_OF_MONTH, 1);
     filter = new StringBuilder();
+    String lastPart = format.format(cal.getTime());
     filter.append(CubeDDL.PART_KEY_IT).append("=").append("'")
-    .append(format.format(cal.getTime())).append("'");
+    .append(lastPart).append("'");
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
         filter.toString()));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName2,
@@ -210,6 +212,17 @@ public class TestDDL {
         filter.toString()));
     Assert.assertFalse(cc.partitionExistsByFilter(storageTableName4,
         filter.toString()));
+
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName2,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName3,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+
+    List<Partition> latestParts = cc.getPartitionsByFilter(storageTableName1,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT));
+    Assert.assertEquals(latestParts.size(), 1);
   }
 
   @Test
@@ -262,8 +275,9 @@ public class TestDDL {
         filter.toString()));
     cal.add(Calendar.HOUR_OF_DAY, 1);
     filter = new StringBuilder();
+    String lastPart = format.format(cal.getTime());
     filter.append(CubeDDL.PART_KEY_IT).append("=").append("'")
-    .append(format.format(cal.getTime())).append("'");
+    .append(lastPart).append("'");
     System.out.println("filter:" + filter);
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
         filter.toString()));
@@ -273,5 +287,18 @@ public class TestDDL {
         filter.toString()));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName4,
         filter.toString()));
+
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName2,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName3,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+    Assert.assertTrue(cc.partitionExistsByFilter(storageTableName4,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+
+    List<Partition> latestParts = cc.getPartitionsByFilter(storageTableName1,
+        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT));
+    Assert.assertEquals(latestParts.size(), 1);
   }
 }
