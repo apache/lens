@@ -174,7 +174,8 @@ public class PopulatePartitions {
               Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
               partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
               System.out.println("Adding partitions for Path" + partPath);
-              client.addPartition(fact, storage, updatePeriod, partitionTimestamps, null);
+              client.addPartition(fact, storage, updatePeriod,
+                  partitionTimestamps, CubeDDL.PART_KEY_IT);
             }
           } else {
             if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
@@ -195,7 +196,8 @@ public class PopulatePartitions {
                   partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
                   partSpec.put(CubeDDL.PART_KEY_COLO, colo); 
                   System.out.println("Adding partitions for Path" + cstat.getPath());
-                  client.addPartition(fact, storage, updatePeriod, partitionTimestamps, partSpec, null);
+                  client.addPartition(fact, storage, updatePeriod,
+                      partitionTimestamps, partSpec, CubeDDL.PART_KEY_IT);
                 }
               } else {
                 partPath = new Path(new Path(new Path(summariesPath, factPathName),
@@ -242,7 +244,8 @@ public class PopulatePartitions {
                       partSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
                     }
                     System.out.println("Adding partitions for Path" + estat.getPath());
-                    client.addPartition(fact, storage, updatePeriod, partitionTimestamps, partSpec, null);
+                    client.addPartition(fact, storage, updatePeriod,
+                        partitionTimestamps, partSpec, CubeDDL.PART_KEY_PT);
                   }
                 }
               }
