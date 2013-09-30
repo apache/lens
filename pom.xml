@@ -203,6 +203,18 @@
                </exclusion>
            </exclusions>
        </dependency>
+       <dependency>
+           <groupId>com.inmobi.dw.yoda</groupId>
+           <artifactId>fpjamr</artifactId>
+           <version>0.6.56-SNAPSHOT</version>
+           <classifier>without-dependency</classifier>
+           <exclusions>
+               <exclusion>
+                   <groupId>org.apache.hadoop.hive</groupId>
+                   <artifactId>hive-exec</artifactId>
+               </exclusion>
+           </exclusions>
+       </dependency>
     </dependencies>
 
  </dependencyManagement>

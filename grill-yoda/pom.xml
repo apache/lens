@@ -82,7 +82,12 @@
           <groupId>com.inmobi.dw.yoda</groupId>
           <artifactId>yoda-udfs</artifactId>
       </dependency>
-
+      <dependency>
+          <groupId>com.inmobi.dw.yoda</groupId>
+          <artifactId>fpjamr</artifactId>
+          <version>0.6.56-SNAPSHOT</version>
+          <classifier>without-dependency</classifier>
+      </dependency>
     <dependency>
       <groupId>org.apache.hive</groupId>
       <artifactId>hive-common</artifactId>
