@@ -121,6 +121,7 @@ public class HiveDriver implements GrillDriver {
     ctx.hiveQuery = hiveQuery;
     ctx.isPersistent = isPersistent;
     handleToContext.put(ctx.queryHandle, ctx);
+    LOG.info("Explain: " + query);
     try {
       return new HiveQueryPlan(explainOutput, ctx.queryHandle, ctx.conf);
     } catch (HiveException e) {
@@ -132,6 +133,7 @@ public class HiveDriver implements GrillDriver {
   public GrillResultSet execute(String query, Configuration conf) throws GrillException {
     // Get eventual Hive query based on conf
     QueryContext ctx = createQueryContext(query, conf);
+    LOG.info("Execute: " + query);
     return execute(ctx);
   }
 
@@ -154,6 +156,7 @@ public class HiveDriver implements GrillDriver {
   }
   @Override
   public QueryHandle executeAsync(String query, Configuration conf) throws GrillException {
+    LOG.info("ExecuteAsync: " + query);
     QueryContext ctx = createQueryContext(query, conf);
     handleToContext.put(ctx.queryHandle, ctx);
     return executeAsync(ctx);
@@ -179,6 +182,7 @@ public class HiveDriver implements GrillDriver {
   @Override
   public GrillResultSet executePrepare(QueryHandle handle, Configuration conf)
       throws GrillException {
+    LOG.info("ExecutePrepared: " + handle);
     QueryContext ctx = getContext(handle);
     copyConf(ctx, conf);
     return execute(ctx);
@@ -193,6 +197,7 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public QueryStatus getStatus(QueryHandle handle)  throws GrillException {
+    LOG.info("GetStatus: " + handle);
     QueryContext ctx = getContext(handle);
     ByteArrayInputStream in = null;
     try {
@@ -265,6 +270,7 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public GrillResultSet fetchResultSet(QueryHandle handle)  throws GrillException {
+    LOG.info("FetchResultSet: " + handle);
     // This should be applicable only for a async query
     QueryContext ctx = getContext(handle);
     return createResultSet(ctx);
@@ -272,6 +278,7 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public void closeQuery(QueryHandle handle) throws GrillException {
+    LOG.info("CloseQuery: " + handle);
     QueryContext options = handleToContext.remove(handle);
     if (options != null) {
       OperationHandle opHandle = options.hiveHandle;
@@ -287,6 +294,7 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public boolean cancelQuery(QueryHandle handle)  throws GrillException {
+    LOG.info("CancelQuery: " + handle);
     QueryContext ctx = getContext(handle);
     try {
       getClient().cancelOperation(ctx.hiveHandle);
@@ -298,6 +306,7 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public void close() {
+    LOG.info("CloseDriver");
     // Close this driver and release all resources
     for (QueryHandle query : new ArrayList<QueryHandle>(handleToContext.keySet())) {
       try {
@@ -323,7 +332,8 @@ public class HiveDriver implements GrillDriver {
             EmbeddedThriftConnection.class, 
             ThriftConnection.class);
         try {
-          this.connection = (ThriftConnection) clazz.newInstance();
+          this.connection = clazz.newInstance();
+          LOG.info("New thrift connection " + clazz.getName());
         } catch (Exception e) {
           throw new GrillException(e);
         }
@@ -382,6 +392,7 @@ public class HiveDriver implements GrillDriver {
         try {
           String userName = conf.getUser();
           session = getClient().openSession(userName, "");
+          LOG.info("New session: " + session.getSessionId());
         } catch (Exception e) {
           throw new GrillException(e);
         }
