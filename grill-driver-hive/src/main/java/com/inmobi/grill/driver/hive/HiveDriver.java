@@ -350,27 +350,21 @@ public class HiveDriver implements GrillDriver {
     ctx.isPersistent = conf.getBoolean(GRILL_PERSISTENT_RESULT_SET, true);
     ctx.userQuery = query;
 
-    if (ctx.isPersistent) {
+    if (ctx.isPersistent && conf.getBoolean(GRILL_ADD_INSERT_OVEWRITE, true)) {
       // store persistent data into user specified location
       // If absent, take default home directory
       String resultSetParentDir = conf.get(GRILL_RESULT_SET_PARENT_DIR);
       StringBuilder builder;
-
       if (StringUtils.isNotBlank(resultSetParentDir)) {
         ctx.resultSetPath = new Path(resultSetParentDir, ctx.queryHandle.toString());
         // create query
-        if (conf.getBoolean(GRILL_ADD_INSERT_OVEWRITE, true)) {
-          builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
-        } else {
-          builder = new StringBuilder();
-        }
+        builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
       } else {
         // Write to /tmp/grillreports
         ctx.resultSetPath = new 
             Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ctx.queryHandle.toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
-
       builder.append('"').append(ctx.resultSetPath).append('"')
       .append(' ').append(ctx.userQuery).append(' ');
       ctx.hiveQuery =  builder.toString();

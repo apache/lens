@@ -167,6 +167,12 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     mockedDriver.rewriteQuery(q2);
 
+    q2 = "explain cube select name from table";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    Assert.assertEquals(cubeQueries.size(), 1);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    mockedDriver.rewriteQuery(q2);
 
     q2 = "select * from (cube select name from table) a";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
@@ -223,5 +229,15 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
     mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from (cube select name from table union all cube select" +
+         " name2 from table2) u group by u.name";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    Assert.assertEquals(cubeQueries.size(), 2);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
+    mockedDriver.rewriteQuery(q2);
+
   }
 }

@@ -66,14 +66,15 @@ public class CubeGrillDriver implements GrillDriver {
     ASTNode ast = HQLParser.parseHQL(query);
     LOG.debug("User query AST:" + ast.dump());
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
-    findCubePositions(ast, cubeQueries);
+    findCubePositions(ast, cubeQueries, query.length());
     for (CubeQueryInfo cqi : cubeQueries) {
       cqi.query = query.substring(cqi.startPos, cqi.endPos);
     }
     return cubeQueries;
   }
 
-  private void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries)
+  private void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries,
+      int queryEndPos)
       throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
@@ -85,9 +86,10 @@ public class CubeGrillDriver implements GrillDriver {
           ASTNode parent = (ASTNode) ast.getParent();
           cqi.startPos = ast.getCharPositionInLine();
           int ci = ast.getChildIndex();
-          if (parent.getToken() == null) {
+          if (parent.getToken() == null ||
+              parent.getToken().getType() == HiveParser.TOK_EXPLAIN) {
             // Not a sub query
-            cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine();
+            cqi.endPos = queryEndPos;
           } else if (parent.getChildCount() > ci + 1) {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
               //one less for the next start and one for close parenthesis
@@ -109,7 +111,7 @@ public class CubeGrillDriver implements GrillDriver {
       }
       else {
         for (int child_pos = 0; child_pos < child_count; ++child_pos) {
-          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries);
+          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, queryEndPos);
         }
       }
     } 
