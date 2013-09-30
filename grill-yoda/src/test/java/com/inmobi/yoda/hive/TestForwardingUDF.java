@@ -43,7 +43,6 @@ public class TestForwardingUDF {
     hiveClient = new ThriftCLIServiceClient(new EmbeddedThriftCLIService());
     session = hiveClient.openSession(conf.getUser(), "");
     confOverlay = new HashMap<String, String>();
-    hiveClient.executeStatement(session, "DROP DATABASE IF EXISTS udfTest", confOverlay);
     hiveClient.executeStatement(session, "CREATE DATABASE udfTest", confOverlay);
     hiveClient.executeStatement(session, "SET hive.lock.manager=org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager",
       confOverlay);
@@ -100,6 +99,9 @@ public class TestForwardingUDF {
     if (testFile != null)  {
       testFile.delete();
     }
+    Hive hive = Hive.get(conf);
+    hive.dropTable(TEST_TBL);
+    hive.dropDatabase("udfTest");
     hiveClient.closeSession(session);
   }
 }
