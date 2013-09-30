@@ -18,5 +18,11 @@
       <artifactId>grill-driver-cube</artifactId>
       <version>${project.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+    </dependency>
+
   </dependencies>
 </project>    

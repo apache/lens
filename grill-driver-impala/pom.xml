@@ -50,6 +50,11 @@
         <artifactId>slf4j-api</artifactId>
         <version>1.6.4</version>
       </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+    </dependency>
+
     </dependencies>
     
 </project>    
