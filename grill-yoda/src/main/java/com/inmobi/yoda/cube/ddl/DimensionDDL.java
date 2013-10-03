@@ -56,11 +56,11 @@ public class DimensionDDL {
   }
 
   private Map<Integer, FieldInfo> fieldMap = new HashMap<Integer, FieldInfo>();
-  private Set<String> noColTables = new HashSet<String>(); 
+  private Map<String, List<FieldInfo>> noColTables = new HashMap<String, List<FieldInfo>>(); 
   private Map<String, Map<Integer, FieldInfo>> tableFields = new HashMap<String,
       Map<Integer, FieldInfo>>();
-  private Map<String, List<TableReference>> dimReferences = 
-      new HashMap<String, List<TableReference>>();
+  private Map<String, Map<String, List<TableReference>>> cubeDimReferences = 
+      new HashMap<String,  Map<String, List<TableReference>>>();
 
   private void loadDimensionDefinitions() throws IOException {
     BufferedReader fieldInforeader = new BufferedReader(new InputStreamReader(
@@ -101,7 +101,12 @@ public class DimensionDDL {
         }
         colMap.put(colPos, fi);
       } else {
-        noColTables.add(fi.tableName);
+        List<FieldInfo> directCubeDims = noColTables.get(fi.tableName);
+        if (directCubeDims == null) {
+          directCubeDims = new ArrayList<FieldInfo>();
+          noColTables.put(fi.tableName, directCubeDims);
+        }
+        directCubeDims.add(fi);
       }
       line = fieldInforeader.readLine();
     }
@@ -125,21 +130,31 @@ public class DimensionDDL {
       }
       line = joinInforeader.readLine();
     }
-    for (FieldInfo fi : fieldMap.values()) {
-      List<TableReference> references = null;
-      if (!fi.references.isEmpty()) {
-        references = new ArrayList<TableReference>();
-        for (int ref : fi.references) {
-          FieldInfo refField = fieldMap.get(ref);
-          references.add(new TableReference(refField.tableName, refField.name));
-        }
+    for (Map.Entry<String, List<FieldInfo>> entry : noColTables.entrySet()) {
+      Map<String, List<TableReference>> dimReferences = 
+          new HashMap<String, List<TableReference>>();     
+      for (FieldInfo fi : entry.getValue()) {
+        dimReferences.put(fi.name, getDimReferences(fi));
       }
-      dimReferences.put(fi.name, references);
+      cubeDimReferences.put(entry.getKey(), dimReferences);
     }
   }
 
-  public List<TableReference> getDimensionReferences(String name) {
-    return dimReferences.get(name);
+  private List<TableReference> getDimReferences(FieldInfo fi) {
+    List<TableReference> references = null;
+    if (!fi.references.isEmpty()) {
+      references = new ArrayList<TableReference>();
+      for (int ref : fi.references) {
+        FieldInfo refField = fieldMap.get(ref);
+        references.add(new TableReference(refField.tableName, refField.name));
+      }
+    }
+    return references;
+  }
+
+  public List<TableReference> getDimensionReferences(String cubeName,
+      String dimName) {
+    return cubeDimReferences.get(cubeName).get(dimName);
   }
 
   public void createAllDimensions() throws HiveException {
@@ -159,10 +174,9 @@ public class DimensionDDL {
     for (int i = 1; i <= colMap.size(); i++) {
       FieldInfo fi = colMap.get(i);
       columns.add(new FieldSchema(fi.name, CubeDDL.DIM_TYPE, fi.desc));
-      if (dimReferences.get(fi.name) != null) {
-        dimensionReferences.put(fi.name, dimReferences.get(fi.name));
-        LOG.info("Dimension " + fi.name + " with references:" 
-            + dimReferences.get(fi.name));
+      List<TableReference> references = getDimReferences(fi);
+      if (references != null) {
+        dimensionReferences.put(fi.name, references);
       }
     }
     Map<Storage, UpdatePeriod> snapshotDumpPeriods = 

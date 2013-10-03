@@ -53,6 +53,7 @@ public class CubeDDL {
   public static final String PART_KEY_COLO = "colo";
 
   public static String cubeStorageSchema = "network_object.proto";
+  public static String cubeNameInJoinChain = "network_object";
   private Map<String, Cube> cubes = new HashMap<String, Cube>();
   private final CubeDefinitionReader cubeReader;
   private final Properties allProps;
@@ -110,9 +111,10 @@ public class CubeDDL {
         CubeDimension dim;
         FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
             "dim col");
-        if (dimDDL.getDimensionReferences(dimName) != null) {
+        if (dimDDL.getDimensionReferences(cubeNameInJoinChain, dimName) != null)
+        {
           dim = new ReferencedDimension(column, dimDDL.getDimensionReferences(
-              dimName));
+              cubeNameInJoinChain, dimName));
         } else {
           dim = new BaseDimension(column);
         }
