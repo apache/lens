@@ -4,6 +4,7 @@ package com.inmobi.yoda.hive;
 import com.google.common.io.Files;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
@@ -21,6 +22,7 @@ import java.nio.charset.Charset;
 import java.util.*;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class TestForwardingUDF {
   public static final String TEST_TBL = "udfTest.test_yoda_udf_table";
@@ -82,7 +84,8 @@ public class TestForwardingUDF {
     OperationHandle opHandle = hiveClient.executeStatement(session,
       "INSERT OVERWRITE LOCAL DIRECTORY 'target/udfTestOutput' " +
         "SELECT str_yoda_udf('com.inmobi.dw.yoda.udfs.generic.MD5', ID), " +
-        "bool_yoda_udf('com.inmobi.dw.yoda.udfs.custom.csc.BeforeCSCDateUDF', CSCDT) FROM " + TEST_TBL,
+        "bool_yoda_udf('com.inmobi.dw.yoda.udfs.custom.csc.BeforeCSCDateUDF', CSCDT)," +
+        "truncate_bucket('2013-01-01 01:01:01.001', 'week_of_year') FROM " + TEST_TBL,
       confOverlay);
     File outputDir = new File("target/udfTestOutput");
     List<String> lines = new ArrayList<String>();
@@ -92,6 +95,17 @@ public class TestForwardingUDF {
       }
     }
     assertEquals(lines.size(), NUM_LINES);
+  }
+
+  @Test
+  public void testTruncateBucketUDF() throws Exception {
+    assertEquals(new TruncateBucket().evaluate("2013-01-01 01:01:01.001", "WEEK_OF_YEAR"), "01");
+    try {
+      new TruncateBucket().evaluate("2013-01-01 01:01:01.001", "WEEK_OF_YEAR_111");
+      fail("Should have thrown error");
+    } catch (IllegalArgumentException exc) {
+
+    }
   }
 
   @AfterTest
