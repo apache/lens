@@ -6,7 +6,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.SessionHandle;
-import org.apache.hive.service.cli.thrift.EmbeddedThriftCLIService;
+import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -40,7 +40,7 @@ public class TestForwardingUDF {
   public void setup() throws Exception {
     conf = new HiveConf(TestForwardingUDF.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-    hiveClient = new ThriftCLIServiceClient(new EmbeddedThriftCLIService());
+    hiveClient = new ThriftCLIServiceClient(new EmbeddedThriftBinaryCLIService());
     session = hiveClient.openSession(conf.getUser(), "");
     confOverlay = new HashMap<String, String>();
     hiveClient.executeStatement(session, "CREATE DATABASE udfTest", confOverlay);
