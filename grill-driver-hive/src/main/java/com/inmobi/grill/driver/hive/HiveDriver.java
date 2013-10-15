@@ -371,7 +371,7 @@ public class HiveDriver implements GrillDriver {
         builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
       } else {
         // Write to /tmp/grillreports
-        ctx.resultSetPath = new 
+        ctx.resultSetPath = new
             Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ctx.queryHandle.toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
