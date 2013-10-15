@@ -11,6 +11,10 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.testng.annotations.*;
 
@@ -21,16 +25,16 @@ import com.inmobi.grill.api.GrillConfUtil;
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
   public static final String TEST_OUTPUT_DIR = "test-output";
-  public static final String TBL = "HIVE_TEST_TABLE";
-  protected Configuration conf;
+  protected static HiveConf conf;
   protected HiveDriver driver;
+  public static final String DATA_BASE = "test_hive_driver";
 
-  @BeforeMethod
+  @BeforeTest
   public void beforeTest() throws Exception {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
-    conf = new Configuration();
+    conf = new HiveConf();
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
@@ -38,33 +42,37 @@ public class TestHiveDriver {
     conf.set(HiveDriver.GRILL_USER_NAME_KEY, "user");
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
 
+    SessionState.start(conf);
+    Hive client = Hive.get(conf);
+    Database database = new Database();
+    database.setName(TestHiveDriver.class.getSimpleName());
+    client.createDatabase(database, true);
+    SessionState.get().setCurrentDatabase(TestHiveDriver.class.getSimpleName());
+
     driver = new HiveDriver();
     driver.configure(conf);
+    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
+    driver.execute("USE " + TestHiveDriver.class.getSimpleName(), conf);
+    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
     System.out.println("Driver created");
   }
 
-  @AfterMethod
+  @AfterTest
   public void afterTest() throws Exception {
     driver.close();
+    Hive.get(conf).dropDatabase(TestHiveDriver.class.getSimpleName(), true, true, true);
   }
 
-
-  private void createTestTable() throws Exception {
-    createTestTable(TBL);
-  }
 
   private void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
-    String dropTable = "DROP TABLE IF EXISTS " + tableName;
-    String createTable = "CREATE TABLE " + tableName  +"(ID STRING)" +
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)" +
         " TBLPROPERTIES ('" + GrillConfUtil.STORAGE_COST + "'='500')";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
-    GrillResultSet resultSet = driver.execute(dropTable, conf);
-
-    assertNotNull(resultSet);
-    assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
     // Craete again
-    resultSet = driver.execute(createTable, conf);
+    GrillResultSet resultSet = driver.execute(createTable, conf);
     assertNotNull(resultSet);
     assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
 
@@ -76,9 +84,9 @@ public class TestHiveDriver {
   // Tests
   @Test
   public void testInsertOverwriteConf() throws Exception {
-    createTestTable();
+    createTestTable("test_insert_overwrite");
     conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
-    String query = "SELECT ID FROM " + TBL;
+    String query = "SELECT ID FROM test_insert_overwrite";
     HiveDriver.QueryContext ctx = driver.createQueryContext(query, conf);
     assertEquals(ctx.userQuery, query);
     assertNotNull(ctx.hiveQuery);
@@ -87,11 +95,11 @@ public class TestHiveDriver {
 
   @Test
   public void testExecuteQuery() throws Exception {
-    createTestTable();
+    createTestTable("test_execute");
     GrillResultSet resultSet = null;
     // Execute a select query
     System.err.println("Execute select");
-    String select = "SELECT ID FROM " + TBL;
+    String select = "SELECT ID FROM test_execute";
     resultSet = driver.execute(select, conf);
     validateExecuteSync(resultSet);
   }
@@ -133,7 +141,7 @@ public class TestHiveDriver {
   // executeAsync
   @Test
   public void testExecuteQueryAsync()  throws Exception {
-    createTestTable();
+    createTestTable("test_execute_sync");
     // Load some data into the table
     QueryHandle handle = null;
 
@@ -146,7 +154,7 @@ public class TestHiveDriver {
 
 
     //  Async select query
-    String select = "SELECT ID FROM " + TBL;
+    String select = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     handle = driver.executeAsync(select, conf);
     validateExecuteAsync(handle, Status.SUCCESSFUL);
@@ -162,9 +170,9 @@ public class TestHiveDriver {
 
   @Test
   public void testCancelAsyncQuery() throws Exception {
-    createTestTable();
+    createTestTable("test_cancel_async");
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
-    QueryHandle handle = driver.executeAsync("SELECT ID FROM " + TBL, conf);
+    QueryHandle handle = driver.executeAsync("SELECT ID FROM test_cancel_async", conf);
     driver.cancelQuery(handle);
     QueryStatus status = driver.getStatus(handle);
     assertEquals(status.getStatus(), Status.CANCELED, "Expecting query to be cancelled");
@@ -180,10 +188,11 @@ public class TestHiveDriver {
 
   @Test
   public void testPersistentResultSet() throws Exception {
-    createTestTable();
+    createTestTable("test_persistent_result_set");
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
     conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
-    GrillResultSet resultSet = driver.execute("SELECT ID FROM " + TBL, conf);
+    GrillResultSet resultSet = driver.execute("SELECT ID FROM test_persistent_result_set", conf);
     assertTrue(resultSet instanceof HivePersistentResultSet);
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();
@@ -250,10 +259,10 @@ public class TestHiveDriver {
   // explain
   @Test
   public void testExplain() throws Exception {
-    createTestTable();
-    QueryPlan plan = driver.explain("SELECT ID FROM " + TBL, conf);
+    createTestTable("test_explain");
+    QueryPlan plan = driver.explain("SELECT ID FROM test_explain", conf);
     assertTrue(plan instanceof HiveQueryPlan);
-    assertEquals(plan.getTableWeight(TBL.toLowerCase()), 500.0);
+    assertEquals(plan.getTableWeight("test_explain"), 500.0);
 
     // test execute prepare
     GrillResultSet result = driver.executePrepare(plan.getHandle(), conf);
