@@ -6,6 +6,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import java.util.*;
 
@@ -40,8 +41,13 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
   public CubeSelectorServiceImpl(Configuration conf) throws GrillException {
     try {
+      // Set SessionState if not set in current thread.
+      HiveConf hconf = new HiveConf(conf, CubeSelectorService.class);
+      if (null == SessionState.get()) {
+        SessionState.start(hconf);
+      }
       allTables = new ArrayList<Table>();
-      CubeMetastoreClient metastore = CubeMetastoreClient.getInstance(new HiveConf(conf, CubeSelectorService.class));
+      CubeMetastoreClient metastore = CubeMetastoreClient.getInstance(hconf);
 
       for (Cube cube : metastore.getAllCubes()) {
         Table tab = new Table();
