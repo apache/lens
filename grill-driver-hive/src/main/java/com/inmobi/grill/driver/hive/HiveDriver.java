@@ -27,6 +27,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
+import com.inmobi.grill.api.GrillConfConstatnts;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -105,25 +106,29 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(String query, Configuration conf) throws GrillException {
+  public QueryPlan explain(String query, Configuration conf)
+      throws GrillException {
     QueryContext ctx = createQueryContext(query, conf);
-    String hiveQuery = ctx.hiveQuery;
-    boolean isPersistent = ctx.isPersistent;
     // Get result set of explain
-    ctx.isPersistent = false;
-    ctx.hiveQuery = "EXPLAIN EXTENDED " + hiveQuery;
-    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(ctx);
+    Configuration explainConf = new Configuration(conf);
+    explainConf.setBoolean(GRILL_PERSISTENT_RESULT_SET, false);
+    String explainQuery = "EXPLAIN EXTENDED " + ctx.hiveQuery;
+    HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(
+        explainQuery, explainConf);
     List<String> explainOutput = new ArrayList<String>();
     while (inMemoryResultSet.hasNext()) {
       explainOutput.add(((TStringValue) inMemoryResultSet.next().get(0)).getValue());
     }
 
-    ctx.hiveQuery = hiveQuery;
-    ctx.isPersistent = isPersistent;
-    handleToContext.put(ctx.queryHandle, ctx);
+    QueryHandle handle = null;
+    if (conf.getBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN,
+        GrillConfConstatnts.DEFAULT_PREPARE_ON_EXPLAIN)) {
+      handleToContext.put(ctx.queryHandle, ctx);
+      handle = ctx.queryHandle;
+    }
     LOG.info("Explain: " + query);
     try {
-      return new HiveQueryPlan(explainOutput, ctx.queryHandle, ctx.conf);
+      return new HiveQueryPlan(explainOutput, handle, ctx.conf);
     } catch (HiveException e) {
       throw new GrillException("Unable to create hive query plan", e);
     }

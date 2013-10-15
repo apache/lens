@@ -19,6 +19,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import com.inmobi.grill.api.GrillConfConstatnts;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -55,7 +56,7 @@ public class CubeGrillDriver implements GrillDriver {
     Map<GrillDriver, String> driverQueries = rewriteQuery(query);
 
     // 2. select driver to run the query
-    GrillDriver driver = selectDriver(driverQueries);
+    GrillDriver driver = selectDriver(driverQueries, conf);
 
     // 3. run query
     return driver.execute(driverQueries.get(driver), conf);
@@ -185,7 +186,7 @@ public class CubeGrillDriver implements GrillDriver {
       throws GrillException {
     Map<GrillDriver, String> driverQueries = rewriteQuery(query);
 
-    GrillDriver driver = selectDriver(driverQueries);
+    GrillDriver driver = selectDriver(driverQueries, conf);
     QueryHandle handle = driver.executeAsync(driverQueries.get(driver), conf);
     executionContexts.put(handle, new QueryExecutionContext(query, driver,
         driverQueries.get(driver), ExecutionStatus.STARTED));
@@ -237,8 +238,8 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   protected GrillDriver selectDriver(Map<GrillDriver,
-      String> queries) {
-    return driverSelector.select(drivers, queries);
+      String> queries, Configuration conf) {
+    return driverSelector.select(drivers, queries, conf);
   }
 
   static class MinQueryCostSelector implements DriverSelector {
@@ -247,15 +248,16 @@ public class CubeGrillDriver implements GrillDriver {
      */
     @Override
     public GrillDriver select(List<GrillDriver> drivers,
-        final Map<GrillDriver, String> driverQueries) {
+        final Map<GrillDriver, String> driverQueries, final Configuration conf) {
       return Collections.min(drivers, new Comparator<GrillDriver>() {
         @Override
         public int compare(GrillDriver d1, GrillDriver d2) {
           QueryPlan c1;
           QueryPlan c2;
+          conf.setBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN, false);
           try {
-            c1 = d1.explain(driverQueries.get(d1), null);
-            c2 = d2.explain(driverQueries.get(d2), null);
+            c1 = d1.explain(driverQueries.get(d1), conf);
+            c2 = d2.explain(driverQueries.get(d2), conf);
           } catch (GrillException e) {
             throw new RuntimeException("Could not compare drivers", e);
           }
@@ -269,7 +271,7 @@ public class CubeGrillDriver implements GrillDriver {
   public QueryPlan explain(String query, Configuration conf)
       throws GrillException {
     Map<GrillDriver, String> driverQueries = rewriteQuery(query);
-    GrillDriver driver = selectDriver(driverQueries);
+    GrillDriver driver = selectDriver(driverQueries, conf);
     QueryPlan plan = driver.explain(driverQueries.get(driver), conf);
     QueryExecutionContext context = new QueryExecutionContext(query,
         driver, driverQueries.get(driver), ExecutionStatus.PREPARED) ;

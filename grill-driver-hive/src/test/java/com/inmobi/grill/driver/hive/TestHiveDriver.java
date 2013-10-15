@@ -273,6 +273,12 @@ public class TestHiveDriver {
     validateExecuteAsync(plan.getHandle(), Status.SUCCESSFUL);
 
     driver.closeQuery(plan.getHandle());
+
+    conf.setBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN, false);
+    plan = driver.explain("SELECT ID FROM test_explain", conf);
+    assertTrue(plan instanceof HiveQueryPlan);
+    assertNull(plan.getHandle());
+    conf.setBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN, true);
   }
 
   @Test
