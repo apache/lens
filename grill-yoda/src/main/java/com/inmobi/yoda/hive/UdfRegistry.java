@@ -12,5 +12,6 @@ public class UdfRegistry {
     FunctionRegistry.registerTemporaryFunction("int_yoda_udf", IntForwardingUDF.class);
     FunctionRegistry.registerTemporaryFunction("double_yoda_udf", DoubleForwardingUDF.class);
     FunctionRegistry.registerTemporaryFunction("long_yoda_udf", LongForwardingUDF.class);
+    FunctionRegistry.registerTemporaryFunction("truncate_bucket", TruncateBucket.class);
   }
 }

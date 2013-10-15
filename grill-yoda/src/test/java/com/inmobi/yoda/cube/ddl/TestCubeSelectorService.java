@@ -16,6 +16,8 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.testng.Assert.*;
 
@@ -129,6 +131,34 @@ public class TestCubeSelectorService {
 
     assertEquals(selection.get(clickCols), clickList);
     assertEquals(selection.get(dimCols), dimList);
+  }
+
+  @Test
+  public void testMultiThreadedSelect() throws Exception {
+    // Test that sessionstate does not throw an error in each of the threads.
+    final AtomicInteger success = new AtomicInteger(0);
+    final int NUM_THRS = 10;
+    Thread threads[] = new Thread[NUM_THRS];
+    for (int i = 0; i < NUM_THRS; i++) {
+      threads[i] = new Thread(new Runnable() {
+        @Override
+        public void run() {
+          try {
+            CubeSelectorService svc = CubeSelectorFactory.getSelectorSvcInstance(conf, true);
+            assertNotNull(svc);
+            success.incrementAndGet();
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
+        }
+      });
+      threads[i].start();
+    }
+
+    for (Thread th : threads) {
+      th.join();
+    }
+    assertEquals(success.get(), NUM_THRS);
   }
 
 }
