@@ -1,4 +1,4 @@
-package com.inmobi.grill.service;
+package com.inmobi.grill.query.service;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Produces;
@@ -10,8 +10,7 @@ public class QueryResource {
 
   @GET
   @Produces(MediaType.TEXT_PLAIN)
-  public String getClichedMessage() {
-      // Return some cliched textual content
-      return "Hello World!";
+  public String getMessage() {
+      return "Hello World! from queryapi";
   }
 }

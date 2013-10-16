@@ -81,7 +81,7 @@ public class EmbeddedServer {
     Map<String, String> initParams = new HashMap<String, String>();
     initParams.put(
             ServerProperties.PROVIDER_PACKAGES,
-            QueryResource.class.getPackage().getName());
+            IndexResource.class.getPackage().getName());
     final HttpServer server = GrizzlyWebContainerFactory.create(BASE_URI, ServletContainer.class, initParams);
     System.out.println(String.format("Application started.%nTry out %s%s%nHit enter to stop it...",
         BASE_URI, ROOT_PATH));

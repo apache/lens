@@ -11,7 +11,7 @@ public class MyApplication extends Application {
     public Set<Class<?>> getClasses() {
         final Set<Class<?>> classes = new HashSet<Class<?>>();
         // register root resource
-        classes.add(QueryResource.class);
+        classes.add(IndexResource.class);
         return classes;
     }
 }
