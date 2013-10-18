@@ -6,6 +6,7 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryHandleWithResultSet;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResult;
+import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.client.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
 
@@ -77,6 +78,15 @@ public interface QueryExecutionService extends GrillService {
       throws GrillException;
 
   /**
+   * Update the query conf
+   * 
+   * @param queryHandle
+   * @param newconf
+   */
+  public void updateQueryConf(String queryHandle, QueryConf newconf)
+      throws GrillException;
+
+  /**
    * Execute the query with a timeout 
    * 
    * @param query The query should be in HiveQL(SQL like)
@@ -102,13 +112,34 @@ public interface QueryExecutionService extends GrillService {
   public QueryStatus getStatus(String queryHandle) throws GrillException;
 
   /**
+   * Get the result set metadata - list of columns(names and types) and result size.
+   * 
+   * @param queryHandle
+   * @return The result set metadata
+   * @throws GrillException
+   */
+  public QueryResultSetMetadata getResultSetMetadata(String queryHandle)
+      throws GrillException;
+
+  /**
    * Fetch the results of the query, specified by the handle
    * 
    * @param queryHandle The query handle
+   * @param startIndex The start Index from which result rows have to be fetched
+   * @param fetchSize Number of rows to be fetched
    * 
    * @return returns the result set
    */
-  public QueryResult fetchResultSet(String queryHandle) throws GrillException;
+  public QueryResult fetchResultSet(String queryHandle, long startIndex,
+      int fetchSize ) throws GrillException;
+
+  /**
+   * Closes result set by releasing any resources used in serving the resultset.
+   * 
+   * @param queryHandle
+   * @throws GrillException
+   */
+  public void closeResultSet(String queryHandle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -131,6 +162,4 @@ public interface QueryExecutionService extends GrillService {
    */
   public List<String> getAllQueries(String state, String user)
       throws GrillException;
-
-  
 }
