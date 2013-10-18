@@ -2,13 +2,11 @@ package com.inmobi.grill.server.api;
 
 import java.util.List;
 
-import org.apache.hadoop.conf.Configuration;
-
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.api.QueryStatus.Status;
+import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.client.api.QueryHandleWithResultSet;
+import com.inmobi.grill.client.api.QueryPlan;
+import com.inmobi.grill.client.api.QueryResult;
+import com.inmobi.grill.client.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
 
 public interface QueryExecutionService extends GrillService {
@@ -19,12 +17,38 @@ public interface QueryExecutionService extends GrillService {
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
-   * @return The query plan object; Query plan also consists of query handle,
+   * @return The query plan;
+   * 
+   * @throws GrillException
+   */
+  public QueryPlan explain(String query, QueryConf conf)
+      throws GrillException;
+
+  /**
+   * Prepare the query
+   * 
+   * @param query The query should be in HiveQL(SQL like)
+   * @param conf The query configuration
+   * 
+   * @return Prepare handle
+   * 
+   * @throws GrillException
+   */
+  public String prepare(String query, QueryConf conf)
+      throws GrillException;
+
+  /**
+   * Explain the given query and prepare it as well.
+   * 
+   * @param query The query should be in HiveQL(SQL like)
+   * @param conf The query configuration
+   * 
+   * @return The query plan; Query plan also consists of prepare handle,
    * if it should be used to executePrepare
    * 
    * @throws GrillException
    */
-  public QueryPlan explain(String query, Configuration conf)
+  public QueryPlan explainAndPrepare(String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -36,7 +60,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public void executePrepareAsync(QueryHandle handle, Configuration conf) 
+  public void executePrepareAsync(String prepareHandle, QueryConf conf) 
       throws GrillException;
 
   /**
@@ -49,7 +73,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryHandle executeAsync(String query, Configuration conf)
+  public String executeAsync(String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -66,7 +90,7 @@ public interface QueryExecutionService extends GrillService {
    * @throws GrillException
    */
   public QueryHandleWithResultSet execute(String query, long timeoutmillis,
-      Configuration conf) throws GrillException;
+      QueryConf conf) throws GrillException;
 
   /**
    * Get status of the query, specified by the handle
@@ -75,35 +99,36 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return query status
    */
-  public QueryStatus getStatus(QueryHandle handle) throws GrillException;
+  public QueryStatus getStatus(String queryHandle) throws GrillException;
 
   /**
    * Fetch the results of the query, specified by the handle
    * 
-   * @param handle The query handle
+   * @param queryHandle The query handle
    * 
    * @return returns the result set
    */
-  public GrillResultSet fetchResultSet(QueryHandle handle) throws GrillException;
+  public QueryResult fetchResultSet(String queryHandle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
    * 
-   * @param handle The query handle.
+   * @param queryHandle The query handle.
    * 
    * @return true if cancel was successful, false otherwise
    */
-  public boolean cancelQuery(QueryHandle handle) throws GrillException;
+  public boolean cancelQuery(String queryHandle) throws GrillException;
 
   /**
    * Returns all the queries in the specified state, If no state is passed
    * queries in all the state will be returned.
    * 
-   * @param status Any of {@link Status}. 
+   * @param state Any of particular state, if null all queries will be returned
+   * @param user The user name, if null all user queries will be returned
    * 
-   * @return List of QueryHandle objects
+   * @return List of query handle strings
    */
-  public List<QueryHandle> getAllQueries(QueryStatus.Status status)
+  public List<String> getAllQueries(String state, String user)
       throws GrillException;
 
   
