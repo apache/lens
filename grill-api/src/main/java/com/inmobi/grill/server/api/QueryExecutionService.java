@@ -120,8 +120,9 @@ public interface QueryExecutionService extends GrillService {
   public boolean cancelQuery(String queryHandle) throws GrillException;
 
   /**
-   * Returns all the queries in the specified state, If no state is passed
-   * queries in all the state will be returned.
+   * Returns all the queries in the specified state, for user. 
+   * If no state is passed, queries in all the state will be returned. Also, if 
+   * no user is passed, queries of all users will be returned.
    * 
    * @param state Any of particular state, if null all queries will be returned
    * @param user The user name, if null all user queries will be returned
