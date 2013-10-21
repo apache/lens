@@ -1,9 +1,10 @@
 package com.inmobi.grill.server.api;
 
-import java.util.List;
-
+import com.inmobi.grill.client.api.QueryPrepareHandle;
 import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.client.api.QueryHandle;
 import com.inmobi.grill.client.api.QueryHandleWithResultSet;
+import com.inmobi.grill.client.api.QueryList;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResult;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
@@ -35,7 +36,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public String prepare(String query, QueryConf conf)
+  public QueryPrepareHandle prepare(String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -61,7 +62,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public void executePrepareAsync(String prepareHandle, QueryConf conf) 
+  public QueryHandle executePrepareAsync(String prepareHandle, QueryConf conf) 
       throws GrillException;
 
   /**
@@ -74,7 +75,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public String executeAsync(String query, QueryConf conf)
+  public QueryHandle executeAsync(String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -82,8 +83,10 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @param queryHandle
    * @param newconf
+   * 
+   * @return true if update is successful 
    */
-  public void updateQueryConf(String queryHandle, QueryConf newconf)
+  public boolean updateQueryConf(String queryHandle, QueryConf newconf)
       throws GrillException;
 
   /**
@@ -160,6 +163,6 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return List of query handle strings
    */
-  public List<String> getAllQueries(String state, String user)
+  public QueryList getAllQueries(String state, String user)
       throws GrillException;
 }

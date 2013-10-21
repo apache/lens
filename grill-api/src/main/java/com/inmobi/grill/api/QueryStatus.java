@@ -2,7 +2,9 @@ package com.inmobi.grill.api;
 
 public class QueryStatus {
   public enum Status {
-    PENDING,
+    QUEUED,
+    PREPARED,
+    LAUNCHED,
     RUNNING,
     SUCCESSFUL,
     FAILED,
@@ -66,5 +68,10 @@ public class QueryStatus {
   			.append(progress).append(':')
   			.append(hasResultSet).append(':').
   			append(statusMessage).toString();
+  }
+
+  public boolean isFinished() {
+    return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) ||
+        status.equals(Status.CANCELED);
   }
 }

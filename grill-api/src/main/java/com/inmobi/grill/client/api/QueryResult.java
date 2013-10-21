@@ -1,5 +1,5 @@
 package com.inmobi.grill.client.api;
 
-public class QueryResult {
+public class QueryResult extends APIResult {
 
 }
