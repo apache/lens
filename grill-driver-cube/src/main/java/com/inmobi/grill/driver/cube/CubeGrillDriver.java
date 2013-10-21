@@ -19,7 +19,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
-import com.inmobi.grill.api.GrillConfConstatnts;
+import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -30,14 +30,13 @@ import com.inmobi.grill.exception.GrillException;
 public class CubeGrillDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(CubeGrillDriver.class);
   public static final String ENGINE_CONF_PREFIX = "grill.cube";
-  public static final String ENGINE_DRIVER_CLASSES = "grill.cube.drivers";
 
-  Pattern cubePattern = Pattern.compile(".*CUBE(.*)",
+  private static Pattern cubePattern = Pattern.compile(".*CUBE(.*)",
       Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+  private static Matcher matcher = null;
   private final List<GrillDriver> drivers;
   private final DriverSelector driverSelector;
   private Configuration conf;
-  Matcher matcher = null;
 
   public CubeGrillDriver(Configuration conf) throws GrillException {
     this(conf, new MinQueryCostSelector());
@@ -53,7 +52,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   public GrillResultSet execute(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query, drivers);
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries, conf);
@@ -62,7 +61,7 @@ public class CubeGrillDriver implements GrillDriver {
     return driver.execute(driverQueries.get(driver), conf);
   }
 
-  List<CubeQueryInfo> findCubePositions(String query)
+  static List<CubeQueryInfo> findCubePositions(String query)
       throws SemanticException, ParseException {
     ASTNode ast = HQLParser.parseHQL(query);
     LOG.debug("User query AST:" + ast.dump());
@@ -74,7 +73,7 @@ public class CubeGrillDriver implements GrillDriver {
     return cubeQueries;
   }
 
-  private void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries,
+  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries,
       int queryEndPos)
       throws SemanticException {
     int child_count = ast.getChildCount();
@@ -118,7 +117,7 @@ public class CubeGrillDriver implements GrillDriver {
     } 
   }
 
-  CubeQueryRewriter getRewriter(GrillDriver driver) throws SemanticException {
+  static CubeQueryRewriter getRewriter(GrillDriver driver) throws SemanticException {
     return new CubeQueryRewriter(driver.getConf());
   }
 
@@ -129,7 +128,7 @@ public class CubeGrillDriver implements GrillDriver {
     ASTNode cubeAST;
   }
 
-  public boolean isCubeQuery(String query) {
+  public static boolean isCubeQuery(String query) {
     if (matcher == null) {
       matcher = cubePattern.matcher(query);
     } else {
@@ -145,14 +144,14 @@ public class CubeGrillDriver implements GrillDriver {
    * 
    * @return
    */
-  String getReplacedQuery(final String query) {
+  static String getReplacedQuery(final String query) {
     String finalQuery = query.replaceAll("[\\n\\r]", " ")
         .replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ");
     return finalQuery;
   }
 
-  Map<GrillDriver, String> rewriteQuery(final String query)
-      throws GrillException {
+  static Map<GrillDriver, String> rewriteQuery(final String query,
+      List<GrillDriver> drivers) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);
       List<CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
@@ -184,7 +183,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   public QueryHandle executeAsync(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query, drivers);
 
     GrillDriver driver = selectDriver(driverQueries, conf);
     QueryHandle handle = driver.executeAsync(driverQueries.get(driver), conf);
@@ -219,7 +218,8 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   private void loadDrivers() throws GrillException {
-    String[] driverClasses = conf.getStrings(ENGINE_DRIVER_CLASSES);
+    String[] driverClasses = conf.getStrings(
+        GrillConfConstants.ENGINE_DRIVER_CLASSES);
     if (driverClasses != null) {
       for (String driverClass : driverClasses) {
         try {
@@ -254,7 +254,7 @@ public class CubeGrillDriver implements GrillDriver {
         public int compare(GrillDriver d1, GrillDriver d2) {
           QueryPlan c1;
           QueryPlan c2;
-          conf.setBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN, false);
+          conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
             c2 = d2.explain(driverQueries.get(d2), conf);
@@ -270,7 +270,7 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public QueryPlan explain(String query, Configuration conf)
       throws GrillException {
-    Map<GrillDriver, String> driverQueries = rewriteQuery(query);
+    Map<GrillDriver, String> driverQueries = rewriteQuery(query, drivers);
     GrillDriver driver = selectDriver(driverQueries, conf);
     QueryPlan plan = driver.explain(driverQueries.get(driver), conf);
     QueryExecutionContext context = new QueryExecutionContext(query,
@@ -335,6 +335,10 @@ public class CubeGrillDriver implements GrillDriver {
       throw new GrillException("Query not found " + ctx); 
     }
     return ctx;
+  }
+
+  public List<GrillDriver> getDrivers() {
+    return drivers;
   }
 
 }
