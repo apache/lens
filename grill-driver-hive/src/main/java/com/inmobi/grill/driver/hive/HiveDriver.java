@@ -27,7 +27,7 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import com.inmobi.grill.api.GrillConfConstatnts;
+import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -121,8 +121,8 @@ public class HiveDriver implements GrillDriver {
     }
 
     QueryHandle handle = null;
-    if (conf.getBoolean(GrillConfConstatnts.PREPARE_ON_EXPLAIN,
-        GrillConfConstatnts.DEFAULT_PREPARE_ON_EXPLAIN)) {
+    if (conf.getBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN,
+        GrillConfConstants.DEFAULT_PREPARE_ON_EXPLAIN)) {
       handleToContext.put(ctx.queryHandle, ctx);
       handle = ctx.queryHandle;
     }
@@ -230,7 +230,7 @@ public class HiveDriver implements GrillDriver {
         stat = Status.RUNNING;
         break;
       case PENDING:
-        stat = Status.PENDING;
+        stat = Status.LAUNCHED;
         break;
       case UNKNOWN:
         stat = Status.UNKNOWN;
