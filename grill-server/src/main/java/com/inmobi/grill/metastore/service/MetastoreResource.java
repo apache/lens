@@ -1,5 +1,6 @@
 package com.inmobi.grill.metastore.service;
 
+import com.inmobi.grill.metastore.model.Database;
 import com.sun.jersey.spi.resource.Singleton;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -9,16 +10,9 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 @Path("/")
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class MetastoreResource {
   public static final Logger LOG = LogManager.getLogger(MetastoreResource.class);
-  static {
-    try {
-      PropertyConfigurator.configure("log4j.properties");
-    } catch (Exception exc) {
-      System.err.println("Unable to initialize logging properly");
-      exc.printStackTrace();
-    }
-  }
 
   /*Cube API:
   <grill-url>/metastore/database/
@@ -29,22 +23,19 @@ public class MetastoreResource {
   */
 
   @GET @Path("database")
-  @Produces("text/plain")
-  public String getDatabase() {
-    LOG.info("get database");
-    return "database";
+  public Database getDatabase() {
+    Database db = new Database();
+    db.setName(CubeMetastoreServiceImpl.getInstance().getCurrentDatabase());
+    return db;
   }
 
   @PUT @Path("database/{dbname}")
-  @Produces("text/plain")
   public String setDatabase(@PathParam("dbname") String dbName) {
-    LOG.info("set database " + dbName);
     return dbName;
   }
 
   @DELETE @Path("database/{dbname}")
   public void dropDatabase(@PathParam("dbname") String dbName, @QueryParam("cascade") boolean cascade) {
-    LOG.info("drop database " + dbName + " cascade? " + cascade);
   }
 
 
@@ -55,16 +46,12 @@ public class MetastoreResource {
   -DELETE - Drop all the cubes
   */
   @GET @Path("cubes")
-  @Produces("text/plain")
   public String getAllCubes() {
-    LOG.info("get all cubes");
     return "All cubes";
   }
 
   @DELETE @Path("cubes")
-  @Produces("text/plain") @Consumes("application/xml")
   public String deleteAllCubes() {
-    LOG.info("delete all cubes");
     return "delete all cubes";
   }
 
@@ -79,33 +66,32 @@ public class MetastoreResource {
   @GET @Path("/cubes/{cubename}")
   @Produces("text/plain")
   public void getCube(@PathParam("cubename") String cubeName) {
-    LOG.info("Get cube " + cubeName);
   }
 
   @POST @Path("/cubes/{cubename}")
   @Produces("text/plain")
   public void createNewCube(@PathParam("cubename") String cubeName) {
-    LOG.info("Create new cube " + cubeName);
   }
 
   @PUT @Path("/cubes/{cubename}")
   @Produces("text/plain")
   public void updateCube(@PathParam("cubename") String cubeName) {
-    LOG.info("Update cube " + cubeName);
   }
 
   @DELETE @Path("/cubes/{cubename}")
   @Produces("text/plain")
-  public void deleteCube(@PathParam("cubename") String cubeName) {
-    LOG.info("Delete cube " + cubeName);
+  public void deleteCube(@PathParam("cubename") String cubeName, @QueryParam("cascade") boolean cascade) {
+    LOG.info("Delete cube " + cubeName + " cascade? " + cascade);
   }
 
   /*<grill-url>/metastore/cubes/cubename/facts
   - GET - Get all the cube facts
-  - POST - Add a fact
   - PUT  - Not used
   - DELETE - Drop all the facts
+  */
 
+
+  /*
   <grill-url>/metastore/cubes/cubename/facts/factname
   - GET - Get the cube fact
   - PUT - Update the cube fact
@@ -185,13 +171,11 @@ public class MetastoreResource {
   */
 
   @GET @Path("/hello")
-  @Produces(MediaType.TEXT_PLAIN)
   public String getMessage() {
       return "Hello World! from metastore";
   }
 
   @GET
-  @Produces(MediaType.TEXT_PLAIN)
   public String index() {
     return "index";
   }
