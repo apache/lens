@@ -1,7 +1,6 @@
 package com.inmobi.grill.metastore.service;
 
 import com.inmobi.grill.metastore.model.Database;
-import com.sun.jersey.spi.resource.Singleton;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
