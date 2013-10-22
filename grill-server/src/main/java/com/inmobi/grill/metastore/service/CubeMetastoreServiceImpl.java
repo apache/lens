@@ -7,20 +7,34 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
 
   @Override
   public String getName() {
-    // TODO Auto-generated method stub
     return null;
   }
 
   @Override
   public void start() throws GrillException {
-    // TODO Auto-generated method stub
-    
   }
 
   @Override
   public void stop() throws GrillException {
-    // TODO Auto-generated method stub
-    
+
   }
 
+  public static CubeMetastoreService getInstance() {
+    return new CubeMetastoreServiceImpl();
+  }
+
+  public  CubeMetastoreServiceImpl() {
+
+  }
+
+  @Override
+  public String getCurrentDatabase() {
+    // TODO get current database from CubeMetastoreClient
+    return "test";
+  }
+
+  @Override
+  public void setCurrentDatabase(String database) {
+    //To change body of implemented methods use File | Settings | File Templates.
+  }
 }

@@ -1,22 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-     <modelVersion>4.0.0</modelVersion>
-   
-     <parent>
-       <artifactId>grill-parent</artifactId>
-       <groupId>com.inmobi.grill</groupId>
-       <version>0.1-SNAPSHOT</version>
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>grill-parent</artifactId>
+        <groupId>com.inmobi.grill</groupId>
+        <version>0.1-SNAPSHOT</version>
     </parent>
-    
+
     <artifactId>grill-server</artifactId>
     <packaging>war</packaging>
 
     <dependencies>
         <dependency>
-        <groupId>com.inmobi.grill</groupId>
-        <artifactId>grill-api</artifactId>
-        <version>${project.version}</version>
+            <groupId>com.inmobi.grill</groupId>
+            <artifactId>grill-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.connectors</groupId>
+            <artifactId>jersey-grizzly-connector</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-moxy</artifactId>
         </dependency>
 
         <dependency>
@@ -30,30 +57,14 @@
       <artifactId>hadoop-core</artifactId>
     </dependency>
 
-<dependency>
-    <groupId>org.glassfish.jersey.containers</groupId>
-    <artifactId>jersey-container-servlet</artifactId>
-</dependency>
-<dependency>
-    <groupId>javax.ws.rs</groupId>
-    <artifactId>javax.ws.rs-api</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.glassfish.jersey.core</groupId>
-    <artifactId>jersey-client</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.glassfish.jersey.connectors</groupId>
-    <artifactId>jersey-grizzly-connector</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.glassfish.jersey.test-framework.providers</groupId>
-    <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
-</dependency>
-<dependency>
-  <groupId>org.glassfish.jersey.test-framework</groupId>
-  <artifactId>jersey-test-framework-core</artifactId>
-</dependency>
+    <dependency>
+       <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+       <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+     </dependency>
+     <dependency>
+        <groupId>org.glassfish.jersey.test-framework</groupId>
+        <artifactId>jersey-test-framework-core</artifactId>
+      </dependency>
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -68,10 +79,10 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
         </dependency>
-<dependency>
-<groupId>org.glassfish.jersey.media</groupId>
-<artifactId>jersey-media-json-jackson</artifactId>
-</dependency>
+        <dependency>
+           <groupId>org.glassfish.jersey.media</groupId>
+           <artifactId>jersey-media-json-jackson</artifactId>
+        </dependency>
        <dependency>
          <groupId>org.glassfish.grizzly</groupId>
          <artifactId>grizzly-framework</artifactId>
@@ -104,6 +115,34 @@
         <artifactId>testng</artifactId>
       </dependency>
         
+        <dependency>
+            <groupId>org.glassfish.grizzly</groupId>
+            <artifactId>grizzly-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.grizzly</groupId>
+            <artifactId>grizzly-http-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-plus</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -116,9 +155,9 @@
                 </configuration>
             </plugin>
             <plugin>
-              <groupId>org.mortbay.jetty</groupId>
-              <artifactId>maven-jetty-plugin</artifactId>
-              <version>${jetty.version}</version>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>maven-jetty-plugin</artifactId>
+                <version>${jetty.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -130,6 +169,6 @@
 
         </plugins>
     </build>
-    
-    
+
+
 </project>    

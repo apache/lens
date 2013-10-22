@@ -1,5 +1,8 @@
 package com.inmobi.grill.metastore.service;
 
+
+import org.glassfish.jersey.filter.LoggingFilter;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,6 +16,7 @@ public class MetastoreApp extends Application {
       final Set<Class<?>> classes = new HashSet<Class<?>>();
       // register root resource
       classes.add(MetastoreResource.class);
+      classes.add(LoggingFilter.class);
       return classes;
   }
 }
