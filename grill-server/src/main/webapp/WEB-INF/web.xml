@@ -42,6 +42,8 @@
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
             <param-value>com.inmobi.grill.query.service.QueryApp</param-value>
+            <param-name>jersey.config.server.provider.packages</param-name>
+            <param-value>org.codehaus.jackson.jaxrs</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

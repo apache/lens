@@ -1,5 +1,9 @@
 package com.inmobi.grill.api;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement(name = "querystatus")
 public class QueryStatus {
   public enum Status {
     QUEUED,
@@ -13,11 +17,18 @@ public class QueryStatus {
     UNKNOWN
   }
   
-	private final double progress;
-	private final String statusMessage;
-	private final Status status;
+  @XmlElement
+	private double progress;
+  @XmlElement
+	private String statusMessage;
+  @XmlElement
+	private Status status;
+  @XmlElement
 	private boolean hasResultSet = false;
 
+  public QueryStatus() {
+    // for jaxb
+  }
   public QueryStatus(double progress, Status status, String statusMessage,
       boolean hasResultSet) {
     this.progress = progress;

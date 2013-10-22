@@ -2,9 +2,15 @@ package com.inmobi.grill.api;
 
 import java.util.UUID;
 
-public class QueryHandle {
-  private final UUID handleId;
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement
+public class QueryHandle extends QuerySubmitResult {
+  private UUID handleId;
+
+  public QueryHandle() {
+    
+  }
   public QueryHandle(UUID handleId) {
     this.handleId = handleId;
   }

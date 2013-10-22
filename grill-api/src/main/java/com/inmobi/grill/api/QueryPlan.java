@@ -5,7 +5,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public abstract class QueryPlan {
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public abstract class QueryPlan extends QuerySubmitResult {
 
   public enum ExecMode {
     INTERACTIVE,

@@ -1,14 +1,14 @@
 package com.inmobi.grill.server.api;
 
-import com.inmobi.grill.client.api.QueryPrepareHandle;
+import com.inmobi.grill.api.QueryPrepareHandle;
+import com.inmobi.grill.api.QueryHandleWithResultSet;
+import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.QueryHandle;
-import com.inmobi.grill.client.api.QueryHandleWithResultSet;
 import com.inmobi.grill.client.api.QueryList;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResult;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
-import com.inmobi.grill.client.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
 
 public interface QueryExecutionService extends GrillService {

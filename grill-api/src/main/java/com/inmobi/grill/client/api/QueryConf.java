@@ -1,5 +1,11 @@
 package com.inmobi.grill.client.api;
 
-public class QueryConf {
+import javax.xml.bind.annotation.XmlRootElement;
 
+
+@XmlRootElement(name = "conf")
+public class QueryConf {
+  public QueryConf() {
+    
+  }
 }
