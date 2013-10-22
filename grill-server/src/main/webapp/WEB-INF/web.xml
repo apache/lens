@@ -106,4 +106,15 @@
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
+    <!-- Servlet Configuration -->
+    <context-param>
+        <param-name>grill.server.log4j.properties</param-name>
+        <param-value>WEB-INF/log4j.properties</param-value>
+    </context-param>
+
+    <!-- Servlet context listener to initialize the webapp -->
+    <listener>
+        <listener-class>com.inmobi.grill.service.GrillServletContextListener</listener-class>
+    </listener>
+
 </web-app>
