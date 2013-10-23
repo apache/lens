@@ -7,26 +7,26 @@
     <xs:annotation>
         <xs:appinfo>
             <jaxb:schemaBindings>
-                <jaxb:package name="com.inmobi.grill.metastore.v0.cube"/>
+                <jaxb:package name="com.inmobi.grill.metastore.model"/>
             </jaxb:schemaBindings>
         </xs:appinfo>
     </xs:annotation>
-    <xs:element name="cube" type="cube">
+    <xs:element name="x_cube" type="x_cube">
     </xs:element>
-    <xs:complexType name="cube">
+    <xs:complexType name="x_cube">
         <xs:annotation>
             <xs:documentation>
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="measures" name="measures"/>
-            <xs:element type="dimensions" name="dimensions"/>
-            <xs:element type="properties" name="properties" minOccurs="0"/>
+            <xs:element type="x_measures" name="measures"/>
+            <xs:element type="x_dimensions" name="dimensions"/>
+            <xs:element type="x_properties" name="properties" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
     </xs:complexType>
-    <xs:complexType name="property">
+    <xs:complexType name="x_property">
         <xs:annotation>
             <xs:documentation>
                 A key-value pair, which are propagated to the cube.
@@ -35,17 +35,17 @@
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="value" use="required"/>
     </xs:complexType>
-    <xs:complexType name="properties">
+    <xs:complexType name="x_properties">
         <xs:annotation>
             <xs:documentation>
                 A list of property elements.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="property" name="property" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="x_property" name="property" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
-    <xs:complexType name="measure">
+    <xs:complexType name="x_measure">
         <xs:annotation>
             <xs:documentation>
                 A cube measure.
@@ -60,24 +60,24 @@
         <xs:attribute type="xs:double" name="cost" />
         <xs:attribute type="xs:string" name="expr" />
     </xs:complexType>
-    <xs:complexType name="measures">
+    <xs:complexType name="x_measures">
         <xs:annotation>
             <xs:documentation>
                 Set of measures.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="measure" name="measure" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element type="x_measure" name="measure" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
-    <xs:complexType name="dimension">
+    <xs:complexType name="x_dimension">
         <xs:annotation>
             <xs:documentation>
                 A cube dimension.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-          <xs:element type="tablereferences" name="references" />
+          <xs:element type="x_tablereferences" name="references" />
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="type" use="required"/>
@@ -86,24 +86,24 @@
         <xs:attribute type="xs:double" name="cost" />
         <xs:attribute type="xs:string" name="expr" />        
     </xs:complexType>
-    <xs:complexType name="tablereference">
+    <xs:complexType name="x_tablereference">
         <xs:attribute type="xs:string" name="desttable" use="required"/>
         <xs:attribute type="xs:string" name="destcolumn" use="required"/>
     </xs:complexType>
-    <xs:complexType name="tablereferences">
+    <xs:complexType name="x_tablereferences">
         <xs:sequence>
-            <xs:element type="tablereference" name="tablereference" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element type="x_tablereference" name="tablereference" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
  
-    <xs:complexType name="dimensions">
+    <xs:complexType name="x_dimensions">
         <xs:annotation>
             <xs:documentation>
                 Set of dimensions.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="dimension" name="dimension" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="x_dimension" name="dimension" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 

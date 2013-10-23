@@ -1,21 +1,21 @@
 package com.inmobi.grill.metastore.service;
 
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
+import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CubeMetastoreServiceImpl implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
@@ -150,5 +150,67 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     } catch (HiveException e) {
       throw new GrillException(e);
     }
+  }
+
+  @Override
+  public List<String> getAllCubeNames() throws GrillException {
+    try {
+      List<Cube> cubes = getClient().getAllCubes();
+      if (cubes != null && !cubes.isEmpty()) {
+        List<String> names = new ArrayList<String>(cubes.size());
+        for (Cube cube : cubes) {
+          names.add(cube.getName());
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+    return null;
+  }
+
+  @Override
+  public void createCube(XCube cube) throws GrillException {
+    Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
+
+    XDimensions xdims = cube.getDimensions();
+    for (XDimension xd : xdims.getDimension()) {
+      BaseDimension basedim = new BaseDimension(new FieldSchema(xd.getName(), xd.getType(), ""),
+        xd.getStarttime().toGregorianCalendar().getTime(),
+        xd.getEndtime().toGregorianCalendar().getTime(),
+        xd.getCost()
+      );
+
+      dims.add(basedim);
+    }
+
+    Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
+    for (XMeasure xm : cube.getMeasures().getMeasure()) {
+      ColumnMeasure cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
+        xm.getFormatString(),
+        xm.getDefaultaggr(),
+        "unit",
+        xm.getStarttime().toGregorianCalendar().getTime(),
+        xm.getEndtime().toGregorianCalendar().getTime(),
+        xm.getCost()
+      );
+      measures.add(cm);
+    }
+
+    Map<String, String> properties = new HashMap<String, String>();
+    for (XProperty xp : cube.getProperties().getProperty()) {
+      properties.put(xp.getName(), xp.getValue());
+    }
+
+    try {
+      getClient().createCube(cube.getName(), measures, dims, properties);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public XCube getCube(String cubeName) throws GrillException {
+    return null;  //To change body of implemented methods use File | Settings | File Templates.
   }
 }

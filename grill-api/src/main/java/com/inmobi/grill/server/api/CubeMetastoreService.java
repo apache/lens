@@ -1,6 +1,7 @@
 package com.inmobi.grill.server.api;
 
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.metastore.model.XCube;
 
 import java.util.List;
 
@@ -35,5 +36,24 @@ public interface CubeMetastoreService extends GrillService {
    * Get names of all databases in this metastore
    * @return list of database names
    */
-  List<String> getAllDatabases() throws GrillException;
+  public List<String> getAllDatabases() throws GrillException;
+
+  /**
+   * Get names of all cubes in the current database
+   * @return list of cube names
+   */
+  public List<String> getAllCubeNames() throws GrillException;
+
+
+  /**
+   * Create a cube based on JAXB Cube object
+   */
+  public void createCube(XCube cube) throws GrillException;
+
+  /**
+   * Get a cube from the metastore
+   * @param cubeName
+   * @return JAXB Cube object
+   */
+  public XCube getCube(String cubeName) throws GrillException;
 }
