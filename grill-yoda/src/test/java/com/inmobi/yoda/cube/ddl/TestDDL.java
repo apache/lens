@@ -28,7 +28,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillConfUtil;
+import com.inmobi.grill.api.GrillConfConstants;
 
 public class TestDDL {
 
@@ -128,7 +128,7 @@ public class TestDDL {
               fact.getName(), Storage.getPrefix(storage));
           Table tbl = cc.getHiveTable(tableName);
           Assert.assertEquals(Double.toString(fact.weight()),
-              tbl.getParameters().get(GrillConfUtil.STORAGE_COST));
+              tbl.getParameters().get(GrillConfConstants.STORAGE_COST));
         }
       }
     }

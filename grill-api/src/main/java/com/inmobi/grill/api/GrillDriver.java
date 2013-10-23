@@ -1,6 +1,5 @@
 package com.inmobi.grill.api;
 
-
 import org.apache.hadoop.conf.Configuration;
 
 import com.inmobi.grill.exception.GrillException;
@@ -26,8 +25,7 @@ public interface GrillDriver {
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
-   * @return The query plan object; Query plan also consists of query handle,
-   * if it should be used to executePrepare
+   * @return The query plan object;
    * 
    * @throws GrillException
    */
@@ -35,54 +33,58 @@ public interface GrillDriver {
       throws GrillException;
 
   /**
-   * Execute already prepared query. Query can be prepared with explain
+   * Prepare the given query
    * 
-   * @param handle The {@link QueryHandle}
-   * @param conf The configuration for the query to execute
-   * 
-   * @return returns the result set
+   * @param pContext 
    * 
    * @throws GrillException
    */
-  public GrillResultSet executePrepare(QueryHandle handle, Configuration conf) 
+  public void prepare(PreparedQueryContext pContext) throws GrillException;
+
+  /**
+   * Explain and prepare the given query
+   * 
+   * @param pContext 
+   * 
+   * @return The query plan object;
+   * 
+   * @throws GrillException
+   */
+  public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException;
 
   /**
-   * Execute already prepared query asynchronously. 
-   * Query can be prepared with explain
+   * Close the prepare query specified by the prepared handle,
+   * releases all the resources held by the prepared query.
    * 
-   * @param handle The {@link QueryHandle}
-   * @param conf The configuration for the query to execute
+   * @param handle The query handle
    * 
    * @throws GrillException
    */
-  public void executePrepareAsync(QueryHandle handle, Configuration conf) 
-      throws GrillException;
+  public void closePreparedQuery(QueryPrepareHandle handle) throws GrillException;
 
   /**
    * Blocking execute of the query
    * 
-   * @param query The query should be in HiveQL(SQL like)
-   * @param conf The query configuration
+   * @param context 
    * 
    * @return returns the result set
    * 
    * @throws GrillException
    */
-  public GrillResultSet execute(String query, Configuration conf)
+  public GrillResultSet execute(QueryContext context)
       throws GrillException;
 
   /**
    * Asynchronously execute the query
    * 
-   * @param query The query should be in HiveQL(SQL like)
-   * @param conf The query configuration
+   * @param context The query context
    * 
    * @return a query handle, which can used to know the status.
    * 
    * @throws GrillException
    */
-  public QueryHandle executeAsync(String query, Configuration conf)
+  public void executeAsync(QueryContext context)
       throws GrillException;
 
   /**
@@ -101,7 +103,16 @@ public interface GrillDriver {
    * 
    * @return returns the result set
    */
-  public GrillResultSet fetchResultSet(QueryHandle handle) throws GrillException;
+  public GrillResultSet fetchResultSet(QueryContext context) throws GrillException;
+
+  /**
+   * Close the resultset for the query
+   * 
+   * @param handle The query handle
+   * 
+   * @throws GrillException
+   */
+  public void closeResultSet(QueryHandle handle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -114,8 +125,7 @@ public interface GrillDriver {
 
   /**
    * Close the query specified by the handle, releases all the resources
-   * held by the query. Should be called in all the cases of user calling
-   * explain or executeAsync to free up resources.
+   * held by the query.
    * 
    * @param handle The query handle
    * 

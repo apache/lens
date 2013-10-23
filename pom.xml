@@ -103,13 +103,13 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-core</artifactId>
         <version>${hadoop.version}</version>
-        <!-- <scope>provided</scope> -->
-    <exclusions>
+       <!-- <scope>provided</scope> -->
+     <exclusions>
         <exclusion>
             <groupId>*</groupId>
             <artifactId>*</artifactId>
         </exclusion>
-    </exclusions>
+    </exclusions>  
       </dependency>
        <dependency>
            <groupId>org.apache.hadoop</groupId>
@@ -147,6 +147,12 @@
            <groupId>org.apache.hive</groupId>
            <artifactId>hive-shims</artifactId>
            <version>${hive.version}</version>
+           <exclusions>
+             <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging-api</artifactId>
+             </exclusion>
+           </exclusions>
        </dependency>
 
       <dependency>

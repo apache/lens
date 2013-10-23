@@ -14,16 +14,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 
-import com.inmobi.grill.client.api.APIResult;
-import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.client.api.QueryList;
-import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.api.QueryPrepareHandle;
-import com.inmobi.grill.client.api.QueryResult;
-import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.api.QueryHandleWithResultSet;
 import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.client.api.QueryList;
+import com.inmobi.grill.client.api.QueryPlan;
+import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.client.api.QueryResult;
+import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.QueryExecutionService;
@@ -31,13 +33,6 @@ import com.inmobi.grill.server.api.QueryExecutionService;
 public class QueryExcecutionServiceImpl implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExcecutionServiceImpl.class);
 
-  public enum Priority {
-    VERY_HIGH,
-    HIGH,
-    NORMAL,
-    LOW,
-    VERY_LOW
-  }
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
   private PriorityBlockingQueue<QueryContext> acceptedQueries =
@@ -45,6 +40,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService {
   private List<QueryContext> launchedQueries = new ArrayList<QueryContext>();
   private DelayQueue<FinishedQuery> finishedQueries =
       new DelayQueue<FinishedQuery>();
+  private DelayQueue<PreparedQueryContext> preparedQueries =
+      new DelayQueue<PreparedQueryContext>();
   private Map<QueryHandle, QueryContext> allQueries = new HashMap<QueryHandle, QueryContext>();
   private final Configuration conf;
   private CubeGrillDriver cubeDriver;
@@ -54,6 +51,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService {
       "StatusPoller");
   private final Thread queryPurger = new Thread(new QueryPurger(),
       "QueryPurger");
+  private final Thread prepareQueryPurger = new Thread(new PreparedQueryPurger(),
+      "PrepareQueryPurger");
   private boolean stopped = false;
   private List<QueryAcceptor> queryAcceptors;
   private List<QueryChangeListener> queryChangeListeners;
@@ -193,7 +192,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService {
         try {
           FinishedQuery finished = finishedQueries.take();
           notifyAllListeners();
-          purgeQuery(finished.getCtx());
+          finished.getCtx().getSelectedDriver().closeQuery(
+              finished.getCtx().getQueryHandle());
           notifyAllListeners();
         } catch (GrillException e) {
           // TODO Auto-generated catch block
@@ -207,8 +207,24 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService {
     }
   }
 
-  public void purgeQuery(QueryContext ctx) throws GrillException {
-    //cubeDriver.closeQuery(ctx.getQueryHandle());
+  private class PreparedQueryPurger implements Runnable {
+    @Override
+    public void run() {
+      while (!stopped && !prepareQueryPurger.isInterrupted()) {
+        try {
+          PreparedQueryContext prepared = preparedQueries.take();
+          prepared.getSelectedDriver().closePreparedQuery(prepared.getPrepareHandle());
+          notifyAllListeners();
+        } catch (GrillException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        } catch (InterruptedException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+          return;
+        }
+      }
+    }
   }
 
   public void notifyAllListeners() throws GrillException {
@@ -236,21 +252,34 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService {
   }
 
   @Override
-  public QueryPlan explain(String query, QueryConf conf) throws GrillException {
-    // TODO Auto-generated method stub
+  public QueryPlan explain(String query, QueryConf queryconf) throws GrillException {
+    Configuration conf = new Configuration(this.conf);
+    // TODO set queryconf into conf
+    // TODO select driver for the query
+    // call explain
     return null;
   }
 
   @Override
-  public QueryPrepareHandle prepare(String query, QueryConf conf) throws GrillException {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public QueryPlan explainAndPrepare(String query, QueryConf conf)
+  public QueryPrepareHandle prepare(String query, QueryConf queryconf)
       throws GrillException {
-    // TODO Auto-generated method stub
+    Configuration conf = new Configuration(this.conf);
+    //TODO set queryconf into conf
+    PreparedQueryContext prepared = new PreparedQueryContext(query, null, conf);
+    // select driver for the query
+    // call prepare
+    preparedQueries.add(prepared);
+    return prepared.getPrepareHandle();
+  }
+
+  @Override
+  public QueryPlan explainAndPrepare(String query, QueryConf queryconf)
+      throws GrillException {
+    Configuration conf = new Configuration(this.conf);
+    //TODO set queryconf into conf
+    PreparedQueryContext prepared = new PreparedQueryContext(query, null, conf);
+    // TODO select driver for the query
+    // call explain and prepare
     return null;
   }
 

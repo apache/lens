@@ -14,4 +14,10 @@ public class GrillConfConstants {
 
   public static final String ENGINE_DRIVER_CLASSES = "grill.drivers";
 
+  public static final String STORAGE_COST = "grill.storage.cost";
+
+  public static final String GRILL_PERSISTENT_RESULT_SET = "grill.persistent.resultset";
+
+  public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
+
 }

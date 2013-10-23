@@ -452,6 +452,7 @@ public abstract class QueryPlan extends QuerySubmitResult {
   }
 
   /**
+   * @deprecated
    * @return the handle
    */
   public QueryHandle getHandle() {
@@ -459,9 +460,10 @@ public abstract class QueryPlan extends QuerySubmitResult {
   }
 
   /**
+   * @deprecated
    * @param handle the handle to set
    */
-  protected void setHandle(QueryHandle handle) {
+  public void setHandle(QueryHandle handle) {
     this.handle = handle;
   }
 }

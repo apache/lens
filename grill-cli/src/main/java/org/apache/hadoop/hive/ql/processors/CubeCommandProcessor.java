@@ -12,6 +12,7 @@ import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.util.StringUtils;
 
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
+import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
 
 public class CubeCommandProcessor extends Driver {
@@ -43,7 +44,7 @@ public class CubeCommandProcessor extends Driver {
 
   public CommandProcessorResponse run(String command)
       throws CommandNeedRetryException {
-    if (engine.isCubeQuery(command)) {
+    if (RewriteUtil.isCubeQuery(command)) {
       int ret = 0;
       try {
         engine.execute(command, conf);

@@ -9,9 +9,12 @@ import org.apache.hadoop.conf.Configuration;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.GrillResultSetMetadata;
+import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryCost;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
+import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
 
@@ -55,71 +58,8 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public GrillResultSet executePrepare(QueryHandle handle, Configuration conf)
-      throws GrillException {
-    return new GrillResultSet() {
-
-      @Override
-      public int size() throws GrillException {
-        return 0;
-      }
-
-      @Override
-      public GrillResultSetMetadata getMetadata() throws GrillException {
-        return new GrillResultSetMetadata() {
-
-          @Override
-          public List<Column> getColumns() {
-            return new ArrayList<Column>();
-          }
-        };
-      }
-    };
-  }
-
-  @Override
-  public void executePrepareAsync(QueryHandle handle, Configuration conf)
-      throws GrillException {
-  }
-
-  @Override
-  public GrillResultSet execute(String query, Configuration conf)
-      throws GrillException {
-    return new GrillResultSet() {
-
-      @Override
-      public int size() throws GrillException {
-        return 0;
-      }
-
-      @Override
-      public GrillResultSetMetadata getMetadata() throws GrillException {
-        return new GrillResultSetMetadata() {
-
-          @Override
-          public List<Column> getColumns() {
-            return new ArrayList<Column>();
-          }
-        };
-      }
-    };
-  }
-
-  @Override
-  public QueryHandle executeAsync(String query, Configuration conf)
-      throws GrillException {
-    return new QueryHandle(UUID.randomUUID());
-  }
-
-  @Override
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
     return new QueryStatus(1.0, QueryStatus.Status.SUCCESSFUL, "Done", false);
-  }
-
-  @Override
-  public GrillResultSet fetchResultSet(QueryHandle handle)
-      throws GrillException {
-    return null;
   }
 
   @Override
@@ -133,6 +73,84 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void close() throws GrillException {
+  }
+
+  @Override
+  public void prepare(PreparedQueryContext pContext) throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
+      throws GrillException {
+    QueryPlan p = new MockQueryPlan(pContext.getDriverQuery());
+    p.setHandle(new QueryHandle(pContext.getPrepareHandle().getHandleId()));
+    return p;
+  }
+
+  @Override
+  public void closePreparedQuery(QueryPrepareHandle handle)
+      throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public GrillResultSet execute(QueryContext context) throws GrillException {
+    return new GrillResultSet() {
+
+      @Override
+      public int size() throws GrillException {
+        return 0;
+      }
+
+      @Override
+      public GrillResultSetMetadata getMetadata() throws GrillException {
+        return new GrillResultSetMetadata() {
+
+          @Override
+          public List<Column> getColumns() {
+            return new ArrayList<Column>();
+          }
+        };
+      }
+    };
+  }
+
+  @Override
+  public void executeAsync(QueryContext context) throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public GrillResultSet fetchResultSet(QueryContext context)
+      throws GrillException {
+    return new GrillResultSet() {
+
+      @Override
+      public int size() throws GrillException {
+        return 0;
+      }
+
+      @Override
+      public GrillResultSetMetadata getMetadata() throws GrillException {
+        return new GrillResultSetMetadata() {
+
+          @Override
+          public List<Column> getColumns() {
+            return new ArrayList<Column>();
+          }
+        };
+      }
+    };
+  }
+
+  @Override
+  public void closeResultSet(QueryHandle handle) throws GrillException {
+    // TODO Auto-generated method stub
+    
   }
 
 }

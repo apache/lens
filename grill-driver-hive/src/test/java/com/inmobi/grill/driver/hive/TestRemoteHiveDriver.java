@@ -1,13 +1,15 @@
 package com.inmobi.grill.driver.hive;
 
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
 import org.testng.annotations.*;
+
+import com.inmobi.grill.api.GrillConfConstants;
+import com.inmobi.grill.api.QueryContext;
 
 import static org.testng.Assert.assertNotNull;
 
@@ -61,10 +63,10 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     driver = new HiveDriver();
     driver.configure(conf);
     conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
-    driver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), conf);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
     conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
   }
 
   @AfterMethod

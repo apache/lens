@@ -1,5 +1,8 @@
 package com.inmobi.grill.client.api;
 
-public class QueryResultSetMetadata extends APIResult {
+import javax.xml.bind.annotation.XmlRootElement;
+
+@XmlRootElement
+public class QueryResultSetMetadata {
 
 }

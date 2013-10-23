@@ -1,11 +1,9 @@
-package com.inmobi.grill.driver.cube;
+package com.inmobi.grill.api;
 
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-
-import com.inmobi.grill.api.GrillDriver;
 
 public interface DriverSelector {
   public GrillDriver select(List<GrillDriver> drivers,

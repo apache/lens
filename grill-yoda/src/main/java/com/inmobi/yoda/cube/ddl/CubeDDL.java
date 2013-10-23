@@ -35,7 +35,7 @@ import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
-import com.inmobi.grill.api.GrillConfUtil;
+import com.inmobi.grill.api.GrillConfConstants;
 
 public class CubeDDL {
   private static final Log LOG = LogFactory.getLog(
@@ -229,7 +229,7 @@ public class CubeDDL {
     Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = 
         new HashMap<Storage, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
-    tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+    tableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
     Storage storage = new HDFSStorage(YODA_STORAGE,
         RCFileInputFormat.class.getCanonicalName(),
         RCFileOutputFormat.class.getCanonicalName(),

@@ -8,10 +8,10 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.QueryCost;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.GrillConfUtil;
 
 public class HiveQueryPlan extends QueryPlan {
   enum ParserState {
@@ -63,7 +63,7 @@ public class HiveQueryPlan extends QueryPlan {
             String tableName = tr.replace("alias:", "").trim();
             tablesQueried.add(tableName);
             Table tbl = metastore.getTable(tableName);
-            String costStr = tbl.getParameters().get(GrillConfUtil.STORAGE_COST);
+            String costStr = tbl.getParameters().get(GrillConfConstants.STORAGE_COST);
             
             Double weight = 1d;
             if (costStr != null) {
