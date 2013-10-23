@@ -16,7 +16,7 @@ import com.inmobi.grill.query.service.QueryExcecutionServiceImpl;
 
 public class AuthenticationFilter implements Filter {
 
-  public static final Log LOG = LogFactory.getLog(QueryExcecutionServiceImpl.class);
+  public static final Log LOG = LogFactory.getLog(AuthenticationFilter.class);
 
   @Override
   public void destroy() {

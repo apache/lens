@@ -9,7 +9,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-@ApplicationPath("/metastore")
+@ApplicationPath("/")
 public class MetastoreApp extends Application {
   @Override
   public Set<Class<?>> getClasses() {
