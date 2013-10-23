@@ -1,6 +1,7 @@
 package com.inmobi.grill.metastore.service;
 
 import java.net.URI;
+import java.util.List;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Application;
@@ -94,6 +95,9 @@ public class TestMetastoreService extends JerseyTest {
     result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.FAILED);
     LOG.info(">> Result message " + result.getMessage());
+
+    // Drop
+    dbTarget.request().delete();
   }
 
   @Test
@@ -113,5 +117,27 @@ public class TestMetastoreService extends JerseyTest {
       .queryParam("cascade", "true")
       .request(MediaType.APPLICATION_XML).delete(APIResult.class);
     assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
+  }
+
+  @Test
+  public void testGetAllDatabases() throws Exception {
+    final String[] dbsToCreate = {"db_1", "db_2", "db_3"};
+    final WebTarget dbTarget = target().path("metastore").path("database");
+
+    for (String name : dbsToCreate) {
+      Database db = new Database();
+      db.setName(name);
+      db.setIgnoreIfExisting(true);
+      dbTarget.path(name).request(MediaType.APPLICATION_XML).put(Entity.xml(db));
+    }
+
+    String allNames = target().path("metastore").path("databases").request().get(String.class);
+    LOG.info("### ALL DB NAMES " + allNames);
+    assertEquals(allNames, "[db_1, db_2, db_3, default]");
+
+    for (String name : dbsToCreate) {
+      dbTarget.path(name).queryParam("cascade", "true").request().delete();
+    }
+
   }
 }

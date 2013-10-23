@@ -14,6 +14,7 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CubeMetastoreServiceImpl implements CubeMetastoreService {
@@ -137,5 +138,17 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
       throw new GrillException(e);
     }
     LOG.info("Database created " + database);
+  }
+
+  /**
+   * @return get all database names
+   */
+  @Override
+  public List<String> getAllDatabases() throws GrillException{
+    try {
+      return Hive.get(userConf).getAllDatabases();
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
   }
 }

@@ -2,6 +2,8 @@ package com.inmobi.grill.server.api;
 
 import com.inmobi.grill.exception.GrillException;
 
+import java.util.List;
+
 public interface CubeMetastoreService extends GrillService {
   /**
    * Get current database used by the CubeMetastoreClient
@@ -28,4 +30,10 @@ public interface CubeMetastoreService extends GrillService {
    * @param ignore ignore if database already exists
    */
   public void createDatabase(String database, boolean ignore) throws GrillException;
+
+  /**
+   * Get names of all databases in this metastore
+   * @return list of database names
+   */
+  List<String> getAllDatabases() throws GrillException;
 }

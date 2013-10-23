@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("metastore")
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
@@ -21,6 +22,12 @@ public class MetastoreResource {
 
   public CubeMetastoreService getSvc() {
     return CubeMetastoreServiceImpl.getInstance(getCurrentUser());
+  }
+
+  @GET @Path("databases")
+  public String getAllDatabases() throws GrillException {
+    List<String> allNames = getSvc().getAllDatabases();
+    return allNames == null? "" : allNames.toString();
   }
 
   @GET @Path("database")
