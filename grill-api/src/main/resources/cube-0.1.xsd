@@ -25,6 +25,7 @@
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
+        <xs:attribute type="xs:double" name="weight"/>
     </xs:complexType>
     <xs:complexType name="x_property">
         <xs:annotation>
@@ -59,6 +60,7 @@
         <xs:attribute type="xs:dateTime" name="endtime" />
         <xs:attribute type="xs:double" name="cost" />
         <xs:attribute type="xs:string" name="expr" />
+        <xs:attribute type="xs:string" name="unit" />
     </xs:complexType>
     <xs:complexType name="x_measures">
         <xs:annotation>

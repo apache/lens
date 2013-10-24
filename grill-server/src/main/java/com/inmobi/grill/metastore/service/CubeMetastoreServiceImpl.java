@@ -6,7 +6,6 @@ import com.inmobi.grill.server.api.CubeMetastoreService;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -152,6 +151,11 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     }
   }
 
+  /**
+   * Get list of all cubes names in the current database
+   * @return
+   * @throws GrillException
+   */
   @Override
   public List<String> getAllCubeNames() throws GrillException {
     try {
@@ -169,41 +173,15 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     return null;
   }
 
+  /**
+   * Create cube based on the JAXB cube object
+   * @param cube
+   * @throws GrillException
+   */
   @Override
   public void createCube(XCube cube) throws GrillException {
-    Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
-
-    XDimensions xdims = cube.getDimensions();
-    for (XDimension xd : xdims.getDimension()) {
-      BaseDimension basedim = new BaseDimension(new FieldSchema(xd.getName(), xd.getType(), ""),
-        xd.getStarttime().toGregorianCalendar().getTime(),
-        xd.getEndtime().toGregorianCalendar().getTime(),
-        xd.getCost()
-      );
-
-      dims.add(basedim);
-    }
-
-    Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
-    for (XMeasure xm : cube.getMeasures().getMeasure()) {
-      ColumnMeasure cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
-        xm.getFormatString(),
-        xm.getDefaultaggr(),
-        "unit",
-        xm.getStarttime().toGregorianCalendar().getTime(),
-        xm.getEndtime().toGregorianCalendar().getTime(),
-        xm.getCost()
-      );
-      measures.add(cm);
-    }
-
-    Map<String, String> properties = new HashMap<String, String>();
-    for (XProperty xp : cube.getProperties().getProperty()) {
-      properties.put(xp.getName(), xp.getValue());
-    }
-
     try {
-      getClient().createCube(cube.getName(), measures, dims, properties);
+      getClient().createCube(JAXBUtils.xCubeToHiveCube(cube));
     } catch (HiveException e) {
       throw new GrillException(e);
     }
