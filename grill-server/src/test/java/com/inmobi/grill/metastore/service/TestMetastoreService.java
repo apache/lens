@@ -5,6 +5,7 @@ import java.util.*;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
+import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
@@ -191,6 +192,71 @@ public class TestMetastoreService extends GrillJerseyTest {
     return response.getName();
   }
 
+  private XCube createTestCube(String cubeName) throws Exception {
+    GregorianCalendar c = new GregorianCalendar();
+    c.setTime(new Date());
+    final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+    c.add(GregorianCalendar.DAY_OF_MONTH, 7);
+    final XMLGregorianCalendar endDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+
+
+    XCube cube = cubeObjectFactory.createXCube();
+    cube.setName(cubeName);
+    cube.setWeight(100.0);
+    XDimensions xdims = cubeObjectFactory.createXDimensions();
+
+    XDimension xd1 = cubeObjectFactory.createXDimension();
+    xd1.setName("dim1");
+    xd1.setType("string");
+    xd1.setStarttime(startDate);
+    // Don't set endtime on this dim to validate null handling on server side
+    xd1.setCost(10.0);
+
+    XDimension xd2 = cubeObjectFactory.createXDimension();
+    xd2.setName("dim2");
+    xd2.setType("integer");
+    // Don't set start time on this dim to validate null handling on server side
+    xd2.setEndtime(endDate);
+    xd2.setCost(5.0);
+
+    xdims.getDimension().add(xd1);
+    xdims.getDimension().add(xd2);
+    cube.setDimensions(xdims);
+
+
+    XMeasures measures = cubeObjectFactory.createXMeasures();
+
+    XMeasure xm1 = new XMeasure();
+    xm1.setName("msr1");
+    xm1.setType("double");
+    xm1.setCost(10.0);
+    // Don't set start time and end time to validate null handling on server side.
+    //xm1.setStarttime(startDate);
+    //xm1.setEndtime(endDate);
+    xm1.setDefaultaggr("sum");
+
+    XMeasure xm2 = new XMeasure();
+    xm2.setName("msr2");
+    xm2.setType("integer");
+    xm2.setCost(10.0);
+    xm2.setStarttime(startDate);
+    xm2.setEndtime(endDate);
+    xm2.setDefaultaggr("max");
+
+    measures.getMeasure().add(xm1);
+    measures.getMeasure().add(xm2);
+    cube.setMeasures(measures);
+
+    XProperties properties = cubeObjectFactory.createXProperties();
+    XProperty xp1 = cubeObjectFactory.createXProperty();
+    xp1.setName("foo");
+    xp1.setValue("bar");
+    properties.getProperty().add(xp1);
+
+    cube.setProperties(properties);
+    return cube;
+  }
+
   @Test
   public void testCreateCube() throws Exception {
     final String DB = "test_create_cube";
@@ -198,74 +264,48 @@ public class TestMetastoreService extends GrillJerseyTest {
     createDatabase(DB);
     setCurrentDatabase(DB);
     try {
-      GregorianCalendar c = new GregorianCalendar();
-      c.setTime(new Date());
-      final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-      c.add(GregorianCalendar.DAY_OF_MONTH, 7);
-      final XMLGregorianCalendar endDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-
-
-      XCube cube = cubeObjectFactory.createXCube();
-      cube.setName("testCube");
-      cube.setWeight(100.0);
-      XDimensions xdims = cubeObjectFactory.createXDimensions();
-
-      XDimension xd1 = cubeObjectFactory.createXDimension();
-      xd1.setName("dim1");
-      xd1.setType("string");
-      xd1.setStarttime(startDate);
-      // Don't set endtime on this dim to validate null handling on server side
-      xd1.setCost(10.0);
-
-      XDimension xd2 = cubeObjectFactory.createXDimension();
-      xd2.setName("dim2");
-      xd2.setType("integer");
-      // Don't set start time on this dim to validate null handling on server side
-      xd2.setEndtime(endDate);
-      xd2.setCost(5.0);
-
-      xdims.getDimension().add(xd1);
-      xdims.getDimension().add(xd2);
-      cube.setDimensions(xdims);
-
-
-      XMeasures measures = cubeObjectFactory.createXMeasures();
-
-      XMeasure xm1 = new XMeasure();
-      xm1.setName("msr1");
-      xm1.setType("double");
-      xm1.setCost(10.0);
-      // Don't set start time and end time to validate null handling on server side.
-      //xm1.setStarttime(startDate);
-      //xm1.setEndtime(endDate);
-      xm1.setDefaultaggr("sum");
-
-      XMeasure xm2 = new XMeasure();
-      xm2.setName("msr2");
-      xm2.setType("integer");
-      xm2.setCost(10.0);
-      xm2.setStarttime(startDate);
-      xm2.setEndtime(endDate);
-      xm2.setDefaultaggr("max");
-
-      measures.getMeasure().add(xm1);
-      measures.getMeasure().add(xm2);
-      cube.setMeasures(measures);
-
-      XProperties properties = cubeObjectFactory.createXProperties();
-      XProperty xp1 = cubeObjectFactory.createXProperty();
-      xp1.setName("foo");
-      xp1.setValue("bar");
-      properties.getProperty().add(xp1);
-
-      cube.setProperties(properties);
-
+      final XCube cube = createTestCube("testCube1");
       final WebTarget target = target().path("metastore").path("cubes");
       APIResult result = target.request(MediaType.APPLICATION_XML).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     }
     finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
+    }
+  }
+
+  @Test
+  public void testGetCube() throws Exception {
+    final String DB = "test_get_cube";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      final XCube cube = createTestCube("testGetCube");
+      // Create this cube first
+      WebTarget target = target().path("metastore").path("cubes");
+      JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
+      APIResult result =
+        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now get
+      target = target().path("metastore").path("cubes").path("testGetCube");
+      JAXBElement<XCube> actualElement =
+        target.request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+      XCube actual = actualElement.getValue();
+      assertNotNull(actual);
+
+      assertTrue(cube.getName().equalsIgnoreCase(actual.getName()));
+      assertNotNull(actual.getMeasures());
+      assertEquals(actual.getMeasures().getMeasure().size(), cube.getMeasures().getMeasure().size());
+      assertEquals(actual.getDimensions().getDimension().size(), cube.getDimensions().getDimension().size());
+      assertEquals(actual.getWeight(), 100.0d);
+
+    } finally {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
     }

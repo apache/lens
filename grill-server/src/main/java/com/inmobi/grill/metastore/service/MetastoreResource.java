@@ -3,6 +3,7 @@ package com.inmobi.grill.metastore.service;
 import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
+import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.XCube;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 import org.apache.log4j.LogManager;
@@ -10,6 +11,7 @@ import org.apache.log4j.Logger;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import javax.xml.bind.JAXBElement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +20,7 @@ import java.util.List;
 public class MetastoreResource {
   public static final Logger LOG = LogManager.getLogger(MetastoreResource.class);
   public static final APIResult SUCCESS = new APIResult(APIResult.Status.SUCCEEDED, "");
+  public static final ObjectFactory xCubeObjectFactory = new ObjectFactory();
 
   private String getCurrentUser() {
     return "";
@@ -113,12 +116,12 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  /*
   @GET @Path("/cubes/{cubename}")
-  public Cube getCube(@PathParam("cubename") String cubeName) throws GrillException{
-     return getSvc().getCube(cubeName);
+  public JAXBElement<XCube> getCube(@PathParam("cubename") String cubeName) throws GrillException{
+    return xCubeObjectFactory.createXCube(getSvc().getCube(cubeName));
   }
-*/
+
+
   /*<grill-url>/metastore/cubes/cubename/facts
   - GET - Get all the cube facts
   - PUT  - Not used

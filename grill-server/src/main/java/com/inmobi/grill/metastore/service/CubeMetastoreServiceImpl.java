@@ -181,14 +181,29 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
   @Override
   public void createCube(XCube cube) throws GrillException {
     try {
-      getClient().createCube(JAXBUtils.xCubeToHiveCube(cube));
+      getClient().createCube(JAXBUtils.hiveCubeFromXCube(cube));
+      LOG.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
     }
   }
 
+  /**
+   * Get a cube from the metastore
+   * @param cubeName
+   * @return
+   * @throws GrillException
+   */
   @Override
   public XCube getCube(String cubeName) throws GrillException {
-    return null;  //To change body of implemented methods use File | Settings | File Templates.
+    try {
+      Cube c = getClient().getCube(cubeName);
+      if (c != null) {
+        return JAXBUtils.xCubeFromHiveCube(c);
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+    return null;
   }
 }
