@@ -1,52 +1,100 @@
 package com.inmobi.grill.metastore.service;
 
+import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
+import com.inmobi.grill.metastore.model.XCube;
+import com.inmobi.grill.server.api.CubeMetastoreService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
-import org.apache.log4j.PropertyConfigurator;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.List;
 
-@Path("/")
+@Path("metastore")
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class MetastoreResource {
   public static final Logger LOG = LogManager.getLogger(MetastoreResource.class);
+  public static final APIResult SUCCESS = new APIResult(APIResult.Status.SUCCEEDED, "");
 
-  /*Cube API:
-  <grill-url>/metastore/database/
-    - GET the current database
-  - PUT set the current database
-  - POST Not used
-  - DELETE drop the database
-  */
+  private String getCurrentUser() {
+    return "";
+  }
+
+  public CubeMetastoreService getSvc() {
+    return CubeMetastoreServiceImpl.getInstance(getCurrentUser());
+  }
+
+  @GET @Path("databases")
+  public List<Database> getAllDatabases() throws GrillException {
+    List<String> allNames = getSvc().getAllDatabases();
+    if (allNames != null && !allNames.isEmpty()) {
+      List<Database> dblist = new ArrayList<Database>();
+      for (String dbName : allNames) {
+        Database db = new Database();
+        db.setName(dbName);
+        dblist.add(db);
+      }
+      return dblist;
+    }
+    return null;
+  }
 
   @GET @Path("database")
-  public Database getDatabase() {
+  public Database getDatabase() throws GrillException {
+    LOG.info("Get database");
     Database db = new Database();
-    db.setName(CubeMetastoreServiceImpl.getInstance().getCurrentDatabase());
+    db.setName(getSvc().getCurrentDatabase());
     return db;
   }
 
-  @PUT @Path("database/{dbname}")
-  public String setDatabase(@PathParam("dbname") String dbName) {
-    return dbName;
+  @PUT @Path("database")
+  @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+  public APIResult setDatabase(Database db) {
+    LOG.info("Set database");
+    try {
+      getSvc().setCurrentDatabase(db.getName());
+    } catch (GrillException e) {
+      LOG.error("Error changing current database", e);
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
   }
 
   @DELETE @Path("database/{dbname}")
-  public void dropDatabase(@PathParam("dbname") String dbName, @QueryParam("cascade") boolean cascade) {
+  public APIResult dropDatabase(@PathParam("dbname") String dbName, @QueryParam("cascade") boolean cascade) {
+    LOG.info("Drop database " + dbName+ " cascade?" + cascade);
+    try {
+      getSvc().dropDatabase(dbName, cascade);
+    } catch (GrillException e) {
+      LOG.error("Error dropping " + dbName, e);
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
   }
 
+  @PUT @Path("database/{dbname}")
+  public APIResult createDatabase(Database db) {
+    LOG.info("Create database " + db.getName() + " Ignore Existing? " + db.getIgnoreIfExisting());
 
-  /*<grill-url>/metastore/cubes/
-    - GET - get all cubes
-    - POST - not used
-  - PUT - Not used
-  -DELETE - Drop all the cubes
-  */
+    try {
+      getSvc().createDatabase(db.getName(), db.getIgnoreIfExisting());
+    } catch (GrillException e) {
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
   @GET @Path("cubes")
-  public String getAllCubes() {
-    return "All cubes";
+  public List<String> getAllCubes() throws GrillException {
+    try {
+      return getSvc().getAllCubeNames();
+    } catch (GrillException e) {
+      LOG.error("Error getting cube names", e);
+      throw e;
+    }
   }
 
   @DELETE @Path("cubes")
@@ -54,35 +102,23 @@ public class MetastoreResource {
     return "delete all cubes";
   }
 
+  @POST @Path("cubes")
+  public APIResult createNewCube(XCube cube) {
+    try {
+      getSvc().createCube(cube);
+    } catch (GrillException e) {
+      LOG.error("Error creating cube " + cube.getName());
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
   /*
-  <grill-url>/metastore/cubes/cubename
-  - GET - Get the cube
-  -  PUT - Update the cube
-  - DELETE - drop the cube
-  - POST - Create new cube
-  */
-
   @GET @Path("/cubes/{cubename}")
-  @Produces("text/plain")
-  public void getCube(@PathParam("cubename") String cubeName) {
+  public Cube getCube(@PathParam("cubename") String cubeName) throws GrillException{
+     return getSvc().getCube(cubeName);
   }
-
-  @POST @Path("/cubes/{cubename}")
-  @Produces("text/plain")
-  public void createNewCube(@PathParam("cubename") String cubeName) {
-  }
-
-  @PUT @Path("/cubes/{cubename}")
-  @Produces("text/plain")
-  public void updateCube(@PathParam("cubename") String cubeName) {
-  }
-
-  @DELETE @Path("/cubes/{cubename}")
-  @Produces("text/plain")
-  public void deleteCube(@PathParam("cubename") String cubeName, @QueryParam("cascade") boolean cascade) {
-    LOG.info("Delete cube " + cubeName + " cascade? " + cascade);
-  }
-
+*/
   /*<grill-url>/metastore/cubes/cubename/facts
   - GET - Get all the cube facts
   - PUT  - Not used
