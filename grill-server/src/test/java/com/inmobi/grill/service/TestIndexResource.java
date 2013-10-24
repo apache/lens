@@ -14,7 +14,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestIndexResource extends JerseyTest {
+public class TestIndexResource extends GrillJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -31,9 +31,8 @@ public class TestIndexResource extends JerseyTest {
     return new MyApplication();
   }
 
-  @Override
-  protected URI getBaseUri() {
-    return UriBuilder.fromUri(super.getBaseUri()).path("grill-server").build();
+  protected int getTestPort() {
+    return 8081;
   }
 
   @Test

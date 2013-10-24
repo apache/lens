@@ -9,6 +9,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.service.GrillJerseyTest;
 import com.inmobi.grill.api.QueryHandle;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -22,7 +23,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestQueryService extends JerseyTest {
+public class TestQueryService extends GrillJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -32,11 +33,6 @@ public class TestQueryService extends JerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
-  }
-
-  @Override
-  protected URI getBaseUri() {
-      return UriBuilder.fromUri(super.getBaseUri()).path("grill-server").build();
   }
 
   @Override
@@ -66,5 +62,10 @@ public class TestQueryService extends JerseyTest {
     final QueryHandle s = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
     System.out.println("QueryHandle:" + s.getHandleId());
+  }
+
+  @Override
+  protected int getTestPort() {
+    return 8083;
   }
 }

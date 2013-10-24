@@ -10,6 +10,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.metastore.model.*;
+import com.inmobi.grill.service.GrillJerseyTest;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -22,7 +24,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestMetastoreService extends JerseyTest {
+public class TestMetastoreService extends GrillJerseyTest {
   public static final Logger LOG = LogManager.getLogger(TestMetastoreService.class);
   private ObjectFactory cubeObjectFactory;
 
@@ -38,9 +40,8 @@ public class TestMetastoreService extends JerseyTest {
     super.tearDown();
   }
 
-  @Override
-  protected URI getBaseUri() {
-    return UriBuilder.fromUri(super.getBaseUri()).path("grill-server").build();
+  protected int getTestPort() {
+    return 8082;
   }
 
   @Override
