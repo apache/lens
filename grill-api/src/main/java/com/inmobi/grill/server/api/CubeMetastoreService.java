@@ -56,4 +56,17 @@ public interface CubeMetastoreService extends GrillService {
    * @return JAXB Cube object
    */
   public XCube getCube(String cubeName) throws GrillException;
+
+  /**
+   * Drop a cube from the metastore in the currently deleted database
+   * @param cubeName
+   * @param cascade
+   */
+  public void dropCube(String cubeName, boolean cascade) throws GrillException;
+
+  /**
+   * Update an existing cube
+   * @param cube JAXB Cube object
+   */
+  void updateCube(XCube cube) throws GrillException;
 }

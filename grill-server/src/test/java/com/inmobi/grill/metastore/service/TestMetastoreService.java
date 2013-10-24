@@ -3,6 +3,7 @@ package com.inmobi.grill.metastore.service;
 import java.net.URI;
 import java.util.*;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
 import javax.xml.bind.JAXBElement;
@@ -13,12 +14,12 @@ import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
 
+import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.test.JerseyTest;
 
 import static org.testng.Assert.*;
 import org.testng.annotations.AfterTest;
@@ -304,6 +305,106 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(actual.getMeasures().getMeasure().size(), cube.getMeasures().getMeasure().size());
       assertEquals(actual.getDimensions().getDimension().size(), cube.getDimensions().getDimension().size());
       assertEquals(actual.getWeight(), 100.0d);
+
+    } finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
+    }
+  }
+
+  @Test
+  public void testDropCube() throws Exception {
+    final String DB = "test_drop_cube";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      final XCube cube = createTestCube("test_drop_cube");
+      // Create this cube first
+      WebTarget target = target().path("metastore").path("cubes");
+      JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
+      APIResult result =
+        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      target = target().path("metastore").path("cubes").path("test_drop_cube").queryParam("cascade", "true");
+      result = target.request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now get should give 404
+      try {
+        target = target().path("metastore").path("cubes").path("test_drop_cube");
+        JAXBElement<XCube> got =
+          target.request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+        fail("Should have thrown 404");
+      } catch (NotFoundException ex) {
+        ex.printStackTrace();
+      }
+    } finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
+    }
+  }
+
+
+  @Test
+  public void testUpdateCube() throws Exception {
+    final String cubeName = "test_update";
+    final String DB = "test_update_cube";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      final XCube cube = createTestCube(cubeName);
+      // Create this cube first
+      WebTarget target = target().path("metastore").path("cubes");
+      JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
+      APIResult result =
+        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Update something
+      cube.setWeight(200.0);
+      // Add a measure and dimension
+      XMeasure xm2 = new XMeasure();
+      xm2.setName("msr3");
+      xm2.setType("double");
+      xm2.setCost(20.0);
+      xm2.setDefaultaggr("sum");
+      cube.getMeasures().getMeasure().add(xm2);
+
+      XDimension xd2 = cubeObjectFactory.createXDimension();
+      xd2.setName("dim3");
+      xd2.setType("string");
+      xd2.setCost(55.0);
+      cube.getDimensions().getDimension().add(xd2);
+
+      XProperty xp = new XProperty();
+      xp.setName("foo2");
+      xp.setValue("bar2");
+      cube.getProperties().getProperty().add(xp);
+
+
+      element = cubeObjectFactory.createXCube(cube);
+      result =
+        target.request(MediaType.APPLICATION_XML).put(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      JAXBElement<XCube> got =
+        target.path(cubeName)
+          .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+      XCube actual = got.getValue();
+      assertEquals(actual.getWeight(), 200.0);
+      assertEquals(actual.getDimensions().getDimension().size(), 3);
+      assertEquals(actual.getMeasures().getMeasure().size(), 3);
+
+      Cube hcube = JAXBUtils.hiveCubeFromXCube(actual);
+      assertTrue(hcube.getMeasureByName("msr3").getAggregate().equals("sum"));
+      assertEquals(hcube.getMeasureByName("msr3").getCost(), 20.0);
+      assertNotNull(hcube.getDimensionByName("dim3"));
+      assertEquals(hcube.getProperties().get("foo2"), "bar2");
 
     } finally {
       dropDatabase(DB);

@@ -206,4 +206,33 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     }
     return null;
   }
+
+  /**
+   * Drop a cube from the metastore in the currently deleted database
+   * @param cubeName
+   * @param cascade
+   */
+  public void dropCube(String cubeName, boolean cascade) throws GrillException {
+    try {
+      LOG.info("Drop cube " + cubeName + " cascade? " + cascade);
+      getClient().dropCube(cubeName, cascade);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  /**
+   * Update cube
+   * @param cube JAXB Cube object
+   * @throws GrillException
+   */
+  @Override
+  public void updateCube(XCube cube) throws GrillException {
+    try {
+      getClient().alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube));
+      LOG.info("Cube updated " + cube.getName());
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+  }
 }

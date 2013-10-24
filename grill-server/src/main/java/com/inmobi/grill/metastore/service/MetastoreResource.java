@@ -6,6 +6,7 @@ import com.inmobi.grill.metastore.model.Database;
 import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.XCube;
 import com.inmobi.grill.server.api.CubeMetastoreService;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -116,10 +117,54 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  @GET @Path("/cubes/{cubename}")
-  public JAXBElement<XCube> getCube(@PathParam("cubename") String cubeName) throws GrillException{
-    return xCubeObjectFactory.createXCube(getSvc().getCube(cubeName));
+  @PUT @Path("/cubes")
+  public APIResult updateCube(XCube cube) {
+    try {
+      getSvc().updateCube(cube);
+    } catch (GrillException e) {
+      if (e.getCause() instanceof HiveException) {
+        HiveException hiveErr = (HiveException) e.getCause();
+        if (hiveErr.getMessage().startsWith("Could not get table")) {
+          throw new NotFoundException("Cube not found " + cube.getName(), e);
+        }
+      }
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
   }
+
+  @GET @Path("/cubes/{cubename}")
+  public JAXBElement<XCube> getCube(@PathParam("cubename") String cubeName) throws Exception{
+    try {
+      return xCubeObjectFactory.createXCube(getSvc().getCube(cubeName));
+    } catch (GrillException e) {
+      if (e.getCause() instanceof HiveException) {
+        HiveException hiveErr = (HiveException) e.getCause();
+        if (hiveErr.getMessage().startsWith("Could not get table")) {
+          throw new NotFoundException("Cube not found " + cubeName, e);
+        }
+      }
+      throw e;
+    }
+  }
+
+  @DELETE @Path("/cubes/{cubename}")
+  public APIResult dropCube(@PathParam("cubename") String cubeName, @QueryParam("cascade") boolean cascade) {
+    try {
+      getSvc().dropCube(cubeName, cascade);
+    } catch (GrillException e) {
+      if (e.getCause() instanceof HiveException) {
+        HiveException hiveErr = (HiveException) e.getCause();
+        if (hiveErr.getMessage().startsWith("Could not get table")) {
+          throw new NotFoundException("Cube not found " + cubeName, e);
+        }
+      }
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
+
 
 
   /*<grill-url>/metastore/cubes/cubename/facts
