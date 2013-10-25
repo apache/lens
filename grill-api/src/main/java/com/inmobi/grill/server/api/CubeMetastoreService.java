@@ -76,4 +76,11 @@ public interface CubeMetastoreService extends GrillService {
    */
   public void createCubeDimensionTable(DimensionTable xDimTable) throws GrillException;
 
+  /**
+   * Drop a dimension table from the cube metastore
+   * @param dimension
+   * @param cascade
+   * @throws GrillException
+   */
+  public void dropDimensionTable(String dimension, boolean cascade) throws GrillException;
 }

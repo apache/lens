@@ -413,7 +413,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   @Test
-  public void testCreateDimensionTable() throws Exception {
+  public void testCreateAndDropDimensionTable() throws Exception {
     final String table = "test_create_dim";
     final String DB = "test_dim_db";
     String prevDb = getCurrentDatabase();
@@ -496,12 +496,28 @@ public class TestMetastoreService extends GrillJerseyTest {
         LOG.error(exc);
         throw exc;
       }
+
+      // Drop the table now
+      APIResult result =
+        target().path("metastore/dimensions").path(table)
+          .queryParam("cascade", "true")
+          .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Drop again, should get 404 now
+      try {
+        result = target().path("metastore/dimensions").path(table)
+          .queryParam("cascade", "true")
+          .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+        fail("Should have got 404");
+      } catch (NotFoundException e404) {
+        LOG.info("correct");
+      }
+
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
     }
-
-
   }
 
 }

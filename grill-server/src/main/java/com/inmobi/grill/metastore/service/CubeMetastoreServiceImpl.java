@@ -260,6 +260,15 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     } catch (HiveException e) {
       throw new GrillException(e);
     }
+  }
 
+  @Override
+  public void dropDimensionTable(String dimension, boolean cascade) throws GrillException {
+    try {
+      getClient().dropDimension(dimension, cascade);
+      LOG.info("Dropped dimension table " + dimension + " cascade? " + cascade);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
   }
 }
