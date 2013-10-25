@@ -2,10 +2,12 @@ package com.inmobi.grill.api;
 
 import java.util.UUID;
 
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement
 public class QueryHandle extends QuerySubmitResult {
+  @XmlElement
   private UUID handleId;
 
   public QueryHandle() {
@@ -17,6 +19,10 @@ public class QueryHandle extends QuerySubmitResult {
 
   public UUID getHandleId() {
     return handleId;
+  }
+
+  public static QueryHandle fromString(String handle) {
+    return new QueryHandle(UUID.fromString(handle));
   }
 
   @Override

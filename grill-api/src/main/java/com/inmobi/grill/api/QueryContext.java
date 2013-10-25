@@ -16,11 +16,11 @@ public class QueryContext implements Comparable<QueryContext> {
     VERY_LOW
   }
 
-  private final String userQuery;
-  private final Date submissionTime;
-  private final String submittedUser;
-  private final Configuration conf;
   private QueryHandle queryHandle;
+  private String userQuery;
+  private Date submissionTime;
+  private String submittedUser;
+  private Configuration conf;
   private Priority priority;
   private boolean isPersistent;
   private GrillDriver selectedDriver;
@@ -67,6 +67,112 @@ public class QueryContext implements Comparable<QueryContext> {
     return conf;
   }
 
+  @Override
+  public int compareTo(QueryContext other) {
+    int pcomp = this.priority.compareTo(other.priority);
+    if (pcomp == 0) {
+      return this.submissionTime.compareTo(other.submissionTime);
+    } else {
+      return pcomp;
+    }
+  }
+
+  /**
+   * @return the queryHandle
+   */
+
+  public QueryHandle getQueryHandle() {
+    return queryHandle;
+  }
+
+  /**
+   * @return the submittedUser
+   */
+
+  public String getSubmittedUser() {
+    return submittedUser;
+  }
+
+  /**
+   * @return the userQuery
+   */
+
+  public String getUserQuery() {
+    return userQuery;
+  }
+
+  /**
+   * @return the conf
+   */
+  public Configuration getConf() {
+    return conf;
+  }
+
+  /**
+   * @param conf the conf to set
+   */
+  public void updateConf(Map<String,String> confoverlay) {
+    for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
+      this.conf.set(prop.getKey(), prop.getValue());
+    }
+  }
+
+
+  public Priority getPriority() {
+    return priority;
+  }
+
+  public void setPriority(Priority priority) {
+    this.priority = priority;
+  }
+
+  /**
+   * @return the isPersistent
+   */
+
+  public boolean isPersistent() {
+    return isPersistent;
+  }
+
+  /**
+   * @param isPersistent the isPersistent to set
+   */
+  public void setPersistent(boolean isPersistent) {
+    this.isPersistent = isPersistent;
+  }
+
+  public String getResultSetPersistentPath() {
+    if (isPersistent) {
+      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR);
+    }
+    return null;
+  }
+
+  /**
+   * @return the resultSetPath
+   */
+
+  public String getResultSetPath() {
+    return resultSetPath;
+  }
+
+  /**
+   * @param resultSetPath the resultSetPath to set
+   */
+  public void setResultSetPath(String resultSetPath) {
+    this.resultSetPath = resultSetPath;
+  }
+
+  /*
+  @XmlElement(name = "selectedDriverClass")
+  public String getSelectedDriver_() {
+    if (selectedDriver != null) {
+      return selectedDriver.getClass().getCanonicalName();
+    } else {
+      return null;
+    }
+  }*/
+
   /**
    * @return the selectedDriver
    */
@@ -105,98 +211,12 @@ public class QueryContext implements Comparable<QueryContext> {
   /**
    * @param status the status to set
    */
-  public void setStatus(QueryStatus status) {
+  public synchronized void setStatus(QueryStatus status) {
     this.status = status;
   }
 
-  @Override
-  public int compareTo(QueryContext other) {
-    int pcomp = this.priority.compareTo(other.priority);
-    if (pcomp == 0) {
-      return this.submissionTime.compareTo(other.submissionTime);
-    } else {
-      return pcomp;
-    }
-  }
-
-  /**
-   * @return the queryHandle
-   */
-  public QueryHandle getQueryHandle() {
-    return queryHandle;
-  }
-
-  /**
-   * @return the submittedUser
-   */
-  public String getSubmittedUser() {
-    return submittedUser;
-  }
-
-  /**
-   * @return the userQuery
-   */
-  public String getUserQuery() {
-    return userQuery;
-  }
-
-  /**
-   * @return the conf
-   */
-  public Configuration getConf() {
-    return conf;
-  }
-
-  /**
-   * @param conf the conf to set
-   */
-  public void updateConf(Map<String,String> confoverlay) {
-    for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
-      this.conf.set(prop.getKey(), prop.getValue());
-    }
-  }
-
-  public Priority getPriority() {
-    return priority;
-  }
-
-  public void setPriority(Priority priority) {
-    this.priority = priority;
-  }
-
-  /**
-   * @return the isPersistent
-   */
-  public boolean isPersistent() {
-    return isPersistent;
-  }
-
-  /**
-   * @param isPersistent the isPersistent to set
-   */
-  public void setPersistent(boolean isPersistent) {
-    this.isPersistent = isPersistent;
-  }
-
-  public String getResultSetPersistentPath() {
-    if (isPersistent) {
-      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR);
-    }
-    return null;
-  }
-
-  /**
-   * @return the resultSetPath
-   */
-  public String getResultSetPath() {
-    return resultSetPath;
-  }
-
-  /**
-   * @param resultSetPath the resultSetPath to set
-   */
-  public void setResultSetPath(String resultSetPath) {
-    this.resultSetPath = resultSetPath;
+  public Date getSubmissionTime() {
+    return submissionTime;
   }
 
 }

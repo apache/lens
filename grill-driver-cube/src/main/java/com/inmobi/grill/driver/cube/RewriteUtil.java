@@ -103,7 +103,7 @@ public class RewriteUtil {
     return finalQuery;
   }
 
-  static Map<GrillDriver, String> rewriteQuery(final String query,
+  public static Map<GrillDriver, String> rewriteQuery(final String query,
       List<GrillDriver> drivers) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);

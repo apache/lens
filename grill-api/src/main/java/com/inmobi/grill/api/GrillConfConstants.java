@@ -20,4 +20,13 @@ public class GrillConfConstants {
 
   public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
 
+  public static final String GRILL_SERVICE_NAMES = "grill.servicenames";
+
+  public static final String GRILL_PFX = "grill.";
+
+  public static final String GRILL_SERVICE_IMPL_SFX = ".service.impl";
+
+  public static String getServiceImplConfKey(String sName) {
+    return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
+  }
 }

@@ -17,7 +17,7 @@ public interface QueryAcceptor {
    * 
    * @throws GrillException
    */
-  public boolean doAccept(String query, Configuration conf,
-      final String cause) throws GrillException;
+  public boolean doAccept(String query, Configuration conf, SubmitOp submitOp,
+      String cause) throws GrillException;
 
 }

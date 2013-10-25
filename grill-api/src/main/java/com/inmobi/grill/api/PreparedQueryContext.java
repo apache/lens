@@ -1,6 +1,7 @@
 package com.inmobi.grill.api;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -8,11 +9,11 @@ import java.util.concurrent.TimeUnit;
 import org.apache.hadoop.conf.Configuration;
 
 public class PreparedQueryContext implements Delayed {
+  private final QueryPrepareHandle prepareHandle;
   private final String userQuery;
   private final Date preparedTime;
   private final String preparedUser;
   private final Configuration conf;
-  private final QueryPrepareHandle prepareHandle;
   private GrillDriver selectedDriver;
   private String driverQuery;
 
@@ -106,6 +107,15 @@ public class PreparedQueryContext implements Delayed {
       return units.convert(delayMillis, TimeUnit.MILLISECONDS);
     } else {
       return Integer.MAX_VALUE;
+    }
+  }
+
+  /**
+   * @param conf the conf to set
+   */
+  public void updateConf(Map<String,String> confoverlay) {
+    for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
+      this.conf.set(prop.getKey(), prop.getValue());
     }
   }
 

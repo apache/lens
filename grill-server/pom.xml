@@ -40,16 +40,21 @@
             <groupId>org.glassfish.jersey.connectors</groupId>
             <artifactId>jersey-grizzly-connector</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-moxy</artifactId>
         </dependency>
-
         <dependency>
         <groupId>com.inmobi.grill</groupId>
         <artifactId>grill-driver-cube</artifactId>
         <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+        <groupId>com.inmobi.grill</groupId>
+        <artifactId>grill-driver-hive</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
         </dependency>
 
     <dependency>

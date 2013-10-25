@@ -7,8 +7,7 @@ public class QuotaServiceImpl implements QuotaService {
 
   @Override
   public String getName() {
-    // TODO Auto-generated method stub
-    return null;
+    return "quota";
   }
 
   @Override
@@ -19,6 +18,12 @@ public class QuotaServiceImpl implements QuotaService {
 
   @Override
   public void stop() throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void init() throws GrillException {
     // TODO Auto-generated method stub
     
   }

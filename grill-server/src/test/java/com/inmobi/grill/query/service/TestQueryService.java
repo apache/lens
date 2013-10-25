@@ -1,24 +1,33 @@
 package com.inmobi.grill.query.service;
 
-import java.net.URI;
+
+import java.util.List;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.GenericEntity;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 
 import com.inmobi.grill.client.api.QueryConf;
+import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.service.GrillJerseyTest;
 import com.inmobi.grill.api.QueryHandle;
+import com.inmobi.grill.api.QueryStatus;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.test.JerseyTest;
 
+import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.conf.HiveConf;
+
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -28,6 +37,7 @@ public class TestQueryService extends GrillJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+    SessionState.start(new HiveConf(TestQueryService.class));
   }
 
   @AfterTest
@@ -45,8 +55,17 @@ public class TestQueryService extends GrillJerseyTest {
       config.register(MultiPartFeature.class);
   }
 
+  //@Test
+  public void testGetQuery() {
+    final WebTarget target = target().path("queryapi/queries");
+
+    Response rs = target.path("random").request().get();
+    Assert.assertEquals(rs.getStatus(), 400);
+  }
+
   @Test
-  public void testQuery() {
+  public void testExecuteQuery() throws InterruptedException {
+    // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -54,6 +73,85 @@ public class TestQueryService extends GrillJerseyTest {
         "select name from table"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+            new QueryConf(),
+            MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+    
+    Assert.assertNotNull(handle);
+
+    // Get all queries
+    // XML 
+    List<QueryHandle> allQueriesXML = target.request(MediaType.APPLICATION_XML)
+        .get(new GenericType<List<QueryHandle>>() {
+    });
+    Assert.assertEquals(allQueriesXML.size(), 1);
+
+    //JSON
+  //  List<QueryHandle> allQueriesJSON = target.request(
+  //      MediaType.APPLICATION_JSON).get(new GenericType<List<QueryHandle>>() {
+  //  });
+  //  Assert.assertEquals(allQueriesJSON.size(), 1);
+    //JAXB
+    List<QueryHandle> allQueries = (List<QueryHandle>)target.request().get(
+        new GenericType<List<QueryHandle>>(){});
+    Assert.assertEquals(allQueries.size(), 1);
+ 
+    // Get query
+   // Invocation.Builder builderjson = target.path(handle.toString()).request(MediaType.APPLICATION_JSON);
+   // String responseJSON = builderjson.get(String.class);
+   // System.out.println("query JSON:" + responseJSON);
+    String queryXML = target.path(handle.toString()).request(MediaType.APPLICATION_XML).get(String.class);
+    System.out.println("query XML:" + queryXML);
+
+    Response response = target.path(handle.toString() + "001").request().get();
+    System.out.println("response:" + response);
+    Assert.assertEquals(response.getStatus(), 404);
+
+    QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+    
+    // wait till the query finishes
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+     ctx = target.path(handle.toString()).request().get(QueryContext.class);
+     stat = ctx.getStatus();
+     System.out.println("Status:" + ctx.getStatus());
+     Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+  }
+
+  //@Test
+  public void testExplainQuery() {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select name from table"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "explain"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+            new QueryConf(),
+            MediaType.APPLICATION_XML_TYPE));
+
+    final QueryHandle s = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+    System.out.println("QueryHandle:" + s.getHandleId());
+  }
+
+  //@Test
+  public void testExecuteWithTimeoutQuery() {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select name from table"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "execute_with_timeout"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
             new QueryConf(),

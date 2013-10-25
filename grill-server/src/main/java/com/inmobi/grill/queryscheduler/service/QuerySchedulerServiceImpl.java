@@ -7,8 +7,7 @@ public class QuerySchedulerServiceImpl implements QuerySchedulerService {
 
   @Override
   public String getName() {
-    // TODO Auto-generated method stub
-    return null;
+    return "scheduler";
   }
 
   @Override
@@ -19,6 +18,12 @@ public class QuerySchedulerServiceImpl implements QuerySchedulerService {
 
   @Override
   public void stop() throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void init() throws GrillException {
     // TODO Auto-generated method stub
     
   }

@@ -1,12 +1,14 @@
 package com.inmobi.grill.server.api;
 
+import java.util.List;
+
+import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryHandleWithResultSet;
 import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.api.QueryHandle;
+import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.QueryList;
-import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResult;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.exception.GrillException;
@@ -62,8 +64,8 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryHandle executePrepareAsync(String prepareHandle, QueryConf conf) 
-      throws GrillException;
+  public QueryHandle executePrepareAsync(QueryPrepareHandle prepareHandle,
+      QueryConf conf) throws GrillException;
 
   /**
    * Asynchronously execute the query
@@ -86,7 +88,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return true if update is successful 
    */
-  public boolean updateQueryConf(String queryHandle, QueryConf newconf)
+  public boolean updateQueryConf(QueryHandle queryHandle, QueryConf newconf)
       throws GrillException;
 
   /**
@@ -112,7 +114,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return query status
    */
-  public QueryStatus getStatus(String queryHandle) throws GrillException;
+  public QueryContext getQueryContext(QueryHandle queryHandle) throws GrillException;
 
   /**
    * Get the result set metadata - list of columns(names and types) and result size.
@@ -121,7 +123,7 @@ public interface QueryExecutionService extends GrillService {
    * @return The result set metadata
    * @throws GrillException
    */
-  public QueryResultSetMetadata getResultSetMetadata(String queryHandle)
+  public QueryResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
       throws GrillException;
 
   /**
@@ -133,7 +135,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return returns the result set
    */
-  public QueryResult fetchResultSet(String queryHandle, long startIndex,
+  public QueryResult fetchResultSet(QueryHandle queryHandle, long startIndex,
       int fetchSize ) throws GrillException;
 
   /**
@@ -142,7 +144,7 @@ public interface QueryExecutionService extends GrillService {
    * @param queryHandle
    * @throws GrillException
    */
-  public void closeResultSet(String queryHandle) throws GrillException;
+  public void closeResultSet(QueryHandle queryHandle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -151,7 +153,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return true if cancel was successful, false otherwise
    */
-  public boolean cancelQuery(String queryHandle) throws GrillException;
+  public boolean cancelQuery(QueryHandle queryHandle) throws GrillException;
 
   /**
    * Returns all the queries in the specified state, for user. 
@@ -163,6 +165,6 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return List of query handle strings
    */
-  public QueryList getAllQueries(String state, String user)
+  public List<QueryHandle> getAllQueries(String state, String user)
       throws GrillException;
 }

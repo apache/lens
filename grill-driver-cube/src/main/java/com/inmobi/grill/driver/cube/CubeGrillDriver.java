@@ -73,7 +73,7 @@ public class CubeGrillDriver implements GrillDriver {
     return driverSelector.select(drivers, queries, conf);
   }
 
-  static class MinQueryCostSelector implements DriverSelector {
+  public static class MinQueryCostSelector implements DriverSelector {
     /**
      * Returns the driver that has the minimum query cost.
      */

@@ -3,6 +3,9 @@ package com.inmobi.grill.metastore.service;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
+
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -16,13 +19,14 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 
-public class CubeMetastoreServiceImpl implements CubeMetastoreService {
+public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configurable {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
 
   private String user;
   private CubeMetastoreClient client;
   private SessionState sessionState;
   private HiveConf userConf;
+  private Configuration conf;
 
   private static final Map<String, CubeMetastoreServiceImpl> instances =
     new HashMap<String, CubeMetastoreServiceImpl>();
@@ -38,12 +42,12 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
 
   public CubeMetastoreServiceImpl() {
     userConf = new HiveConf(CubeMetastoreServiceImpl.class);
-    sessionState = new SessionState(userConf);
+    sessionState = new SessionState(userConf); 
   }
 
   @Override
   public String getName() {
-    return "CubeMetastoreService";
+    return "metastore";
   }
 
   @Override
@@ -234,5 +238,19 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     } catch (HiveException e) {
       throw new GrillException(e);
     }
+  }
+
+  @Override
+  public void init() throws GrillException {
+  }
+
+  @Override
+  public void setConf(Configuration conf) {
+    this.conf = conf;
+  }
+
+  @Override
+  public Configuration getConf() {
+    return this.conf;
   }
 }

@@ -6,6 +6,8 @@ public interface GrillService {
 
   public String getName();
 
+  public void init() throws GrillException;
+
   public void start() throws GrillException;
 
   public void stop() throws GrillException;

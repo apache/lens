@@ -20,6 +20,10 @@ public class QueryPrepareHandle extends QuerySubmitResult {
     return prepareHandleId;
   }
 
+  public static QueryPrepareHandle fromString(String handle) {
+    return new QueryPrepareHandle(UUID.fromString(handle));
+  }
+
   @Override
   public int hashCode() {
     final int prime = 31;
