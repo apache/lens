@@ -117,17 +117,21 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
+  private void checkCubeNotFound(GrillException e, String cubeName) {
+    if (e.getCause() instanceof HiveException) {
+      HiveException hiveErr = (HiveException) e.getCause();
+      if (hiveErr.getMessage().startsWith("Could not get table")) {
+        throw new NotFoundException("Cube not found " + cubeName, e);
+      }
+    }
+  }
+
   @PUT @Path("/cubes")
   public APIResult updateCube(XCube cube) {
     try {
       getSvc().updateCube(cube);
     } catch (GrillException e) {
-      if (e.getCause() instanceof HiveException) {
-        HiveException hiveErr = (HiveException) e.getCause();
-        if (hiveErr.getMessage().startsWith("Could not get table")) {
-          throw new NotFoundException("Cube not found " + cube.getName(), e);
-        }
-      }
+      checkCubeNotFound(e, cube.getName());
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -138,12 +142,7 @@ public class MetastoreResource {
     try {
       return xCubeObjectFactory.createXCube(getSvc().getCube(cubeName));
     } catch (GrillException e) {
-      if (e.getCause() instanceof HiveException) {
-        HiveException hiveErr = (HiveException) e.getCause();
-        if (hiveErr.getMessage().startsWith("Could not get table")) {
-          throw new NotFoundException("Cube not found " + cubeName, e);
-        }
-      }
+      checkCubeNotFound(e, cubeName);
       throw e;
     }
   }
@@ -153,12 +152,7 @@ public class MetastoreResource {
     try {
       getSvc().dropCube(cubeName, cascade);
     } catch (GrillException e) {
-      if (e.getCause() instanceof HiveException) {
-        HiveException hiveErr = (HiveException) e.getCause();
-        if (hiveErr.getMessage().startsWith("Could not get table")) {
-          throw new NotFoundException("Cube not found " + cubeName, e);
-        }
-      }
+      checkCubeNotFound(e, cubeName);
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;
