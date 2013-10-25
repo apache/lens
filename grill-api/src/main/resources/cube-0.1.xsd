@@ -109,5 +109,79 @@
         </xs:sequence>
     </xs:complexType>
 
+    <xs:element name="dimension_table" type="dimension_table">
+    </xs:element>
+    
+    <xs:complexType name="dimension_table">
+        <xs:sequence>
+            <xs:element type="columns" name="columns"/>
+            <xs:element type="dimension_references" name="dimensions_references"/>
+            <xs:element type="update_periods" name="update_periods"/>
+            <xs:element type="x_properties" name="properties" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="weight" type="xs:double" />
+    </xs:complexType>
+
+    <xs:complexType name="columns">
+        <xs:sequence>
+            <xs:element name="columns" type="column" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="column">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="type" type="xs:string" use="required" />
+        <xs:attribute name="comment" type="xs:string" />
+    </xs:complexType>
+
+    <xs:complexType name="dimension_references">
+        <xs:sequence>
+            <xs:element name="reference" type="dimension_reference" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="dimension_reference">
+        <xs:sequence>
+            <xs:element name="table_reference" type="x_tablereference" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute name="dimension_column" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="update_periods">
+        <xs:sequence>
+            <xs:element name="update_period_element" type="update_period_element" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="update_period_element">
+        <xs:sequence>
+            <xs:element name="storage_attr" type="x_storage" />
+        </xs:sequence>
+        <xs:attribute name="update_period" type="xs:string"/>
+    </xs:complexType>
+
+    <xs:complexType name="x_storage">
+        <xs:sequence>
+            <xs:element name="table_parameters" type="x_properties" />
+            <xs:element name="serde_parameters" type="x_properties" />
+            <xs:element name="part_cols" type="columns" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="table_type" type="xs:string" use="required"/>
+        <xs:attribute name="table_location" type="xs:anyURI"/>
+        <xs:attribute name="part_location" type="xs:anyURI"/>
+        <xs:attribute name="input_format" type="xs:string" />
+        <xs:attribute name="output_format" type="xs:string" />
+        <xs:attribute name="is_compressed" type="xs:boolean" />
+        <xs:attribute name="field_delimiter" type="xs:string" />
+        <xs:attribute name="escape_char" type="xs:string" />
+        <xs:attribute name="collection_delimiter" type="xs:string" />
+        <xs:attribute name="line_delimiter" type="xs:string" />
+        <xs:attribute name="map_key_delimiter" type="xs:string" />
+        <xs:attribute name="serde_class_name" type="xs:string" />
+    </xs:complexType>
+
+
 </xs:schema>
            

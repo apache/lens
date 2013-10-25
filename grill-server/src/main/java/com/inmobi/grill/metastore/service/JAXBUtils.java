@@ -2,6 +2,7 @@ package com.inmobi.grill.metastore.service;
 
 
 import com.inmobi.grill.metastore.model.*;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.log4j.LogManager;
@@ -249,4 +250,95 @@ public class JAXBUtils {
     }
     return null;
   }
+
+  public static FieldSchema fieldSchemaFromColumn(Column c) {
+    if (c == null) {
+      return null;
+    }
+
+    return new FieldSchema(c.getName(), c.getType(), c.getComment());
+  }
+
+  public static Column columnFromFieldSchema(FieldSchema fs) {
+    if (fs == null) {
+      return null;
+    }
+    Column c = xCubeObjectFactory.createColumn();
+    c.setName(fs.getName());
+    c.setType(fs.getType());
+    c.setComment(fs.getComment());
+    return c;
+  }
+
+  public static List<TableReference> tableRefFromDimensionRef(DimensionReference drf) {
+    if (drf == null) {
+      return null;
+    }
+
+    List<TableReference> tabRefs = new ArrayList<TableReference>(drf.getTableReference().size());
+    for (XTablereference xTabRef : drf.getTableReference()) {
+      TableReference tabRef = new TableReference();
+      tabRef.setDestTable(xTabRef.getDesttable());
+      tabRef.setDestColumn(xTabRef.getDestcolumn());
+      tabRefs.add(tabRef);
+    }
+
+    return tabRefs;
+  }
+
+  public static Map<String, List<TableReference>> mapFromDimensionReferences(DimensionReferences dimRefs) {
+    if (dimRefs != null && dimRefs.getReference() != null && !dimRefs.getReference().isEmpty()) {
+      Map<String, List<TableReference>> cubeRefs = new LinkedHashMap<String, List<TableReference>>();
+      for (DimensionReference drf : dimRefs.getReference()) {
+        List<TableReference> refs = cubeRefs.get(drf.getDimensionColumn().toLowerCase());
+        if (refs == null) {
+          refs = new ArrayList<TableReference>();
+          cubeRefs.put(drf.getDimensionColumn().toLowerCase(), refs);
+        }
+        refs.addAll(tableRefFromDimensionRef(drf));
+      }
+      return cubeRefs;
+    }
+    return null;
+  }
+
+  public static List<FieldSchema> fieldSchemaListFromColumns(Columns columns) {
+    if (columns != null && columns.getColumns() != null && !columns.getColumns().isEmpty()) {
+      List<FieldSchema> fsList = new ArrayList<FieldSchema>(columns.getColumns().size());
+      for (Column c : columns.getColumns()) {
+        LOG.debug("##Column "+ c.getName() + "-" + c.getType());
+        fsList.add(fieldSchemaFromColumn(c));
+      }
+      return fsList;
+    }
+    return null;
+  }
+
+  public static Map<Storage, UpdatePeriod> dumpPeriodsFromUpdatePeriods(UpdatePeriods periods) {
+    if (periods != null && periods.getUpdatePeriodElement() != null && !periods.getUpdatePeriodElement().isEmpty()) {
+      Map<Storage, UpdatePeriod> map = new LinkedHashMap<Storage, UpdatePeriod>();
+
+      for (UpdatePeriodElement upd : periods.getUpdatePeriodElement()) {
+        UpdatePeriod updatePeriod = UpdatePeriod.valueOf(upd.getUpdatePeriod().toUpperCase());
+        Storage storage = storageFromXStorage(upd.getStorageAttr());
+        map.put(storage, updatePeriod);
+      }
+      return map;
+    }
+    return null;
+  }
+
+  public static Storage storageFromXStorage(XStorage xs) {
+    if (xs == null) {
+      return null;
+    }
+
+    return new HDFSStorage(xs.getName(), xs.getInputFormat(), xs.getOutputFormat(),
+      xs.getFieldDelimiter(), xs.getLineDelimiter(), xs.getEscapeChar(),
+      xs.getCollectionDelimiter(), xs.getMapKeyDelimiter(), xs.isIsCompressed(),
+      mapFromXProperties(xs.getTableParameters()), mapFromXProperties(xs.getSerdeParameters()),
+      new Path(xs.getTableLocation()));
+  }
+
+
 }

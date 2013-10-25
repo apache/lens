@@ -3,6 +3,7 @@ package com.inmobi.grill.metastore.service;
 import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
+import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.XCube;
 import com.inmobi.grill.server.api.CubeMetastoreService;
@@ -117,11 +118,11 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  private void checkCubeNotFound(GrillException e, String cubeName) {
+  private void checkTableNotFound(GrillException e, String cubeName) {
     if (e.getCause() instanceof HiveException) {
       HiveException hiveErr = (HiveException) e.getCause();
       if (hiveErr.getMessage().startsWith("Could not get table")) {
-        throw new NotFoundException("Cube not found " + cubeName, e);
+        throw new NotFoundException("Table not found " + cubeName, e);
       }
     }
   }
@@ -131,7 +132,7 @@ public class MetastoreResource {
     try {
       getSvc().updateCube(cube);
     } catch (GrillException e) {
-      checkCubeNotFound(e, cube.getName());
+      checkTableNotFound(e, cube.getName());
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -142,7 +143,7 @@ public class MetastoreResource {
     try {
       return xCubeObjectFactory.createXCube(getSvc().getCube(cubeName));
     } catch (GrillException e) {
-      checkCubeNotFound(e, cubeName);
+      checkTableNotFound(e, cubeName);
       throw e;
     }
   }
@@ -152,7 +153,7 @@ public class MetastoreResource {
     try {
       getSvc().dropCube(cubeName, cascade);
     } catch (GrillException e) {
-      checkCubeNotFound(e, cubeName);
+      checkTableNotFound(e, cubeName);
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -209,7 +210,31 @@ public class MetastoreResource {
   - POST - Add a dimension
   - PUT  - Not used
   - DELETE - Drop all the dimensions
+ */
 
+  @POST @Path("/dimensions")
+  public APIResult createCubeDimension(DimensionTable dimensionTable) {
+    try {
+      getSvc().createCubeDimensionTable(dimensionTable);
+    } catch (GrillException exc) {
+      LOG.error("Error creating cube dimension table " + dimensionTable.getName(), exc);
+      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  @DELETE @Path("/dimensions/{dimname}")
+  public APIResult dropDimension(@PathParam("dimname") String dimension, @QueryParam("cascade") boolean cascade) {
+    try {
+      getSvc().dropDimensionTable(dimension, cascade);
+    } catch (GrillException e) {
+      checkTableNotFound(e, dimension);
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /*
   <grill-url>/metastore/dimensions/dimname
   - GET - Get the dimension
   - PUT - Update the dimension

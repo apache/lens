@@ -1,6 +1,7 @@
 package com.inmobi.grill.server.api;
 
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.XCube;
 
 import java.util.List;
@@ -68,5 +69,18 @@ public interface CubeMetastoreService extends GrillService {
    * Update an existing cube
    * @param cube JAXB Cube object
    */
-  void updateCube(XCube cube) throws GrillException;
+  public void updateCube(XCube cube) throws GrillException;
+
+  /**
+   * Create a cube dimension table
+   */
+  public void createCubeDimensionTable(DimensionTable xDimTable) throws GrillException;
+
+  /**
+   * Drop a dimension table from the cube metastore
+   * @param dimension
+   * @param cascade
+   * @throws GrillException
+   */
+  public void dropDimensionTable(String dimension, boolean cascade) throws GrillException;
 }
