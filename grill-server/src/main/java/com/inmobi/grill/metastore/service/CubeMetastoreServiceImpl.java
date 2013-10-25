@@ -6,6 +6,7 @@ import com.inmobi.grill.server.api.CubeMetastoreService;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -83,9 +84,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
    */
   @Override
   public String getCurrentDatabase() throws GrillException {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Get database");
-    }
     return getClient().getCurrentDatabase();
   }
 
@@ -96,10 +94,8 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
    */
   @Override
   public void setCurrentDatabase(String database) throws GrillException {
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Set database " + database);
-    }
     getClient().setCurrentDatabase(database);
+    LOG.info("Set database " + database);
   }
 
   /**
@@ -112,6 +108,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
   public void dropDatabase(String database, boolean cascade) throws GrillException {
     try {
       Hive.get(getUserConf()).dropDatabase(database, true, true, cascade);
+      LOG.info("Database dropped " + database + " cascade? " + true);
     } catch (HiveException e) {
       throw new GrillException(e);
     } catch (NoSuchObjectException e) {
@@ -214,8 +211,8 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
    */
   public void dropCube(String cubeName, boolean cascade) throws GrillException {
     try {
-      LOG.info("Drop cube " + cubeName + " cascade? " + cascade);
       getClient().dropCube(cubeName, cascade);
+      LOG.info("Dropped cube " + cubeName + " cascade? " + cascade);
     } catch (HiveException e) {
       throw new GrillException(e);
     }
@@ -234,5 +231,35 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService {
     } catch (HiveException e) {
       throw new GrillException(e);
     }
+  }
+
+  /**
+   * Create a cube dimension table based on JAXB object
+   * @param xDimTable
+   * @throws GrillException
+   */
+  @Override
+  public void createCubeDimensionTable(DimensionTable xDimTable) throws GrillException {
+    String dimName = xDimTable.getName();
+    List<FieldSchema> columns = JAXBUtils.fieldSchemaListFromColumns(xDimTable.getColumns());
+    Map<String, List<TableReference>> references =
+      JAXBUtils.mapFromDimensionReferences(xDimTable.getDimensionsReferences());
+    Map<Storage, UpdatePeriod> updatePeriodMap =
+      JAXBUtils.dumpPeriodsFromUpdatePeriods(xDimTable.getUpdatePeriods());
+    Map<String, String> properties = JAXBUtils.mapFromXProperties(xDimTable.getProperties());
+
+    try {
+      System.out.println("# Columns: "+ columns);
+      getClient().createCubeDimensionTable(dimName,
+        columns,
+        xDimTable.getWeight(),
+        references,
+        updatePeriodMap,
+        properties);
+      LOG.info("Dimension Table created " + xDimTable.getName());
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+
   }
 }

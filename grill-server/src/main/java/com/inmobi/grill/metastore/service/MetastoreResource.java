@@ -3,6 +3,7 @@ package com.inmobi.grill.metastore.service;
 import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
+import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.XCube;
 import com.inmobi.grill.server.api.CubeMetastoreService;
@@ -209,7 +210,20 @@ public class MetastoreResource {
   - POST - Add a dimension
   - PUT  - Not used
   - DELETE - Drop all the dimensions
+ */
 
+  @POST @Path("/dimensions")
+  public APIResult createCubeDimension(DimensionTable dimensionTable) {
+    try {
+      getSvc().createCubeDimensionTable(dimensionTable);
+    } catch (GrillException exc) {
+      LOG.error("Error creating cube dimension table " + dimensionTable.getName(), exc);
+      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /*
   <grill-url>/metastore/dimensions/dimname
   - GET - Get the dimension
   - PUT - Update the dimension
