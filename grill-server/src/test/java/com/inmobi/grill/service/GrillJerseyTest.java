@@ -26,4 +26,15 @@ public abstract class GrillJerseyTest extends JerseyTest {
   protected URI getBaseUri() {
     return UriBuilder.fromUri(getUri()).path("grill-server").build();
   }
+
+  @BeforeSuite
+  public void startAll() {
+    GrillServices.get().initServices();
+  }
+
+  @AfterSuite
+  public void stopAll() {
+    GrillServices.get().stopAll();
+  }
+
 }

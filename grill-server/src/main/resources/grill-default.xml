@@ -6,4 +6,30 @@
   <name>grill.drivers</name>
   <value>com.inmobi.grill.driver.hive.HiveDriver</value>
 </property>
+
+<property>
+  <name>grill.servicenames</name>
+  <value>query,metastore,scheduler,quota</value>
+</property>
+
+<property>
+  <name>grill.query.service.impl</name>
+  <value>com.inmobi.grill.query.service.QueryExcecutionServiceImpl</value>
+</property>
+
+<property>
+  <name>grill.quota.service.impl</name>
+  <value>com.inmobi.grill.quota.service.QuotaServiceImpl</value>
+</property>
+
+<property>
+  <name>grill.metastore.service.impl</name>
+  <value>com.inmobi.grill.metastore.service.CubeMetastoreServiceImpl</value>
+</property>
+
+<property>
+  <name>grill.scheduler.service.impl</name>
+  <value>com.inmobi.grill.queryscheduler.service.QuerySchedulerServiceImpl</value>
+</property>
+
 </configuration>

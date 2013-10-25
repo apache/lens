@@ -1,5 +1,7 @@
 package com.inmobi.grill.service;
 
+import java.util.List;
+
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -11,6 +13,7 @@ import javax.servlet.ServletContextListener;
  */
 public class GrillServletContextListener  implements ServletContextListener {
   public static final String LOG_PROPERTIES_FILE_KEY = "grill.server.log4j.properties";
+
   /**
    * * Notification that the web application initialization
    * * process is starting.
@@ -37,6 +40,10 @@ public class GrillServletContextListener  implements ServletContextListener {
       exc.printStackTrace();
       BasicConfigurator.configure();
     }
+
+    // start up all grill services
+    GrillServices services = GrillServices.get();
+    services.initServices();
   }
 
   /**
@@ -47,5 +54,6 @@ public class GrillServletContextListener  implements ServletContextListener {
    */
   @Override
   public void contextDestroyed(ServletContextEvent sce) {
+    GrillServices.get().stopAll();
   }
 }
