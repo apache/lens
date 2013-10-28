@@ -1,12 +1,14 @@
 package com.inmobi.grill.metastore.service;
 
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
 import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.XCube;
 import com.inmobi.grill.server.api.CubeMetastoreService;
+
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -14,6 +16,7 @@ import org.apache.log4j.Logger;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -223,6 +226,17 @@ public class MetastoreResource {
       return new APIResult(APIResult.Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
+  }
+  
+  @PUT @Path("/dimensions")
+  public APIResult updateCubdeDimension(DimensionTable dimensionTable) {
+  	try {
+  		getSvc().updateDimensionTable(dimensionTable);
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimensionTable.getName());
+  		return new APIResult(Status.FAILED, exc.getMessage());
+  	}
+  	return SUCCESS;
   }
 
   @DELETE @Path("/dimensions/{dimname}")

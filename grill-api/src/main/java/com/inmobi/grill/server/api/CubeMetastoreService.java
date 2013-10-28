@@ -90,4 +90,6 @@ public interface CubeMetastoreService extends GrillService {
    * @return
    */
 	public DimensionTable getDimensionTable(String dimName) throws GrillException;
+
+	public void updateDimensionTable(DimensionTable dimensionTable) throws GrillException;
 }

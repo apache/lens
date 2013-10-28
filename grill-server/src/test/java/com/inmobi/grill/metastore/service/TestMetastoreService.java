@@ -11,6 +11,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
 
@@ -22,6 +23,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import static org.testng.Assert.*;
+
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -463,8 +465,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     xs1.setEscapeChar("\\");
     xs1.setFieldDelimiter("");
     xs1.setFieldDelimiter("\t");
-    xs1.setInputFormat("SequenceFileInputFormat");
-    xs1.setOutputFormat("SequenceFileOutputFormat");
+    //xs1.setInputFormat("SequenceFileInputFormat");
+    //xs1.setOutputFormat("SequenceFileOutputFormat");
     xs1.setIsCompressed(false);
     xs1.setLineDelimiter("\n");
     xs1.setMapKeyDelimiter("\r");
@@ -525,7 +527,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
   
   @Test 
-  public void testGetDimensionTable() throws Exception {
+  public void testGetAndUpdateDimensionTable() throws Exception {
   	final String table = "test_get_dim";
     final String DB = "test_get_dim_db";
     String prevDb = getCurrentDatabase();
@@ -558,7 +560,46 @@ public class TestMetastoreService extends GrillJerseyTest {
     	assertTrue(props.containsKey("foodim"));
     	assertEquals(props.get("foodim"), "bardim");
     	
-    	APIResult result =
+    	
+    	// Update a property
+    	props.put("foodim", "bardim1");
+    	dt2.setProperties(JAXBUtils.xPropertiesFromMap(props));
+    	dt2.setWeight(200.0);
+    	// Add a column
+    	Column c = cubeObjectFactory.createColumn();
+    	c.setName("col3");
+    	c.setType("string");
+    	c.setComment("Added column");
+    	dt2.getColumns().getColumns().add(c);
+    	
+    	// Update the table
+    	APIResult result = target().path("metastore/dimensions").request(MediaType.APPLICATION_XML)
+    			.put(Entity.xml(cubeObjectFactory.createDimensionTable(dt2)), APIResult.class);
+    	assertEquals(result.getStatus(), Status.SUCCEEDED);
+    	
+    	// Get the updated table
+    	JAXBElement<DimensionTable> dtElement2 = target().path("metastore/dimensions").path(table)
+    			.request(MediaType.APPLICATION_XML)
+    			.get(new GenericType<JAXBElement<DimensionTable>>() {});
+    	DimensionTable dt3 = dtElement2.getValue();
+    	assertEquals(dt3.getWeight(), 200.0);
+    	
+    	Columns cols = dt3.getColumns();
+    	List<Column> colList = cols.getColumns();
+    	boolean foundCol = false;
+    	for (Column col : colList) {
+    		if (col.getName().equals("col3") && col.getType().equals("string") && 
+    				"Added column".equalsIgnoreCase(col.getComment())) {
+    			foundCol = true;
+    			break;
+    		}
+    	}
+    	assertTrue(foundCol);
+    	Map<String, String> updProps = JAXBUtils.mapFromXProperties(dt3.getProperties());
+    	assertEquals(updProps.get("foodim"), "bardim1");
+    	
+    	// Drop table
+    	result =
           target().path("metastore/dimensions").path(table)
             .queryParam("cascade", "true")
             .request(MediaType.APPLICATION_XML).delete(APIResult.class);
