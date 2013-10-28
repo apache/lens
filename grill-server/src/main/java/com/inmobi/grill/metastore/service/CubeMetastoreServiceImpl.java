@@ -20,6 +20,8 @@ import org.apache.log4j.Logger;
 
 import java.util.*;
 
+import javax.ws.rs.NotFoundException;
+
 public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configurable {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
 
@@ -306,6 +308,80 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   		getClient().alterCubeDimensionTable(dimensionTable.getName(), 
   				JAXBUtils.cubeDimTableFromDimTable(dimensionTable));
   		LOG.info("Updated dimension table " + dimensionTable.getName());
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
+  
+  @Override
+  public Collection<String> getDimensionStorages(String dimension) throws GrillException {
+  	try {
+  		CubeDimensionTable dimTable = getClient().getDimensionTable(dimension);
+  		return new ArrayList<String>(dimTable.getStorages());
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
+  
+  @Override
+  public void createDimensionStorage(String dimName, String updatePeriod, XStorage storageAttr) 
+  throws GrillException {
+  	try {
+	  	Storage storage = JAXBUtils.storageFromXStorage(storageAttr);
+	  	CubeDimensionTable dimTable = getClient().getDimensionTable(dimName);
+	  	UpdatePeriod period = UpdatePeriod.valueOf(updatePeriod.toUpperCase());
+	  	getClient().addStorage(dimTable, storage, period);
+	  	LOG.info("Added storage " + storageAttr.getName() + " for dimension table " + dimName
+	  			+ " with update period " + period);
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
+  
+  @Override
+  public void dropAllStoragesOfDim(String dimName) throws GrillException {
+  	try {
+	  	CubeDimensionTable tab = getClient().getDimensionTable(dimName);
+	  	int total = tab.getStorages().size();
+	  	int i = 0;
+	  	List<String> storageNames = new ArrayList<String>(tab.getStorages());
+	  	for (String s : storageNames) {
+	  		getClient().dropStorageFromDim(dimName, s);
+	  		LOG.info("Dropped storage " + s + " from dimension table " + dimName 
+	  				+ " [" + ++i + "/" + total + "]");
+	  	}
+	  	LOG.info("Dropped " + total + " storages from dimension table " + dimName);
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
+  
+  @Override
+  public XStorage getStorageOfDimension(String dimname, String storage) throws GrillException {
+  	try {
+  		CubeDimensionTable tab = getClient().getDimensionTable(dimname);
+  		if (!tab.getStorages().contains(storage)) {
+  			throw new NotFoundException("Storage " + storage + " not found for dimension " + dimname);
+  		}
+  		
+  		XStorage xs = new XStorage();
+  		xs.setName(storage);
+  		return xs;
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
+
+  @Override
+  public void dropStorageOfDim(String dimName, String storage) throws GrillException {
+  	try {
+  		CubeDimensionTable tab = getClient().getDimensionTable(dimName);
+  		if (!tab.getStorages().contains(storage)) {
+  			throw new NotFoundException("Storage " + storage + " not found for dimension " + dimName);
+  		}
+  		
+  		getClient().dropStorageFromDim(dimName, storage);
+  		LOG.info("Dropped storage " + storage + " from dimension table " + dimName) ;
   	} catch (HiveException exc) {
   		throw new GrillException(exc);
   	}
