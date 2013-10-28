@@ -10,10 +10,12 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -384,6 +386,26 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   		LOG.info("Dropped storage " + storage + " from dimension table " + dimName) ;
   	} catch (HiveException exc) {
   		throw new GrillException(exc);
+  	}
+  }
+  
+  @Override
+  public List<XPartition> getPartitionsOfDimStorage(String dimName, String storage,
+  		String filter) throws GrillException {
+  	try {
+  		String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
+  	      Storage.getPrefix(storage));
+  		List<Partition> parts = getClient().getPartitionsByFilter(storageTableName, filter);
+  		List<XPartition> xParts = new ArrayList<XPartition>();
+  		for (Partition part : parts) {
+  			XPartition xPart = new XPartition();
+  			xPart.setName(part.getName());
+  			xPart.setLocation(part.getLocation());
+  			xParts.add(xPart);
+  		}
+  		return xParts;
+  	} catch (Exception ex) {
+  		throw new GrillException(ex);
   	}
   }
 }

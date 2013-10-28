@@ -185,6 +185,18 @@
         <xs:attribute name="serde_class_name" type="xs:string" />
     </xs:complexType>
 
-
+		<xs:element name="x_partition" type="x_partition">
+		</xs:element>
+		
+		
+		<xs:complexType name="x_partition">
+        <xs:annotation>
+            <xs:documentation>
+               Partition details
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="location" use="required"/>
+    </xs:complexType>
 </xs:schema>
            

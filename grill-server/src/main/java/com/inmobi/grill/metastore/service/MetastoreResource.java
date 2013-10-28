@@ -8,9 +8,12 @@ import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.ObjectFactory;
 import com.inmobi.grill.metastore.model.UpdatePeriodElement;
 import com.inmobi.grill.metastore.model.XCube;
+import com.inmobi.grill.metastore.model.XPartition;
 import com.inmobi.grill.metastore.model.XStorage;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
+import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -325,12 +328,20 @@ public class MetastoreResource {
   	}
   }
   
-  /*<grill-url>/metastore/dimensions/dimname/storages/storage
-  - GET - Get the dimension storage
-  - PUT - Update the dimension storage
-  - DELETE - Drop the dimension storage
-  - POST - ?
-
+  @GET @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  public List<XPartition> getPartitionsOfDimStorage(@PathParam("dimname") String dimName,
+  		@PathParam("storage") String storage,
+  		@QueryParam("filter") String partFilter) throws GrillException {
+  	try {
+  		return getSvc().getPartitionsOfDimStorage(dimName, storage, partFilter);
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimName);
+  		checkTableNotFound(exc, MetastoreUtil.getDimStorageTableName(dimName,
+  	      Storage.getPrefix(storage)));
+  		throw exc;
+  	}
+  }
+  /*
   <grill-url>/metastore/dimensions/dimname/storages/storage/partitions
   - GET - get all the partitions in storage
   - POST - Add a partition
