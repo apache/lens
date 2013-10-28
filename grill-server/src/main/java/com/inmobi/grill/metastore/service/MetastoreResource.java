@@ -69,7 +69,8 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("database/{dbname}")
-  public APIResult dropDatabase(@PathParam("dbname") String dbName, @QueryParam("cascade") boolean cascade) {
+  public APIResult dropDatabase(@PathParam("dbname") String dbName, 
+  		@QueryParam("cascade") boolean cascade) {
     LOG.info("Drop database " + dbName+ " cascade?" + cascade);
     try {
       getSvc().dropDatabase(dbName, cascade);
@@ -149,7 +150,8 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/cubes/{cubename}")
-  public APIResult dropCube(@PathParam("cubename") String cubeName, @QueryParam("cascade") boolean cascade) {
+  public APIResult dropCube(@PathParam("cubename") String cubeName, 
+  		@QueryParam("cascade") boolean cascade) {
     try {
       getSvc().dropCube(cubeName, cascade);
     } catch (GrillException e) {
@@ -232,6 +234,16 @@ public class MetastoreResource {
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;
+  }
+  
+  @GET @Path("/dimensions/{dimname}")
+  public JAXBElement<DimensionTable> getDimension(@PathParam("dimname") String dimName) throws GrillException {
+  	try {
+  		return xCubeObjectFactory.createDimensionTable(getSvc().getDimensionTable(dimName));
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimName);
+  		throw exc;
+  	}
   }
 
   /*

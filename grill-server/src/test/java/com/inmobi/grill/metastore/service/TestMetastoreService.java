@@ -411,6 +411,73 @@ public class TestMetastoreService extends GrillJerseyTest {
       setCurrentDatabase(prevDb);
     }
   }
+  
+  private DimensionTable createDimTable(String table) {
+  	DimensionTable dt = cubeObjectFactory.createDimensionTable();
+    dt.setName(table);
+    dt.setWeight(15.0);
+
+    Columns cols = cubeObjectFactory.createColumns();
+
+    Column c1 = cubeObjectFactory.createColumn();
+    c1.setName("col1");
+    c1.setType("string");
+    c1.setComment("Fisrt column");
+    cols.getColumns().add(c1);
+    Column c2 = cubeObjectFactory.createColumn();
+    c2.setName("col2");
+    c2.setType("int");
+    c2.setComment("Second column");
+    cols.getColumns().add(c2);
+    dt.setColumns(cols);
+
+    XProperty p1 = cubeObjectFactory.createXProperty();
+    p1.setName("foodim");
+    p1.setValue("bardim");
+    XProperties properties = cubeObjectFactory.createXProperties();
+    properties.getProperty().add(p1);
+    dt.setProperties(properties);
+
+    DimensionReferences refs = cubeObjectFactory.createDimensionReferences();
+    DimensionReference drf = cubeObjectFactory.createDimensionReference();
+    drf.setDimensionColumn("col1");
+    XTablereference tref1 = cubeObjectFactory.createXTablereference();
+    tref1.setDestcolumn("dim2id");
+    tref1.setDesttable("dim2");
+    XTablereference tref2 = cubeObjectFactory.createXTablereference();
+    tref2.setDestcolumn("dim3id");
+    tref2.setDesttable("dim3");
+    drf.getTableReference().add(tref1);
+    drf.getTableReference().add(tref2);
+    refs.getReference().add(drf);
+    dt.setDimensionsReferences(refs);
+
+    UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
+
+    UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
+    ue1.setUpdatePeriod("HOURLY");
+
+    XStorage xs1 = cubeObjectFactory.createXStorage();
+    xs1.setName(table + "_hourly");
+    xs1.setCollectionDelimiter(",");
+    xs1.setEscapeChar("\\");
+    xs1.setFieldDelimiter("");
+    xs1.setFieldDelimiter("\t");
+    xs1.setInputFormat("SequenceFileInputFormat");
+    xs1.setOutputFormat("SequenceFileOutputFormat");
+    xs1.setIsCompressed(false);
+    xs1.setLineDelimiter("\n");
+    xs1.setMapKeyDelimiter("\r");
+    xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
+    xs1.setPartLocation("/tmp/part");
+    xs1.setTableLocation("/tmp/" + table);
+    xs1.setTableType("EXTERNAL");
+
+    ue1.setStorageAttr(xs1);
+    periods.getUpdatePeriodElement().add(ue1);
+    dt.setUpdatePeriods(periods);
+    return dt;
+  }
 
   @Test
   public void testCreateAndDropDimensionTable() throws Exception {
@@ -421,70 +488,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     setCurrentDatabase(DB);
 
     try {
-      DimensionTable dt = cubeObjectFactory.createDimensionTable();
-      dt.setName(table);
-      dt.setWeight(15.0);
-
-      Columns cols = cubeObjectFactory.createColumns();
-
-      Column c1 = cubeObjectFactory.createColumn();
-      c1.setName("col1");
-      c1.setType("string");
-      c1.setComment("Fisrt column");
-      cols.getColumns().add(c1);
-      Column c2 = cubeObjectFactory.createColumn();
-      c2.setName("col2");
-      c2.setType("int");
-      c2.setComment("Second column");
-      cols.getColumns().add(c2);
-      dt.setColumns(cols);
-
-      XProperty p1 = cubeObjectFactory.createXProperty();
-      p1.setName("foodim");
-      p1.setValue("bardim");
-      XProperties properties = cubeObjectFactory.createXProperties();
-      properties.getProperty().add(p1);
-      dt.setProperties(properties);
-
-      DimensionReferences refs = cubeObjectFactory.createDimensionReferences();
-      DimensionReference drf = cubeObjectFactory.createDimensionReference();
-      drf.setDimensionColumn("col1");
-      XTablereference tref1 = cubeObjectFactory.createXTablereference();
-      tref1.setDestcolumn("dim2id");
-      tref1.setDesttable("dim2");
-      XTablereference tref2 = cubeObjectFactory.createXTablereference();
-      tref2.setDestcolumn("dim3id");
-      tref2.setDesttable("dim3");
-      drf.getTableReference().add(tref1);
-      drf.getTableReference().add(tref2);
-      refs.getReference().add(drf);
-      dt.setDimensionsReferences(refs);
-
-      UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
-
-      UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
-      ue1.setUpdatePeriod("HOURLY");
-
-      XStorage xs1 = cubeObjectFactory.createXStorage();
-      xs1.setName(table + "_hourly");
-      xs1.setCollectionDelimiter(",");
-      xs1.setEscapeChar("\\");
-      xs1.setFieldDelimiter("");
-      xs1.setFieldDelimiter("\t");
-      xs1.setInputFormat("SequenceFileInputFormat");
-      xs1.setOutputFormat("SequenceFileOutputFormat");
-      xs1.setIsCompressed(false);
-      xs1.setLineDelimiter("\n");
-      xs1.setMapKeyDelimiter("\r");
-      xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
-      xs1.setPartLocation("/tmp/part");
-      xs1.setTableLocation("/tmp/" + table);
-      xs1.setTableType("EXTERNAL");
-
-      ue1.setStorageAttr(xs1);
-      periods.getUpdatePeriodElement().add(ue1);
-      dt.setUpdatePeriods(periods);
-
+      DimensionTable dt = createDimTable(table);
       try {
         APIResult result = target()
           .path("metastore")
@@ -517,6 +521,51 @@ public class TestMetastoreService extends GrillJerseyTest {
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
+    }
+  }
+  
+  @Test 
+  public void testGetDimensionTable() throws Exception {
+  	final String table = "test_get_dim";
+    final String DB = "test_get_dim_db";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    try {
+    	DimensionTable dt1 = createDimTable(table);
+    	try {
+        APIResult result = target()
+          .path("metastore")
+          .path("dimensions")
+          .request(MediaType.APPLICATION_XML)
+          .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
+        assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      } catch (Exception exc) {
+        LOG.error(exc);
+        throw exc;
+      }
+    	
+    	JAXBElement<DimensionTable> dtElement = target().path("metastore/dimensions").path(table)
+    			.request(MediaType.APPLICATION_XML)
+    			.get(new GenericType<JAXBElement<DimensionTable>>() {});
+    	DimensionTable dt2 = dtElement.getValue();
+    	assertTrue (dt1 != dt2);
+    	assertEquals(dt2.getName(), table);
+    	assertEquals(dt2.getDimensionsReferences().getReference().size(), 
+    			dt1.getDimensionsReferences().getReference().size());
+    	assertEquals(dt2.getWeight(), dt1.getWeight());
+    	Map<String, String> props = JAXBUtils.mapFromXProperties(dt2.getProperties());
+    	assertTrue(props.containsKey("foodim"));
+    	assertEquals(props.get("foodim"), "bardim");
+    	
+    	APIResult result =
+          target().path("metastore/dimensions").path(table)
+            .queryParam("cascade", "true")
+            .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+        assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    } finally {
+    	setCurrentDatabase(prevDb);
+    	dropDatabase(DB);
     }
   }
 

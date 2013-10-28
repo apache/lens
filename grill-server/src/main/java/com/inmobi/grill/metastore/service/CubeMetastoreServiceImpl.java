@@ -289,4 +289,14 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       throw new GrillException(e);
     }
   }
+  
+  @Override
+  public DimensionTable getDimensionTable(String dimName) throws GrillException {
+  	try {
+  		CubeDimensionTable cubeDimTable = getClient().getDimensionTable(dimName);
+  		return JAXBUtils.dimTableFromCubeDimTable(cubeDimTable);
+  	} catch (HiveException exc) {
+  		throw new GrillException(exc);
+  	}
+  }
 }
