@@ -131,8 +131,8 @@ public class MetastoreResource {
     }
   }
 
-  @PUT @Path("/cubes")
-  public APIResult updateCube(XCube cube) {
+  @PUT @Path("/cubes/{cubename}")
+  public APIResult updateCube(@PathParam("cubename") String cubename, XCube cube) {
     try {
       getSvc().updateCube(cube);
     } catch (GrillException e) {
@@ -228,8 +228,9 @@ public class MetastoreResource {
     return SUCCESS;
   }
   
-  @PUT @Path("/dimensions")
-  public APIResult updateCubdeDimension(DimensionTable dimensionTable) {
+  @PUT @Path("/dimensions/{dimname}")
+  public APIResult updateCubdeDimension(@PathParam("dimname") String dimName, 
+  		DimensionTable dimensionTable) {
   	try {
   		getSvc().updateDimensionTable(dimensionTable);
   	} catch (GrillException exc) {

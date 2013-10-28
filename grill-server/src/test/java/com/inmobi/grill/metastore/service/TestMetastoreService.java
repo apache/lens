@@ -390,8 +390,8 @@ public class TestMetastoreService extends GrillJerseyTest {
 
 
       element = cubeObjectFactory.createXCube(cube);
-      result =
-        target.request(MediaType.APPLICATION_XML).put(Entity.xml(element), APIResult.class);
+      result = target.path(cubeName)
+        .request(MediaType.APPLICATION_XML).put(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       JAXBElement<XCube> got =
@@ -573,7 +573,9 @@ public class TestMetastoreService extends GrillJerseyTest {
     	dt2.getColumns().getColumns().add(c);
     	
     	// Update the table
-    	APIResult result = target().path("metastore/dimensions").request(MediaType.APPLICATION_XML)
+    	APIResult result = target().path("metastore/dimensions")
+    			.path(table)
+    			.request(MediaType.APPLICATION_XML)
     			.put(Entity.xml(cubeObjectFactory.createDimensionTable(dt2)), APIResult.class);
     	assertEquals(result.getStatus(), Status.SUCCEEDED);
     	
