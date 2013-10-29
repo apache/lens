@@ -16,6 +16,8 @@ import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
 
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
+import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -459,26 +461,31 @@ public class TestMetastoreService extends GrillJerseyTest {
     UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
     ue1.setUpdatePeriod("HOURLY");
 
-    XStorage xs1 = cubeObjectFactory.createXStorage();
-    xs1.setName(table + "_hourly");
-    xs1.setCollectionDelimiter(",");
-    xs1.setEscapeChar("\\");
-    xs1.setFieldDelimiter("");
-    xs1.setFieldDelimiter("\t");
-    //xs1.setInputFormat("SequenceFileInputFormat");
-    //xs1.setOutputFormat("SequenceFileOutputFormat");
-    xs1.setIsCompressed(false);
-    xs1.setLineDelimiter("\n");
-    xs1.setMapKeyDelimiter("\r");
-    xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
-    xs1.setPartLocation("/tmp/part");
-    xs1.setTableLocation("/tmp/" + table);
-    xs1.setTableType("EXTERNAL");
+    XStorage xs1 = createXStorage(table + "_hourly");
 
     ue1.setStorageAttr(xs1);
     periods.getUpdatePeriodElement().add(ue1);
     dt.setUpdatePeriods(periods);
     return dt;
+  }
+  
+  private XStorage createXStorage(String name) {
+  	 XStorage xs1 = cubeObjectFactory.createXStorage();
+     xs1.setName(name);
+     xs1.setCollectionDelimiter(",");
+     xs1.setEscapeChar("\\");
+     xs1.setFieldDelimiter("");
+     xs1.setFieldDelimiter("\t");
+     //xs1.setInputFormat("SequenceFileInputFormat");
+     //xs1.setOutputFormat("SequenceFileOutputFormat");
+     xs1.setIsCompressed(false);
+     xs1.setLineDelimiter("\n");
+     xs1.setMapKeyDelimiter("\r");
+     xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
+     xs1.setPartLocation("/tmp/part");
+     xs1.setTableLocation("/tmp/" + name);
+     xs1.setTableType("EXTERNAL");
+     return xs1;
   }
 
   @Test
@@ -611,5 +618,194 @@ public class TestMetastoreService extends GrillJerseyTest {
     	dropDatabase(DB);
     }
   }
+  
+  @Test
+  public void testGetDimensionStorages() throws Exception {
+  	final String table = "test_get_storage";
+    final String DB = "test_get_dim_storage_db";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    try {
+    	DimensionTable dt1 = createDimTable(table);
+    	try {
+        APIResult result = target()
+          .path("metastore")
+          .path("dimensions")
+          .request(MediaType.APPLICATION_XML)
+          .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
+        assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      } catch (Exception exc) {
+        LOG.error(exc);
+        throw exc;
+      }
+    	List storages = target().path("metastore").path("dimensions")
+    			.path(table).path("storages")
+          .request(MediaType.APPLICATION_XML)
+          .get(new GenericType<List<JAXBElement<XStorage>>>() {
+          });
+    	assertEquals(storages.size(), 1);
+    	XStorage xs = (XStorage) storages.get(0);
+    	assertEquals(xs.getName(), table + "_hourly");
+    } finally {
+    	setCurrentDatabase(prevDb);
+    	dropDatabase(DB);
+    }
+  }
+  
+  @Test
+  public void testAddDimensionStorages() throws Exception {
+  	final String table = "test_add_storage";
+    final String DB = "test_add_dim_storage_db";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    try {
+    	DimensionTable dt1 = createDimTable(table);
+    	
+    	try {
+        APIResult result = target()
+          .path("metastore")
+          .path("dimensions")
+          .request(MediaType.APPLICATION_XML)
+          .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
+        assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      } catch (Exception exc) {
+        LOG.error(exc);
+        throw exc;
+      }
+    	
+    	// Add update period
+    	UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
+    	uel.setUpdatePeriod("DAILY");
+    	uel.setStorageAttr(createXStorage("S2"));
+    	
+    	// Check storage is returned in get storage call
+    	APIResult result = target().path("metastore/dimensions").path(table).path("/storages")
+    			.request(MediaType.APPLICATION_XML)
+    			.post(Entity.xml(cubeObjectFactory.createUpdatePeriodElement(uel)), APIResult.class);
+    	assertEquals(result.getStatus(), Status.SUCCEEDED);
+    	
+    	List storages = target().path("metastore").path("dimensions")
+    			.path(table).path("storages")
+          .request(MediaType.APPLICATION_XML)
+          .get(new GenericType<List<JAXBElement<XStorage>>>() {
+          });
+    	assertEquals(storages.size(), 2);
+    	
+    	boolean foundStorage = false;
+    	for (int i = 0; i < storages.size(); i++) {
+    		XStorage xs = (XStorage) storages.get(i);
+    		if (xs.getName().equalsIgnoreCase("S2")) {
+    			foundStorage = true;
+    			break;
+    		}
+    	}
+    	assertTrue(foundStorage);
+    	
+    	// Check get table also contains the storage
+    	JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
+    			.request(MediaType.APPLICATION_XML)
+    			.get(new GenericType<JAXBElement<DimensionTable>>() {});
+    	DimensionTable dimTable = dt.getValue();
+    	CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
+    	assertTrue(cdim.getStorages().contains("S2"));
+    	assertEquals(cdim.getSnapshotDumpPeriods().get("S2"), UpdatePeriod.DAILY);
+    } finally {
+    	setCurrentDatabase(prevDb);
+    	dropDatabase(DB);
+    }
+  }
+    
+    @Test
+    public void testAddDropAllDimStorages() throws Exception {
+    	final String table = "testAddDropAllDimStorages";
+      final String DB = "testAddDropAllDimStorages_db";
+      String prevDb = getCurrentDatabase();
+      createDatabase(DB);
+      setCurrentDatabase(DB);
+      try {
+      	DimensionTable dt1 = createDimTable(table);
+      	// Add update period
+      	UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
+      	uel.setUpdatePeriod("DAILY");
+      	uel.setStorageAttr(createXStorage("S2"));
+      	dt1.getUpdatePeriods().getUpdatePeriodElement().add(uel);
+      	try {
+          APIResult result = target()
+            .path("metastore")
+            .path("dimensions")
+            .request(MediaType.APPLICATION_XML)
+            .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
+          assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        } catch (Exception exc) {
+          LOG.error(exc);
+          throw exc;
+        }
+      	
+      	APIResult result = target().path("metastore/dimensions/").path(table).path("storages")
+      			.request(MediaType.APPLICATION_XML)
+      			.delete(APIResult.class);
+      	assertEquals(result.getStatus(), Status.SUCCEEDED);
+      	
+      	JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.get(new GenericType<JAXBElement<DimensionTable>>() {});
+      	DimensionTable dimTable = dt.getValue();
+      	CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
+      	
+      	assertTrue(cdim.getSnapshotDumpPeriods() == null || cdim.getSnapshotDumpPeriods().isEmpty());
+      } finally {
+      	setCurrentDatabase(prevDb);
+      	dropDatabase(DB);
+      }
+    }
+    
+    @Test
+    public void testDropStorageFromDim() throws Exception {
+    	final String table = "testDropStorageFromDim";
+      final String DB = "testDropStorageFromDim_DB";
+      String prevDb = getCurrentDatabase();
+      createDatabase(DB);
+      setCurrentDatabase(DB);
+      try {
+      	DimensionTable dt1 = createDimTable(table);
+      	// Add update period
+      	UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
+      	uel.setUpdatePeriod("DAILY");
+      	uel.setStorageAttr(createXStorage("S2"));
+      	dt1.getUpdatePeriods().getUpdatePeriodElement().add(uel);
+      	try {
+          APIResult result = target()
+            .path("metastore")
+            .path("dimensions")
+            .request(MediaType.APPLICATION_XML)
+            .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
+          assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+        } catch (Exception exc) {
+          LOG.error(exc);
+          throw exc;
+        }
+      	
+      	APIResult result = target().path("metastore/dimensions/").path(table).path("storages").path("S2")
+      			.request(MediaType.APPLICATION_XML)
+      			.delete(APIResult.class);
+      	assertEquals(result.getStatus(), Status.SUCCEEDED);
+      	
+      	JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.get(new GenericType<JAXBElement<DimensionTable>>() {});
+      	DimensionTable dimTable = dt.getValue();
+      	
+      	CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
+      	assertFalse(cdim.getStorages().contains("S2"));
+      	assertTrue(cdim.getStorages().contains(table+"_hourly"));
+      	assertEquals(cdim.getSnapshotDumpPeriods().get(table + "_hourly"), UpdatePeriod.HOURLY);
+      	
+      } finally {
+      	setCurrentDatabase(prevDb);
+      	dropDatabase(DB);
+      }
+    }
 
 }

@@ -3,7 +3,10 @@ package com.inmobi.grill.server.api;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.XCube;
+import com.inmobi.grill.metastore.model.XStorage;
+import com.inmobi.grill.metastore.model.XPartition;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface CubeMetastoreService extends GrillService {
@@ -92,4 +95,18 @@ public interface CubeMetastoreService extends GrillService {
 	public DimensionTable getDimensionTable(String dimName) throws GrillException;
 
 	public void updateDimensionTable(DimensionTable dimensionTable) throws GrillException;
+
+	public Collection<String> getDimensionStorages(String dimension) throws GrillException;
+
+	public void createDimensionStorage(String dimName, String updatePeriod, XStorage storageAttr)
+	throws GrillException;
+
+	public void dropAllStoragesOfDim(String dimName) throws GrillException;
+
+	public XStorage getStorageOfDimension(String dimname, String storage) throws GrillException;
+
+	public void dropStorageOfDim(String dimName, String storage) throws GrillException;
+
+	public List<XPartition> getPartitionsOfDimStorage(String dimName, String storage,
+			String partFilter) throws GrillException;
 }

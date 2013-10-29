@@ -6,9 +6,14 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.Database;
 import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.ObjectFactory;
+import com.inmobi.grill.metastore.model.UpdatePeriodElement;
 import com.inmobi.grill.metastore.model.XCube;
+import com.inmobi.grill.metastore.model.XPartition;
+import com.inmobi.grill.metastore.model.XStorage;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
+import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -18,6 +23,7 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Path("metastore")
@@ -164,9 +170,6 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-
-
-
   /*<grill-url>/metastore/cubes/cubename/facts
   - GET - Get all the cube facts
   - PUT  - Not used
@@ -252,7 +255,8 @@ public class MetastoreResource {
   }
   
   @GET @Path("/dimensions/{dimname}")
-  public JAXBElement<DimensionTable> getDimension(@PathParam("dimname") String dimName) throws GrillException {
+  public JAXBElement<DimensionTable> getDimension(@PathParam("dimname") String dimName) 
+  		throws GrillException {
   	try {
   		return xCubeObjectFactory.createDimensionTable(getSvc().getDimensionTable(dimName));
   	} catch (GrillException exc) {
@@ -261,25 +265,83 @@ public class MetastoreResource {
   	}
   }
 
+  @GET @Path("/dimensions/{dimname}/storages")
+  public List<JAXBElement<XStorage>> getDimensionStorages(@PathParam("dimname") String dimension) 
+  		throws GrillException {
+  	Collection<String> storages = getSvc().getDimensionStorages(dimension);
+  	List<JAXBElement<XStorage>> xStorages = new ArrayList<JAXBElement<XStorage>>(storages.size());
+  	
+  	for (String s : storages) {
+  		XStorage xs = xCubeObjectFactory.createXStorage();
+  		xs.setName(s);
+  		xStorages.add(xCubeObjectFactory.createXStorage(xs));
+  	}
+  	
+  	return xStorages;
+  }
+  
+  @POST @Path("/dimensions/{dimname}/storages")
+  public APIResult createDimensionStorage(@PathParam("dimname") String dimName, 
+  		UpdatePeriodElement updatePeriodElement) {
+  	try {
+			getSvc().createDimensionStorage(dimName, 
+					updatePeriodElement.getUpdatePeriod(),
+					updatePeriodElement.getStorageAttr());
+		} catch (GrillException e) {
+			checkTableNotFound(e, dimName);
+			return new APIResult(Status.FAILED, e.getMessage());
+		}
+  	return SUCCESS;
+  }
+  
+  @DELETE @Path("/dimensions/{dimname}/storages")
+  public APIResult dropAllStoragesOfDim(@PathParam("dimname") String dimName) {
+  	try {
+  		getSvc().dropAllStoragesOfDim(dimName);
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimName);
+  		return new APIResult(Status.FAILED, exc.getMessage());
+  	}
+  	return SUCCESS;
+  }
+  
+  @DELETE @Path("/dimensions/{dimname}/storages/{storage}")
+  public APIResult dropStorageOfDim(@PathParam("dimname") String dimName,
+  		@PathParam("storage") String storage) {
+  	try {
+  		getSvc().dropStorageOfDim(dimName, storage);
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimName);
+  		return new APIResult(Status.FAILED, exc.getMessage());
+  	}
+  	return SUCCESS;
+  }
+  
+  @GET @Path("/dimensions/{dimname}/storages/{storage}")
+  public JAXBElement<XStorage> getStorageOfDimension(@PathParam("dimname") String dimname, 
+  		@PathParam("storage") String storage) throws GrillException {
+  	try {
+  		return xCubeObjectFactory.createXStorage(getSvc().getStorageOfDimension(dimname, storage));
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimname);
+  		throw exc;
+  	}
+  }
+  
+  @GET @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  public List<XPartition> getPartitionsOfDimStorage(@PathParam("dimname") String dimName,
+  		@PathParam("storage") String storage,
+  		@QueryParam("filter") String partFilter) throws GrillException {
+  	try {
+  		return getSvc().getPartitionsOfDimStorage(dimName, storage, partFilter);
+  	} catch (GrillException exc) {
+  		checkTableNotFound(exc, dimName);
+  		checkTableNotFound(exc, MetastoreUtil.getDimStorageTableName(dimName,
+  	      Storage.getPrefix(storage)));
+  		throw exc;
+  	}
+  }
   /*
-  <grill-url>/metastore/dimensions/dimname
-  - GET - Get the dimension
-  - PUT - Update the dimension
-  - DELETE - Drop the dimension
-  - POST - ?
-
-  <grill-url>/metastore/dimensions/dimname/storages
-  - GET - get all the storages of the dimension dimname
-  - POST - Add a storage to dimname
-  - PUT  - Not used
-  - DELETE - Drop all the strorages
-
-  <grill-url>/metastore/dimensions/dimname/storages/storage
-  - GET - Get the dimension storage
-  - PUT - Update the dimension storage
-  - DELETE - Drop the dimension storage
-  - POST - ?
-
   <grill-url>/metastore/dimensions/dimname/storages/storage/partitions
   - GET - get all the partitions in storage
   - POST - Add a partition

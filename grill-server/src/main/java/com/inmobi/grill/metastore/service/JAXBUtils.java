@@ -411,22 +411,31 @@ public class JAXBUtils {
 
 	public static CubeDimensionTable cubeDimTableFromDimTable(DimensionTable dimensionTable) {
 		Map<String, UpdatePeriod> storageToUpdatePeriod = new HashMap<String, UpdatePeriod>();
-		for (UpdatePeriodElement upd : dimensionTable.getUpdatePeriods().getUpdatePeriodElement()) {
-			upd.getUpdatePeriod();
-			upd.getStorageAttr().getName();
-			storageToUpdatePeriod.put(upd.getStorageAttr().getName(), 
-					UpdatePeriod.valueOf(upd.getUpdatePeriod().toUpperCase()));
+		if (dimensionTable.getUpdatePeriods() != null
+				&& dimensionTable.getUpdatePeriods().getUpdatePeriodElement() != null
+				&& !dimensionTable.getUpdatePeriods().getUpdatePeriodElement().isEmpty()) {
+			for (UpdatePeriodElement upd : dimensionTable.getUpdatePeriods().getUpdatePeriodElement()) {
+				upd.getUpdatePeriod();
+				upd.getStorageAttr().getName();
+				storageToUpdatePeriod.put(upd.getStorageAttr().getName(),
+						UpdatePeriod.valueOf(upd.getUpdatePeriod().toUpperCase()));
+			}
 		}
 		
 		Map<String, List<TableReference>> tabrefs = new HashMap<String, List<TableReference>>();
-		for (DimensionReference drf : dimensionTable.getDimensionsReferences().getReference()) {
-			String col = drf.getDimensionColumn();
-			List<TableReference> refs = tableRefFromDimensionRef(drf);
-			List<TableReference> val = tabrefs.get(col);
-			if (val == null) {
-				tabrefs.put(col, refs);
-			} else {
-				val.addAll(refs);
+		
+		if (dimensionTable.getDimensionsReferences() != null &&
+				dimensionTable.getDimensionsReferences().getReference() != null &&
+				!dimensionTable.getDimensionsReferences().getReference().isEmpty()) {
+			for (DimensionReference drf : dimensionTable.getDimensionsReferences().getReference()) {
+				String col = drf.getDimensionColumn();
+				List<TableReference> refs = tableRefFromDimensionRef(drf);
+				List<TableReference> val = tabrefs.get(col);
+				if (val == null) {
+					tabrefs.put(col, refs);
+				} else {
+					val.addAll(refs);
+				}
 			}
 		}
 
