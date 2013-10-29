@@ -97,7 +97,7 @@ public class HiveDriver implements GrillDriver {
   public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
     QueryPlan plan = explain(pContext.getDriverQuery(), pContext.getConf());
-    plan.setHandle(new QueryHandle(pContext.getPrepareHandle().getHandleId()));
+    plan.setPrepareHandle(pContext.getPrepareHandle());
     return plan;
   }
 

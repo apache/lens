@@ -36,19 +36,18 @@ public class QueryContext {
   public QueryContext() {
     // only for JAXB
   }
-  public QueryContext(QueryHandle queryHandle, String query, String user,
-      Date submissionTime, Priority priority, boolean isPersistent,
-      String selectedDriverClassName, String driverQuery, QueryStatus status,
-      String resultSetPath) {
-    this.userQuery = query;
-    this.submissionTime = submissionTime;
-    this.submittedUser = user;
-    this.queryHandle = queryHandle;
-    this.priority = priority;
-    this.isPersistent = isPersistent;
-    this.driverQuery = driverQuery;
-    this.selectedDriverClassName = selectedDriverClassName;
-    this.status = status;
+  public QueryContext(com.inmobi.grill.api.QueryContext ctx) {
+    this.userQuery = ctx.getUserQuery();
+    this.submissionTime = ctx.getSubmissionTime();
+    this.submittedUser = ctx.getSubmittedUser();
+    this.queryHandle = ctx.getQueryHandle();
+    this.priority = ctx.getPriority();
+    this.isPersistent = ctx.isPersistent();
+    this.driverQuery = ctx.getDriverQuery();
+    this.selectedDriverClassName = ctx.getSelectedDriver() == null ? null :
+      ctx.getSelectedDriver().getClass().getCanonicalName();
+    this.status = ctx.getStatus();
+    this.resultSetPath = ctx.getResultSetPath();
   }
 
   /**

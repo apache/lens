@@ -2,6 +2,7 @@ package com.inmobi.grill.server.api;
 
 import java.util.List;
 
+import com.inmobi.grill.api.PreparedQueryContext;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryHandleWithResultSet;
@@ -163,8 +164,36 @@ public interface QueryExecutionService extends GrillService {
    * @param state Any of particular state, if null all queries will be returned
    * @param user The user name, if null all user queries will be returned
    * 
-   * @return List of query handle strings
+   * @return List of query handles
    */
   public List<QueryHandle> getAllQueries(String state, String user)
       throws GrillException;
+
+  /**
+   * Returns all the prepared queries for the specified user. 
+   * If no user is passed, queries of all users will be returned.
+   * 
+   * @param user The user name, if null all user queries will be returned
+   * 
+   * @return List of query prepare handles
+   */
+  public List<QueryPrepareHandle> getAllPreparedQueries(String user)
+      throws GrillException;
+
+  /**
+   * Destroy a prepared query
+   * 
+   * @param prepared
+   * @return return true if successful, false otherwise
+   */
+  public boolean destroyPrepared(QueryPrepareHandle prepared)
+      throws GrillException;
+
+  PreparedQueryContext getPreparedQueryContext(QueryPrepareHandle prepareHandle)
+      throws GrillException;
+
+  boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
+      throws GrillException;
+
+
 }

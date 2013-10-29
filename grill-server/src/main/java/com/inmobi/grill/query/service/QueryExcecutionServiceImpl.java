@@ -167,7 +167,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   }
 
   private class StatusPoller implements Runnable {
-    long pollInterval = 100;
+    long pollInterval = 1000;
     @Override
     public void run() {
       while (!stopped && !statusPoller.isInterrupted()) {
@@ -287,7 +287,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
 
     // 2. select driver to run the query
     GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
-    
+
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }
@@ -298,7 +298,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
 
     // 2. select driver to run the query
     GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
-    
+
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }
@@ -346,7 +346,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     Configuration qconf = getQueryConf(queryConf);
     accept(query, qconf, SubmitOp.EXPLAIN);
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-          query, drivers);
+        query, drivers);
     // select driver to run the query
     return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
   }
@@ -361,6 +361,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     preparedQueries.put(prepared.getPrepareHandle(), prepared);
     preparedQueryQueue.add(prepared);
     prepared.getSelectedDriver().prepare(prepared);
+    System.out.println("################### returning " + prepared.getPrepareHandle());
     return prepared.getPrepareHandle();
   }
 
@@ -379,11 +380,11 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public QueryHandle executePrepareAsync(
       QueryPrepareHandle prepareHandle, QueryConf queryConf)
-      throws GrillException {
+          throws GrillException {
+    PreparedQueryContext pctx = getPreparedQueryContext(prepareHandle);
     Configuration qconf = getQueryConf(queryConf);
-    accept(preparedQueries.get(prepareHandle).getUserQuery(), qconf,
-        SubmitOp.EXECUTE);
-    QueryContext ctx = new QueryContext(preparedQueries.get(prepareHandle), "user", qconf);
+    accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
+    QueryContext ctx = new QueryContext(pctx, "user", qconf);
     ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
         "Query is queued", false));
@@ -414,7 +415,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public boolean updateQueryConf(QueryHandle queryHandle, QueryConf newconf)
       throws GrillException {
-    QueryContext ctx = allQueries.get(queryHandle);
+    QueryContext ctx = getQueryContext(queryHandle);
     if (ctx != null && ctx.getStatus().getStatus() == QueryStatus.Status.QUEUED) {
       ctx.updateConf(newconf.getProperties());
       notifyAllListeners();
@@ -425,12 +426,12 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     }
   }
 
- // @Override
-  public boolean updateQueryConf(QueryPrepareHandle queryHandle, QueryConf newconf)
+  @Override
+  public boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
       throws GrillException {
-    PreparedQueryContext ctx = preparedQueries.get(queryHandle);
-      ctx.updateConf(newconf.getProperties());
-      return true;
+    PreparedQueryContext ctx = getPreparedQueryContext(prepareHandle);
+    ctx.updateConf(newconf.getProperties());
+    return true;
   }
 
   @Override
@@ -441,6 +442,17 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
       throw new NotFoundException("Query not found " + queryHandle);
     }
     updateStatus(queryHandle);
+    return ctx;
+  }
+
+  @Override
+  public PreparedQueryContext getPreparedQueryContext(
+      QueryPrepareHandle prepareHandle)
+          throws GrillException {
+    PreparedQueryContext ctx = preparedQueries.get(prepareHandle);
+    if (ctx == null) {
+      throw new NotFoundException("Prepared query not found " + prepareHandle);
+    }
     return ctx;
   }
 
@@ -488,11 +500,29 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public void setConf(Configuration conf) {
     this.conf = conf;
-    
+
   }
 
   @Override
   public Configuration getConf() {
     return this.conf;
+  }
+
+  @Override
+  public List<QueryPrepareHandle> getAllPreparedQueries(String user)
+      throws GrillException {
+    List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>();
+    allPrepared.addAll(preparedQueries.keySet());
+    return allPrepared;
+  }
+
+  @Override
+  public boolean destroyPrepared(QueryPrepareHandle prepared)
+      throws GrillException {
+    PreparedQueryContext ctx = getPreparedQueryContext(prepared);
+    ctx.getSelectedDriver().closePreparedQuery(prepared);
+    preparedQueries.remove(prepared);
+    preparedQueryQueue.remove(ctx);
+    return true;
   }
 }

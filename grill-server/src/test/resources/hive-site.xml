@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+<property>
+  <name>hive.metastore.local</name>
+  <value>true</value>
+</property>
+
+<property>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>/tmp/hive/warehouse</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
+  <description>JDBC connect string for a JDBC metastore</description>
+</property>
+
+<property>
+  <name>hive.lock.manager</name>
+  <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
+</property>
+
+<property>
+  <name>grill.hive.connection.class</name>
+  <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
+</property>
+
+<property>
+  <name>grill.hs2.password</name>
+  <value>password</value>
+</property>
+
+<property>
+  <name>grill.hs2.user</name>
+  <value>user</value>
+</property>
+
+</configuration>

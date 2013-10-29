@@ -38,7 +38,7 @@ public class MockDriver implements GrillDriver {
     String query;
     MockQueryPlan(String query) {
       this.query = query;
-      setHandle(new QueryHandle(UUID.randomUUID()));
+      setPrepareHandle(new QueryPrepareHandle(UUID.randomUUID()));
     }
     @Override
     public String getPlan() {
@@ -85,7 +85,7 @@ public class MockDriver implements GrillDriver {
   public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
     QueryPlan p = new MockQueryPlan(pContext.getDriverQuery());
-    p.setHandle(new QueryHandle(pContext.getPrepareHandle().getHandleId()));
+    p.setPrepareHandle(pContext.getPrepareHandle());
     return p;
   }
 

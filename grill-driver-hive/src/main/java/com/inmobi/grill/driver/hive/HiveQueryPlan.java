@@ -10,8 +10,8 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.QueryCost;
-import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
+import com.inmobi.grill.api.QueryPrepareHandle;
 
 public class HiveQueryPlan extends QueryPlan {
   enum ParserState {
@@ -27,9 +27,9 @@ public class HiveQueryPlan extends QueryPlan {
     MAP_REDUCE,
   };
 
-  public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle,
+  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
       HiveConf conf) throws HiveException {
-    setHandle(queryHandle);
+    setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
     extractPlanDetails(explainOutput, conf);
@@ -84,7 +84,7 @@ public class HiveQueryPlan extends QueryPlan {
           break;
         case GROUPBY_EXPRS:
           if (tr.startsWith("expr:")) {
-            numDefaultAggrExprs++;
+            numAggrExprs++;
           }
           break;
         case GROUPBY_KEYS:

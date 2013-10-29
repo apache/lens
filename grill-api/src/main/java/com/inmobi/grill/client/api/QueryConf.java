@@ -3,6 +3,7 @@ package com.inmobi.grill.client.api;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
 
@@ -17,6 +18,7 @@ public class QueryConf {
     properties.put(key, value);
   }
 
+  @XmlElementWrapper
   public Map<String, String> getProperties() {
     return properties;
   }

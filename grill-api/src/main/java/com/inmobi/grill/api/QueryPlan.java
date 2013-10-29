@@ -5,10 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
-@XmlRootElement
-public abstract class QueryPlan extends QuerySubmitResult {
+public abstract class QueryPlan {
 
   public enum ExecMode {
     INTERACTIVE,
@@ -22,15 +19,14 @@ public abstract class QueryPlan extends QuerySubmitResult {
     PARTIAL_SCAN,
     FULL_SCAN
   }
-  
+
   protected int numJoins = 0;
   protected int numGbys = 0;
   protected int numSels = 0;
   protected int numSelDi = 0;
   protected int numHaving = 0;
   protected int numObys = 0;
-  protected int numNonDefaultAggrExprs = 0;
-  protected int numDefaultAggrExprs = 0;
+  protected int numAggrExprs = 0;
   protected int numFilters = 0;
   protected final List<String> tablesQueried = new ArrayList<String>();
   protected boolean hasSubQuery = false;
@@ -44,7 +40,7 @@ public abstract class QueryPlan extends QuerySubmitResult {
   protected Double havingWeight;
   protected Double obyWeight;
   protected Double selectWeight;
-  protected QueryHandle handle;
+  protected QueryPrepareHandle handle;
 
   /**
    * Get the query plan
@@ -166,42 +162,6 @@ public abstract class QueryPlan extends QuerySubmitResult {
    */
   protected void setNumOrderBys(int numObys) {
     this.numObys = numObys;
-  }
-
-  /**
-   * Get the number of non-default aggregation expressions in query
-   * 
-   * @return the numNonDefaultAggrExprs
-   */
-  public int getNumNonDefaultAggrExprs() {
-    return numNonDefaultAggrExprs;
-  }
-
-  /**
-   * Set the number of non-default aggregation expressions in query
-   * 
-   * @param numNonDefaultAggrExprs the numNonDefaultAggrExprs to set
-   */
-  protected void setNumNonDefaultAggrExprs(int numNonDefaultAggrExprs) {
-    this.numNonDefaultAggrExprs = numNonDefaultAggrExprs;
-  }
-
-  /**
-   * Get the number of default aggregation expressions in query
-   * 
-   * @return the numDefaultAggrExprs
-   */
-  public int getNumDefaultAggrExprs() {
-    return numDefaultAggrExprs;
-  }
-
-  /**
-   * Set the number of default aggregation expressions in query
-   * 
-   * @param numDefaultAggrExprs the numDefaultAggrExprs to set
-   */
-  protected void setNumDefaultAggrExprs(int numDefaultAggrExprs) {
-    this.numDefaultAggrExprs = numDefaultAggrExprs;
   }
 
   /**
@@ -456,14 +416,26 @@ public abstract class QueryPlan extends QuerySubmitResult {
    * @return the handle
    */
   public QueryHandle getHandle() {
+    return new QueryHandle(handle.getHandleId());
+  }
+
+  /**
+   * 
+   * @return the prepare handle
+   */
+  public QueryPrepareHandle getPrepareHandle() {
     return handle;
   }
 
   /**
-   * @deprecated
+   * 
    * @param handle the handle to set
    */
-  public void setHandle(QueryHandle handle) {
+  public void setPrepareHandle(QueryPrepareHandle handle) {
     this.handle = handle;
+  }
+
+  public int getNumAggreagateExprs() {
+    return numAggrExprs;
   }
 }

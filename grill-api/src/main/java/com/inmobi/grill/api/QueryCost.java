@@ -1,9 +1,15 @@
 package com.inmobi.grill.api;
 
-public class QueryCost implements Comparable<QueryCost> {
-  private final long estimatedExecTimeMillis;
-  private final double estimatedResourceUsage;
+import javax.xml.bind.annotation.XmlRootElement;
 
+@XmlRootElement
+public class QueryCost implements Comparable<QueryCost> {
+  private long estimatedExecTimeMillis;
+  private double estimatedResourceUsage;
+
+  public QueryCost() {
+    
+  }
   public QueryCost(long exectimeMillis, double resourceUsage) {
     this.estimatedExecTimeMillis = exectimeMillis;
     this.estimatedResourceUsage = resourceUsage;

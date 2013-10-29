@@ -317,10 +317,7 @@ public class TestHiveDriver {
         " GROUP BY explain_test_1.ID", conf);
 
     assertTrue(plan instanceof  HiveQueryPlan);
-    assertNull(plan.getResultDestination());
     assertNotNull(plan.getTablesQueried());
-    System.out.println("@@Result Destination " + plan.getResultDestination());
-    System.out.println("@@Tables Queried " + plan.getTablesQueried());
     assertEquals(plan.getTablesQueried().size(), 2);
     assertNotNull(plan.getTableWeights());
     assertTrue(plan.getTableWeights().containsKey("explain_test_1"));
