@@ -188,7 +188,6 @@
 		<xs:element name="x_partition" type="x_partition">
 		</xs:element>
 		
-		
 		<xs:complexType name="x_partition">
         <xs:annotation>
             <xs:documentation>
@@ -197,6 +196,20 @@
         </xs:annotation>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="location" use="required"/>
+    </xs:complexType>
+    
+    <xs:element name="fact_table" type="fact_table">
+    </xs:element>
+    
+    <xs:complexType name="fact_table">
+    	<xs:sequence>
+            <xs:element type="columns" name="columns"/>
+            <xs:element type="update_periods" name="update_periods"/>
+            <xs:element type="x_properties" name="properties" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="required" />
+        <xs:attribute name="cube_name" type="xs:string" use="required" />
+        <xs:attribute name="weight" type="xs:double" />
     </xs:complexType>
 </xs:schema>
            

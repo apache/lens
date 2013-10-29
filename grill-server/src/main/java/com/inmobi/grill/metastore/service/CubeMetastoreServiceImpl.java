@@ -10,7 +10,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -390,7 +389,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   }
   
   @Override
-  public List<XPartition> getPartitionsOfDimStorage(String dimName, String storage,
+  public List<XPartition> getAllPartitionsOfDimStorage(String dimName, String storage,
   		String filter) throws GrillException {
   	try {
   		String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
@@ -407,5 +406,72 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   	} catch (Exception ex) {
   		throw new GrillException(ex);
   	}
+  	
+  	
   }
+
+	@Override
+	public void addPartitionToDimStorage(String dimName, String storage, XPartition partition)
+			throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void dropAllPartitionsOfDimStorage(String dimName, String storage, String partFilter)
+			throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public XPartition getPartitionOfDimStorage(String dimName, String storage, String partSpec)
+			throws GrillException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void updatePartitionOfDimStorage(String dimName, String storage, String partSpec)
+			throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void dropPartitionOfDimStorage(String dimName, String storage, String partSpec)
+			throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void dropAllFactsOfCube(String cubeName) throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public List<FactTable> getAllFactsOfCube(String cubeName) throws GrillException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public FactTable getFactOfCube(String cubeName) throws GrillException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void createFactForCube(String cubeName, FactTable fact) throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void updateFactForCube(String cubeName, FactTable fact) throws GrillException {
+		// TODO Auto-generated method stub
+		
+	}
 }
