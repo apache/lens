@@ -216,6 +216,7 @@ public class TestQueryService extends GrillJerseyTest {
     List<QueryHandle> allQueries = (List<QueryHandle>)target.request().get(
         new GenericType<List<QueryHandle>>(){});
     Assert.assertTrue(allQueries.size() >= 1);
+    Assert.assertTrue(allQueries.contains(handle));
 
     // Get query
     // Invocation.Builder builderjson = target.path(handle.toString()).request(MediaType.APPLICATION_JSON);
@@ -278,8 +279,8 @@ public class TestQueryService extends GrillJerseyTest {
   // get all prepared queries
   // get a prepared query
   // update a prepared query
+  // post to prepared query multiple times
   // delete a prepared query
-  // post to prepared query - pending
   @Test
   public void testPrepareQuery() throws InterruptedException {    
     final WebTarget target = target().path("queryapi/preparedqueries");
@@ -296,6 +297,12 @@ public class TestQueryService extends GrillJerseyTest {
 
     final QueryPrepareHandle pHandle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPrepareHandle.class);
+
+    // Get all prepared queries
+    List<QueryPrepareHandle> allQueries = (List<QueryPrepareHandle>)target
+        .request().get(new GenericType<List<QueryPrepareHandle>>(){});
+    Assert.assertTrue(allQueries.size() >= 1);
+    Assert.assertTrue(allQueries.contains(pHandle));
 
     PreparedQueryContext ctx = target.path(pHandle.toString()).request().get(
         PreparedQueryContext.class);
@@ -325,9 +332,49 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
         "myvalue");
 
+    QueryHandle handle1 = target.path(pHandle.toString()).request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryHandle.class);
+    
+    // do post once again
+    QueryHandle handle2 = target.path(pHandle.toString()).request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryHandle.class);
+    Assert.assertNotEquals(handle1, handle2);
+
+    QueryContext ctx1 = target().path("queryapi/queries").path(
+        handle1.toString()).request().get(QueryContext.class);
+    // wait till the query finishes
+    QueryStatus stat = ctx1.getStatus();
+    while (!stat.isFinished()) {
+      ctx1 = target().path("queryapi/queries").path(
+          handle1.toString()).request().get(QueryContext.class);
+      stat = ctx1.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    QueryContext ctx2 = target().path("queryapi/queries").path(
+        handle2.toString()).request().get(QueryContext.class);
+    // wait till the query finishes
+    stat = ctx2.getStatus();
+    while (!stat.isFinished()) {
+      ctx2 = target().path("queryapi/queries").path(
+          handle1.toString()).request().get(QueryContext.class);
+      stat = ctx2.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
     // destroy prepared
     APIResult result = target.path(pHandle.toString()).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // Post on destroyed query
+    Response response = target.path(pHandle.toString()).request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        Response.class);
+    Assert.assertEquals(response.getStatus(), 404);
   }
 
   @Test
@@ -379,14 +426,56 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
         "myvalue");
 
+    QueryHandle handle1 = target.path(plan.getPrepareHandle().toString()).request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryHandle.class);
+    
+    // do post once again
+    QueryHandle handle2 = target.path(plan.getPrepareHandle().toString()).request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryHandle.class);
+    Assert.assertNotEquals(handle1, handle2);
+
+    QueryContext ctx1 = target().path("queryapi/queries").path(
+        handle1.toString()).request().get(QueryContext.class);
+    // wait till the query finishes
+    QueryStatus stat = ctx1.getStatus();
+    while (!stat.isFinished()) {
+      ctx1 = target().path("queryapi/queries").path(
+          handle1.toString()).request().get(QueryContext.class);
+      stat = ctx1.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    QueryContext ctx2 = target().path("queryapi/queries").path(
+        handle2.toString()).request().get(QueryContext.class);
+    // wait till the query finishes
+    stat = ctx2.getStatus();
+    while (!stat.isFinished()) {
+      ctx2 = target().path("queryapi/queries").path(
+          handle1.toString()).request().get(QueryContext.class);
+      stat = ctx2.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
     // destroy prepared
     APIResult result = target.path(plan.getPrepareHandle().toString())
         .request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // Post on destroyed query
+    Response response = target.path(plan.getPrepareHandle().toString())
+        .request().post(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        Response.class);
+    Assert.assertEquals(response.getStatus(), 404);
+
   }
 
   // test with execute async post, get query, get results
-  //@Test
+  @Test
   public void testExecuteAsync() throws InterruptedException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");

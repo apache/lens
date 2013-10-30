@@ -304,7 +304,7 @@ public class QueryServiceResource {
   }
 
   @POST
-  @Path("queries/{prepareHandle}")
+  @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QueryHandle executePrepared(@PathParam("prepareHandle") String prepareHandle, 
