@@ -272,11 +272,31 @@ public class QueryServiceResource {
     try {
       boolean ret = queryServer.updateQueryConf(getQueryHandle(queryHandle), conf);
       if (ret) {
-        return new APIResult(APIResult.Status.SUCCEEDED, "Cancel on the query "
+        return new APIResult(APIResult.Status.SUCCEEDED, "Update on the query conf for "
             + queryHandle + " is successful");
       } else {
-        return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
+        return new APIResult(APIResult.Status.FAILED, "Update on the query conf for "
             + queryHandle + " failed");        
+      }
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    }
+  }
+
+  @PUT
+  @Path("preparedqueries/{prepareHandle}")
+  @Consumes({MediaType.MULTIPART_FORM_DATA})
+  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  public APIResult updatePreparedConf(@PathParam("prepareHandle") String prepareHandle, 
+      @FormDataParam("conf") QueryConf conf) {
+    try {
+      boolean ret = queryServer.updateQueryConf(getPrepareHandle(prepareHandle), conf);
+      if (ret) {
+        return new APIResult(APIResult.Status.SUCCEEDED, "Update on the query conf for "
+            + prepareHandle + " is successful");
+      } else {
+        return new APIResult(APIResult.Status.FAILED, "Update on the query conf for "
+            + prepareHandle + " failed");        
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);

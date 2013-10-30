@@ -1,6 +1,7 @@
 package com.inmobi.grill.client.api;
 
 import java.util.Date;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -22,6 +23,9 @@ public class PreparedQueryContext {
   private String selectedDriverClassName;
   @XmlElement
   private String driverQuery;
+  @XmlElement
+  private QueryConf conf;
+  
 
   public PreparedQueryContext() {
     // for JAXB
@@ -32,7 +36,13 @@ public class PreparedQueryContext {
     this.preparedUser = pctx.getPreparedUser();
     this.prepareHandle = pctx.getPrepareHandle();
     this.driverQuery = pctx.getDriverQuery();
-    this.selectedDriverClassName = pctx.getSelectedDriver().getClass().getCanonicalName();
+    this.selectedDriverClassName = pctx.getSelectedDriver()
+        .getClass().getCanonicalName();
+    this.conf = new QueryConf();
+    pctx.getConf().iterator();
+    for (Map.Entry<String, String> entry : pctx.getConf()) {
+      this.conf.addProperty(entry.getKey(), entry.getValue());
+    }
   }
   /**
    * @return the prepareHandle
@@ -70,5 +80,10 @@ public class PreparedQueryContext {
   public String getDriverQuery() {
     return driverQuery;
   }
-
+  /**
+   * @return the conf
+   */
+  public QueryConf getConf() {
+    return conf;
+  }
 }

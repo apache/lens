@@ -319,9 +319,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   }
 
   private Configuration getQueryConf(QueryConf queryConf) {
-    Configuration qconf = this.conf;
+    Configuration qconf = new Configuration(this.conf);
     if (queryConf != null && !queryConf.getProperties().isEmpty()) {
-      qconf = new Configuration(this.conf);
       for (Map.Entry<String, String> entry : queryConf.getProperties().entrySet()) {
         qconf.set(entry.getKey(), entry.getValue());
       }

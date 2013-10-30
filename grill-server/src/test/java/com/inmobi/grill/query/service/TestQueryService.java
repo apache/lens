@@ -100,7 +100,6 @@ public class TestQueryService extends GrillJerseyTest {
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).request().get(QueryContext.class);
       stat = ctx.getStatus();
-      System.out.println("Status:" + ctx.getStatus());
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
@@ -133,7 +132,6 @@ public class TestQueryService extends GrillJerseyTest {
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).request().get(QueryContext.class);
       stat = ctx.getStatus();
-      System.out.println("Status:" + ctx.getStatus());
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
@@ -227,21 +225,31 @@ public class TestQueryService extends GrillJerseyTest {
     System.out.println("query XML:" + queryXML);
 
     Response response = target.path(handle.toString() + "001").request().get();
-    System.out.println("response:" + response);
     Assert.assertEquals(response.getStatus(), 404);
 
     QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+   // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).request().get(QueryContext.class);
       stat = ctx.getStatus();
-      System.out.println("Status:" + ctx.getStatus());
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+    // Update conf for prepared query
+    final FormDataMultiPart confpart = new FormDataMultiPart();
+    QueryConf conf = new QueryConf();
+    conf.addProperty("my.property", "myvalue");
+    confpart.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    APIResult updateConf = target.path(handle.toString()).request().put(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        APIResult.class);
+    Assert.assertEquals(updateConf.getStatus(), APIResult.Status.FAILED);
   }
 
   @Test
@@ -266,6 +274,12 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNull(plan.getPrepareHandle());
   }
 
+  // post to preparedqueries
+  // get all prepared queries
+  // get a prepared query
+  // update a prepared query
+  // delete a prepared query
+  // post to prepared query - pending
   @Test
   public void testPrepareQuery() throws InterruptedException {    
     final WebTarget target = target().path("queryapi/preparedqueries");
@@ -291,6 +305,25 @@ public class TestQueryService extends GrillJerseyTest {
         "select ID from " + testTable));
     Assert.assertEquals(ctx.getSelectedDriverClassName(),
         com.inmobi.grill.driver.hive.HiveDriver.class.getCanonicalName());
+    Assert.assertNull(ctx.getConf().getProperties().get("my.property"));
+
+    // Update conf for prepared query
+    final FormDataMultiPart confpart = new FormDataMultiPart();
+    QueryConf conf = new QueryConf();
+    conf.addProperty("my.property", "myvalue");
+    confpart.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    APIResult updateConf = target.path(pHandle.toString()).request().put(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        APIResult.class);
+    Assert.assertEquals(updateConf.getStatus(), APIResult.Status.SUCCEEDED);
+
+    ctx = target.path(pHandle.toString()).request().get(
+        PreparedQueryContext.class);
+    Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
+        "myvalue");
 
     // destroy prepared
     APIResult result = target.path(pHandle.toString()).request().delete(APIResult.class);
@@ -326,6 +359,25 @@ public class TestQueryService extends GrillJerseyTest {
         "select ID from " + testTable));
     Assert.assertEquals(ctx.getSelectedDriverClassName(),
         com.inmobi.grill.driver.hive.HiveDriver.class.getCanonicalName());
+    Assert.assertNull(ctx.getConf().getProperties().get("my.property"));
+
+    // Update conf for prepared query
+    final FormDataMultiPart confpart = new FormDataMultiPart();
+    QueryConf conf = new QueryConf();
+    conf.addProperty("my.property", "myvalue");
+    confpart.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    APIResult updateConf = target.path(plan.getPrepareHandle().toString()).request().put(
+        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+        APIResult.class);
+    Assert.assertEquals(updateConf.getStatus(), APIResult.Status.SUCCEEDED);
+
+    ctx = target.path(plan.getPrepareHandle().toString()).request().get(
+        PreparedQueryContext.class);
+    Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
+        "myvalue");
 
     // destroy prepared
     APIResult result = target.path(plan.getPrepareHandle().toString())
