@@ -6,6 +6,7 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -125,8 +126,7 @@ public class MetastoreResource {
   private void checkTableNotFound(GrillException e, String table) {
     if (e.getCause() instanceof HiveException) {
       HiveException hiveErr = (HiveException) e.getCause();
-      if (hiveErr.getMessage().startsWith("Could not get table") &&
-      		hiveErr.getMessage().toLowerCase().contains(table.toLowerCase())) {
+      if (hiveErr.getMessage().startsWith("Could not get table")) {
         throw new NotFoundException("Table not found " + table, e);
       }
     }
@@ -182,53 +182,52 @@ public class MetastoreResource {
   	}
   }
   
-  @GET @Path("/cubes/{cubename}/facts/{factname}")
-  public FactTable getFactOfCube(@PathParam("cubename") String cubeName, 
-  		@PathParam("factname") String fact) 
+  @GET @Path("/facts/{factname}")
+  public JAXBElement<FactTable> getFactTable(@PathParam("factname") String fact) 
   		throws GrillException {
   	try {
-  		return getSvc().getFactOfCube(cubeName);
+  		return xCubeObjectFactory.createFactTable(getSvc().getFactTable(fact));
   	} catch (GrillException exc) {
-  		checkTableNotFound(exc, cubeName);
+  		checkTableNotFound(exc, fact);
   		throw exc;
   	}
   }
   
-  @DELETE @Path("/cubes/{cubename}/facts")
-  public APIResult dropAllFactsOfCube(@PathParam("cubename") String cubeName) 
+  @POST @Path("/facts/{factname}")
+  public APIResult createFactTable(FactTable fact) 
   		throws GrillException {
   	try {
-  		getSvc().dropAllFactsOfCube(cubeName);
+  		getSvc().createFactTable(fact);
   	} catch (GrillException exc) {
-  		checkTableNotFound(exc, cubeName);
-  		return new APIResult(Status.FAILED, exc.getMessage());
+  		return new APIResult(APIResult.Status.FAILED, exc.getMessage());
   	}
   	return SUCCESS;
   }
   
-  @POST @Path("/cubes/{cubename}/facts")
-  public APIResult createFactForCube(@PathParam("cubename") String cubeName, FactTable fact) {
+  @PUT @Path("/facts/{factname}")
+  public APIResult updateFactTable(FactTable fact) 
+  		throws GrillException {
   	try {
-  		getSvc().createFactForCube(cubeName, fact);
+  		getSvc().updateFactTable(fact);
   	} catch (GrillException exc) {
-  		checkTableNotFound(exc, cubeName);
-  		return new APIResult(Status.FAILED, exc.getMessage());
+  		return new APIResult(APIResult.Status.FAILED, exc.getMessage());
   	}
   	return SUCCESS;
   }
   
-  @PUT @Path("/cubes/{cubename}/facts/{factname}")
-  public APIResult updateFactForCube(@PathParam("cubename") String cubeName, 
-  		@PathParam("factname") String factName,
-  		FactTable fact) {
+  @DELETE @Path("/facts/{factname}")
+  public APIResult dropFactTable(@PathParam("factname") String  fact, 
+  		@QueryParam("cascade") boolean cascade)  
+  		throws GrillException {
   	try {
-  		getSvc().updateFactForCube(cubeName, fact);
+  		getSvc().dropFactTable(fact, cascade);
   	} catch (GrillException exc) {
-  		checkTableNotFound(exc, cubeName);
-  		return new APIResult(Status.FAILED, exc.getMessage());
+      checkTableNotFound(exc, fact);
+  		return new APIResult(APIResult.Status.FAILED, exc.getMessage());
   	}
   	return SUCCESS;
   }
+  
   
 /*
 
@@ -273,7 +272,7 @@ public class MetastoreResource {
   }
   
   @PUT @Path("/dimensions/{dimname}")
-  public APIResult updateCubdeDimension(@PathParam("dimname") String dimName, 
+  public APIResult updateCubeDimension(@PathParam("dimname") String dimName, 
   		DimensionTable dimensionTable) {
   	try {
   		getSvc().updateDimensionTable(dimensionTable);
@@ -359,6 +358,7 @@ public class MetastoreResource {
   	return SUCCESS;
   }
   
+  // Get storage sets only the name of the XStorage object.
   @GET @Path("/dimensions/{dimname}/storages/{storage}")
   public JAXBElement<XStorage> getStorageOfDimension(@PathParam("dimname") String dimname, 
   		@PathParam("storage") String storage) throws GrillException {
@@ -458,16 +458,5 @@ public class MetastoreResource {
   		return new APIResult(Status.FAILED, exc.getMessage());
   	}
   	return SUCCESS;
-  }
-  
-
-  @GET @Path("/hello")
-  public String getMessage() {
-      return "Hello World! from metastore";
-  }
-
-  @GET
-  public String index() {
-    return "index";
   }
 }

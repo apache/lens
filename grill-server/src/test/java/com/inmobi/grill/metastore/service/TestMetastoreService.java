@@ -15,8 +15,10 @@ import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
 
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
@@ -787,6 +789,13 @@ public class TestMetastoreService extends GrillJerseyTest {
           throw exc;
         }
       	
+      	// Test that storage has been created
+      	XStorage s2 = target().path("/metastore/dimensions/").path(table).path("storages").path("S2")
+      	.request(MediaType.APPLICATION_XML).get(XStorage.class);
+      	assertNotNull(s2);
+      	// Get storage API sets only the name of the storage object.
+      	assertEquals(s2.getName(), "S2");
+      	
       	APIResult result = target().path("metastore/dimensions/").path(table).path("storages").path("S2")
       			.request(MediaType.APPLICATION_XML)
       			.delete(APIResult.class);
@@ -802,6 +811,140 @@ public class TestMetastoreService extends GrillJerseyTest {
       	assertTrue(cdim.getStorages().contains(table+"_hourly"));
       	assertEquals(cdim.getSnapshotDumpPeriods().get(table + "_hourly"), UpdatePeriod.HOURLY);
       	
+      } finally {
+      	setCurrentDatabase(prevDb);
+      	dropDatabase(DB);
+      }
+    }
+    
+    @Test
+    public void testCreateFactTable() throws Exception {
+    	final String table = "testCreateFactTable";
+      final String DB = "testCreateFactTable_DB";
+      String prevDb = getCurrentDatabase();
+      createDatabase(DB);
+      setCurrentDatabase(DB);
+      try {
+      	FactTable f = cubeObjectFactory.createFactTable();
+      	f.setName(table);
+      	f.setWeight(10.0);
+      	f.setCubeName("testCube");
+      	
+      	Columns cols = cubeObjectFactory.createColumns();
+      	Column c1 = cubeObjectFactory.createColumn();
+      	c1.setName("c1");
+      	c1.setType("string");
+      	c1.setComment("col1");
+      	cols.getColumns().add(c1);
+      	
+      	Column c2 = cubeObjectFactory.createColumn();
+      	c2.setName("c2");
+      	c2.setType("string");
+      	c2.setComment("col1");
+      	cols.getColumns().add(c2);
+      	
+      	f.setColumns(cols);
+      	
+      	Map<String, String> properties = new HashMap<String, String>();
+      	properties.put("foo", "bar");
+      	f.setProperties(JAXBUtils.xPropertiesFromMap(properties));
+      	
+      	UpdatePeriods upd = cubeObjectFactory.createUpdatePeriods();
+      	
+      	UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
+      	uel.setStorageAttr(createXStorage("S1"));
+      	uel.setUpdatePeriod("HOURLY");
+      	upd.getUpdatePeriodElement().add(uel);
+      	
+      	UpdatePeriodElement uel2 = cubeObjectFactory.createUpdatePeriodElement();
+      	uel2.setStorageAttr(createXStorage("S2"));
+      	uel2.setUpdatePeriod("DAILY");
+      	upd.getUpdatePeriodElement().add(uel2);
+      	
+      	f.setUpdatePeriods(upd);
+      	
+      	// Create the FACT table
+      	APIResult result = target().path("metastore").path("facts").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
+      			
+      	assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      	
+      	// Get the created table
+      	JAXBElement<FactTable> gotFactElement = target().path("metastore/facts").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.get(new GenericType<JAXBElement<FactTable>>() {});
+      	FactTable gotFact = gotFactElement.getValue();
+      	assertTrue(gotFact.getName().equalsIgnoreCase(table));
+      	assertEquals(gotFact.getWeight(), 10.0);
+      	CubeFactTable cf = JAXBUtils.cubeFactFromFactTable(gotFact);
+      	
+      	// Check for a column
+      	boolean foundC1 = false;
+      	for (FieldSchema fs : cf.getColumns()) {
+      		if (fs.getName().equalsIgnoreCase("c1") && fs.getType().equalsIgnoreCase("string")) {
+      			foundC1 = true;
+      			break;
+      		}
+      	}
+      	
+      	assertTrue(foundC1);
+      	assertEquals(cf.getProperties().get("foo"), "bar");
+      	assertTrue(cf.getStorages().contains("S1"));
+      	assertTrue(cf.getStorages().contains("S2"));
+      	assertTrue(cf.getUpdatePeriods().get("S1").contains(UpdatePeriod.HOURLY));
+      	assertTrue(cf.getUpdatePeriods().get("S2").contains(UpdatePeriod.DAILY));
+      	
+      	// Do some changes to test update
+      	cf.addUpdatePeriod("S2", UpdatePeriod.MONTHLY);
+      	cf.alterWeight(20.0);
+      	cf.alterColumn(new FieldSchema("c2", "int", "changed to int"));
+      	
+      	FactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
+      	
+      	// Update
+      	result = target().path("metastore").path("facts").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.put(Entity.xml(cubeObjectFactory.createFactTable(update)), APIResult.class);
+      	assertEquals(result.getStatus(), Status.SUCCEEDED);
+      	
+      	// Get the updated table
+      	gotFactElement = target().path("metastore/facts").path(table)
+      			.request(MediaType.APPLICATION_XML)
+      			.get(new GenericType<JAXBElement<FactTable>>() {});
+      	gotFact = gotFactElement.getValue();
+      	CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
+      	
+      	assertEquals(ucf.weight(), 20.0);
+      	assertTrue(ucf.getUpdatePeriods().get("S2").contains(UpdatePeriod.MONTHLY));
+      	
+      	boolean foundC2 = false;
+      	for (FieldSchema fs : cf.getColumns()) {
+      		if (fs.getName().equalsIgnoreCase("c2") && fs.getType().equalsIgnoreCase("int")) {
+      			foundC2 = true;
+      			break;
+      		}
+      	}
+      	assertTrue(foundC2);
+      	
+      	// Finally, drop the fact table
+      	result = target().path("metastore").path("facts").path(table)
+      			.queryParam("cascade", "false")
+      			.request(MediaType.APPLICATION_XML)
+      			.delete(APIResult.class);
+      	
+      	assertEquals(result.getStatus(), Status.SUCCEEDED);
+      	
+      	// Drop again, this time it should give a 404
+      	try {
+      		result = target().path("metastore").path("facts").path(table)
+      			.queryParam("cascade", "false")
+      			.request(MediaType.APPLICATION_XML)
+      			.delete(APIResult.class);
+      		fail("Expected 404");
+      	} catch (NotFoundException nfe) {
+      		// PASS
+      	}
       } finally {
       	setCurrentDatabase(prevDb);
       	dropDatabase(DB);

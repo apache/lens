@@ -1,5 +1,6 @@
 package com.inmobi.grill.server.api;
 
+import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.DimensionTable;
 import com.inmobi.grill.metastore.model.XCube;
@@ -94,46 +95,35 @@ public interface CubeMetastoreService extends GrillService {
    * @return
    */
 	public DimensionTable getDimensionTable(String dimName) throws GrillException;
-
 	public void updateDimensionTable(DimensionTable dimensionTable) throws GrillException;
 
 	public Collection<String> getDimensionStorages(String dimension) throws GrillException;
-
 	public void createDimensionStorage(String dimName, String updatePeriod, XStorage storageAttr)
 	throws GrillException;
-
 	public void dropAllStoragesOfDim(String dimName) throws GrillException;
-
 	public XStorage getStorageOfDimension(String dimname, String storage) throws GrillException;
-
 	public void dropStorageOfDim(String dimName, String storage) throws GrillException;
 
 	public List<XPartition> getAllPartitionsOfDimStorage(String dimName, String storage,
 			String partFilter) throws GrillException;
-
 	public void addPartitionToDimStorage(String dimName, String storage, XPartition partition) 
 			throws GrillException;
-
 	public void dropAllPartitionsOfDimStorage(String dimName, String storage, String partFilter)
 			throws GrillException;
-
 	public XPartition getPartitionOfDimStorage(String dimName, String storage, String partSpec) 
 			throws GrillException;
-
 	public void updatePartitionOfDimStorage(String dimName, String storage, String partSpec)
 			throws GrillException;
-
 	public void dropPartitionOfDimStorage(String dimName, String storage, String partSpec)
 			throws GrillException;
 
 	public List<FactTable> getAllFactsOfCube(String cubeName) throws GrillException;
+	public FactTable getFactTable(String fact) throws GrillException;
 
-	public FactTable getFactOfCube(String cubeName) throws GrillException;
+	public void createFactTable(FactTable fact) throws GrillException;
 
-	public void dropAllFactsOfCube(String cubeName) throws GrillException;
-	
-	public void createFactForCube(String cubeName, FactTable fact) throws GrillException;
-	
-	public void updateFactForCube(String cubeName, FactTable fact) throws GrillException;
+	public void updateFactTable(FactTable fact) throws GrillException;
+
+	public void dropFactTable(String fact, boolean cascade) throws GrillException;
 	
 }

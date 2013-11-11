@@ -316,6 +316,18 @@ public class JAXBUtils {
     }
     return null;
   }
+  
+  public static Columns columnsFromFieldSchemaList(List<FieldSchema> fslist) {
+  	if (fslist == null || fslist.isEmpty()) {
+  		return null;
+  	}
+  	
+  	Columns cols = XCF.createColumns();
+  	for (FieldSchema fs : fslist) {
+  		cols.getColumns().add(columnFromFieldSchema(fs));
+  	}
+  	return cols;
+  }
 
   public static Map<Storage, UpdatePeriod> dumpPeriodsFromUpdatePeriods(UpdatePeriods periods) {
     if (periods != null && periods.getUpdatePeriodElement() != null && !periods.getUpdatePeriodElement().isEmpty()) {
@@ -448,6 +460,56 @@ public class JAXBUtils {
 		
 		return cdim;
 	}
+	
+	public static CubeFactTable cubeFactFromFactTable(FactTable fact) {
+		List<FieldSchema> columns = fieldSchemaListFromColumns(fact.getColumns());
+		
+		UpdatePeriods periods = fact.getUpdatePeriods();
+		List<UpdatePeriodElement> updList = periods.getUpdatePeriodElement();
 
-
+		Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<String, Set<UpdatePeriod>>();
+		for (UpdatePeriodElement upd : updList) {
+			UpdatePeriod updPeriod = UpdatePeriod.valueOf(upd.getUpdatePeriod().toUpperCase());
+			String storage = upd.getStorageAttr().getName();
+			
+			Set<UpdatePeriod> updSet = storageUpdatePeriods.get(storage);
+			if (updSet == null) {
+				updSet = new TreeSet<UpdatePeriod>();
+				storageUpdatePeriods.put(storage, updSet);
+			}
+			updSet.add(updPeriod);
+		}
+		
+		return new CubeFactTable(Arrays.asList(fact.getCubeName()),
+				fact.getName(), 
+				columns, 
+				storageUpdatePeriods, 
+				fact.getWeight(), 
+				mapFromXProperties(fact.getProperties()));
+	}
+	
+	public static FactTable factTableFromCubeFactTable(CubeFactTable cFact) {
+		FactTable fact = XCF.createFactTable();
+		fact.setName(cFact.getName());
+		fact.setProperties(xPropertiesFromMap(cFact.getProperties()));
+		fact.setColumns(columnsFromFieldSchemaList(cFact.getColumns()));
+		fact.setWeight(cFact.weight());
+		
+		if (cFact.getUpdatePeriods() != null && !cFact.getUpdatePeriods().isEmpty()) {
+			UpdatePeriods periods = XCF.createUpdatePeriods();
+			for (Map.Entry<String, Set<UpdatePeriod>> e : cFact.getUpdatePeriods().entrySet()) {
+				String storage = e.getKey();
+				XStorage xs = XCF.createXStorage();
+				xs.setName(storage);
+				for (UpdatePeriod p : e.getValue()) {
+					UpdatePeriodElement uel = XCF.createUpdatePeriodElement();
+					uel.setStorageAttr(xs);
+					uel.setUpdatePeriod(p.toString());
+					periods.getUpdatePeriodElement().add(uel);
+				}
+			}
+			fact.setUpdatePeriods(periods);
+		}
+		return fact;
+	}
 }
