@@ -60,7 +60,6 @@ public class TestDDL {
   @Test
   public void testAllDimensions() throws HiveException, IOException {
     dimDDL.createAllDimensions();
-    conf.setBoolean(MetastoreConstants.METASTORE_NEEDS_REFRESH, true);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     List<String> dimTables = new ArrayList<String>();
     for (CubeDimensionTable dim : cc.getAllDimensionTables()) {
@@ -96,42 +95,63 @@ public class TestDDL {
     Assert.assertTrue(cubes.contains("cube_userappdistribution"));
     // campaign is not a cube table name
     Assert.assertFalse(cubes.contains("campaign"));
-    List<String> cubesWithPIEStorage = Arrays.asList("cube_request", "cube_click",
-        "cube_impression", "cube_rrcube");
+    List<String> factsWithPIEStorage = Arrays.asList("summary1", "summary2",
+        "summary3", "cube_request_raw", "cube_impression_raw", "cube_click_raw");
 
     Assert.assertEquals(15, cc.getAllCubes().size());
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
       Assert.assertFalse(cube.getTimedDimensions().isEmpty());
+      Assert.assertFalse(cc.getAllFactTables(cube).isEmpty());
+    }
 
-      List<CubeFactTable> facts = cc.getAllFactTables(cube);
-      Assert.assertFalse(facts.isEmpty());
-      for (CubeFactTable fact : facts) {
-        Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_STORAGE));
-        Assert.assertNotNull(fact.getProperties());
-        Assert.assertEquals(cube.getName(), fact.getCubeName());
-        Assert.assertEquals(fact.getColumns().size(),
-            CubeDDL.getNobColList().size());
-        // Assert.assertEquals(fact.getColumns(), CubeDDL.getNobColList());
-        if (fact.getName().contains(CubeDDL.RAW_FACT_NAME)) {
-          Assert.assertNull(fact.getValidColumns()); 
-        } else {
-          Assert.assertNotNull(fact.getValidColumns());             
-        }
-        if (cubesWithPIEStorage.contains(cube.getName())) {
-          Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_PIE_STORAGE));
-        }
-        // storage cost validation
-        for (String storage : fact.getStorages()) {
-          String tableName = MetastoreUtil.getFactStorageTableName(
-              fact.getName(), Storage.getPrefix(storage));
-          Table tbl = cc.getHiveTable(tableName);
-          Assert.assertEquals(Double.toString(fact.weight()),
-              tbl.getParameters().get(GrillConfUtil.STORAGE_COST));
-        }
+    List<CubeFactTable> facts = cc.getAllFacts();
+    Assert.assertEquals(22, facts.size());
+    System.out.println("All Facts:" + facts);
+    for (CubeFactTable fact : facts) {
+      Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_STORAGE));
+      Assert.assertNotNull(fact.getProperties());
+      if (fact.getName().equals("summary1") ||
+          fact.getName().equals("summary2") ||
+          fact.getName().equals("cube_request_raw") ||
+          fact.getName().equals("cube_impression_raw") ||
+          fact.getName().equals("cube_click_raw") ||
+          fact.getName().equals("summary3")) {
+        Assert.assertTrue(fact.getCubeNames().contains("cube_request"));
+        Assert.assertTrue(fact.getCubeNames().contains("cube_impression"));
+        Assert.assertTrue(fact.getCubeNames().contains("cube_click"));
+      } else if (fact.getName().equals("retargetsummary1"))  {
+        Assert.assertTrue(fact.getCubeNames().contains("cube_appownerretarget"));
+        Assert.assertTrue(fact.getCubeNames().contains("cube_clickimpretarget"));
+      } else {
+        System.out.println("fact " + fact.getName() + " Cubes:" + fact.getCubeNames());
+        Assert.assertEquals(fact.getCubeNames().size(), 1);
+      }
+      Assert.assertEquals(fact.getColumns().size(),
+          CubeDDL.getNobColList().size());
+      // Assert.assertEquals(fact.getColumns(), CubeDDL.getNobColList());
+      if (fact.getName().contains(CubeDDL.RAW_FACT_NAME)) {
+        Assert.assertNull(fact.getValidColumns()); 
+      } else {
+        Assert.assertNotNull(fact.getValidColumns());             
+      }
+      if (factsWithPIEStorage.contains(fact.getName())) {
+        Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_PIE_STORAGE));
+      } else {
+        System.out.println("fact:" + fact.getName() + "storages:" + fact.getStorages());
+        Assert.assertFalse(fact.getStorages().contains(CubeDDL.YODA_PIE_STORAGE));
+      }
+      // storage cost validation
+      for (String storage : fact.getStorages()) {
+        String tableName = MetastoreUtil.getFactStorageTableName(
+            fact.getName(), Storage.getPrefix(storage));
+        Table tbl = cc.getHiveTable(tableName);
+        Assert.assertEquals(Double.toString(fact.weight()),
+            tbl.getParameters().get(GrillConfUtil.STORAGE_COST));
       }
     }
+
   }
 
   @Test
@@ -154,7 +174,7 @@ public class TestDDL {
 
   @Test
   public void testPartitions() throws HiveException, IOException,
-      ParseException, MetaException, NoSuchObjectException, TException {
+  ParseException, MetaException, NoSuchObjectException, TException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
@@ -166,14 +186,20 @@ public class TestDDL {
         format, "all", false);
 
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    String rawFactName = null;
+    for (CubeFactTable fact : cc.getAllFactTables(cc.getCube("cube_request"))) {
+      if (fact.getName().endsWith(CubeDDL.RAW_FACT_NAME)) {
+        rawFactName = fact.getName();
+      }
+    }
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
-        "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName2 = MetastoreUtil.getFactStorageTableName(
-        "request_summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName3 = MetastoreUtil.getFactStorageTableName(
-        "request_summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName4 = MetastoreUtil.getFactStorageTableName(
-        "request_raw", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        rawFactName, Storage.getPrefix(CubeDDL.YODA_STORAGE));
 
     cal.setTime(before);
     StringBuilder filter = new StringBuilder();
@@ -227,7 +253,7 @@ public class TestDDL {
 
   @Test
   public void testHourlyPartitions() throws HiveException, IOException,
-      ParseException, MetaException, NoSuchObjectException, TException {
+  ParseException, MetaException, NoSuchObjectException, TException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.HOUR_OF_DAY, -2);
@@ -238,14 +264,20 @@ public class TestDDL {
         UpdatePeriod.HOURLY, new Path("file:////tmp/hive/warehouse/parts"),
         format, "all", false);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
+    String rawFactName = null;
+    for (CubeFactTable fact : cc.getAllFactTables(cc.getCube("cube_request"))) {
+      if (fact.getName().endsWith(CubeDDL.RAW_FACT_NAME)) {
+        rawFactName = fact.getName();
+      }
+    }
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
-        "request_summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName2 = MetastoreUtil.getFactStorageTableName(
-        "request_summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName3 = MetastoreUtil.getFactStorageTableName(
-        "request_summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
     String storageTableName4 = MetastoreUtil.getFactStorageTableName(
-        "request_raw", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        rawFactName, Storage.getPrefix(CubeDDL.YODA_STORAGE));
 
     cal.setTime(before);
     StringBuilder filter = new StringBuilder();

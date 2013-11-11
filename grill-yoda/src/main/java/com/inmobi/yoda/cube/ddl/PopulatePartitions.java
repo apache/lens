@@ -138,11 +138,10 @@ public class PopulatePartitions {
     while (!dt.after(end)) {
       // for each fact add the partition for dt
       for (CubeFactTable fact : facts) {
-        String factPathName = fact.getName().substring(cubeName.length() + 1);
-        if (!populateAll && !summaryList.contains(factPathName)) {
+        if (!populateAll && !summaryList.contains(fact.getName())) {
           continue; 
         }
-        if (populateOnlyRaw && (!factPathName.equalsIgnoreCase(
+        if (populateOnlyRaw && (!fact.getName().endsWith(
             CubeDDL.RAW_FACT_NAME))) {
           continue;
         }
@@ -155,10 +154,10 @@ public class PopulatePartitions {
           Path partPath;
           if (!pieStorage) {
             if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_STORAGE)) {
-              if (factPathName.equalsIgnoreCase(CubeDDL.RAW_FACT_NAME)) {
+              if (fact.getName().endsWith(CubeDDL.RAW_FACT_NAME)) {
                 partPath = new Path(rawFactPath, dateFormat.format(dt));
               } else {
-                partPath = new Path(new Path(new Path(summariesPath, factPathName),
+                partPath = new Path(new Path(new Path(summariesPath, fact.getName()),
                     updatePeriod.name().toLowerCase()), dateFormat.format(dt));
               }
               if (checkExist && !fs.exists(partPath)) {
@@ -179,7 +178,7 @@ public class PopulatePartitions {
             }
           } else {
             if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
-              if (factPathName.equalsIgnoreCase(CubeDDL.RAW_FACT_NAME)) {
+              if (fact.getName().endsWith(CubeDDL.RAW_FACT_NAME)) {
                 partPath = new Path(rawFactPath, dateFormat.format(dt));
                 Date it = dt;
                 FileStatus[] cStats = fs.listStatus(partPath, filter);
@@ -200,7 +199,7 @@ public class PopulatePartitions {
                       partitionTimestamps, partSpec, CubeDDL.PART_KEY_IT);
                 }
               } else {
-                partPath = new Path(new Path(new Path(summariesPath, factPathName),
+                partPath = new Path(new Path(new Path(summariesPath, fact.getName()),
                     updatePeriod.name().toLowerCase()), dateFormat.format(dt));
                 if (checkExist && !fs.exists(partPath)) {
                   System.out.println("Path" + partPath +" does not exist");

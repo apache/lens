@@ -55,14 +55,18 @@ public class CubeDDL {
   public static String cubeStorageSchema = "network_object.proto";
   public static String cubeNameInJoinChain = "network_object";
   private Map<String, Cube> cubes = new HashMap<String, Cube>();
+  // fact name to list of cubes it belongs
+  private Map<String, List<String>> factToCubes = new HashMap<String, List<String>>();
+  // raw fact to list of cubes it belongs
+  private Map<String, List<String>> rawFactPathToCubes = new HashMap<String, List<String>>();
   private final CubeDefinitionReader cubeReader;
   private final Properties allProps;
   private final DimensionDDL dimDDL;
   private final CubeMetastoreClient client;
   private static List<FieldSchema> nobColList;
 
-  private final Map<String, Map<String, Map<String, String>>> summaryProperties =
-      new HashMap<String, Map<String, Map<String, String>>>();
+  private final Map<String, Map<String, String>> summaryProperties =
+      new HashMap<String, Map<String, String>>();
 
   static final Set<String> allMeasures = new HashSet<String>();
   static {
@@ -104,7 +108,7 @@ public class CubeDDL {
       Map<String, String> cubeProperties = new HashMap<String, String>();
       cubeProperties.putAll(getProperties(cubeName));
       cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(cubeTableName),
-          "dt,pt,et,it");
+          "pt,et,it");
       // Construct CubeDimension and CubeMeasure objects for each dimension and 
       // measure
       for (String dimName : cubeReader.getAllDimensionNames(cubeName)) {
@@ -131,18 +135,32 @@ public class CubeDDL {
           cubeProperties, cubeReader.getCost(cubeName))); 
 
 
+      // raw fact path
+      String rawPath = cubeReader.getCubePath(cubeName);
+      List<String> cubeNames = rawFactPathToCubes.get(rawPath);
+      if (cubeNames == null) {
+        cubeNames = new ArrayList<String>();
+        rawFactPathToCubes.put(rawPath, cubeNames);
+      }
+      cubeNames.add(cubeTableName);
+
       // Read summary definitions
-      summaryProperties.put(cubeName, new HashMap<String,
-          Map<String, String>>());
       for (String summary : cubeReader.getSummaryNames(cubeName)) {
-        Map<String, String> props = getSummaryProperties(cubeName, summary);
-        Set<String> cols = new HashSet<String>();
-        cols.addAll(cubeReader.getSummaryDimensionNames(cubeName, summary));
-        cols.addAll(cubeReader.getSummaryMeasureNames(cubeName, summary));
-        props.put(MetastoreUtil.getValidColumnsKey(
-            (cubeName + "_" + summary).toLowerCase()),
-            StringUtils.join(cols, ','));
-        summaryProperties.get(cubeName).put(summary, props);
+        List<String> factcCubeNames = factToCubes.get(summary);
+        if (factcCubeNames == null) {
+          factcCubeNames = new ArrayList<String>();
+          factToCubes.put(summary, factcCubeNames);
+          // read the summary definition for the first time
+          Map<String, String> props = getSummaryProperties(cubeName, summary);
+          Set<String> cols = new HashSet<String>();
+          cols.addAll(cubeReader.getSummaryDimensionNames(cubeName, summary));
+          cols.addAll(cubeReader.getSummaryMeasureNames(cubeName, summary));
+          props.put(MetastoreUtil.getValidColumnsKey(
+              summary.toLowerCase()),
+              StringUtils.join(cols, ','));
+          summaryProperties.put(summary, props);
+        }
+        factcCubeNames.add(cubeTableName);
       }
     }
   }
@@ -150,7 +168,27 @@ public class CubeDDL {
   public void createAllCubes() throws HiveException {
     for (String cubeName : cubes.keySet()) {
       createCube(cubeName);
-      createSummaries(cubeName);
+    }
+
+    // create raw facts
+    for (Map.Entry<String, List<String>> entry : rawFactPathToCubes.entrySet()) {
+      // create raw fact for each cube
+      Set<Grain> rawGrain = new HashSet<Grain>();
+      List<String> cubeNames = entry.getValue();
+      String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
+      rawGrain.add(cubeReader.getCubeGrain(cubeName));
+      createFactTable(cubeNames, cubeNames.get(0) + "_" + RAW_FACT_NAME,
+          cubeReader.getCost(cubeName), null, rawGrain);
+    }
+
+    // create summaries
+    for (String summary : factToCubes.keySet()) {
+      List<String> cubeNames = factToCubes.get(summary);
+      String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
+      createFactTable(cubeNames, summary,
+          cubeReader.getAvgSummaryCost(cubeName, summary),
+          summaryProperties.get(summary),
+          cubeReader.getSummaryGrains(cubeName, summary));
     }
   }
 
@@ -163,17 +201,6 @@ public class CubeDDL {
         cubes.get(cubeName).getMeasures() + " with dimensions:" +
         cubes.get(cubeName).getDimensions());
     client.createCube(cubes.get(cubeName));
-  }
-
-  public void createSummaries(String cubeName) throws HiveException {
-    for (String summary : cubeReader.getSummaryNames(cubeName)) {
-      createSummary(cubeName, summary);
-    }
-    // create raw fact
-    Set<Grain> rawGrain = new HashSet<Grain>();
-    rawGrain.add(cubeReader.getCubeGrain(cubeName));
-    createFactTable(cubeName, RAW_FACT_NAME, cubeReader.getCost(cubeName),
-        null, rawGrain);
   }
 
   public static List<FieldSchema> getNobColList() {
@@ -199,31 +226,23 @@ public class CubeDDL {
     return allMeasures.contains(name);
   }
 
-  public void createSummary(String cubeName, String summary)
-      throws HiveException {
-    createFactTable(cubeName, summary,
-        cubeReader.getAvgSummaryCost(cubeName, summary),
-        summaryProperties.get(cubeName).get(summary),
-        cubeReader.getSummaryGrains(cubeName, summary));
-  }
-
-  private void createFactTable(String cubeName, String summary, double cost,
+  private void createFactTable(List<String> cubeNames, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
     Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
-        cubeName, summary, grains, cost);
+        summary, grains, cost,
+        cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null);
     List<FieldSchema> columns = getNobColList();
 
-    LOG.info("Creating fact table " + cubeName + "_" + summary +
+    LOG.info("Creating fact table " + summary +
         " with storageAggregatePeriods:" + storageAggregatePeriods +
         "columns:" + columns + " cost:" + cost);
 
-    String cubeTableName = CUBE_NAME_PFX + cubeName;
-    client.createCubeFactTable(cubeTableName, cubeName + "_" + summary, columns,
+    client.createCubeFactTable(cubeNames, summary, columns,
         storageAggregatePeriods, cost, props);
   }
 
-  public Map<Storage, Set<UpdatePeriod>> createStorages(String cubeName,
-      String summary, Set<Grain> grains, double cost) {
+  public Map<Storage, Set<UpdatePeriod>> createStorages(
+      String summary, Set<Grain> grains, double cost, boolean hasPIEStorage) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
     Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = 
@@ -251,13 +270,13 @@ public class CubeDDL {
     storageAggregatePeriods.put(storage, updatePeriods);
 
     // create storage with PIE partitions
-    if (cubeReader.getCubeColoPath(cubeName) != null) {
+    if (hasPIEStorage) {
       Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE,
           RCFileInputFormat.class.getCanonicalName(),
           RCFileOutputFormat.class.getCanonicalName(),
           LazyNOBColumnarSerde.class.getCanonicalName(),
           true, tableParams, null, null);
-      if (!summary.equals(RAW_FACT_NAME)) {
+      if (!summary.endsWith(RAW_FACT_NAME)) {
         piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
         piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
         piestorage.addToPartCols(new FieldSchema(PART_KEY_ET, "string", "date partition"));
@@ -303,7 +322,6 @@ public class CubeDDL {
     } else {
       LOG.info("Creating cube " + args[0]);
       cc.createCube(args[0]);        
-      cc.createSummaries(args[0]);
     }
   }
 }
