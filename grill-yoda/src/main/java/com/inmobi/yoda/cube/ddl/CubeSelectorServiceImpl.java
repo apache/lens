@@ -7,10 +7,13 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import java.util.*;
 
 public class CubeSelectorServiceImpl implements CubeSelectorService {
+  public static final Logger LOG = LogManager.getLogger(CubeSelectorServiceImpl.class);
   private List<Table> allTables;
 
   private class Table {
@@ -50,6 +53,7 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
       CubeMetastoreClient metastore = CubeMetastoreClient.getInstance(hconf);
 
       for (Cube cube : metastore.getAllCubes()) {
+        LOG.debug("Processing cube " + cube.getName());
         Table tab = new Table();
         tab.table = cube;
         String costKey = "cube." + cube.getName().substring("cube_".length()) + ".cost";
@@ -73,6 +77,7 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
       }
 
       for (CubeDimensionTable dim : metastore.getAllDimensionTables()) {
+        LOG.debug("Processing dimension " + dim.getName());
         Table tab = new Table();
         tab.table = dim;
         tab.columns = new HashSet<String>();
@@ -81,9 +86,11 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
           tab.columns.add(f.getName());
         }
         allTables.add(tab);
+        LOG.debug("Total tables loaded " + allTables.size());
       }
 
     } catch (HiveException e) {
+      LOG.error("Error caching cubes metastore table", e);
       throw new GrillException(e);
     }
   }
