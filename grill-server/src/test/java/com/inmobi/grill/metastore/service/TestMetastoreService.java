@@ -276,6 +276,18 @@ public class TestMetastoreService extends GrillJerseyTest {
       APIResult result = target.request(MediaType.APPLICATION_XML).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      StringList cubes = target().path("metastore/cubes").request(MediaType.APPLICATION_XML).get(StringList.class);
+      boolean foundcube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+          break;
+        }
+      }
+
+      assertTrue(foundcube);
+
     }
     finally {
       dropDatabase(DB);
@@ -869,7 +881,19 @@ public class TestMetastoreService extends GrillJerseyTest {
       			.post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
       			
       	assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-      	
+
+        // Get all fact names, this should contain the fact table
+        StringList factNames = target().path("metastore/facts")
+          .request(MediaType.APPLICATION_XML).get(StringList.class);
+        boolean contains = false;
+        for (String fn : factNames.getElements()) {
+          if (fn.equalsIgnoreCase(table)) {
+            contains = true;
+            break;
+          }
+        }
+        assertTrue(contains);
+
       	// Get the created table
       	JAXBElement<FactTable> gotFactElement = target().path("metastore/facts").path(table)
       			.request(MediaType.APPLICATION_XML)

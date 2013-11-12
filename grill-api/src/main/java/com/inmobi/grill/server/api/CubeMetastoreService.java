@@ -125,5 +125,6 @@ public interface CubeMetastoreService extends GrillService {
 	public void updateFactTable(FactTable fact) throws GrillException;
 
 	public void dropFactTable(String fact, boolean cascade) throws GrillException;
-	
+
+  public List<String> getAllFactNames() throws GrillException;
 }

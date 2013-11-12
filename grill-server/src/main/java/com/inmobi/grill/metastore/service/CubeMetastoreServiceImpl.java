@@ -534,6 +534,19 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
 		}
 	}
 
+  @Override
+  public List<String> getAllFactNames() throws GrillException {
+    try {
+      List<CubeFactTable> facts = getClient().getAllFacts();
+      List<String> factNames = new ArrayList<String>(facts.size());
+      for (CubeFactTable cft : facts) {
+        factNames.add(cft.getName());
+      }
+      return factNames;
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+  }
 	
 	
 }

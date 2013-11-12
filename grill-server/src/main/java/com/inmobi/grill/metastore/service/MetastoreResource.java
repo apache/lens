@@ -6,7 +6,6 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
-import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -98,9 +97,9 @@ public class MetastoreResource {
   }
 
   @GET @Path("cubes")
-  public List<String> getAllCubes() throws GrillException {
+  public StringList getAllCubes() throws GrillException {
     try {
-      return getSvc().getAllCubeNames();
+      return new StringList(getSvc().getAllCubeNames());
     } catch (GrillException e) {
       LOG.error("Error getting cube names", e);
       throw e;
@@ -181,7 +180,12 @@ public class MetastoreResource {
   		throw exc;
   	}
   }
-  
+
+  @GET @Path("/facts")
+  public StringList getAllFacts() throws GrillException {
+    return new StringList(getSvc().getAllFactNames());
+  }
+
   @GET @Path("/facts/{factname}")
   public JAXBElement<FactTable> getFactTable(@PathParam("factname") String fact) 
   		throws GrillException {
