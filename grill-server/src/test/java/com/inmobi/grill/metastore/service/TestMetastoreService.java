@@ -929,7 +929,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       	
       	// Finally, drop the fact table
       	result = target().path("metastore").path("facts").path(table)
-      			.queryParam("cascade", "false")
+      			.queryParam("cascade", "true")
       			.request(MediaType.APPLICATION_XML)
       			.delete(APIResult.class);
       	
@@ -938,7 +938,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       	// Drop again, this time it should give a 404
       	try {
       		result = target().path("metastore").path("facts").path(table)
-      			.queryParam("cascade", "false")
+      			.queryParam("cascade", "true")
       			.request(MediaType.APPLICATION_XML)
       			.delete(APIResult.class);
       		fail("Expected 404");
