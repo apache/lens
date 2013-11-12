@@ -416,7 +416,11 @@ public abstract class QueryPlan {
    * @return the handle
    */
   public QueryHandle getHandle() {
-    return new QueryHandle(handle.getHandleId());
+    if (handle != null) {
+      return new QueryHandle(handle.getHandleId());
+    } else {
+      return null;
+    }
   }
 
   /**
