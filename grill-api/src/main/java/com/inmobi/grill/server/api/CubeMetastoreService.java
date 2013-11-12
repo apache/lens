@@ -2,11 +2,7 @@ package com.inmobi.grill.server.api;
 
 import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.metastore.model.DimensionTable;
-import com.inmobi.grill.metastore.model.XCube;
-import com.inmobi.grill.metastore.model.XStorage;
-import com.inmobi.grill.metastore.model.XPartition;
-import com.inmobi.grill.metastore.model.FactTable;
+import com.inmobi.grill.metastore.model.*;
 
 import java.util.Collection;
 import java.util.List;
@@ -127,4 +123,12 @@ public interface CubeMetastoreService extends GrillService {
 	public void dropFactTable(String fact, boolean cascade) throws GrillException;
 
   public List<String> getAllFactNames() throws GrillException;
+
+  public List<String> getStoragesOfFact(String fact) throws GrillException;
+
+  public void addStorageToFact(String fact, FactStorage storage) throws GrillException;
+
+  public void dropStorageOfFact(String fact, String storage) throws GrillException;
+
+  public FactStorage getStorageOfFact(String fact, String storage) throws GrillException;
 }

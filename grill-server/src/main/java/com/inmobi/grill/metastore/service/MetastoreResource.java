@@ -231,7 +231,39 @@ public class MetastoreResource {
   	}
   	return SUCCESS;
   }
-  
+
+  @GET @Path("/facts/{factname}/storages")
+  public StringList getStoragesOfFact(@PathParam("factname") String fact) throws GrillException {
+    return new StringList(getSvc().getStoragesOfFact(fact));
+  }
+
+  @POST @Path("/facts/{factname}/storages")
+  public APIResult addStorageToFact(@PathParam("factname") String fact, FactStorage storage) {
+    try {
+      getSvc().addStorageToFact(fact, storage);
+    } catch (GrillException exc) {
+      checkTableNotFound(exc, fact);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  @DELETE @Path("/facts/{factname}/storages/{storage}")
+  public APIResult dropStorageFromFact(@PathParam("factname") String fact, @PathParam("storage") String storage) {
+    try {
+      getSvc().dropStorageOfFact(fact, storage);
+    } catch (GrillException exc) {
+      checkTableNotFound(exc, fact);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return  SUCCESS;
+  }
+
+  @GET @Path("/facts/{factname}/storages/{storage}")
+  public JAXBElement<FactStorage> getStorageOfFact(@PathParam("factname") String fact,
+                                      @PathParam("storage") String storage) throws  GrillException {
+    return xCubeObjectFactory.createFactStorage(getSvc().getStorageOfFact(fact, storage));
+  }
   
 /*
 
@@ -243,7 +275,7 @@ public class MetastoreResource {
   <grill-url>/metastore/cubes/cubename/facts/factname/storages/storage
   - GET - Get the fact storage
   - PUT - Update the fact storage (add/remove update periods with storage)
-  - DELETE - Drop the fact stoarge
+    - DELETE - Drop the fact stoarge
   - POST - ?
 
   <grill-url>/metastore/cubes/cubename/facts/factname/storages/storage/partitions

@@ -547,6 +547,75 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       throw new GrillException(e);
     }
   }
-	
-	
+
+  @Override
+  public List<String> getStoragesOfFact(String fact) throws GrillException {
+    try {
+      if (!getClient().isFactTable(fact)) {
+        throw new NotFoundException("Not a fact table " + fact);
+      }
+
+      CubeFactTable cft = getClient().getFactTable(fact);
+      if (cft != null) {
+        return new ArrayList<String>(cft.getStorages());
+      } else {
+        throw new NotFoundException("Could not get fact table " + fact);
+      }
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
+
+  @Override
+  public void addStorageToFact(String fact, FactStorage s) throws GrillException {
+    XStorage storage = s.getStorage();
+    Set<UpdatePeriod> updatePeriods = new TreeSet<UpdatePeriod>();
+    for (StorageUpdatePeriod sup : s.getStorageUpdatePeriod()) {
+      updatePeriods.add(UpdatePeriod.valueOf(sup.getUpdatePeriod().toUpperCase()));
+    }
+    try {
+      getClient().addStorage(getClient().getFactTable(fact), JAXBUtils.storageFromXStorage(storage), updatePeriods);
+      LOG.info("Added storage " + storage.getName() + ":" + updatePeriods + " for fact " + fact);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
+
+  @Override
+  public void dropStorageOfFact(String fact, String storage) throws GrillException {
+    try {
+      getClient().dropStorageFromFact(fact, storage);
+      LOG.info("Dropped storage " + storage + " from fact " + fact);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
+
+  @Override
+  public FactStorage getStorageOfFact(String fact, String storage) throws GrillException {
+    try {
+      if (getClient().isFactTable(fact)) {
+        CubeFactTable cft = getClient().getFactTable(fact);
+        if (!cft.getStorages().contains(storage)) {
+          throw new NotFoundException("Storage " + storage + " not found in fact " + fact);
+        }
+
+        XStorage xs = new XStorage();
+        xs.setName(storage);
+        // TODO set rest of the storage attributes here
+        FactStorage f = new FactStorage();
+        f.setStorage(xs);
+        for (UpdatePeriod period : cft.getUpdatePeriods().get(storage)) {
+          StorageUpdatePeriod sup = new StorageUpdatePeriod();
+          sup.setUpdatePeriod(period.toString());
+          f.getStorageUpdatePeriod().add(sup);
+        }
+        return f;
+      } else {
+        throw new NotFoundException("Fact table not found: " + fact);
+      }
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
 }

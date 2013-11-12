@@ -154,16 +154,26 @@
         </xs:sequence>
     </xs:complexType>
 		
-		<xs:element name="update_period_element" type="update_period_element"></xs:element>
+	<xs:element name="update_period_element" type="update_period_element"></xs:element>
     <xs:complexType name="update_period_element">
         <xs:sequence>
             <xs:element name="storage_attr" type="x_storage" />
         </xs:sequence>
         <xs:attribute name="update_period" type="xs:string"/>
     </xs:complexType>
+
+    <xs:element name="fact_storage" type="fact_storage"></xs:element>
+    <xs:complexType name="fact_storage">
+        <xs:sequence>
+            <xs:element name="storage" type="x_storage"/>
+            <xs:element name="storage_update_period" type="storage_update_period" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="storage_update_period">
+        <xs:attribute name="update_period" type="xs:string"/>
+    </xs:complexType>
     
-    
-		<xs:element name="x_storage" type="x_storage"></xs:element>
+	<xs:element name="x_storage" type="x_storage"></xs:element>
     <xs:complexType name="x_storage">
         <xs:sequence>
             <xs:element name="table_parameters" type="x_properties" />
