@@ -18,6 +18,7 @@ import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.service.GrillJerseyTest;
 import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.QueryHandle;
+import com.inmobi.grill.api.QueryHandleWithResultSet;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryStatus;
 
@@ -229,7 +230,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(response.getStatus(), 404);
 
     QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
-   // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+    // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
@@ -335,7 +336,7 @@ public class TestQueryService extends GrillJerseyTest {
     QueryHandle handle1 = target.path(pHandle.toString()).request().post(
         Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         QueryHandle.class);
-    
+
     // do post once again
     QueryHandle handle2 = target.path(pHandle.toString()).request().post(
         Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
@@ -429,7 +430,7 @@ public class TestQueryService extends GrillJerseyTest {
     QueryHandle handle1 = target.path(plan.getPrepareHandle().toString()).request().post(
         Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         QueryHandle.class);
-    
+
     // do post once again
     QueryHandle handle2 = target.path(plan.getPrepareHandle().toString()).request().post(
         Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
@@ -468,8 +469,8 @@ public class TestQueryService extends GrillJerseyTest {
     // Post on destroyed query
     Response response = target.path(plan.getPrepareHandle().toString())
         .request().post(
-        Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
-        Response.class);
+            Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
+            Response.class);
     Assert.assertEquals(response.getStatus(), 404);
 
   }
@@ -509,13 +510,13 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
-  //@Test
+  @Test
   public void testExecuteWithTimeoutQuery() {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-        "select name from table"));
+        "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute_with_timeout"));
     mp.bodyPart(new FormDataBodyPart(
@@ -523,9 +524,9 @@ public class TestQueryService extends GrillJerseyTest {
         new QueryConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final QueryHandle s = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
-    System.out.println("QueryHandle:" + s.getHandleId());
+    final QueryHandleWithResultSet result = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandleWithResultSet.class);
+    Assert.assertNotNull(result.getQueryHandle());
   }
 
   @Override

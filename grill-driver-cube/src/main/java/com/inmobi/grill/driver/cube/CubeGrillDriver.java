@@ -16,6 +16,7 @@ import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
@@ -257,6 +258,13 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public void closeResultSet(QueryHandle handle) throws GrillException {
     getContext(handle).getSelectedDriver().closeResultSet(handle);
+  }
+
+  @Override
+  public void registerForCompletionNotification(QueryHandle handle,
+      long timeoutMillis, QueryCompletionListener listener)
+      throws GrillException {
+    throw new GrillException("Not implemented");
   }
 
 }

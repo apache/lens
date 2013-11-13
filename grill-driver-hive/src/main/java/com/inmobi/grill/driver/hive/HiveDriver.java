@@ -30,6 +30,7 @@ import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
@@ -360,5 +361,67 @@ public class HiveDriver implements GrillDriver {
       throw new GrillException("Query not found " + handle); 
     }
     return opHandle;
+  }
+
+  private class QueryCompletionNotifier implements Runnable {
+    long pollInterval;
+    OperationHandle hiveHandle;
+    long timeoutMillis;
+    QueryCompletionListener listener;
+    QueryHandle handle;
+
+    QueryCompletionNotifier(QueryHandle handle, long timeoutMillis,
+        QueryCompletionListener listener) throws GrillException {
+      hiveHandle = getHiveHandle(handle);
+      this.timeoutMillis = timeoutMillis;
+      this.listener = listener;
+      this.pollInterval = timeoutMillis/10;
+    }
+
+    @Override
+    public void run() {
+      // till query is complete or timeout has reached
+      long timeSpent = 0;
+      String error = null;
+      try {
+        while (timeSpent <= timeoutMillis) { 
+            if (isFinished(hiveHandle)) {
+              listener.onCompletion(handle);
+              return;
+            }
+            Thread.sleep(pollInterval);
+            timeSpent += pollInterval;
+        }
+        error = "timedout";
+      } catch (Exception e) {
+        LOG.warn("Error while polling for status", e);
+        error = "error polling";
+      }
+      listener.onError(handle, error);
+    }
+
+    private boolean isFinished(OperationHandle hiveHandle) throws GrillException {
+      OperationState state;
+      try {
+        state = getClient().getOperationStatus(hiveHandle).getState();
+      } catch (HiveSQLException e) {
+        throw new GrillException("Could not get Status", e);
+      }
+      if (state.equals(OperationState.FINISHED) ||
+          state.equals(OperationState.CANCELED) ||
+          state.equals(OperationState.ERROR) ||
+          state.equals(OperationState.CLOSED)) {
+        return true;
+      }
+      return false;
+    }
+  }
+
+  @Override
+  public void registerForCompletionNotification(QueryHandle handle,
+      long timeoutMillis, QueryCompletionListener listener)
+      throws GrillException {
+    Thread th = new Thread(new QueryCompletionNotifier(handle, timeoutMillis, listener));
+    th.start();
   }
 }

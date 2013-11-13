@@ -24,6 +24,7 @@ import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPrepareHandle;
@@ -456,10 +457,50 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   }
 
   @Override
-  public QueryHandleWithResultSet execute(String query, long timeoutmillis,
+  public QueryHandleWithResultSet execute(String query, long timeoutMillis,
       QueryConf conf) throws GrillException {
-    // TODO Auto-generated method stub
-    return null;
+    QueryHandle handle = executeAsync(query, conf);
+    QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
+    while (!getQueryContext(handle).getStatus().getStatus().equals(
+        QueryStatus.Status.LAUNCHED)) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    QueryCompletionListener listener = new QueryCompletionListenerImpl();
+    getQueryContext(handle).getSelectedDriver().
+        registerForCompletionNotification(handle, timeoutMillis, listener);
+    try {
+      synchronized (listener) {
+        listener.wait(timeoutMillis);
+      }
+    } catch (InterruptedException e) {
+      LOG.info("Waiting thread interrupted");
+    }
+    if (getQueryContext(handle).getStatus().isFinished()) {
+      result.SetResult("Finished");
+    }
+    return result;
+  }
+
+  class QueryCompletionListenerImpl implements QueryCompletionListener {
+    QueryCompletionListenerImpl() {
+    }
+    @Override
+    public void onCompletion(QueryHandle handle) {
+      synchronized (this) {
+        this.notify();
+      }
+    }
+
+    @Override
+    public void onError(QueryHandle handle, String error) {
+      synchronized (this) {
+        this.notify();
+      }
+    }
   }
 
   @Override

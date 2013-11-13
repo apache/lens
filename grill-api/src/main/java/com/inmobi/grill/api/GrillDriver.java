@@ -88,6 +88,17 @@ public interface GrillDriver {
       throws GrillException;
 
   /**
+   * Register for query completion notification
+   * 
+   * @param handle
+   * @param timeoutMillis
+   * @param listener
+   * @throws GrillException
+   */
+  public void registerForCompletionNotification(QueryHandle handle,
+      long timeoutMillis, QueryCompletionListener listener) throws GrillException;
+
+  /**
    * Get status of the query, specified by the handle
    * 
    * @param handle The query handle
