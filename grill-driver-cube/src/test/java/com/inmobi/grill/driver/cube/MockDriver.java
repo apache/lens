@@ -10,6 +10,7 @@ import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.GrillResultSetMetadata;
 import com.inmobi.grill.api.PreparedQueryContext;
+import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryCost;
 import com.inmobi.grill.api.QueryHandle;
@@ -149,6 +150,14 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void closeResultSet(QueryHandle handle) throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void registerForCompletionNotification(QueryHandle handle,
+      long timeoutMillis, QueryCompletionListener listener)
+      throws GrillException {
     // TODO Auto-generated method stub
     
   }
