@@ -206,10 +206,10 @@ public class TestHiveDriver {
     String path = persistentResultSet.getOutputPath();
     QueryHandle handle = persistentResultSet.getQueryHandle();
 
-    Path actualPath = new Path(path);
-    assertEquals(actualPath, new Path(TEST_OUTPUT_DIR, handle.toString()));
-    assertTrue(FileSystem.get(conf).exists(actualPath));
     FileSystem fs = FileSystem.get(conf);
+    Path actualPath = new Path(path);
+    assertEquals(actualPath, new Path(TEST_OUTPUT_DIR, handle.toString()).makeQualified(fs));
+    assertTrue(FileSystem.get(conf).exists(actualPath));
     validatePersistentResult(actualPath, TEST_DATA_FILE);
     fs.delete(actualPath, true);
   }
