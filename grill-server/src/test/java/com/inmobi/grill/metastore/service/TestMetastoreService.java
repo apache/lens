@@ -1055,6 +1055,31 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(storageList.getElements().size(), 2);
       assertFalse(storageList.getElements().contains("S3"));
 
+      // Change update period of S2
+      StorageUpdatePeriodList supList = cubeObjectFactory.createStorageUpdatePeriodList();
+      StorageUpdatePeriod s2Sup1 = cubeObjectFactory.createStorageUpdatePeriod();
+      s2Sup1.setUpdatePeriod("MONTHLY");
+      StorageUpdatePeriod s2Sup2 = cubeObjectFactory.createStorageUpdatePeriod();
+      s2Sup2.setUpdatePeriod("QUARTERLY");
+
+      supList.getStorageUpdatePeriod().add(s2Sup1);
+      supList.getStorageUpdatePeriod().add(s2Sup2);
+
+      APIResult updateResult = target().path("metastore/facts").path(table).path("storages/S2")
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(cubeObjectFactory.createStorageUpdatePeriodList(supList)), APIResult.class);
+      assertEquals(updateResult.getStatus(), Status.SUCCEEDED);
+
+      FactStorage s2 = target().path("metastore/facts").path(table).path("storages/S2")
+        .request(MediaType.APPLICATION_XML)
+        .get(FactStorage.class);
+      EnumSet<UpdatePeriod> s2Periods = EnumSet.noneOf(UpdatePeriod.class);
+      for (StorageUpdatePeriod sup : s2.getStorageUpdatePeriod()) {
+        s2Periods.add(UpdatePeriod.valueOf(sup.getUpdatePeriod().toUpperCase()));
+      }
+
+      assertEquals(s2Periods, EnumSet.of(UpdatePeriod.MONTHLY, UpdatePeriod.QUARTERLY));
+
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);

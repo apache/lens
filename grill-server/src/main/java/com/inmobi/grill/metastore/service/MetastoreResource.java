@@ -264,6 +264,21 @@ public class MetastoreResource {
                                       @PathParam("storage") String storage) throws  GrillException {
     return xCubeObjectFactory.createFactStorage(getSvc().getStorageOfFact(fact, storage));
   }
+
+
+  @PUT @Path("/facts/{factname}/storages/{storage}")
+  public APIResult alterFactStorageUpdatePeriod(@PathParam("factname") String fact,
+                                                 @PathParam("storage") String storage,
+                                                 StorageUpdatePeriodList periods) {
+    try {
+      getSvc().alterFactStorageUpdatePeriod(fact, storage, periods);
+    } catch (GrillException exc) {
+      checkTableNotFound(exc, fact);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
   
 /*
 
