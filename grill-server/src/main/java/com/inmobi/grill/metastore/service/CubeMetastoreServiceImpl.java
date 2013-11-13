@@ -618,4 +618,38 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       throw new GrillException(exc);
     }
   }
+
+  @Override
+  public void alterFactStorageUpdatePeriod(String fact, String storage, StorageUpdatePeriodList periods)
+    throws GrillException {
+    try {
+      CubeMetastoreClient client = getClient();
+      if (!client.isFactTable(fact)) {
+        throw new NotFoundException("Fact table not found: " + fact);
+      }
+
+      CubeFactTable factTable = client.getFactTable(fact);
+
+      if (!factTable.getStorages().contains(storage)) {
+        throw new NotFoundException("Storage " + storage + " not found for fact table " + fact);
+      }
+
+      UpdatePeriod oldPeriods[] = factTable.getUpdatePeriods().get(storage).toArray(new UpdatePeriod[]{});
+      for (UpdatePeriod old : oldPeriods) {
+        factTable.removeUpdatePeriod(storage, old);
+      }
+
+      if (periods.getStorageUpdatePeriod() != null && !periods.getStorageUpdatePeriod().isEmpty()) {
+        for (StorageUpdatePeriod p : periods.getStorageUpdatePeriod()) {
+          factTable.addUpdatePeriod(storage, UpdatePeriod.valueOf(p.getUpdatePeriod().toUpperCase()));
+        }
+      }
+
+      client.alterCubeFactTable(fact, factTable);
+      LOG.info("Altered update periods for storage:" + storage + " fact: " + fact + " periods: "
+        + factTable.getUpdatePeriods().get(storage));
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
+  }
 }
