@@ -17,6 +17,7 @@ import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.api.ResultColumn;
 import com.inmobi.grill.exception.GrillException;
 
 public class MockDriver implements GrillDriver {
@@ -111,9 +112,10 @@ public class MockDriver implements GrillDriver {
         return new GrillResultSetMetadata() {
 
           @Override
-          public List<Column> getColumns() {
-            return new ArrayList<Column>();
+          public List<ResultColumn> getColumns() {
+            return new ArrayList<ResultColumn>();
           }
+
         };
       }
     };
@@ -140,9 +142,10 @@ public class MockDriver implements GrillDriver {
         return new GrillResultSetMetadata() {
 
           @Override
-          public List<Column> getColumns() {
-            return new ArrayList<Column>();
+          public List<ResultColumn> getColumns() {
+            return new ArrayList<ResultColumn>();
           }
+
         };
       }
     };

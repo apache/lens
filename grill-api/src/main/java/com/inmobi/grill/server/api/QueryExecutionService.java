@@ -2,16 +2,15 @@ package com.inmobi.grill.server.api;
 
 import java.util.List;
 
+import com.inmobi.grill.api.GrillResultSet;
+import com.inmobi.grill.api.GrillResultSetMetadata;
 import com.inmobi.grill.api.PreparedQueryContext;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryHandleWithResultSet;
-import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.QueryResult;
-import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.exception.GrillException;
 
 public interface QueryExecutionService extends GrillService {
@@ -124,7 +123,7 @@ public interface QueryExecutionService extends GrillService {
    * @return The result set metadata
    * @throws GrillException
    */
-  public QueryResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
+  public GrillResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
       throws GrillException;
 
   /**
@@ -136,7 +135,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return returns the result set
    */
-  public QueryResult fetchResultSet(QueryHandle queryHandle, long startIndex,
+  public GrillResultSet fetchResultSet(QueryHandle queryHandle, long startIndex,
       int fetchSize ) throws GrillException;
 
   /**

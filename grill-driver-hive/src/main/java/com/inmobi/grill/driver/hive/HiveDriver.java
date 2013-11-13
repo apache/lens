@@ -127,6 +127,8 @@ public class HiveDriver implements GrillDriver {
         throw new GrillException("Unknown error while running query " + ctx.getUserQuery());
       }
       return createResultSet(ctx);
+    } catch (IOException e) {
+      throw new GrillException("Error adding persistent path" , e);
     } catch (HiveSQLException hiveErr) {
       throw new GrillException("Error executing query" , hiveErr);
     }
@@ -142,6 +144,8 @@ public class HiveDriver implements GrillDriver {
           ctx.getDriverQuery(), 
           ctx.getConf().getValByRegex(".*"));
       hiveHandles.put(ctx.getQueryHandle(), op);
+    } catch (IOException e) {
+      throw new GrillException("Error adding persistent path" , e);
     } catch (HiveSQLException e) {
       throw new GrillException("Error executing async query", e);
     }
@@ -152,6 +156,7 @@ public class HiveDriver implements GrillDriver {
     LOG.info("GetStatus: " + handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     ByteArrayInputStream in = null;
+    boolean hasResult = false;
     try {
       // Get operation status from hive server
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
@@ -169,6 +174,7 @@ public class HiveDriver implements GrillDriver {
         break;
       case FINISHED:
         stat = Status.SUCCESSFUL;
+        hasResult = true;
         break;
       case INITIALIZED:
         stat = Status.RUNNING;
@@ -206,7 +212,7 @@ public class HiveDriver implements GrillDriver {
       } else {
         LOG.warn("Empty task statuses");
       }
-      return new QueryStatus(progress, stat, msg, false);
+      return new QueryStatus(progress, stat, msg, hasResult);
     } catch (Exception e) {
       throw new GrillException("Error getting query status", e);
     } finally {
@@ -308,7 +314,7 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  void addPersistentPath(QueryContext context) {
+  void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
     if (context.isPersistent() &&
         context.getConf().getBoolean(GRILL_ADD_INSERT_OVEWRITE, true)) {
@@ -327,7 +333,8 @@ public class HiveDriver implements GrillDriver {
             Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, context.getQueryHandle().toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
-      context.setResultSetPath(resultSetPath.toString());
+      context.setResultSetPath(resultSetPath.makeQualified(
+          resultSetPath.getFileSystem(context.getConf())).toString());
       builder.append('"').append(resultSetPath).append('"')
       .append(' ').append(context.getDriverQuery()).append(' ');
       hiveQuery =  builder.toString();
@@ -385,12 +392,12 @@ public class HiveDriver implements GrillDriver {
       String error = null;
       try {
         while (timeSpent <= timeoutMillis) { 
-            if (isFinished(hiveHandle)) {
-              listener.onCompletion(handle);
-              return;
-            }
-            Thread.sleep(pollInterval);
-            timeSpent += pollInterval;
+          if (isFinished(hiveHandle)) {
+            listener.onCompletion(handle);
+            return;
+          }
+          Thread.sleep(pollInterval);
+          timeSpent += pollInterval;
         }
         error = "timedout";
       } catch (Exception e) {
@@ -420,7 +427,7 @@ public class HiveDriver implements GrillDriver {
   @Override
   public void registerForCompletionNotification(QueryHandle handle,
       long timeoutMillis, QueryCompletionListener listener)
-      throws GrillException {
+          throws GrillException {
     Thread th = new Thread(new QueryCompletionNotifier(handle, timeoutMillis, listener));
     th.start();
   }

@@ -23,6 +23,7 @@ import com.inmobi.grill.api.DriverSelector;
 import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
+import com.inmobi.grill.api.GrillResultSetMetadata;
 import com.inmobi.grill.api.PreparedQueryContext;
 import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
@@ -339,9 +340,13 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
       throws GrillException {
     GrillResultSet resultSet = resultSets.get(queryHandle);
     if (resultSet == null) {
-      resultSet = allQueries.get(queryHandle).getSelectedDriver().
-          fetchResultSet(allQueries.get(queryHandle));
-      resultSets.put(queryHandle, resultSet);
+      if (allQueries.get(queryHandle).getStatus().hasResultSet()) {
+        resultSet = allQueries.get(queryHandle).getSelectedDriver().
+            fetchResultSet(allQueries.get(queryHandle));
+        resultSets.put(queryHandle, resultSet);
+      } else {
+        throw new NotFoundException("Result set not available for query:" + queryHandle);
+      }
     }   
     return resultSets.get(queryHandle);
   }
@@ -510,19 +515,21 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   }
 
   @Override
-  public QueryResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
+  public GrillResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
       throws GrillException {
-    // TODO Auto-generated method stub
     GrillResultSet resultSet = getResultset(queryHandle);
+    if (resultSet != null) {
+      return resultSet.getMetadata();
+    }
     return null;
   }
 
   @Override
-  public QueryResult fetchResultSet(QueryHandle queryHandle, long startIndex,
+  public GrillResultSet fetchResultSet(QueryHandle queryHandle, long startIndex,
       int fetchSize) throws GrillException {
     // TODO Auto-generated method stub
     GrillResultSet resultSet = getResultset(queryHandle);
-    return null;
+    return resultSet;
   }
 
   @Override

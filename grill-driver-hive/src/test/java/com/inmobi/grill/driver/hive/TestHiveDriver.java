@@ -24,7 +24,7 @@ import com.inmobi.grill.exception.GrillException;
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
   public static final String TEST_OUTPUT_DIR = "test-output";
-  protected static HiveConf conf;
+  protected static HiveConf conf = new HiveConf();
   protected HiveDriver driver;
   public static final String DATA_BASE = "test_hive_driver";
 
@@ -33,7 +33,6 @@ public class TestHiveDriver {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
-    conf = new HiveConf();
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
@@ -117,7 +116,7 @@ public class TestHiveDriver {
 
     // check metadata
     GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
-    List<GrillResultSetMetadata.Column>  columns = rsMeta.getColumns();
+    List<ResultColumn>  columns = rsMeta.getColumns();
     assertNotNull(columns);
     assertEquals(columns.size(), 1);
     assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
@@ -141,8 +140,8 @@ public class TestHiveDriver {
     }
     System.out.print(actualRows);
     assertEquals(actualRows, expectedRows);
-
   }
+
   // executeAsync
   @Test
   public void testExecuteQueryAsync()  throws Exception {
@@ -210,9 +209,14 @@ public class TestHiveDriver {
     Path actualPath = new Path(path);
     assertEquals(actualPath, new Path(TEST_OUTPUT_DIR, handle.toString()));
     assertTrue(FileSystem.get(conf).exists(actualPath));
-
-    // read in data from output
     FileSystem fs = FileSystem.get(conf);
+    validatePersistentResult(actualPath, TEST_DATA_FILE);
+    fs.delete(actualPath, true);
+  }
+
+  public static void validatePersistentResult(Path actualPath, String dataFile) throws IOException {
+    // read in data from output
+    FileSystem fs = actualPath.getFileSystem(conf);
     Set<String> actualRows = new HashSet<String>();
     for (FileStatus stat : fs.listStatus(actualPath)) {
       FSDataInputStream in = fs.open(stat.getPath());
@@ -236,7 +240,7 @@ public class TestHiveDriver {
     Set<String> expectedRows = new HashSet<String>();
 
     try {
-      br = new BufferedReader(new FileReader(new File(TEST_DATA_FILE)));
+      br = new BufferedReader(new FileReader(new File(dataFile)));
       String line = "";
       while ((line = br.readLine()) != null) {
         expectedRows.add(line.trim());
@@ -247,7 +251,6 @@ public class TestHiveDriver {
       }
     }
     assertEquals(actualRows, expectedRows);
-    fs.delete(actualPath, true);
   }
 
   private void waitForAsyncQuery(QueryHandle handle, HiveDriver driver) throws Exception {

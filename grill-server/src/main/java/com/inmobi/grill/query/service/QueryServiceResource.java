@@ -20,10 +20,13 @@ import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.PersistentQueryResult;
 import com.inmobi.grill.client.api.PreparedQueryContext;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.client.api.QueryPlan;
+import com.inmobi.grill.api.GrillResultSet;
+import com.inmobi.grill.api.PersistentResultSet;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QuerySubmitResult;
@@ -323,7 +326,7 @@ public class QueryServiceResource {
   public QueryResultSetMetadata getResultSetMetadata(
       @PathParam("queryhandle") String queryHandle) {
     try {
-      return queryServer.getResultSetMetadata(getQueryHandle(queryHandle));
+      return new QueryResultSetMetadata(queryServer.getResultSetMetadata(getQueryHandle(queryHandle)));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -337,7 +340,12 @@ public class QueryServiceResource {
       @QueryParam("fromindex") long startIndex,
       @QueryParam("fetchsize") int fetchSize) {
     try {
-      return queryServer.fetchResultSet(getQueryHandle(queryHandle), startIndex, fetchSize);
+      GrillResultSet result = queryServer.fetchResultSet(getQueryHandle(queryHandle), startIndex, fetchSize);
+      if (result instanceof PersistentResultSet) {
+      return new PersistentQueryResult(((PersistentResultSet) result).getOutputPath());
+      } else {
+        return null;
+      }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
