@@ -508,6 +508,17 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    // test cancel query
+    final QueryHandle handle2 = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+    Assert.assertNotNull(handle2);
+    APIResult result = target.path(handle2.toString()).request().delete(APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    QueryContext ctx2 = target.path(handle2.toString()).request().get(QueryContext.class);
+    Assert.assertEquals(ctx2.getStatus().getStatus(), QueryStatus.Status.CANCELED);
   }
 
   @Test

@@ -31,6 +31,7 @@ import com.inmobi.grill.api.QueryPrepareHandle;
 import com.inmobi.grill.api.QueryHandleWithResultSet;
 import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryResult;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
@@ -196,10 +197,15 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
       ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
       notifyAllListeners();
       if (ctx.getStatus().isFinished()) {
-        finishedQueries.add(new FinishedQuery(ctx));
-        notifyAllListeners();
+        updateFinishedQuery(ctx);
       }
     }
+  }
+
+  private void updateFinishedQuery(QueryContext ctx) throws GrillException {
+    launchedQueries.remove(ctx);
+    finishedQueries.add(new FinishedQuery(ctx));
+    notifyAllListeners();    
   }
 
   private class QueryPurger implements Runnable {
@@ -526,7 +532,19 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
 
   @Override
   public boolean cancelQuery(QueryHandle queryHandle) throws GrillException {
-    return getQueryContext(queryHandle).getSelectedDriver().cancelQuery(queryHandle);
+    QueryContext ctx = getQueryContext(queryHandle);
+    if (ctx.getStatus().getStatus().equals(
+        QueryStatus.Status.LAUNCHED)) {
+      boolean ret = getQueryContext(queryHandle).getSelectedDriver().cancelQuery(queryHandle);
+      if (!ret) {
+        return false;
+      }
+    } else {
+      acceptedQueries.remove(ctx);
+    }
+    ctx.setStatus(new QueryStatus(0.0, Status.CANCELED, "Cancelled", false));
+    updateFinishedQuery(ctx);
+    return true;
   }
 
   @Override
