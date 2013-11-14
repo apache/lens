@@ -348,11 +348,17 @@ public class JAXBUtils {
       return null;
     }
 
-    return new HDFSStorage(xs.getName(), xs.getInputFormat(), xs.getOutputFormat(),
+    Storage storage = new HDFSStorage(xs.getName(), xs.getInputFormat(), xs.getOutputFormat(),
       xs.getFieldDelimiter(), xs.getLineDelimiter(), xs.getEscapeChar(),
       xs.getCollectionDelimiter(), xs.getMapKeyDelimiter(), xs.isIsCompressed(),
       mapFromXProperties(xs.getTableParameters()), mapFromXProperties(xs.getSerdeParameters()),
       new Path(xs.getTableLocation()));
+
+
+    for (Column c : xs.getPartCols()) {
+      storage.addToPartCols(fieldSchemaFromColumn(c));
+    }
+    return storage;
   }
 
 	public static DimensionTable dimTableFromCubeDimTable(CubeDimensionTable cubeDimTable) {
