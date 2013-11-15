@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import com.inmobi.grill.api.GrillResultSet;
 
 @XmlRootElement
-@XmlSeeAlso({PersistentQueryResult.class})
+@XmlSeeAlso({PersistentQueryResult.class, InMemoryQueryResult.class})
 public class QueryResult {
 
   public QueryResult() {

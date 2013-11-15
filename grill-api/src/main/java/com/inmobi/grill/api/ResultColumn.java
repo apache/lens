@@ -3,18 +3,24 @@ package com.inmobi.grill.api;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.inmobi.grill.client.api.ResultColumnType;
+
 @XmlRootElement
 public class ResultColumn {
 
   @XmlElement
   private String name;
   @XmlElement
-  private String type;
+  private ResultColumnType type;
 
   public ResultColumn() {
   }
 
   public ResultColumn(String name, String type) {
+    this(name, ResultColumnType.valueOf(type));
+  }
+
+  public ResultColumn(String name, ResultColumnType type) {
     this.name = name;
     this.type = type;
   }
@@ -29,7 +35,7 @@ public class ResultColumn {
   /**
    * @return the type
    */
-  public String getType() {
+  public ResultColumnType getType() {
     return type;
   }
 

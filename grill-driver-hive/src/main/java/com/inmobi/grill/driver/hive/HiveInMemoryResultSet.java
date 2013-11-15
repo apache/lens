@@ -9,9 +9,17 @@ import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.TableSchema;
+import org.apache.hive.service.cli.Type;
+import org.apache.hive.service.cli.thrift.TBoolValue;
+import org.apache.hive.service.cli.thrift.TByteValue;
 import org.apache.hive.service.cli.thrift.TColumnValue;
+import org.apache.hive.service.cli.thrift.TDoubleValue;
+import org.apache.hive.service.cli.thrift.TI16Value;
+import org.apache.hive.service.cli.thrift.TI32Value;
+import org.apache.hive.service.cli.thrift.TI64Value;
 import org.apache.hive.service.cli.thrift.TRow;
 import org.apache.hive.service.cli.thrift.TRowSet;
+import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
 import com.inmobi.grill.api.GrillResultSetMetadata;
@@ -97,11 +105,89 @@ public class HiveInMemoryResultSet implements InMemoryResultSet {
   @Override
   public List<Object> next() throws GrillException {
     TRow row = rowItr.next();
+    List<ColumnDescriptor> descriptors = getTableSchema().getColumnDescriptors();
 
     List<Object> results = new ArrayList<Object>(row.getColValsSize());
     List<TColumnValue> thriftRow = row.getColVals();
     for (int i = 0 ; i < row.getColValsSize(); i++) {
-      results.add(thriftRow.get(i).getFieldValue());
+      TColumnValue tColumnValue = thriftRow.get(i);
+      Type type = descriptors.get(i).getType();
+      Object value = null;
+      switch (type) {
+      case NULL_TYPE :
+        value = null;
+        break;
+      case BOOLEAN_TYPE:
+      {
+        TBoolValue tValue = tColumnValue.getBoolVal();
+        if (tValue.isSetValue()) {
+        value = tValue.isValue();
+        }
+        break;
+      }
+      case TINYINT_TYPE:
+      {
+        TByteValue tValue = tColumnValue.getByteVal();
+        if (tValue.isSetValue()) {
+        value = tValue.getValue();
+        }
+        break;
+      }
+      case SMALLINT_TYPE: 
+      {
+        TI16Value tValue = tColumnValue.getI16Val();
+        if (tValue.isSetValue()) {
+        value = tValue.getValue();
+        }
+        break;
+      }
+      case INT_TYPE: 
+      {
+        TI32Value tValue = tColumnValue.getI32Val();
+        if (tValue.isSetValue()) {
+        value = tValue.getValue();
+        }
+        break;
+      }
+      case BIGINT_TYPE: 
+      {
+        TI64Value tValue = tColumnValue.getI64Val();
+        if (tValue.isSetValue()) {
+        value = tValue.getValue();
+        }
+        break;
+      }
+      case FLOAT_TYPE:
+      case DOUBLE_TYPE:
+      {
+        TDoubleValue tValue = tColumnValue.getDoubleVal();
+        if (tValue.isSetValue()) {
+        value = tValue.getValue();
+        }
+        break;
+      }
+      case STRING_TYPE:
+      case VARCHAR_TYPE:
+      case DATE_TYPE:
+      case TIMESTAMP_TYPE:
+      case BINARY_TYPE:
+      case DECIMAL_TYPE:
+      case ARRAY_TYPE:
+      case MAP_TYPE:
+      case STRUCT_TYPE:
+      case UNION_TYPE:
+      case USER_DEFINED_TYPE:
+      {
+        TStringValue tValue = tColumnValue.getStringVal();
+        if (tValue.isSetValue()) {
+          value = tValue.getValue();
+        }
+        break;
+      }
+      default:
+        value = null;
+      }
+      results.add(value);
     }
 
     return results;

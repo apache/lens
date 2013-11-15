@@ -83,7 +83,7 @@ public class HiveDriver implements GrillDriver {
         explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
     while (inMemoryResultSet.hasNext()) {
-      explainOutput.add(((TStringValue) inMemoryResultSet.next().get(0)).getValue());
+      explainOutput.add((String)inMemoryResultSet.next().get(0));
     }
     LOG.info("Explain: " + query);
     try {

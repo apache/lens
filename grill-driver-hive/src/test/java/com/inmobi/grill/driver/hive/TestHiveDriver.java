@@ -15,7 +15,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.service.cli.thrift.TStringValue;
 import org.testng.annotations.*;
 
 import com.inmobi.grill.api.QueryStatus.Status;
@@ -101,7 +100,7 @@ public class TestHiveDriver {
     createTestTable("test_execute");
     GrillResultSet resultSet = null;
     // Execute a select query
-    System.err.println("Execute select");
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     String select = "SELECT ID FROM test_execute";
     QueryContext context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
@@ -120,7 +119,7 @@ public class TestHiveDriver {
     assertNotNull(columns);
     assertEquals(columns.size(), 1);
     assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
-    assertEquals("STRING".toLowerCase(), columns.get(0).getType().toLowerCase());
+    assertEquals("STRING".toLowerCase(), columns.get(0).getType().name().toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
     // Read data from the test file into expectedRows
@@ -135,10 +134,8 @@ public class TestHiveDriver {
     List<String> actualRows = new ArrayList<String>();
     while (inmemrs.hasNext()) {
       List<Object> row = inmemrs.next();
-      TStringValue thriftString = (TStringValue) row.get(0);
-      actualRows.add(thriftString.getValue());
+      actualRows.add((String)row.get(0));
     }
-    System.out.print(actualRows);
     assertEquals(actualRows, expectedRows);
   }
 
@@ -217,7 +214,7 @@ public class TestHiveDriver {
   public static void validatePersistentResult(Path actualPath, String dataFile) throws IOException {
     // read in data from output
     FileSystem fs = actualPath.getFileSystem(conf);
-    Set<String> actualRows = new HashSet<String>();
+    List<String> actualRows = new ArrayList<String>();
     for (FileStatus stat : fs.listStatus(actualPath)) {
       FSDataInputStream in = fs.open(stat.getPath());
       BufferedReader br = null;
@@ -237,7 +234,7 @@ public class TestHiveDriver {
 
 
     BufferedReader br = null;
-    Set<String> expectedRows = new HashSet<String>();
+    List<String> expectedRows = new ArrayList<String>();
 
     try {
       br = new BufferedReader(new FileReader(new File(dataFile)));

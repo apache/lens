@@ -20,12 +20,14 @@ import org.apache.commons.lang.StringUtils;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.InMemoryQueryResult;
 import com.inmobi.grill.client.api.PersistentQueryResult;
 import com.inmobi.grill.client.api.PreparedQueryContext;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.api.GrillResultSet;
+import com.inmobi.grill.api.InMemoryResultSet;
 import com.inmobi.grill.api.PersistentResultSet;
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryPrepareHandle;
@@ -342,9 +344,9 @@ public class QueryServiceResource {
     try {
       GrillResultSet result = queryServer.fetchResultSet(getQueryHandle(queryHandle), startIndex, fetchSize);
       if (result instanceof PersistentResultSet) {
-      return new PersistentQueryResult(((PersistentResultSet) result).getOutputPath());
+        return new PersistentQueryResult(((PersistentResultSet) result).getOutputPath());
       } else {
-        return null;
+        return new InMemoryQueryResult((InMemoryResultSet)result);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
