@@ -100,37 +100,22 @@ public interface CubeMetastoreService extends GrillService {
 	public XStorage getStorageOfDimension(String dimname, String storage) throws GrillException;
 	public void dropStorageOfDim(String dimName, String storage) throws GrillException;
 
-	public List<XPartition> getAllPartitionsOfDimStorage(String dimName, String storage,
-			String partFilter) throws GrillException;
-	public void addPartitionToDimStorage(String dimName, String storage, XPartition partition) 
-			throws GrillException;
-	public void dropAllPartitionsOfDimStorage(String dimName, String storage, String partFilter)
-			throws GrillException;
-	public XPartition getPartitionOfDimStorage(String dimName, String storage, String partSpec) 
-			throws GrillException;
-	public void updatePartitionOfDimStorage(String dimName, String storage, String partSpec)
-			throws GrillException;
-	public void dropPartitionOfDimStorage(String dimName, String storage, String partSpec)
-			throws GrillException;
 
 	public List<FactTable> getAllFactsOfCube(String cubeName) throws GrillException;
 	public FactTable getFactTable(String fact) throws GrillException;
-
 	public void createFactTable(FactTable fact) throws GrillException;
-
 	public void updateFactTable(FactTable fact) throws GrillException;
-
 	public void dropFactTable(String fact, boolean cascade) throws GrillException;
-
   public List<String> getAllFactNames() throws GrillException;
 
   public List<String> getStoragesOfFact(String fact) throws GrillException;
-
   public void addStorageToFact(String fact, FactStorage storage) throws GrillException;
-
   public void dropStorageOfFact(String fact, String storage) throws GrillException;
-
   public FactStorage getStorageOfFact(String fact, String storage) throws GrillException;
-
   public void alterFactStorageUpdatePeriod(String fact, String storage, StorageUpdatePeriodList periods) throws GrillException;
+
+  public List<XPartition> getAllPartitionsOfFactStorage(String fact, String storage, String filter) throws GrillException;
+  public void addPartitionToFactStorage(String fact, String storage, XPartition partition) throws GrillException;
+  public void dropPartitionsOfFactStorageByFilter(String fact, String storage, String filter) throws GrillException;
+  public void dropPartitionOfFactStorageByValue(String fact, String storage, String values) throws GrillException;
 }

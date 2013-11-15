@@ -1,6 +1,7 @@
 package com.inmobi.grill.metastore.service;
 
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.ws.rs.NotFoundException;
@@ -15,6 +16,7 @@ import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
@@ -484,22 +486,22 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
   
   private XStorage createXStorage(String name) {
-  	 XStorage xs1 = cubeObjectFactory.createXStorage();
-     xs1.setName(name);
-     xs1.setCollectionDelimiter(",");
-     xs1.setEscapeChar("\\");
-     xs1.setFieldDelimiter("");
-     xs1.setFieldDelimiter("\t");
-     //xs1.setInputFormat("SequenceFileInputFormat");
-     //xs1.setOutputFormat("SequenceFileOutputFormat");
-     xs1.setIsCompressed(false);
-     xs1.setLineDelimiter("\n");
-     xs1.setMapKeyDelimiter("\r");
-     xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
-     xs1.setPartLocation("/tmp/part");
-     xs1.setTableLocation("/tmp/" + name);
-     xs1.setTableType("EXTERNAL");
-     return xs1;
+    XStorage xs1 = cubeObjectFactory.createXStorage();
+    xs1.setName(name);
+    xs1.setCollectionDelimiter(",");
+    xs1.setEscapeChar("\\");
+    xs1.setFieldDelimiter("");
+    xs1.setFieldDelimiter("\t");
+    //xs1.setInputFormat("SequenceFileInputFormat");
+    //xs1.setOutputFormat("SequenceFileOutputFormat");
+    xs1.setIsCompressed(false);
+    xs1.setLineDelimiter("\n");
+    xs1.setMapKeyDelimiter("\r");
+    xs1.setSerdeClassName("com.inmobi.grill.TestSerde");
+    xs1.setPartLocation("/tmp/part");
+    xs1.setTableLocation("/tmp/" + name);
+    xs1.setTableType("EXTERNAL");
+    return xs1;
   }
 
   @Test
@@ -858,7 +860,13 @@ public class TestMetastoreService extends GrillJerseyTest {
 
     for (int i = 0; i < storages.length; i++) {
       UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
-      uel.setStorageAttr(createXStorage(storages[i]));
+      XStorage xs = createXStorage(storages[i]);
+      Column dt = cubeObjectFactory.createColumn();
+      dt.setName("dt");
+      dt.setType("string");
+      dt.setComment("default partition column for fact");
+      xs.getPartCols().add(dt);
+      uel.setStorageAttr(xs);
       uel.setUpdatePeriod(updatePeriods[i]);
       upd.getUpdatePeriodElement().add(uel);
     }
@@ -1086,5 +1094,122 @@ public class TestMetastoreService extends GrillJerseyTest {
     }
   }
 
+  private XPartition createPartition(Date partDate) {
+    XPartition xp = cubeObjectFactory.createXPartition();
+    xp.setName("test_part");
+    xp.setLocation("/tmp/part/test_part");
+    xp.setDataLocation("file:///tmp/part/test_part");
+
+    Map<String, String> partitionSpec = new HashMap<String, String>();
+    partitionSpec.put("foo", "bar");
+    for (Map.Entry<String, String> e : partitionSpec.entrySet()) {
+      PartitionSpec ps = cubeObjectFactory.createPartitionSpec();
+      ps.setKey(e.getKey());
+      ps.setValue(e.getValue());
+      xp.getPartitionSpec().add(ps);
+    }
+
+    PartitionTimeStamp pts = cubeObjectFactory.createPartitionTimeStamp();
+    pts.setColumn("dt");
+    pts.setDate(JAXBUtils.getXMLGregorianCalendar(partDate));
+    xp.getPartitionTimeStamp().add(pts);
+
+    StorageUpdatePeriod sup = cubeObjectFactory.createStorageUpdatePeriod();
+    sup.setUpdatePeriod("HOURLY");
+    xp.setUpdatePeriod(sup);
+
+    return xp;
+  }
+
+  @Test
+  public void testFactStoragePartitions() throws Exception {
+    final String table = "testFactStoragePartitions";
+    final String DB = "testFactStoragePartitions_DB";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      String [] storages = {"S1", "S2"};
+      String [] updatePeriods = {"HOURLY", "DAILY"};
+      FactTable f = createFactTable(table, storages, updatePeriods);
+
+      APIResult result = target().path("metastore/facts").path(table)
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
+
+      assertEquals(result.getStatus(), Status.SUCCEEDED);
+
+      // Add a partition
+      final Date partDate = new Date();
+      XPartition xp = createPartition(partDate);
+      APIResult partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
+
+      JAXBElement<PartitionList> partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      PartitionList partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 1);
+
+      // Drop the partitions
+      APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .delete(APIResult.class);
+
+      assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was dropped
+      partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 0);
+
+      // Add again
+      partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was added
+      partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 1);
+
+      // Drop again by values
+      SimpleDateFormat sdf = new SimpleDateFormat(UpdatePeriod.HOURLY.format());
+      String val[] = new String[] {sdf.format(partDate)};
+      dropResult = target().path("metastore/facts").path(table).path("storages/S2/partition")
+        .path(StringUtils.join(val, ","))
+        .request(MediaType.APPLICATION_XML)
+        .delete(APIResult.class);
+
+      assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was dropped
+      partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+        .request(MediaType.APPLICATION_XML)
+        .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 0);
+
+    } finally {
+      setCurrentDatabase(prevDb);
+      dropDatabase(DB);
+    }
+  }
 
 }

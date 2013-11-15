@@ -4,14 +4,13 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
-import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hadoop.hive.metastore.api.*;
 import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -19,6 +18,7 @@ import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.thrift.TException;
 
 import java.util.*;
 
@@ -389,72 +389,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   		throw new GrillException(exc);
   	}
   }
-  
-  @Override
-  public List<XPartition> getAllPartitionsOfDimStorage(String dimName, String storage,
-  		String filter) throws GrillException {
-  	try {
-  		String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
-  	      Storage.getPrefix(storage));
-  		List<Partition> parts = getClient().getPartitionsByFilter(storageTableName, filter);
-  		List<XPartition> xParts = new ArrayList<XPartition>();
-  		for (Partition part : parts) {
-  			XPartition xPart = new XPartition();
-  			xPart.setName(part.getName());
-  			xPart.setLocation(part.getLocation());
-  			xParts.add(xPart);
-  		}
-  		return xParts;
-  	} catch (Exception ex) {
-  		throw new GrillException(ex);
-  	}
-  }
-
-	@Override
-	public void addPartitionToDimStorage(String dimName, String storage, XPartition partition)
-			throws GrillException {
-		try {
-			String storageName = MetastoreUtil.getDimStorageTableName(dimName,
-		      Storage.getPrefix(storage));
-			HDFSStorage storageTable = 
-					new HDFSStorage(getClient().getHiveTable(storageName));
-			getClient().addPartition(getClient().getDimensionTable(dimName), storageTable, 
-					JAXBUtils.getDateFromXML(partition.getDate()));
-			LOG.info("Added partition dimension=" + dimName + " storage=" + storage + " date=" + 
-					partition.getDate().toString());
-		} catch (HiveException exc) {
-			throw new GrillException(exc);
-		}
-	}
-
-	@Override
-	public void dropAllPartitionsOfDimStorage(String dimName, String storage, String partFilter)
-			throws GrillException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public XPartition getPartitionOfDimStorage(String dimName, String storage, String partSpec)
-			throws GrillException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public void updatePartitionOfDimStorage(String dimName, String storage, String partSpec)
-			throws GrillException {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void dropPartitionOfDimStorage(String dimName, String storage, String partSpec)
-			throws GrillException {
-		// TODO Auto-generated method stub
-		
-	}
-
 
 	@Override
 	public List<FactTable> getAllFactsOfCube(String cubeName) throws GrillException {
@@ -584,6 +518,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   @Override
   public void dropStorageOfFact(String fact, String storage) throws GrillException {
     try {
+      checkFactStorage(fact, storage);
       getClient().dropStorageFromFact(fact, storage);
       LOG.info("Dropped storage " + storage + " from fact " + fact);
     } catch (HiveException exc) {
@@ -594,12 +529,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   @Override
   public FactStorage getStorageOfFact(String fact, String storage) throws GrillException {
     try {
-      if (getClient().isFactTable(fact)) {
-        CubeFactTable cft = getClient().getFactTable(fact);
-        if (!cft.getStorages().contains(storage)) {
-          throw new NotFoundException("Storage " + storage + " not found in fact " + fact);
-        }
-
+        CubeFactTable cft = checkFactStorage(fact, storage);
         XStorage xs = new XStorage();
         xs.setName(storage);
         // TODO set rest of the storage attributes here
@@ -611,28 +541,31 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
           f.getStorageUpdatePeriod().add(sup);
         }
         return f;
-      } else {
-        throw new NotFoundException("Fact table not found: " + fact);
-      }
+
     } catch (HiveException exc) {
       throw new GrillException(exc);
     }
+  }
+
+  private CubeFactTable checkFactStorage(String fact, String storage) throws HiveException, GrillException {
+    CubeMetastoreClient client = getClient();
+    if (!client.isFactTable(fact)) {
+      throw new NotFoundException("Fact table not found: " + fact);
+    }
+
+    CubeFactTable factTable = client.getFactTable(fact);
+
+    if (!factTable.getStorages().contains(storage)) {
+      throw new NotFoundException("Storage " + storage + " not found for fact table " + fact);
+    }
+    return factTable;
   }
 
   @Override
   public void alterFactStorageUpdatePeriod(String fact, String storage, StorageUpdatePeriodList periods)
     throws GrillException {
     try {
-      CubeMetastoreClient client = getClient();
-      if (!client.isFactTable(fact)) {
-        throw new NotFoundException("Fact table not found: " + fact);
-      }
-
-      CubeFactTable factTable = client.getFactTable(fact);
-
-      if (!factTable.getStorages().contains(storage)) {
-        throw new NotFoundException("Storage " + storage + " not found for fact table " + fact);
-      }
+      CubeFactTable factTable = checkFactStorage(fact, storage);
 
       UpdatePeriod oldPeriods[] = factTable.getUpdatePeriods().get(storage).toArray(new UpdatePeriod[]{});
       for (UpdatePeriod old : oldPeriods) {
@@ -645,11 +578,126 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
         }
       }
 
-      client.alterCubeFactTable(fact, factTable);
+      getClient().alterCubeFactTable(fact, factTable);
       LOG.info("Altered update periods for storage:" + storage + " fact: " + fact + " periods: "
         + factTable.getUpdatePeriods().get(storage));
     } catch (HiveException e) {
       throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public List<XPartition> getAllPartitionsOfFactStorage(String fact, String storage, String filter) throws GrillException {
+    try {
+      checkFactStorage(fact, storage);
+      String storageTableName = MetastoreUtil.getFactStorageTableName(fact, Storage.getPrefix(storage));
+      List<Partition> parts = getClient().getPartitionsByFilter(storageTableName, filter);
+      if (parts != null) {
+        List<XPartition> result = new ArrayList<XPartition>(parts.size());
+        for (Partition p : parts) {
+          XPartition xp = new XPartition();
+          xp.setName(p.getCompleteName());
+          xp.setDataLocation(p.getDataLocation().toString());
+          xp.setLocation(p.getLocation());
+
+          for (Map.Entry<String, String> e : p.getSpec().entrySet()) {
+            PartitionSpec spec = new PartitionSpec();
+            spec.setKey(e.getKey());
+            spec.setValue(e.getValue());
+            xp.getPartitionSpec().add(spec);
+          }
+
+          for (String v : p.getValues()) {
+            xp.getPartitionValues().add(v);
+          }
+
+          for (FieldSchema fs : p.getCols()) {
+            xp.getPartitionColumns().add(fs.getName());
+          }
+
+          result.add(xp);
+        }
+        return result;
+      } else {
+        return new ArrayList<XPartition>();
+      }
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } catch (MetaException e) {
+      throw new GrillException(e);
+    } catch (NoSuchObjectException e) {
+      throw new NotFoundException(e);
+    } catch (TException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public void addPartitionToFactStorage(String fact, String storage, XPartition partition) throws GrillException {
+    try {
+      CubeFactTable factTable = checkFactStorage(fact, storage);
+
+      Map<String, Date> partitionTimeStamps = new HashMap<String, Date>();
+      for (PartitionTimeStamp ts : partition.getPartitionTimeStamp()) {
+        partitionTimeStamps.put(ts.getColumn(), JAXBUtils.getDateFromXML(ts.getDate()));
+      }
+
+      Map<String, String> partitionSpec = new HashMap<String, String>();
+      for (PartitionSpec spec : partition.getPartitionSpec()) {
+        partitionSpec.put(spec.getKey(), spec.getValue());
+      }
+
+      // TODO consider for non-HDFS storages
+      Storage str = new HDFSStorage(storage, null, null);
+
+      StorageUpdatePeriod sup = partition.getUpdatePeriod();
+      UpdatePeriod up = UpdatePeriod.valueOf(sup.getUpdatePeriod().toUpperCase());
+
+      getClient().addPartition(factTable, str, up, partitionTimeStamps, partitionSpec, null);
+      LOG.info("Added partition for fact " + fact + " storage:" + storage
+        + " dates: " + partitionTimeStamps + " spec:" + partitionSpec + " update period: " + up);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
+
+  @Override
+  public void dropPartitionsOfFactStorageByFilter(String fact, String storage, String filter) throws GrillException {
+    try {
+      checkFactStorage(fact, storage);
+      HDFSStorage str = new HDFSStorage(storage, null, null);
+      String storageTableName = MetastoreUtil.getFactStorageTableName(fact, str.getPrefix());
+      List<Partition> partitions = getClient().getPartitionsByFilter(storageTableName, filter);
+      if (partitions != null) {
+        for (int i = 0; i < partitions.size(); i++) {
+          Partition p = partitions.get(i);
+          str.dropPartition(storageTableName, p.getValues(), getUserConf());
+          LOG.info("Dropped partition [" + (i+1) + "/" + partitions.size() + "] " + p.getLocation());
+        }
+      } else {
+        LOG.info("No partitions matching fact: " + fact + " storage: " + storage + " filter:" + filter);
+      }
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } catch (MetaException e) {
+      throw new GrillException(e);
+    } catch (NoSuchObjectException e) {
+      throw new NotFoundException(e);
+    } catch (TException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public void dropPartitionOfFactStorageByValue(String fact, String storage, String values) throws GrillException {
+    try {
+      checkFactStorage(fact, storage);
+      String[] vals = StringUtils.split(values, ",");
+      Storage s = new HDFSStorage(storage, null, null);
+      s.dropPartition(MetastoreUtil.getFactStorageTableName(fact, s.getPrefix()), Arrays.asList(vals), getUserConf());
+      LOG.info("Dropped partition fact: " + fact + " storage: " + storage + " values:" + values);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
     }
   }
 }
