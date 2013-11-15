@@ -1,6 +1,5 @@
 package com.inmobi.grill.metastore.service;
 
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -29,6 +28,7 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -37,6 +37,7 @@ import org.testng.annotations.Test;
 public class TestMetastoreService extends GrillJerseyTest {
   public static final Logger LOG = LogManager.getLogger(TestMetastoreService.class);
   private ObjectFactory cubeObjectFactory;
+  protected String mediaType = MediaType.APPLICATION_XML;
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -67,12 +68,12 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testGetDatabase() throws Exception {
     WebTarget dbTarget = target().path("metastore").path("database");
-    Invocation.Builder builder = dbTarget.request(MediaType.APPLICATION_XML);
+    Invocation.Builder builder = dbTarget.request(mediaType);
     Database response = builder.get(Database.class);
     assertEquals(response.getName(), "default");
 
     // Test JSON
-    Database jsonResp = dbTarget.request(MediaType.APPLICATION_JSON).get(Database.class);
+    Database jsonResp = dbTarget.request(mediaType).get(Database.class);
     assertEquals(jsonResp.getName(), "default");
   }
 
@@ -81,11 +82,11 @@ public class TestMetastoreService extends GrillJerseyTest {
     WebTarget dbTarget = target().path("metastore").path("database");
     Database db = new Database();
     db.setName("test_db");
-    APIResult result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-    Database current = dbTarget.request(MediaType.APPLICATION_XML).get(Database.class);
+    Database current = dbTarget.request(mediaType).get(Database.class);
     assertEquals(current.getName(), db.getName());
   }
 
@@ -98,13 +99,13 @@ public class TestMetastoreService extends GrillJerseyTest {
     db.setName(newDb);
     db.setIgnoreIfExisting(true);
 
-    APIResult result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
     // Create again
     db.setIgnoreIfExisting(false);
-    result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    result = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.FAILED);
     LOG.info(">> Result message " + result.getMessage());
 
@@ -121,13 +122,13 @@ public class TestMetastoreService extends GrillJerseyTest {
     db.setIgnoreIfExisting(true);
 
     // First create the database
-    APIResult create = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    APIResult create = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertEquals(create.getStatus(), APIResult.Status.SUCCEEDED);
 
     // Now drop it
     APIResult drop = dbTarget
       .queryParam("cascade", "true")
-      .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      .request(mediaType).delete(APIResult.class);
     assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
@@ -140,7 +141,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       Database db = new Database();
       db.setName(name);
       db.setIgnoreIfExisting(true);
-      dbTarget.path(name).request(MediaType.APPLICATION_XML).put(Entity.xml(db));
+      dbTarget.path(name).request(mediaType).put(Entity.xml(db));
     }
 
 
@@ -173,7 +174,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     db.setName(dbName);
     db.setIgnoreIfExisting(true);
 
-    APIResult result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
@@ -182,7 +183,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     WebTarget dbTarget = target().path("metastore").path("database").path(dbName);
 
     APIResult result = dbTarget.queryParam("cascade", "true")
-      .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      .request(mediaType).delete(APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
@@ -190,13 +191,13 @@ public class TestMetastoreService extends GrillJerseyTest {
     WebTarget dbTarget = target().path("metastore").path("database");
     Database db = new Database();
     db.setName(dbName);
-    APIResult result = dbTarget.request(MediaType.APPLICATION_XML).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.request(mediaType).put(Entity.xml(db), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   private String getCurrentDatabase() throws Exception {
     WebTarget dbTarget = target().path("metastore").path("database");
-    Invocation.Builder builder = dbTarget.request(MediaType.APPLICATION_XML);
+    Invocation.Builder builder = dbTarget.request(mediaType);
     Database response = builder.get(Database.class);
     return response.getName();
   }
@@ -275,11 +276,11 @@ public class TestMetastoreService extends GrillJerseyTest {
     try {
       final XCube cube = createTestCube("testCube1");
       final WebTarget target = target().path("metastore").path("cubes");
-      APIResult result = target.request(MediaType.APPLICATION_XML).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+      APIResult result = target.request(mediaType).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      StringList cubes = target().path("metastore/cubes").request(MediaType.APPLICATION_XML).get(StringList.class);
+      StringList cubes = target().path("metastore/cubes").request(mediaType).get(StringList.class);
       boolean foundcube = false;
       for (String c : cubes.getElements()) {
         if (c.equalsIgnoreCase("testCube1")) {
@@ -310,13 +311,13 @@ public class TestMetastoreService extends GrillJerseyTest {
       WebTarget target = target().path("metastore").path("cubes");
       JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
       APIResult result =
-        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+        target.request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Now get
       target = target().path("metastore").path("cubes").path("testGetCube");
       JAXBElement<XCube> actualElement =
-        target.request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+        target.request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
       XCube actual = actualElement.getValue();
       assertNotNull(actual);
 
@@ -345,18 +346,18 @@ public class TestMetastoreService extends GrillJerseyTest {
       WebTarget target = target().path("metastore").path("cubes");
       JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
       APIResult result =
-        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+        target.request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       target = target().path("metastore").path("cubes").path("test_drop_cube").queryParam("cascade", "true");
-      result = target.request(MediaType.APPLICATION_XML).delete(APIResult.class);
+      result = target.request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Now get should give 404
       try {
         target = target().path("metastore").path("cubes").path("test_drop_cube");
         JAXBElement<XCube> got =
-          target.request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+          target.request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
         fail("Should have thrown 404");
       } catch (NotFoundException ex) {
         ex.printStackTrace();
@@ -382,7 +383,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       WebTarget target = target().path("metastore").path("cubes");
       JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
       APIResult result =
-        target.request(MediaType.APPLICATION_XML).post(Entity.xml(element), APIResult.class);
+        target.request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Update something
@@ -409,12 +410,12 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       element = cubeObjectFactory.createXCube(cube);
       result = target.path(cubeName)
-        .request(MediaType.APPLICATION_XML).put(Entity.xml(element), APIResult.class);
+        .request(mediaType).put(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       JAXBElement<XCube> got =
         target.path(cubeName)
-          .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XCube>>() {});
+          .request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
       XCube actual = got.getValue();
       assertEquals(actual.getWeight(), 200.0);
       assertEquals(actual.getDimensions().getDimension().size(), 3);
@@ -518,7 +519,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -530,14 +531,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       APIResult result =
         target().path("metastore/dimensions").path(table)
           .queryParam("cascade", "true")
-          .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+          .request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Drop again, should get 404 now
       try {
         result = target().path("metastore/dimensions").path(table)
           .queryParam("cascade", "true")
-          .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+          .request(mediaType).delete(APIResult.class);
         fail("Should have got 404");
       } catch (NotFoundException e404) {
         LOG.info("correct");
@@ -562,7 +563,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -571,7 +572,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       }
     	
     	JAXBElement<DimensionTable> dtElement = target().path("metastore/dimensions").path(table)
-    			.request(MediaType.APPLICATION_XML)
+    			.request(mediaType)
     			.get(new GenericType<JAXBElement<DimensionTable>>() {});
     	DimensionTable dt2 = dtElement.getValue();
     	assertTrue (dt1 != dt2);
@@ -598,13 +599,13 @@ public class TestMetastoreService extends GrillJerseyTest {
     	// Update the table
     	APIResult result = target().path("metastore/dimensions")
     			.path(table)
-    			.request(MediaType.APPLICATION_XML)
+    			.request(mediaType)
     			.put(Entity.xml(cubeObjectFactory.createDimensionTable(dt2)), APIResult.class);
     	assertEquals(result.getStatus(), Status.SUCCEEDED);
     	
     	// Get the updated table
     	JAXBElement<DimensionTable> dtElement2 = target().path("metastore/dimensions").path(table)
-    			.request(MediaType.APPLICATION_XML)
+    			.request(mediaType)
     			.get(new GenericType<JAXBElement<DimensionTable>>() {});
     	DimensionTable dt3 = dtElement2.getValue();
     	assertEquals(dt3.getWeight(), 200.0);
@@ -627,7 +628,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     	result =
           target().path("metastore/dimensions").path(table)
             .queryParam("cascade", "true")
-            .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+            .request(mediaType).delete(APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     } finally {
     	setCurrentDatabase(prevDb);
@@ -648,7 +649,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -657,12 +658,20 @@ public class TestMetastoreService extends GrillJerseyTest {
       }
     	List storages = target().path("metastore").path("dimensions")
     			.path(table).path("storages")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<List<JAXBElement<XStorage>>>() {
           });
     	assertEquals(storages.size(), 1);
-    	XStorage xs = (XStorage) storages.get(0);
-    	assertEquals(xs.getName(), table + "_hourly");
+      Object storage = storages.get(0);
+      if ( storage instanceof XStorage) {
+        XStorage xs = (XStorage) storages.get(0);
+        assertEquals(xs.getName(), table + "_hourly");
+      } else {
+        JAXBElement<XStorage> jxEl = (JAXBElement<XStorage>) storages.get(0);
+        assertEquals(jxEl.getValue().getName(), table + "_hourly");
+      }
+
+
     } finally {
     	setCurrentDatabase(prevDb);
     	dropDatabase(DB);
@@ -683,7 +692,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -698,30 +707,39 @@ public class TestMetastoreService extends GrillJerseyTest {
     	
     	// Check storage is returned in get storage call
     	APIResult result = target().path("metastore/dimensions").path(table).path("/storages")
-    			.request(MediaType.APPLICATION_XML)
+    			.request(mediaType)
     			.post(Entity.xml(cubeObjectFactory.createUpdatePeriodElement(uel)), APIResult.class);
     	assertEquals(result.getStatus(), Status.SUCCEEDED);
     	
     	List storages = target().path("metastore").path("dimensions")
     			.path(table).path("storages")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<List<JAXBElement<XStorage>>>() {
           });
     	assertEquals(storages.size(), 2);
     	
     	boolean foundStorage = false;
     	for (int i = 0; i < storages.size(); i++) {
-    		XStorage xs = (XStorage) storages.get(i);
-    		if (xs.getName().equalsIgnoreCase("S2")) {
-    			foundStorage = true;
-    			break;
-    		}
+        Object str = storages.get(0);
+        if (str instanceof  XStorage) {
+          XStorage xs = (XStorage) storages.get(i);
+          if (xs.getName().equalsIgnoreCase("S2")) {
+            foundStorage = true;
+            break;
+          }
+        } else {
+          JAXBElement<XStorage> xs = (JAXBElement<XStorage>) storages.get(i);
+          if (xs.getValue().getName().equalsIgnoreCase("S2")) {
+            foundStorage = true;
+            break;
+          }
+        }
     	}
     	assertTrue(foundStorage);
     	
     	// Check get table also contains the storage
     	JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
-    			.request(MediaType.APPLICATION_XML)
+    			.request(mediaType)
     			.get(new GenericType<JAXBElement<DimensionTable>>() {});
     	DimensionTable dimTable = dt.getValue();
     	CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
@@ -751,7 +769,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -760,12 +778,12 @@ public class TestMetastoreService extends GrillJerseyTest {
       }
 
       APIResult result = target().path("metastore/dimensions/").path(table).path("storages")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .delete(APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dimTable = dt.getValue();
       CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
@@ -795,7 +813,7 @@ public class TestMetastoreService extends GrillJerseyTest {
         APIResult result = target()
           .path("metastore")
           .path("dimensions")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createDimensionTable(dt1)), APIResult.class);
         assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
       } catch (Exception exc) {
@@ -805,18 +823,18 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Test that storage has been created
       XStorage s2 = target().path("/metastore/dimensions/").path(table).path("storages").path("S2")
-      .request(MediaType.APPLICATION_XML).get(XStorage.class);
+      .request(mediaType).get(XStorage.class);
       assertNotNull(s2);
       // Get storage API sets only the name of the storage object.
       assertEquals(s2.getName(), "S2");
 
       APIResult result = target().path("metastore/dimensions/").path(table).path("storages").path("S2")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .delete(APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dimTable = dt.getValue();
 
@@ -887,14 +905,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       FactTable f = createFactTable(table, new String[] {"S1", "S2"},  new String[] {"HOURLY", "DAILY"});
       // Create the FACT table
       APIResult result = target().path("metastore").path("facts").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
 
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Get all fact names, this should contain the fact table
       StringList factNames = target().path("metastore/facts")
-        .request(MediaType.APPLICATION_XML).get(StringList.class);
+        .request(mediaType).get(StringList.class);
       boolean contains = false;
       for (String fn : factNames.getElements()) {
         if (fn.equalsIgnoreCase(table)) {
@@ -906,7 +924,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Get the created table
       JAXBElement<FactTable> gotFactElement = target().path("metastore/facts").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<JAXBElement<FactTable>>() {});
       FactTable gotFact = gotFactElement.getValue();
       assertTrue(gotFact.getName().equalsIgnoreCase(table));
@@ -938,13 +956,13 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Update
       result = target().path("metastore").path("facts").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .put(Entity.xml(cubeObjectFactory.createFactTable(update)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Get the updated table
       gotFactElement = target().path("metastore/facts").path(table)
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .get(new GenericType<JAXBElement<FactTable>>() {});
       gotFact = gotFactElement.getValue();
       CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
@@ -964,7 +982,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       // Finally, drop the fact table
       result = target().path("metastore").path("facts").path(table)
           .queryParam("cascade", "true")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .delete(APIResult.class);
 
       assertEquals(result.getStatus(), Status.SUCCEEDED);
@@ -973,7 +991,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       try {
         result = target().path("metastore").path("facts").path(table)
           .queryParam("cascade", "true")
-          .request(MediaType.APPLICATION_XML)
+          .request(mediaType)
           .delete(APIResult.class);
         fail("Expected 404");
       } catch (NotFoundException nfe) {
@@ -999,14 +1017,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       FactTable f = createFactTable(table, storages, updatePeriods);
 
       APIResult result = target().path("metastore/facts").path(table)
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
 
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Test get storages
       StringList storageList = target().path("metastore/facts").path(table).path("storages")
-        .request(MediaType.APPLICATION_XML).get(StringList.class);
+        .request(mediaType).get(StringList.class);
       assertEquals(storageList.getElements().size(), 2);
       assertTrue(storageList.getElements().contains("S1"));
       assertTrue(storageList.getElements().contains("S2"));
@@ -1028,13 +1046,13 @@ public class TestMetastoreService extends GrillJerseyTest {
       fs.getStorageUpdatePeriod().add(sup3);
 
       result = target().path("metastore/facts").path(table).path("storages")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createFactStorage(fs)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Get the fact storage
       FactStorage got = target().path("metastore/facts").path(table).path("storages/S3")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(FactStorage.class);
       assertNotNull(got);
       assertEquals(got.getStorage().getName(), "S3");
@@ -1047,19 +1065,19 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Check new storage is added
       storageList = target().path("metastore/facts").path(table).path("storages")
-        .request(MediaType.APPLICATION_XML).get(StringList.class);
+        .request(mediaType).get(StringList.class);
       assertEquals(storageList.getElements().size(), 3);
       assertTrue(storageList.getElements().contains("S3"));
 
       // Drop new storage
       result = target().path("metastore/facts").path(table).path("storages").path("S3")
-        .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+        .request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Now S3 should not be available
       storageList = null;
       storageList = target().path("metastore/facts").path(table).path("storages")
-        .request(MediaType.APPLICATION_XML).get(StringList.class);
+        .request(mediaType).get(StringList.class);
       assertEquals(storageList.getElements().size(), 2);
       assertFalse(storageList.getElements().contains("S3"));
 
@@ -1074,12 +1092,12 @@ public class TestMetastoreService extends GrillJerseyTest {
       supList.getStorageUpdatePeriod().add(s2Sup2);
 
       APIResult updateResult = target().path("metastore/facts").path(table).path("storages/S2")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .put(Entity.xml(cubeObjectFactory.createStorageUpdatePeriodList(supList)), APIResult.class);
       assertEquals(updateResult.getStatus(), Status.SUCCEEDED);
 
       FactStorage s2 = target().path("metastore/facts").path(table).path("storages/S2")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(FactStorage.class);
       EnumSet<UpdatePeriod> s2Periods = EnumSet.noneOf(UpdatePeriod.class);
       for (StorageUpdatePeriod sup : s2.getStorageUpdatePeriod()) {
@@ -1135,7 +1153,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       FactTable f = createFactTable(table, storages, updatePeriods);
 
       APIResult result = target().path("metastore/facts").path(table)
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createFactTable(f)), APIResult.class);
 
       assertEquals(result.getStatus(), Status.SUCCEEDED);
@@ -1144,12 +1162,12 @@ public class TestMetastoreService extends GrillJerseyTest {
       final Date partDate = new Date();
       XPartition xp = createPartition(partDate);
       APIResult partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
       JAXBElement<PartitionList> partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(new GenericType<JAXBElement<PartitionList>>() {});
 
       PartitionList partitions = partitionsElement.getValue();
@@ -1158,14 +1176,14 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .delete(APIResult.class);
 
       assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(new GenericType<JAXBElement<PartitionList>>() {});
 
       partitions = partitionsElement.getValue();
@@ -1174,13 +1192,13 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Add again
       partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was added
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(new GenericType<JAXBElement<PartitionList>>() {});
 
       partitions = partitionsElement.getValue();
@@ -1192,14 +1210,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       String val[] = new String[] {sdf.format(partDate)};
       dropResult = target().path("metastore/facts").path(table).path("storages/S2/partition")
         .path(StringUtils.join(val, ","))
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .delete(APIResult.class);
 
       assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
-        .request(MediaType.APPLICATION_XML)
+        .request(mediaType)
         .get(new GenericType<JAXBElement<PartitionList>>() {});
 
       partitions = partitionsElement.getValue();
