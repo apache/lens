@@ -273,21 +273,13 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  
-/*
-  <grill-url>/metastore/cubes/cubename/facts/factname/storages/storage/partitions
-  - GET - get all the partitions in storage
-  - POST - Add a partition
-  - PUT  - Not used
-  - DELETE - Drop all the partitions
-
-*/
 
   @GET @Path("/facts/{factname}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfFactStorage(@PathParam("factname") String fact,
-                                                     @PathParam("storage") String storage) throws GrillException {
+  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@PathParam("factname") String fact,
+                                                     @PathParam("storage") String storage,
+                                                     @QueryParam("filter") String filter) throws GrillException {
     try {
-      List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(fact, storage);
+      List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(fact, storage, filter);
       PartitionList partList = xCubeObjectFactory.createPartitionList();
       partList.getXPartition().addAll(partitions);
       return xCubeObjectFactory.createPartitionList(partList);
@@ -295,6 +287,19 @@ public class MetastoreResource {
       checkTableNotFound(exc, fact);
       throw exc;
     }
+  }
+
+  @DELETE @Path("/facts/{factname}/storages/{storage}/partitions")
+  public APIResult dropPartitionsOfFactStorageByFilter(@PathParam("factname") String fact,
+                                                         @PathParam("storage") String storage,
+                                                         @QueryParam("filter") String filter) {
+    try {
+      getSvc().dropPartitionsOfFactStorageByFilter(fact, storage, filter);
+    } catch (GrillException exc) {
+      checkTableNotFound(exc, fact);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
   }
 
   @POST @Path("/facts/{factname}/storages/{storage}/partitions")
@@ -310,14 +315,20 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
+  @DELETE @Path("/facts/{factname}/storages/{storage}/partition/{values}")
+  public APIResult dropPartitionOfFactStorageByValues(@PathParam("factname") String fact,
+                                                      @PathParam("storage") String storage,
+                                                      @PathParam("values") String values) {
+    try {
+      getSvc().dropPartitionOfFactStorageByValue(fact, storage, values);
+    } catch (GrillException e) {
+      checkTableNotFound(e, fact);
+      return new APIResult(Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
 
-  /*
-  <grill-url>/metastore/cubes/cubename/facts/factname/storages/storage/partitions?partfilter
-  - GET - get all the partitions in storage with part filter
-  - POST - Not Used
-  - PUT  - Not used
-  - DELETE - Drop all the partitions with the part filter
-
+ /*
   <grill-url>/metastore/cubes/cubename/facts/factname/storages/storage/partitions/<partspec>
   - GET - Get the partition
   - PUT - Update the storage partition
