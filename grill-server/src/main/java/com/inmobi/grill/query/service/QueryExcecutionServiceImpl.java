@@ -34,8 +34,6 @@ import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.QueryResult;
-import com.inmobi.grill.client.api.QueryResultSetMetadata;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
@@ -150,6 +148,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   private class QuerySubmitter implements Runnable {
     @Override
     public void run() {
+      LOG.info("Starting QuerySubmitter thread");
       while (!stopped && !querySubmitter.isInterrupted()) {
         try {
           QueryContext ctx = acceptedQueries.take();
@@ -164,6 +163,10 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
         } catch (GrillException e) {
           LOG.error("Error launching query ", e);
         } catch (InterruptedException e) {
+          LOG.info("Query Submitter has been interrupted, exiting");
+          return;
+        } catch (Exception e) {
+          LOG.error("Error in query submitter", e);
         }
       }
     }
@@ -173,9 +176,12 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     long pollInterval = 1000;
     @Override
     public void run() {
+      LOG.info("Starting Status poller thread");
       while (!stopped && !statusPoller.isInterrupted()) {
         try {
-          for (QueryContext ctx : launchedQueries) {
+          List<QueryContext> launched = new ArrayList<QueryContext>();
+          launched.addAll(launchedQueries);
+          for (QueryContext ctx : launched) {
             try {
               updateStatus(ctx.getQueryHandle());
             } catch (GrillException e) {
@@ -184,8 +190,10 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
           }
           Thread.sleep(pollInterval);
         } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
+          LOG.info("Status poller has been interrupted, exiting");
           return;
+        } catch (Exception e) {
+          LOG.error("Error in status poller", e);
         }
       }
     }
@@ -193,12 +201,14 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
 
   private void updateStatus(QueryHandle handle) throws GrillException {
     QueryContext ctx = allQueries.get(handle);
-    if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
-        !ctx.getStatus().isFinished()) {
-      ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
-      notifyAllListeners();
-      if (ctx.getStatus().isFinished()) {
-        updateFinishedQuery(ctx);
+    if (ctx != null) {
+      if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
+          !ctx.getStatus().isFinished()) {
+        ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
+        notifyAllListeners();
+        if (ctx.getStatus().isFinished()) {
+          updateFinishedQuery(ctx);
+        }
       }
     }
   }
@@ -212,6 +222,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   private class QueryPurger implements Runnable {
     @Override
     public void run() {
+      LOG.info("Starting Query purger thread");
       while (!stopped && !queryPurger.isInterrupted()) {
         try {
           FinishedQuery finished = finishedQueries.take();
@@ -223,7 +234,10 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
         } catch (GrillException e) {
           LOG.error("Error closing  query ", e);
         } catch (InterruptedException e) {
+          LOG.info("QueryPurger has been interrupted, exiting");
           return;
+        } catch (Exception e) {
+          LOG.error("Error in query purger", e);
         }
       }
     }
@@ -232,6 +246,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   private class PreparedQueryPurger implements Runnable {
     @Override
     public void run() {
+      LOG.info("Starting Prepared Query purger thread");
       while (!stopped && !prepareQueryPurger.isInterrupted()) {
         try {
           PreparedQueryContext prepared = preparedQueryQueue.take();
@@ -241,7 +256,10 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
         } catch (GrillException e) {
           LOG.error("Error closing prepared query ", e);
         } catch (InterruptedException e) {
+          LOG.info("PreparedQueryPurger has been interrupted, exiting");
           return;
+        } catch (Exception e) {
+          LOG.error("Error in prepared query purger", e);
         }
       }
     }
@@ -527,7 +545,6 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public GrillResultSet fetchResultSet(QueryHandle queryHandle, long startIndex,
       int fetchSize) throws GrillException {
-    // TODO Auto-generated method stub
     GrillResultSet resultSet = getResultset(queryHandle);
     return resultSet;
   }
