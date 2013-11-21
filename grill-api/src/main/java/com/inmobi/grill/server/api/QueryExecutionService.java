@@ -188,11 +188,25 @@ public interface QueryExecutionService extends GrillService {
   public boolean destroyPrepared(QueryPrepareHandle prepared)
       throws GrillException;
 
-  PreparedQueryContext getPreparedQueryContext(QueryPrepareHandle prepareHandle)
+  /**
+   * Get prepared query
+   * 
+   * @param prepareHandle
+   * @return PreparedQueryContext object
+   * @throws GrillException
+   */
+  public PreparedQueryContext getPreparedQueryContext(QueryPrepareHandle prepareHandle)
       throws GrillException;
 
-  boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
+  /**
+   * Update configuration for prepared query
+   * 
+   * @param prepareHandle
+   * @param newconf
+   * @return true if update is successful, false otherwise
+   * 
+   * @throws GrillException
+   */
+  public boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
       throws GrillException;
-
-
 }
