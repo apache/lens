@@ -1,13 +1,16 @@
 package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 import org.apache.hadoop.fs.Path;
@@ -144,7 +147,7 @@ public class TestDDL {
       }
       // storage cost validation
       for (String storage : fact.getStorages()) {
-        String tableName = MetastoreUtil.getFactStorageTableName(
+        String tableName = MetastoreUtil.getStorageTableName(
             fact.getName(), Storage.getPrefix(storage));
         Table tbl = cc.getHiveTable(tableName);
         Assert.assertEquals(Double.toString(fact.weight()),
@@ -160,15 +163,17 @@ public class TestDDL {
     Date now = cal.getTime();
     PopulatePartitions pp = new PopulatePartitions(conf);
     pp.populateAllDimParts(new Path("file:///tmp/hive/warehouse/parts/metadata"),
-        new SimpleDateFormat(UpdatePeriod.HOURLY.format()),
+        UpdatePeriod.HOURLY.format(),
         now, false);
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
     for (CubeDimensionTable dim : cc.getAllDimensionTables()) {
       String dimName = dim.getName();
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
           Storage.getPrefix(CubeDDL.YODA_STORAGE));
+      Map<String, Date> timeParts = new HashMap<String, Date>();
+      timeParts.put(DimensionDDL.dim_time_part_column, cal.getTime());
       Assert.assertTrue(cc.partitionExists(storageTableName,
-          UpdatePeriod.HOURLY, cal.getTime()));
+          UpdatePeriod.HOURLY, timeParts));
     }
   }
 
@@ -180,7 +185,7 @@ public class TestDDL {
     cal.add(Calendar.DAY_OF_MONTH, -2);
     Date before = cal.getTime();
     PopulatePartitions pp = new PopulatePartitions(conf);
-    SimpleDateFormat format = new SimpleDateFormat(UpdatePeriod.DAILY.format());
+    DateFormat format = UpdatePeriod.DAILY.format();
     pp.populateCubeParts("request", before, now,
         UpdatePeriod.DAILY, new Path("file:////tmp/hive/warehouse/parts"),
         format, "all", false);
@@ -240,14 +245,14 @@ public class TestDDL {
         filter.toString()));
 
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName2,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName3,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
 
     List<Partition> latestParts = cc.getPartitionsByFilter(storageTableName1,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT));
     Assert.assertEquals(latestParts.size(), 1);
   }
 
@@ -259,7 +264,7 @@ public class TestDDL {
     cal.add(Calendar.HOUR_OF_DAY, -2);
     Date before = cal.getTime();
     PopulatePartitions pp = new PopulatePartitions(conf);
-    SimpleDateFormat format = new SimpleDateFormat(UpdatePeriod.HOURLY.format());
+    DateFormat format = UpdatePeriod.HOURLY.format();
     pp.populateCubeParts("request", before, now,
         UpdatePeriod.HOURLY, new Path("file:////tmp/hive/warehouse/parts"),
         format, "all", false);
@@ -321,16 +326,16 @@ public class TestDDL {
         filter.toString()));
 
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName1,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName2,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName3,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
     Assert.assertTrue(cc.partitionExistsByFilter(storageTableName4,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT)));
 
     List<Partition> latestParts = cc.getPartitionsByFilter(storageTableName1,
-        Storage.getLatestPartFilter(CubeDDL.PART_KEY_IT));
+        StorageConstants.getLatestPartFilter(CubeDDL.PART_KEY_IT));
     Assert.assertEquals(latestParts.size(), 1);
   }
 }

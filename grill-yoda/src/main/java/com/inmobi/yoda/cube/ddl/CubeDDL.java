@@ -24,6 +24,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
 import org.apache.hadoop.hive.ql.cube.metadata.ReferencedDimension;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
+import org.apache.hadoop.hive.ql.cube.metadata.StorageTableDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
@@ -228,9 +229,11 @@ public class CubeDDL {
 
   private void createFactTable(List<String> cubeNames, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
-    Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
+    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
         summary, grains, cost,
-        cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null);
+        cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null,
+        storageTables);
     List<FieldSchema> columns = getNobColList();
 
     LOG.info("Creating fact table " + summary +
@@ -238,23 +241,30 @@ public class CubeDDL {
         "columns:" + columns + " cost:" + cost);
 
     client.createCubeFactTable(cubeNames, summary, columns,
-        storageAggregatePeriods, cost, props);
+        storageAggregatePeriods, cost, props, storageTables);
   }
 
-  public Map<Storage, Set<UpdatePeriod>> createStorages(
-      String summary, Set<Grain> grains, double cost, boolean hasPIEStorage) {
+  public Map<String, Set<UpdatePeriod>> createStorages(
+      String summary, Set<Grain> grains, double cost, boolean hasPIEStorage,
+      Map<Storage, StorageTableDesc> storageTables) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
-    Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = 
-        new HashMap<Storage, Set<UpdatePeriod>>();
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods = 
+        new HashMap<String, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
     tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
-    Storage storage = new HDFSStorage(YODA_STORAGE,
-        RCFileInputFormat.class.getCanonicalName(),
-        RCFileOutputFormat.class.getCanonicalName(),
-        LazyNOBColumnarSerde.class.getCanonicalName(),
-        true, tableParams, null, null);
-    storage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+    Storage storage = new HDFSStorage(YODA_STORAGE);
+    StorageTableDesc sTbl = new StorageTableDesc();
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+    timePartCols.add(PART_KEY_IT);
+    sTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
+    sTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
+    sTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
+    sTbl.setTblProps(tableParams);
+    sTbl.setPartCols(partCols);
+    sTbl.setTimePartCols(timePartCols);
     Set<UpdatePeriod> updatePeriods = new HashSet<UpdatePeriod>();
     for (Grain g : grains) {
       if (g.getFileSystemPrefix().equals("none")) {
@@ -267,25 +277,37 @@ public class CubeDDL {
             .toUpperCase()));          
       }
     }
-    storageAggregatePeriods.put(storage, updatePeriods);
+    storageAggregatePeriods.put(storage.getName(), updatePeriods);
+    storageTables.put(storage, sTbl);
 
     // create storage with PIE partitions
     if (hasPIEStorage) {
-      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE,
-          RCFileInputFormat.class.getCanonicalName(),
-          RCFileOutputFormat.class.getCanonicalName(),
-          LazyNOBColumnarSerde.class.getCanonicalName(),
-          true, tableParams, null, null);
+      Map<String, String> pieTableParams = new HashMap<String, String>();
+      pieTableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
+          StorageTableDesc pieTbl = new StorageTableDesc();
+      ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();
+      List<String> pieTimePartCols = new ArrayList<String>();
       if (!summary.endsWith(RAW_FACT_NAME)) {
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_PT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+        pieTimePartCols.add(PART_KEY_PT);
+        pieTimePartCols.add(PART_KEY_IT);
+        pieTimePartCols.add(PART_KEY_ET);
       } else {
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
+        piePartCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
+        pieTimePartCols.add(PART_KEY_IT);
       }
-
-      storageAggregatePeriods.put(piestorage, updatePeriods);
+      pieTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
+      pieTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
+      pieTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
+      pieTbl.setTblProps(pieTableParams);
+      pieTbl.setPartCols(piePartCols);
+      pieTbl.setTimePartCols(pieTimePartCols);
+      storageAggregatePeriods.put(piestorage.getName(), updatePeriods);
+      storageTables.put(piestorage, pieTbl);
     }
     return storageAggregatePeriods;
   }

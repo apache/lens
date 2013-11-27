@@ -9,6 +9,7 @@ import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
@@ -38,19 +39,37 @@ public class TestCubeSelectorService {
     Map<String, List<TableReference>> dimensionReferences =
       new HashMap<String, List<TableReference>>();
 
-    Storage hdfsStorage1 = new HDFSStorage("C1",
-      TextInputFormat.class.getCanonicalName(),
-      HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    Storage hdfsStorage2 = new HDFSStorage("C2",
-      TextInputFormat.class.getCanonicalName(),
-      HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    Map<Storage, UpdatePeriod> snapshotDumpPeriods =
-      new HashMap<Storage, UpdatePeriod>();
-    snapshotDumpPeriods.put(hdfsStorage1, UpdatePeriod.HOURLY);
-    snapshotDumpPeriods.put(hdfsStorage2, null);
+    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(new FieldSchema("dt",
+        serdeConstants.STRING_TYPE_NAME,
+        "date partition"));
+    timePartCols.add("dt");
+    Storage hdfsStorage1 = Storage.createInstance(HDFSStorage.class.getCanonicalName(), "C1");
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s1.setPartCols(partCols);
+    s1.setTimePartCols(timePartCols);
+    dumpPeriods.put(hdfsStorage1.getName(), UpdatePeriod.HOURLY);
+
+    Storage hdfsStorage2 = Storage.createInstance(HDFSStorage.class.getCanonicalName(), "C2");
+    StorageTableDesc s2 = new StorageTableDesc();
+    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    dumpPeriods.put(hdfsStorage2.getName(), null);
+
+    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
+    storageTables.put(hdfsStorage1, s1);
+    storageTables.put(hdfsStorage2, s2);
+
+    Map<String, String> dimProps = new HashMap<String, String>();
+    dimProps.put(MetastoreConstants.TIMED_DIMENSION, "dt");
 
     client.createCubeDimensionTable(dimName, dimColumns, 0L,
-      dimensionReferences, snapshotDumpPeriods, null);
+        dimensionReferences, dumpPeriods, dimProps, storageTables);
+
   }
 
   @BeforeTest
