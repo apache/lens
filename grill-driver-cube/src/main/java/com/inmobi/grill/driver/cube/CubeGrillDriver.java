@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import org.apache.log4j.Logger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -45,7 +46,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   public CubeGrillDriver(Configuration conf, DriverSelector driverSelector)
       throws GrillException {
-    this.conf = conf;
+    this.conf = new HiveConf(conf, CubeGrillDriver.class);
     this.drivers = new ArrayList<GrillDriver>();
     loadDrivers();
     this.driverSelector = driverSelector;
