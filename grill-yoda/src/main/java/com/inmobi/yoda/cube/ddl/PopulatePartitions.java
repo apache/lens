@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,6 +29,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.StoragePartitionDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.log4j.BasicConfigurator;
 
 /**
  * This class populates the partitions for a given range for a cube.
@@ -36,7 +39,7 @@ import org.apache.hadoop.hive.ql.session.SessionState;
  *
  */
 public class PopulatePartitions {
-
+  public static final Log LOG = LogFactory.getLog(PopulatePartitions.class);
   private final HiveConf conf;
   private PathFilter filter;
 
@@ -68,7 +71,11 @@ public class PopulatePartitions {
       timeParts.put(DimensionDDL.dim_time_part_column, partitionTimestamp);
       StoragePartitionDesc partSpec = new StoragePartitionDesc(dim.getName(), timeParts, null, UpdatePeriod.HOURLY);
       partSpec.setLocation(partPath.toString());
-      client.addPartition(partSpec, new HDFSStorage(CubeDDL.YODA_STORAGE));
+      try {
+        client.addPartition(partSpec, new HDFSStorage(CubeDDL.YODA_STORAGE));
+      } catch (HiveException exc) {
+        LOG.error("Error adding dim partition for : " + dim.getName(), exc);
+      }
     }
   }
 
@@ -168,7 +175,11 @@ public class PopulatePartitions {
               StoragePartitionDesc partSpec = new StoragePartitionDesc(
                   fact.getName(), partitionTimestamps, null, updatePeriod);
               partSpec.setLocation(partPath.toString());
-              client.addPartition(partSpec, storage);
+              try {
+                client.addPartition(partSpec, storage);
+              } catch (HiveException exc) {
+                LOG.error("Error adding cube partition", exc);
+              }
             }
           } else {
             if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
@@ -187,7 +198,11 @@ public class PopulatePartitions {
                   StoragePartitionDesc partSpec = new StoragePartitionDesc(
                       fact.getName(), partitionTimestamps, nonTimepartSpec, updatePeriod);
                   partSpec.setLocation(cstat.getPath().toString());
-                  client.addPartition(partSpec, storage);
+                  try {
+                    client.addPartition(partSpec, storage);
+                  } catch (HiveException exc) {
+                    LOG.error("Error adding cube partition", exc);
+                  }
                 }
               } else {
                 partPath = new Path(new Path(new Path(summariesPath, fact.getName()),
@@ -232,7 +247,11 @@ public class PopulatePartitions {
                     StoragePartitionDesc partSpec = new StoragePartitionDesc(
                         fact.getName(), partitionTimestamps, nonTimePartSpec, updatePeriod);
                     partSpec.setLocation(estat.getPath().toString());
-                    client.addPartition(partSpec, storage);
+                    try {
+                      client.addPartition(partSpec, storage);
+                    } catch (HiveException exc) {
+                      LOG.error("Error adding cube partition", exc);
+                    }
                   }
                 }
               }
@@ -266,6 +285,7 @@ public class PopulatePartitions {
           " UpdatePeriod basePath pathDateFormat (summarylist|raw|all) ]");
       return;
     }
+    BasicConfigurator.configure();
     HiveConf conf = new HiveConf(PopulatePartitions.class);
     SessionState.start(conf);
     PopulatePartitions pp = new PopulatePartitions(conf);
