@@ -192,6 +192,7 @@ public class DimensionDDL {
     client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
         dimensionReferences,
         snapshotDumpPeriods, properties, storageTables);
+    System.out.println("Created dimension:" + dimName);
   }
 
   public Map<Storage, StorageTableDesc> createStorages(String dimName) {
@@ -216,5 +217,6 @@ public class DimensionDDL {
     SessionState.start(conf);
     DimensionDDL cd = new DimensionDDL(conf);
     cd.createAllDimensions();
+    System.out.println("Created all dimensions");
   }
 }

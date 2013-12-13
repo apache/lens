@@ -191,6 +191,7 @@ public class CubeDDL {
           summaryProperties.get(summary),
           cubeReader.getSummaryGrains(cubeName, summary));
     }
+    System.out.println("All cubes and fact tables created!");
   }
 
   private void createCube(String cubeName) throws HiveException {
@@ -202,6 +203,7 @@ public class CubeDDL {
         cubes.get(cubeName).getMeasures() + " with dimensions:" +
         cubes.get(cubeName).getDimensions());
     client.createCube(cubes.get(cubeName));
+    System.out.println("Created cube " + cubeName);
   }
 
   public static List<FieldSchema> getNobColList() {
@@ -242,6 +244,7 @@ public class CubeDDL {
 
     client.createCubeFactTable(cubeNames, summary, columns,
         storageAggregatePeriods, cost, props, storageTables);
+    System.out.println("Created fact:" + summary);
   }
 
   public Map<String, Set<UpdatePeriod>> createStorages(

@@ -75,6 +75,7 @@ public class PopulatePartitions {
         client.addPartition(partSpec, new HDFSStorage(CubeDDL.YODA_STORAGE));
       } catch (HiveException exc) {
         LOG.error("Error adding dim partition for : " + dim.getName(), exc);
+        System.out.println("Failed to add partition for" + partPath);
       }
     }
   }
@@ -179,6 +180,7 @@ public class PopulatePartitions {
                 client.addPartition(partSpec, storage);
               } catch (HiveException exc) {
                 LOG.error("Error adding cube partition", exc);
+                System.out.println("Failed to add partition for" + partPath);
               }
             }
           } else {
@@ -202,6 +204,7 @@ public class PopulatePartitions {
                     client.addPartition(partSpec, storage);
                   } catch (HiveException exc) {
                     LOG.error("Error adding cube partition", exc);
+                    System.out.println("Failed to add partition for" + cstat.getPath());
                   }
                 }
               } else {
@@ -251,6 +254,7 @@ public class PopulatePartitions {
                       client.addPartition(partSpec, storage);
                     } catch (HiveException exc) {
                       LOG.error("Error adding cube partition", exc);
+                      System.out.println("Failed to add partition for" + estat.getPath());
                     }
                   }
                 }
