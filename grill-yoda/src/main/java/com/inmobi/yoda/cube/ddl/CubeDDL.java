@@ -2,6 +2,7 @@ package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
+import org.joda.time.DateTime;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
@@ -112,24 +114,30 @@ public class CubeDDL {
           "pt,et,it");
       // Construct CubeDimension and CubeMeasure objects for each dimension and 
       // measure
-      for (String dimName : cubeReader.getAllDimensionNames(cubeName)) {
+      for (Map.Entry<String, DateTime> dimEntry :
+          cubeReader.getAllDimensions(cubeName).entrySet()) {
+        String dimName = dimEntry.getKey();
         CubeDimension dim;
         FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
             "dim col");
+        Date startTime = dimEntry.getValue().toDate();
         if (dimDDL.getDimensionReferences(cubeNameInJoinChain, dimName) != null)
         {
           dim = new ReferencedDimension(column, dimDDL.getDimensionReferences(
-              cubeNameInJoinChain, dimName));
+              cubeNameInJoinChain, dimName), startTime, null, 0.0);
         } else {
-          dim = new BaseDimension(column);
+          dim = new BaseDimension(column, startTime, null, 0.0);
         }
         dimensions.add(dim);
       }
 
-      for (String msrName : cubeReader.getAllMeasureNames(cubeName)) {
+      for (Map.Entry<String, DateTime> msrEntry:
+          cubeReader.getAllMeasures(cubeName).entrySet()) {
+        String msrName = msrEntry.getKey();
+        Date startTime = msrEntry.getValue().toDate();
         FieldSchema column = new FieldSchema(msrName, MEASURE_TYPE, "msr col");
         CubeMeasure msr = new ColumnMeasure(column, null,
-            MEASURE_DEFAULT_AGGREGATE, null);
+            MEASURE_DEFAULT_AGGREGATE, null, startTime, null, 0.0);
         measures.add(msr);
       }
       this.cubes.put(cubeName, new Cube(cubeTableName, measures, dimensions,

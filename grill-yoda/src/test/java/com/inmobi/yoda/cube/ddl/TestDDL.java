@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 
 import org.apache.hadoop.fs.Path;
@@ -26,6 +27,9 @@ import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -82,7 +86,7 @@ public class TestDDL {
   }
 
   @Test
-  public void testAllCubes() throws HiveException, IOException {
+  public void testAllCubes() throws HiveException, IOException, ParseException {
     CubeDDL cubeDDL = new CubeDDL(dimDDL, conf);
     cubeDDL.createAllCubes();
     CubeMetastoreClient cc =  CubeMetastoreClient.getInstance(conf);
@@ -109,6 +113,20 @@ public class TestDDL {
       Assert.assertFalse(cc.getAllFactTables(cube).isEmpty());
     }
 
+    CubeDimension dim = cc.getCube("cube_downloadmatch").getDimensionByName("dl_carrier_region_id");
+    Assert.assertNotNull(dim);
+    Assert.assertNotNull(dim.getStartTime());
+    DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd-HH").withZoneUTC();
+    SimpleDateFormat format  = new SimpleDateFormat("yyyy-MM-dd-HH");
+    Assert.assertEquals(format.format(dim.getStartTime()),
+        format.format(dateFormatter.parseDateTime("2012-09-25-00").toDate()));
+
+  /*  dim = cc.getCube("cube_request").getDimensionByName("rq_geo_type");
+    Assert.assertNotNull(dim);
+    Assert.assertNotNull(dim.getStartTime());
+    Assert.assertEquals(dim.getStartTime(),
+        format.parse("2013-01-28-10"));
+*/
     List<CubeFactTable> facts = cc.getAllFacts();
     Assert.assertEquals(22, facts.size());
     System.out.println("All Facts:" + facts);
