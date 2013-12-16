@@ -204,6 +204,7 @@ public class DimensionDDL {
     partCols.add(new FieldSchema(dim_time_part_column, "string", "dim part column"));
     timePartCols.add(dim_time_part_column);
     StorageTableDesc sTbl = new StorageTableDesc();
+    sTbl.setExternal(true);
     sTbl.setInputFormat(TextInputFormat.class.getCanonicalName());
     sTbl.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
     sTbl.setPartCols(partCols);

@@ -270,6 +270,7 @@ public class CubeDDL {
     List<String> timePartCols = new ArrayList<String>();
     partCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
     timePartCols.add(PART_KEY_IT);
+    sTbl.setExternal(true);
     sTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
     sTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
     sTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
@@ -296,7 +297,7 @@ public class CubeDDL {
       Map<String, String> pieTableParams = new HashMap<String, String>();
       pieTableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
       Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
-          StorageTableDesc pieTbl = new StorageTableDesc();
+      StorageTableDesc pieTbl = new StorageTableDesc();
       ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();
       List<String> pieTimePartCols = new ArrayList<String>();
       if (!summary.endsWith(RAW_FACT_NAME)) {
@@ -311,6 +312,7 @@ public class CubeDDL {
         piePartCols.add(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
         pieTimePartCols.add(PART_KEY_IT);
       }
+      pieTbl.setExternal(true);
       pieTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
       pieTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
       pieTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
