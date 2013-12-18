@@ -9,7 +9,7 @@
     <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
     <hive.version>0.12.0-SNAPSHOT</hive.version>
     <hadoop.version>0.20.2-cdh3u5</hadoop.version>
-    <yoda.version>0.6.27</yoda.version>
+    <yoda.version>0.6.74-SNAPSHOT</yoda.version>
   </properties>
 
   <groupId>com.inmobi.grill</groupId>
@@ -191,6 +191,18 @@
             <groupId>org.apache.hadoop.hive</groupId>
             <artifactId>hive-exec</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
        <dependency>
@@ -207,7 +219,7 @@
        <dependency>
            <groupId>com.inmobi.dw.yoda</groupId>
            <artifactId>fpjamr</artifactId>
-           <version>0.6.56-SNAPSHOT</version>
+           <version>${yoda.version}</version>
            <classifier>without-dependency</classifier>
            <exclusions>
                <exclusion>

@@ -33,6 +33,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
 import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
@@ -102,6 +104,13 @@ public class CubeDDL {
     loadCubeDefinition();
   }
 
+  static DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd-HH").withZoneUTC();
+  private static Date defaultStartTime;
+  
+  static{
+    defaultStartTime = dateFormatter.parseDateTime("2011-04-01-00").toDate();
+  }
+  
   private void loadCubeDefinition() {
     for (String cubeName : cubeReader.getCubeNames()) {
       String cubeTableName = CUBE_NAME_PFX + cubeName;
@@ -115,12 +124,15 @@ public class CubeDDL {
       // Construct CubeDimension and CubeMeasure objects for each dimension and 
       // measure
       for (Map.Entry<String, DateTime> dimEntry :
-          cubeReader.getAllDimensions(cubeName).entrySet()) {
+          cubeReader.getAllDimensionsWithActualStartTime(cubeName).entrySet()) {
         String dimName = dimEntry.getKey();
         CubeDimension dim;
         FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
             "dim col");
-        Date startTime = dimEntry.getValue().toDate();
+        Date startTime = defaultStartTime;
+        if (dimEntry.getValue() != null) {
+          startTime = dimEntry.getValue().toDate();
+        }
         if (dimDDL.getDimensionReferences(cubeNameInJoinChain, dimName) != null)
         {
           dim = new ReferencedDimension(column, dimDDL.getDimensionReferences(
@@ -132,9 +144,12 @@ public class CubeDDL {
       }
 
       for (Map.Entry<String, DateTime> msrEntry:
-          cubeReader.getAllMeasures(cubeName).entrySet()) {
+          cubeReader.getAllMeasuresWithActualStartTime(cubeName).entrySet()) {
         String msrName = msrEntry.getKey();
-        Date startTime = msrEntry.getValue().toDate();
+        Date startTime = defaultStartTime;
+        if (msrEntry.getValue() != null) {
+          startTime = msrEntry.getValue().toDate();
+        }
         FieldSchema column = new FieldSchema(msrName, MEASURE_TYPE, "msr col");
         CubeMeasure msr = new ColumnMeasure(column, null,
             MEASURE_DEFAULT_AGGREGATE, null, startTime, null, 0.0);
