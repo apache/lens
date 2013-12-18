@@ -217,6 +217,13 @@ public class DimensionDDL {
     HiveConf conf = new HiveConf(DimensionDDL.class);
     SessionState.start(conf);
     DimensionDDL cd = new DimensionDDL(conf);
+    if (args.length > 0) {
+      if (args[0].equals("-db")) {
+        String dbName = args[1];
+        SessionState.get().setCurrentDatabase(dbName);
+      }
+    }
+    LOG.info("Creating all dimensions");
     cd.createAllDimensions();
     System.out.println("Created all dimensions");
   }

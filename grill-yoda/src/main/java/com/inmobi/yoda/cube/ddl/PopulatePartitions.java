@@ -284,8 +284,8 @@ public class PopulatePartitions {
       throws HiveException, ParseException, IOException {
     if (args.length < 4) {
       System.out.println("Usage:" +
-          "\t [-dims basepath timestamp pathDateFormat]\n" +
-          "\t [cubeName startPartition endPartition" +
+          "\t [ [-db dbName] -dims basepath timestamp pathDateFormat]\n" +
+          "\t [ [-db dbName] cubeName startPartition endPartition" +
           " UpdatePeriod basePath pathDateFormat (summarylist|raw|all) ]");
       return;
     }
@@ -293,21 +293,29 @@ public class PopulatePartitions {
     HiveConf conf = new HiveConf(PopulatePartitions.class);
     SessionState.start(conf);
     PopulatePartitions pp = new PopulatePartitions(conf);
-    if (args[0].equalsIgnoreCase("-dims")) {
-      String baseDimPath = args[1];
-      String dimTS = args[2];
-      String pathDateFormat = args[3];
+    int startIndex = 0;
+    if (args.length > 0) {
+      if (args[0].equals("-db")) {
+        String dbName = args[1];
+        SessionState.get().setCurrentDatabase(dbName);
+        startIndex = 2;
+      }
+    }
+    if (args[startIndex].equalsIgnoreCase("-dims")) {
+      String baseDimPath = args[startIndex + 1];
+      String dimTS = args[startIndex + 2];
+      String pathDateFormat = args[startIndex + 3];
       SimpleDateFormat dateFormat = new SimpleDateFormat(pathDateFormat);
       pp.populateAllDimParts(new Path(baseDimPath), dateFormat,
           dateFormat.parse(dimTS), true);
     } else {
-      String cubeName = args[0];
-      String startPos = args[1];
-      String endPos = args[2];
-      String updatePeriod = args[3];
-      String basePath = args[4];
-      String pathDateFormat = args[5];
-      String summaries = args[6];
+      String cubeName = args[startIndex];
+      String startPos = args[startIndex + 1];
+      String endPos = args[startIndex + 2];
+      String updatePeriod = args[startIndex + 3];
+      String basePath = args[startIndex + 4];
+      String pathDateFormat = args[startIndex + 5];
+      String summaries = args[startIndex + 6];
 
       UpdatePeriod p = UpdatePeriod.valueOf(updatePeriod.toUpperCase());
       SimpleDateFormat dateFormat = new SimpleDateFormat(pathDateFormat);
