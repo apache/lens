@@ -11,8 +11,10 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimension;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
@@ -21,6 +23,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.StorageTableDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.TableReference;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.TextInputFormat;
@@ -189,10 +192,25 @@ public class DimensionDDL {
 
     Map<String, String> properties = new HashMap<String, String>();
     properties.put(MetastoreConstants.TIMED_DIMENSION, dim_time_part_column);
-    client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
-        dimensionReferences,
-        snapshotDumpPeriods, properties, storageTables);
-    System.out.println("Created dimension:" + dimName);
+    
+    if (Hive.get().getTable(dimName, false) == null) {
+      client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
+          dimensionReferences,
+          snapshotDumpPeriods, properties, storageTables);
+      System.out.println("Created dimension:" + dimName);
+    } else {
+      CubeDimensionTable original = client.getDimensionTable(dimName);
+      CubeDimensionTable dimTable = new CubeDimensionTable(dimName, columns,
+          Double.valueOf(0.0), snapshotDumpPeriods, dimensionReferences, properties);
+      if (original == null) {
+        System.out.println(dimName + " is not a dimension table");
+      } else if (!original.equals(dimTable)) {
+        System.out.println("Altering dimension table original:" + original + " new:" + dimTable);
+        client.alterCubeDimensionTable(dimName, dimTable);
+      } else {
+        System.out.println("Nothing to alter for" + dimTable);
+      }
+    }
   }
 
   public Map<Storage, StorageTableDesc> createStorages(String dimName) {
@@ -213,13 +231,16 @@ public class DimensionDDL {
     return storages;
   }
 
-  public static void main(String[] args) throws IOException, HiveException {
+  public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(DimensionDDL.class);
     SessionState.start(conf);
     DimensionDDL cd = new DimensionDDL(conf);
     if (args.length > 0) {
       if (args[0].equals("-db")) {
         String dbName = args[1];
+        Database database = new Database();
+        database.setName(dbName);
+        Hive.get().createDatabase(database, true);
         SessionState.get().setCurrentDatabase(dbName);
       }
     }

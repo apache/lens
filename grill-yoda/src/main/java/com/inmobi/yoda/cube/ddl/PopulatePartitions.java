@@ -20,6 +20,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
@@ -27,6 +28,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.StoragePartitionDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.BasicConfigurator;
@@ -281,7 +283,7 @@ public class PopulatePartitions {
   }
 
   public static void main(String[] args)
-      throws HiveException, ParseException, IOException {
+      throws Exception {
     if (args.length < 4) {
       System.out.println("Usage:" +
           "\t [ [-db dbName] -dims basepath timestamp pathDateFormat]\n" +
@@ -297,6 +299,9 @@ public class PopulatePartitions {
     if (args.length > 0) {
       if (args[0].equals("-db")) {
         String dbName = args[1];
+        Database database = new Database();
+        database.setName(dbName);
+        Hive.get().createDatabase(database, true);
         SessionState.get().setCurrentDatabase(dbName);
         startIndex = 2;
       }
