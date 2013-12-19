@@ -150,8 +150,10 @@ public class TestDDL {
       // Assert.assertEquals(fact.getColumns(), CubeDDL.getNobColList());
       if (fact.getName().contains(CubeDDL.RAW_FACT_NAME)) {
         Assert.assertNull(fact.getValidColumns()); 
+        Assert.assertFalse(fact.isAggregated());
       } else {
         Assert.assertNotNull(fact.getValidColumns());             
+        Assert.assertTrue(fact.isAggregated());
       }
       if (factsWithPIEStorage.contains(fact.getName())) {
         Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_PIE_STORAGE));

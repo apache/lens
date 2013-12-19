@@ -22,6 +22,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeDimension;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMeasure;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
 import org.apache.hadoop.hive.ql.cube.metadata.ReferencedDimension;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
@@ -201,14 +202,17 @@ public class CubeDDL {
       List<String> cubeNames = entry.getValue();
       String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
       rawGrain.add(cubeReader.getCubeGrain(cubeName));
+      Map<String, String> rawProps = new HashMap<String, String>();
+      rawProps.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
       createFactTable(cubeNames, cubeNames.get(0) + "_" + RAW_FACT_NAME,
-          cubeReader.getCost(cubeName), null, rawGrain);
+          cubeReader.getCost(cubeName), rawProps, rawGrain);
     }
 
     // create summaries
     for (String summary : factToCubes.keySet()) {
       List<String> cubeNames = factToCubes.get(summary);
       String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
+      summaryProperties.get(summary).put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "true");
       createFactTable(cubeNames, summary,
           cubeReader.getAvgSummaryCost(cubeName, summary),
           summaryProperties.get(summary),
