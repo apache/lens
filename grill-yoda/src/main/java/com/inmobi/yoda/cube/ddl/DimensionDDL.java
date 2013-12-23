@@ -5,22 +5,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimension;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
+import org.apache.hadoop.hive.ql.cube.metadata.StorageTableDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.TableReference;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.mapred.TextInputFormat;
@@ -32,6 +35,7 @@ public class DimensionDDL {
   public static final String metadata_field_info_file = "field_info.csv";
   public static final String join_chain_info_file = "join_chain_info.csv";
   public static final UpdatePeriod dimension_dump_period = UpdatePeriod.HOURLY;
+  public static final String dim_time_part_column = "dt";
 
   private static class FieldInfo {
     int id; // seq id
@@ -179,33 +183,69 @@ public class DimensionDDL {
         dimensionReferences.put(fi.name, references);
       }
     }
-    Map<Storage, UpdatePeriod> snapshotDumpPeriods = 
-        new HashMap<Storage, UpdatePeriod>();
-    Set<Storage> storages = createStorages(dimName);
-    for (Storage storage: storages) {
-      snapshotDumpPeriods.put(storage, dimension_dump_period);
+    Map<String, UpdatePeriod> snapshotDumpPeriods = 
+        new HashMap<String, UpdatePeriod>();
+    Map<Storage, StorageTableDesc> storageTables = createStorages(dimName);
+    for (Storage storage: storageTables.keySet()) {
+      snapshotDumpPeriods.put(storage.getName(), dimension_dump_period);
     }
 
     Map<String, String> properties = new HashMap<String, String>();
-    client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
-        dimensionReferences,
-        snapshotDumpPeriods, properties);
+    properties.put(MetastoreConstants.TIMED_DIMENSION, dim_time_part_column);
+    
+    if (Hive.get().getTable(dimName, false) == null) {
+      client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
+          dimensionReferences,
+          snapshotDumpPeriods, properties, storageTables);
+      System.out.println("Created dimension:" + dimName);
+    } else {
+      CubeDimensionTable original = client.getDimensionTable(dimName);
+      CubeDimensionTable dimTable = new CubeDimensionTable(dimName, columns,
+          Double.valueOf(0.0), snapshotDumpPeriods, dimensionReferences, properties);
+      if (original == null) {
+        System.out.println(dimName + " is not a dimension table");
+      } else if (!original.equals(dimTable)) {
+        System.out.println("Altering dimension table original:" + original + " new:" + dimTable);
+        client.alterCubeDimensionTable(dimName, dimTable);
+      } else {
+        System.out.println("Nothing to alter for" + dimTable);
+      }
+    }
   }
 
-  public Set<Storage> createStorages(String dimName) {
-    Set<Storage> storages =  new HashSet<Storage>();
-    Storage storage = new HDFSStorage(CubeDDL.YODA_STORAGE,
-        TextInputFormat.class.getCanonicalName(),
-        HiveIgnoreKeyTextOutputFormat.class.getCanonicalName(),
-        null, true, null, null, null);
-    storages.add(storage);
+  public Map<Storage, StorageTableDesc> createStorages(String dimName) {
+    Map<Storage, StorageTableDesc> storages =  new HashMap<Storage, StorageTableDesc>();
+    
+    Storage storage = new HDFSStorage(CubeDDL.YODA_STORAGE);
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(new FieldSchema(dim_time_part_column, "string", "dim part column"));
+    timePartCols.add(dim_time_part_column);
+    StorageTableDesc sTbl = new StorageTableDesc();
+    sTbl.setExternal(true);
+    sTbl.setInputFormat(TextInputFormat.class.getCanonicalName());
+    sTbl.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    sTbl.setPartCols(partCols);
+    sTbl.setTimePartCols(timePartCols);
+    storages.put(storage, sTbl);
     return storages;
   }
 
-  public static void main(String[] args) throws IOException, HiveException {
+  public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(DimensionDDL.class);
     SessionState.start(conf);
     DimensionDDL cd = new DimensionDDL(conf);
+    if (args.length > 0) {
+      if (args[0].equals("-db")) {
+        String dbName = args[1];
+        Database database = new Database();
+        database.setName(dbName);
+        Hive.get().createDatabase(database, true);
+        SessionState.get().setCurrentDatabase(dbName);
+      }
+    }
+    LOG.info("Creating all dimensions");
     cd.createAllDimensions();
+    System.out.println("Created all dimensions");
   }
 }

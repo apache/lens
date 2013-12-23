@@ -2,6 +2,7 @@ package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,23 +14,31 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.BaseDimension;
 import org.apache.hadoop.hive.ql.cube.metadata.ColumnMeasure;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimension;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMeasure;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
 import org.apache.hadoop.hive.ql.cube.metadata.ReferencedDimension;
 import org.apache.hadoop.hive.ql.cube.metadata.Storage;
+import org.apache.hadoop.hive.ql.cube.metadata.StorageTableDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
@@ -99,6 +108,13 @@ public class CubeDDL {
     loadCubeDefinition();
   }
 
+  static DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd-HH").withZoneUTC();
+  private static Date defaultStartTime;
+
+  static{
+    defaultStartTime = dateFormatter.parseDateTime("2011-04-01-00").toDate();
+  }
+
   private void loadCubeDefinition() {
     for (String cubeName : cubeReader.getCubeNames()) {
       String cubeTableName = CUBE_NAME_PFX + cubeName;
@@ -111,24 +127,36 @@ public class CubeDDL {
           "pt,et,it");
       // Construct CubeDimension and CubeMeasure objects for each dimension and 
       // measure
-      for (String dimName : cubeReader.getAllDimensionNames(cubeName)) {
+      for (Map.Entry<String, DateTime> dimEntry :
+        cubeReader.getAllDimensionsWithActualStartTime(cubeName).entrySet()) {
+        String dimName = dimEntry.getKey();
         CubeDimension dim;
         FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
             "dim col");
+        Date startTime = defaultStartTime;
+        if (dimEntry.getValue() != null) {
+          startTime = dimEntry.getValue().toDate();
+        }
         if (dimDDL.getDimensionReferences(cubeNameInJoinChain, dimName) != null)
         {
           dim = new ReferencedDimension(column, dimDDL.getDimensionReferences(
-              cubeNameInJoinChain, dimName));
+              cubeNameInJoinChain, dimName), startTime, null, 0.0);
         } else {
-          dim = new BaseDimension(column);
+          dim = new BaseDimension(column, startTime, null, 0.0);
         }
         dimensions.add(dim);
       }
 
-      for (String msrName : cubeReader.getAllMeasureNames(cubeName)) {
+      for (Map.Entry<String, DateTime> msrEntry:
+        cubeReader.getAllMeasuresWithActualStartTime(cubeName).entrySet()) {
+        String msrName = msrEntry.getKey();
+        Date startTime = defaultStartTime;
+        if (msrEntry.getValue() != null) {
+          startTime = msrEntry.getValue().toDate();
+        }
         FieldSchema column = new FieldSchema(msrName, MEASURE_TYPE, "msr col");
         CubeMeasure msr = new ColumnMeasure(column, null,
-            MEASURE_DEFAULT_AGGREGATE, null);
+            MEASURE_DEFAULT_AGGREGATE, null, startTime, null, 0.0);
         measures.add(msr);
       }
       this.cubes.put(cubeName, new Cube(cubeTableName, measures, dimensions,
@@ -167,29 +195,52 @@ public class CubeDDL {
 
   public void createAllCubes() throws HiveException {
     for (String cubeName : cubes.keySet()) {
-      createCube(cubeName);
+      if (Hive.get().getTable(cubes.get(cubeName).getName(), false) == null) {
+        createCube(cubeName);        
+      } else {
+        Cube original = client.getCube(cubes.get(cubeName).getName());
+        if (original == null) {
+          System.out.println(cubes.get(cubeName).getName() + " is not a cube table");
+        } else if (!original.equals(cubes.get(cubeName))) {
+          System.out.println("Altering cube  original:" + original + "new:" + cubes.get(cubeName));
+          client.alterCube(cubes.get(cubeName).getName(), cubes.get(cubeName));
+        }
+      }
     }
 
     // create raw facts
     for (Map.Entry<String, List<String>> entry : rawFactPathToCubes.entrySet()) {
-      // create raw fact for each cube
-      Set<Grain> rawGrain = new HashSet<Grain>();
-      List<String> cubeNames = entry.getValue();
-      String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
-      rawGrain.add(cubeReader.getCubeGrain(cubeName));
-      createFactTable(cubeNames, cubeNames.get(0) + "_" + RAW_FACT_NAME,
-          cubeReader.getCost(cubeName), null, rawGrain);
+      createOrAlterRawFact(entry);
     }
 
     // create summaries
     for (String summary : factToCubes.keySet()) {
-      List<String> cubeNames = factToCubes.get(summary);
-      String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
-      createFactTable(cubeNames, summary,
-          cubeReader.getAvgSummaryCost(cubeName, summary),
-          summaryProperties.get(summary),
-          cubeReader.getSummaryGrains(cubeName, summary));
+      createOrAlterSummaryFact(summary);
     }
+    System.out.println("All cubes and fact tables created/altered!");
+  }
+
+  private void createOrAlterRawFact(Map.Entry<String, List<String>> entry) throws HiveException {
+    Set<Grain> rawGrain = new HashSet<Grain>();
+    List<String> cubeNames = entry.getValue();
+    String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
+    rawGrain.add(cubeReader.getCubeGrain(cubeName));
+    Map<String, String> rawProps = new HashMap<String, String>();
+    rawProps.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
+    String factName = cubeNames.get(0) + "_" + RAW_FACT_NAME;
+    createOrAlterFactTable(cubeNames, factName,
+        cubeReader.getCost(cubeName), rawProps, rawGrain);
+
+  }
+
+  private void createOrAlterSummaryFact(String summary) throws HiveException {
+    List<String> cubeNames = factToCubes.get(summary);
+    String cubeName = cubeNames.get(0).substring(CUBE_NAME_PFX.length());
+    summaryProperties.get(summary).put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "true");
+    createOrAlterFactTable(cubeNames, summary,
+        cubeReader.getAvgSummaryCost(cubeName, summary),
+        summaryProperties.get(summary),
+        cubeReader.getSummaryGrains(cubeName, summary));    
   }
 
   private void createCube(String cubeName) throws HiveException {
@@ -201,6 +252,7 @@ public class CubeDDL {
         cubes.get(cubeName).getMeasures() + " with dimensions:" +
         cubes.get(cubeName).getDimensions());
     client.createCube(cubes.get(cubeName));
+    System.out.println("Created cube " + cubeName);
   }
 
   public static List<FieldSchema> getNobColList() {
@@ -226,35 +278,60 @@ public class CubeDDL {
     return allMeasures.contains(name);
   }
 
-  private void createFactTable(List<String> cubeNames, String summary, double cost,
+  private void createOrAlterFactTable(List<String> cubeNames, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
-    Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
-        summary, grains, cost,
-        cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null);
     List<FieldSchema> columns = getNobColList();
+    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
+        summary, grains, cost,
+        cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null,
+        storageTables);
 
-    LOG.info("Creating fact table " + summary +
-        " with storageAggregatePeriods:" + storageAggregatePeriods +
-        "columns:" + columns + " cost:" + cost);
+    if (Hive.get().getTable(summary, false) == null) {
+      LOG.info("Creating fact table " + summary +
+          " with storageAggregatePeriods:" + storageAggregatePeriods +
+          "columns:" + columns + " cost:" + cost);
 
-    client.createCubeFactTable(cubeNames, summary, columns,
-        storageAggregatePeriods, cost, props);
+      client.createCubeFactTable(cubeNames, summary, columns,
+          storageAggregatePeriods, cost, props, storageTables);
+      System.out.println("Created fact:" + summary);
+    } else {
+      CubeFactTable original = client.getFactTable(summary);
+      CubeFactTable factTable = new CubeFactTable(cubeNames, summary, columns,
+          storageAggregatePeriods, cost, props);
+      if (original == null) {
+        System.out.println(summary + " is not a fact table");
+      } else if (!original.equals(factTable)) {
+        System.out.println("Altering fact  original:" + original + " new:" + summary);
+        client.alterCubeFactTable(summary, factTable);
+      } else {
+        System.out.println("Nothing to alter for" + summary);
+      }
+    }
   }
 
-  public Map<Storage, Set<UpdatePeriod>> createStorages(
-      String summary, Set<Grain> grains, double cost, boolean hasPIEStorage) {
+  public Map<String, Set<UpdatePeriod>> createStorages(
+      String summary, Set<Grain> grains, double cost, boolean hasPIEStorage,
+      Map<Storage, StorageTableDesc> storageTables) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
-    Map<Storage, Set<UpdatePeriod>> storageAggregatePeriods = 
-        new HashMap<Storage, Set<UpdatePeriod>>();
+    Map<String, Set<UpdatePeriod>> storageAggregatePeriods = 
+        new HashMap<String, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
-    tableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
-    Storage storage = new HDFSStorage(YODA_STORAGE,
-        RCFileInputFormat.class.getCanonicalName(),
-        RCFileOutputFormat.class.getCanonicalName(),
-        LazyNOBColumnarSerde.class.getCanonicalName(),
-        true, tableParams, null, null);
-    storage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+    tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+    Storage storage = new HDFSStorage(YODA_STORAGE);
+    StorageTableDesc sTbl = new StorageTableDesc();
+    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    List<String> timePartCols = new ArrayList<String>();
+    partCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+    timePartCols.add(PART_KEY_IT);
+    sTbl.setExternal(true);
+    sTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
+    sTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
+    sTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
+    sTbl.setTblProps(tableParams);
+    sTbl.setPartCols(partCols);
+    sTbl.setTimePartCols(timePartCols);
     Set<UpdatePeriod> updatePeriods = new HashSet<UpdatePeriod>();
     for (Grain g : grains) {
       if (g.getFileSystemPrefix().equals("none")) {
@@ -267,25 +344,38 @@ public class CubeDDL {
             .toUpperCase()));          
       }
     }
-    storageAggregatePeriods.put(storage, updatePeriods);
+    storageAggregatePeriods.put(storage.getName(), updatePeriods);
+    storageTables.put(storage, sTbl);
 
     // create storage with PIE partitions
     if (hasPIEStorage) {
-      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE,
-          RCFileInputFormat.class.getCanonicalName(),
-          RCFileOutputFormat.class.getCanonicalName(),
-          LazyNOBColumnarSerde.class.getCanonicalName(),
-          true, tableParams, null, null);
+      Map<String, String> pieTableParams = new HashMap<String, String>();
+      pieTableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
+      StorageTableDesc pieTbl = new StorageTableDesc();
+      ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();
+      List<String> pieTimePartCols = new ArrayList<String>();
       if (!summary.endsWith(RAW_FACT_NAME)) {
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_PT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_PT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_ET, "string", "date partition"));
+        pieTimePartCols.add(PART_KEY_PT);
+        pieTimePartCols.add(PART_KEY_IT);
+        pieTimePartCols.add(PART_KEY_ET);
       } else {
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_IT, "string", "date partition"));
-        piestorage.addToPartCols(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
+        piePartCols.add(new FieldSchema(PART_KEY_IT, "string", "date partition"));
+        piePartCols.add(new FieldSchema(PART_KEY_COLO, "string", "colo name"));
+        pieTimePartCols.add(PART_KEY_IT);
       }
-
-      storageAggregatePeriods.put(piestorage, updatePeriods);
+      pieTbl.setExternal(true);
+      pieTbl.setInputFormat(RCFileInputFormat.class.getCanonicalName());
+      pieTbl.setOutputFormat(RCFileOutputFormat.class.getCanonicalName());
+      pieTbl.setSerName(LazyNOBColumnarSerde.class.getCanonicalName());
+      pieTbl.setTblProps(pieTableParams);
+      pieTbl.setPartCols(piePartCols);
+      pieTbl.setTimePartCols(pieTimePartCols);
+      storageAggregatePeriods.put(piestorage.getName(), updatePeriods);
+      storageTables.put(piestorage, pieTbl);
     }
     return storageAggregatePeriods;
   }
@@ -310,18 +400,22 @@ public class CubeDDL {
     return props;
   }
 
-  public static void main(String[] args) throws IOException, HiveException {
+  public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(CubeDDL.class);
     SessionState.start(conf);
 
     DimensionDDL dimDDL = new DimensionDDL(conf);
     CubeDDL cc = new CubeDDL(dimDDL, conf);
-    if (args.length == 0) {
-      LOG.info("Creating all cubes ");
-      cc.createAllCubes();
-    } else {
-      LOG.info("Creating cube " + args[0]);
-      cc.createCube(args[0]);        
+    if (args.length > 0) {
+      if (args[0].equals("-db")) {
+        String dbName = args[1];
+        Database database = new Database();
+        database.setName(dbName);
+        Hive.get().createDatabase(database, true);
+        SessionState.get().setCurrentDatabase(dbName);
+      }
     }
+    LOG.info("Creating all cubes ");
+    cc.createAllCubes();
   }
 }

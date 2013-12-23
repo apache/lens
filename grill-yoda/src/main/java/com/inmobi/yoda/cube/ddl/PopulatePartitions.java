@@ -1,6 +1,7 @@
 package com.inmobi.yoda.cube.ddl;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -12,24 +13,25 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.StoragePartitionDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
-import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
-import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
-import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.serde2.columnar.LazyNOBColumnarSerde;
-import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.log4j.BasicConfigurator;
 
 /**
  * This class populates the partitions for a given range for a cube.
@@ -39,7 +41,7 @@ import org.apache.hadoop.mapred.TextInputFormat;
  *
  */
 public class PopulatePartitions {
-
+  public static final Log LOG = LogFactory.getLog(PopulatePartitions.class);
   private final HiveConf conf;
   private PathFilter filter;
 
@@ -48,7 +50,7 @@ public class PopulatePartitions {
     filter = createPathFilter();
   }
 
-  public void populateAllDimParts(Path basePath, SimpleDateFormat pathDateFormat,
+  public void populateAllDimParts(Path basePath, DateFormat pathDateFormat,
       Date partitionTimestamp, boolean checkExist)
           throws HiveException, IOException {
     final CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
@@ -67,17 +69,21 @@ public class PopulatePartitions {
 
       }
       System.out.println("Adding partition at Path" + partPath);
-      HDFSStorage storage = new HDFSStorage(CubeDDL.YODA_STORAGE,
-          TextInputFormat.class.getCanonicalName(),
-          HiveIgnoreKeyTextOutputFormat.class.getCanonicalName(),
-          null, true, null, null, null);
-      storage.setPartLocation(partPath);
-      client.addPartition(dim, storage, partitionTimestamp);
+      Map<String, Date> timeParts = new HashMap<String, Date>();
+      timeParts.put(DimensionDDL.dim_time_part_column, partitionTimestamp);
+      StoragePartitionDesc partSpec = new StoragePartitionDesc(dim.getName(), timeParts, null, UpdatePeriod.HOURLY);
+      partSpec.setLocation(partPath.toString());
+      try {
+        client.addPartition(partSpec, new HDFSStorage(CubeDDL.YODA_STORAGE));
+      } catch (HiveException exc) {
+        LOG.error("Error adding dim partition for : " + dim.getName(), exc);
+        System.out.println("Failed to add partition for" + partPath);
+      }
     }
   }
 
   public void populateCubeParts(String cubeName, Date start, Date end,
-      UpdatePeriod updatePeriod, Path basePath, SimpleDateFormat dateFormat,
+      UpdatePeriod updatePeriod, Path basePath, DateFormat dateFormat,
       String summaries, boolean checkExist)
           throws HiveException, IOException {
     final CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
@@ -132,6 +138,7 @@ public class PopulatePartitions {
     }
 
     List<CubeFactTable> facts = client.getAllFactTables(cube);
+    System.out.println("All facts:" + facts);
     Calendar cal = Calendar.getInstance();
     cal.setTime(start);
     Date dt = cal.getTime();
@@ -164,17 +171,19 @@ public class PopulatePartitions {
                 System.out.println("Path" + partPath +" does not exist");
                 continue;
               }
-              HDFSStorage storage = new HDFSStorage(entry.getKey(),
-                  RCFileInputFormat.class.getCanonicalName(),
-                  RCFileOutputFormat.class.getCanonicalName(),
-                  LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-                  null);
-              storage.setPartLocation(partPath);
               Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
               partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
               System.out.println("Adding partitions for Path" + partPath);
-              client.addPartition(fact, storage, updatePeriod,
-                  partitionTimestamps, CubeDDL.PART_KEY_IT);
+              HDFSStorage storage = new HDFSStorage(entry.getKey());
+              StoragePartitionDesc partSpec = new StoragePartitionDesc(
+                  fact.getName(), partitionTimestamps, null, updatePeriod);
+              partSpec.setLocation(partPath.toString());
+              try {
+                client.addPartition(partSpec, storage);
+              } catch (HiveException exc) {
+                LOG.error("Error adding cube partition", exc);
+                System.out.println("Failed to add partition for" + partPath);
+              }
             }
           } else {
             if (entry.getKey().equalsIgnoreCase(CubeDDL.YODA_PIE_STORAGE)) {
@@ -184,19 +193,21 @@ public class PopulatePartitions {
                 FileStatus[] cStats = fs.listStatus(partPath, filter);
                 for (FileStatus cstat : cStats) {
                   String colo = cstat.getPath().getName();
-                  HDFSStorage storage = new HDFSStorage(entry.getKey(),
-                      RCFileInputFormat.class.getCanonicalName(),
-                      RCFileOutputFormat.class.getCanonicalName(),
-                      LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-                      null);
-                  storage.setPartLocation(cstat.getPath());
                   Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
-                  Map<String, String> partSpec = new HashMap<String, String>();
+                  Map<String, String> nonTimepartSpec = new HashMap<String, String>();
                   partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
-                  partSpec.put(CubeDDL.PART_KEY_COLO, colo); 
+                  nonTimepartSpec.put(CubeDDL.PART_KEY_COLO, colo); 
                   System.out.println("Adding partitions for Path" + cstat.getPath());
-                  client.addPartition(fact, storage, updatePeriod,
-                      partitionTimestamps, partSpec, CubeDDL.PART_KEY_IT);
+                  HDFSStorage storage = new HDFSStorage(entry.getKey());
+                  StoragePartitionDesc partSpec = new StoragePartitionDesc(
+                      fact.getName(), partitionTimestamps, nonTimepartSpec, updatePeriod);
+                  partSpec.setLocation(cstat.getPath().toString());
+                  try {
+                    client.addPartition(partSpec, storage);
+                  } catch (HiveException exc) {
+                    LOG.error("Error adding cube partition", exc);
+                    System.out.println("Failed to add partition for" + cstat.getPath());
+                  }
                 }
               } else {
                 partPath = new Path(new Path(new Path(summariesPath, fact.getName()),
@@ -222,29 +233,31 @@ public class PopulatePartitions {
                     } catch (ParseException e) {
                       //ignore
                     }
-                    HDFSStorage storage = new HDFSStorage(entry.getKey(),
-                        RCFileInputFormat.class.getCanonicalName(),
-                        RCFileOutputFormat.class.getCanonicalName(),
-                        LazyNOBColumnarSerde.class.getCanonicalName(), true, null, null,
-                        null);
-                    storage.setPartLocation(estat.getPath());
                     Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
-                    Map<String, String> partSpec = new HashMap<String, String>();
+                    Map<String, String> nonTimePartSpec = new HashMap<String, String>();
                     partitionTimestamps.put(CubeDDL.PART_KEY_PT, pt);
                     if (it != null) {
                       partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
                     } else {
-                      partSpec.put(CubeDDL.PART_KEY_IT, istat.getPath().getName()); 
+                      nonTimePartSpec.put(CubeDDL.PART_KEY_IT, istat.getPath().getName()); 
                     }
 
                     if (et != null) {
                       partitionTimestamps.put(CubeDDL.PART_KEY_ET, et);
                     } else {
-                      partSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
+                      nonTimePartSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
                     }
                     System.out.println("Adding partitions for Path" + estat.getPath());
-                    client.addPartition(fact, storage, updatePeriod,
-                        partitionTimestamps, partSpec, CubeDDL.PART_KEY_PT);
+                    HDFSStorage storage = new HDFSStorage(entry.getKey());
+                    StoragePartitionDesc partSpec = new StoragePartitionDesc(
+                        fact.getName(), partitionTimestamps, nonTimePartSpec, updatePeriod);
+                    partSpec.setLocation(estat.getPath().toString());
+                    try {
+                      client.addPartition(partSpec, storage);
+                    } catch (HiveException exc) {
+                      LOG.error("Error adding cube partition", exc);
+                      System.out.println("Failed to add partition for" + estat.getPath());
+                    }
                   }
                 }
               }
@@ -270,32 +283,44 @@ public class PopulatePartitions {
   }
 
   public static void main(String[] args)
-      throws HiveException, ParseException, IOException {
+      throws Exception {
     if (args.length < 4) {
       System.out.println("Usage:" +
-          "\t [-dims basepath timestamp pathDateFormat]\n" +
-          "\t [cubeName startPartition endPartition" +
+          "\t [ [-db dbName] -dims basepath timestamp pathDateFormat]\n" +
+          "\t [ [-db dbName] cubeName startPartition endPartition" +
           " UpdatePeriod basePath pathDateFormat (summarylist|raw|all) ]");
       return;
     }
+    BasicConfigurator.configure();
     HiveConf conf = new HiveConf(PopulatePartitions.class);
     SessionState.start(conf);
     PopulatePartitions pp = new PopulatePartitions(conf);
-    if (args[0].equalsIgnoreCase("-dims")) {
-      String baseDimPath = args[1];
-      String dimTS = args[2];
-      String pathDateFormat = args[3];
+    int startIndex = 0;
+    if (args.length > 0) {
+      if (args[0].equals("-db")) {
+        String dbName = args[1];
+        Database database = new Database();
+        database.setName(dbName);
+        Hive.get().createDatabase(database, true);
+        SessionState.get().setCurrentDatabase(dbName);
+        startIndex = 2;
+      }
+    }
+    if (args[startIndex].equalsIgnoreCase("-dims")) {
+      String baseDimPath = args[startIndex + 1];
+      String dimTS = args[startIndex + 2];
+      String pathDateFormat = args[startIndex + 3];
       SimpleDateFormat dateFormat = new SimpleDateFormat(pathDateFormat);
       pp.populateAllDimParts(new Path(baseDimPath), dateFormat,
           dateFormat.parse(dimTS), true);
     } else {
-      String cubeName = args[0];
-      String startPos = args[1];
-      String endPos = args[2];
-      String updatePeriod = args[3];
-      String basePath = args[4];
-      String pathDateFormat = args[5];
-      String summaries = args[6];
+      String cubeName = args[startIndex];
+      String startPos = args[startIndex + 1];
+      String endPos = args[startIndex + 2];
+      String updatePeriod = args[startIndex + 3];
+      String basePath = args[startIndex + 4];
+      String pathDateFormat = args[startIndex + 5];
+      String summaries = args[startIndex + 6];
 
       UpdatePeriod p = UpdatePeriod.valueOf(updatePeriod.toUpperCase());
       SimpleDateFormat dateFormat = new SimpleDateFormat(pathDateFormat);

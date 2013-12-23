@@ -58,11 +58,11 @@ error() {
 
 display_help() {
   cat <<EOF
-Usage: $0 dimensionddl --conf <confdir>
-       $0 cubeddl [cubename] --conf <confdir>
+Usage: $0 dimensionddl [-db dbname] --conf <confdir>
+       $0 cubeddl [-db dbname] --conf <confdir>
        $0 populateParts
-           [-dims basepath timestamp pathDateFormat ]
-           [cubename startPartition endPartition UpdatePeriod basePath pathDateFormat (summarylist|raw|all) --conf <confdir>]
+           [ [-db dbname] -dims basepath timestamp pathDateFormat ]
+           [ [-db dbname] cubename startPartition endPartition UpdatePeriod basePath pathDateFormat (summarylist|raw|all) --conf <confdir>]
 EOF
 }
 

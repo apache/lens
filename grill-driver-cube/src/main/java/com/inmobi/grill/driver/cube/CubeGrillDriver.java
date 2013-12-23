@@ -43,7 +43,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   public CubeGrillDriver(Configuration conf, DriverSelector driverSelector)
       throws GrillException {
-    this.conf = conf;
+    this.conf = new HiveConf(conf, CubeGrillDriver.class);
     this.drivers = new ArrayList<GrillDriver>();
     loadDrivers();
     this.driverSelector = driverSelector;

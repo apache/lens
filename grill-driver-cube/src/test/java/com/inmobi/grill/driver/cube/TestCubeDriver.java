@@ -21,8 +21,6 @@ public class TestCubeDriver {
 
   @BeforeTest
   public void beforeTest() throws Exception {
-    conf.set(GrillConfConstants.ENGINE_DRIVER_CLASSES,
-        MockDriver.class.getCanonicalName());
     cubeDriver = new CubeGrillDriver(conf);
   }
 
