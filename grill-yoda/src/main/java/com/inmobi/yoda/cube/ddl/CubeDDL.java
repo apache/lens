@@ -318,7 +318,7 @@ public class CubeDDL {
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = 
         new HashMap<String, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
-    tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+    tableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
     Storage storage = new HDFSStorage(YODA_STORAGE);
     StorageTableDesc sTbl = new StorageTableDesc();
     ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
@@ -350,7 +350,7 @@ public class CubeDDL {
     // create storage with PIE partitions
     if (hasPIEStorage) {
       Map<String, String> pieTableParams = new HashMap<String, String>();
-      pieTableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
+      pieTableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
       Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
       StorageTableDesc pieTbl = new StorageTableDesc();
       ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();

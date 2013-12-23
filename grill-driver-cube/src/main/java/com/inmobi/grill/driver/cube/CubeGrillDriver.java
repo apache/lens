@@ -10,6 +10,7 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import com.inmobi.grill.api.DriverSelector;
 import com.inmobi.grill.api.GrillConfConstants;
