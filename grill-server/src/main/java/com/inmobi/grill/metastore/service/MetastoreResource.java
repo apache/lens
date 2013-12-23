@@ -6,8 +6,6 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 
-import org.apache.hadoop.hive.ql.cube.metadata.MetastoreUtil;
-import org.apache.hadoop.hive.ql.cube.metadata.Storage;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -444,6 +442,51 @@ public class MetastoreResource {
   		throw exc;
   	}
   }
-  
 
+  @GET @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  public JAXBElement<PartitionList> getAllPartitionsOfDimStorage(@PathParam("dimname") String dimension,
+                                                                 @PathParam("storage") String storage,
+                                                                 @QueryParam("filter") String filter)
+    throws GrillException {
+    List<XPartition> partitions = getSvc().getAllPartitionsOfDimStorage(dimension, storage, filter);
+    PartitionList partList = xCubeObjectFactory.createPartitionList();
+    partList.getXPartition().addAll(partitions);
+    return xCubeObjectFactory.createPartitionList(partList);
+  }
+
+  @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  public APIResult dropPartitionsOfDimStorageByFilter(@PathParam("dimname") String dimension,
+                                                      @PathParam("storage") String storage,
+                                                      @QueryParam("filter") String filter) {
+    try {
+      getSvc().dropPartitionOfDimStorageByFilter(dimension, storage, filter);
+    } catch (GrillException exc) {
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partition")
+  public APIResult dropPartitionsOfDimStorageByValue(@PathParam("dimname") String dimension,
+                                                     @PathParam("storage") String storage,
+                                                     @QueryParam("values") String values) {
+    try {
+      getSvc().dropPartitionOfDimStorageByValue(dimension, storage, values);
+    } catch (GrillException exc) {
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  @POST @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  public APIResult addPartitionToDimStorage(@PathParam("dimname") String dimension,
+                                            @PathParam("storage") String storage,
+                                            XPartition partition) {
+    try {
+      getSvc().addPartitionToDimStorage(dimension, storage, partition);
+    } catch (GrillException exc) {
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
 }

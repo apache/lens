@@ -66,18 +66,6 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   @Test
-  public void testGetDatabase() throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database");
-    Invocation.Builder builder = dbTarget.request(mediaType);
-    Database response = builder.get(Database.class);
-    assertEquals(response.getName(), "default");
-
-    // Test JSON
-    Database jsonResp = dbTarget.request(mediaType).get(Database.class);
-    assertEquals(jsonResp.getName(), "default");
-  }
-
-  @Test
   public void testSetDatabase() throws Exception {
     WebTarget dbTarget = target().path("metastore").path("database");
     Database db = new Database();
@@ -1229,5 +1217,4 @@ public class TestMetastoreService extends GrillJerseyTest {
       dropDatabase(DB);
     }
   }
-
 }

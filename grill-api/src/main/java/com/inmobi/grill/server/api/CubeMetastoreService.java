@@ -118,4 +118,9 @@ public interface CubeMetastoreService extends GrillService {
   public void addPartitionToFactStorage(String fact, String storage, XPartition partition) throws GrillException;
   public void dropPartitionsOfFactStorageByFilter(String fact, String storage, String filter) throws GrillException;
   public void dropPartitionOfFactStorageByValue(String fact, String storage, String values) throws GrillException;
+
+  public List<XPartition> getAllPartitionsOfDimStorage(String dimension, String storage, String filter) throws GrillException;
+  public void addPartitionToDimStorage(String dimension, String storage, XPartition partition) throws GrillException;
+  public void dropPartitionOfDimStorageByFilter(String dimension, String storage, String filter) throws GrillException;
+  public void dropPartitionOfDimStorageByValue(String dimension, String storage, String values) throws GrillException;
 }

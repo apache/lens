@@ -700,4 +700,120 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       throw new GrillException(exc);
     }
   }
+
+  private CubeDimensionTable checkDimensionStorage(String dimension, String storage)
+    throws HiveException, GrillException {
+    CubeMetastoreClient client = getClient();
+    if (!client.isDimensionTable(dimension)) {
+      throw new NotFoundException("Dimension table not found: " + dimension);
+    }
+    CubeDimensionTable cdt = client.getDimensionTable(dimension);
+    if (!cdt.getStorages().contains(storage)) {
+      throw new NotFoundException("Storage " + storage + " not found for dimension " + dimension);
+    }
+    return cdt;
+  }
+
+  @Override
+  public List<XPartition> getAllPartitionsOfDimStorage(String dimension, String storage, String filter)
+    throws GrillException {
+    try {
+      checkDimensionStorage(dimension, storage);
+      Storage s = new HDFSStorage(storage, null, null);
+      String storageTableName = MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix());
+      List<Partition> partitions = getClient().getPartitionsByFilter(storageTableName, filter);
+      if (partitions != null) {
+        List<XPartition> result = new ArrayList<XPartition>(partitions.size());
+        for (Partition p : partitions) {
+          XPartition xp = new XPartition();
+          xp.setName(p.getCompleteName());
+          xp.setDataLocation(p.getDataLocation().toString());
+          xp.setLocation(p.getLocation());
+
+          for (Map.Entry<String, String> e : p.getSpec().entrySet()) {
+            PartitionSpec spec = new PartitionSpec();
+            spec.setKey(e.getKey());
+            spec.setValue(e.getValue());
+            xp.getPartitionSpec().add(spec);
+          }
+
+          for (String v : p.getValues()) {
+            xp.getPartitionValues().add(v);
+          }
+
+          for (FieldSchema fs : p.getCols()) {
+            xp.getPartitionColumns().add(fs.getName());
+          }
+
+          result.add(xp);
+        }
+        return result;
+      } else {
+        return new ArrayList<XPartition>();
+      }
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } catch (MetaException e) {
+      throw new GrillException(e);
+    } catch (NoSuchObjectException e) {
+      throw new NotFoundException(e);
+    } catch (TException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public void addPartitionToDimStorage(String dimension, String storage, XPartition partition) throws GrillException {
+    try {
+      CubeDimensionTable dim = checkDimensionStorage(dimension, storage);
+      Storage s = new HDFSStorage(storage, null, null);
+      getClient().addPartition(dim, s, JAXBUtils.getDateFromXML(partition.getTimeStamp()));
+      LOG.info("Added partition for dimension: " + dimension + " storage: " + storage);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
+
+  @Override
+  public void dropPartitionOfDimStorageByFilter(String dimension, String storage, String filter) throws GrillException {
+    try {
+      checkDimensionStorage(dimension, storage);
+      Storage s = new HDFSStorage(storage, null, null);
+      String storageTableName = MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix());
+      List<Partition> partitions =
+        getClient().getPartitionsByFilter(storageTableName, filter);
+      if (partitions != null && !partitions.isEmpty()) {
+        int total = partitions.size();
+        int i = 0;
+        for (Partition p : partitions) {
+          s.dropPartition(storageTableName, p.getValues(), getUserConf());
+          LOG.info("Dropped partition [" +  ++i + "/" + total + "]" + " for dimension: " + dimension +
+          "storage: " + storage + " filter:" + filter + " partition:" + p.getValues());
+        }
+      }
+      LOG.info("");
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } catch (MetaException e) {
+      throw new GrillException(e);
+    } catch (NoSuchObjectException e) {
+      throw new NotFoundException(e);
+    } catch (TException e) {
+      throw new GrillException(e);
+    }
+  }
+
+  @Override
+  public void dropPartitionOfDimStorageByValue(String dimension, String storage, String values) throws GrillException {
+    try {
+      checkDimensionStorage(dimension, storage);
+      Storage s = new HDFSStorage(storage, null, null);
+      s.dropPartition(MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix()),
+        Arrays.asList(StringUtils.split(values, ",")), getUserConf());
+      LOG.info("Dropped partition  for dimension: " + dimension +
+        "storage: " + storage + " partition:" + values);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    }
+  }
 }
