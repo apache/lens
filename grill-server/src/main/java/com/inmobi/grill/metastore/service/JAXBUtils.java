@@ -6,6 +6,7 @@ import com.inmobi.grill.metastore.model.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
@@ -329,14 +330,13 @@ public class JAXBUtils {
   	return cols;
   }
 
-  public static Map<Storage, UpdatePeriod> dumpPeriodsFromUpdatePeriods(UpdatePeriods periods) {
+  public static Map<String, UpdatePeriod> dumpPeriodsFromUpdatePeriods(UpdatePeriods periods) {
     if (periods != null && periods.getUpdatePeriodElement() != null && !periods.getUpdatePeriodElement().isEmpty()) {
-      Map<Storage, UpdatePeriod> map = new LinkedHashMap<Storage, UpdatePeriod>();
+      Map<String, UpdatePeriod> map = new LinkedHashMap<String, UpdatePeriod>();
 
       for (UpdatePeriodElement upd : periods.getUpdatePeriodElement()) {
         UpdatePeriod updatePeriod = UpdatePeriod.valueOf(upd.getUpdatePeriod().toUpperCase());
-        Storage storage = storageFromXStorage(upd.getStorageAttr());
-        map.put(storage, updatePeriod);
+        map.put(upd.getStorageAttr().getName(), updatePeriod);
       }
       return map;
     }
@@ -348,15 +348,16 @@ public class JAXBUtils {
       return null;
     }
 
-    Storage storage = new HDFSStorage(xs.getName(), xs.getInputFormat(), xs.getOutputFormat(),
-      xs.getFieldDelimiter(), xs.getLineDelimiter(), xs.getEscapeChar(),
-      xs.getCollectionDelimiter(), xs.getMapKeyDelimiter(), xs.isIsCompressed(),
-      mapFromXProperties(xs.getTableParameters()), mapFromXProperties(xs.getSerdeParameters()),
-      new Path(xs.getTableLocation()));
+    Storage storage = null;
+    try {
+      storage = Storage.createInstance("TODO", "TODO");
+    } catch (HiveException e) {
+      e.printStackTrace();
+    }
 
 
     for (Column c : xs.getPartCols()) {
-      storage.addToPartCols(fieldSchemaFromColumn(c));
+      //storage.addToPartCols(fieldSchemaFromColumn(c));
     }
     return storage;
   }
