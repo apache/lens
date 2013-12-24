@@ -17,6 +17,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hive.service.cli.SessionHandle;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.client.api.APIResult;
@@ -27,6 +28,7 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.api.GrillResultSet;
+import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.InMemoryResultSet;
 import com.inmobi.grill.api.PersistentResultSet;
 import com.inmobi.grill.api.QueryHandle;
@@ -75,7 +77,8 @@ public class QueryServiceResource {
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public QuerySubmitResult query(@FormDataParam("query") String query,
+  public QuerySubmitResult query(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+      @FormDataParam("query") String query,
       @FormDataParam("operation") String op,
       @FormDataParam("conf") QueryConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
@@ -85,7 +88,7 @@ public class QueryServiceResource {
       case EXECUTE:
         return queryServer.executeAsync(query, conf);
       case EXPLAIN:
-        return new QueryPlan(queryServer.explain(query, conf));
+        return new QueryPlan(queryServer.explain(sessionid.getSessionHandle(), query, conf));
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(query, timeoutmillis, conf);
       default:

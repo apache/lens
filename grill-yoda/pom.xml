@@ -85,7 +85,7 @@
       <dependency>
           <groupId>com.inmobi.dw.yoda</groupId>
           <artifactId>fpjamr</artifactId>
-          <version>0.6.56-SNAPSHOT</version>
+          <version>${yoda.version}</version>
           <classifier>without-dependency</classifier>
       </dependency>
     <dependency>

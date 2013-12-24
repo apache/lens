@@ -5,6 +5,8 @@ import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
+import com.inmobi.grill.server.api.QueryExecutionService;
+import com.inmobi.grill.service.GrillServices;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
@@ -30,7 +32,7 @@ public class MetastoreResource {
   }
 
   public CubeMetastoreService getSvc() {
-    return CubeMetastoreServiceImpl.getInstance(getCurrentUser());
+    return (CubeMetastoreService)GrillServices.get().getService("metastore");
   }
 
   @GET @Path("databases")

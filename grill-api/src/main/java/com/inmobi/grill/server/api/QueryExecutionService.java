@@ -2,6 +2,8 @@ package com.inmobi.grill.server.api;
 
 import java.util.List;
 
+import org.apache.hive.service.cli.SessionHandle;
+
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.GrillResultSetMetadata;
 import com.inmobi.grill.api.PreparedQueryContext;
@@ -13,7 +15,7 @@ import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.exception.GrillException;
 
-public interface QueryExecutionService extends GrillService {
+public interface QueryExecutionService {
 
   /**
    * Explain the given query
@@ -25,7 +27,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryPlan explain(String query, QueryConf conf)
+  public QueryPlan explain(SessionHandle sessionHandle, String query, QueryConf conf)
       throws GrillException;
 
   /**

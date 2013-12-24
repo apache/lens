@@ -1,14 +1,72 @@
 package com.inmobi.grill.server.api;
 
+import java.io.IOException;
+import java.util.Map;
+
+import javax.security.auth.login.LoginException;
+
+import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+import org.apache.hive.service.CompositeService;
+import org.apache.hive.service.auth.HiveAuthFactory;
+import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.SessionHandle;
+import org.apache.hive.service.cli.session.SessionManager;
+
 import com.inmobi.grill.exception.GrillException;
 
-public interface GrillService {
+public abstract class GrillService extends CompositeService {
 
-  public String getName();
+  private final CLIService cliService;
 
-  public void init() throws GrillException;
+  protected GrillService(String name, CLIService cliService) {
+    super(name);
+    this.cliService = cliService;
+  }
 
-  public void start() throws GrillException;
+  /**
+   * @return the cliService
+   */
+  public CLIService getCliService() {
+    return cliService;
+  }
 
-  public void stop() throws GrillException;
+  public SessionHandle openSession(String username, String password, Map<String, String> configuration)
+      throws GrillException {
+    SessionHandle sessionHandle = null;
+    try {
+      if (
+          cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
+          .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
+          &&
+          cliService.getHiveConf().
+          getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS)
+          )
+      {
+        String delegationTokenStr = null;
+        try {
+          delegationTokenStr = cliService.getDelegationTokenFromMetaStore(username);
+        } catch (UnsupportedOperationException e) {
+          // The delegation token is not applicable in the given deployment mode
+        }
+        sessionHandle = cliService.openSessionWithImpersonation(username, password,
+            configuration, delegationTokenStr);
+      } else {
+        sessionHandle = cliService.openSession(username, password,
+            configuration);
+      }
+    } catch (Exception e) {
+      throw new GrillException (e);
+    }
+    return sessionHandle;
+  }
+
+  public void closeSession(SessionHandle sessionHandle)
+      throws HiveSQLException {
+    cliService.closeSession(sessionHandle);
+  }
+
+  public SessionManager getSessionManager() throws GrillException {
+    return cliService.getSessionManager();
+  }
 }

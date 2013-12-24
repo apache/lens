@@ -1,31 +1,13 @@
 package com.inmobi.grill.queryscheduler.service;
 
-import com.inmobi.grill.exception.GrillException;
+import org.apache.hive.service.cli.CLIService;
+
+import com.inmobi.grill.server.api.GrillService;
 import com.inmobi.grill.server.api.QuerySchedulerService;
 
-public class QuerySchedulerServiceImpl implements QuerySchedulerService {
+public class QuerySchedulerServiceImpl extends GrillService implements QuerySchedulerService {
 
-  @Override
-  public String getName() {
-    return "scheduler";
+  public QuerySchedulerServiceImpl(CLIService cliService) {
+    super("scheduler", cliService);
   }
-
-  @Override
-  public void start() throws GrillException {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void stop() throws GrillException {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void init() throws GrillException {
-    // TODO Auto-generated method stub
-    
-  }
-
 }

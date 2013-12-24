@@ -7,7 +7,7 @@ import com.inmobi.grill.metastore.model.*;
 import java.util.Collection;
 import java.util.List;
 
-public interface CubeMetastoreService extends GrillService {
+public interface CubeMetastoreService {
   /**
    * Get current database used by the CubeMetastoreClient
    * @return

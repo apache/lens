@@ -3,6 +3,7 @@ package com.inmobi.grill.metastore.service;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
+import com.inmobi.grill.server.api.GrillService;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configurable;
@@ -16,6 +17,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.cli.CLIService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
@@ -24,45 +26,11 @@ import java.util.*;
 
 import javax.ws.rs.NotFoundException;
 
-public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configurable {
+public class CubeMetastoreServiceImpl extends GrillService implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
 
-  private String user;
-  private CubeMetastoreClient client;
-  private SessionState sessionState;
-  private HiveConf userConf;
-  private Configuration conf;
-
-  private static final Map<String, CubeMetastoreServiceImpl> instances =
-    new HashMap<String, CubeMetastoreServiceImpl>();
-
-  public synchronized static CubeMetastoreService getInstance(String user) {
-    if (!instances.containsKey(user)) {
-      CubeMetastoreServiceImpl instance = new CubeMetastoreServiceImpl();
-      instance.user = user;
-      instances.put(user, instance);
-    }
-    return instances.get(user);
-  }
-
-  public CubeMetastoreServiceImpl() {
-    userConf = new HiveConf(CubeMetastoreServiceImpl.class);
-    sessionState = new SessionState(userConf); 
-  }
-
-  @Override
-  public String getName() {
-    return "metastore";
-  }
-
-  @Override
-  public void start() throws GrillException {
-    LOG.info("Starting cube metastore service");
-  }
-
-  @Override
-  public void stop() throws GrillException {
-    LOG.info("Stopping cube metastore service");
+  public CubeMetastoreServiceImpl(CLIService cliService) {
+    super("metastore", cliService);
   }
 
   private HiveConf getUserConf() {
@@ -70,18 +38,11 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   }
 
   synchronized CubeMetastoreClient getClient() throws GrillException {
-    if (client == null) {
-      try {
-        LOG.info("Create new CubeMetastoreClient");
-        client = CubeMetastoreClient.getInstance(userConf);
-      } catch (HiveException e) {
-        throw new GrillException(e);
-      }
+    try {
+      return CubeMetastoreClient.getInstance(getHiveConf());
+    } catch (HiveException e) {
+      throw new GrillException(e);
     }
-
-    // Start session state for the current thread
-    SessionState.start(sessionState);
-    return client;
   }
 
 
@@ -135,7 +96,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
     try {
       Database db = new Database();
       db.setName(database);
-      Hive.get(userConf).createDatabase(db, ignore);
+      Hive.get(getHiveConf()).createDatabase(db, ignore);
     } catch (AlreadyExistsException e) {
       throw new GrillException(e);
     } catch (HiveException e) {
@@ -150,7 +111,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   @Override
   public List<String> getAllDatabases() throws GrillException{
     try {
-      return Hive.get(userConf).getAllDatabases();
+      return Hive.get(getHiveConf()).getAllDatabases();
     } catch (HiveException e) {
       throw new GrillException(e);
     }
@@ -239,20 +200,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
     } catch (HiveException e) {
       throw new GrillException(e);
     }
-  }
-
-  @Override
-  public void init() throws GrillException {
-  }
-
-  @Override
-  public void setConf(Configuration conf) {
-    this.conf = conf;
-  }
-
-  @Override
-  public Configuration getConf() {
-    return this.conf;
   }
 
   /**

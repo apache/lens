@@ -18,6 +18,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.SessionHandle;
 
 import com.inmobi.grill.api.DriverSelector;
 import com.inmobi.grill.api.GrillConfConstants;
@@ -37,9 +41,10 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.server.api.GrillService;
 import com.inmobi.grill.server.api.QueryExecutionService;
 
-public class QueryExcecutionServiceImpl implements QueryExecutionService, Configurable {
+public class QueryExcecutionServiceImpl extends GrillService implements QueryExecutionService {
   static {
     Configuration.addDefaultResource("grill-default.xml");
     Configuration.addDefaultResource("grill-site.xml");
@@ -75,7 +80,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   private DriverSelector driverSelector;
   private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
 
-  public QueryExcecutionServiceImpl() throws GrillException {
+  public QueryExcecutionServiceImpl(CLIService cliService) throws GrillException {
+    super("query", cliService);
   }
 
   private void initializeQueryAcceptorsAndListeners() {
@@ -268,19 +274,19 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   public void notifyAllListeners() throws GrillException {
     //TODO 
   }
-
-  @Override
+/*
+ // @Override
   public String getName() {
     return "query";
   }
 
-  @Override
+ // @Override
   public void init() throws GrillException {
     initializeQueryAcceptorsAndListeners();
     loadDriversAndSelector();
   }
 
-  @Override
+ // @Override
   public void start() throws GrillException {
     querySubmitter.start();
     statusPoller.start();
@@ -288,7 +294,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     prepareQueryPurger.start();
   }
 
-  @Override
+ // @Override
   public void stop() throws GrillException {
     this.stopped = true;
 
@@ -305,6 +311,42 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+*/
+  public synchronized void init(HiveConf hiveConf) {
+    super.init(hiveConf);
+    this.conf = hiveConf;
+    initializeQueryAcceptorsAndListeners();
+    try {
+      loadDriversAndSelector();
+    } catch (GrillException e) {
+      throw new IllegalStateException("Could not load drivers");
+    }
+  }
+
+  public synchronized void stop() {
+    super.stop();
+    querySubmitter.interrupt();
+    statusPoller.interrupt();
+    queryPurger.interrupt();
+    prepareQueryPurger.interrupt();
+
+    try {
+      querySubmitter.join();
+      statusPoller.join();
+      queryPurger.join();
+      prepareQueryPurger.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public synchronized void start() {
+    super.start();
+    querySubmitter.start();
+    statusPoller.start();
+    queryPurger.start();
+    prepareQueryPurger.start();
   }
 
   private void rewriteAndSelect(QueryContext ctx) throws GrillException {
@@ -344,8 +386,8 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     notifyAllListeners();
   }
 
-  private Configuration getQueryConf(QueryConf queryConf) {
-    Configuration qconf = new Configuration(this.conf);
+  private Configuration getQueryConf(Configuration sessionConf, QueryConf queryConf) {
+    Configuration qconf = new Configuration(sessionConf);
     if (queryConf != null && !queryConf.getProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : queryConf.getProperties().entrySet()) {
         qconf.set(entry.getKey(), entry.getValue());
@@ -369,7 +411,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     return resultSets.get(queryHandle);
   }
 
-  @Override
+ /* @Override
   public QueryPlan explain(String query, QueryConf queryConf)
       throws GrillException {
     Configuration qconf = getQueryConf(queryConf);
@@ -378,12 +420,12 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
         query, drivers);
     // select driver to run the query
     return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
-  }
+  } */
 
   @Override
   public QueryPrepareHandle prepare(String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
+    Configuration qconf = getQueryConf(this.conf, queryConf);
     accept(query, qconf, SubmitOp.PREPARE);
     PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
     rewriteAndSelect(prepared);
@@ -397,7 +439,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public QueryPlan explainAndPrepare(String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
+    Configuration qconf = getQueryConf(this.conf, queryConf);
     accept(query, qconf, SubmitOp.EXPLAIN_AND_PREPARE);
     PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
     rewriteAndSelect(prepared);
@@ -411,7 +453,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
       QueryPrepareHandle prepareHandle, QueryConf queryConf)
           throws GrillException {
     PreparedQueryContext pctx = getPreparedQueryContext(prepareHandle);
-    Configuration qconf = getQueryConf(queryConf);
+    Configuration qconf = getQueryConf(this.conf, queryConf);
     accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
     QueryContext ctx = new QueryContext(pctx, "user", qconf);
     ctx.setStatus(new QueryStatus(0.0,
@@ -427,7 +469,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   @Override
   public QueryHandle executeAsync(String query,
       QueryConf queryConf) throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
+    Configuration qconf = getQueryConf(this.conf, queryConf);
     accept(query, qconf, SubmitOp.EXECUTE);
 
     QueryContext ctx = new QueryContext(query, "user", qconf);
@@ -580,17 +622,6 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   }
 
   @Override
-  public void setConf(Configuration conf) {
-    this.conf = conf;
-
-  }
-
-  @Override
-  public Configuration getConf() {
-    return this.conf;
-  }
-
-  @Override
   public List<QueryPrepareHandle> getAllPreparedQueries(String user)
       throws GrillException {
     List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>();
@@ -606,5 +637,22 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
     preparedQueries.remove(prepared);
     preparedQueryQueue.remove(ctx);
     return true;
+  }
+
+  @Override
+  public QueryPlan explain(SessionHandle sessionHandle, String query,
+      QueryConf queryConf) throws GrillException {
+    HiveConf sessionConf;
+    try {
+      sessionConf = getSessionManager().getSession(sessionHandle).getHiveConf();
+    } catch (HiveSQLException e) {
+      throw new GrillException(e);
+    }
+    Configuration qconf = getQueryConf(sessionConf, queryConf);
+    accept(query, qconf, SubmitOp.EXPLAIN);
+    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
+        query, drivers);
+    // select driver to run the query
+    return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
   }
 }
