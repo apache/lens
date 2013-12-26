@@ -12,7 +12,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.NDC;
 
-import com.inmobi.grill.query.service.QueryExcecutionServiceImpl;
+import com.inmobi.grill.query.service.QueryExecutionServiceImpl;
 
 public class AuthenticationFilter implements Filter {
 

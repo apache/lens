@@ -14,7 +14,7 @@
 
 <property>
   <name>grill.query.service.impl</name>
-  <value>com.inmobi.grill.query.service.QueryExcecutionServiceImpl</value>
+  <value>com.inmobi.grill.query.service.QueryExecutionServiceImpl</value>
 </property>
 
 <property>
