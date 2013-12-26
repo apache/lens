@@ -1194,8 +1194,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(partitions.getXPartition().size(), 1);
 
       // Drop again by values
-      SimpleDateFormat sdf = new SimpleDateFormat(UpdatePeriod.HOURLY.format());
-      String val[] = new String[] {sdf.format(partDate)};
+      String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
       dropResult = target().path("metastore/facts").path(table).path("storages/S2/partition")
         .path(StringUtils.join(val, ","))
         .request(mediaType)

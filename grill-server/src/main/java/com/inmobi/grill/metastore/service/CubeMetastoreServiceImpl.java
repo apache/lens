@@ -266,9 +266,11 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
     List<FieldSchema> columns = JAXBUtils.fieldSchemaListFromColumns(xDimTable.getColumns());
     Map<String, List<TableReference>> references =
       JAXBUtils.mapFromDimensionReferences(xDimTable.getDimensionsReferences());
-    Map<Storage, UpdatePeriod> updatePeriodMap =
+    Map<String, UpdatePeriod> updatePeriodMap =
       JAXBUtils.dumpPeriodsFromUpdatePeriods(xDimTable.getUpdatePeriods());
+
     Map<String, String> properties = JAXBUtils.mapFromXProperties(xDimTable.getProperties());
+    Map<Storage, StorageTableDesc> storageDesc = new HashMap<Storage, StorageTableDesc>();
 
     try {
       System.out.println("# Columns: "+ columns);
@@ -277,7 +279,8 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
         xDimTable.getWeight(),
         references,
         updatePeriodMap,
-        properties);
+        properties,
+        new HashMap<Storage, StorageTableDesc>());
       LOG.info("Dimension Table created " + xDimTable.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
@@ -333,7 +336,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
 	  	Storage storage = JAXBUtils.storageFromXStorage(storageAttr);
 	  	CubeDimensionTable dimTable = getClient().getDimensionTable(dimName);
 	  	UpdatePeriod period = UpdatePeriod.valueOf(updatePeriod.toUpperCase());
-	  	getClient().addStorage(dimTable, storage, period);
+	  	getClient().addStorage(dimTable, storage, period, new StorageTableDesc());
 	  	LOG.info("Added storage " + storageAttr.getName() + " for dimension table " + dimName
 	  			+ " with update period " + period);
   	} catch (HiveException exc) {
@@ -384,7 +387,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   		}
   		
   		getClient().dropStorageFromDim(dimName, storage);
-  		LOG.info("Dropped storage " + storage + " from dimension table " + dimName) ;
+  		LOG.info("Dropped storage " + storage + " from dimension table " + dimName);
   	} catch (HiveException exc) {
   		throw new GrillException(exc);
   	}
@@ -435,12 +438,15 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
 		}
 		
 		try {
+      // TODO Convert update period map to String, UpdatePeriod and
+      // add <storage, StorageTableDesc> map
 			getClient().createCubeFactTable(Arrays.asList(fact.getCubeName()),
 					fact.getName(), 
 					JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()), 
-					updatePeriods, 
+					new HashMap<String, Set<UpdatePeriod>>(),
 					fact.getWeight(), 
-					JAXBUtils.mapFromXProperties(fact.getProperties()));
+					JAXBUtils.mapFromXProperties(fact.getProperties()),
+          new HashMap<Storage, StorageTableDesc>());
 			LOG.info("Created fact table " + fact.getName());
 		} catch (HiveException e) {
 			throw new GrillException(e);
@@ -508,7 +514,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       updatePeriods.add(UpdatePeriod.valueOf(sup.getUpdatePeriod().toUpperCase()));
     }
     try {
-      getClient().addStorage(getClient().getFactTable(fact), JAXBUtils.storageFromXStorage(storage), updatePeriods);
+      getClient().addStorage(getClient().getFactTable(fact), JAXBUtils.storageFromXStorage(storage), updatePeriods, new StorageTableDesc());
       LOG.info("Added storage " + storage.getName() + ":" + updatePeriods + " for fact " + fact);
     } catch (HiveException exc) {
       throw new GrillException(exc);
@@ -623,12 +629,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       }
     } catch (HiveException exc) {
       throw new GrillException(exc);
-    } catch (MetaException e) {
-      throw new GrillException(e);
-    } catch (NoSuchObjectException e) {
-      throw new NotFoundException(e);
-    } catch (TException e) {
-      throw new GrillException(e);
     }
   }
 
@@ -648,12 +648,12 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       }
 
       // TODO consider for non-HDFS storages
-      Storage str = new HDFSStorage(storage, null, null);
+      Storage str = Storage.createInstance("", "");
 
       StorageUpdatePeriod sup = partition.getUpdatePeriod();
       UpdatePeriod up = UpdatePeriod.valueOf(sup.getUpdatePeriod().toUpperCase());
 
-      getClient().addPartition(factTable, str, up, partitionTimeStamps, partitionSpec, null);
+      getClient().addPartition(new StoragePartitionDesc(), str);
       LOG.info("Added partition for fact " + fact + " storage:" + storage
         + " dates: " + partitionTimeStamps + " spec:" + partitionSpec + " update period: " + up);
     } catch (HiveException exc) {
@@ -665,13 +665,13 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   public void dropPartitionsOfFactStorageByFilter(String fact, String storage, String filter) throws GrillException {
     try {
       checkFactStorage(fact, storage);
-      HDFSStorage str = new HDFSStorage(storage, null, null);
+      Storage str = Storage.createInstance("TODO", "TODO");
       String storageTableName = MetastoreUtil.getFactStorageTableName(fact, str.getPrefix());
       List<Partition> partitions = getClient().getPartitionsByFilter(storageTableName, filter);
       if (partitions != null) {
         for (int i = 0; i < partitions.size(); i++) {
           Partition p = partitions.get(i);
-          str.dropPartition(storageTableName, p.getValues(), getUserConf());
+          //str.dropPartition(storageTableName, p.getValues(), getUserConf());
           LOG.info("Dropped partition [" + (i+1) + "/" + partitions.size() + "] " + p.getLocation());
         }
       } else {
@@ -679,12 +679,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       }
     } catch (HiveException exc) {
       throw new GrillException(exc);
-    } catch (MetaException e) {
-      throw new GrillException(e);
-    } catch (NoSuchObjectException e) {
-      throw new NotFoundException(e);
-    } catch (TException e) {
-      throw new GrillException(e);
     }
   }
 
@@ -693,8 +687,8 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
     try {
       checkFactStorage(fact, storage);
       String[] vals = StringUtils.split(values, ",");
-      Storage s = new HDFSStorage(storage, null, null);
-      s.dropPartition(MetastoreUtil.getFactStorageTableName(fact, s.getPrefix()), Arrays.asList(vals), getUserConf());
+      Storage s = Storage.createInstance("TODO", "TODO");
+      //s.dropPartition(MetastoreUtil.getFactStorageTableName(fact, s.getPrefix()), Arrays.asList(vals), getUserConf());
       LOG.info("Dropped partition fact: " + fact + " storage: " + storage + " values:" + values);
     } catch (HiveException exc) {
       throw new GrillException(exc);
@@ -719,7 +713,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
     throws GrillException {
     try {
       checkDimensionStorage(dimension, storage);
-      Storage s = new HDFSStorage(storage, null, null);
+      Storage s = Storage.createInstance("TODO", "TODO");
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix());
       List<Partition> partitions = getClient().getPartitionsByFilter(storageTableName, filter);
       if (partitions != null) {
@@ -753,12 +747,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       }
     } catch (HiveException exc) {
       throw new GrillException(exc);
-    } catch (MetaException e) {
-      throw new GrillException(e);
-    } catch (NoSuchObjectException e) {
-      throw new NotFoundException(e);
-    } catch (TException e) {
-      throw new GrillException(e);
     }
   }
 
@@ -766,8 +754,8 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   public void addPartitionToDimStorage(String dimension, String storage, XPartition partition) throws GrillException {
     try {
       CubeDimensionTable dim = checkDimensionStorage(dimension, storage);
-      Storage s = new HDFSStorage(storage, null, null);
-      getClient().addPartition(dim, s, JAXBUtils.getDateFromXML(partition.getTimeStamp()));
+      Storage s = Storage.createInstance("TODO", "TODO");
+      //getClient().addPartition(dim, s, JAXBUtils.getDateFromXML(partition.getTimeStamp()));
       LOG.info("Added partition for dimension: " + dimension + " storage: " + storage);
     } catch (HiveException exc) {
       throw new GrillException(exc);
@@ -778,7 +766,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   public void dropPartitionOfDimStorageByFilter(String dimension, String storage, String filter) throws GrillException {
     try {
       checkDimensionStorage(dimension, storage);
-      Storage s = new HDFSStorage(storage, null, null);
+      Storage s = Storage.createInstance("TODO", "TODO");
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix());
       List<Partition> partitions =
         getClient().getPartitionsByFilter(storageTableName, filter);
@@ -786,7 +774,7 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
         int total = partitions.size();
         int i = 0;
         for (Partition p : partitions) {
-          s.dropPartition(storageTableName, p.getValues(), getUserConf());
+          //s.dropPartition(storageTableName, p.getValues(), getUserConf());
           LOG.info("Dropped partition [" +  ++i + "/" + total + "]" + " for dimension: " + dimension +
           "storage: " + storage + " filter:" + filter + " partition:" + p.getValues());
         }
@@ -794,12 +782,6 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
       LOG.info("");
     } catch (HiveException exc) {
       throw new GrillException(exc);
-    } catch (MetaException e) {
-      throw new GrillException(e);
-    } catch (NoSuchObjectException e) {
-      throw new NotFoundException(e);
-    } catch (TException e) {
-      throw new GrillException(e);
     }
   }
 
@@ -807,9 +789,9 @@ public class CubeMetastoreServiceImpl implements CubeMetastoreService, Configura
   public void dropPartitionOfDimStorageByValue(String dimension, String storage, String values) throws GrillException {
     try {
       checkDimensionStorage(dimension, storage);
-      Storage s = new HDFSStorage(storage, null, null);
-      s.dropPartition(MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix()),
-        Arrays.asList(StringUtils.split(values, ",")), getUserConf());
+      Storage s = Storage.createInstance("TODO", "TODO");
+      //s.dropPartition(MetastoreUtil.getDimStorageTableName(dimension, s.getPrefix()),
+      //  Arrays.asList(StringUtils.split(values, ",")), getUserConf());
       LOG.info("Dropped partition  for dimension: " + dimension +
         "storage: " + storage + " partition:" + values);
     } catch (HiveException exc) {
