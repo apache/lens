@@ -38,7 +38,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("databases")
-  public List<Database> getAllDatabases(@FormDataParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  public List<Database> getAllDatabases(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     List<String> allNames = getSvc().getAllDatabases(sessionid);
     if (allNames != null && !allNames.isEmpty()) {
       List<Database> dblist = new ArrayList<Database>();
@@ -53,7 +53,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("database")
-  public Database getDatabase(@FormDataParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  public Database getDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     LOG.info("Get database");
     Database db = new Database();
     db.setName(getSvc().getCurrentDatabase(sessionid));
@@ -62,7 +62,7 @@ public class MetastoreResource {
 
   @PUT @Path("database")
   @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-  public APIResult setDatabase(@FormDataParam("sessionid") GrillSessionHandle sessionid, Database db) {
+  public APIResult setDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, Database db) {
     LOG.info("Set database");
     try {
       getSvc().setCurrentDatabase(sessionid, db.getName());
@@ -74,7 +74,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("database/{dbname}")
-  public APIResult dropDatabase(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbname") String dbName, 
+  public APIResult dropDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbname") String dbName, 
   		@QueryParam("cascade") boolean cascade) {
     LOG.info("Drop database " + dbName+ " cascade?" + cascade);
     try {
@@ -87,7 +87,7 @@ public class MetastoreResource {
   }
 
   @PUT @Path("database/{dbname}")
-  public APIResult createDatabase(@FormDataParam("sessionid") GrillSessionHandle sessionid, Database db) {
+  public APIResult createDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, Database db) {
     LOG.info("Create database " + db.getName() + " Ignore Existing? " + db.getIgnoreIfExisting());
 
     try {
@@ -99,7 +99,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("cubes")
-  public StringList getAllCubes(@FormDataParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  public StringList getAllCubes(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     try {
       return new StringList(getSvc().getAllCubeNames(sessionid));
     } catch (GrillException e) {
@@ -114,7 +114,7 @@ public class MetastoreResource {
   }
 
   @POST @Path("cubes")
-  public APIResult createNewCube(@FormDataParam("sessionid") GrillSessionHandle sessionid, XCube cube) {
+  public APIResult createNewCube(@QueryParam("sessionid") GrillSessionHandle sessionid, XCube cube) {
     try {
       getSvc().createCube(sessionid, cube);
     } catch (GrillException e) {
@@ -134,7 +134,7 @@ public class MetastoreResource {
   }
 
   @PUT @Path("/cubes/{cubename}")
-  public APIResult updateCube(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubename, XCube cube) {
+  public APIResult updateCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubename, XCube cube) {
     try {
       getSvc().updateCube(sessionid, cube);
     } catch (GrillException e) {
@@ -145,7 +145,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("/cubes/{cubename}")
-  public JAXBElement<XCube> getCube(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) throws Exception{
+  public JAXBElement<XCube> getCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) throws Exception{
     try {
       return xCubeObjectFactory.createXCube(getSvc().getCube(sessionid, cubeName));
     } catch (GrillException e) {
@@ -155,7 +155,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/cubes/{cubename}")
-  public APIResult dropCube(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName, 
+  public APIResult dropCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName, 
   		@QueryParam("cascade") boolean cascade) {
     try {
       getSvc().dropCube(sessionid, cubeName, cascade);
@@ -167,7 +167,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("/cubes/{cubename}/facts")
-  public List<FactTable> getAllFactsOfCube(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) 
+  public List<FactTable> getAllFactsOfCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) 
   		throws GrillException {
   	try {
   		return getSvc().getAllFactsOfCube(sessionid, cubeName);
@@ -178,12 +178,12 @@ public class MetastoreResource {
   }
 
   @GET @Path("/facts")
-  public StringList getAllFacts(@FormDataParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  public StringList getAllFacts(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     return new StringList(getSvc().getAllFactNames(sessionid));
   }
 
   @GET @Path("/facts/{factname}")
-  public JAXBElement<FactTable> getFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) 
+  public JAXBElement<FactTable> getFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) 
   		throws GrillException {
   	try {
   		return xCubeObjectFactory.createFactTable(getSvc().getFactTable(sessionid, fact));
@@ -194,7 +194,7 @@ public class MetastoreResource {
   }
   
   @POST @Path("/facts/{factname}")
-  public APIResult createFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid, FactTable fact) 
+  public APIResult createFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, FactTable fact) 
   		throws GrillException {
   	try {
   		getSvc().createFactTable(sessionid, fact);
@@ -205,7 +205,7 @@ public class MetastoreResource {
   }
   
   @PUT @Path("/facts/{factname}")
-  public APIResult updateFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid, FactTable fact) 
+  public APIResult updateFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, FactTable fact) 
   		throws GrillException {
   	try {
   		getSvc().updateFactTable(sessionid, fact);
@@ -216,7 +216,7 @@ public class MetastoreResource {
   }
   
   @DELETE @Path("/facts/{factname}")
-  public APIResult dropFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String  fact, 
+  public APIResult dropFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String  fact, 
   		@QueryParam("cascade") boolean cascade)  
   		throws GrillException {
   	try {
@@ -229,12 +229,12 @@ public class MetastoreResource {
   }
 
   @GET @Path("/facts/{factname}/storages")
-  public StringList getStoragesOfFact(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) throws GrillException {
+  public StringList getStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) throws GrillException {
     return new StringList(getSvc().getStoragesOfFact(sessionid, fact));
   }
 
   @POST @Path("/facts/{factname}/storages")
-  public APIResult addStorageToFact(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact, FactStorage storage) {
+  public APIResult addStorageToFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact, FactStorage storage) {
     try {
       getSvc().addStorageToFact(sessionid, fact, storage);
     } catch (GrillException exc) {
@@ -245,7 +245,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/facts/{factname}/storages/{storage}")
-  public APIResult dropStorageFromFact(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact, @PathParam("storage") String storage) {
+  public APIResult dropStorageFromFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact, @PathParam("storage") String storage) {
     try {
       getSvc().dropStorageOfFact(sessionid, fact, storage);
     } catch (GrillException exc) {
@@ -256,14 +256,14 @@ public class MetastoreResource {
   }
 
   @GET @Path("/facts/{factname}/storages/{storage}")
-  public JAXBElement<FactStorage> getStorageOfFact(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
+  public JAXBElement<FactStorage> getStorageOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
                                       @PathParam("storage") String storage) throws  GrillException {
     return xCubeObjectFactory.createFactStorage(getSvc().getStorageOfFact(sessionid, fact, storage));
   }
 
 
   @PUT @Path("/facts/{factname}/storages/{storage}")
-  public APIResult alterFactStorageUpdatePeriod(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
+  public APIResult alterFactStorageUpdatePeriod(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
                                                  @PathParam("storage") String storage,
                                                  StorageUpdatePeriodList periods) {
     try {
@@ -277,7 +277,7 @@ public class MetastoreResource {
 
 
   @GET @Path("/facts/{factname}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
+  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
                                                      @PathParam("storage") String storage,
                                                      @QueryParam("filter") String filter) throws GrillException {
     try {
@@ -292,7 +292,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/facts/{factname}/storages/{storage}/partitions")
-  public APIResult dropPartitionsOfFactStorageByFilter(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult dropPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("factname") String fact,
                                                          @PathParam("storage") String storage,
                                                          @QueryParam("filter") String filter) {
@@ -306,7 +306,7 @@ public class MetastoreResource {
   }
 
   @POST @Path("/facts/{factname}/storages/{storage}/partitions")
-  public APIResult addPartitionToFactStorage(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult addPartitionToFactStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("factname") String fact,
                                              @PathParam("storage") String storage,
                                              XPartition partition) {
@@ -320,7 +320,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/facts/{factname}/storages/{storage}/partition/{values}")
-  public APIResult dropPartitionOfFactStorageByValues(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult dropPartitionOfFactStorageByValues(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("factname") String fact,
                                                       @PathParam("storage") String storage,
                                                       @PathParam("values") String values) {
@@ -341,7 +341,7 @@ public class MetastoreResource {
   - POST - ?*/
 
   @POST @Path("/dimensions")
-  public APIResult createCubeDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid, DimensionTable dimensionTable) {
+  public APIResult createCubeDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, DimensionTable dimensionTable) {
     try {
       getSvc().createCubeDimensionTable(sessionid, dimensionTable);
     } catch (GrillException exc) {
@@ -352,7 +352,7 @@ public class MetastoreResource {
   }
   
   @PUT @Path("/dimensions/{dimname}")
-  public APIResult updateCubeDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
+  public APIResult updateCubeDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
   		DimensionTable dimensionTable) {
   	try {
   		getSvc().updateDimensionTable(sessionid, dimensionTable);
@@ -364,7 +364,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/dimensions/{dimname}")
-  public APIResult dropDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension, 
+  public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension, 
   		@QueryParam("cascade") boolean cascade) {
     try {
       getSvc().dropDimensionTable(sessionid, dimension, cascade);
@@ -376,7 +376,7 @@ public class MetastoreResource {
   }
   
   @GET @Path("/dimensions/{dimname}")
-  public JAXBElement<DimensionTable> getDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) 
+  public JAXBElement<DimensionTable> getDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) 
   		throws GrillException {
   	try {
   		return xCubeObjectFactory.createDimensionTable(getSvc().getDimensionTable(sessionid, dimName));
@@ -387,7 +387,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("/dimensions/{dimname}/storages")
-  public List<JAXBElement<XStorage>> getDimensionStorages(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension) 
+  public List<JAXBElement<XStorage>> getDimensionStorages(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension) 
   		throws GrillException {
   	Collection<String> storages = getSvc().getDimensionStorages(sessionid, dimension);
   	List<JAXBElement<XStorage>> xStorages = new ArrayList<JAXBElement<XStorage>>(storages.size());
@@ -402,7 +402,7 @@ public class MetastoreResource {
   }
   
   @POST @Path("/dimensions/{dimname}/storages")
-  public APIResult createDimensionStorage(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
+  public APIResult createDimensionStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
   		UpdatePeriodElement updatePeriodElement) {
   	try {
 			getSvc().createDimensionStorage(sessionid, dimName, 
@@ -416,7 +416,7 @@ public class MetastoreResource {
   }
   
   @DELETE @Path("/dimensions/{dimname}/storages")
-  public APIResult dropAllStoragesOfDim(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) {
+  public APIResult dropAllStoragesOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) {
   	try {
   		getSvc().dropAllStoragesOfDim(sessionid, dimName);
   	} catch (GrillException exc) {
@@ -427,7 +427,7 @@ public class MetastoreResource {
   }
   
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}")
-  public APIResult dropStorageOfDim(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName,
+  public APIResult dropStorageOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName,
   		@PathParam("storage") String storage) {
   	try {
   		getSvc().dropStorageOfDim(sessionid, dimName, storage);
@@ -440,7 +440,7 @@ public class MetastoreResource {
   
   // Get storage sets only the name of the XStorage object.
   @GET @Path("/dimensions/{dimname}/storages/{storage}")
-  public JAXBElement<XStorage> getStorageOfDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimname, 
+  public JAXBElement<XStorage> getStorageOfDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimname, 
   		@PathParam("storage") String storage) throws GrillException {
   	try {
   		return xCubeObjectFactory.createXStorage(getSvc().getStorageOfDimension(sessionid, dimname, storage));
@@ -451,7 +451,7 @@ public class MetastoreResource {
   }
 
   @GET @Path("/dimensions/{dimname}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfDimStorage(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public JAXBElement<PartitionList> getAllPartitionsOfDimStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("dimname") String dimension,
                                                                  @PathParam("storage") String storage,
                                                                  @QueryParam("filter") String filter)
@@ -463,7 +463,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partitions")
-  public APIResult dropPartitionsOfDimStorageByFilter(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult dropPartitionsOfDimStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("dimname") String dimension,
                                                       @PathParam("storage") String storage,
                                                       @QueryParam("filter") String filter) {
@@ -476,7 +476,7 @@ public class MetastoreResource {
   }
 
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partition")
-  public APIResult dropPartitionsOfDimStorageByValue(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult dropPartitionsOfDimStorageByValue(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("dimname") String dimension,
                                                      @PathParam("storage") String storage,
                                                      @QueryParam("values") String values) {
@@ -489,7 +489,7 @@ public class MetastoreResource {
   }
 
   @POST @Path("/dimensions/{dimname}/storages/{storage}/partitions")
-  public APIResult addPartitionToDimStorage(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult addPartitionToDimStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("dimname") String dimension,
                                             @PathParam("storage") String storage,
                                             XPartition partition) {

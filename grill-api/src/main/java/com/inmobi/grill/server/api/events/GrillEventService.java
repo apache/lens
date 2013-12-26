@@ -6,7 +6,7 @@ import com.inmobi.grill.server.api.GrillService;
 
 import java.util.Collection;
 
-public interface GrillEventService extends GrillService {
+public interface GrillEventService {
   public void addListener(QueryEventListener listener);
   public void removeListener(QueryEventListener listener);
   public void handleEvent(QueryEvent change) throws GrillException;

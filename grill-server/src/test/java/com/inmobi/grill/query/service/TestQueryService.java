@@ -25,7 +25,6 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
-import com.inmobi.grill.server.api.QueryExecutionService;
 import com.inmobi.grill.service.GrillJerseyTest;
 import com.inmobi.grill.service.GrillServices;
 import com.inmobi.grill.api.GrillConfConstants;
@@ -46,8 +45,6 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.SessionHandle;
 
 import org.testng.Assert;
@@ -59,14 +56,16 @@ import org.testng.annotations.Test;
 
 public class TestQueryService extends GrillJerseyTest {
 
-  QueryExcecutionServiceImpl queryService;
+  QueryExecutionServiceImpl queryService;
   SessionHandle sessionHandle;
+  GrillSessionHandle grillSessionId;
   
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    queryService = (QueryExcecutionServiceImpl)GrillServices.get().getService("query");
+    queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
     sessionHandle = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    grillSessionId = new GrillSessionHandle(sessionHandle);
   }
 
   @AfterTest
@@ -106,6 +105,8 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "CREATE TABLE IF NOT EXISTS " + tblName  +"(ID INT, IDSTR STRING)";
 
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         createTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -119,10 +120,10 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     // wait till the query finishes
-    QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
+    QueryContext ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).request().get(QueryContext.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -138,6 +139,8 @@ public class TestQueryService extends GrillJerseyTest {
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +
         "' OVERWRITE INTO TABLE " + tblName;
 
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         dataLoad));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -151,10 +154,10 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     // wait till the query finishes
-    QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
+    QueryContext ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).request().get(QueryContext.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -170,6 +173,8 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "DROP TABLE IF EXISTS " + tblName ;
 
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         createTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -183,10 +188,10 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     // wait till the query finishes
-    QueryContext ctx = target.path(handle.toString()).request().get(QueryContext.class);
+    QueryContext ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).request().get(QueryContext.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -210,6 +215,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query")
         .build(),
         "select name from table"));
@@ -268,6 +275,8 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart confpart = new FormDataMultiPart();
     QueryConf conf = new QueryConf();
     conf.addProperty("my.property", "myvalue");
+    confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     confpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
@@ -285,7 +294,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        new GrillSessionHandle(sessionHandle), MediaType.APPLICATION_XML_TYPE));
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -314,6 +323,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/preparedqueries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -410,6 +421,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/preparedqueries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -440,6 +453,8 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart confpart = new FormDataMultiPart();
     QueryConf conf = new QueryConf();
     conf.addProperty("my.property", "myvalue");
+    confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     confpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
@@ -510,6 +525,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID, IDSTR from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -604,6 +621,8 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     QueryConf conf = new QueryConf();
     conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID, IDSTR from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -670,6 +689,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
