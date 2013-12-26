@@ -39,13 +39,13 @@ import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.QueryExecutionService;
 
-public class QueryExcecutionServiceImpl implements QueryExecutionService, Configurable {
+public class QueryExecutionServiceImpl implements QueryExecutionService, Configurable {
   static {
     Configuration.addDefaultResource("grill-default.xml");
     Configuration.addDefaultResource("grill-site.xml");
   }
 
-  public static final Log LOG = LogFactory.getLog(QueryExcecutionServiceImpl.class);
+  public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
@@ -75,7 +75,7 @@ public class QueryExcecutionServiceImpl implements QueryExecutionService, Config
   private DriverSelector driverSelector;
   private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
 
-  public QueryExcecutionServiceImpl() throws GrillException {
+  public QueryExecutionServiceImpl() throws GrillException {
   }
 
   private void initializeQueryAcceptorsAndListeners() {
