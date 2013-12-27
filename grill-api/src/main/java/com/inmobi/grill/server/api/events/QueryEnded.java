@@ -6,6 +6,10 @@ import com.inmobi.grill.api.QueryStatus;
 
 import java.util.EnumSet;
 
+/**
+ * Generic event denoting that query has ended. If a listener wants to just be notified when query has ended
+ * irrespective of its success or failure, then that listener can subscribe for this event type
+ */
 public class QueryEnded extends StatusChange {
   private final String user;
   private final Throwable cause;
@@ -24,10 +28,18 @@ public class QueryEnded extends StatusChange {
     }
   }
 
+  /**
+   * If the query ended because of a user action, then this method will return the user id of requesting user
+   * @return
+   */
   public final String getUser() {
     return user;
   }
 
+  /**
+   * If the query ended because of an error, then this method should give the cause.
+   * @return
+   */
   public final Throwable getCause() {
     return cause;
   }
