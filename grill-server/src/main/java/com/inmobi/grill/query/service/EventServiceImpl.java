@@ -8,14 +8,18 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class EventServiceImpl implements GrillEventService {
   public static final Logger LOG = Logger.getLogger(EventServiceImpl.class);
   final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners;
   private volatile boolean running;
+  private ExecutorService eventHandlerPool;
 
   public EventServiceImpl() {
     eventListeners = new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
+    eventHandlerPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   }
 
   @SuppressWarnings("unchecked")
@@ -68,23 +72,36 @@ public class EventServiceImpl implements GrillEventService {
     }
   }
 
+  private final class EventHandler implements Runnable {
+    final GrillEvent event;
+
+    EventHandler(GrillEvent event) {
+      this.event = event;
+    }
+
+    public void run() {
+      Class<? extends GrillEvent> evtClass = event.getClass();
+      // Call listeners directly listening for this event type
+      handleEvent(eventListeners.get(evtClass), event);
+      Class<?> superClass =  evtClass.getSuperclass();
+
+      // Call listeners which listen of super types of this event type
+      while (GrillEvent.class.isAssignableFrom(superClass)) {
+        if (eventListeners.containsKey(superClass)) {
+          handleEvent(eventListeners.get(superClass), event);
+        }
+        superClass = superClass.getSuperclass();
+      }
+    }
+  }
+
   @SuppressWarnings("unchecked")
   @Override
-  public void handleEvent(GrillEvent evt) throws GrillException {
+  public void handleEvent(final GrillEvent evt) throws GrillException {
     if (!running || evt == null) {
       return;
     }
-
-    Class<? extends GrillEvent> evtClass = evt.getClass();
-    handleEvent(eventListeners.get(evtClass), evt);
-    Class<?> superClass =  evtClass.getSuperclass();
-
-    while (GrillEvent.class.isAssignableFrom(superClass)) {
-      if (eventListeners.containsKey(superClass)) {
-        handleEvent(eventListeners.get(superClass), evt);
-      }
-      superClass = superClass.getSuperclass();
-    }
+    eventHandlerPool.submit(new EventHandler(evt));
   }
 
   @Override
@@ -110,6 +127,17 @@ public class EventServiceImpl implements GrillEventService {
   @Override
   public void stop() throws GrillException {
     running = false;
-    LOG.info("Event listener service stopped");
+    List<Runnable> pending = eventHandlerPool.shutdownNow();
+    if (pending != null && !pending.isEmpty()) {
+      StringBuilder pendingMsg = new StringBuilder("Pending Events:");
+      for (Runnable handler : pending) {
+        if (handler instanceof EventHandler) {
+          pendingMsg.append(((EventHandler) handler).event.getEventId()).append(",");
+        }
+      }
+      LOG.info("Event listener service stopped while " + pending.size() + " events still pending");
+      LOG.info(pendingMsg.toString());
+    }
+    LOG.info("Event service stopped");
   }
 }

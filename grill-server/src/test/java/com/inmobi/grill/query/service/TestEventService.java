@@ -14,6 +14,7 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import static org.testng.Assert.*;
 
@@ -24,12 +25,14 @@ public class TestEventService {
   MockFailedListener failedListener;
   MockQueuePositionChange queuePositionChangeListener;
   MockEndedListener endedListener;
+  CountDownLatch latch;
 
   class GenericEventListener implements GrillEventListener<GrillEvent> {
     boolean processed = false;
     @Override
     public void onEvent(GrillEvent event) throws GrillException {
       processed = true;
+      latch.countDown();
       LOG.info("GrillEvent:" + event.getEventId());
     }
   }
@@ -39,6 +42,7 @@ public class TestEventService {
     @Override
     public void onEvent(QueryFailed change) throws GrillException {
       processed = true;
+      latch.countDown();
       LOG.info("Query Failed event: " + change);
     }
   }
@@ -48,6 +52,7 @@ public class TestEventService {
     @Override
     public void onEvent(QueryEnded change) throws GrillException {
       processed = true;
+      latch.countDown();
       LOG.info("Query ended event: " + change);
     }
   }
@@ -57,6 +62,7 @@ public class TestEventService {
     @Override
     public void onEvent(QueuePositionChange change) throws GrillException {
       processed = true;
+      latch.countDown();
       LOG.info("Query position changed: " + change);
     }
   }
@@ -109,7 +115,7 @@ public class TestEventService {
   }
 
   @Test
-  public void testHandleEvent() {
+  public void testHandleEvent() throws Exception{
     QueryHandle query = new QueryHandle(UUID.randomUUID());
     Exception cause = new Exception("Failure cause");
     String user = "user";
@@ -118,21 +124,27 @@ public class TestEventService {
     QueuePositionChange positionChange = new QueuePositionChange(1, 0, query);
 
     try {
+      latch = new CountDownLatch(3);
       service.handleEvent(failed);
+      latch.await();
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertTrue(failedListener.processed);
       assertFalse(queuePositionChangeListener.processed);
       resetListeners();
 
+      latch = new CountDownLatch(2);
       service.handleEvent(success);
+      latch.await();
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertFalse(failedListener.processed);
       assertFalse(queuePositionChangeListener.processed);
       resetListeners();
 
+      latch = new CountDownLatch(2);
       service.handleEvent(positionChange);
+      latch.await();
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
@@ -146,7 +158,9 @@ public class TestEventService {
         }
       };
 
+      latch = new CountDownLatch(1);
       service.handleEvent(genEvent);
+      latch.await();
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
