@@ -1,43 +1,45 @@
 package com.inmobi.grill.query.service;
 
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.server.api.events.GrillEvent;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
-import com.inmobi.grill.server.api.events.QueryEvent;
-import com.inmobi.grill.server.api.events.QueryEventListener;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class EventServiceImpl implements GrillEventService{
+public class EventServiceImpl implements GrillEventService {
   public static final Logger LOG = Logger.getLogger(EventServiceImpl.class);
-  Map<Class<? extends QueryEvent>, List<QueryEventListener>> eventListeners;
+  final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners;
   private volatile boolean running;
+  private ExecutorService eventHandlerPool;
 
   public EventServiceImpl() {
-    eventListeners = new HashMap<Class<? extends QueryEvent>, List<QueryEventListener>>();
+    eventListeners = new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
+    eventHandlerPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   }
 
   @SuppressWarnings("unchecked")
-  private Class<? extends QueryEvent> getListenerType(QueryEventListener listener) {
-    Class<? extends QueryEvent> listenerEventType = null;
+  protected final Class<? extends GrillEvent> getListenerType(GrillEventListener listener) {
     for (Method m : listener.getClass().getMethods()) {
-      if (QueryEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
+      if (GrillEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
         // Found handler method
-        Class<?>[] params = m.getParameterTypes();
-        listenerEventType =  (Class<? extends QueryEvent>) params[0];
+        return  (Class<? extends GrillEvent>) m.getParameterTypes()[0];
       }
     }
-    return listenerEventType;
+    return null;
   }
 
   @Override
-  public void addListener(QueryEventListener listener) {
-    Class<? extends QueryEvent> listenerEventType = getListenerType(listener);
+  public void addListener(GrillEventListener listener) {
+    Class<? extends GrillEvent> listenerEventType = getListenerType(listener);
     synchronized (eventListeners) {
-      List<QueryEventListener> listeners = eventListeners.get(listenerEventType);
+      List<GrillEventListener> listeners = eventListeners.get(listenerEventType);
       if (listeners == null) {
-        listeners = new ArrayList<QueryEventListener>();
+        listeners = new ArrayList<GrillEventListener>();
         eventListeners.put(listenerEventType, listeners);
       }
       listeners.add(listener);
@@ -46,9 +48,9 @@ public class EventServiceImpl implements GrillEventService{
   }
 
   @Override
-  public void removeListener(QueryEventListener listener) {
+  public void removeListener(GrillEventListener listener) {
     synchronized (eventListeners) {
-      List<QueryEventListener> listeners = eventListeners.get(getListenerType(listener));
+      List<GrillEventListener> listeners = eventListeners.get(getListenerType(listener));
       if (listeners != null) {
         if (listeners.remove(listener)) {
           LOG.info("Removed listener " + listener);
@@ -58,32 +60,73 @@ public class EventServiceImpl implements GrillEventService{
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public void handleEvent(QueryEvent evt) throws GrillException {
-    if (!running) {
-      return;
-    }
-
-    for (Map.Entry<Class<? extends QueryEvent>, List<QueryEventListener>> entry : eventListeners.entrySet()) {
-      Class<? extends QueryEvent> type = entry.getKey();
-      // isAssignable will take care of handling event hierarchy.
-      // For example if some one is interested in all QueryEnded events, then they will be able to just
-      // listen for QueryEnded event type, instead of having to subscribe for all end event types in a loop
-      if (type.isAssignableFrom(evt.getClass())) {
-        for (QueryEventListener listener : entry.getValue()) {
-          try {
-            listener.onQueryEvent(evt);
-          } catch (Exception exc) {
-            LOG.error("Error in handling event: " + evt.getQueryHandle() + "//" + evt.getId()
-              + " for listener " + listener, exc);
-          }
+  private void handleEvent(List<GrillEventListener> listeners, GrillEvent evt) {
+    if (listeners != null && !listeners.isEmpty()) {
+      for (GrillEventListener listener : listeners) {
+        try {
+          listener.onEvent(evt);
+        } catch (Exception exc) {
+          LOG.error("Error in handling event" + evt.getEventId() + " for listener " + listener, exc);
         }
       }
     }
   }
 
+  private final class EventHandler implements Runnable {
+    final GrillEvent event;
+
+    EventHandler(GrillEvent event) {
+      this.event = event;
+    }
+
+    public void run() {
+      Class<? extends GrillEvent> evtClass = event.getClass();
+      // Call listeners directly listening for this event type
+      handleEvent(eventListeners.get(evtClass), event);
+      Class<?> superClass =  evtClass.getSuperclass();
+
+      // Call listeners which listen of super types of this event type
+      while (GrillEvent.class.isAssignableFrom(superClass)) {
+        if (eventListeners.containsKey(superClass)) {
+          handleEvent(eventListeners.get(superClass), event);
+        }
+        superClass = superClass.getSuperclass();
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
   @Override
-  public Collection<QueryEventListener> getListeners(Class<? extends QueryEvent> changeType) {
-    return eventListeners.get(changeType);
+  public void handleEvent(final GrillEvent evt) throws GrillException {
+    if (!running || evt == null) {
+      return;
+    }
+    eventHandlerPool.submit(new EventHandler(evt));
+  }
+
+  @Override
+  public Collection<GrillEventListener> getListeners(Class<? extends GrillEvent> eventType) {
+    return Collections.unmodifiableList(eventListeners.get(eventType));
+  }
+
+  public void start() throws GrillException {
+    running = true;
+    LOG.info("Event listener service started");
+  }
+
+  public void stop() throws GrillException {
+    running = false;
+    List<Runnable> pending = eventHandlerPool.shutdownNow();
+    if (pending != null && !pending.isEmpty()) {
+      StringBuilder pendingMsg = new StringBuilder("Pending Events:");
+      for (Runnable handler : pending) {
+        if (handler instanceof EventHandler) {
+          pendingMsg.append(((EventHandler) handler).event.getEventId()).append(",");
+        }
+      }
+      LOG.info("Event listener service stopped while " + pending.size() + " events still pending");
+      LOG.info(pendingMsg.toString());
+    }
+    LOG.info("Event service stopped");
   }
 }

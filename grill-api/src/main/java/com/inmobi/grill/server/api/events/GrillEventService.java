@@ -13,25 +13,26 @@ public interface GrillEventService {
    * Add a listener interested in a specific type of event. The type is deduced from the argument type of handler method
    * @param listener
    */
-  public void addListener(QueryEventListener listener);
+  public void addListener(GrillEventListener listener);
 
   /**
    * Remove this listener instance
    * @param listener
    */
-  public void removeListener(QueryEventListener listener);
+  public void removeListener(GrillEventListener listener);
 
   /**
    * Process an event, and notify all listeners interested in this event
-   * @param change
+   * @param event object
+   * @param event object
    * @throws GrillException
    */
-  public void handleEvent(QueryEvent change) throws GrillException;
+  public void handleEvent(GrillEvent event) throws GrillException;
 
   /**
    * Get all listeners of a particular type
    * @param changeType
    * @return
    */
-  public Collection<QueryEventListener> getListeners(Class<? extends QueryEvent> changeType);
+  public Collection<GrillEventListener> getListeners(Class<? extends GrillEvent> changeType);
 }

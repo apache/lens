@@ -1,7 +1,8 @@
-package com.inmobi.grill.server.api.events;
+package com.inmobi.grill.server.api.events.query;
 
 
 import com.inmobi.grill.api.QueryHandle;
+import com.inmobi.grill.server.api.events.GrillEvent;
 
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
  *
  * @param <T> Type of changed information about the query
  */
-public abstract class QueryEvent<T> {
+public abstract class QueryEvent<T> extends GrillEvent {
   protected final T previousValue;
   protected final T currentValue;
   protected final QueryHandle handle;
@@ -37,7 +38,17 @@ public abstract class QueryEvent<T> {
     return handle;
   }
 
-  public final UUID getId() {
-    return id;
+  @Override
+  public String getEventId() {
+    return id.toString();
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder(getClass().getSimpleName())
+    .append(":{id: ").append(id).append(", query:")
+      .append(getQueryHandle())
+      .append(", change:[").append(previousValue).append(" -> ").append(currentValue).append("]}");
+    return buf.toString();
   }
 }
