@@ -119,7 +119,7 @@ public class MetastoreResource {
     try {
       getSvc().createCube(sessionid, cube);
     } catch (GrillException e) {
-      LOG.error("Error creating cube " + cube.getName());
+      LOG.error("Error creating cube " + cube.getName(), e);
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return SUCCESS;

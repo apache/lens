@@ -41,8 +41,8 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.server.api.GrillService;
 import com.inmobi.grill.server.api.QueryExecutionService;
+import com.inmobi.grill.service.GrillService;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   static {

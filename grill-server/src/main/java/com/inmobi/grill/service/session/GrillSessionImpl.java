@@ -42,4 +42,12 @@ public class GrillSessionImpl extends HiveSessionImpl {
     }
     return cubeClient;
   }
+
+  public synchronized void acquire() throws HiveSQLException {
+    super.acquire();
+  }
+
+  public synchronized void release() {
+    super.release();
+  }
 }

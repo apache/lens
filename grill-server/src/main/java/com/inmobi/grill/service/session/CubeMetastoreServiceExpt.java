@@ -6,7 +6,7 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.SessionHandle;
 
-import com.inmobi.grill.server.api.GrillService;
+import com.inmobi.grill.service.GrillService;
 
 public class CubeMetastoreServiceExpt extends GrillService {
   public CubeMetastoreServiceExpt(CLIService cliService) {

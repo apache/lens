@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.api;
+package com.inmobi.grill.service;
 
 import java.io.IOException;
 import java.util.Map;
@@ -14,6 +14,7 @@ import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.service.session.GrillSessionImpl;
 
 public abstract class GrillService extends CompositeService {
 
@@ -73,4 +74,25 @@ public abstract class GrillService extends CompositeService {
   public SessionManager getSessionManager() throws GrillException {
     return cliService.getSessionManager();
   }
+
+  public GrillSessionImpl getSession(SessionHandle sessionHandle) throws GrillException {
+    try {
+      return ((GrillSessionImpl)getSessionManager().getSession(sessionHandle));
+    } catch (Exception e) {
+      throw new GrillException (e);
+    }
+  }
+
+  public void acquire(SessionHandle sessionHandle) throws GrillException {
+    try {
+      getSession(sessionHandle).acquire();
+    } catch (HiveSQLException e) {
+      throw new GrillException (e);
+    }
+  }
+
+  public void release(SessionHandle sessionHandle) throws GrillException {
+    getSession(sessionHandle).release();
+  }
+
 }

@@ -14,7 +14,7 @@ import org.apache.hive.service.cli.thrift.TRow;
 
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.server.api.GrillService;
+import com.inmobi.grill.service.GrillService;
 
 public class HiveCommandService extends GrillService {
 

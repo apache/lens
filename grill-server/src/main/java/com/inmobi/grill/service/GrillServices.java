@@ -13,7 +13,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
 
 import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.server.api.GrillService;
 import com.inmobi.grill.service.session.GrillSessionImpl;
 
 public class GrillServices {

@@ -69,6 +69,7 @@ public class TestQueryService extends GrillJerseyTest {
 
   @AfterTest
   public void tearDown() throws Exception {
+    queryService.closeSession(grillSessionId.getSessionHandle());
     super.tearDown();
   }
 
