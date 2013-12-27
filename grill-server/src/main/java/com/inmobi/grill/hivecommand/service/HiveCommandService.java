@@ -1,16 +1,11 @@
 package com.inmobi.grill.hivecommand.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
-import org.apache.hive.service.cli.RowSet;
-import org.apache.hive.service.cli.thrift.TRow;
 
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
@@ -25,9 +20,18 @@ public class HiveCommandService extends GrillService {
   public void addResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
+      acquire(sessionid.getSessionHandle());
       getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    } finally {
+      try {
+        release(sessionid.getSessionHandle());
+      } catch (GrillException e) {
+        throw new WebApplicationException(e);
+      }
     }
   }
 
@@ -35,9 +39,18 @@ public class HiveCommandService extends GrillService {
   public void deleteResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "delete " + type.toLowerCase() + " " + path;
     try {
+      acquire(sessionid.getSessionHandle());
       getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    } finally {
+      try {
+        release(sessionid.getSessionHandle());
+      } catch (GrillException e) {
+        throw new WebApplicationException(e);
+      }
     }
   }
 
@@ -49,18 +62,21 @@ public class HiveCommandService extends GrillService {
     }
     if (!StringUtils.isBlank(key)) {
       command += " " + key;
-      try {
-        System.out.println(key + " in sessionconf:" + getSessionManager().getSession(sessionid.getSessionHandle()).getHiveConf().get(key));
-      } catch (Exception e1) {
-        // TODO Auto-generated catch block
-        e1.printStackTrace();
-      }
     }
     OperationHandle handle;
     try {
+      acquire(sessionid.getSessionHandle());
       handle = getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    } finally {
+      try {
+        release(sessionid.getSessionHandle());
+      } catch (GrillException e) {
+        throw new WebApplicationException(e);
+      }
     }
     return handle;
   }
@@ -68,19 +84,18 @@ public class HiveCommandService extends GrillService {
   public void setSessionParameter(GrillSessionHandle sessionid, String key, String value) {
     String command = "set" + " " + key + "= " + value;
     try {
-      OperationHandle handle = getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
-      RowSet rows = null;
-      try {
-        rows = getCliService().fetchResults(handle);
-      } catch (HiveSQLException e) {
-        new WebApplicationException(e);
-      }
-      for (TRow row : rows.toTRowSet().getRows()) {
-        System.out.println(row.getColVals().get(0).getStringVal().getValue()); 
-      }
-
+      acquire(sessionid.getSessionHandle());
+      getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    } finally {
+      try {
+        release(sessionid.getSessionHandle());
+      } catch (GrillException e) {
+        throw new WebApplicationException(e);
+      }
     }
   }
 
