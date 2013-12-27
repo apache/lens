@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.api.events;
+package com.inmobi.grill.server.api.events.query;
 
 
 import com.inmobi.grill.api.QueryHandle;

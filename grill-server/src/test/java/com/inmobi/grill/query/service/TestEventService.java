@@ -4,6 +4,10 @@ import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.events.*;
+import com.inmobi.grill.server.api.events.query.QueryEnded;
+import com.inmobi.grill.server.api.events.query.QueryFailed;
+import com.inmobi.grill.server.api.events.query.QuerySuccess;
+import com.inmobi.grill.server.api.events.query.QueuePositionChange;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -16,32 +20,42 @@ import static org.testng.Assert.*;
 public class TestEventService {
   public static final Logger LOG = Logger.getLogger(TestEventService.class);
   GrillEventService service;
+  GenericEventListener genericEventListener;
   MockFailedListener failedListener;
   MockQueuePositionChange queuePositionChangeListener;
   MockEndedListener endedListener;
 
-  class MockFailedListener implements QueryEventListener<QueryFailed> {
+  class GenericEventListener implements GrillEventListener<GrillEvent> {
     boolean processed = false;
     @Override
-    public void onQueryEvent(QueryFailed change) throws GrillException {
+    public void onEvent(GrillEvent event) throws GrillException {
+      processed = true;
+      LOG.info("GrillEvent:" + event.getEventId());
+    }
+  }
+
+  class MockFailedListener implements GrillEventListener<QueryFailed> {
+    boolean processed = false;
+    @Override
+    public void onEvent(QueryFailed change) throws GrillException {
       processed = true;
       LOG.info("Query Failed event: " + change);
     }
   }
 
-  class MockEndedListener implements QueryEventListener<QueryEnded> {
+  class MockEndedListener implements GrillEventListener<QueryEnded> {
     boolean processed = false;
     @Override
-    public void onQueryEvent(QueryEnded change) throws GrillException {
+    public void onEvent(QueryEnded change) throws GrillException {
       processed = true;
       LOG.info("Query ended event: " + change);
     }
   }
 
-  class MockQueuePositionChange implements QueryEventListener<QueuePositionChange> {
+  class MockQueuePositionChange implements GrillEventListener<QueuePositionChange> {
     boolean processed = false;
     @Override
-    public void onQueryEvent(QueuePositionChange change) throws GrillException {
+    public void onEvent(QueuePositionChange change) throws GrillException {
       processed = true;
       LOG.info("Query position changed: " + change);
     }
@@ -63,6 +77,8 @@ public class TestEventService {
 
   @Test
   public void testAddListener() {
+    genericEventListener = new GenericEventListener();
+    service.addListener(genericEventListener);
     endedListener = new MockEndedListener();
     service.addListener(endedListener);
     failedListener = new MockFailedListener();
@@ -70,7 +86,7 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertEquals(((EventServiceImpl) service).eventListeners.keySet().size(), 3);
+    assertEquals(((EventServiceImpl) service).eventListeners.keySet().size(), 4);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
     assertEquals(service.getListeners(QueryEnded.class).size(), 1);
     assertEquals(service.getListeners(QueuePositionChange.class).size(), 1);
@@ -86,6 +102,7 @@ public class TestEventService {
   }
 
   private void resetListeners() {
+    genericEventListener.processed = false;
     endedListener.processed = false;
     failedListener.processed = false;
     queuePositionChangeListener.processed = false;
@@ -102,22 +119,38 @@ public class TestEventService {
 
     try {
       service.handleEvent(failed);
+      assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertTrue(failedListener.processed);
       assertFalse(queuePositionChangeListener.processed);
       resetListeners();
 
       service.handleEvent(success);
+      assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertFalse(failedListener.processed);
       assertFalse(queuePositionChangeListener.processed);
       resetListeners();
 
       service.handleEvent(positionChange);
+      assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
       assertTrue(queuePositionChangeListener.processed);
+      resetListeners();
 
+      GrillEvent genEvent = new GrillEvent() {
+        @Override
+        public String getEventId() {
+          return "TEST_EVENT";
+        }
+      };
+
+      service.handleEvent(genEvent);
+      assertTrue(genericEventListener.processed);
+      assertFalse(endedListener.processed);
+      assertFalse(failedListener.processed);
+      assertFalse(queuePositionChangeListener.processed);
     } catch (GrillException e) {
       fail(e.getMessage());
     }
