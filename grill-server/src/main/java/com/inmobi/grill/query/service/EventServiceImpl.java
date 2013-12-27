@@ -9,9 +9,9 @@ import org.apache.log4j.Logger;
 import java.lang.reflect.Method;
 import java.util.*;
 
-public class EventServiceImpl implements GrillEventService{
+public class EventServiceImpl implements GrillEventService {
   public static final Logger LOG = Logger.getLogger(EventServiceImpl.class);
-  Map<Class<? extends QueryEvent>, List<QueryEventListener>> eventListeners;
+  final Map<Class<? extends QueryEvent>, List<QueryEventListener>> eventListeners;
   private volatile boolean running;
 
   public EventServiceImpl() {
@@ -19,16 +19,14 @@ public class EventServiceImpl implements GrillEventService{
   }
 
   @SuppressWarnings("unchecked")
-  private Class<? extends QueryEvent> getListenerType(QueryEventListener listener) {
-    Class<? extends QueryEvent> listenerEventType = null;
+  protected final Class<? extends QueryEvent> getListenerType(QueryEventListener listener) {
     for (Method m : listener.getClass().getMethods()) {
       if (QueryEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
         // Found handler method
-        Class<?>[] params = m.getParameterTypes();
-        listenerEventType =  (Class<? extends QueryEvent>) params[0];
+        return  (Class<? extends QueryEvent>) m.getParameterTypes()[0];
       }
     }
-    return listenerEventType;
+    return null;
   }
 
   @Override
@@ -58,27 +56,35 @@ public class EventServiceImpl implements GrillEventService{
   }
 
   @SuppressWarnings("unchecked")
+  private void handleEvent(List<QueryEventListener> listeners, QueryEvent evt) {
+    if (listeners != null && !listeners.isEmpty()) {
+      for (QueryEventListener listener : listeners) {
+        try {
+          listener.onQueryEvent(evt);
+        } catch (Exception exc) {
+          LOG.error("Error in handling event: " + evt.getQueryHandle() + "//" + evt.getId()
+            + " for listener " + listener, exc);
+        }
+      }
+    }
+  }
+
+  @SuppressWarnings("unchecked")
   @Override
   public void handleEvent(QueryEvent evt) throws GrillException {
-    if (!running) {
+    if (!running || evt == null) {
       return;
     }
 
-    for (Map.Entry<Class<? extends QueryEvent>, List<QueryEventListener>> entry : eventListeners.entrySet()) {
-      Class<? extends QueryEvent> type = entry.getKey();
-      // isAssignable will take care of handling event hierarchy.
-      // For example if some one is interested in all QueryEnded events, then they will be able to just
-      // listen for QueryEnded event type, instead of having to subscribe for all end event types in a loop
-      if (type.isAssignableFrom(evt.getClass())) {
-        for (QueryEventListener listener : entry.getValue()) {
-          try {
-            listener.onQueryEvent(evt);
-          } catch (Exception exc) {
-            LOG.error("Error in handling event: " + evt.getQueryHandle() + "//" + evt.getId()
-              + " for listener " + listener, exc);
-          }
-        }
+    Class<? extends QueryEvent> evtClass = evt.getClass();
+    handleEvent(eventListeners.get(evtClass), evt);
+    Class<?> superClass =  evtClass.getSuperclass();
+
+    while (QueryEvent.class.isAssignableFrom(superClass)) {
+      if (eventListeners.containsKey(superClass)) {
+        handleEvent(eventListeners.get(superClass), evt);
       }
+      superClass = superClass.getSuperclass();
     }
   }
 

@@ -40,4 +40,13 @@ public abstract class QueryEvent<T> {
   public final UUID getId() {
     return id;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder buf = new StringBuilder(getClass().getSimpleName())
+    .append(":{id: ").append(id).append(", query:")
+      .append(getQueryHandle())
+      .append(", change:[").append(previousValue).append(" -> ").append(currentValue).append("]}");
+    return buf.toString();
+  }
 }
