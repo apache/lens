@@ -88,8 +88,8 @@ public class EventServiceImpl implements GrillEventService {
   }
 
   @Override
-  public Collection<GrillEventListener> getListeners(Class<? extends GrillEvent> changeType) {
-    return eventListeners.get(changeType);
+  public Collection<GrillEventListener> getListeners(Class<? extends GrillEvent> eventType) {
+    return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
   @Override
