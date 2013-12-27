@@ -62,8 +62,12 @@ public abstract class GrillService extends CompositeService {
   }
 
   public void closeSession(SessionHandle sessionHandle)
-      throws HiveSQLException {
-    cliService.closeSession(sessionHandle);
+      throws GrillException {
+    try {
+      cliService.closeSession(sessionHandle);
+    } catch (Exception e) {
+      throw new GrillException (e);
+    }
   }
 
   public SessionManager getSessionManager() throws GrillException {

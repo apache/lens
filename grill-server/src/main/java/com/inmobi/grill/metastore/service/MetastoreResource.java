@@ -2,6 +2,7 @@ package com.inmobi.grill.metastore.service;
 
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.StringList;
 import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;

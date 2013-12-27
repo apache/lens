@@ -11,6 +11,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.StringList;
 import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.service.GrillJerseyTest;
@@ -28,7 +29,6 @@ import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;

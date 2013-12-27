@@ -86,25 +86,4 @@ public class EventServiceImpl implements GrillEventService{
   public Collection<QueryEventListener> getListeners(Class<? extends QueryEvent> changeType) {
     return eventListeners.get(changeType);
   }
-
-  @Override
-  public String getName() {
-    return getClass().getName();
-  }
-
-  @Override
-  public void init() throws GrillException {
-  }
-
-  @Override
-  public void start() throws GrillException {
-    running = true;
-    LOG.info("Event listener service started");
-  }
-
-  @Override
-  public void stop() throws GrillException {
-    running = false;
-    LOG.info("Event listener service stopped");
-  }
 }

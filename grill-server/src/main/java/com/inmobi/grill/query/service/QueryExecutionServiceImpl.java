@@ -386,7 +386,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     notifyAllListeners();
   }
 
-  private Configuration getQueryConf(Configuration sessionConf, QueryConf queryConf) {
+  private Configuration getQueryConf(GrillSessionHandle sessionHandle, QueryConf queryConf) throws GrillException {
+    HiveConf sessionConf;
+    try {
+      sessionConf = getSessionManager().getSession(sessionHandle.getSessionHandle()).getHiveConf();
+    } catch (HiveSQLException e) {
+      throw new GrillException(e);
+    }
     Configuration qconf = new Configuration(sessionConf);
     if (queryConf != null && !queryConf.getProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : queryConf.getProperties().entrySet()) {
@@ -425,7 +431,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(this.conf, queryConf);
+    Configuration qconf = getQueryConf(sessionHandle, queryConf);
     accept(query, qconf, SubmitOp.PREPARE);
     PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
     rewriteAndSelect(prepared);
@@ -439,7 +445,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(this.conf, queryConf);
+    Configuration qconf = getQueryConf(sessionHandle, queryConf);
     accept(query, qconf, SubmitOp.EXPLAIN_AND_PREPARE);
     PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
     rewriteAndSelect(prepared);
@@ -453,7 +459,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       QueryPrepareHandle prepareHandle, QueryConf queryConf)
           throws GrillException {
     PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
-    Configuration qconf = getQueryConf(this.conf, queryConf);
+    Configuration qconf = getQueryConf(sessionHandle, queryConf);
     accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
     QueryContext ctx = new QueryContext(pctx, "user", qconf);
     ctx.setStatus(new QueryStatus(0.0,
@@ -469,7 +475,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query,
       QueryConf queryConf) throws GrillException {
-    Configuration qconf = getQueryConf(this.conf, queryConf);
+    Configuration qconf = getQueryConf(sessionHandle, queryConf);
     accept(query, qconf, SubmitOp.EXECUTE);
 
     QueryContext ctx = new QueryContext(query, "user", qconf);
@@ -642,13 +648,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public QueryPlan explain(GrillSessionHandle sessionHandle, String query,
       QueryConf queryConf) throws GrillException {
-    HiveConf sessionConf;
-    try {
-      sessionConf = getSessionManager().getSession(sessionHandle.getSessionHandle()).getHiveConf();
-    } catch (HiveSQLException e) {
-      throw new GrillException(e);
-    }
-    Configuration qconf = getQueryConf(sessionConf, queryConf);
+    Configuration qconf = getQueryConf(sessionHandle, queryConf);
     accept(query, qconf, SubmitOp.EXPLAIN);
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
         query, drivers);
