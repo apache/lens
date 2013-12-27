@@ -234,7 +234,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Get all queries
     // XML 
-    List<QueryHandle> allQueriesXML = target.request(MediaType.APPLICATION_XML)
+    List<QueryHandle> allQueriesXML = target.queryParam("sessionid", grillSessionId).request(MediaType.APPLICATION_XML)
         .get(new GenericType<List<QueryHandle>>() {
         });
     Assert.assertTrue(allQueriesXML.size() >= 1);
@@ -254,7 +254,7 @@ public class TestQueryService extends GrillJerseyTest {
     // Invocation.Builder builderjson = target.path(handle.toString()).request(MediaType.APPLICATION_JSON);
     // String responseJSON = builderjson.get(String.class);
     // System.out.println("query JSON:" + responseJSON);
-    String queryXML = target.path(handle.toString()).request(MediaType.APPLICATION_XML).get(String.class);
+    String queryXML = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request(MediaType.APPLICATION_XML).get(String.class);
     System.out.println("query XML:" + queryXML);
 
     Response response = target.path(handle.toString() + "001").queryParam("sessionid", grillSessionId).request().get();
