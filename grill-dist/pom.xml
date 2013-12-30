@@ -61,6 +61,43 @@
           </execution>
         </executions>
       </plugin>
+      <!--Plugin to build deb-->
+      <plugin>
+        <artifactId>jdeb</artifactId>
+        <groupId>org.vafer</groupId>
+        <version>0.9</version>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jdeb</goal>
+            </goals>
+            <configuration>
+              <installDir>/usr/local/grill</installDir>
+              <deb>${project.build.directory}/${artifactId}_${version}.deb</deb>
+              <dataSet>
+                <data>
+                  <src>target/grill-dist-${project.version}-pkg</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/usr/local/grill</prefix>
+                  </mapper>
+                </data>
+                <data>
+                  <src>target/grill-dist-${project.version}-pkg/bin</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/usr/local/grill/bin</prefix>
+                    <filemode>755</filemode>
+                  </mapper>
+                </data>
+              </dataSet>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>    

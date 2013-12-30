@@ -40,9 +40,9 @@
   <moduleSets>
     <moduleSet>
       <includes>
+        <include>com.inmobi.grill:grill-api</include>
         <include>com.inmobi.grill:grill-cli</include>
-        <include>com.inmobi.grill:grill-common</include>
-        <include>com.inmobi.grill:grill-cube-driver</include>
+        <include>com.inmobi.grill:grill-driver-cube</include>
         <include>com.inmobi.grill:grill-driver</include>
         <include>com.inmobi.grill:grill-driver-hive</include>
         <include>com.inmobi.grill:grill-driver-impala</include>
