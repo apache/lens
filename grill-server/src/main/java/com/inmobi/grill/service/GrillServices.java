@@ -26,13 +26,14 @@ public class GrillServices {
   private static final GrillServices INSTANCE = new GrillServices();
   private HiveConf conf = new HiveConf();
   private boolean inited = false;
+  private CLIService cliService;
 
   private GrillServices() {
   }
 
   public synchronized void initServices() {
       if (!inited) {
-        CLIService cliService = new CLIService();
+        cliService = new CLIService();
         conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getCanonicalName());
         cliService.init(conf);
         cliService.start();
@@ -50,6 +51,8 @@ public class GrillServices {
             services.put(sName, service);
             service.start();
           } catch (Exception e) {
+            LOG.warn("Could not start service:" + sName, e);
+            stopAll();
             throw new WebApplicationException(e);
           }
         }
@@ -69,8 +72,11 @@ public class GrillServices {
         try {
           service.stop();
         } catch (Exception e) {
-          throw new WebApplicationException(e);
+          LOG.warn("Could not stop service:" + service.getName(), e);
         }
+      }
+      if (cliService != null) {
+        cliService.stop();
       }
   }
 
