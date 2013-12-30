@@ -2,15 +2,13 @@ package com.inmobi.grill.server.api.events;
 
 
 import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.server.api.GrillService;
-import com.inmobi.grill.server.api.events.query.QueryEvent;
 
 import java.util.Collection;
 
 /**
  * Singleton which is responsible for managing the event-listener mapping as well as processing events.
  */
-public interface GrillEventService extends GrillService {
+public interface GrillEventService {
   /**
    * Add a listener interested in a specific type of event. The type is deduced from the argument type of handler method
    * @param listener

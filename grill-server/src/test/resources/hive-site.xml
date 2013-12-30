@@ -25,6 +25,11 @@
 </property>
 
 <property>
+  <name>hive.server2.async.exec.threads</name>
+  <value>5</value>
+</property>
+
+<property>
   <name>grill.hive.connection.class</name>
   <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
 </property>

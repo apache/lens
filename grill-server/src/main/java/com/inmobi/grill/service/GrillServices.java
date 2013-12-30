@@ -1,5 +1,6 @@
 package com.inmobi.grill.service;
 
+import java.lang.reflect.Constructor;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -8,10 +9,11 @@ import javax.ws.rs.WebApplicationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.cli.CLIService;
 
 import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.server.api.GrillService;
+import com.inmobi.grill.service.session.GrillSessionImpl;
 
 public class GrillServices {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);
@@ -22,14 +24,19 @@ public class GrillServices {
   }
 
   private static final GrillServices INSTANCE = new GrillServices();
-  private Configuration conf = new Configuration();
+  private HiveConf conf = new HiveConf();
   private boolean inited = false;
+  private CLIService cliService;
 
   private GrillServices() {
   }
 
   public synchronized void initServices() {
       if (!inited) {
+        cliService = new CLIService();
+        conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getCanonicalName());
+        cliService.init(conf);
+        cliService.start();
         String[] serviceNames = conf.getStrings(GrillConfConstants.GRILL_SERVICE_NAMES);
         for (String sName : serviceNames) {
           try {
@@ -37,11 +44,15 @@ public class GrillServices {
                 GrillConfConstants.getServiceImplConfKey(sName), null,
                 GrillService.class);
             LOG.info("Starting " + sName + " service with " + serviceClass);
-            GrillService service = ReflectionUtils.newInstance(serviceClass, conf);
-            service.init();
+            Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
+            GrillService service  = (GrillService) constructor.newInstance(new Object[]
+                {cliService});
+            service.init(conf);
             services.put(sName, service);
             service.start();
           } catch (Exception e) {
+            LOG.warn("Could not start service:" + sName, e);
+            stopAll();
             throw new WebApplicationException(e);
           }
         }
@@ -61,8 +72,11 @@ public class GrillServices {
         try {
           service.stop();
         } catch (Exception e) {
-          throw new WebApplicationException(e);
+          LOG.warn("Could not stop service:" + service.getName(), e);
         }
+      }
+      if (cliService != null) {
+        cliService.stop();
       }
   }
 

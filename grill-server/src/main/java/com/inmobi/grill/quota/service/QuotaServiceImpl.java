@@ -1,31 +1,15 @@
 package com.inmobi.grill.quota.service;
 
+import org.apache.hive.service.cli.CLIService;
+
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.QuotaService;
+import com.inmobi.grill.service.GrillService;
 
-public class QuotaServiceImpl implements QuotaService {
+public class QuotaServiceImpl extends GrillService implements QuotaService {
 
-  @Override
-  public String getName() {
-    return "quota";
-  }
-
-  @Override
-  public void start() throws GrillException {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void stop() throws GrillException {
-    // TODO Auto-generated method stub
-    
-  }
-
-  @Override
-  public void init() throws GrillException {
-    // TODO Auto-generated method stub
-    
+  public QuotaServiceImpl(CLIService cliService) {
+    super("quota", cliService);
   }
 
 }

@@ -20,7 +20,7 @@ import static org.testng.Assert.*;
 
 public class TestEventService {
   public static final Logger LOG = Logger.getLogger(TestEventService.class);
-  GrillEventService service;
+  EventServiceImpl service;
   GenericEventListener genericEventListener;
   MockFailedListener failedListener;
   MockQueuePositionChange queuePositionChangeListener;
@@ -71,7 +71,6 @@ public class TestEventService {
   @BeforeTest
   public void setup() throws Exception {
     service = new EventServiceImpl();
-    service.init();
     service.start();
     LOG.info("Service started");
   }

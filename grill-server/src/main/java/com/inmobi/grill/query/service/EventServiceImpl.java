@@ -4,6 +4,8 @@ import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.events.GrillEvent;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
+
+import org.apache.hive.service.AbstractService;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
@@ -11,13 +13,14 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class EventServiceImpl implements GrillEventService {
+public class EventServiceImpl extends AbstractService implements GrillEventService {
   public static final Logger LOG = Logger.getLogger(EventServiceImpl.class);
   final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners;
   private volatile boolean running;
   private ExecutorService eventHandlerPool;
 
   public EventServiceImpl() {
+    super("EventService");
     eventListeners = new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
     eventHandlerPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   }
@@ -109,23 +112,12 @@ public class EventServiceImpl implements GrillEventService {
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
-  @Override
-  public String getName() {
-    return getClass().getName();
-  }
-
-  @Override
-  public void init() throws GrillException {
-  }
-
-  @Override
-  public void start() throws GrillException {
+  public void start() {
     running = true;
     LOG.info("Event listener service started");
   }
 
-  @Override
-  public void stop() throws GrillException {
+  public void stop() {
     running = false;
     List<Runnable> pending = eventHandlerPool.shutdownNow();
     if (pending != null && !pending.isEmpty()) {

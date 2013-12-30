@@ -9,7 +9,12 @@
 
 <property>
   <name>grill.servicenames</name>
-  <value>query,metastore,scheduler,quota</value>
+  <value>command,query,metastore,scheduler,quota</value>
+</property>
+
+<property>
+  <name>grill.command.service.impl</name>
+  <value>com.inmobi.grill.hivecommand.service.HiveCommandService</value>
 </property>
 
 <property>

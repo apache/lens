@@ -18,12 +18,16 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HiveSQLException;
 
 import com.inmobi.grill.api.DriverSelector;
 import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.api.GrillDriver;
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.GrillResultSetMetadata;
+import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.PreparedQueryContext;
 import com.inmobi.grill.api.QueryCompletionListener;
 import com.inmobi.grill.api.QueryContext;
@@ -38,8 +42,9 @@ import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.QueryExecutionService;
+import com.inmobi.grill.service.GrillService;
 
-public class QueryExecutionServiceImpl implements QueryExecutionService, Configurable {
+public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   static {
     Configuration.addDefaultResource("grill-default.xml");
     Configuration.addDefaultResource("grill-site.xml");
@@ -74,7 +79,8 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
   private DriverSelector driverSelector;
   private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
 
-  public QueryExecutionServiceImpl() throws GrillException {
+  public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
+    super("query", cliService);
   }
 
   private void initializeQueryAcceptorsAndListeners() {
@@ -267,19 +273,19 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
   public void notifyAllListeners() throws GrillException {
     //TODO 
   }
-
-  @Override
+  /*
+ // @Override
   public String getName() {
     return "query";
   }
 
-  @Override
+ // @Override
   public void init() throws GrillException {
     initializeQueryAcceptorsAndListeners();
     loadDriversAndSelector();
   }
 
-  @Override
+ // @Override
   public void start() throws GrillException {
     querySubmitter.start();
     statusPoller.start();
@@ -287,7 +293,7 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
     prepareQueryPurger.start();
   }
 
-  @Override
+ // @Override
   public void stop() throws GrillException {
     this.stopped = true;
 
@@ -304,6 +310,42 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+   */
+  public synchronized void init(HiveConf hiveConf) {
+    super.init(hiveConf);
+    this.conf = hiveConf;
+    initializeQueryAcceptorsAndListeners();
+    try {
+      loadDriversAndSelector();
+    } catch (GrillException e) {
+      throw new IllegalStateException("Could not load drivers");
+    }
+  }
+
+  public synchronized void stop() {
+    super.stop();
+    querySubmitter.interrupt();
+    statusPoller.interrupt();
+    queryPurger.interrupt();
+    prepareQueryPurger.interrupt();
+
+    try {
+      querySubmitter.join();
+      statusPoller.join();
+      queryPurger.join();
+      prepareQueryPurger.join();
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public synchronized void start() {
+    super.start();
+    querySubmitter.start();
+    statusPoller.start();
+    queryPurger.start();
+    prepareQueryPurger.start();
   }
 
   private void rewriteAndSelect(QueryContext ctx) throws GrillException {
@@ -343,8 +385,14 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
     notifyAllListeners();
   }
 
-  private Configuration getQueryConf(QueryConf queryConf) {
-    Configuration qconf = new Configuration(this.conf);
+  private Configuration getQueryConf(GrillSessionHandle sessionHandle, QueryConf queryConf) throws GrillException {
+    HiveConf sessionConf;
+    try {
+      sessionConf = getSessionManager().getSession(sessionHandle.getSessionHandle()).getHiveConf();
+    } catch (HiveSQLException e) {
+      throw new GrillException(e);
+    }
+    Configuration qconf = new Configuration(sessionConf);
     if (queryConf != null && !queryConf.getProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : queryConf.getProperties().entrySet()) {
         qconf.set(entry.getKey(), entry.getValue());
@@ -368,7 +416,7 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
     return resultSets.get(queryHandle);
   }
 
-  @Override
+  /* @Override
   public QueryPlan explain(String query, QueryConf queryConf)
       throws GrillException {
     Configuration qconf = getQueryConf(queryConf);
@@ -377,140 +425,185 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
         query, drivers);
     // select driver to run the query
     return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
-  }
+  } */
 
   @Override
-  public QueryPrepareHandle prepare(String query, QueryConf queryConf)
+  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
-    accept(query, qconf, SubmitOp.PREPARE);
-    PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
-    rewriteAndSelect(prepared);
-    preparedQueries.put(prepared.getPrepareHandle(), prepared);
-    preparedQueryQueue.add(prepared);
-    prepared.getSelectedDriver().prepare(prepared);
-    System.out.println("################### returning " + prepared.getPrepareHandle());
-    return prepared.getPrepareHandle();
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      Configuration qconf = getQueryConf(sessionHandle, queryConf);
+      accept(query, qconf, SubmitOp.PREPARE);
+      PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
+      rewriteAndSelect(prepared);
+      preparedQueries.put(prepared.getPrepareHandle(), prepared);
+      preparedQueryQueue.add(prepared);
+      prepared.getSelectedDriver().prepare(prepared);
+      System.out.println("################### returning " + prepared.getPrepareHandle());
+      return prepared.getPrepareHandle();
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public QueryPlan explainAndPrepare(String query, QueryConf queryConf)
+  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, QueryConf queryConf)
       throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
-    accept(query, qconf, SubmitOp.EXPLAIN_AND_PREPARE);
-    PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
-    rewriteAndSelect(prepared);
-    preparedQueries.put(prepared.getPrepareHandle(), prepared);
-    preparedQueryQueue.add(prepared);
-    return prepared.getSelectedDriver().explainAndPrepare(prepared);
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      Configuration qconf = getQueryConf(sessionHandle, queryConf);
+      accept(query, qconf, SubmitOp.EXPLAIN_AND_PREPARE);
+      PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
+      rewriteAndSelect(prepared);
+      preparedQueries.put(prepared.getPrepareHandle(), prepared);
+      preparedQueryQueue.add(prepared);
+      return prepared.getSelectedDriver().explainAndPrepare(prepared);
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public QueryHandle executePrepareAsync(
+  public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle, QueryConf queryConf)
           throws GrillException {
-    PreparedQueryContext pctx = getPreparedQueryContext(prepareHandle);
-    Configuration qconf = getQueryConf(queryConf);
-    accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
-    QueryContext ctx = new QueryContext(pctx, "user", qconf);
-    ctx.setStatus(new QueryStatus(0.0,
-        QueryStatus.Status.QUEUED,
-        "Query is queued", false));
-    acceptedQueries.add(ctx);
-    allQueries.put(ctx.getQueryHandle(), ctx);
-    notifyAllListeners();
-    LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
-    return ctx.getQueryHandle();
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
+      Configuration qconf = getQueryConf(sessionHandle, queryConf);
+      accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
+      QueryContext ctx = new QueryContext(pctx, "user", qconf);
+      ctx.setStatus(new QueryStatus(0.0,
+          QueryStatus.Status.QUEUED,
+          "Query is queued", false));
+      acceptedQueries.add(ctx);
+      allQueries.put(ctx.getQueryHandle(), ctx);
+      notifyAllListeners();
+      LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
+      return ctx.getQueryHandle();
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public QueryHandle executeAsync(String query,
+  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query,
       QueryConf queryConf) throws GrillException {
-    Configuration qconf = getQueryConf(queryConf);
-    accept(query, qconf, SubmitOp.EXECUTE);
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      Configuration qconf = getQueryConf(sessionHandle, queryConf);
+      accept(query, qconf, SubmitOp.EXECUTE);
 
-    QueryContext ctx = new QueryContext(query, "user", qconf);
-    acceptedQueries.add(ctx);
-    ctx.setStatus(new QueryStatus(0.0,
-        QueryStatus.Status.QUEUED,
-        "Query is queued", false));
-    allQueries.put(ctx.getQueryHandle(), ctx);
-    notifyAllListeners();
-    LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
-    return ctx.getQueryHandle();
+      QueryContext ctx = new QueryContext(query, "user", qconf);
+      acceptedQueries.add(ctx);
+      ctx.setStatus(new QueryStatus(0.0,
+          QueryStatus.Status.QUEUED,
+          "Query is queued", false));
+      allQueries.put(ctx.getQueryHandle(), ctx);
+      notifyAllListeners();
+      LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
+      return ctx.getQueryHandle();
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public boolean updateQueryConf(QueryHandle queryHandle, QueryConf newconf)
+  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryHandle queryHandle, QueryConf newconf)
       throws GrillException {
-    QueryContext ctx = getQueryContext(queryHandle);
-    if (ctx != null && ctx.getStatus().getStatus() == QueryStatus.Status.QUEUED) {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
+      if (ctx != null && ctx.getStatus().getStatus() == QueryStatus.Status.QUEUED) {
+        ctx.updateConf(newconf.getProperties());
+        notifyAllListeners();
+        return true;
+      } else {
+        notifyAllListeners();
+        return false;
+      }
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  @Override
+  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, QueryConf newconf)
+      throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      PreparedQueryContext ctx = getPreparedQueryContext(sessionHandle, prepareHandle);
       ctx.updateConf(newconf.getProperties());
-      notifyAllListeners();
       return true;
-    } else {
-      notifyAllListeners();
-      return false;
+    } finally {
+      release(sessionHandle.getSessionHandle());
     }
   }
 
   @Override
-  public boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
+  public QueryContext getQueryContext(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
       throws GrillException {
-    PreparedQueryContext ctx = getPreparedQueryContext(prepareHandle);
-    ctx.updateConf(newconf.getProperties());
-    return true;
-  }
-
-  @Override
-  public QueryContext getQueryContext(QueryHandle queryHandle)
-      throws GrillException {
-    QueryContext ctx = allQueries.get(queryHandle);
-    if (ctx == null) {
-      throw new NotFoundException("Query not found " + queryHandle);
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      QueryContext ctx = allQueries.get(queryHandle);
+      if (ctx == null) {
+        throw new NotFoundException("Query not found " + queryHandle);
+      }
+      updateStatus(queryHandle);
+      return ctx;
+    } finally {
+      release(sessionHandle.getSessionHandle());
     }
-    updateStatus(queryHandle);
-    return ctx;
   }
 
   @Override
-  public PreparedQueryContext getPreparedQueryContext(
+  public PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle, 
       QueryPrepareHandle prepareHandle)
           throws GrillException {
-    PreparedQueryContext ctx = preparedQueries.get(prepareHandle);
-    if (ctx == null) {
-      throw new NotFoundException("Prepared query not found " + prepareHandle);
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      PreparedQueryContext ctx = preparedQueries.get(prepareHandle);
+      if (ctx == null) {
+        throw new NotFoundException("Prepared query not found " + prepareHandle);
+      }
+      return ctx;
+    } finally {
+      release(sessionHandle.getSessionHandle());
     }
-    return ctx;
   }
 
   @Override
-  public QueryHandleWithResultSet execute(String query, long timeoutMillis,
+  public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutMillis,
       QueryConf conf) throws GrillException {
-    QueryHandle handle = executeAsync(query, conf);
-    QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
-    while (!getQueryContext(handle).getStatus().getStatus().equals(
-        QueryStatus.Status.LAUNCHED)) {
-      try {
-        Thread.sleep(10);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
-    }
-    QueryCompletionListener listener = new QueryCompletionListenerImpl();
-    getQueryContext(handle).getSelectedDriver().
-        registerForCompletionNotification(handle, timeoutMillis, listener);
     try {
-      synchronized (listener) {
-        listener.wait(timeoutMillis);
+      acquire(sessionHandle.getSessionHandle());
+      QueryHandle handle = executeAsync(sessionHandle, query, conf);
+      QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
+      while (!getQueryContext(sessionHandle, handle).getStatus().getStatus().equals(
+          QueryStatus.Status.LAUNCHED)) {
+        try {
+          Thread.sleep(10);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
       }
-    } catch (InterruptedException e) {
-      LOG.info("Waiting thread interrupted");
+      QueryCompletionListener listener = new QueryCompletionListenerImpl();
+      getQueryContext(sessionHandle, handle).getSelectedDriver().
+      registerForCompletionNotification(handle, timeoutMillis, listener);
+      try {
+        synchronized (listener) {
+          listener.wait(timeoutMillis);
+        }
+      } catch (InterruptedException e) {
+        LOG.info("Waiting thread interrupted");
+      }
+      if (getQueryContext(sessionHandle, handle).getStatus().isFinished()) {
+        result.SetResult("Finished");
+      }
+      return result;
+    } finally {
+      release(sessionHandle.getSessionHandle());
     }
-    if (getQueryContext(handle).getStatus().isFinished()) {
-      result.SetResult("Finished");
-    }
-    return result;
   }
 
   class QueryCompletionListenerImpl implements QueryCompletionListener {
@@ -532,78 +625,118 @@ public class QueryExecutionServiceImpl implements QueryExecutionService, Configu
   }
 
   @Override
-  public GrillResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
+  public GrillResultSetMetadata getResultSetMetadata(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
       throws GrillException {
-    GrillResultSet resultSet = getResultset(queryHandle);
-    if (resultSet != null) {
-      return resultSet.getMetadata();
-    }
-    return null;
-  }
-
-  @Override
-  public GrillResultSet fetchResultSet(QueryHandle queryHandle, long startIndex,
-      int fetchSize) throws GrillException {
-    GrillResultSet resultSet = getResultset(queryHandle);
-    return resultSet;
-  }
-
-  @Override
-  public void closeResultSet(QueryHandle queryHandle) throws GrillException {
-    resultSets.remove(queryHandle);
-  }
-
-  @Override
-  public boolean cancelQuery(QueryHandle queryHandle) throws GrillException {
-    QueryContext ctx = getQueryContext(queryHandle);
-    if (ctx.getStatus().getStatus().equals(
-        QueryStatus.Status.LAUNCHED)) {
-      boolean ret = getQueryContext(queryHandle).getSelectedDriver().cancelQuery(queryHandle);
-      if (!ret) {
-        return false;
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      GrillResultSet resultSet = getResultset(queryHandle);
+      if (resultSet != null) {
+        return resultSet.getMetadata();
       }
-    } else {
-      acceptedQueries.remove(ctx);
+      return null;
+    } finally {
+      release(sessionHandle.getSessionHandle());
     }
-    ctx.setStatus(new QueryStatus(0.0, Status.CANCELED, "Cancelled", false));
-    updateFinishedQuery(ctx);
-    return true;
   }
 
   @Override
-  public List<QueryHandle> getAllQueries(String state, String user)
+  public GrillResultSet fetchResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
+      int fetchSize) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      GrillResultSet resultSet = getResultset(queryHandle);
+      return resultSet;
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  @Override
+  public void closeResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      resultSets.remove(queryHandle);
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  @Override
+  public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
+      if (ctx.getStatus().getStatus().equals(
+          QueryStatus.Status.LAUNCHED)) {
+        boolean ret = getQueryContext(sessionHandle, queryHandle).getSelectedDriver().cancelQuery(queryHandle);
+        if (!ret) {
+          return false;
+        }
+      } else {
+        acceptedQueries.remove(ctx);
+      }
+      ctx.setStatus(new QueryStatus(0.0, Status.CANCELED, "Cancelled", false));
+      updateFinishedQuery(ctx);
+      return true;
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  @Override
+  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle, String state, String user)
       throws GrillException {
-    List<QueryHandle> all = new ArrayList<QueryHandle>();
-    all.addAll(allQueries.keySet());
-    return all;
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      List<QueryHandle> all = new ArrayList<QueryHandle>();
+      all.addAll(allQueries.keySet());
+      return all;
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public void setConf(Configuration conf) {
-    this.conf = conf;
-
-  }
-
-  @Override
-  public Configuration getConf() {
-    return this.conf;
-  }
-
-  @Override
-  public List<QueryPrepareHandle> getAllPreparedQueries(String user)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user)
       throws GrillException {
-    List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>();
-    allPrepared.addAll(preparedQueries.keySet());
-    return allPrepared;
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>();
+      allPrepared.addAll(preparedQueries.keySet());
+      return allPrepared;
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 
   @Override
-  public boolean destroyPrepared(QueryPrepareHandle prepared)
+  public boolean destroyPrepared(GrillSessionHandle sessionHandle, QueryPrepareHandle prepared)
       throws GrillException {
-    PreparedQueryContext ctx = getPreparedQueryContext(prepared);
-    ctx.getSelectedDriver().closePreparedQuery(prepared);
-    preparedQueries.remove(prepared);
-    preparedQueryQueue.remove(ctx);
-    return true;
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      PreparedQueryContext ctx = getPreparedQueryContext(sessionHandle, prepared);
+      ctx.getSelectedDriver().closePreparedQuery(prepared);
+      preparedQueries.remove(prepared);
+      preparedQueryQueue.remove(ctx);
+      return true;
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  @Override
+  public QueryPlan explain(GrillSessionHandle sessionHandle, String query,
+      QueryConf queryConf) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      Configuration qconf = getQueryConf(sessionHandle, queryConf);
+      accept(query, qconf, SubmitOp.EXPLAIN);
+      Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
+          query, drivers);
+      // select driver to run the query
+      return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
   }
 }

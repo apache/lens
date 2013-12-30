@@ -2,8 +2,10 @@ package com.inmobi.grill.server.api;
 
 import java.util.List;
 
+
 import com.inmobi.grill.api.GrillResultSet;
 import com.inmobi.grill.api.GrillResultSetMetadata;
+import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.PreparedQueryContext;
 import com.inmobi.grill.api.QueryContext;
 import com.inmobi.grill.api.QueryPrepareHandle;
@@ -13,7 +15,7 @@ import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.exception.GrillException;
 
-public interface QueryExecutionService extends GrillService {
+public interface QueryExecutionService {
 
   /**
    * Explain the given query
@@ -25,12 +27,12 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryPlan explain(String query, QueryConf conf)
+  public QueryPlan explain(GrillSessionHandle sessionHandle, String query, QueryConf conf)
       throws GrillException;
 
   /**
    * Prepare the query
-   * 
+   * @param sessionHandle TODO
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
@@ -38,12 +40,12 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryPrepareHandle prepare(String query, QueryConf conf)
+  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, QueryConf conf)
       throws GrillException;
 
   /**
    * Explain the given query and prepare it as well.
-   * 
+   * @param sessionHandle TODO
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
@@ -52,7 +54,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryPlan explainAndPrepare(String query, QueryConf conf)
+  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -64,7 +66,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryHandle executePrepareAsync(QueryPrepareHandle prepareHandle,
+  public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
       QueryConf conf) throws GrillException;
 
   /**
@@ -77,7 +79,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryHandle executeAsync(String query, QueryConf conf)
+  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query, QueryConf conf)
       throws GrillException;
 
   /**
@@ -88,7 +90,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return true if update is successful 
    */
-  public boolean updateQueryConf(QueryHandle queryHandle, QueryConf newconf)
+  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryHandle queryHandle, QueryConf newconf)
       throws GrillException;
 
   /**
@@ -104,7 +106,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public QueryHandleWithResultSet execute(String query, long timeoutmillis,
+  public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutmillis,
       QueryConf conf) throws GrillException;
 
   /**
@@ -114,7 +116,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return query status
    */
-  public QueryContext getQueryContext(QueryHandle queryHandle) throws GrillException;
+  public QueryContext getQueryContext(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
    * Get the result set metadata - list of columns(names and types) and result size.
@@ -123,7 +125,7 @@ public interface QueryExecutionService extends GrillService {
    * @return The result set metadata
    * @throws GrillException
    */
-  public GrillResultSetMetadata getResultSetMetadata(QueryHandle queryHandle)
+  public GrillResultSetMetadata getResultSetMetadata(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
       throws GrillException;
 
   /**
@@ -135,7 +137,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return returns the result set
    */
-  public GrillResultSet fetchResultSet(QueryHandle queryHandle, long startIndex,
+  public GrillResultSet fetchResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
       int fetchSize ) throws GrillException;
 
   /**
@@ -144,7 +146,7 @@ public interface QueryExecutionService extends GrillService {
    * @param queryHandle
    * @throws GrillException
    */
-  public void closeResultSet(QueryHandle queryHandle) throws GrillException;
+  public void closeResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -153,7 +155,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return true if cancel was successful, false otherwise
    */
-  public boolean cancelQuery(QueryHandle queryHandle) throws GrillException;
+  public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
    * Returns all the queries in the specified state, for user. 
@@ -165,7 +167,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return List of query handles
    */
-  public List<QueryHandle> getAllQueries(String state, String user)
+  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle, String state, String user)
       throws GrillException;
 
   /**
@@ -176,7 +178,7 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @return List of query prepare handles
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(String user)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user)
       throws GrillException;
 
   /**
@@ -185,7 +187,7 @@ public interface QueryExecutionService extends GrillService {
    * @param prepared
    * @return return true if successful, false otherwise
    */
-  public boolean destroyPrepared(QueryPrepareHandle prepared)
+  public boolean destroyPrepared(GrillSessionHandle sessionHandle, QueryPrepareHandle prepared)
       throws GrillException;
 
   /**
@@ -195,7 +197,7 @@ public interface QueryExecutionService extends GrillService {
    * @return PreparedQueryContext object
    * @throws GrillException
    */
-  public PreparedQueryContext getPreparedQueryContext(QueryPrepareHandle prepareHandle)
+  public PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle)
       throws GrillException;
 
   /**
@@ -207,6 +209,6 @@ public interface QueryExecutionService extends GrillService {
    * 
    * @throws GrillException
    */
-  public boolean updateQueryConf(QueryPrepareHandle prepareHandle, QueryConf newconf)
+  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, QueryConf newconf)
       throws GrillException;
 }

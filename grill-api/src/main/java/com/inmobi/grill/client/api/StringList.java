@@ -1,4 +1,4 @@
-package com.inmobi.grill.metastore.model;
+package com.inmobi.grill.client.api;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
