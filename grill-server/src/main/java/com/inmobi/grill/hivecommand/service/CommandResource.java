@@ -19,7 +19,6 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.thrift.TRow;
-import org.apache.hive.service.cli.thrift.TRow._Fields;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.api.GrillSessionHandle;
@@ -60,7 +59,6 @@ public class CommandResource {
 
   @DELETE
   @Path("session")
-  @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@QueryParam("sessionid") GrillSessionHandle sessionid) {
     try {
