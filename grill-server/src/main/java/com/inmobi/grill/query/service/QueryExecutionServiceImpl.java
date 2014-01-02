@@ -230,19 +230,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private synchronized void updateStatus(QueryHandle handle) throws GrillException {
+  private void updateStatus(QueryHandle handle) throws GrillException {
     QueryContext ctx = allQueries.get(handle);
     if (ctx != null) {
-      QueryStatus before = ctx.getStatus();
-      if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
-          !ctx.getStatus().isFinished()) {
-        ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
-      }
+      synchronized(ctx) {
+        QueryStatus before = ctx.getStatus();
+        if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
+            !ctx.getStatus().isFinished()) {
+          ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
+        }
 
-      if (ctx.getStatus().isFinished()) {
-        updateFinishedQuery(ctx);
+        if (ctx.getStatus().isFinished()) {
+          updateFinishedQuery(ctx);
+        }
+        fireStatusChangeEvent(ctx, ctx.getStatus(), before);
       }
-      fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     }
   }
 
