@@ -5,22 +5,24 @@ import com.inmobi.grill.server.api.events.GrillEvent;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 
-import org.apache.hive.service.AbstractService;
-import org.apache.log4j.Logger;
+import com.inmobi.grill.service.GrillService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hive.service.cli.CLIService;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class EventServiceImpl extends AbstractService implements GrillEventService {
-  public static final Logger LOG = Logger.getLogger(EventServiceImpl.class);
+public class EventServiceImpl extends GrillService implements GrillEventService {
+  public static final Log LOG = LogFactory.getLog(EventServiceImpl.class);
   final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners;
   private volatile boolean running;
   private ExecutorService eventHandlerPool;
 
-  public EventServiceImpl() {
-    super("EventService");
+  public EventServiceImpl(CLIService cliService) {
+    super(NAME, cliService);
     eventListeners = new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
     eventHandlerPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
   }
@@ -100,7 +102,7 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
 
   @SuppressWarnings("unchecked")
   @Override
-  public void handleEvent(final GrillEvent evt) throws GrillException {
+  public void notifyEvent(final GrillEvent evt) throws GrillException {
     if (!running || evt == null) {
       return;
     }

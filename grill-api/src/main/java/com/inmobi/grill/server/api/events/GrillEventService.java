@@ -9,6 +9,7 @@ import java.util.Collection;
  * Singleton which is responsible for managing the event-listener mapping as well as processing events.
  */
 public interface GrillEventService {
+  public static final String NAME = "event";
   /**
    * Add a listener interested in a specific type of event. The type is deduced from the argument type of handler method
    * @param listener
@@ -27,7 +28,7 @@ public interface GrillEventService {
    * @param event object
    * @throws GrillException
    */
-  public void handleEvent(GrillEvent event) throws GrillException;
+  public void notifyEvent(GrillEvent event) throws GrillException;
 
   /**
    * Get all listeners of a particular type

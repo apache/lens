@@ -12,4 +12,9 @@ public class QuerySuccess extends QueryEnded {
     super(prev, current, handle, null, null);
     checkCurrentState(QueryStatus.Status.SUCCESSFUL);
   }
+
+  public QuerySuccess(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle, long endTime) {
+    super(prev, current, handle, null, null, endTime);
+    checkCurrentState(QueryStatus.Status.SUCCESSFUL);
+  }
 }

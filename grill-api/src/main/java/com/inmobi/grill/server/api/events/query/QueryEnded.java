@@ -12,20 +12,34 @@ import java.util.EnumSet;
  */
 public class QueryEnded extends StatusChange {
   private final String user;
-  private final Throwable cause;
+  private final String cause;
+  private final long endTime;
 
   public static final EnumSet<QueryStatus.Status> END_STATES =
     EnumSet.of(QueryStatus.Status.SUCCESSFUL,
       QueryStatus.Status.CANCELED, QueryStatus.Status.CLOSED, QueryStatus.Status.FAILED);
 
   public QueryEnded(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
-                    String user, Throwable cause) {
+                    String user, String cause) {
     super(prev, current, handle);
     this.user = user;
     this.cause = cause;
     if (!END_STATES.contains(current)) {
       throw new IllegalStateException("Not a valid end state: " + current + " query: " + handle);
     }
+    endTime = System.currentTimeMillis();
+  }
+
+  public QueryEnded(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+                    String user, String cause, long endTime) {
+    super(prev, current, handle);
+    this.user = user;
+    this.cause = cause;
+    if (!END_STATES.contains(current)) {
+      throw new IllegalStateException("Not a valid end state: " + current + " query: " + handle);
+    }
+
+    this.endTime = endTime;
   }
 
   /**
@@ -40,8 +54,15 @@ public class QueryEnded extends StatusChange {
    * If the query ended because of an error, then this method should give the cause.
    * @return
    */
-  public final Throwable getCause() {
+  public final String getCause() {
     return cause;
+  }
+
+  /**
+   * Time when this event was generated
+   */
+  public final long getEndTime() {
+    return endTime;
   }
 
 }

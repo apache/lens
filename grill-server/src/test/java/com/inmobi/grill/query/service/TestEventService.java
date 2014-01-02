@@ -8,6 +8,7 @@ import com.inmobi.grill.server.api.events.query.QueryEnded;
 import com.inmobi.grill.server.api.events.query.QueryFailed;
 import com.inmobi.grill.server.api.events.query.QuerySuccess;
 import com.inmobi.grill.server.api.events.query.QueuePositionChange;
+import com.inmobi.grill.service.GrillServices;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -70,9 +71,10 @@ public class TestEventService {
 
   @BeforeTest
   public void setup() throws Exception {
-    service = new EventServiceImpl();
-    service.start();
-    LOG.info("Service started");
+    GrillServices.get().initServices();
+    service = GrillServices.get().getService(GrillEventService.NAME);
+    assertNotNull(service);
+    LOG.info("Service started " + service) ;
   }
 
   @AfterTest
@@ -124,7 +126,7 @@ public class TestEventService {
 
     try {
       latch = new CountDownLatch(3);
-      service.handleEvent(failed);
+      service.notifyEvent(failed);
       latch.await();
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
@@ -133,7 +135,7 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      service.handleEvent(success);
+      service.notifyEvent(success);
       latch.await();
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
@@ -142,7 +144,7 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      service.handleEvent(positionChange);
+      service.notifyEvent(positionChange);
       latch.await();
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
@@ -158,7 +160,7 @@ public class TestEventService {
       };
 
       latch = new CountDownLatch(1);
-      service.handleEvent(genEvent);
+      service.notifyEvent(genEvent);
       latch.await();
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);

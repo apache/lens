@@ -45,7 +45,7 @@ public abstract class QueryEvent<T> extends GrillEvent {
 
   @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder(getClass().getSimpleName())
+    StringBuilder buf = new StringBuilder("QueryEvent: ").append(getClass().getSimpleName())
     .append(":{id: ").append(id).append(", query:")
       .append(getQueryHandle())
       .append(", change:[").append(previousValue).append(" -> ").append(currentValue).append("]}");
