@@ -292,12 +292,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       return;
     }
 
-    // temp debug code
-    Exception exc = new Exception();
-    for (int i = 0; i < 3; i++) {
-      QueryStatusLogger.STATUS_LOG.info("Caller " + exc.getStackTrace()[i].getMethodName() + ":" + exc.getStackTrace()[i].getLineNumber());
-    }
-
     StatusChange event = newStatusChangeEvent(ctx, prevState, currentStatus);
     if (event != null) {
       try {
