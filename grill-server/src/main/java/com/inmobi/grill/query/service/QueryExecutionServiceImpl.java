@@ -230,10 +230,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private void updateStatus(QueryHandle handle) throws GrillException {
+  private void updateStatus(final QueryHandle handle) throws GrillException {
     QueryContext ctx = allQueries.get(handle);
     if (ctx != null) {
-      synchronized(ctx) {
+      synchronized(handle.getHandleId()) {
         QueryStatus before = ctx.getStatus();
         if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
             !ctx.getStatus().isFinished()) {

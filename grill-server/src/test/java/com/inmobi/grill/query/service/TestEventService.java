@@ -120,7 +120,7 @@ public class TestEventService {
     QueryHandle query = new QueryHandle(UUID.randomUUID());
     Exception cause = new Exception("Failure cause");
     String user = "user";
-    QueryFailed failed = new QueryFailed(QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, cause);
+    QueryFailed failed = new QueryFailed(QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
     QuerySuccess success = new QuerySuccess(QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
     QueuePositionChange positionChange = new QueuePositionChange(1, 0, query);
 
