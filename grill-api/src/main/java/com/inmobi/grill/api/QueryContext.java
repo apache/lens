@@ -11,7 +11,6 @@ public class QueryContext implements Comparable<QueryContext> {
   private long cancelTime;
   private long closedTime;
   private long endTime;
-  private long launcTime;
   private long launchTime;
   private long runningTime;
 
