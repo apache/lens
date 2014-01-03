@@ -30,10 +30,10 @@ public class TestEventService {
   MockEndedListener endedListener;
   CountDownLatch latch;
 
-  class GenericEventListener implements GrillEventListener<GrillEvent> {
+  class GenericEventListener extends AsyncEventListener<GrillEvent> {
     boolean processed = false;
     @Override
-    public void onEvent(GrillEvent event) throws GrillException {
+    public void process(GrillEvent event) {
       processed = true;
       latch.countDown();
       LOG.info("GrillEvent:" + event.getEventId());
