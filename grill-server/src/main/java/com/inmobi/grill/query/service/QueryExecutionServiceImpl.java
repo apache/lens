@@ -467,7 +467,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       String cause = "";
       boolean accept = acceptor.doAccept(query, conf, submitOp);
       if (!accept) {
-        getEventService().notifyEvent(new QueryRejected(System.currentTimeMillis(), query, acceptor.getCause(), null));
+        getEventService().notifyEvent(new QueryRejected(System.currentTimeMillis(), query, acceptor.getRejectionCause(), null));
         throw new GrillException("Query not accepted because " + cause);
       }
     }
