@@ -4,6 +4,7 @@ import java.net.URI;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Application;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.test.JerseyTest;
 import org.glassfish.jersey.test.spi.TestContainerException;
 import org.glassfish.jersey.test.spi.TestContainerFactory;
@@ -29,12 +30,13 @@ public abstract class GrillJerseyTest extends JerseyTest {
 
   @BeforeSuite
   public void startAll() {
-    GrillServices.get().initServices();
+    GrillServices.get().init(new HiveConf());
+    GrillServices.get().start();
   }
 
   @AfterSuite
   public void stopAll() {
-    GrillServices.get().stopAll();
+    GrillServices.get().stop();
   }
 
 }

@@ -9,6 +9,7 @@ import com.inmobi.grill.server.api.events.query.QueryFailed;
 import com.inmobi.grill.server.api.events.query.QuerySuccess;
 import com.inmobi.grill.server.api.events.query.QueuePositionChange;
 import com.inmobi.grill.service.GrillServices;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -71,7 +72,7 @@ public class TestEventService {
 
   @BeforeTest
   public void setup() throws Exception {
-    GrillServices.get().initServices();
+    GrillServices.get().init(new HiveConf());
     service = GrillServices.get().getService(GrillEventService.NAME);
     assertNotNull(service);
     LOG.info("Service started " + service) ;

@@ -1,30 +1,37 @@
 package com.inmobi.grill.query.service;
 
+import com.inmobi.grill.api.GrillConfConstants;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.events.GrillEvent;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 
-import com.inmobi.grill.service.GrillService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hive.service.cli.CLIService;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.AbstractService;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class EventServiceImpl extends GrillService implements GrillEventService {
+public class EventServiceImpl extends AbstractService implements GrillEventService {
   public static final Log LOG = LogFactory.getLog(EventServiceImpl.class);
-  final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners;
-  private volatile boolean running;
+  final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners =
+    new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
   private ExecutorService eventHandlerPool;
 
-  public EventServiceImpl(CLIService cliService) {
-    super(NAME, cliService);
-    eventListeners = new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
-    eventHandlerPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+  public EventServiceImpl(String name) {
+    super(name);
+  }
+
+  @Override
+  public synchronized void init(HiveConf hiveConf) {
+    int numProcs = Runtime.getRuntime().availableProcessors();
+    eventHandlerPool =
+      Executors.newFixedThreadPool(hiveConf.getInt(GrillConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
+    super.init(hiveConf);
   }
 
   @SuppressWarnings("unchecked")
@@ -103,7 +110,7 @@ public class EventServiceImpl extends GrillService implements GrillEventService 
   @SuppressWarnings("unchecked")
   @Override
   public void notifyEvent(final GrillEvent evt) throws GrillException {
-    if (!running || evt == null) {
+    if (getServiceState() != STATE.STARTED || evt == null) {
       return;
     }
     eventHandlerPool.submit(new EventHandler(evt));
@@ -114,13 +121,9 @@ public class EventServiceImpl extends GrillService implements GrillEventService 
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
-  public void start() {
-    running = true;
-    LOG.info("Event listener service started");
-  }
 
+  @Override
   public void stop() {
-    running = false;
     List<Runnable> pending = eventHandlerPool.shutdownNow();
     if (pending != null && !pending.isEmpty()) {
       StringBuilder pendingMsg = new StringBuilder("Pending Events:");
@@ -132,6 +135,7 @@ public class EventServiceImpl extends GrillService implements GrillEventService 
       LOG.info("Event listener service stopped while " + pending.size() + " events still pending");
       LOG.info(pendingMsg.toString());
     }
+    super.stop();
     LOG.info("Event service stopped");
   }
 }

@@ -9,7 +9,7 @@
 
 <property>
   <name>grill.servicenames</name>
-  <value>command,event,query,metastore,scheduler,quota</value>
+  <value>command,query,metastore,scheduler,quota</value>
 </property>
 
 <property>
@@ -35,10 +35,5 @@
 <property>
   <name>grill.scheduler.service.impl</name>
   <value>com.inmobi.grill.queryscheduler.service.QuerySchedulerServiceImpl</value>
-</property>
-
-<property>
-    <name>grill.event.service.impl</name>
-    <value>com.inmobi.grill.query.service.EventServiceImpl</value>
 </property>
 </configuration>

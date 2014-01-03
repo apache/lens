@@ -614,7 +614,9 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
       QueryContext ctx2 = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
       if (QueryEnded.END_STATES.contains(ctx2.getStatus().getStatus())) {
-        Assert.assertEquals(ctx2.getStatus().getStatus(), QueryStatus.Status.CANCELED);
+        // It's possible that the query we tried to cancel had already completed
+        Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED
+         || ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL, "Query should be either cancelled or completed");
         break;
       } else {
         System.out.println(handle2 + " " + ctx2.getStatus().getStatus());
