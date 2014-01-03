@@ -2,6 +2,8 @@ package com.inmobi.grill.service;
 
 import java.util.List;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.CompositeService;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 
@@ -43,7 +45,9 @@ public class GrillServletContextListener  implements ServletContextListener {
 
     // start up all grill services
     GrillServices services = GrillServices.get();
-    services.initServices();
+    services.init(new HiveConf());
+    services.start();
+    Runtime.getRuntime().addShutdownHook(new Thread(new CompositeService.CompositeServiceShutdownHook(services)));
   }
 
   /**
@@ -54,6 +58,6 @@ public class GrillServletContextListener  implements ServletContextListener {
    */
   @Override
   public void contextDestroyed(ServletContextEvent sce) {
-    GrillServices.get().stopAll();
+    GrillServices.get().stop();
   }
 }

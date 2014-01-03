@@ -7,8 +7,8 @@ import com.inmobi.grill.api.QueryStatus;
  * Event fired when query enters a RUNNING state
  */
 public class QueryRunning extends StatusChange {
-  public QueryRunning(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(prev, current, handle);
+  public QueryRunning(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
+    super(eventTime, prev, current, handle);
     checkCurrentState(QueryStatus.Status.RUNNING);
   }
 }

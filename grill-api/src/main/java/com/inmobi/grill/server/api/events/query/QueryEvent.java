@@ -20,7 +20,8 @@ public abstract class QueryEvent<T> extends GrillEvent {
   protected final QueryHandle handle;
   protected final UUID id = UUID.randomUUID();
 
-  public QueryEvent(T prev, T current, QueryHandle handle) {
+  public QueryEvent(long eventTime, T prev, T current, QueryHandle handle) {
+    super(eventTime);
     previousValue = prev;
     currentValue = current;
     this.handle = handle;
@@ -45,7 +46,7 @@ public abstract class QueryEvent<T> extends GrillEvent {
 
   @Override
   public String toString() {
-    StringBuilder buf = new StringBuilder(getClass().getSimpleName())
+    StringBuilder buf = new StringBuilder("QueryEvent: ").append(getClass().getSimpleName())
     .append(":{id: ").append(id).append(", query:")
       .append(getQueryHandle())
       .append(", change:[").append(previousValue).append(" -> ").append(currentValue).append("]}");

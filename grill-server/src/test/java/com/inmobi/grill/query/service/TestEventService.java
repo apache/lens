@@ -8,6 +8,8 @@ import com.inmobi.grill.server.api.events.query.QueryEnded;
 import com.inmobi.grill.server.api.events.query.QueryFailed;
 import com.inmobi.grill.server.api.events.query.QuerySuccess;
 import com.inmobi.grill.server.api.events.query.QueuePositionChange;
+import com.inmobi.grill.service.GrillServices;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.log4j.Logger;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -15,6 +17,7 @@ import org.testng.annotations.Test;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
@@ -27,10 +30,10 @@ public class TestEventService {
   MockEndedListener endedListener;
   CountDownLatch latch;
 
-  class GenericEventListener implements GrillEventListener<GrillEvent> {
+  class GenericEventListener extends AsyncEventListener<GrillEvent> {
     boolean processed = false;
     @Override
-    public void onEvent(GrillEvent event) throws GrillException {
+    public void process(GrillEvent event) {
       processed = true;
       latch.countDown();
       LOG.info("GrillEvent:" + event.getEventId());
@@ -70,9 +73,11 @@ public class TestEventService {
 
   @BeforeTest
   public void setup() throws Exception {
-    service = new EventServiceImpl();
-    service.start();
-    LOG.info("Service started");
+    GrillServices.get().init(new HiveConf());
+    GrillServices.get().start();
+    service = GrillServices.get().getService(GrillEventService.NAME);
+    assertNotNull(service);
+    LOG.info("Service started " + service) ;
   }
 
   @AfterTest
@@ -82,6 +87,7 @@ public class TestEventService {
 
   @Test
   public void testAddListener() {
+    int listenersBefore = ((EventServiceImpl) service).eventListeners.keySet().size();
     genericEventListener = new GenericEventListener();
     service.addListener(genericEventListener);
     endedListener = new MockEndedListener();
@@ -91,7 +97,7 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertEquals(((EventServiceImpl) service).eventListeners.keySet().size(), 4);
+    assertEquals(((EventServiceImpl) service).eventListeners.keySet().size() - listenersBefore, 4);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
     assertEquals(service.getListeners(QueryEnded.class).size(), 1);
     assertEquals(service.getListeners(QueuePositionChange.class).size(), 1);
@@ -116,16 +122,17 @@ public class TestEventService {
   @Test
   public void testHandleEvent() throws Exception{
     QueryHandle query = new QueryHandle(UUID.randomUUID());
-    Exception cause = new Exception("Failure cause");
     String user = "user";
-    QueryFailed failed = new QueryFailed(QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, cause);
-    QuerySuccess success = new QuerySuccess(QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
-    QueuePositionChange positionChange = new QueuePositionChange(1, 0, query);
+    long now = System.currentTimeMillis();
+    QueryFailed failed = new QueryFailed(now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
+    QuerySuccess success = new QuerySuccess(now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
+    QueuePositionChange positionChange = new QueuePositionChange(now, 1, 0, query);
 
     try {
       latch = new CountDownLatch(3);
-      service.handleEvent(failed);
-      latch.await();
+      LOG.info("Sending event: " + failed);
+      service.notifyEvent(failed);
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertTrue(failedListener.processed);
@@ -133,8 +140,9 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      service.handleEvent(success);
-      latch.await();
+      LOG.info("Sending event : " + success);
+      service.notifyEvent(success);
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertFalse(failedListener.processed);
@@ -142,15 +150,16 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
-      service.handleEvent(positionChange);
-      latch.await();
+      LOG.info("Sending event: " + positionChange);
+      service.notifyEvent(positionChange);
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
       assertTrue(queuePositionChangeListener.processed);
       resetListeners();
 
-      GrillEvent genEvent = new GrillEvent() {
+      GrillEvent genEvent = new GrillEvent(now) {
         @Override
         public String getEventId() {
           return "TEST_EVENT";
@@ -158,8 +167,9 @@ public class TestEventService {
       };
 
       latch = new CountDownLatch(1);
-      service.handleEvent(genEvent);
-      latch.await();
+      LOG.info("Sending generic event " + genEvent.getEventId());
+      service.notifyEvent(genEvent);
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);

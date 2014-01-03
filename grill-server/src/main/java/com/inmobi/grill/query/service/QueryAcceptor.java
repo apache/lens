@@ -11,13 +11,12 @@ public interface QueryAcceptor {
    * 
    * @param query The query
    * @param conf The configuration of the query
-   * @param cause Populate cause especially in case of returning false
-   * 
+   *
    * @return true if query should be accepted, false otherwise
    * 
    * @throws GrillException
    */
-  public boolean doAccept(String query, Configuration conf, SubmitOp submitOp,
-      String cause) throws GrillException;
+  public boolean doAccept(String query, Configuration conf, SubmitOp submitOp) throws GrillException;
+  public String getRejectionCause();
 
 }
