@@ -7,8 +7,8 @@ import com.inmobi.grill.api.QueryStatus;
  * Event fired when query is PREPARED
  */
 public class QueryPrepared extends StatusChange {
-  public QueryPrepared(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(prev, current, handle);
+  public QueryPrepared(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
+    super(eventTime, prev, current, handle);
     checkCurrentState(QueryStatus.Status.PREPARED);
   }
 }

@@ -17,6 +17,7 @@ import org.testng.annotations.Test;
 
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
@@ -73,6 +74,7 @@ public class TestEventService {
   @BeforeTest
   public void setup() throws Exception {
     GrillServices.get().init(new HiveConf());
+    GrillServices.get().start();
     service = GrillServices.get().getService(GrillEventService.NAME);
     assertNotNull(service);
     LOG.info("Service started " + service) ;
@@ -120,16 +122,17 @@ public class TestEventService {
   @Test
   public void testHandleEvent() throws Exception{
     QueryHandle query = new QueryHandle(UUID.randomUUID());
-    Exception cause = new Exception("Failure cause");
     String user = "user";
-    QueryFailed failed = new QueryFailed(QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
-    QuerySuccess success = new QuerySuccess(QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
-    QueuePositionChange positionChange = new QueuePositionChange(1, 0, query);
+    long now = System.currentTimeMillis();
+    QueryFailed failed = new QueryFailed(now, QueryStatus.Status.RUNNING, QueryStatus.Status.FAILED, query, user, null);
+    QuerySuccess success = new QuerySuccess(now, QueryStatus.Status.RUNNING, QueryStatus.Status.SUCCESSFUL, query);
+    QueuePositionChange positionChange = new QueuePositionChange(now, 1, 0, query);
 
     try {
       latch = new CountDownLatch(3);
+      LOG.info("Sending event: " + failed);
       service.notifyEvent(failed);
-      latch.await();
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertTrue(failedListener.processed);
@@ -137,8 +140,9 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
+      LOG.info("Sending event : " + success);
       service.notifyEvent(success);
-      latch.await();
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertTrue(endedListener.processed);
       assertFalse(failedListener.processed);
@@ -146,15 +150,16 @@ public class TestEventService {
       resetListeners();
 
       latch = new CountDownLatch(2);
+      LOG.info("Sending event: " + positionChange);
       service.notifyEvent(positionChange);
-      latch.await();
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
       assertTrue(queuePositionChangeListener.processed);
       resetListeners();
 
-      GrillEvent genEvent = new GrillEvent() {
+      GrillEvent genEvent = new GrillEvent(now) {
         @Override
         public String getEventId() {
           return "TEST_EVENT";
@@ -162,8 +167,9 @@ public class TestEventService {
       };
 
       latch = new CountDownLatch(1);
+      LOG.info("Sending generic event " + genEvent.getEventId());
       service.notifyEvent(genEvent);
-      latch.await();
+      latch.await(5, TimeUnit.SECONDS);
       assertTrue(genericEventListener.processed);
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);

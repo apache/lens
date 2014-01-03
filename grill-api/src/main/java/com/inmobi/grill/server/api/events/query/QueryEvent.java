@@ -20,7 +20,8 @@ public abstract class QueryEvent<T> extends GrillEvent {
   protected final QueryHandle handle;
   protected final UUID id = UUID.randomUUID();
 
-  public QueryEvent(T prev, T current, QueryHandle handle) {
+  public QueryEvent(long eventTime, T prev, T current, QueryHandle handle) {
+    super(eventTime);
     previousValue = prev;
     currentValue = current;
     this.handle = handle;

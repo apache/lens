@@ -251,24 +251,23 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private StatusChange newStatusChangeEvent(QueryContext ctx, QueryStatus.Status prevState,
                                             QueryStatus.Status currState) {
     QueryHandle query = ctx.getQueryHandle();
+    // TODO Get event time from status
     switch (currState) {
       case CANCELED:
-        return new QueryCancelled(prevState, currState, query, ctx.getSubmittedUser(), null);
+        return new QueryCancelled(ctx.getCancelTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
       case CLOSED:
-        return new QueryClosed(prevState, currState, query, ctx.getSubmittedUser(), null);
+        return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
       case FAILED:
-        return new QueryFailed(prevState, currState, query, ctx.getSubmittedUser(), null);
+        return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
       case LAUNCHED:
-        return new QueryLaunched(prevState, currState, query);
-      case PREPARED:
-        return new QueryPrepared(prevState, currState, query);
+        return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
       case QUEUED:
         long time = ctx.getSubmissionTime() == null ? System.currentTimeMillis() : ctx.getSubmissionTime().getTime();
-        return new QueryQueued(prevState, currState, query, ctx.getSubmittedUser(), time);
+        return new QueryQueued(time, prevState, currState, query, ctx.getSubmittedUser());
       case RUNNING:
-        return new QueryRunning(prevState, currState, query);
+        return new QueryRunning(ctx.getRunningTime(), prevState, currState, query);
       case SUCCESSFUL:
-        return new QuerySuccess(prevState, currState, query);
+        return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
       case UNKNOWN:
       default:
         LOG.warn("Query " + query + " transitioned to UNKNOWN state from " + prevState + " state");
@@ -528,8 +527,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       preparedQueryQueue.add(prepared);
       prepared.getSelectedDriver().prepare(prepared);
       System.out.println("################### returning " + prepared.getPrepareHandle());
-      fireStatusChangeEvent(new QueryContext(prepared, getSession(sessionHandle.getSessionHandle()).getUserName(), qconf),
-        new QueryStatus(0f, Status.PREPARED, "prepared", false), null);
       return prepared.getPrepareHandle();
     } finally {
       release(sessionHandle.getSessionHandle());
@@ -547,8 +544,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       rewriteAndSelect(prepared);
       preparedQueries.put(prepared.getPrepareHandle(), prepared);
       preparedQueryQueue.add(prepared);
-      fireStatusChangeEvent(new QueryContext(prepared, getSession(sessionHandle.getSessionHandle()).getUserName(), qconf),
-        new QueryStatus(0f, Status.PREPARED, "prepared", false), null);
       return prepared.getSelectedDriver().explainAndPrepare(prepared);
     } finally {
       release(sessionHandle.getSessionHandle());

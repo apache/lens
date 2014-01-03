@@ -8,6 +8,53 @@ import org.apache.hadoop.conf.Configuration;
 
 public class QueryContext implements Comparable<QueryContext> {
 
+  private long cancelTime;
+  private long closedTime;
+  private long endTime;
+  private long launcTime;
+  private long launchTime;
+  private long runningTime;
+
+  public long getCancelTime() {
+    return cancelTime;
+  }
+
+  public void setCancelTime(long cancelTime) {
+    this.cancelTime = cancelTime;
+  }
+
+  public long getClosedTime() {
+    return closedTime;
+  }
+
+  public void setClosedTime(long closedTime) {
+    this.closedTime = closedTime;
+  }
+
+  public long getEndTime() {
+    return endTime;
+  }
+
+  public void setEndTime(long endTime) {
+    this.endTime = endTime;
+  }
+
+  public long getLaunchTime() {
+    return launchTime;
+  }
+
+  public void setLaunchTime(long launchTime) {
+    this.launchTime = launchTime;
+  }
+
+  public long getRunningTime() {
+    return runningTime;
+  }
+
+  public void setRunningTime(long runningTime) {
+    this.runningTime = runningTime;
+  }
+
   public enum Priority {
     VERY_HIGH,
     HIGH,

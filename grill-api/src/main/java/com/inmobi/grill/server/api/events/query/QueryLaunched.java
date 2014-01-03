@@ -8,8 +8,8 @@ import com.inmobi.grill.api.QueryStatus;
  * Event fired when query is LAUNCHED
  */
 public class QueryLaunched extends StatusChange {
-  public QueryLaunched(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(prev, current, handle);
+  public QueryLaunched(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
+    super(eventTime, prev, current, handle);
     checkCurrentState(QueryStatus.Status.LAUNCHED);
   }
 }

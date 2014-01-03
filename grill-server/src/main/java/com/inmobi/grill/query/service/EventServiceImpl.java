@@ -110,7 +110,11 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   @SuppressWarnings("unchecked")
   @Override
   public void notifyEvent(final GrillEvent evt) throws GrillException {
-    if (getServiceState() != STATE.STARTED || evt == null) {
+    if (getServiceState() != STATE.STARTED) {
+      throw new GrillException("Event service is not in STARTED state. Current state is " + getServiceState());
+    }
+
+    if (evt == null) {
       return;
     }
     eventHandlerPool.submit(new EventHandler(evt));
@@ -121,6 +125,10 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
+  @Override
+  public synchronized void start() {
+    super.start();
+  }
 
   @Override
   public void stop() {
