@@ -4,7 +4,7 @@
   <parent>
     <artifactId>grill-parent</artifactId>
     <groupId>com.inmobi.grill</groupId>
-    <version>0.1</version>
+    <version>0.2-SNAPSHOT</version>
   </parent>
     
   <artifactId>grill-api</artifactId>
