@@ -259,7 +259,7 @@ public class HiveDriver implements GrillDriver {
       } else {
         LOG.warn("Empty task statuses");
       }
-      return new QueryStatus(progress, stat, msg, false);
+      return new QueryStatus(progress, stat, msg, false, ctx.hiveHandle.getHandleIdentifier().toString());
     } catch (Exception e) {
       throw new GrillException("Error getting query status", e);
     } finally {
