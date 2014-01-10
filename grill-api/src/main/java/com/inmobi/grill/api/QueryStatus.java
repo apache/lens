@@ -24,16 +24,23 @@ public class QueryStatus {
 	private Status status;
   @XmlElement
 	private boolean hasResultSet = false;
+  private final String driverOpHandle;
 
   public QueryStatus() {
     // for jaxb
   }
   public QueryStatus(double progress, Status status, String statusMessage,
       boolean hasResultSet) {
+    this(progress, status, statusMessage, hasResultSet, null);
+  }
+
+  public QueryStatus(double progress, Status status, String statusMessage,
+                     boolean hasResultSet, String driverOpHandle) {
     this.progress = progress;
     this.status = status;
     this.statusMessage = statusMessage;
     this.hasResultSet = hasResultSet;
+    this.driverOpHandle = driverOpHandle;
   }
   
   /**
@@ -70,6 +77,14 @@ public class QueryStatus {
    */
   public boolean hasResultSet() {
     return hasResultSet;
+  }
+
+  /**
+   * Return the driver specific operation handle created for this query
+   * @return handle identifier
+   */
+  public String getDriverOpHandle() {
+    return driverOpHandle;
   }
   
   @Override

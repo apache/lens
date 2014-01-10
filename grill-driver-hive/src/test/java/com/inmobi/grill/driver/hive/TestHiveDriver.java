@@ -257,7 +257,10 @@ public class TestHiveDriver {
 
     while (true) {
       QueryStatus status = driver.getStatus(handle);
+      System.out.println("#W Waiting for query " + handle + " status: " + status.getStatus() + " driverOpHandle:"
+        + status.getDriverOpHandle());
       assertNotNull(status);
+      assertNotNull(status.getDriverOpHandle());
       if (terminationStates.contains(status.getStatus())) {
         break;
       }
