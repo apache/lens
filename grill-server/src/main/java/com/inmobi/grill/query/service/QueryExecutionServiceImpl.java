@@ -669,8 +669,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       QueryHandle handle = executeAsync(sessionHandle, query, conf);
       QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
       // getQueryContext calls updateStatus, which fires query events if there's a change in status
-      while (!getQueryContext(sessionHandle, handle).getStatus().getStatus().equals(
-          QueryStatus.Status.LAUNCHED)) {
+      while (getQueryContext(sessionHandle, handle).getStatus().getStatus().equals(
+          QueryStatus.Status.QUEUED)) {
         try {
           Thread.sleep(10);
         } catch (InterruptedException e) {
