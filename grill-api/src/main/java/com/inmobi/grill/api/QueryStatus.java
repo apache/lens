@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 public class QueryStatus {
   public enum Status {
     QUEUED,
-    PREPARED,
     LAUNCHED,
     RUNNING,
     SUCCESSFUL,
