@@ -71,10 +71,11 @@ public class PopulatePartitions {
       System.out.println("Adding partition at Path" + partPath);
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(DimensionDDL.dim_time_part_column, partitionTimestamp);
-      StoragePartitionDesc partSpec = new StoragePartitionDesc(dim.getName(), timeParts, null, UpdatePeriod.HOURLY);
+      StoragePartitionDesc partSpec = new StoragePartitionDesc(dim.getName(),
+          timeParts, null, UpdatePeriod.HOURLY);
       partSpec.setLocation(partPath.toString());
       try {
-        client.addPartition(partSpec, new HDFSStorage(CubeDDL.YODA_STORAGE));
+        client.addPartition(partSpec, CubeDDL.YODA_STORAGE);
       } catch (HiveException exc) {
         LOG.error("Error adding dim partition for : " + dim.getName(), exc);
         System.out.println("Failed to add partition for" + partPath);
@@ -174,12 +175,11 @@ public class PopulatePartitions {
               Map<String, Date> partitionTimestamps = new HashMap<String, Date>();
               partitionTimestamps.put(CubeDDL.PART_KEY_IT, dt);
               System.out.println("Adding partitions for Path" + partPath);
-              HDFSStorage storage = new HDFSStorage(entry.getKey());
               StoragePartitionDesc partSpec = new StoragePartitionDesc(
                   fact.getName(), partitionTimestamps, null, updatePeriod);
               partSpec.setLocation(partPath.toString());
               try {
-                client.addPartition(partSpec, storage);
+                client.addPartition(partSpec, entry.getKey());
               } catch (HiveException exc) {
                 LOG.error("Error adding cube partition", exc);
                 System.out.println("Failed to add partition for" + partPath);
@@ -198,12 +198,11 @@ public class PopulatePartitions {
                   partitionTimestamps.put(CubeDDL.PART_KEY_IT, it);
                   nonTimepartSpec.put(CubeDDL.PART_KEY_COLO, colo); 
                   System.out.println("Adding partitions for Path" + cstat.getPath());
-                  HDFSStorage storage = new HDFSStorage(entry.getKey());
                   StoragePartitionDesc partSpec = new StoragePartitionDesc(
                       fact.getName(), partitionTimestamps, nonTimepartSpec, updatePeriod);
                   partSpec.setLocation(cstat.getPath().toString());
                   try {
-                    client.addPartition(partSpec, storage);
+                    client.addPartition(partSpec, entry.getKey());
                   } catch (HiveException exc) {
                     LOG.error("Error adding cube partition", exc);
                     System.out.println("Failed to add partition for" + cstat.getPath());
@@ -248,12 +247,11 @@ public class PopulatePartitions {
                       nonTimePartSpec.put(CubeDDL.PART_KEY_ET, estat.getPath().getName()); 
                     }
                     System.out.println("Adding partitions for Path" + estat.getPath());
-                    HDFSStorage storage = new HDFSStorage(entry.getKey());
                     StoragePartitionDesc partSpec = new StoragePartitionDesc(
                         fact.getName(), partitionTimestamps, nonTimePartSpec, updatePeriod);
                     partSpec.setLocation(estat.getPath().toString());
                     try {
-                      client.addPartition(partSpec, storage);
+                      client.addPartition(partSpec, entry.getKey());
                     } catch (HiveException exc) {
                       LOG.error("Error adding cube partition", exc);
                       System.out.println("Failed to add partition for" + estat.getPath());

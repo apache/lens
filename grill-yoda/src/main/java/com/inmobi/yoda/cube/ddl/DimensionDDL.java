@@ -57,6 +57,7 @@ public class DimensionDDL {
     this.conf = conf;
     client = CubeMetastoreClient.getInstance(conf);
     loadDimensionDefinitions();
+    CubeDDL.createStorages(conf);
   }
 
   private Map<Integer, FieldInfo> fieldMap = new HashMap<Integer, FieldInfo>();
@@ -185,9 +186,9 @@ public class DimensionDDL {
     }
     Map<String, UpdatePeriod> snapshotDumpPeriods = 
         new HashMap<String, UpdatePeriod>();
-    Map<Storage, StorageTableDesc> storageTables = createStorages(dimName);
-    for (Storage storage: storageTables.keySet()) {
-      snapshotDumpPeriods.put(storage.getName(), dimension_dump_period);
+    Map<String, StorageTableDesc> storageTables = createStorages(dimName);
+    for (String storageName : storageTables.keySet()) {
+      snapshotDumpPeriods.put(storageName, dimension_dump_period);
     }
 
     Map<String, String> properties = new HashMap<String, String>();
@@ -213,10 +214,9 @@ public class DimensionDDL {
     }
   }
 
-  public Map<Storage, StorageTableDesc> createStorages(String dimName) {
-    Map<Storage, StorageTableDesc> storages =  new HashMap<Storage, StorageTableDesc>();
+  public Map<String, StorageTableDesc> createStorages(String dimName) {
+    Map<String, StorageTableDesc> storages =  new HashMap<String, StorageTableDesc>();
     
-    Storage storage = new HDFSStorage(CubeDDL.YODA_STORAGE);
     ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
     List<String> timePartCols = new ArrayList<String>();
     partCols.add(new FieldSchema(dim_time_part_column, "string", "dim part column"));
@@ -227,7 +227,7 @@ public class DimensionDDL {
     sTbl.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
     sTbl.setPartCols(partCols);
     sTbl.setTimePartCols(timePartCols);
-    storages.put(storage, sTbl);
+    storages.put(CubeDDL.YODA_STORAGE, sTbl);
     return storages;
   }
 

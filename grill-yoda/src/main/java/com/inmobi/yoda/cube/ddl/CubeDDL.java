@@ -106,6 +106,7 @@ public class CubeDDL {
     this.dimDDL = dimDDL;
     this.client = CubeMetastoreClient.getInstance(conf);
     loadCubeDefinition();
+    createStorages(conf);
   }
 
   static DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd-HH").withZoneUTC();
@@ -190,6 +191,16 @@ public class CubeDDL {
         }
         factcCubeNames.add(cubeTableName);
       }
+    }
+  }
+
+  public static void createStorages(HiveConf conf) throws HiveException {
+    CubeMetastoreClient cc = CubeMetastoreClient.getInstance(conf);
+    if (!cc.tableExists(YODA_STORAGE)) {
+      cc.createStorage(new HDFSStorage(YODA_STORAGE));
+    }
+    if (!cc.tableExists(YODA_PIE_STORAGE)) {
+      cc.createStorage(new HDFSStorage(YODA_PIE_STORAGE));
     }
   }
 
@@ -281,7 +292,7 @@ public class CubeDDL {
   private void createOrAlterFactTable(List<String> cubeNames, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
     List<FieldSchema> columns = getNobColList();
-    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
         summary, grains, cost,
         cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null,
@@ -312,14 +323,13 @@ public class CubeDDL {
 
   public Map<String, Set<UpdatePeriod>> createStorages(
       String summary, Set<Grain> grains, double cost, boolean hasPIEStorage,
-      Map<Storage, StorageTableDesc> storageTables) {
+      Map<String, StorageTableDesc> storageTables) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = 
         new HashMap<String, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
     tableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
-    Storage storage = new HDFSStorage(YODA_STORAGE);
     StorageTableDesc sTbl = new StorageTableDesc();
     ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
     List<String> timePartCols = new ArrayList<String>();
@@ -344,14 +354,13 @@ public class CubeDDL {
             .toUpperCase()));          
       }
     }
-    storageAggregatePeriods.put(storage.getName(), updatePeriods);
-    storageTables.put(storage, sTbl);
+    storageAggregatePeriods.put(YODA_STORAGE, updatePeriods);
+    storageTables.put(YODA_STORAGE, sTbl);
 
     // create storage with PIE partitions
     if (hasPIEStorage) {
       Map<String, String> pieTableParams = new HashMap<String, String>();
       pieTableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
-      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
       StorageTableDesc pieTbl = new StorageTableDesc();
       ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();
       List<String> pieTimePartCols = new ArrayList<String>();
@@ -374,8 +383,8 @@ public class CubeDDL {
       pieTbl.setTblProps(pieTableParams);
       pieTbl.setPartCols(piePartCols);
       pieTbl.setTimePartCols(pieTimePartCols);
-      storageAggregatePeriods.put(piestorage.getName(), updatePeriods);
-      storageTables.put(piestorage, pieTbl);
+      storageAggregatePeriods.put(YODA_PIE_STORAGE, updatePeriods);
+      storageTables.put(YODA_PIE_STORAGE, pieTbl);
     }
     return storageAggregatePeriods;
   }
