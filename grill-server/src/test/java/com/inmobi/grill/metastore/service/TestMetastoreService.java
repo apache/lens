@@ -48,6 +48,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   private ObjectFactory cubeObjectFactory;
   protected String mediaType = MediaType.APPLICATION_XML;
   protected MediaType medType = MediaType.APPLICATION_XML_TYPE;
+  protected String dbPFX = "TestMetastoreService_";
   CubeMetastoreServiceImpl metastoreService;
   GrillSessionHandle grillSessionId;
 
@@ -97,7 +98,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testCreateDatabase() throws Exception {
-    final String newDb = "new_db";
+    final String newDb = dbPFX + "new_db";
     WebTarget dbTarget = target().path("metastore").path("database").path(newDb);
 
     Database db = new Database();
@@ -120,7 +121,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testDropDatabase() throws Exception {
-    final String dbName = "del_db";
+    final String dbName = dbPFX + "del_db";
     final WebTarget dbTarget = target().path("metastore").path("database").path(dbName);
     final Database db = new Database();
     db.setName(dbName);
@@ -300,7 +301,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testCreateCube() throws Exception {
-    final String DB = "test_create_cube";
+    final String DB = dbPFX + "test_create_cube";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -331,7 +332,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testGetCube() throws Exception {
-    final String DB = "test_get_cube";
+    final String DB = dbPFX + "test_get_cube";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -366,7 +367,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testDropCube() throws Exception {
-    final String DB = "test_drop_cube";
+    final String DB = dbPFX + "test_drop_cube";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -402,7 +403,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testUpdateCube() throws Exception {
     final String cubeName = "test_update";
-    final String DB = "test_update_cube";
+    final String DB = dbPFX + "test_update_cube";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -464,7 +465,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   public void testStorage() throws Exception {
-    final String DB = "test_storage";
+    final String DB = dbPFX + "test_storage";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -626,7 +627,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testCreateAndDropDimensionTable() throws Exception {
     final String table = "test_create_dim";
-    final String DB = "test_dim_db";
+    final String DB = dbPFX + "test_dim_db";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -661,7 +662,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test 
   public void testGetAndUpdateDimensionTable() throws Exception {
     final String table = "test_get_dim";
-    final String DB = "test_get_dim_db";
+    final String DB = dbPFX + "test_get_dim_db";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -738,7 +739,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testGetDimensionStorages() throws Exception {
     final String table = "test_get_storage";
-    final String DB = "test_get_dim_storage_db";
+    final String DB = dbPFX + "test_get_dim_storage_db";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -761,7 +762,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testAddAndDropDimensionStorages() throws Exception {
     final String table = "test_add_drop_storage";
-    final String DB = "test_add_drop_dim_storage_db";
+    final String DB = dbPFX + "test_add_drop_dim_storage_db";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -852,7 +853,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testAddDropAllDimStorages() throws Exception {
     final String table = "testAddDropAllDimStorages";
-    final String DB = "testAddDropAllDimStorages_db";
+    final String DB = dbPFX + "testAddDropAllDimStorages_db";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -927,7 +928,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testCreateFactTable() throws Exception {
     final String table = "testCreateFactTable";
-    final String DB = "testCreateFactTable_DB";
+    final String DB = dbPFX + "testCreateFactTable_DB";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -1044,7 +1045,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testFactStorages() throws Exception {
     final String table = "testFactStorages";
-    final String DB = "testFactStorages_DB";
+    final String DB = dbPFX + "testFactStorages_DB";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
@@ -1142,7 +1143,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testFactStoragePartitions() throws Exception {
     final String table = "testFactStoragePartitions";
-    final String DB = "testFactStoragePartitions_DB";
+    final String DB = dbPFX + "testFactStoragePartitions_DB";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
