@@ -24,7 +24,8 @@ public class QueryStatus {
 	private Status status;
   @XmlElement
 	private boolean hasResultSet = false;
-  private final String driverOpHandle;
+  @XmlElement
+  private String driverOpHandle;
 
   public QueryStatus() {
     // for jaxb
