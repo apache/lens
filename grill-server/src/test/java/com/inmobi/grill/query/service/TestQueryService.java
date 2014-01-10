@@ -25,6 +25,7 @@ import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.QueryContext;
 import com.inmobi.grill.client.api.QueryPlan;
 import com.inmobi.grill.client.api.QueryResultSetMetadata;
+import com.inmobi.grill.server.api.events.query.QueryEnded;
 import com.inmobi.grill.service.GrillJerseyTest;
 import com.inmobi.grill.service.GrillServices;
 import com.inmobi.grill.api.GrillConfConstants;
@@ -609,8 +610,18 @@ public class TestQueryService extends GrillJerseyTest {
     APIResult result = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-    QueryContext ctx2 = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
-    Assert.assertEquals(ctx2.getStatus().getStatus(), QueryStatus.Status.CANCELED);
+    while (true) {
+      Thread.sleep(1000);
+      QueryContext ctx2 = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(QueryContext.class);
+      if (QueryEnded.END_STATES.contains(ctx2.getStatus().getStatus())) {
+        // It's possible that the query we tried to cancel had already completed
+        Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED
+         || ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL, "Query should be either cancelled or completed");
+        break;
+      } else {
+        System.out.println(handle2 + " " + ctx2.getStatus().getStatus());
+      }
+    }
   }
 
   // test with execute async post, get query, get results

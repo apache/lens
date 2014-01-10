@@ -12,21 +12,22 @@ import java.util.EnumSet;
  */
 public class QueryEnded extends StatusChange {
   private final String user;
-  private final Throwable cause;
+  private final String cause;
 
   public static final EnumSet<QueryStatus.Status> END_STATES =
     EnumSet.of(QueryStatus.Status.SUCCESSFUL,
       QueryStatus.Status.CANCELED, QueryStatus.Status.CLOSED, QueryStatus.Status.FAILED);
 
-  public QueryEnded(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
-                    String user, Throwable cause) {
-    super(prev, current, handle);
+  public QueryEnded(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+                    String user, String cause) {
+    super(eventTime, prev, current, handle);
     this.user = user;
     this.cause = cause;
     if (!END_STATES.contains(current)) {
       throw new IllegalStateException("Not a valid end state: " + current + " query: " + handle);
     }
   }
+
 
   /**
    * If the query ended because of a user action, then this method will return the user id of requesting user
@@ -40,7 +41,7 @@ public class QueryEnded extends StatusChange {
    * If the query ended because of an error, then this method should give the cause.
    * @return
    */
-  public final Throwable getCause() {
+  public final String getCause() {
     return cause;
   }
 

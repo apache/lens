@@ -36,5 +36,4 @@
   <name>grill.scheduler.service.impl</name>
   <value>com.inmobi.grill.queryscheduler.service.QuerySchedulerServiceImpl</value>
 </property>
-
 </configuration>

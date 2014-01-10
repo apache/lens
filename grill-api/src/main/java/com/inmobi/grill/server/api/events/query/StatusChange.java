@@ -6,8 +6,8 @@ import com.inmobi.grill.api.QueryStatus;
 
 
 public abstract class StatusChange extends QueryEvent<QueryStatus.Status> {
-  public StatusChange(QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(prev, current, handle);
+  public StatusChange(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
+    super(eventTime, prev, current, handle);
   }
 
   protected void checkCurrentState(QueryStatus.Status status) {
