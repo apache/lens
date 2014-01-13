@@ -562,6 +562,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Configuration qconf = getQueryConf(sessionHandle, queryConf);
       accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
       QueryContext ctx = new QueryContext(pctx, getSession(sessionHandle.getSessionHandle()).getUserName(), qconf);
+      ctx.setGrillSessionIdentifier(sessionHandle.getSessionHandle().getHandleIdentifier().toString());
       ctx.setStatus(new QueryStatus(0.0,
           QueryStatus.Status.QUEUED,
           "Query is queued", false));
@@ -584,6 +585,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       accept(query, qconf, SubmitOp.EXECUTE);
 
       QueryContext ctx = new QueryContext(query, getSession(sessionHandle.getSessionHandle()).getUserName(), qconf);
+      ctx.setGrillSessionIdentifier(sessionHandle.getSessionHandle().getHandleIdentifier().toString());
       acceptedQueries.add(ctx);
       ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
