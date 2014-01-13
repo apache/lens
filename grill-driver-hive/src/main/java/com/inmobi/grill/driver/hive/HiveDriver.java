@@ -370,9 +370,10 @@ public class HiveDriver implements GrillDriver {
       SessionHandle userSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
-          userSession = getClient().openSession(grillSession, "");
+          userSession = getClient().openSession(ctx.getSubmittedUser(), "");
           grillToHiveSession.put(grillSession, userSession);
-          LOG.info("New session for user: " + grillSession + " session handle: " + userSession.getHandleIdentifier());
+          LOG.info("New session for user: " + ctx.getSubmittedUser() + " grill session: " +
+            grillSession + " session handle: " + userSession.getHandleIdentifier());
         } catch (Exception e) {
           throw new GrillException(e);
         }
