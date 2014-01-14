@@ -1,10 +1,6 @@
 package com.inmobi.grill.query.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.DelayQueue;
@@ -12,12 +8,14 @@ import java.util.concurrent.Delayed;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.events.query.*;
 import com.inmobi.grill.service.GrillServices;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -493,6 +491,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private GrillResultSet getResultset(QueryHandle queryHandle)
       throws GrillException {
     GrillResultSet resultSet = resultSets.get(queryHandle);
+    if (!allQueries.containsKey(queryHandle)) {
+      throw new NotFoundException("Query not found: " + queryHandle);
+    }
+
     if (resultSet == null) {
       if (allQueries.get(queryHandle).getStatus().hasResultSet()) {
         resultSet = allQueries.get(queryHandle).getSelectedDriver().
@@ -724,8 +726,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       GrillResultSet resultSet = getResultset(queryHandle);
       if (resultSet != null) {
         return resultSet.getMetadata();
+      } else {
+        throw new NotFoundException("Resultset metadata not found for query: ("
+          + sessionHandle.getSessionHandle() + ", " + queryHandle + ")");
       }
-      return null;
     } finally {
       release(sessionHandle.getSessionHandle());
     }
@@ -760,7 +764,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
       if (ctx.getStatus().getStatus().equals(
           QueryStatus.Status.LAUNCHED)) {
-        boolean ret = getQueryContext(sessionHandle, queryHandle).getSelectedDriver().cancelQuery(queryHandle);
+        boolean ret = ctx.getSelectedDriver().cancelQuery(queryHandle);
         if (!ret) {
           return false;
         }
@@ -782,8 +786,26 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throws GrillException {
     try {
       acquire(sessionHandle.getSessionHandle());
-      List<QueryHandle> all = new ArrayList<QueryHandle>();
-      all.addAll(allQueries.keySet());
+      Status status = StringUtils.isBlank(state) ? null : Status.valueOf(state);
+      boolean filterByStatus = status != null;
+      boolean filterByUser = StringUtils.isNotBlank(user);
+
+      List<QueryHandle> all = new ArrayList<QueryHandle>(allQueries.keySet());
+      Iterator<QueryHandle> itr = all.iterator();
+      while (itr.hasNext()) {
+        QueryHandle q = itr.next();
+        if (filterByStatus) {
+          if (status != allQueries.get(q).getStatus().getStatus()) {
+            itr.remove();
+          }
+        }
+
+        if (filterByUser) {
+          if (!user.equalsIgnoreCase(allQueries.get(q).getSubmittedUser())) {
+            itr.remove();
+          }
+        }
+      }
       return all;
     } finally {
       release(sessionHandle.getSessionHandle());
@@ -795,8 +817,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throws GrillException {
     try {
       acquire(sessionHandle.getSessionHandle());
-      List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>();
-      allPrepared.addAll(preparedQueries.keySet());
+      List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>(preparedQueries.keySet());
+      Iterator<QueryPrepareHandle> itr = allPrepared.iterator();
+      while (itr.hasNext()) {
+        QueryPrepareHandle q = itr.next();
+        if (StringUtils.isNotBlank(user) && !user.equalsIgnoreCase(preparedQueries.get(q).getPreparedUser())) {
+          itr.remove();
+        }
+      }
       return allPrepared;
     } finally {
       release(sessionHandle.getSessionHandle());
