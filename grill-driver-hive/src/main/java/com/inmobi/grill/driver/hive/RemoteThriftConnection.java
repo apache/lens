@@ -95,10 +95,12 @@ public class RemoteThriftConnection implements ThriftConnection {
       throw new GrillException(e);
     }
   }
+
 	@Override
 	public void close() {
 		if (connected) {
 			transport.close();
+      connected = false;
 		}
 	}
 }

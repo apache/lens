@@ -2,10 +2,7 @@ package com.inmobi.grill.driver.hive;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -20,7 +17,6 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
-import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -49,16 +45,18 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
 
   private HiveConf conf;
-  private SessionHandle session;
   private Map<QueryHandle, OperationHandle> hiveHandles =
       new HashMap<QueryHandle, OperationHandle>();
   private ThriftConnection connection;
   private final Lock connectionLock;
   private final Lock sessionLock;
+  // Store mapping of Grill session ID to Hive session identifier
+  private Map<String, SessionHandle> grillToHiveSession;
 
   public HiveDriver() throws GrillException {
     this.connectionLock = new ReentrantLock();
     this.sessionLock = new ReentrantLock();
+    grillToHiveSession = new HashMap<String, SessionHandle>();
   }
 
   @Override
@@ -118,7 +116,7 @@ public class HiveDriver implements GrillDriver {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
-      OperationHandle op = getClient().executeStatement(getSession(), ctx.getDriverQuery(), 
+      OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getDriverQuery(),
           ctx.getConf().getValByRegex(".*"));
       hiveHandles.put(ctx.getQueryHandle(), op);
       OperationStatus status = getClient().getOperationStatus(op);
@@ -140,7 +138,7 @@ public class HiveDriver implements GrillDriver {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
-      OperationHandle op = getClient().executeStatementAsync(getSession(),
+      OperationHandle op = getClient().executeStatementAsync(getSession(ctx),
           ctx.getDriverQuery(), 
           ctx.getConf().getValByRegex(".*"));
       hiveHandles.put(ctx.getQueryHandle(), op);
@@ -276,10 +274,30 @@ public class HiveDriver implements GrillDriver {
       }
     }
 
+    sessionLock.lock();
     try {
-      getClient().closeSession(getSession());
-    } catch (Exception e) {
-      LOG.error("Unable to close connection", e);
+      for (String grillSession : grillToHiveSession.keySet()) {
+        try {
+          getClient().closeSession(grillToHiveSession.get(grillSession));
+        } catch (Exception e) {
+          LOG.warn("Error closing session for grill session: " + grillSession + ", hive session: "
+            + grillToHiveSession.get(grillSession), e);
+        }
+      }
+      grillToHiveSession.clear();
+    } finally {
+      sessionLock.unlock();
+    }
+
+    connectionLock.lock();
+    try {
+      try {
+        connection.close();
+      } catch (IOException e) {
+        LOG.warn("Could not close connection", e);
+      }
+    } finally {
+      connectionLock.unlock();
     }
   }
 
@@ -345,22 +363,27 @@ public class HiveDriver implements GrillDriver {
     context.setDriverQuery(hiveQuery);
   }
 
-  private SessionHandle getSession() throws GrillException {
+  private SessionHandle getSession(QueryContext ctx) throws GrillException {
     sessionLock.lock();
     try {
-      if (session == null) {
+      String grillSession = ctx.getGrillSessionIdentifier();
+      SessionHandle userSession;
+      if (!grillToHiveSession.containsKey(grillSession)) {
         try {
-          String userName = conf.getUser();
-          session = getClient().openSession(userName, "");
-          LOG.info("New session: " + session.getSessionId());
+          userSession = getClient().openSession(ctx.getSubmittedUser(), "");
+          grillToHiveSession.put(grillSession, userSession);
+          LOG.info("New session for user: " + ctx.getSubmittedUser() + " grill session: " +
+            grillSession + " session handle: " + userSession.getHandleIdentifier());
         } catch (Exception e) {
           throw new GrillException(e);
         }
+      } else {
+        userSession = grillToHiveSession.get(grillSession);
       }
+      return userSession;
     } finally {
       sessionLock.unlock();
     }
-    return session;
   }
 
   private OperationHandle getHiveHandle(QueryHandle handle) throws GrillException {

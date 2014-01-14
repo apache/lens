@@ -13,6 +13,7 @@ public class QueryContext implements Comparable<QueryContext> {
   private long endTime;
   private long launchTime;
   private long runningTime;
+  private String grillSessionIdentifier;
 
   public long getCancelTime() {
     return cancelTime;
@@ -52,6 +53,14 @@ public class QueryContext implements Comparable<QueryContext> {
 
   public void setRunningTime(long runningTime) {
     this.runningTime = runningTime;
+  }
+
+  public String getGrillSessionIdentifier() {
+    return grillSessionIdentifier;
+  }
+
+  public void setGrillSessionIdentifier(String grillSessionIdentifier) {
+    this.grillSessionIdentifier = grillSessionIdentifier;
   }
 
   public enum Priority {
