@@ -794,16 +794,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Iterator<QueryHandle> itr = all.iterator();
       while (itr.hasNext()) {
         QueryHandle q = itr.next();
-        if (filterByStatus) {
-          if (status != allQueries.get(q).getStatus().getStatus()) {
+        if ( (filterByStatus && status != allQueries.get(q).getStatus().getStatus())
+          || (filterByUser && !user.equalsIgnoreCase(allQueries.get(q).getSubmittedUser()))
+          ) {
             itr.remove();
-          }
-        }
-
-        if (filterByUser) {
-          if (!user.equalsIgnoreCase(allQueries.get(q).getSubmittedUser())) {
-            itr.remove();
-          }
         }
       }
       return all;
