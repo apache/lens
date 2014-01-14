@@ -84,6 +84,9 @@ public class QueryServiceResource {
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
     try {
       SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
+      if (sop == null) {
+        throw new BadRequestException("Invalid operation type: " + op);
+      }
       switch (sop) {
       case EXECUTE:
         return queryServer.executeAsync(sessionid, query, conf);
@@ -92,7 +95,7 @@ public class QueryServiceResource {
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(sessionid, query, timeoutmillis, conf);
       default:
-        throw new GrillException("Invalid operation type");
+        throw new BadRequestException("Invalid operation type: " + op);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
@@ -144,17 +147,20 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
-      @FormDataParam("operation") String op,
+      @DefaultValue("") @FormDataParam("operation") String op,
       @FormDataParam("conf") QueryConf conf) {
     try {
       SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
+      if (sop == null) {
+        throw new BadRequestException("Invalid submit operation: " + op);
+      }
       switch (sop) {
       case PREPARE:
         return queryServer.prepare(sessionid, query, conf);
       case EXPLAIN_AND_PREPARE:
         return new QueryPlan(queryServer.explainAndPrepare(sessionid, query, conf));
       default:
-        throw new GrillException("Invalid operation type");
+        throw new BadRequestException("Invalid submit operation: " + op);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
@@ -190,7 +196,7 @@ public class QueryServiceResource {
     try {
       return QueryHandle.fromString(queryHandle);
     } catch (Exception e) {
-      throw new BadRequestException(e);
+      throw new BadRequestException("Invalid query handle: "  + queryHandle, e);
     }
   }
 
@@ -198,7 +204,7 @@ public class QueryServiceResource {
     try {
       return QueryPrepareHandle.fromString(prepareHandle);
     } catch (Exception e) {
-      throw new BadRequestException(e);
+      throw new BadRequestException("Invalid prepared query handle: " + prepareHandle, e);
     }
   }
 
@@ -219,7 +225,7 @@ public class QueryServiceResource {
   @Path("preparedqueries/{preparehandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPrepared(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("preparehandle") String prepareHandle) {
-    boolean ret = destroyPrepared(sessionid, QueryPrepareHandle.fromString(prepareHandle));
+    boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
       return new APIResult(APIResult.Status.SUCCEEDED, "Destroy on the query "
           + prepareHandle + " is successful");

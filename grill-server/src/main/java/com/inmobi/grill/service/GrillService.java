@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import javax.security.auth.login.LoginException;
+import javax.ws.rs.NotFoundException;
 
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.CompositeService;
@@ -78,6 +79,8 @@ public abstract class GrillService extends CompositeService {
   public GrillSessionImpl getSession(SessionHandle sessionHandle) throws GrillException {
     try {
       return ((GrillSessionImpl)getSessionManager().getSession(sessionHandle));
+    } catch (HiveSQLException exc) {
+      throw new NotFoundException("Session not found " + sessionHandle);
     } catch (Exception e) {
       throw new GrillException (e);
     }
