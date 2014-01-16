@@ -1241,4 +1241,86 @@ public class TestMetastoreService extends GrillJerseyTest {
       dropDatabase(DB);
     }
   }
+
+  @Test
+  public void testDimStoragePartitions() throws Exception {
+    final String table = "testDimStoragePartitions";
+    final String DB = dbPFX + "testDimStoragePartitions_DB";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    createStorage("S1");
+    createStorage("S2");
+
+    try {
+      createDimension(table);
+      // Add a partition
+      final Date partDate = new Date();
+      XPartition xp = createPartition(table, partDate);
+      APIResult partAddResult = target().path("metastore/dimensions/").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
+
+      JAXBElement<PartitionList> partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      PartitionList partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 1);
+
+      // Drop the partitions
+      APIResult dropResult = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .delete(APIResult.class);
+
+      assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was dropped
+      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 0);
+
+      // Add again
+      partAddResult = target().path("metastore/dimensions/").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was added
+      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 1);
+
+      // Drop again by values
+      String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
+      dropResult = target().path("metastore/dimensions").path(table).path("storages/test/partition")
+          .queryParam("values", StringUtils.join(val, ","))
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .delete(APIResult.class);
+      assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
+
+      // Verify partition was dropped
+      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+          .queryParam("sessionid", grillSessionId).request(mediaType)
+          .get(new GenericType<JAXBElement<PartitionList>>() {});
+
+      partitions = partitionsElement.getValue();
+      assertNotNull(partitions);
+      assertEquals(partitions.getXPartition().size(), 0);
+    } finally {
+      setCurrentDatabase(prevDb);
+      dropDatabase(DB);
+    }
+  }
+
 }
