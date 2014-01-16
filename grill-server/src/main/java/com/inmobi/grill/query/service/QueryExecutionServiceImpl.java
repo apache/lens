@@ -416,13 +416,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     queryPurger.interrupt();
     prepareQueryPurger.interrupt();
 
-    try {
-      querySubmitter.join();
-      statusPoller.join();
-      queryPurger.join();
-      prepareQueryPurger.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+    for (Thread th : new Thread[]{querySubmitter, statusPoller, queryPurger, prepareQueryPurger}) {
+      try {
+        th.join();
+      } catch (InterruptedException e) {
+        LOG.error("Error waiting for thread: " + th.getName(), e);
+      }
     }
   }
 
