@@ -247,6 +247,7 @@
         <xs:sequence>
             <xs:element name="non_time_partition_spec" type="x_part_spec" />
             <xs:element name="time_partition_spec" type="x_time_part_spec"/>
+            <xs:element name="full_partition_spec" type="x_part_spec" />
             <xs:element name="partition_parameters" type="x_properties" />
             <xs:element name="serde_parameters" type="x_properties" />            
         </xs:sequence>

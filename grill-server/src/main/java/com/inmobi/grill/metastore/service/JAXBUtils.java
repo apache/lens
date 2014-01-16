@@ -3,8 +3,10 @@ package com.inmobi.grill.metastore.service;
 
 import com.inmobi.grill.metastore.model.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -353,7 +355,7 @@ public class JAXBUtils {
       for (UpdatePeriodElement upd : periods.getUpdatePeriodElement()) {
         UpdatePeriod dumpPeriod = null;
         if (upd.getUpdatePeriods().size() > 0) {
-         dumpPeriod =  UpdatePeriod.valueOf(upd.getUpdatePeriods().get(0).toUpperCase());
+          dumpPeriod =  UpdatePeriod.valueOf(upd.getUpdatePeriods().get(0).toUpperCase());
         }
         map.put(upd.getStorageName(), dumpPeriod);
       }
@@ -558,9 +560,9 @@ public class JAXBUtils {
       XTimePartSpec xtimePartSpec) {
     Map<String, Date> timePartSpec = new HashMap<String, Date>();
     if (xtimePartSpec != null) {
-    for (XTimePartSpecElement xtimePart : xtimePartSpec.getPartSpecElement()) {
-      timePartSpec.put(xtimePart.getKey(), getDateFromXML(xtimePart.getValue()));
-    }
+      for (XTimePartSpecElement xtimePart : xtimePartSpec.getPartSpecElement()) {
+        timePartSpec.put(xtimePart.getKey(), getDateFromXML(xtimePart.getValue()));
+      }
     }
     return timePartSpec;
   }
@@ -569,18 +571,34 @@ public class JAXBUtils {
       XPartSpec xnonTimePartSpec) {
     Map<String, String> nonTimePartSpec = new HashMap<String, String>();
     if (xnonTimePartSpec != null) {
-    for (XPartSpecElement xPart : xnonTimePartSpec.getPartSpecElement()) {
-      nonTimePartSpec.put(xPart.getKey(), xPart.getValue());
-    }
+      for (XPartSpecElement xPart : xnonTimePartSpec.getPartSpecElement()) {
+        nonTimePartSpec.put(xPart.getKey(), xPart.getValue());
+      }
     }
     return nonTimePartSpec;
   }
 
-  public static XPartition xpartitionFromPartition(Partition p) {
+  public static XPartition xpartitionFromPartition(Partition p) throws HiveException {
     XPartition xp = new XPartition();
     xp.setName(p.getCompleteName());
     xp.setLocation(p.getLocation());
-    //TODO fill other fields
+    xp.setInputFormat(p.getInputFormatClass().getCanonicalName());
+    xp.setOutputFormat(p.getOutputFormatClass().getCanonicalName());
+    xp.setPartitionParameters(xPropertiesFromMap(p.getParameters()));
+    String timePartColsStr = p.getTable().getTTable().getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
+    String upParam = p.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
+    xp.setUpdatePeriod(upParam);
+    UpdatePeriod period = UpdatePeriod.valueOf(upParam);
+    XPartSpec xps = new XPartSpec();
+    for (Map.Entry<String, String> entry : p.getSpec().entrySet()) {
+      XPartSpecElement e = new XPartSpecElement();
+      e.setKey(entry.getKey());
+      e.setValue(entry.getValue());
+      xps.getPartSpecElement().add(e);
+    }
+    xp.setFullPartitionSpec(xps);
+    xp.setSerdeClassname(p.getTPartition().getSd().getSerdeInfo().getSerializationLib());
+    xp.setSerdeParameters(xPropertiesFromMap(p.getTPartition().getSd().getSerdeInfo().getParameters()));
     return xp;
   }
 

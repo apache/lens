@@ -27,6 +27,7 @@ import org.apache.thrift.TException;
 
 import java.util.*;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 public class CubeMetastoreServiceImpl extends GrillService implements CubeMetastoreService {
@@ -662,6 +663,110 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } finally {
       release(sessionid.getSessionHandle());
     }
+  }
+
+  private String getFilter(CubeMetastoreClient client, String tableName,
+      String values) throws HiveException {
+    List<FieldSchema> cols = client.getHiveTable(tableName).getPartCols();
+    String[] vals = StringUtils.split(values, ",");
+    if (vals.length != cols.size()) {
+      LOG.error("Values for all the part columns not specified, cols:" + cols + " vals:" + vals );
+      throw new BadRequestException("Values for all the part columns not specified");
+    }
+    StringBuilder filter = new StringBuilder();
+    for (int i = 0; i < vals.length; i++) {
+      filter.append(cols.get(i).getName());
+      filter.append("=");
+      filter.append("\"");
+      filter.append(vals[i]);
+      filter.append("\"");
+      if (i != (vals.length -1)) {
+        filter.append(" AND ");
+      }
+    }
+    return filter.toString();
+  }
+
+  private UpdatePeriod populatePartSpec(Partition p, Map<String, Date> timeSpec,
+      Map<String, String> nonTimeSpec) throws HiveException {
+    String timePartColsStr = p.getTable().getTTable().getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
+    String upParam = p.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
+    UpdatePeriod period = UpdatePeriod.valueOf(upParam);
+    Map<String, String> partSpec = new HashMap<String, String>();
+    partSpec.putAll(p.getSpec());
+    if (timePartColsStr != null) {
+      String[] timePartCols = StringUtils.split(timePartColsStr, ',');
+      for (String partCol : timePartCols) {
+        String dateStr = partSpec.get(partCol);
+        Date date = null;
+        try {
+          date = period.format().parse(dateStr);
+        } catch (Exception e) {
+          continue;
+        }
+        partSpec.remove(partCol);
+        timeSpec.put(partCol, date);
+      }
+    }
+    if (!partSpec.isEmpty()) {
+      nonTimeSpec.putAll(partSpec);
+    }
+    return period;
+  }
+
+  public void dropPartitionFromStorageByValues(GrillSessionHandle sessionid,
+      String cubeTableName, String storageName, String values) throws GrillException {
+    try {
+      acquire(sessionid.getSessionHandle());
+      String tableName = MetastoreUtil.getStorageTableName(cubeTableName,
+          Storage.getPrefix(storageName));
+      String filter = getFilter(getClient(sessionid), tableName, values);
+      List<Partition> partitions = getClient(sessionid).getPartitionsByFilter(
+          tableName, filter);
+      if (partitions.size() > 1) {
+        LOG.error("More than one partition with specified values, correspoding filter:" + filter);
+        throw new BadRequestException("More than one partition with specified values");
+      } else if (partitions.size() == 0) {
+        LOG.error("No partition exists with specified values, correspoding filter:" + filter);
+        throw new NotFoundException("No partition exists with specified values");
+      }
+      Map<String, Date> timeSpec = new HashMap<String, Date>();
+      Map<String, String> nonTimeSpec = new HashMap<String, String>();
+      UpdatePeriod updatePeriod = populatePartSpec(partitions.get(0), timeSpec, nonTimeSpec);
+      getClient(sessionid).dropPartition(cubeTableName,
+          storageName, timeSpec, nonTimeSpec, updatePeriod);
+      LOG.info("Dropped partition  for dimension: " + cubeTableName +
+          " storage: " + storageName + " values:" + values);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } finally {
+      release(sessionid.getSessionHandle());
+    }    
+  }
+
+  public void dropPartitionFromStorageByFilter(GrillSessionHandle sessionid, String cubeTableName,
+      String storageName, String filter) throws GrillException {
+    try {
+      acquire(sessionid.getSessionHandle());
+      String tableName = MetastoreUtil.getStorageTableName(cubeTableName,
+          Storage.getPrefix(storageName));
+      List<Partition> partitions = getClient(sessionid).getPartitionsByFilter(
+          tableName, filter);
+      for (Partition part : partitions) {
+      Map<String, Date> timeSpec = new HashMap<String, Date>();
+      Map<String, String> nonTimeSpec = new HashMap<String, String>();
+      UpdatePeriod updatePeriod = populatePartSpec(part, timeSpec, nonTimeSpec);
+      getClient(sessionid).dropPartition(cubeTableName,
+          storageName, timeSpec, nonTimeSpec,
+          updatePeriod);
+      }
+      LOG.info("Dropped partition  for cube table: " + cubeTableName +
+          " storage: " + storageName + " by filter:" + filter);
+    } catch (HiveException exc) {
+      throw new GrillException(exc);
+    } finally {
+      release(sessionid.getSessionHandle());
+    } 
   }
 
   @Override

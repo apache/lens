@@ -166,4 +166,8 @@ public interface CubeMetastoreService {
   public void dropPartitionFromStorage(GrillSessionHandle sessionid,
       String cubeTableName, String storageName, XTimePartSpec timePartSpec,
       XPartSpec nonTimePartSpec, String updatePeriod) throws GrillException;
+  public void dropPartitionFromStorageByValues(GrillSessionHandle sessionid,
+      String cubeTableName, String storageName, String values) throws GrillException;
+  public void dropPartitionFromStorageByFilter(GrillSessionHandle sessionid,
+      String cubeTableName, String storageName, String filter) throws GrillException;
 }

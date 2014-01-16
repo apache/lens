@@ -1189,7 +1189,6 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertNotNull(partitions);
       assertEquals(partitions.getXPartition().size(), 1);
 
-      /*
       // Drop the partitions
       APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S2/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
@@ -1224,10 +1223,9 @@ public class TestMetastoreService extends GrillJerseyTest {
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
       dropResult = target().path("metastore/facts").path(table).path("storages/S2/partition")
-          .path(StringUtils.join(val, ","))
+          .queryParam("values", StringUtils.join(val, ","))
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .delete(APIResult.class);
-
       assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was dropped
@@ -1238,7 +1236,6 @@ public class TestMetastoreService extends GrillJerseyTest {
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
       assertEquals(partitions.getXPartition().size(), 0);
-*/
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
