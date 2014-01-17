@@ -41,6 +41,7 @@ import com.inmobi.grill.api.QueryStatus.Status;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
+import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.server.api.QueryExecutionService;
 import com.inmobi.grill.service.GrillService;
@@ -851,6 +852,44 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           query, drivers);
       // select driver to run the query
       return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  public void addResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      String command = "add " + type.toLowerCase() + " " + path;
+      for (GrillDriver driver : drivers) {
+        if (driver instanceof HiveDriver) {
+          QueryConf conf = new QueryConf();
+          conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+          QueryContext addQuery = new QueryContext(command,
+              getSession(sessionHandle.getSessionHandle()).getUserName(),
+              getQueryConf(sessionHandle, conf));
+          driver.execute(addQuery);
+        }
+      }
+    } finally {
+      release(sessionHandle.getSessionHandle());
+    }
+  }
+
+  public void deleteResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
+    try {
+      acquire(sessionHandle.getSessionHandle());
+      String command = "delete " + type.toLowerCase() + " " + path;
+      for (GrillDriver driver : drivers) {
+        if (driver instanceof HiveDriver) {
+          QueryConf conf = new QueryConf();
+          conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+          QueryContext addQuery = new QueryContext(command,
+              getSession(sessionHandle.getSessionHandle()).getUserName(),
+              getQueryConf(sessionHandle, conf));
+          driver.execute(addQuery);
+        }
+      }
     } finally {
       release(sessionHandle.getSessionHandle());
     }

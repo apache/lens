@@ -1,7 +1,9 @@
 package com.inmobi.grill.service;
 
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
@@ -33,6 +35,7 @@ public class GrillServices extends CompositeService {
   private boolean inited = false;
   private CLIService cliService;
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
+  private final List<GrillService> grillServices = new ArrayList<GrillService>();
 
   public GrillServices(String name) {
     super(name);
@@ -66,6 +69,7 @@ public class GrillServices extends CompositeService {
         GrillService service  = (GrillService) constructor.newInstance(new Object[]
           {cliService});
         addService(service);
+        grillServices.add(service);
       } catch (Exception e) {
         LOG.warn("Could not add service:" + sName, e);
         throw new WebApplicationException(e);
@@ -88,5 +92,9 @@ public class GrillServices extends CompositeService {
   @SuppressWarnings("unchecked")
   public <T extends Service> T getService(String sName) {
     return (T) services.get(sName);
+  }
+
+  public List<GrillService> getGrillServices() {
+    return grillServices;
   }
 }

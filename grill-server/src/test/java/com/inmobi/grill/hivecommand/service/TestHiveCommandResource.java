@@ -17,7 +17,9 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.client.api.APIResult;
+import com.inmobi.grill.client.api.APIResult.Status;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.StringList;
 import com.inmobi.grill.service.GrillJerseyTest;
@@ -51,7 +53,7 @@ public class TestHiveCommandResource extends GrillJerseyTest {
 
   @Test
   public void testSession() {
-    final WebTarget target = target().path("command/session");
+    final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
@@ -68,7 +70,7 @@ public class TestHiveCommandResource extends GrillJerseyTest {
     Assert.assertNotNull(handle);
     
     // get all session params
-    final WebTarget paramtarget = target().path("command/session/params");
+    final WebTarget paramtarget = target().path("session/params");
     StringList sessionParams = paramtarget.queryParam("sessionid", handle).request().get(
         StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
@@ -163,4 +165,53 @@ public class TestHiveCommandResource extends GrillJerseyTest {
     result = target.queryParam("sessionid", handle2).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
+
+  @Test
+  public void testResource() {
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
+        "user1"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
+        "psword"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        new QueryConf(),
+        MediaType.APPLICATION_XML_TYPE));
+
+    final GrillSessionHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    Assert.assertNotNull(handle);
+    
+    // add a resource
+    final WebTarget resourcetarget = target().path("session/resources");
+    final FormDataMultiPart mp1 = new FormDataMultiPart();
+    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        handle, MediaType.APPLICATION_XML_TYPE));
+    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
+        "file"));
+    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
+        "test-classes/grill-site.xml"));
+    APIResult result = resourcetarget.path("add").request().put(
+        Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
+
+    // delete the resource
+    final FormDataMultiPart mp2 = new FormDataMultiPart();
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        handle, MediaType.APPLICATION_XML_TYPE));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
+        "file"));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
+        "test-classes/grill-site.xml"));
+    result = resourcetarget.path("delete").request().put(
+        Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // close session
+    result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+  }
+
 }

@@ -1,9 +1,7 @@
 package com.inmobi.grill.service;
 
-import java.io.IOException;
 import java.util.Map;
 
-import javax.security.auth.login.LoginException;
 import javax.ws.rs.NotFoundException;
 
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
@@ -14,6 +12,7 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 
+import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.service.session.GrillSessionImpl;
 
@@ -98,4 +97,11 @@ public abstract class GrillService extends CompositeService {
     getSession(sessionHandle).release();
   }
 
+  public void addResource(GrillSessionHandle sessionHandle, String type,
+      String path) throws GrillException {
+  }
+
+  public void deleteResource(GrillSessionHandle sessionHandle, String type,
+      String path) throws GrillException {
+  }
 }
