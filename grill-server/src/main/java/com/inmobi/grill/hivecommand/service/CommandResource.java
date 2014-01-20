@@ -26,9 +26,10 @@ import com.inmobi.grill.client.api.APIResult;
 import com.inmobi.grill.client.api.QueryConf;
 import com.inmobi.grill.client.api.StringList;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.service.GrillService;
 import com.inmobi.grill.service.GrillServices;
 
-@Path("/command")
+@Path("/session")
 public class CommandResource {
   private HiveCommandService commandService;
 
@@ -44,7 +45,6 @@ public class CommandResource {
   }
 
   @POST
-  @Path("session")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillSessionHandle openSession(@FormDataParam("username") String username,
@@ -58,7 +58,6 @@ public class CommandResource {
   }
 
   @DELETE
-  @Path("session")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@QueryParam("sessionid") GrillSessionHandle sessionid) {
     try {
@@ -76,7 +75,14 @@ public class CommandResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult addResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
-    commandService.addResource(sessionid,  type, path);
+    for (GrillService service : GrillServices.get().getGrillServices()) {
+      try {
+        service.addResource(sessionid,  type, path);
+      } catch (GrillException e) {
+        return new APIResult(APIResult.Status.PARTIAL,
+            "Add resource is partial, failed for service:" + service.getName());
+      }
+    }
     return new APIResult(APIResult.Status.SUCCEEDED,
         "Add resource succeeded");
   }
@@ -87,13 +93,20 @@ public class CommandResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult deleteResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
-    commandService.deleteResource(sessionid,  type, path);
+    for (GrillService service : GrillServices.get().getGrillServices()) {
+      try {
+        service.deleteResource(sessionid,  type, path);
+      } catch (GrillException e) {
+        return new APIResult(APIResult.Status.PARTIAL,
+            "Add resource is partial, failed for service:" + service.getName());
+      }
+    }
     return new APIResult(APIResult.Status.SUCCEEDED,
         "Delete resource succeeded");
   }
 
   @GET
-  @Path("session/params")
+  @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public StringList getParams(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("false") @QueryParam("verbose") boolean verbose,
@@ -113,7 +126,7 @@ public class CommandResource {
   }
 
   @PUT
-  @Path("session/params")
+  @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult setParam(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("key") String key, @FormDataParam("value") String value) {
