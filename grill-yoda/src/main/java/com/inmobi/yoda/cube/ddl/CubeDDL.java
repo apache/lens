@@ -131,8 +131,23 @@ public class CubeDDL {
         cubeReader.getAllDimensionsWithActualStartTime(cubeName).entrySet()) {
         String dimName = dimEntry.getKey();
         CubeDimension dim;
-        FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
-            "dim col");
+        FieldSchema column;
+
+        DimensionDDL.FieldInfo fi = dimDDL.getFieldInfo(cubeNameInJoinChain, dimName);
+        if (fi != null) {
+          if ("list".equalsIgnoreCase(fi.type)) {
+            column = new FieldSchema(dimName, "array<string>", "dim col");
+          } else if ("map".equalsIgnoreCase(fi.type)) {
+            column = new FieldSchema(dimName, "map<string, string>", "dim col");
+          } else if (fi.type != null && !fi.type.isEmpty()) {
+            column = new FieldSchema(dimName, fi.type, "dim col");
+          } else {
+            column = new FieldSchema(dimName, CubeDDL.DIM_TYPE, "dim col");
+          }
+        } else {
+          column = new FieldSchema(dimName, CubeDDL.DIM_TYPE, "dim col");
+        }
+
         Date startTime = defaultStartTime;
         if (dimEntry.getValue() != null) {
           startTime = dimEntry.getValue().toDate();
