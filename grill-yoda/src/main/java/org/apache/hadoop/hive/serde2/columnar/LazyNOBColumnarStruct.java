@@ -15,7 +15,9 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory.CubeReaderType;
 
 public class LazyNOBColumnarStruct extends ColumnarStructBase {
   private static final Log LOG = LogFactory.getLog(LazyNOBColumnarStruct.class);
@@ -23,7 +25,7 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
   KeyLessNetworkObject.Builder nobBuilder = KeyLessNetworkObject.newBuilder();
   static final Set<String> measures = new HashSet<String>();
   static {
-    CubeDefinitionReader reader = CubeDefinitionReader.get();
+    CubeDefinitionReader reader = CubeDefinitionReaderFactory.get(CubeReaderType.UBER);
     for (String cubeName : reader.getCubeNames()) {
       measures.addAll(reader.getAllMeasureNames(cubeName));
       for (String summary : reader.getSummaryNames(cubeName)) {
