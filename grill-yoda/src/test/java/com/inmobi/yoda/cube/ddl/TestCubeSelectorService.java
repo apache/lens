@@ -109,7 +109,7 @@ public class TestCubeSelectorService {
     assertNotNull(selected);
     assertEquals(selected.size(), 2);
 
-    Cube click = metastore.getCube("cube_click");
+    Cube click = metastore.getCube("cube_billing");
     Cube dlUnMatch = metastore.getCube("cube_downloadunmatch");
     Cube dlMatch = metastore.getCube("cube_downloadmatch");
 
@@ -134,7 +134,7 @@ public class TestCubeSelectorService {
     assertNotNull(selection);
     assertEquals(selection.size(), 2);
 
-    Cube click = metastore.getCube("cube_click");
+    Cube click = metastore.getCube("cube_billing");
     CubeDimensionTable testDim = metastore.getDimensionTable("testDim");
 
     Set<AbstractCubeTable> clickList = new HashSet<AbstractCubeTable>();
