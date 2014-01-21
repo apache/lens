@@ -8,7 +8,7 @@
     <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
     <hive.version>0.12.1</hive.version>
     <hadoop.version>0.20.2-cdh3u5</hadoop.version>
-    <yoda.version>0.6.74</yoda.version>
+    <yoda.version>0.6.77-SNAPSHOT</yoda.version>
   </properties>
 
   <groupId>com.inmobi.grill</groupId>
