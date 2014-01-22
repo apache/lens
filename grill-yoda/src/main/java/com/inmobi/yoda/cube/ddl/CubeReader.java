@@ -5,24 +5,25 @@ import java.io.IOException;
 import java.util.Properties;
 
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 
 public class CubeReader {
   private final CubeDefinitionReader reader;
   private final Properties props = new Properties();
 
   public CubeReader() throws IOException {
-    reader = CubeDefinitionReader.get();
+    reader = CubeDefinitionReaderFactory.get();
     props.load(Thread.currentThread().getContextClassLoader()
         .getResourceAsStream("cube_defn.properties"));
   }
 
   public CubeReader(final String propertyFilePath) throws IOException { 
-    reader = CubeDefinitionReader.get(propertyFilePath);
+    reader = CubeDefinitionReaderFactory.get(propertyFilePath);
     props.load(new FileInputStream(propertyFilePath));
   }
 
   public CubeReader(final Properties changes) throws IOException {
-    reader = CubeDefinitionReader.get(changes);
+    reader = CubeDefinitionReaderFactory.get(changes);
     props.load(Thread.currentThread().getContextClassLoader()
         .getResourceAsStream("cube_defn.properties"));
     for (final Object key : changes.keySet()) {

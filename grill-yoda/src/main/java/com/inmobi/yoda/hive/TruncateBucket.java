@@ -1,7 +1,7 @@
 package com.inmobi.yoda.hive;
 
 
-import com.inmobi.dw.yoda.mr.util.TruncateBucketHelper;
+import com.inmobi.dw.yoda.tools.util.TruncateBucketHelper;
 import com.inmobi.dw.yoda.proto.YodaMrSpec;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
