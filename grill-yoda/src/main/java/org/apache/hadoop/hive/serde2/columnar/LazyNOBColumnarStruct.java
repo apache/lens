@@ -103,13 +103,15 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
   public void init(BytesRefArrayWritable cols) {
     nobBuilder.clear();
     for (int i : referedCols) {
-      BytesRefWritable bytesRef = cols.get(i);
-      if (bytesRef.getLength() != 0) {
-        try {
-          nobBuilder.mergeFrom(bytesRef.getData(),
-              bytesRef.getStart(), bytesRef.getLength());
-        } catch (Exception e) {
-          throw new RuntimeException("Could not initialize network object", e);
+      if (i < cols.size()) {
+        BytesRefWritable bytesRef = cols.get(i);
+        if (bytesRef.getLength() != 0) {
+          try {
+            nobBuilder.mergeFrom(bytesRef.getData(),
+                bytesRef.getStart(), bytesRef.getLength());
+          } catch (Exception e) {
+            throw new RuntimeException("Could not initialize network object", e);
+          }
         }
       }
     }
