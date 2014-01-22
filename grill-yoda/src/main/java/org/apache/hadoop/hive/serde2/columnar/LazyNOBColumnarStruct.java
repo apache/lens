@@ -1,7 +1,6 @@
 package org.apache.hadoop.hive.serde2.columnar;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -79,7 +78,6 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
    * @return The field as a LazyObject
    */
   public Object getField(int fieldID) {
-    LOG.info("Get field " + fieldID + " from lazy struct");
     Object o = fieldInfoList[fieldID].getField();
     return o;
   }
@@ -117,8 +115,6 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
     }
     KeyLessNetworkObject nob = nobBuilder.build();
 
-   // List<FieldDescriptor> fdList = new ArrayList<FieldDescriptor>();
-   // fdList.addAll(nob.getDescriptorForType().getFields());
     for (int i = 0; i < numCols; i++) {
       fieldInfoList[i].init(nob, CubeDDL.getFdListMap().get(i));
     }
