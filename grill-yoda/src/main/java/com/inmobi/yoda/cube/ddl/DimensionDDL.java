@@ -179,7 +179,6 @@ public class DimensionDDL {
 
   public void createAllDimensions() throws HiveException {
     for (String tableName : tableFields.keySet()) {
-      System.out.println("## DIM TABLE:" + tableName);
       try {
         createDimension(tableName);
       } catch (HiveException exc) {
@@ -228,7 +227,7 @@ public class DimensionDDL {
 
     Map<String, String> properties = new HashMap<String, String>();
     properties.put(MetastoreConstants.TIMED_DIMENSION, dim_time_part_column);
-    System.out.println("## Creating table " + dimName);
+    System.out.println("Creating table " + dimName);
     if (Hive.get().getTable(dimName, false) == null) {
       client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
           dimensionReferences,

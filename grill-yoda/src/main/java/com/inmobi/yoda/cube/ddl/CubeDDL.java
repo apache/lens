@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import org.apache.commons.lang.StringUtils;
@@ -75,6 +76,7 @@ public class CubeDDL {
   private final DimensionDDL dimDDL;
   private final CubeMetastoreClient client;
   private static List<FieldSchema> nobColList;
+  private static final Map<Integer, FieldDescriptor> fdListMap = new TreeMap<Integer, FieldDescriptor>();
 
   private final Map<String, Map<String, String>> summaryProperties =
       new HashMap<String, Map<String, String>>();
@@ -89,7 +91,21 @@ public class CubeDDL {
         allMeasures.addAll(reader.getSummaryMeasureNames(cubeName, summary));
       }
     }
+
+    List<FieldDescriptor> fdList = KeyLessNetworkObject.getDescriptor()
+        .getFields();
+    for (FieldDescriptor fd : fdList) {
+      fdListMap.put(fd.getNumber() - 1, fd);
+    }
   }
+
+  /**
+   * @return the fdListMap
+   */
+  public static Map<Integer, FieldDescriptor> getFdListMap() {
+    return fdListMap;
+  }
+
 
   public CubeDDL(String cubeName, CubeDefinitionReader cubeReader,
       Properties properties, DimensionDDL dimDDL, HiveConf conf)
@@ -275,10 +291,20 @@ public class CubeDDL {
 
   public static List<FieldSchema> getNobColList() {
     if (nobColList == null) {
-      List<FieldDescriptor> fdList = KeyLessNetworkObject.getDescriptor()
-          .getFields();
+      long maxIndex = KeyLessNetworkObject.getDefaultInstance().getNextFreeFieldId();
       nobColList = new ArrayList<FieldSchema>();
-      for (FieldDescriptor fd : fdList) {
+      int nextIndex = 0;
+      for (Map.Entry<Integer, FieldDescriptor> entry : fdListMap.entrySet()) {
+        int fdIndex = entry.getKey();
+        if (fdIndex >= maxIndex) {
+          break;
+        }
+        FieldDescriptor fd = entry.getValue();
+        while (nextIndex < fdIndex) {
+          // add unused columns
+          nobColList.add(nextIndex, new FieldSchema("unused" +nextIndex, DIM_TYPE, "unused col"));
+          nextIndex++;
+        }
         String name = fd.getName();
         String type;
         if (isMeasure(name)) {
@@ -286,13 +312,14 @@ public class CubeDDL {
         } else {
           type = DIM_TYPE;
         }
-        nobColList.add(new FieldSchema(name, type, "nob col"));
+        nobColList.add(fdIndex, new FieldSchema(name, type, "nob col"));
+        nextIndex = fdIndex + 1;
       }
     }
     return nobColList;
   }
 
-  private static boolean isMeasure(String name) {
+  public static boolean isMeasure(String name) {
     return allMeasures.contains(name);
   }
 

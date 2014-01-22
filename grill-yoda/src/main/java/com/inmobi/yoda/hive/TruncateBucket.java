@@ -1,14 +1,12 @@
 package com.inmobi.yoda.hive;
 
-
-import com.inmobi.dw.yoda.tools.util.TruncateBucketHelper;
 import com.inmobi.dw.yoda.proto.YodaMrSpec;
+import com.inmobi.dw.yoda.tools.util.TruncateBucketHelper;
+
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-
-import java.text.ParseException;
 
 @Description(
   name = "truncate_bucket",
