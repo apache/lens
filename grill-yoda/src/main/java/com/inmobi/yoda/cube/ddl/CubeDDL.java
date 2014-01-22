@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,6 +45,7 @@ import org.joda.time.format.DateTimeFormatter;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
 import com.inmobi.grill.api.GrillConfUtil;
 
@@ -81,7 +83,8 @@ public class CubeDDL {
 
   static final Set<String> allMeasures = new HashSet<String>();
   static {
-    CubeDefinitionReader reader = CubeDefinitionReader.get();
+    CubeDefinitionReader reader = CubeDefinitionReaderFactory.get(CubeDefinitionReaderFactory.CubeReaderType.UBER);
+
     for (String cubeName : reader.getCubeNames()) {
       allMeasures.addAll(reader.getAllMeasureNames(cubeName));
       for (String summary : reader.getSummaryNames(cubeName)) {
