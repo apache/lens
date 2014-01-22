@@ -75,18 +75,15 @@
     <dependency>
       <groupId>com.inmobi.dw.yoda</groupId>
       <artifactId>yoda-commons</artifactId>
-      <version>${yoda.version}</version>
     </dependency>
 
       <dependency>
           <groupId>com.inmobi.dw.yoda</groupId>
           <artifactId>yoda-udfs</artifactId>
-          <version>${yoda.version}</version>
       </dependency>
       <dependency>
           <groupId>com.inmobi.dw.yoda</groupId>
           <artifactId>fpjamr</artifactId>
-          <version>${yoda.version}</version>
           <classifier>without-dependency</classifier>
       </dependency>
     <dependency>
