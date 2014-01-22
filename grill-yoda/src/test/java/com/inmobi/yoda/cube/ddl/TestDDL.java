@@ -102,7 +102,7 @@ public class TestDDL {
     List<String> factsWithPIEStorage = Arrays.asList("summary1", "summary2",
         "summary3", "cube_request_raw", "cube_impression_raw", "cube_click_raw");
 
-    Assert.assertEquals(15, cc.getAllCubes().size());
+    Assert.assertEquals(18, cc.getAllCubes().size());
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
