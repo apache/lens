@@ -27,50 +27,7 @@ public class TestCubeSelectorService {
   private DimensionDDL dimDDL;
   private HiveConf conf;
   private CubeMetastoreClient metastore;
-
-  private void createTestDim(CubeMetastoreClient client)
-    throws HiveException {
-    String dimName = "testDim";
-
-    List<FieldSchema>  dimColumns = new ArrayList<FieldSchema>();
-    dimColumns.add(new FieldSchema("id", "int", "code"));
-    dimColumns.add(new FieldSchema("testdim_name", "string", "field1"));
-
-    Map<String, List<TableReference>> dimensionReferences =
-      new HashMap<String, List<TableReference>>();
-
-    Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
-    ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
-    List<String> timePartCols = new ArrayList<String>();
-    partCols.add(new FieldSchema("dt",
-        serdeConstants.STRING_TYPE_NAME,
-        "date partition"));
-    timePartCols.add("dt");
-    Storage hdfsStorage1 = Storage.createInstance(HDFSStorage.class.getCanonicalName(), "C1");
-    StorageTableDesc s1 = new StorageTableDesc();
-    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
-    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    s1.setPartCols(partCols);
-    s1.setTimePartCols(timePartCols);
-    dumpPeriods.put(hdfsStorage1.getName(), UpdatePeriod.HOURLY);
-
-    Storage hdfsStorage2 = Storage.createInstance(HDFSStorage.class.getCanonicalName(), "C2");
-    StorageTableDesc s2 = new StorageTableDesc();
-    s2.setInputFormat(TextInputFormat.class.getCanonicalName());
-    s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
-    dumpPeriods.put(hdfsStorage2.getName(), null);
-
-    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
-    storageTables.put(hdfsStorage1, s1);
-    storageTables.put(hdfsStorage2, s2);
-
-    Map<String, String> dimProps = new HashMap<String, String>();
-    dimProps.put(MetastoreConstants.TIMED_DIMENSION, "dt");
-
-    client.createCubeDimensionTable(dimName, dimColumns, 0L,
-        dimensionReferences, dumpPeriods, dimProps, storageTables);
-
-  }
+  private CubeSelectorService selector;
 
   @BeforeTest
   public void setup() throws Exception {
@@ -79,16 +36,17 @@ public class TestCubeSelectorService {
     Hive client = Hive.get(conf);
     Database database = new Database();
     database.setName(TEST_DB);
-    client.createDatabase(database);
+    client.createDatabase(database, true);
 
     SessionState.get().setCurrentDatabase(TEST_DB);
     metastore = CubeMetastoreClient.getInstance(conf);
     metastore.setCurrentDatabase(TEST_DB);
-
+    System.out.println("@@ Set current DB to " + metastore.getCurrentDatabase());
     dimDDL = new DimensionDDL(conf);
     CubeDDL cubeDDL = new CubeDDL(dimDDL, conf);
     cubeDDL.createAllCubes();
-    createTestDim(metastore);
+    dimDDL.createAllDimensions();
+    selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
     System.out.println("##setup test cubeselector service");
   }
 
@@ -99,85 +57,43 @@ public class TestCubeSelectorService {
   }
 
   @Test
-  public void testSelectCube() throws Exception  {
-    String columns[] = {"bl_billedcount", "dl_joined_count"};
+  public void testSelectorService() throws Exception {
+    List<String> col1 = Arrays.asList("rq_time", "rq_siteid", "rq_adimp",
+      "rq_mkvldadreq", "bc_click_no_pings", "bl_data_enrichment_cost","dl_joined_count");
+    System.out.println("@@TEST_1: " + col1.toString());
+    Map<Set<String>, Set<AbstractCubeTable>> result1 = selector.select(col1);
+    printResult(result1);
 
-    CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
 
-    Map<Set<String>, Set<AbstractCubeTable>> selected = selector.select(Arrays.asList(columns));
+    List<String> col2 = Arrays.asList("rq_time", "rq_siteid", "impid", "rq_adimp", "bc_click_no_pings",
+      "bl_data_enrichment_cost", "dl_joined_count");
+    System.out.println("@@TEST_2: " + col2.toString());
+    Map<Set<String>, Set<AbstractCubeTable>> result2 = selector.select(col2);
+    printResult(result2);
 
-    assertNotNull(selected);
-    assertEquals(selected.size(), 2);
+    List<String> col3 = Arrays.asList("rq_time", "rq_siteid", "impid", "dl_carrier_city_id");
+    System.out.println("@@TEST_3: " + col3.toString());
+    Map<Set<String>, Set<AbstractCubeTable>> result3 = selector.select(col3);
+    printResult(result3);
 
-    Cube click = metastore.getCube("cube_billing");
-    Cube dlUnMatch = metastore.getCube("cube_downloadunmatch");
-    Cube dlMatch = metastore.getCube("cube_downloadmatch");
-
-    System.out.println("## result " + selected.toString());
-    Set<AbstractCubeTable> clickList = selected.get(new HashSet<String>(Arrays.asList("bl_billedcount")));
-    assertEquals(clickList.size(), 1, "Size mistmatch:" + clickList.toString());
-    assertTrue(clickList.contains(click));
-
-    Set<AbstractCubeTable> dlList = selected.get(new HashSet<String>(Arrays.asList("dl_joined_count")));
-    assertEquals(dlList.size(), 2);
-    assertEquals(dlList,
-      new HashSet<AbstractCubeTable>(Arrays.asList(dlUnMatch, dlMatch)));
+    List<String> col4 = Arrays.asList("rq_time", "rq_siteid", "impid");
+    System.out.println("@@TEST_4: " + col4.toString());
+    Map<Set<String>, Set<AbstractCubeTable>> result4 = selector.select(col4);
+    printResult(result4);
   }
 
-  @Test
-  public void testSelectDimension() throws Exception {
-    String columns[] = {"bl_billedcount", "testdim_name"};
-    CubeSelectorService selector = CubeSelectorFactory.getSelectorSvcInstance(conf);
-
-    Map<Set<String>, Set<AbstractCubeTable>> selection = selector.select(Arrays.asList(columns));
-
-    assertNotNull(selection);
-    assertEquals(selection.size(), 2);
-
-    Cube click = metastore.getCube("cube_billing");
-    CubeDimensionTable testDim = metastore.getDimensionTable("testDim");
-
-    Set<AbstractCubeTable> clickList = new HashSet<AbstractCubeTable>();
-    clickList.add(click);
-    Set<AbstractCubeTable> dimList = new HashSet<AbstractCubeTable>();
-    dimList.add(testDim);
-
-    Set<String> clickCols = new HashSet<String>();
-    clickCols.add("bl_billedcount");
-
-    Set<String> dimCols = new HashSet<String>();
-    dimCols.add("testdim_name");
-
-    assertEquals(selection.get(clickCols), clickList);
-    assertEquals(selection.get(dimCols), dimList);
-  }
-
-  @Test
-  public void testMultiThreadedSelect() throws Exception {
-    // Test that sessionstate does not throw an error in each of the threads.
-    final AtomicInteger success = new AtomicInteger(0);
-    final int NUM_THRS = 10;
-    Thread threads[] = new Thread[NUM_THRS];
-    for (int i = 0; i < NUM_THRS; i++) {
-      threads[i] = new Thread(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            CubeSelectorService svc = CubeSelectorFactory.getSelectorSvcInstance(conf, true);
-            assertNotNull(svc);
-            success.incrementAndGet();
-          } catch (Exception e) {
-            e.printStackTrace();
-          }
-        }
-      });
-      threads[i].start();
+  private void printResult( Map<Set<String>, Set<AbstractCubeTable>> result) {
+    if (result == null || result.isEmpty()) {
+      System.out.println("@@ EMPTY");
+      return;
     }
-
-    for (Thread th : threads) {
-      th.join();
+    for (Set<String> key : result.keySet()) {
+      System.out.print("@@ " + key.toString() + " -> [");
+      for(AbstractCubeTable ct : result.get(key)) {
+        System.out.print(ct.getName());
+        System.out.print(",");
+      }
+      System.out.println("]");
     }
-    assertEquals(success.get(), NUM_THRS);
   }
-
 }
