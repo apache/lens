@@ -85,6 +85,8 @@ public class LazyNOBColumnarSerde implements SerDe {
       columnObjectInspectors.add(colObjectInspector);
     }
 
+    LOG.info("Initializing serde with numColumns:" + numColumns +
+        "referedCols:" + Arrays.asList(referedCols));
     cachedObjectInspector = ObjectInspectorFactory
         .getColumnarStructObjectInspector(columnNames, columnObjectInspectors);
     cachedNOBLazyStruct = new LazyNOBColumnarStruct(cachedObjectInspector,

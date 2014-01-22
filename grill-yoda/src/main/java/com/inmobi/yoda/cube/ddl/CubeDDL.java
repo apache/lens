@@ -76,7 +76,7 @@ public class CubeDDL {
   private final DimensionDDL dimDDL;
   private final CubeMetastoreClient client;
   private static List<FieldSchema> nobColList;
-  private static Map<Integer, FieldDescriptor> fdListMap = new TreeMap<Integer, FieldDescriptor>();
+  private static final Map<Integer, FieldDescriptor> fdListMap = new TreeMap<Integer, FieldDescriptor>();
 
   private final Map<String, Map<String, String>> summaryProperties =
       new HashMap<String, Map<String, String>>();
@@ -94,7 +94,6 @@ public class CubeDDL {
 
     List<FieldDescriptor> fdList = KeyLessNetworkObject.getDescriptor()
         .getFields();
-    fdListMap = new TreeMap<Integer, FieldDescriptor>();
     for (FieldDescriptor fd : fdList) {
       fdListMap.put(fd.getNumber() - 1, fd);
     }
