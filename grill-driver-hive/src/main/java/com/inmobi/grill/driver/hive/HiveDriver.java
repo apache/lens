@@ -148,6 +148,7 @@ public class HiveDriver implements GrillDriver {
       OperationHandle op = getClient().executeStatement(getSession(), ctx.hiveQuery, 
           ctx.conf.getValByRegex(".*"));
       ctx.hiveHandle = op;
+      LOG.info("The hive operation handle: " + ctx.hiveHandle);
       OperationStatus status = getClient().getOperationStatus(op);
 
       if (status.getState() == OperationState.ERROR) {
@@ -173,6 +174,7 @@ public class HiveDriver implements GrillDriver {
       ctx.conf.set("mapred.job.name", ctx.queryHandle.toString());
       ctx.hiveHandle = getClient().executeStatementAsync(getSession(), ctx.hiveQuery, 
           ctx.conf.getValByRegex(".*"));
+      LOG.info("The hive operation handle: " + ctx.hiveHandle);
     } catch (HiveSQLException e) {
       throw new GrillException("Error executing async query", e);
     }
@@ -207,7 +209,9 @@ public class HiveDriver implements GrillDriver {
     ByteArrayInputStream in = null;
     try {
       // Get operation status from hive server
+      LOG.info("GetStatus hiveHandle: " + ctx.hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(ctx.hiveHandle);
+      LOG.info("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
       QueryStatus.Status stat = null;
 
       switch (opStatus.getState()) {
@@ -286,6 +290,7 @@ public class HiveDriver implements GrillDriver {
     LOG.info("CloseQuery: " + handle);
     QueryContext options = handleToContext.remove(handle);
     if (options != null) {
+      LOG.info("CloseQuery: " + options.hiveHandle);
       OperationHandle opHandle = options.hiveHandle;
       if (opHandle != null) {
         try {
@@ -302,6 +307,7 @@ public class HiveDriver implements GrillDriver {
     LOG.info("CancelQuery: " + handle);
     QueryContext ctx = getContext(handle);
     try {
+      LOG.info("CancelQuery hiveHandle: " + ctx.hiveHandle);
       getClient().cancelOperation(ctx.hiveHandle);
       return true;
     } catch (HiveSQLException e) {
@@ -351,6 +357,7 @@ public class HiveDriver implements GrillDriver {
 
   private GrillResultSet createResultSet(QueryContext context)
       throws GrillException {
+    LOG.info("Creating result set for hiveHandle:" + context.hiveHandle);
     if (context.isPersistent) {
       return new HivePersistentResultSet(context.resultSetPath,
           context.hiveHandle, getClient(), context.queryHandle);
