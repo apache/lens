@@ -9,12 +9,11 @@ import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 
 public class CubeReader {
   private final CubeDefinitionReader reader;
-  private final Properties props = new Properties();
+  private Properties props;
 
   public CubeReader() throws IOException {
-    reader = CubeDefinitionReaderFactory.get();
-    props.load(Thread.currentThread().getContextClassLoader()
-        .getResourceAsStream("cube_defn.properties"));
+    reader = CubeDefinitionReaderFactory.get(CubeDefinitionReaderFactory.CubeReaderType.UBER);
+    props = reader.getAllProps();
   }
 
   public CubeReader(final String propertyFilePath) throws IOException { 
@@ -24,8 +23,8 @@ public class CubeReader {
 
   public CubeReader(final Properties changes) throws IOException {
     reader = CubeDefinitionReaderFactory.get(changes);
-    props.load(Thread.currentThread().getContextClassLoader()
-        .getResourceAsStream("cube_defn.properties"));
+    props = reader.getAllProps();
+
     for (final Object key : changes.keySet()) {
       props.put(key, changes.get(key));
     }
