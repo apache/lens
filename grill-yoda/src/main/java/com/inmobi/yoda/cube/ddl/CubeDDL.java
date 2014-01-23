@@ -135,6 +135,7 @@ public class CubeDDL {
   }
 
   private void loadCubeDefinition() {
+
     for (String cubeName : cubeReader.getCubeNames()) {
       String cubeTableName = CUBE_NAME_PFX + cubeName;
 
