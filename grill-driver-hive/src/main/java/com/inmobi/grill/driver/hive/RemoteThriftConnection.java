@@ -51,11 +51,13 @@ public class RemoteThriftConnection implements ThriftConnection {
 	public ThriftCLIServiceClient getClient(Configuration conf) throws GrillException {
 		if (!connected) {
       String remoteHost = conf.get(HS2_HOST);
+      if (remoteHost == null) {
+        throw new GrillException("Hostname not specified for HiveServer");
+      }
       int remotePort = conf.getInt(HS2_PORT, HS2_DEFAULT_PORT);
       openTransport(conf, remoteHost, remotePort, conf.getValByRegex(".*"));
 			hs2Client = new ThriftCLIServiceClient(client);
       connected = true;
-
 		}
 		return hs2Client;
 	}
