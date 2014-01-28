@@ -204,14 +204,14 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public QueryStatus getStatus(QueryHandle handle)  throws GrillException {
-    LOG.info("GetStatus: " + handle);
+    LOG.debug("GetStatus: " + handle);
     QueryContext ctx = getContext(handle);
     ByteArrayInputStream in = null;
     try {
       // Get operation status from hive server
-      LOG.info("GetStatus hiveHandle: " + ctx.hiveHandle);
+      LOG.debug("GetStatus hiveHandle: " + ctx.hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(ctx.hiveHandle);
-      LOG.info("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
+      LOG.debug("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
       QueryStatus.Status stat = null;
 
       switch (opStatus.getState()) {
