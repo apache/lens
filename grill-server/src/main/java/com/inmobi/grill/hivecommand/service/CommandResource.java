@@ -1,7 +1,9 @@
 package com.inmobi.grill.hivecommand.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -48,9 +50,15 @@ public class CommandResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillSessionHandle openSession(@FormDataParam("username") String username,
       @FormDataParam("password") String password,
-      @FormDataParam("sessionconf") QueryConf sessionconf) {
+      @DefaultValue("<conf/>") @FormDataParam("sessionconf") QueryConf sessionconf) {
     try {
-      return new GrillSessionHandle(commandService.openSession(username, password, sessionconf.getProperties()));
+      Map<String, String> conf;
+      if (sessionconf != null) {
+        conf = sessionconf.getProperties();
+      } else{
+        conf = new HashMap<String, String>();
+      }
+      return new GrillSessionHandle(commandService.openSession(username, password, conf));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
