@@ -10,7 +10,7 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 
-@ApplicationPath("/command")
+@ApplicationPath("/session")
 public class CommandApp extends Application {
   @Override
   public Set<Class<?>> getClasses() {

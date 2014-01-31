@@ -34,8 +34,7 @@ public class CommandResource {
   private HiveCommandService commandService;
 
   @GET
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML,
-    MediaType.TEXT_PLAIN})
+  @Produces({MediaType.TEXT_PLAIN})
   public String getMessage() {
     return "Hello World! from command";
   }

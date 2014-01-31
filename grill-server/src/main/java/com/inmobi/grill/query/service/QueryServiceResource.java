@@ -46,8 +46,7 @@ public class QueryServiceResource {
   private QueryExecutionService queryServer;
 
   @GET
-  @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML,
-    MediaType.TEXT_PLAIN})
+  @Produces(MediaType.TEXT_PLAIN)
   public String getMessage() {
     return "Hello World! from queryapi";
   }

@@ -34,6 +34,12 @@ public class MetastoreResource {
     return (CubeMetastoreService)GrillServices.get().getService("metastore");
   }
 
+  @GET
+  @Produces(MediaType.TEXT_PLAIN)
+  public String getMessage() {
+    return "Hello World! from metastore";
+  }
+
   @GET @Path("databases")
   public List<Database> getAllDatabases(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     List<String> allNames = getSvc().getAllDatabases(sessionid);
