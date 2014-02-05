@@ -37,11 +37,12 @@ public class DimensionDDL {
   public static final UpdatePeriod dimension_dump_period = UpdatePeriod.HOURLY;
   public static final String dim_time_part_column = "dt";
 
-  private static class FieldInfo {
+  public static class FieldInfo {
     int id; // seq id
     String name;
     String tableName;
     String desc;
+    String type;
     List<Integer> references = new ArrayList<Integer>();
 
     public String toString() {
@@ -64,6 +65,7 @@ public class DimensionDDL {
   private Map<String, List<FieldInfo>> noColTables = new HashMap<String, List<FieldInfo>>(); 
   private Map<String, Map<Integer, FieldInfo>> tableFields = new HashMap<String,
       Map<Integer, FieldInfo>>();
+  private Map<String, Map<String, FieldInfo>> tableFieldSchema = new HashMap<String, Map<String, FieldInfo>>();
   private Map<String, Map<String, List<TableReference>>> cubeDimReferences = 
       new HashMap<String,  Map<String, List<TableReference>>>();
 
@@ -87,17 +89,26 @@ public class DimensionDDL {
       //Field 2: Table name
       //Field 3: Desc
       //Field 4: sequence number of the field within the table.
+      //Fild 5: Field data type
       FieldInfo fi = new FieldInfo();
       fi.id = Integer.parseInt(fields[0]);
-      fi.name = fields[1];
+      fi.name = fields[1].trim();
       fi.tableName = fields[2];
       fieldMap.put(fi.id, fi);
+
+      Map<String, FieldInfo> fieldSchemaMap = tableFieldSchema.get(fi.tableName);
+      if (fieldSchemaMap == null) {
+        fieldSchemaMap = new HashMap<String, FieldInfo>();
+        tableFieldSchema.put(fi.tableName, fieldSchemaMap);
+      }
+      fieldSchemaMap.put(fi.name, fi);
+
       if (fields.length > 3 && fields[3] != null) {
         fi.desc = fields[3];
       } else {
         fi.desc = "";
       }
-      if (fields.length > 4 && fields[4] != null) {
+      if (fields.length > 4 && fields[4] != null && !fields[4].isEmpty()) {
         int colPos = Integer.parseInt(fields[4]);
         Map<Integer, FieldInfo> colMap = tableFields.get(fi.tableName);
         if (colMap == null) {
@@ -113,6 +124,11 @@ public class DimensionDDL {
         }
         directCubeDims.add(fi);
       }
+
+      if (fields.length > 5 && fields[5] != null && !fields[5].isEmpty()) {
+        fi.type = fields[5].toLowerCase();
+      }
+
       line = fieldInforeader.readLine();
     }
     LOG.warn("No columns available for tables :" + noColTables);
@@ -164,7 +180,13 @@ public class DimensionDDL {
 
   public void createAllDimensions() throws HiveException {
     for (String tableName : tableFields.keySet()) {
-      createDimension(tableName);
+      try {
+        createDimension(tableName);
+      } catch (HiveException exc) {
+        System.err.println("@@Error creating table: " + tableName + "  " +  exc.getMessage());
+        exc.printStackTrace();
+        throw exc;
+      }
     }
   }
 
@@ -178,7 +200,20 @@ public class DimensionDDL {
 
     for (int i = 1; i <= colMap.size(); i++) {
       FieldInfo fi = colMap.get(i);
-      columns.add(new FieldSchema(fi.name, CubeDDL.DIM_TYPE, fi.desc));
+      FieldSchema fieldSchema;
+      if ("list".equalsIgnoreCase(fi.type)) {
+        // Handle List
+        fieldSchema = new FieldSchema(fi.name, "array<string>", fi.desc);
+      } else if ("map".equalsIgnoreCase(fi.type)) {
+        // Handle map type
+        fieldSchema = new FieldSchema(fi.name, "map<string, string>", fi.desc);
+      } else if (fi.type != null && !fi.type.isEmpty()) {
+        fieldSchema = new FieldSchema(fi.name, fi.type, fi.desc);
+      } else {
+        // Default data type is string
+        fieldSchema = new FieldSchema(fi.name, CubeDDL.DIM_TYPE, fi.desc);
+      }
+      columns.add(fieldSchema);
       List<TableReference> references = getDimReferences(fi);
       if (references != null) {
         dimensionReferences.put(fi.name, references);
@@ -193,7 +228,7 @@ public class DimensionDDL {
 
     Map<String, String> properties = new HashMap<String, String>();
     properties.put(MetastoreConstants.TIMED_DIMENSION, dim_time_part_column);
-    
+    System.out.println("Creating table " + dimName);
     if (Hive.get().getTable(dimName, false) == null) {
       client.createCubeDimensionTable(dimName, columns, Double.valueOf(0.0),
           dimensionReferences,
@@ -229,6 +264,11 @@ public class DimensionDDL {
     sTbl.setTimePartCols(timePartCols);
     storages.put(CubeDDL.YODA_STORAGE, sTbl);
     return storages;
+  }
+
+  public FieldInfo getFieldInfo(String table, String field) {
+    Map<String, FieldInfo> tableSchema = tableFieldSchema.get(table);
+    return tableSchema == null ? null : tableSchema.get(field);
   }
 
   public static void main(String[] args) throws Exception {

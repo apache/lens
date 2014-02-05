@@ -23,6 +23,8 @@ import com.inmobi.grill.exception.GrillException;
 public class MockDriver implements GrillDriver {
 
   Configuration conf;
+  String query;
+
   public MockDriver() {    
   }
 
@@ -100,6 +102,7 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public GrillResultSet execute(QueryContext context) throws GrillException {
+    this.query = context.getDriverQuery();
     return new GrillResultSet() {
 
       @Override
@@ -123,8 +126,7 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void executeAsync(QueryContext context) throws GrillException {
-    // TODO Auto-generated method stub
-    
+    this.query = context.getDriverQuery();
   }
 
   @Override
@@ -154,7 +156,6 @@ public class MockDriver implements GrillDriver {
   @Override
   public void closeResultSet(QueryHandle handle) throws GrillException {
     // TODO Auto-generated method stub
-    
   }
 
   @Override

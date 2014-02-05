@@ -13,9 +13,11 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
+import com.inmobi.grill.api.GrillConfConstatnts;
 import com.inmobi.grill.exception.GrillException;
 
 import javax.security.sasl.SaslException;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,19 +32,17 @@ public class RemoteThriftConnection implements ThriftConnection {
   public static final int HS2_DEFAULT_TIMEOUT = 60000;
   public static final int HS2_DEFAULT_PORT = 10000;
 
-  private static final String HIVE_AUTH_TYPE= "auth";
-  private static final String HIVE_AUTH_SIMPLE = "noSasl";
-  private static final String HIVE_AUTH_USER = "user";
-  private static final String HIVE_AUTH_PRINCIPAL = "principal";
-  private static final String HIVE_AUTH_PASSWD = "password";
-  private static final String HIVE_ANONYMOUS_USER = "anonymous";
-  private static final String HIVE_ANONYMOUS_PASSWD = "anonymous";
-
 	private TTransport transport;
 	private boolean connected;
 	private TCLIService.Client client;
   private ThriftCLIServiceClient hs2Client;
 	
+  private static final String HIVE_AUTH_TYPE= "auth";
+  private static final String HIVE_AUTH_SIMPLE = "noSasl";
+  private static final String HIVE_AUTH_PRINCIPAL = "principal";
+  private static final String HIVE_ANONYMOUS_USER = "anonymous";
+  private static final String HIVE_ANONYMOUS_PASSWD = "anonymous";
+  
 	public RemoteThriftConnection() {
 		
 	}
@@ -51,18 +51,20 @@ public class RemoteThriftConnection implements ThriftConnection {
 	public ThriftCLIServiceClient getClient(Configuration conf) throws GrillException {
 		if (!connected) {
       String remoteHost = conf.get(HS2_HOST);
+      if (remoteHost == null) {
+        throw new GrillException("Hostname not specified for HiveServer");
+      }
       int remotePort = conf.getInt(HS2_PORT, HS2_DEFAULT_PORT);
-      openTransport(conf, remoteHost, remotePort, new HashMap<String, String>());
+      openTransport(conf, remoteHost, remotePort, conf.getValByRegex(".*"));
 			hs2Client = new ThriftCLIServiceClient(client);
       connected = true;
-
 		}
 		return hs2Client;
 	}
 
   private void openTransport(Configuration conf, String host, int port, Map<String, String> sessConf )
     throws GrillException {
-    transport = new TSocket(host, port);
+  	transport = new TSocket(host, port);
     ((TSocket) transport).setTimeout(conf.getInt(HS2_CONNECTION_TIMEOUT, HS2_DEFAULT_TIMEOUT));
     // handle secure connection if specified
     if (!sessConf.containsKey(HIVE_AUTH_TYPE)
@@ -72,11 +74,11 @@ public class RemoteThriftConnection implements ThriftConnection {
           transport = KerberosSaslHelper.getKerberosTransport(
             sessConf.get(HIVE_AUTH_PRINCIPAL), host, transport, sessConf);
         } else {
-          String userName = sessConf.get(HIVE_AUTH_USER);
+          String userName = sessConf.get(HiveDriver.GRILL_USER_NAME_KEY);
           if ((userName == null) || userName.isEmpty()) {
             userName = HIVE_ANONYMOUS_USER;
           }
-          String passwd = sessConf.get(HIVE_AUTH_PASSWD);
+          String passwd = sessConf.get(HiveDriver.GRILL_PASSWORD_KEY);
           if ((passwd == null) || passwd.isEmpty()) {
             passwd = HIVE_ANONYMOUS_PASSWD;
           }

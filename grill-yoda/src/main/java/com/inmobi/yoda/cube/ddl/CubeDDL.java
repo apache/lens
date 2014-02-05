@@ -9,7 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -43,6 +45,7 @@ import org.joda.time.format.DateTimeFormatter;
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
+import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
 import com.inmobi.grill.api.GrillConfConstants;
 
@@ -73,20 +76,36 @@ public class CubeDDL {
   private final DimensionDDL dimDDL;
   private final CubeMetastoreClient client;
   private static List<FieldSchema> nobColList;
+  private static final Map<Integer, FieldDescriptor> fdListMap = new TreeMap<Integer, FieldDescriptor>();
 
   private final Map<String, Map<String, String>> summaryProperties =
       new HashMap<String, Map<String, String>>();
 
   static final Set<String> allMeasures = new HashSet<String>();
   static {
-    CubeDefinitionReader reader = CubeDefinitionReader.get();
+    CubeDefinitionReader reader = CubeDefinitionReaderFactory.get(CubeDefinitionReaderFactory.CubeReaderType.UBER);
+
     for (String cubeName : reader.getCubeNames()) {
       allMeasures.addAll(reader.getAllMeasureNames(cubeName));
       for (String summary : reader.getSummaryNames(cubeName)) {
         allMeasures.addAll(reader.getSummaryMeasureNames(cubeName, summary));
       }
     }
+
+    List<FieldDescriptor> fdList = KeyLessNetworkObject.getDescriptor()
+        .getFields();
+    for (FieldDescriptor fd : fdList) {
+      fdListMap.put(fd.getNumber() - 1, fd);
+    }
   }
+
+  /**
+   * @return the fdListMap
+   */
+  public static Map<Integer, FieldDescriptor> getFdListMap() {
+    return fdListMap;
+  }
+
 
   public CubeDDL(String cubeName, CubeDefinitionReader cubeReader,
       Properties properties, DimensionDDL dimDDL, HiveConf conf)
@@ -117,6 +136,7 @@ public class CubeDDL {
   }
 
   private void loadCubeDefinition() {
+
     for (String cubeName : cubeReader.getCubeNames()) {
       String cubeTableName = CUBE_NAME_PFX + cubeName;
 
@@ -132,8 +152,23 @@ public class CubeDDL {
         cubeReader.getAllDimensionsWithActualStartTime(cubeName).entrySet()) {
         String dimName = dimEntry.getKey();
         CubeDimension dim;
-        FieldSchema column = new FieldSchema(dimName, CubeDDL.DIM_TYPE,
-            "dim col");
+        FieldSchema column;
+
+        DimensionDDL.FieldInfo fi = dimDDL.getFieldInfo(cubeNameInJoinChain, dimName);
+        if (fi != null) {
+          if ("list".equalsIgnoreCase(fi.type)) {
+            column = new FieldSchema(dimName, "array<string>", "dim col");
+          } else if ("map".equalsIgnoreCase(fi.type)) {
+            column = new FieldSchema(dimName, "map<string, string>", "dim col");
+          } else if (fi.type != null && !fi.type.isEmpty()) {
+            column = new FieldSchema(dimName, fi.type, "dim col");
+          } else {
+            column = new FieldSchema(dimName, CubeDDL.DIM_TYPE, "dim col");
+          }
+        } else {
+          column = new FieldSchema(dimName, CubeDDL.DIM_TYPE, "dim col");
+        }
+
         Date startTime = defaultStartTime;
         if (dimEntry.getValue() != null) {
           startTime = dimEntry.getValue().toDate();
@@ -268,10 +303,20 @@ public class CubeDDL {
 
   public static List<FieldSchema> getNobColList() {
     if (nobColList == null) {
-      List<FieldDescriptor> fdList = KeyLessNetworkObject.getDescriptor()
-          .getFields();
+      long maxIndex = KeyLessNetworkObject.getDefaultInstance().getNextFreeFieldId();
       nobColList = new ArrayList<FieldSchema>();
-      for (FieldDescriptor fd : fdList) {
+      int nextIndex = 0;
+      for (Map.Entry<Integer, FieldDescriptor> entry : fdListMap.entrySet()) {
+        int fdIndex = entry.getKey();
+        if (fdIndex >= maxIndex) {
+          break;
+        }
+        FieldDescriptor fd = entry.getValue();
+        while (nextIndex < fdIndex) {
+          // add unused columns
+          nobColList.add(nextIndex, new FieldSchema("unused" +nextIndex, DIM_TYPE, "unused col"));
+          nextIndex++;
+        }
         String name = fd.getName();
         String type;
         if (isMeasure(name)) {
@@ -279,13 +324,14 @@ public class CubeDDL {
         } else {
           type = DIM_TYPE;
         }
-        nobColList.add(new FieldSchema(name, type, "nob col"));
+        nobColList.add(fdIndex, new FieldSchema(name, type, "nob col"));
+        nextIndex = fdIndex + 1;
       }
     }
     return nobColList;
   }
 
-  private static boolean isMeasure(String name) {
+  public static boolean isMeasure(String name) {
     return allMeasures.contains(name);
   }
 

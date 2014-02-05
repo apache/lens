@@ -44,7 +44,7 @@ public class RewriteUtil {
 
   static void findCubePositions(ASTNode ast, List<RewriteUtil.CubeQueryInfo> cubeQueries,
       int queryEndPos)
-      throws SemanticException {
+          throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
@@ -107,23 +107,31 @@ public class RewriteUtil {
       List<GrillDriver> drivers) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);
-      List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
+      String lowerCaseQuery = replacedQuery.toLowerCase();
       Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
-      for (GrillDriver driver : drivers) {
-        CubeQueryRewriter rewriter = getRewriter(driver);
-        StringBuilder builder = new StringBuilder();
-        int start = 0;
-        for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-          if (start != cqi.startPos) {
-            builder.append(replacedQuery.substring(start, cqi.startPos));
+      if (lowerCaseQuery.startsWith("add") ||
+          lowerCaseQuery.startsWith("set")) {
+        for (GrillDriver driver : drivers) {
+          driverQueries.put(driver, replacedQuery);
+        } 
+      } else {
+        List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
+        for (GrillDriver driver : drivers) {
+          CubeQueryRewriter rewriter = getRewriter(driver);
+          StringBuilder builder = new StringBuilder();
+          int start = 0;
+          for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+            if (start != cqi.startPos) {
+              builder.append(replacedQuery.substring(start, cqi.startPos));
+            }
+            String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
+            builder.append(hqlQuery);
+            start = cqi.endPos;
           }
-          String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
-          builder.append(hqlQuery);
-          start = cqi.endPos;
+          builder.append(replacedQuery.substring(start));
+          CubeGrillDriver.LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
+          driverQueries.put(driver, builder.toString());
         }
-        builder.append(replacedQuery.substring(start));
-        CubeGrillDriver.LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
-        driverQueries.put(driver, builder.toString());
       }
       return driverQueries;
     } catch (Exception e) {

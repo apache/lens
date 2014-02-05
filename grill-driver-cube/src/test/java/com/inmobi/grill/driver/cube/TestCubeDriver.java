@@ -30,6 +30,16 @@ public class TestCubeDriver {
 
   @Test
   public void testCubeDriver() throws GrillException {
+    String addQ = "add jar xyz.jar";
+    GrillResultSet result = cubeDriver.execute(addQ, conf);
+    Assert.assertNotNull(result);
+    Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, addQ);
+
+    String setQ = "set xyz=random";
+    result = cubeDriver.execute(setQ, conf);
+    Assert.assertNotNull(result);
+    Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, setQ);
+
     String query = "select name from table";
     QueryPlan plan = cubeDriver.explain(query, conf);
     String planString = plan.getPlan();
@@ -42,7 +52,7 @@ public class TestCubeDriver {
     Assert.assertFalse(cubeDriver.cancelQuery(plan.getHandle()));
 
     // execute sync from handle
-    GrillResultSet result = cubeDriver.executePrepare(plan.getHandle(), conf);
+    result = cubeDriver.executePrepare(plan.getHandle(), conf);
     Assert.assertNotNull(result);
     Assert.assertNotNull(result.getMetadata());
     Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),

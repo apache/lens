@@ -71,7 +71,7 @@ public class TestDDL {
       Assert.assertTrue(dim.hasStorageSnapshots(CubeDDL.YODA_STORAGE));
     }
     System.out.println("Dimension tables :" + dimTables);
-    Assert.assertEquals(dimTables.size(), 101);
+    Assert.assertEquals(dimTables.size(), 125);
     // assert for some random dimension table names
     Assert.assertTrue(dimTables.contains("wap_ad_m3"));
     Assert.assertTrue(dimTables.contains("wap_site"));
@@ -102,7 +102,7 @@ public class TestDDL {
     List<String> factsWithPIEStorage = Arrays.asList("summary1", "summary2",
         "summary3", "cube_request_raw", "cube_impression_raw", "cube_click_raw");
 
-    Assert.assertEquals(15, cc.getAllCubes().size());
+    Assert.assertEquals(18, cc.getAllCubes().size());
     for (Cube cube : cc.getAllCubes()) {
       Assert.assertFalse(cube.getDimensions().isEmpty());
       Assert.assertFalse(cube.getMeasures().isEmpty());
@@ -124,7 +124,7 @@ public class TestDDL {
         format.format(CubeDDL.dateFormatter.parseDateTime("2013-01-28-10").toDate()));
 
     List<CubeFactTable> facts = cc.getAllFacts();
-    Assert.assertEquals(22, facts.size());
+    Assert.assertEquals(24, facts.size());
     System.out.println("All Facts:" + facts);
     for (CubeFactTable fact : facts) {
       Assert.assertTrue(fact.getStorages().contains(CubeDDL.YODA_STORAGE));

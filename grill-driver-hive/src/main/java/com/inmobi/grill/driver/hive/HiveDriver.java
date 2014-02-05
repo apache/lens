@@ -118,6 +118,7 @@ public class HiveDriver implements GrillDriver {
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
       OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getDriverQuery(),
           ctx.getConf().getValByRegex(".*"));
+      LOG.info("The hive operation handle: " + op);
       hiveHandles.put(ctx.getQueryHandle(), op);
       OperationStatus status = getClient().getOperationStatus(op);
 
@@ -141,6 +142,7 @@ public class HiveDriver implements GrillDriver {
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx),
           ctx.getDriverQuery(), 
           ctx.getConf().getValByRegex(".*"));
+      LOG.info("The hive operation handle: " + op);
       hiveHandles.put(ctx.getQueryHandle(), op);
     } catch (IOException e) {
       throw new GrillException("Error adding persistent path" , e);
@@ -151,13 +153,15 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public QueryStatus getStatus(QueryHandle handle)  throws GrillException {
-    LOG.info("GetStatus: " + handle);
+    LOG.debug("GetStatus: " + handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     ByteArrayInputStream in = null;
     boolean hasResult = false;
     try {
       // Get operation status from hive server
+      LOG.debug("GetStatus hiveHandle: " + hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
+      LOG.debug("GetStatus on hiveHandle: " + hiveHandle + " returned state:" + opStatus);
       QueryStatus.Status stat = null;
 
       switch (opStatus.getState()) {
@@ -242,6 +246,7 @@ public class HiveDriver implements GrillDriver {
     LOG.info("CloseQuery: " + handle);
     OperationHandle opHandle = hiveHandles.remove(handle);
     if (opHandle != null) {
+      LOG.info("CloseQuery: " + opHandle);
       try {
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
@@ -255,6 +260,7 @@ public class HiveDriver implements GrillDriver {
     LOG.info("CancelQuery: " + handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     try {
+      LOG.info("CancelQuery hiveHandle: " + hiveHandle);
       getClient().cancelOperation(hiveHandle);
       return true;
     } catch (HiveSQLException e) {
@@ -324,6 +330,7 @@ public class HiveDriver implements GrillDriver {
 
   private GrillResultSet createResultSet(QueryContext context)
       throws GrillException {
+    LOG.info("Creating result set for hiveHandle:" + hiveHandles.get(context.getQueryHandle()));
     if (context.isPersistent()) {
       return new HivePersistentResultSet(new Path(context.getResultSetPath()),
           hiveHandles.get(context.getQueryHandle()), getClient(), context.getQueryHandle());

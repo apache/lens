@@ -1,11 +1,6 @@
 package org.apache.hadoop.hive.serde2.columnar;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -15,22 +10,12 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
-import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
+import com.inmobi.yoda.cube.ddl.CubeDDL;
 
 public class LazyNOBColumnarStruct extends ColumnarStructBase {
   private static final Log LOG = LogFactory.getLog(LazyNOBColumnarStruct.class);
 
   KeyLessNetworkObject.Builder nobBuilder = KeyLessNetworkObject.newBuilder();
-  static final Set<String> measures = new HashSet<String>();
-  static {
-    CubeDefinitionReader reader = CubeDefinitionReader.get();
-    for (String cubeName : reader.getCubeNames()) {
-      measures.addAll(reader.getAllMeasureNames(cubeName));
-      for (String summary : reader.getSummaryNames(cubeName)) {
-        measures.addAll(reader.getSummaryMeasureNames(cubeName, summary));
-      }
-    }
-  }
 
   class NOBFieldInfo {
     Object value = null;
@@ -40,11 +25,11 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
 
     protected Object getField() {
       if (!retrievedData) {
-        if (nob.hasField(fd)) {
+        if (fd != null && nob.hasField(fd)) {
           Object nobField = nob.getField(fd);
           value = nobField;
           if (nobField instanceof String) {
-            if (measures.contains(fd.getName())) {
+            if (CubeDDL.isMeasure(fd.getName())) {
               try {
                 double val = Double.parseDouble((String) nobField);
                 value = val;
@@ -116,25 +101,24 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
   }
 
   public void init(BytesRefArrayWritable cols) {
-    int numGroups = LazyNOBColumnarSerde.fieldGroups.size();
     nobBuilder.clear();
     for (int i : referedCols) {
-      BytesRefWritable bytesRef = cols.get(i);
-      if (bytesRef.getLength() != 0) {
-        try {
-          nobBuilder.mergeFrom(bytesRef.getData(),
-              bytesRef.getStart(), bytesRef.getLength());
-        } catch (Exception e) {
-          throw new RuntimeException("Could not initialize network object", e);
+      if (i < cols.size()) {
+        BytesRefWritable bytesRef = cols.get(i);
+        if (bytesRef.getLength() != 0) {
+          try {
+            nobBuilder.mergeFrom(bytesRef.getData(),
+                bytesRef.getStart(), bytesRef.getLength());
+          } catch (Exception e) {
+            throw new RuntimeException("Could not initialize network object", e);
+          }
         }
       }
     }
     KeyLessNetworkObject nob = nobBuilder.build();
 
-    List<FieldDescriptor> fdList = new ArrayList<FieldDescriptor>();
-    fdList.addAll(nob.getDescriptorForType().getFields());
     for (int i = 0; i < numCols; i++) {
-      fieldInfoList[i].init(nob, fdList.get(i));
+      fieldInfoList[i].init(nob, CubeDDL.getFdListMap().get(i));
     }
   }
 

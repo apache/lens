@@ -33,7 +33,7 @@ public class LazyNOBColumnarSerde implements SerDe {
     fieldGroups = new TreeMap<Integer, List<String>>();
     Properties fieldProps = new Properties();
     try {
-      fieldProps.load(LazyNOBColumnarSerde.class.getClassLoader()
+      fieldProps.load(Thread.currentThread().getContextClassLoader()
           .getResourceAsStream("field_group.properties"));
 
       for (Map.Entry<Object, Object> entry : fieldProps.entrySet()) {
@@ -85,6 +85,8 @@ public class LazyNOBColumnarSerde implements SerDe {
       columnObjectInspectors.add(colObjectInspector);
     }
 
+    LOG.info("Initializing serde with numColumns:" + numColumns +
+        "referedCols:" + Arrays.asList(referedCols));
     cachedObjectInspector = ObjectInspectorFactory
         .getColumnarStructObjectInspector(columnNames, columnObjectInspectors);
     cachedNOBLazyStruct = new LazyNOBColumnarStruct(cachedObjectInspector,
