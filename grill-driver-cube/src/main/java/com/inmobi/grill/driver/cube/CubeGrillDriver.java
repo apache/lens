@@ -327,6 +327,9 @@ public class CubeGrillDriver implements GrillDriver {
 
   @Override
   public void close() throws GrillException {
+    for (GrillDriver driver : drivers) {
+      driver.close();
+    }
     drivers.clear();
     executionContexts.clear();
   }
