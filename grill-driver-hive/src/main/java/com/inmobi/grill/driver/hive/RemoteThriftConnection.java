@@ -13,7 +13,6 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-import com.inmobi.grill.api.GrillConfConstatnts;
 import com.inmobi.grill.exception.GrillException;
 
 import javax.security.sasl.SaslException;
