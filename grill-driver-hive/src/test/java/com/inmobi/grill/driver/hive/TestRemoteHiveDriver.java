@@ -69,6 +69,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
       conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
       try {
+        reconnectCalled = false;
         driver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), conf);
       } catch(Exception exc) {
         LOG.error("Error in reconnect test", exc);
