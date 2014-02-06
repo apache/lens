@@ -55,12 +55,28 @@ public class RemoteThriftConnection implements ThriftConnection {
         throw new GrillException("Hostname not specified for HiveServer");
       }
       int remotePort = conf.getInt(HS2_PORT, HS2_DEFAULT_PORT);
+      LOG.info("Connecting to " + remoteHost + ":" + remotePort);
       openTransport(conf, remoteHost, remotePort, conf.getValByRegex(".*"));
 			hs2Client = new ThriftCLIServiceClient(client);
       connected = true;
+      LOG.info("Connected");
 		}
 		return hs2Client;
 	}
+
+  /**
+   * Indicate if next call of getClient should return a new connection
+   */
+  @Override
+  public void setNeedsReconnect() {
+    try {
+      close();
+    } catch (Exception e) {
+      LOG.warn("Unable to close previous connection in setNeedsReconnect", e);
+    } finally {
+      connected = false;
+    }
+  }
 
   private void openTransport(Configuration conf, String host, int port, Map<String, String> sessConf )
     throws GrillException {

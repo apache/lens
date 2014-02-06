@@ -22,7 +22,15 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 		return client;
 	}
 
-	@Override
+  /**
+   * Indicate if next call of getClient should return a new connection
+   */
+  @Override
+  public void setNeedsReconnect() {
+    connected = false;
+  }
+
+  @Override
 	public void close() throws IOException {
 		// Does nothing
 	}

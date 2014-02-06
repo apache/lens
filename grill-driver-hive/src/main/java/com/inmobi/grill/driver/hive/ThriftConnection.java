@@ -9,4 +9,9 @@ import com.inmobi.grill.exception.GrillException;
 
 public interface ThriftConnection extends Closeable {
 	public ThriftCLIServiceClient getClient(Configuration conf) throws GrillException;
+
+  /**
+   * Indicate if next call of getClient should return a new connection
+   */
+  public void setNeedsReconnect();
 }
