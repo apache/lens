@@ -418,17 +418,12 @@ public class HiveDriver implements GrillDriver {
     return ctx;
   }
 
-  private SessionHandle getSession() throws GrillException {
+  private SessionHandle getSession() throws HiveSQLException, GrillException {
     sessionLock.lock();
     try {
       if (session == null) {
-        try {
-          String userName = conf.getUser();
-          session = getClient().openSession(userName, "");
-          LOG.info("New session: " + session.getSessionId());
-        } catch (Exception e) {
-          throw new GrillException(e);
-        }
+        session = getClient().openSession(conf.get(GRILL_USER_NAME_KEY), conf.get(GRILL_PASSWORD_KEY));
+        LOG.info("New session: " + session.getSessionId());
       }
     } finally {
       sessionLock.unlock();
