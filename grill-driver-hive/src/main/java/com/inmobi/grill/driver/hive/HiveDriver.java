@@ -218,13 +218,20 @@ public class HiveDriver implements GrillDriver {
     LOG.debug("GetStatus: " + handle);
     QueryContext ctx = getContext(handle);
     ByteArrayInputStream in = null;
+    OperationStatus opStatus;
     try {
       // Get operation status from hive server
       LOG.debug("GetStatus hiveHandle: " + ctx.hiveHandle);
-      OperationStatus opStatus = getClient().getOperationStatus(ctx.hiveHandle);
+      opStatus = getClient().getOperationStatus(ctx.hiveHandle);
       LOG.debug("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
-      QueryStatus.Status stat = null;
+    } catch (HiveSQLException e) {
+      checkIfConnectionShouldReset(e);
+      throw new GrillException("Error getting query status", e);
+    }
 
+    QueryStatus.Status stat = null;
+
+    try {
       switch (opStatus.getState()) {
       case CANCELED:
         stat = Status.CANCELED;
@@ -258,7 +265,7 @@ public class HiveDriver implements GrillDriver {
       if (StringUtils.isNotBlank(jsonTaskStatus)) {
         ObjectMapper mapper = new ObjectMapper();
         in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-        List<TaskStatus> taskStatuses = 
+        List<TaskStatus> taskStatuses =
             mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
         int completedTasks = 0;
         StringBuilder message = new StringBuilder();
@@ -275,8 +282,7 @@ public class HiveDriver implements GrillDriver {
         LOG.warn("Empty task statuses");
       }
       return new QueryStatus(progress, stat, msg, false, ctx.hiveHandle.getHandleIdentifier().toString());
-    } catch (Exception e) {
-      checkIfConnectionShouldReset(e);
+    } catch (IOException e) {
       throw new GrillException("Error getting query status", e);
     } finally {
       if (in != null) {
@@ -310,9 +316,6 @@ public class HiveDriver implements GrillDriver {
         } catch (HiveSQLException e) {
           checkIfConnectionShouldReset(e);
           throw new GrillException("Unable to close query", e);
-        } catch (GrillException grillError) {
-          checkIfConnectionShouldReset(grillError);
-          throw grillError;
         }
       }
     }
