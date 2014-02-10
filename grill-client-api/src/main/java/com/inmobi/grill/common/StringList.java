@@ -1,6 +1,5 @@
 package com.inmobi.grill.common;
 
-import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
 
@@ -14,5 +13,5 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StringList {
-  @XmlElementWrapper @Getter @Setter private List<String> elements;
+  @Getter @Setter private List<String> elements;
 }

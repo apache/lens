@@ -80,54 +80,44 @@ public class TestMetastoreService extends GrillJerseyTest {
 
   @Test
   public void testSetDatabase() throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database");
-    Database db = new Database();
-    db.setName("test_db");
-    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    WebTarget dbTarget = target().path("metastore").path("databases/current");
+    String dbName = "test_db";
+    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-    Database current = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).get(Database.class);
-    assertEquals(current.getName(), db.getName());
+    String current = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).get(String.class);
+    assertEquals(current, dbName);
   }
 
   @Test
   public void testCreateDatabase() throws Exception {
     final String newDb = dbPFX + "new_db";
-    WebTarget dbTarget = target().path("metastore").path("database").path(newDb);
+    WebTarget dbTarget = target().path("metastore").path("databases");
 
-    Database db = new Database();
-    db.setName(newDb);
-    db.setIgnoreIfExisting(true);
-
-    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(newDb), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
     // Create again
-    db.setIgnoreIfExisting(false);
-    result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    result = dbTarget.queryParam("sessionid", grillSessionId).queryParam("ignoreifexist", false).request(mediaType).post(Entity.xml(newDb), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.FAILED);
     LOG.info(">> Result message " + result.getMessage());
 
     // Drop
-    dbTarget.queryParam("sessionid", grillSessionId).request().delete();
+    dbTarget.path(newDb).queryParam("sessionid", grillSessionId).request().delete();
   }
 
   @Test
   public void testDropDatabase() throws Exception {
     final String dbName = dbPFX + "del_db";
-    final WebTarget dbTarget = target().path("metastore").path("database").path(dbName);
-    final Database db = new Database();
-    db.setName(dbName);
-    db.setIgnoreIfExisting(true);
-
+    final WebTarget dbTarget = target().path("metastore").path("databases");
     // First create the database
-    APIResult create = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    APIResult create = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(dbName), APIResult.class);
     assertEquals(create.getStatus(), APIResult.Status.SUCCEEDED);
 
     // Now drop it
-    APIResult drop = dbTarget
+    APIResult drop = dbTarget.path(dbName)
         .queryParam("cascade", "true")
         .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
     assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
@@ -136,46 +126,34 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testGetAllDatabases() throws Exception {
     final String[] dbsToCreate = {"db_1", "db_2", "db_3"};
-    final WebTarget dbTarget = target().path("metastore").path("database");
+    final WebTarget dbTarget = target().path("metastore").path("databases");
 
     for (String name : dbsToCreate) {
-      Database db = new Database();
-      db.setName(name);
-      db.setIgnoreIfExisting(true);
-      dbTarget.path(name).queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db));
+      dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(name));
     }
 
 
-    List<Database> allDbs = target().path("metastore").path("databases")
-        .queryParam("sessionid", grillSessionId).request(MediaType.APPLICATION_JSON)
-        .get(new GenericType<List<Database>>() {
-        });
-    assertEquals(allDbs.size(), 4);
+    StringList allDbs = target().path("metastore").path("databases")
+        .queryParam("sessionid", grillSessionId).request(mediaType)
+        .get(StringList.class);
+    System.out.println("ALL DBs:" + allDbs.getElements());
+    assertEquals(allDbs.getElements().size(), 4);
 
-    List<String> actualNames = new ArrayList<String>();
-    for (Database db : allDbs) {
-      actualNames.add(db.getName());
-    }
     List<String> expected = new ArrayList<String>(Arrays.asList(dbsToCreate));
     // Default is always there
     expected.add("default");
 
-    assertEquals(actualNames, expected);
+    assertEquals(allDbs.getElements(), expected);
 
     for (String name : dbsToCreate) {
       dbTarget.path(name).queryParam("cascade", "true").queryParam("sessionid", grillSessionId).request().delete();
     }
-
   }
 
   private void createDatabase(String dbName) throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database").path(dbName);
+    WebTarget dbTarget = target().path("metastore").path("databases");
 
-    Database db = new Database();
-    db.setName(dbName);
-    db.setIgnoreIfExisting(true);
-
-    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(dbName), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
@@ -207,7 +185,7 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   private void dropDatabase(String dbName) throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database").path(dbName);
+    WebTarget dbTarget = target().path("metastore").path("databases").path(dbName);
 
     APIResult result = dbTarget.queryParam("cascade", "true")
         .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
@@ -215,18 +193,16 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   private void setCurrentDatabase(String dbName) throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database");
-    Database db = new Database();
-    db.setName(dbName);
-    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(db), APIResult.class);
+    WebTarget dbTarget = target().path("metastore").path("databases/current");
+    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   private String getCurrentDatabase() throws Exception {
-    WebTarget dbTarget = target().path("metastore").path("database");
+    WebTarget dbTarget = target().path("metastore").path("databases/current");
     Invocation.Builder builder = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType);
-    Database response = builder.get(Database.class);
-    return response.getName();
+    String response = builder.get(String.class);
+    return response;
   }
 
   private XCube createTestCube(String cubeName) throws Exception {

@@ -4,12 +4,12 @@ import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.xml.bind.annotation.XmlElement;
-
 import org.apache.hadoop.conf.Configuration;
 
+import com.inmobi.grill.common.GrillConf;
 import com.inmobi.grill.common.Priority;
 import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.query.GrillQuery;
 import com.inmobi.grill.query.QueryHandle;
 import com.inmobi.grill.query.QueryStatus;
 
@@ -97,8 +97,14 @@ public class QueryContext implements Comparable<QueryContext> {
     return null;
   }
 
-  public com.inmobi.grill.query.GrillQuery toGrillQuery() {
-    // TODO Auto-generated method stub
-    return null;
+  public GrillQuery toGrillQuery() {
+    GrillConf qconf = new GrillConf();
+    for (Map.Entry<String, String> p : conf) {
+      qconf.addProperty(p.getKey(), p.getValue());
+    }
+    return new GrillQuery(queryHandle, userQuery, submissionTime,
+        submittedUser, priority, isPersistent,
+        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
+        driverQuery, status, resultSetPath, driverOpHandle, qconf);
   }
 }

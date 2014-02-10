@@ -13,7 +13,7 @@ import lombok.Setter;
 public class QueryHandleWithResultSet extends QuerySubmitResult {
 
   @XmlElement @Getter private QueryHandle queryHandle;
-  @XmlElement @Getter @Setter private QueryResult result;
+  @Getter @Setter private QueryResult result;
 
   public QueryHandleWithResultSet(QueryHandle handle) {
     this.queryHandle = handle;

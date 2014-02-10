@@ -32,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
-import org.apache.hive.service.cli.HiveSQLException;
 
 import com.inmobi.grill.common.GrillConf;
 import com.inmobi.grill.common.GrillSessionHandle;
@@ -537,7 +536,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       rewriteAndSelect(prepared);
       preparedQueries.put(prepared.getPrepareHandle(), prepared);
       preparedQueryQueue.add(prepared);
-      return prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
+      QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
+      plan.setPrepareHandle(prepared.getPrepareHandle());
+      return plan;
     } finally {
       release(sessionHandle);
     }

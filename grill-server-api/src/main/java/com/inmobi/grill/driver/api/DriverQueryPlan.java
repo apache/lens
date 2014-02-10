@@ -449,7 +449,9 @@ public abstract class DriverQueryPlan {
   }
 
   public QueryPlan toQueryPlan() {
-    // TODO Auto-generated method stub
-    return null;
+    return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
+        numHaving, numObys, numAggrExprs, numFilters, tablesQueried, hasSubQuery,
+        execMode.name(), scanMode.name(), tableWeights, joinWeight, gbyWeight, filterWeight,
+        havingWeight, obyWeight, selectWeight, null, getPlan(), getCost());
   }
 }

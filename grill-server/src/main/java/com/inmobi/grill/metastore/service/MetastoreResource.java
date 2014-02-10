@@ -39,34 +39,23 @@ public class MetastoreResource {
   }
 
   @GET @Path("databases")
-  public List<Database> getAllDatabases(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  public StringList getAllDatabases(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     List<String> allNames = getSvc().getAllDatabases(sessionid);
-    if (allNames != null && !allNames.isEmpty()) {
-      List<Database> dblist = new ArrayList<Database>();
-      for (String dbName : allNames) {
-        Database db = new Database();
-        db.setName(dbName);
-        dblist.add(db);
-      }
-      return dblist;
-    }
-    return null;
+    return new StringList(allNames);
   }
 
-  @GET @Path("database")
-  public Database getDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
+  @GET @Path("databases/current")
+  public String getDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
     LOG.info("Get database");
-    Database db = new Database();
-    db.setName(getSvc().getCurrentDatabase(sessionid));
-    return db;
+    return getSvc().getCurrentDatabase(sessionid);
   }
 
-  @PUT @Path("database")
+  @PUT @Path("databases/current")
   @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
-  public APIResult setDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, Database db) {
+  public APIResult setDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, String dbName) {
     LOG.info("Set database");
     try {
-      getSvc().setCurrentDatabase(sessionid, db.getName());
+      getSvc().setCurrentDatabase(sessionid, dbName);
     } catch (GrillException e) {
       LOG.error("Error changing current database", e);
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
@@ -74,7 +63,7 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  @DELETE @Path("database/{dbname}")
+  @DELETE @Path("databases/{dbname}")
   public APIResult dropDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbname") String dbName, 
       @QueryParam("cascade") boolean cascade) {
     LOG.info("Drop database " + dbName+ " cascade?" + cascade);
@@ -87,12 +76,14 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
-  @PUT @Path("database/{dbname}")
-  public APIResult createDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, Database db) {
-    LOG.info("Create database " + db.getName() + " Ignore Existing? " + db.getIgnoreIfExisting());
+  @POST @Path("databases")
+  public APIResult createDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @QueryParam("ignoreifexist") @DefaultValue("true") boolean ignoreIfExisting,
+      String dbName ) {
+    LOG.info("Create database " + dbName + " Ignore Existing? " + ignoreIfExisting);
 
     try {
-      getSvc().createDatabase(sessionid, db.getName(), db.getIgnoreIfExisting());
+      getSvc().createDatabase(sessionid, dbName, ignoreIfExisting);
     } catch (GrillException e) {
       return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }

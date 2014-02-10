@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.inmobi.grill.common.GrillConf;
 import com.inmobi.grill.common.Priority;
 
 import lombok.AccessLevel;
@@ -28,4 +29,5 @@ public class GrillQuery {
   @XmlElement @Getter private QueryStatus status;
   @XmlElement @Getter private String resultSetPath;
   @XmlElement @Getter private String driverOpHandle;
+  @XmlElement @Getter private GrillConf queryConf;
 }

@@ -119,7 +119,14 @@ public class MockDriver implements GrillDriver {
       @Override
       public GrillResultSetMetadata getMetadata() throws GrillException {
         // TODO Auto-generated method stub
-        return null;
+        return new GrillResultSetMetadata() {
+          
+          @Override
+          public List<ResultColumn> getColumns() {
+            // TODO Auto-generated method stub
+            return null;
+          }
+        };
       }
       
       @Override
@@ -148,8 +155,14 @@ public class MockDriver implements GrillDriver {
       
       @Override
       public GrillResultSetMetadata getMetadata() throws GrillException {
-        // TODO Auto-generated method stub
-        return null;
+        return new GrillResultSetMetadata() {
+          
+          @Override
+          public List<ResultColumn> getColumns() {
+            // TODO Auto-generated method stub
+            return null;
+          }
+        };
       }
       
       @Override

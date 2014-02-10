@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
 
+import com.inmobi.grill.common.GrillConf;
+import com.inmobi.grill.query.GrillPreparedQuery;
 import com.inmobi.grill.query.QueryPrepareHandle;
 
 import lombok.Getter;
@@ -61,9 +63,15 @@ public class PreparedQueryContext implements Delayed {
     }
   }
 
-  public com.inmobi.grill.query.GrillPreparedQuery toPreparedQuery() {
-    // TODO Auto-generated method stub
-    return null;
+  public GrillPreparedQuery toPreparedQuery() {
+    GrillConf qconf = new GrillConf();
+    for (Map.Entry<String, String> p : conf) {
+      qconf.addProperty(p.getKey(), p.getValue());
+    }
+    return new GrillPreparedQuery(prepareHandle, userQuery, preparedTime,
+        preparedUser,
+        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
+        driverQuery, qconf);
   }
 
 }
