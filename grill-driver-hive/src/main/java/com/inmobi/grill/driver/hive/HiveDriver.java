@@ -16,11 +16,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hive.service.cli.HiveSQLException;
-import org.apache.hive.service.cli.OperationHandle;
-import org.apache.hive.service.cli.OperationState;
-import org.apache.hive.service.cli.OperationStatus;
-import org.apache.hive.service.cli.SessionHandle;
+import org.apache.hive.service.cli.*;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
@@ -355,7 +351,7 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  protected ThriftCLIServiceClient getClient() throws GrillException {
+  protected CLIServiceClient getClient() throws GrillException {
     connectionLock.lock();
     try {
       if (connection == null) {

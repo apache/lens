@@ -3,8 +3,11 @@ package com.inmobi.grill.driver.hive;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.auth.KerberosSaslHelper;
 import org.apache.hive.service.auth.PlainSaslHelper;
+import org.apache.hive.service.cli.CLIServiceClient;
+import org.apache.hive.service.cli.thrift.RetryingThriftCLIServiceClient;
 import org.apache.hive.service.cli.thrift.TCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.thrift.protocol.TBinaryProtocol;
@@ -18,6 +21,7 @@ import com.inmobi.grill.exception.GrillException;
 
 import javax.security.sasl.SaslException;
 
+import java.rmi.Remote;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,7 +39,7 @@ public class RemoteThriftConnection implements ThriftConnection {
 	private TTransport transport;
 	private boolean connected;
 	private TCLIService.Client client;
-  private ThriftCLIServiceClient hs2Client;
+  private CLIServiceClient hs2Client;
 	
   private static final String HIVE_AUTH_TYPE= "auth";
   private static final String HIVE_AUTH_SIMPLE = "noSasl";
@@ -48,7 +52,7 @@ public class RemoteThriftConnection implements ThriftConnection {
 	}
 
 	@Override
-	public ThriftCLIServiceClient getClient(Configuration conf) throws GrillException {
+	public CLIServiceClient getClient(Configuration conf) throws GrillException {
 		if (!connected) {
       String remoteHost = conf.get(HS2_HOST);
       if (remoteHost == null) {
@@ -57,7 +61,9 @@ public class RemoteThriftConnection implements ThriftConnection {
       int remotePort = conf.getInt(HS2_PORT, HS2_DEFAULT_PORT);
       LOG.info("Connecting to " + remoteHost + ":" + remotePort);
       openTransport(conf, remoteHost, remotePort, conf.getValByRegex(".*"));
-			hs2Client = new ThriftCLIServiceClient(client);
+			hs2Client =
+        RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(new HiveConf(conf, RemoteThriftConnection.class),
+        client);
       connected = true;
       LOG.info("Connected");
 		}

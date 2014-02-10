@@ -3,6 +3,7 @@ package com.inmobi.grill.driver.hive;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
@@ -14,7 +15,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 	private boolean connected;
 	
 	@Override
-	public ThriftCLIServiceClient getClient(Configuration conf) throws GrillException {
+	public CLIServiceClient getClient(Configuration conf) throws GrillException {
 		if (!connected) {
 	    client = new ThriftCLIServiceClient(new EmbeddedThriftBinaryCLIService());
 	    connected = true;
