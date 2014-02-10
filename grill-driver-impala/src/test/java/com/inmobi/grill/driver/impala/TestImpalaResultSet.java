@@ -41,7 +41,7 @@ public class TestImpalaResultSet {
 
 		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
-		List<Object> result = is.next();
+		List<Object> result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -75,7 +75,7 @@ public class TestImpalaResultSet {
 		Assert.assertEquals(is.hasNext(), true);
 
 		//do first next
-		List<Object> result = is.next();
+    List<Object> result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -90,7 +90,7 @@ public class TestImpalaResultSet {
 		Assert.assertEquals(is.hasNext(), true);
 
 		//do second next to empty the result set
-		result = is.next();
+    result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -121,7 +121,7 @@ public class TestImpalaResultSet {
 
 		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
-		List<Object> result = is.next();
+    List<Object> result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -149,7 +149,7 @@ public class TestImpalaResultSet {
 
 		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
-		List<Object> result = is.next();
+    List<Object> result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -181,7 +181,7 @@ public class TestImpalaResultSet {
 
 		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
-		List<Object> result = is.next();
+    List<Object> result = is.next().getValues();
 
 		// test and verify
 		Assert.assertEquals(result.size(), 2);
@@ -192,7 +192,7 @@ public class TestImpalaResultSet {
 		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
 		Mockito.verify(mockClient, Mockito.times(0)).close(qh);
 		when(resultSet.isHas_more()).thenReturn(false);
-		result = is.next();
+		result = is.next().getValues();
 
 		Mockito.verify(resultSet, Mockito.times(2)).getData();
 		Mockito.verify(mockClient, Mockito.times(2)).fetch(qh, false, -1);

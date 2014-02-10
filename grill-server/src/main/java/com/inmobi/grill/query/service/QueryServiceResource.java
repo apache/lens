@@ -17,26 +17,20 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hive.service.cli.SessionHandle;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-import com.inmobi.grill.client.api.APIResult;
-import com.inmobi.grill.client.api.InMemoryQueryResult;
-import com.inmobi.grill.client.api.PersistentQueryResult;
-import com.inmobi.grill.client.api.PreparedQueryContext;
-import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.QueryContext;
-import com.inmobi.grill.client.api.QueryPlan;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.api.InMemoryResultSet;
-import com.inmobi.grill.api.PersistentResultSet;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPrepareHandle;
-import com.inmobi.grill.api.QuerySubmitResult;
-import com.inmobi.grill.client.api.QueryResult;
-import com.inmobi.grill.client.api.QueryResultSetMetadata;
+import com.inmobi.grill.common.APIResult;
+import com.inmobi.grill.common.GrillConf;
+import com.inmobi.grill.common.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.GrillPreparedQuery;
+import com.inmobi.grill.query.GrillQuery;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryPrepareHandle;
+import com.inmobi.grill.query.QueryResult;
+import com.inmobi.grill.query.QueryResultSetMetadata;
+import com.inmobi.grill.query.QuerySubmitResult;
+import com.inmobi.grill.query.SubmitOp;
 import com.inmobi.grill.server.api.QueryExecutionService;
 import com.inmobi.grill.service.GrillServices;
 
@@ -79,7 +73,7 @@ public class QueryServiceResource {
   public QuerySubmitResult query(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
       @FormDataParam("operation") String op,
-      @FormDataParam("conf") QueryConf conf,
+      @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
     try {
       SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
@@ -90,7 +84,7 @@ public class QueryServiceResource {
       case EXECUTE:
         return queryServer.executeAsync(sessionid, query, conf);
       case EXPLAIN:
-        return new QueryPlan(queryServer.explain(sessionid, query, conf));
+        return queryServer.explain(sessionid, query, conf);
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(sessionid, query, timeoutmillis, conf);
       default:
@@ -147,7 +141,7 @@ public class QueryServiceResource {
   public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
       @DefaultValue("") @FormDataParam("operation") String op,
-      @FormDataParam("conf") QueryConf conf) {
+      @FormDataParam("conf") GrillConf conf) {
     try {
       SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
       if (sop == null) {
@@ -157,7 +151,7 @@ public class QueryServiceResource {
       case PREPARE:
         return queryServer.prepare(sessionid, query, conf);
       case EXPLAIN_AND_PREPARE:
-        return new QueryPlan(queryServer.explainAndPrepare(sessionid, query, conf));
+        return queryServer.explainAndPrepare(sessionid, query, conf);
       default:
         throw new BadRequestException("Invalid submit operation: " + op);
       }
@@ -210,11 +204,11 @@ public class QueryServiceResource {
   @GET
   @Path("preparedqueries/{preparehandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public PreparedQueryContext getPreparedQuery(@QueryParam("sessionid") GrillSessionHandle sessionid,
+  public GrillPreparedQuery getPreparedQuery(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("preparehandle") String prepareHandle) {
     try {
-      return new PreparedQueryContext(queryServer.getPreparedQueryContext(sessionid,
-          getPrepareHandle(prepareHandle)));
+      return queryServer.getPreparedQuery(sessionid,
+          getPrepareHandle(prepareHandle));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -237,10 +231,10 @@ public class QueryServiceResource {
   @GET
   @Path("queries/{queryhandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public QueryContext getStatus(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
+  public GrillQuery getStatus(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
     try {
-      return new QueryContext(queryServer.getQueryContext(sessionid,
-          getQueryHandle(queryHandle)));
+      return queryServer.getQuery(sessionid,
+          getQueryHandle(queryHandle));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -283,7 +277,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult updateConf(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("queryhandle") String queryHandle, 
-      @FormDataParam("conf") QueryConf conf) {
+      @FormDataParam("conf") GrillConf conf) {
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getQueryHandle(queryHandle), conf);
       if (ret) {
@@ -304,7 +298,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult updatePreparedConf(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("prepareHandle") String prepareHandle, 
-      @FormDataParam("conf") QueryConf conf) {
+      @FormDataParam("conf") GrillConf conf) {
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getPrepareHandle(prepareHandle), conf);
       if (ret) {
@@ -325,7 +319,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QueryHandle executePrepared(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("prepareHandle") String prepareHandle, 
-      @FormDataParam("conf") QueryConf conf) {
+      @FormDataParam("conf") GrillConf conf) {
     try {
       return queryServer.executePrepareAsync(sessionid,
           getPrepareHandle(prepareHandle), conf);
@@ -341,7 +335,7 @@ public class QueryServiceResource {
       @QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("queryhandle") String queryHandle) {
     try {
-      return new QueryResultSetMetadata(queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle)));
+      return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -356,12 +350,7 @@ public class QueryServiceResource {
       @QueryParam("fromindex") long startIndex,
       @QueryParam("fetchsize") int fetchSize) {
     try {
-      GrillResultSet result = queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
-      if (result instanceof PersistentResultSet) {
-        return new PersistentQueryResult(((PersistentResultSet) result).getOutputPath());
-      } else {
-        return new InMemoryQueryResult((InMemoryResultSet)result);
-      }
+      return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }

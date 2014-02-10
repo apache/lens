@@ -19,7 +19,12 @@
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-api</artifactId>
+      <artifactId>grill-client-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

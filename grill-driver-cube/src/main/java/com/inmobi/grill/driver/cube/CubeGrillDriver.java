@@ -12,18 +12,18 @@ import org.apache.log4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import com.inmobi.grill.api.DriverSelector;
-import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.api.GrillDriver;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.PreparedQueryContext;
-import com.inmobi.grill.api.QueryCompletionListener;
-import com.inmobi.grill.api.QueryContext;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryPrepareHandle;
-import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.driver.api.DriverSelector;
+import com.inmobi.grill.driver.api.GrillDriver;
+import com.inmobi.grill.driver.api.GrillResultSet;
+import com.inmobi.grill.driver.api.PreparedQueryContext;
+import com.inmobi.grill.driver.api.QueryCompletionListener;
+import com.inmobi.grill.driver.api.QueryContext;
+import com.inmobi.grill.driver.api.DriverQueryPlan;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryPrepareHandle;
+import com.inmobi.grill.query.QueryStatus;
 
 public class CubeGrillDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(CubeGrillDriver.class);
@@ -85,8 +85,8 @@ public class CubeGrillDriver implements GrillDriver {
       return Collections.min(drivers, new Comparator<GrillDriver>() {
         @Override
         public int compare(GrillDriver d1, GrillDriver d2) {
-          QueryPlan c1;
-          QueryPlan c2;
+          DriverQueryPlan c1;
+          DriverQueryPlan c2;
           conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
@@ -207,7 +207,7 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(String query, Configuration conf)
+  public DriverQueryPlan explain(String query, Configuration conf)
       throws GrillException {
     if (conf.getBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN,
         GrillConfConstants.DEFAULT_PREPARE_ON_EXPLAIN)) {
@@ -244,7 +244,7 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
     rewriteAndSelectForPrepare(pContext);
     return pContext.getSelectedDriver().explainAndPrepare(pContext);

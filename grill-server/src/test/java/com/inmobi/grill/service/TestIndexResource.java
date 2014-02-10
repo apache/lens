@@ -28,7 +28,7 @@ public class TestIndexResource extends GrillJerseyTest {
 
   @Override
   protected Application configure() {
-    return new MyApplication();
+    return new IndexApp();
   }
 
   protected int getTestPort() {

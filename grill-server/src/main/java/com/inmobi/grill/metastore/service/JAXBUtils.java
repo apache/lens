@@ -34,12 +34,12 @@ public class JAXBUtils {
    */
   public static Cube hiveCubeFromXCube(XCube cube) {
     Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
-    for (XDimension xd : cube.getDimensions().getDimension()) {
+    for (XDimension xd : cube.getDimensions().getDimensions()) {
       dims.add(hiveDimFromXDim(xd));
     }
 
     Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
-    for (XMeasure xm : cube.getMeasures().getMeasure()) {
+    for (XMeasure xm : cube.getMeasures().getMeasures()) {
       measures.add(hiveMeasureFromXMeasure(xm));
     }
 
@@ -59,7 +59,7 @@ public class JAXBUtils {
     xc.setWeight(c.weight());
 
     XMeasures xms = XCF.createXMeasures();
-    List<XMeasure> xmsList = xms.getMeasure();
+    List<XMeasure> xmsList = xms.getMeasures();
     for (CubeMeasure cm : c.getMeasures()) {
       xmsList.add(xMeasureFromHiveMeasure(cm));
     }
@@ -67,7 +67,7 @@ public class JAXBUtils {
 
 
     XDimensions xdm = XCF.createXDimensions();
-    List<XDimension> xdmList = xdm.getDimension();
+    List<XDimension> xdmList = xdm.getDimensions();
     for (CubeDimension cd : c.getDimensions()) {
       xdmList.add(xDimensionFromHiveDimension(cd));
     }
@@ -83,18 +83,18 @@ public class JAXBUtils {
    * @return
    */
   public static CubeDimension hiveDimFromXDim(XDimension xd) {
-    Date startDate = getDateFromXML(xd.getStarttime());
-    Date endDate = getDateFromXML(xd.getEndtime());
+    Date startDate = getDateFromXML(xd.getStartTime());
+    Date endDate = getDateFromXML(xd.getEndTime());
 
     CubeDimension hiveDim;
 
-    if (xd.getReferences() != null && xd.getReferences().getTablereference() != null &&
-        !xd.getReferences().getTablereference().isEmpty()) {
+    if (xd.getReferences() != null && xd.getReferences().getTableReferences() != null &&
+        !xd.getReferences().getTableReferences().isEmpty()) {
 
-      List<TableReference> dimRefs = new ArrayList<TableReference>(xd.getReferences().getTablereference().size());
+      List<TableReference> dimRefs = new ArrayList<TableReference>(xd.getReferences().getTableReferences().size());
 
-      for (XTablereference xRef : xd.getReferences().getTablereference()) {
-        dimRefs.add(new TableReference(xRef.getDesttable(), xRef.getDestcolumn()));
+      for (XTablereference xRef : xd.getReferences().getTableReferences()) {
+        dimRefs.add(new TableReference(xRef.getDestTable(), xRef.getDestColumn()));
       }
 
       hiveDim = new ReferencedDimension(new FieldSchema(xd.getName(), xd.getType(), ""),
@@ -142,13 +142,13 @@ public class JAXBUtils {
 
     XMeasure xm = XCF.createXMeasure();
     xm.setName(cm.getName());
-    xm.setDefaultaggr(cm.getAggregate());
+    xm.setDefaultAggr(cm.getAggregate());
     xm.setFormatString(cm.getFormatString());
     xm.setType(cm.getType());
     xm.setUnit(cm.getUnit());
     xm.setCost(cm.getCost());
-    xm.setStarttime(getXMLGregorianCalendar(cm.getStartTime()));
-    xm.setEndtime(getXMLGregorianCalendar(cm.getEndTime()));
+    xm.setStartTime(getXMLGregorianCalendar(cm.getStartTime()));
+    xm.setEndTime(getXMLGregorianCalendar(cm.getEndTime()));
 
     if (cm instanceof ExprMeasure) {
       xm.setExpr(((ExprMeasure) cm).getExpr());
@@ -179,12 +179,12 @@ public class JAXBUtils {
 
   public static XTablereferences xTabReferenceFromHiveTabReference(List<TableReference> hiveRefs) {
     XTablereferences xrefs = XCF.createXTablereferences();
-    List<XTablereference> xrefList = xrefs.getTablereference();
+    List<XTablereference> xrefList = xrefs.getTableReferences();
 
     for (TableReference hRef : hiveRefs) {
       XTablereference xref = XCF.createXTablereference();
-      xref.setDesttable(hRef.getDestTable());
-      xref.setDestcolumn(hRef.getDestColumn());
+      xref.setDestTable(hRef.getDestTable());
+      xref.setDestColumn(hRef.getDestColumn());
       xrefList.add(xref);
     }
     return xrefs;
@@ -196,14 +196,14 @@ public class JAXBUtils {
    * @return
    */
   public static CubeMeasure hiveMeasureFromXMeasure(XMeasure xm) {
-    Date startDate = xm.getStarttime() == null ? null : xm.getStarttime().toGregorianCalendar().getTime();
-    Date endDate = xm.getEndtime() == null ? null : xm.getEndtime().toGregorianCalendar().getTime();
+    Date startDate = xm.getStartTime() == null ? null : xm.getStartTime().toGregorianCalendar().getTime();
+    Date endDate = xm.getEndTime() == null ? null : xm.getEndTime().toGregorianCalendar().getTime();
     CubeMeasure cm;
     if (xm.getExpr() != null && !xm.getExpr().isEmpty()) {
       cm = new ExprMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
           xm.getExpr(),
           xm.getFormatString(),
-          xm.getDefaultaggr(),
+          xm.getDefaultAggr(),
           "unit",
           startDate,
           endDate,
@@ -212,7 +212,7 @@ public class JAXBUtils {
     } else {
       cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
           xm.getFormatString(),
-          xm.getDefaultaggr(),
+          xm.getDefaultAggr(),
           "unit",
           startDate,
           endDate,
@@ -229,9 +229,9 @@ public class JAXBUtils {
    */
   public static Map<String, String> mapFromXProperties(XProperties xProperties) {
     Map<String, String> properties = new HashMap<String, String>();
-    if (xProperties != null && xProperties.getProperty() != null &&
-        !xProperties.getProperty().isEmpty()) {
-      for (XProperty xp : xProperties.getProperty()) {
+    if (xProperties != null && xProperties.getProperties() != null &&
+        !xProperties.getProperties().isEmpty()) {
+      for (XProperty xp : xProperties.getProperties()) {
         properties.put(xp.getName(), xp.getValue());
       }
     }
@@ -244,7 +244,7 @@ public class JAXBUtils {
   public static XProperties xPropertiesFromMap(Map<String, String> map) {
     if (map != null && !map.isEmpty()) {
       XProperties xp = XCF.createXProperties();
-      List<XProperty> xpList = xp.getProperty();
+      List<XProperty> xpList = xp.getProperties();
       for (Map.Entry<String, String> e : map.entrySet()) {
         XProperty property = XCF.createXProperty();
         property.setName(e.getKey());
@@ -281,11 +281,11 @@ public class JAXBUtils {
       return null;
     }
 
-    List<TableReference> tabRefs = new ArrayList<TableReference>(drf.getTableReference().size());
-    for (XTablereference xTabRef : drf.getTableReference()) {
+    List<TableReference> tabRefs = new ArrayList<TableReference>(drf.getTableReferences().size());
+    for (XTablereference xTabRef : drf.getTableReferences()) {
       TableReference tabRef = new TableReference();
-      tabRef.setDestTable(xTabRef.getDesttable());
-      tabRef.setDestColumn(xTabRef.getDestcolumn());
+      tabRef.setDestTable(xTabRef.getDestTable());
+      tabRef.setDestColumn(xTabRef.getDestColumn());
       tabRefs.add(tabRef);
     }
 
@@ -293,9 +293,9 @@ public class JAXBUtils {
   }
 
   public static Map<String, List<TableReference>> mapFromDimensionReferences(DimensionReferences dimRefs) {
-    if (dimRefs != null && dimRefs.getReference() != null && !dimRefs.getReference().isEmpty()) {
+    if (dimRefs != null && dimRefs.getDimReferences() != null && !dimRefs.getDimReferences().isEmpty()) {
       Map<String, List<TableReference>> cubeRefs = new LinkedHashMap<String, List<TableReference>>();
-      for (DimensionReference drf : dimRefs.getReference()) {
+      for (DimensionReference drf : dimRefs.getDimReferences()) {
         List<TableReference> refs = cubeRefs.get(drf.getDimensionColumn().toLowerCase());
         if (refs == null) {
           refs = new ArrayList<TableReference>();
@@ -417,8 +417,8 @@ public class JAXBUtils {
         cubeDimTable.getDimensionReferences().entrySet()) {
         DimensionReference ref = XCF.createDimensionReference();
         ref.setDimensionColumn(entry.getKey());
-        ref.getTableReference().addAll(dimRefListFromTabRefList(entry.getValue()));
-        dimRefs.getReference().add(ref);
+        ref.getTableReferences().addAll(dimRefListFromTabRefList(entry.getValue()));
+        dimRefs.getDimReferences().add(ref);
       }
       dimTab.setDimensionsReferences(dimRefs);
     }
@@ -437,7 +437,7 @@ public class JAXBUtils {
         }
         periods.getUpdatePeriodElement().add(e);
       }
-      dimTab.setUpdatePeriods(periods);
+      dimTab.setStorageDumpPeriods(periods);
     }
 
     return dimTab;
@@ -449,8 +449,8 @@ public class JAXBUtils {
       List<XTablereference> xTabRefs = new ArrayList<XTablereference>(tabRefs.size());
       for (TableReference ref : tabRefs) {
         XTablereference xRef = XCF.createXTablereference();
-        xRef.setDestcolumn(ref.getDestColumn());
-        xRef.setDesttable(ref.getDestTable());
+        xRef.setDestColumn(ref.getDestColumn());
+        xRef.setDestTable(ref.getDestTable());
         xTabRefs.add(xRef);
       }
       return xTabRefs;
@@ -463,9 +463,9 @@ public class JAXBUtils {
     Map<String, List<TableReference>> tabrefs = new HashMap<String, List<TableReference>>();
 
     if (dimensionTable.getDimensionsReferences() != null &&
-        dimensionTable.getDimensionsReferences().getReference() != null &&
-        !dimensionTable.getDimensionsReferences().getReference().isEmpty()) {
-      for (DimensionReference drf : dimensionTable.getDimensionsReferences().getReference()) {
+        dimensionTable.getDimensionsReferences().getDimReferences() != null &&
+        !dimensionTable.getDimensionsReferences().getDimReferences().isEmpty()) {
+      for (DimensionReference drf : dimensionTable.getDimensionsReferences().getDimReferences()) {
         String col = drf.getDimensionColumn();
         List<TableReference> refs = tableRefFromDimensionRef(drf);
         List<TableReference> val = tabrefs.get(col);
@@ -480,7 +480,7 @@ public class JAXBUtils {
     CubeDimensionTable cdim = new CubeDimensionTable(dimensionTable.getName(),
         fieldSchemaListFromColumns(dimensionTable.getColumns()), 
         dimensionTable.getWeight(),
-        dumpPeriodsFromUpdatePeriods(dimensionTable.getUpdatePeriods()),
+        dumpPeriodsFromUpdatePeriods(dimensionTable.getStorageDumpPeriods()),
         tabrefs,
         mapFromXProperties(dimensionTable.getProperties()));
 
@@ -490,7 +490,7 @@ public class JAXBUtils {
   public static CubeFactTable cubeFactFromFactTable(FactTable fact) {
     List<FieldSchema> columns = fieldSchemaListFromColumns(fact.getColumns());
 
-    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromUpdatePeriods(fact.getUpdatePeriods());
+    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods());
 
     return new CubeFactTable(Arrays.asList(fact.getCubeName()),
         fact.getName(), 
@@ -517,7 +517,7 @@ public class JAXBUtils {
         }
         periods.getUpdatePeriodElement().add(uel);
       }
-      fact.setUpdatePeriods(periods);
+      fact.setStorageUpdatePeriods(periods);
     }
     return fact;
   }
@@ -550,7 +550,7 @@ public class JAXBUtils {
 
   public static Map<String, StorageTableDesc> storageTableMapFromXStorageTables(XStorageTables storageTables) {
     Map<String, StorageTableDesc> storageTableMap = new HashMap<String, StorageTableDesc>();
-    for (XStorageTableElement sTbl : storageTables.getStorageTable()) {
+    for (XStorageTableElement sTbl : storageTables.getStorageTables()) {
       storageTableMap.put(sTbl.getStorageName(), storageTableDescFromXStorageTableElement(sTbl));
     }
     return storageTableMap;

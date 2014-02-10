@@ -22,18 +22,18 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.api.GrillDriver;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.PreparedQueryContext;
-import com.inmobi.grill.api.QueryCompletionListener;
-import com.inmobi.grill.api.QueryContext;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryPrepareHandle;
-import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.api.QueryStatus.Status;
+import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.driver.api.GrillDriver;
+import com.inmobi.grill.driver.api.GrillResultSet;
+import com.inmobi.grill.driver.api.PreparedQueryContext;
+import com.inmobi.grill.driver.api.QueryCompletionListener;
+import com.inmobi.grill.driver.api.QueryContext;
+import com.inmobi.grill.driver.api.DriverQueryPlan;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryPrepareHandle;
+import com.inmobi.grill.query.QueryStatus;
+import com.inmobi.grill.query.QueryStatus.Status;
 
 public class HiveDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
@@ -70,7 +70,7 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(final String query, final Configuration conf)
+  public DriverQueryPlan explain(final String query, final Configuration conf)
       throws GrillException {
     HiveConf explainConf = new HiveConf(conf, HiveDriver.class);
     explainConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
@@ -81,7 +81,7 @@ public class HiveDriver implements GrillDriver {
         explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
     while (inMemoryResultSet.hasNext()) {
-      explainOutput.add((String)inMemoryResultSet.next().get(0));
+      explainOutput.add((String)inMemoryResultSet.next().getValues().get(0));
     }
     LOG.info("Explain: " + query);
     try {
@@ -93,9 +93,9 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
-    QueryPlan plan = explain(pContext.getDriverQuery(), pContext.getConf());
+    DriverQueryPlan plan = explain(pContext.getDriverQuery(), pContext.getConf());
     plan.setPrepareHandle(pContext.getPrepareHandle());
     return plan;
   }
@@ -119,6 +119,7 @@ public class HiveDriver implements GrillDriver {
       OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getDriverQuery(),
           ctx.getConf().getValByRegex(".*"));
       LOG.info("The hive operation handle: " + op);
+      ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);
       OperationStatus status = getClient().getOperationStatus(op);
 
@@ -214,8 +215,7 @@ public class HiveDriver implements GrillDriver {
       } else {
         LOG.warn("Empty task statuses");
       }
-      return new QueryStatus(progress, stat, msg, hasResult,
-          hiveHandle.getHandleIdentifier().toString());
+      return new QueryStatus(progress, stat, msg, hasResult);
     } catch (Exception e) {
       throw new GrillException("Error getting query status", e);
     } finally {

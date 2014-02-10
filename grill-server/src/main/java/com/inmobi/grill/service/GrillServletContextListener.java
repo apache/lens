@@ -1,7 +1,5 @@
 package com.inmobi.grill.service;
 
-import java.util.List;
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.log4j.BasicConfigurator;

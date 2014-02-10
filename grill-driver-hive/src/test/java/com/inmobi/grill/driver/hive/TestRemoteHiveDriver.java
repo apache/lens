@@ -1,6 +1,5 @@
 package com.inmobi.grill.driver.hive;
 
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -8,8 +7,9 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
 import org.testng.annotations.*;
 
-import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.api.QueryContext;
+import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.driver.api.QueryContext;
+
 
 import static org.testng.Assert.assertNotNull;
 

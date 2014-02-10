@@ -3,7 +3,6 @@ package com.inmobi.grill.driver.hive;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.inmobi.grill.api.QueryHandle;
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.HiveSQLException;
@@ -11,12 +10,15 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
-import com.inmobi.grill.api.GrillResultSetMetadata;
-import com.inmobi.grill.api.PersistentResultSet;
-import com.inmobi.grill.api.ResultColumn;
+import com.inmobi.grill.driver.api.GrillResultSetMetadata;
+import com.inmobi.grill.driver.api.PersistentResultSet;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryResult;
+import com.inmobi.grill.query.QueryResultSetMetadata;
+import com.inmobi.grill.query.ResultColumn;
 
-public class HivePersistentResultSet implements PersistentResultSet {
+public class HivePersistentResultSet extends PersistentResultSet {
   private final Path path;
   private final OperationHandle opHandle;
   private final ThriftCLIServiceClient client;

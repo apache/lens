@@ -1,13 +1,12 @@
 package com.inmobi.grill.metastore.service;
 
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.client.api.APIResult;
-import com.inmobi.grill.client.api.StringList;
-import com.inmobi.grill.client.api.APIResult.Status;
+import com.inmobi.grill.common.APIResult;
+import com.inmobi.grill.common.GrillSessionHandle;
+import com.inmobi.grill.common.StringList;
+import com.inmobi.grill.common.APIResult.Status;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
-import com.inmobi.grill.server.api.QueryExecutionService;
 import com.inmobi.grill.service.GrillServices;
 
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -20,7 +19,6 @@ import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Path("metastore")

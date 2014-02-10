@@ -6,19 +6,24 @@ import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 
-import com.inmobi.grill.api.GrillDriver;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.GrillResultSetMetadata;
-import com.inmobi.grill.api.PreparedQueryContext;
-import com.inmobi.grill.api.QueryCompletionListener;
-import com.inmobi.grill.api.QueryContext;
-import com.inmobi.grill.api.QueryCost;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryPrepareHandle;
-import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.api.ResultColumn;
+import com.inmobi.grill.driver.api.GrillDriver;
+import com.inmobi.grill.driver.api.GrillResultSet;
+import com.inmobi.grill.driver.api.GrillResultSetMetadata;
+import com.inmobi.grill.driver.api.InMemoryResultSet;
+import com.inmobi.grill.driver.api.PersistentResultSet;
+import com.inmobi.grill.driver.api.PreparedQueryContext;
+import com.inmobi.grill.driver.api.QueryCompletionListener;
+import com.inmobi.grill.driver.api.QueryContext;
+import com.inmobi.grill.driver.api.DriverQueryPlan;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryCost;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryPrepareHandle;
+import com.inmobi.grill.query.QueryResult;
+import com.inmobi.grill.query.QueryResultSetMetadata;
+import com.inmobi.grill.query.QueryStatus;
+import com.inmobi.grill.query.ResultColumn;
+import com.inmobi.grill.query.ResultRow;
 
 public class MockDriver implements GrillDriver {
 
@@ -38,7 +43,7 @@ public class MockDriver implements GrillDriver {
     this.conf = conf;
   }
 
-  static class MockQueryPlan extends QueryPlan {
+  static class MockQueryPlan extends DriverQueryPlan {
     String query;
     MockQueryPlan(String query) {
       this.query = query;
@@ -56,7 +61,7 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(String query, Configuration conf)
+  public DriverQueryPlan explain(String query, Configuration conf)
       throws GrillException {
     return new MockQueryPlan(query);
   }
@@ -86,9 +91,9 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explainAndPrepare(PreparedQueryContext pContext)
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
-    QueryPlan p = new MockQueryPlan(pContext.getDriverQuery());
+    DriverQueryPlan p = new MockQueryPlan(pContext.getDriverQuery());
     p.setPrepareHandle(pContext.getPrepareHandle());
     return p;
   }
@@ -103,23 +108,24 @@ public class MockDriver implements GrillDriver {
   @Override
   public GrillResultSet execute(QueryContext context) throws GrillException {
     this.query = context.getDriverQuery();
-    return new GrillResultSet() {
-
+    return new PersistentResultSet() {
+      
       @Override
       public int size() throws GrillException {
+        // TODO Auto-generated method stub
         return 0;
       }
-
+      
       @Override
       public GrillResultSetMetadata getMetadata() throws GrillException {
-        return new GrillResultSetMetadata() {
-
-          @Override
-          public List<ResultColumn> getColumns() {
-            return new ArrayList<ResultColumn>();
-          }
-
-        };
+        // TODO Auto-generated method stub
+        return null;
+      }
+      
+      @Override
+      public String getOutputPath() throws GrillException {
+        // TODO Auto-generated method stub
+        return null;
       }
     };
   }
@@ -132,23 +138,36 @@ public class MockDriver implements GrillDriver {
   @Override
   public GrillResultSet fetchResultSet(QueryContext context)
       throws GrillException {
-    return new GrillResultSet() {
-
+    return new InMemoryResultSet() {
+      
       @Override
       public int size() throws GrillException {
+        // TODO Auto-generated method stub
         return 0;
       }
-
+      
       @Override
       public GrillResultSetMetadata getMetadata() throws GrillException {
-        return new GrillResultSetMetadata() {
-
-          @Override
-          public List<ResultColumn> getColumns() {
-            return new ArrayList<ResultColumn>();
-          }
-
-        };
+        // TODO Auto-generated method stub
+        return null;
+      }
+      
+      @Override
+      public void setFetchSize(int size) throws GrillException {
+        // TODO Auto-generated method stub
+        
+      }
+      
+      @Override
+      public ResultRow next() throws GrillException {
+        // TODO Auto-generated method stub
+        return null;
+      }
+      
+      @Override
+      public boolean hasNext() throws GrillException {
+        // TODO Auto-generated method stub
+        return false;
       }
     };
   }

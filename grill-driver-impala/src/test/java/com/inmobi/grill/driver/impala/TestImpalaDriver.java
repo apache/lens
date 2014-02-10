@@ -18,8 +18,7 @@ import com.cloudera.beeswax.api.Query;
 import com.cloudera.beeswax.api.QueryHandle;
 import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.QueryCost;
+import com.inmobi.grill.driver.api.GrillResultSet;
 import com.inmobi.grill.driver.impala.ImpalaDriver;
 import com.inmobi.grill.driver.impala.ImpalaResultSet;
 

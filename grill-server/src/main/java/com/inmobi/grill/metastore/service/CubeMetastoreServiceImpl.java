@@ -1,11 +1,11 @@
 package com.inmobi.grill.metastore.service;
 
-import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.common.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.metastore.model.*;
 import com.inmobi.grill.server.api.CubeMetastoreService;
 import com.inmobi.grill.service.GrillService;
-import com.inmobi.grill.service.session.GrillSessionImpl;
+import com.inmobi.grill.service.GrillSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configurable;
@@ -42,13 +42,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   }
 
   synchronized CubeMetastoreClient getClient(GrillSessionHandle sessionid) throws GrillException {
-    try {
-      return ((GrillSessionImpl)getSessionManager().getSession(sessionid.getSessionHandle())).getCubeMetastoreClient();
-    } catch (HiveException e) {
-      throw new GrillException(e);
-    } catch (HiveSQLException e) {
-      throw new GrillException(e);
-    }
+    return ((GrillSessionImpl)getSession(sessionid)).getCubeMetastoreClient();
   }
 
 
@@ -59,7 +53,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   @Override
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException {
-    return getSession(sessionid.getSessionHandle()).getSessionState().getCurrentDatabase();
+    return getSession(sessionid).getSessionState().getCurrentDatabase();
   }
 
   /**
@@ -69,7 +63,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   @Override
   public void setCurrentDatabase(GrillSessionHandle sessionid, String database) throws GrillException {
-    getSession(sessionid.getSessionHandle()).getSessionState().setCurrentDatabase(database);
+    getSession(sessionid).getSessionState().setCurrentDatabase(database);
     LOG.info("Set database " + database);
   }
 
@@ -82,7 +76,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public void dropDatabase(GrillSessionHandle sessionid, String database, boolean cascade) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       Hive.get(getUserConf()).dropDatabase(database, true, true, cascade);
       LOG.info("Database dropped " + database + " cascade? " + true);
     } catch (HiveException e) {
@@ -90,7 +84,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (NoSuchObjectException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -103,7 +97,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public void createDatabase(GrillSessionHandle sessionid, String database, boolean ignore) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       Database db = new Database();
       db.setName(database);
       Hive.get(getHiveConf()).createDatabase(db, ignore);
@@ -112,7 +106,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
     LOG.info("Database created " + database);
   }
@@ -123,12 +117,12 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public List<String> getAllDatabases(GrillSessionHandle sessionid) throws GrillException{
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       return Hive.get(getHiveConf()).getAllDatabases();
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -140,7 +134,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       List<Cube> cubes = getClient(sessionid).getAllCubes();
       if (cubes != null && !cubes.isEmpty()) {
         List<String> names = new ArrayList<String>(cubes.size());
@@ -152,7 +146,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
     return null;
   }
@@ -165,13 +159,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public void createCube(GrillSessionHandle sessionid, XCube cube) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).createCube(JAXBUtils.hiveCubeFromXCube(cube));
       LOG.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -184,7 +178,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public XCube getCube(GrillSessionHandle sessionid, String cubeName) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       Cube c = getClient(sessionid).getCube(cubeName);
       if (c != null) {
         return JAXBUtils.xCubeFromHiveCube(c);
@@ -192,7 +186,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
     return null;
   }
@@ -204,13 +198,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   public void dropCube(GrillSessionHandle sessionid, String cubeName, boolean cascade) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).dropCube(cubeName);
       LOG.info("Dropped cube " + cubeName + " cascade? " + cascade);
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -222,13 +216,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public void updateCube(GrillSessionHandle sessionid, XCube cube) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube));
       LOG.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -244,13 +238,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     Map<String, List<TableReference>> references =
         JAXBUtils.mapFromDimensionReferences(xDimTable.getDimensionsReferences());
     Map<String, UpdatePeriod> updatePeriodMap =
-        JAXBUtils.dumpPeriodsFromUpdatePeriods(xDimTable.getUpdatePeriods());
+        JAXBUtils.dumpPeriodsFromUpdatePeriods(xDimTable.getStorageDumpPeriods());
 
     Map<String, String> properties = JAXBUtils.mapFromXProperties(xDimTable.getProperties());
     Map<String, StorageTableDesc> storageDesc = JAXBUtils.storageTableMapFromXStorageTables(storageTables);
 
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       System.out.println("# Columns: "+ columns);
       getClient(sessionid).createCubeDimensionTable(dimName,
           columns,
@@ -263,61 +257,61 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void dropDimensionTable(GrillSessionHandle sessionid, String dimension, boolean cascade) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).dropDimension(dimension, cascade);
       LOG.info("Dropped dimension table " + dimension + " cascade? " + cascade);
     } catch (HiveException e) {
       LOG.error("@@@@ Got HiveException: >>>>>>>" + e.getMessage() + "<<<<<<<<<");
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public DimensionTable getDimensionTable(GrillSessionHandle sessionid, String dimName) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable cubeDimTable = getClient(sessionid).getDimensionTable(dimName);
       return JAXBUtils.dimTableFromCubeDimTable(cubeDimTable);
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void updateDimensionTable(GrillSessionHandle sessionid, DimensionTable dimensionTable) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).alterCubeDimensionTable(dimensionTable.getName(), 
           JAXBUtils.cubeDimTableFromDimTable(dimensionTable));
       LOG.info("Updated dimension table " + dimensionTable.getName());
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public List<String> getDimensionStorages(GrillSessionHandle sessionid, String dimension) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable dimTable = getClient(sessionid).getDimensionTable(dimension);
       return new ArrayList<String>(dimTable.getStorages());
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -325,7 +319,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void createDimensionStorage(GrillSessionHandle sessionid,
       String dimName, XStorageTableElement storageTable) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable dimTable = getClient(sessionid).getDimensionTable(dimName);
       UpdatePeriod period = null;
       if (!storageTable.getUpdatePeriods().isEmpty()) {
@@ -338,14 +332,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void dropAllStoragesOfDim(GrillSessionHandle sessionid, String dimName) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable tab = getClient(sessionid).getDimensionTable(dimName);
       int total = tab.getStorages().size();
       int i = 0;
@@ -359,14 +353,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void dropStorageOfDim(GrillSessionHandle sessionid, String dimName, String storage) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable tab = getClient(sessionid).getDimensionTable(dimName);
       if (!tab.getStorages().contains(storage)) {
         throw new NotFoundException("Storage " + storage + " not found for dimension " + dimName);
@@ -377,14 +371,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public List<FactTable> getAllFactsOfCube(GrillSessionHandle sessionid, String cubeName) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       List<CubeFactTable> cubeFacts = getClient(sessionid).getAllFactTables(getClient(sessionid).getCube(cubeName));
       if (cubeFacts != null && !cubeFacts.isEmpty()) {
         List<FactTable> facts = new ArrayList<FactTable>(cubeFacts.size());
@@ -396,7 +390,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
     return null;
   }
@@ -404,23 +398,23 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public FactTable getFactTable(GrillSessionHandle sessionid, String fact) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       return JAXBUtils.factTableFromCubeFactTable(getClient(sessionid).getFactTable(fact));
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void createFactTable(GrillSessionHandle sessionid, FactTable fact, XStorageTables storageTables) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).createCubeFactTable(Arrays.asList(fact.getCubeName()),
           fact.getName(), 
           JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()), 
-          JAXBUtils.getFactUpdatePeriodsFromUpdatePeriods(fact.getUpdatePeriods()),
+          JAXBUtils.getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods()),
           fact.getWeight(), 
           JAXBUtils.mapFromXProperties(fact.getProperties()),
           JAXBUtils.storageTableMapFromXStorageTables(storageTables));
@@ -428,40 +422,40 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void updateFactTable(GrillSessionHandle sessionid, FactTable fact) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact));
       LOG.info("Updated fact table " + fact.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }		
   }
 
   @Override
   public void dropFactTable(GrillSessionHandle sessionid, String fact, boolean cascade) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).dropFact(fact, cascade);
       LOG.info("Dropped fact table " + fact + " cascade? " + cascade);
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public List<String> getAllFactNames(GrillSessionHandle sessionid) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       List<CubeFactTable> facts = getClient(sessionid).getAllFacts();
       List<String> factNames = new ArrayList<String>(facts.size());
       for (CubeFactTable cft : facts) {
@@ -471,14 +465,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public List<String> getStoragesOfFact(GrillSessionHandle sessionid, String fact) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       if (!getClient(sessionid).isFactTable(fact)) {
         throw new NotFoundException("Not a fact table " + fact);
       }
@@ -492,7 +486,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -503,7 +497,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       updatePeriods.add(UpdatePeriod.valueOf(sup.toUpperCase()));
     }
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).addStorage(getClient(sessionid).getFactTable(fact),
           storageTable.getStorageName(), updatePeriods,
           JAXBUtils.storageTableDescFromXStorageTableElement(storageTable));
@@ -511,21 +505,21 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void dropStorageOfFact(GrillSessionHandle sessionid, String fact, String storage) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       checkFactStorage(sessionid, fact, storage);
       getClient(sessionid).dropStorageFromFact(fact, storage);
       LOG.info("Dropped storage " + storage + " from fact " + fact);
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -548,7 +542,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       GrillSessionHandle sessionid, String fact, String storageName,
       String filter) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       checkFactStorage(sessionid, fact, storageName);
       String storageTableName = MetastoreUtil.getFactStorageTableName(fact, storageName);
       List<Partition> parts = getClient(sessionid).getPartitionsByFilter(storageTableName, filter);
@@ -565,14 +559,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
   @Override
   public void addPartitionToFactStorage(GrillSessionHandle sessionid, String fact, String storageName, XPartition partition) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeFactTable factTable = checkFactStorage(sessionid, fact, storageName);
       getClient(sessionid).addPartition(
           JAXBUtils.storagePartSpecFromXPartition(partition),
@@ -583,7 +577,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -605,7 +599,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       GrillSessionHandle sessionid, String dimension, String storageName, String filter)
       throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       checkDimensionStorage(sessionid, dimension, storageName);
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimension,
           storageName);
@@ -623,7 +617,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -631,7 +625,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void addPartitionToDimStorage(GrillSessionHandle sessionid,
       String dimName, String storageName, XPartition partition) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       CubeDimensionTable dim = checkDimensionStorage(sessionid, dimName, storageName);
       getClient(sessionid).addPartition(
           JAXBUtils.storagePartSpecFromXPartition(partition),
@@ -640,7 +634,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -649,7 +643,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       String cubeTableName, String storageName, XTimePartSpec timePartSpec,
       XPartSpec nonTimePartSpec, String updatePeriod) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       checkDimensionStorage(sessionid, cubeTableName, storageName);
       getClient(sessionid).dropPartition(cubeTableName,
           storageName,
@@ -661,7 +655,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
   }
 
@@ -717,7 +711,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void dropPartitionFromStorageByValues(GrillSessionHandle sessionid,
       String cubeTableName, String storageName, String values) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       String tableName = MetastoreUtil.getStorageTableName(cubeTableName,
           Storage.getPrefix(storageName));
       String filter = getFilter(getClient(sessionid), tableName, values);
@@ -740,14 +734,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }    
   }
 
   public void dropPartitionFromStorageByFilter(GrillSessionHandle sessionid, String cubeTableName,
       String storageName, String filter) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       String tableName = MetastoreUtil.getStorageTableName(cubeTableName,
           Storage.getPrefix(storageName));
       List<Partition> partitions = getClient(sessionid).getPartitionsByFilter(
@@ -765,7 +759,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException exc) {
       throw new GrillException(exc);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     } 
   }
 
@@ -773,13 +767,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void createStorage(GrillSessionHandle sessionid, XStorage storage)
       throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).createStorage(JAXBUtils.storageFromXStorage(storage));
       LOG.info("Created storage " + storage.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
 
   }
@@ -788,13 +782,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void dropStorage(GrillSessionHandle sessionid, String storageName)
       throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).dropStorage(storageName);
       LOG.info("Dropped storage " + storageName);
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }    
   }
 
@@ -802,14 +796,14 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void alterStorage(GrillSessionHandle sessionid, String storageName,
       XStorage storage) throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       getClient(sessionid).alterStorage(storageName,
           JAXBUtils.storageFromXStorage(storage));
       LOG.info("Altered storage " + storageName);
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }        
   }
 
@@ -817,12 +811,12 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public XStorage getStorage(GrillSessionHandle sessionid, String storageName)
       throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       return JAXBUtils.xstorageFromStorage(getClient(sessionid).getStorage(storageName));
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }        
   }
 
@@ -830,7 +824,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public List<String> getAllStorageNames(GrillSessionHandle sessionid)
       throws GrillException {
     try {
-      acquire(sessionid.getSessionHandle());
+      acquire(sessionid);
       List<Storage> storages = getClient(sessionid).getAllStorages();
       if (storages != null && !storages.isEmpty()) {
         List<String> names = new ArrayList<String>(storages.size());
@@ -842,7 +836,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
-      release(sessionid.getSessionHandle());
+      release(sessionid);
     }
     return null;
   }

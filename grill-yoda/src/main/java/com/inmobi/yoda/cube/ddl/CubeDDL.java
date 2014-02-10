@@ -44,10 +44,10 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
-import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
-import com.inmobi.grill.api.GrillConfConstants;
+
+import com.inmobi.grill.conf.GrillConfConstants;
 
 public class CubeDDL {
   private static final Log LOG = LogFactory.getLog(

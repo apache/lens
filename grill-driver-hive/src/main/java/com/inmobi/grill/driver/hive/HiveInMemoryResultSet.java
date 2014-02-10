@@ -22,12 +22,14 @@ import org.apache.hive.service.cli.thrift.TRowSet;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
-import com.inmobi.grill.api.GrillResultSetMetadata;
-import com.inmobi.grill.api.InMemoryResultSet;
-import com.inmobi.grill.api.ResultColumn;
+import com.inmobi.grill.driver.api.GrillResultSetMetadata;
+import com.inmobi.grill.driver.api.InMemoryResultSet;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryResult;
+import com.inmobi.grill.query.ResultColumn;
+import com.inmobi.grill.query.ResultRow;
 
-public class HiveInMemoryResultSet implements InMemoryResultSet {
+public class HiveInMemoryResultSet extends InMemoryResultSet {
   private final ThriftCLIServiceClient client;
   private final OperationHandle opHandle;
   private TableSchema metadata;
@@ -103,7 +105,7 @@ public class HiveInMemoryResultSet implements InMemoryResultSet {
   }
 
   @Override
-  public List<Object> next() throws GrillException {
+  public ResultRow next() throws GrillException {
     TRow row = rowItr.next();
     List<ColumnDescriptor> descriptors = getTableSchema().getColumnDescriptors();
 
@@ -190,7 +192,7 @@ public class HiveInMemoryResultSet implements InMemoryResultSet {
       results.add(value);
     }
 
-    return results;
+    return new ResultRow(results);
   }
 
   @Override
@@ -198,5 +200,4 @@ public class HiveInMemoryResultSet implements InMemoryResultSet {
     assert size >= 0;
     fetchSize = size == 0 ? Integer.MAX_VALUE : size;
   }
-
 }

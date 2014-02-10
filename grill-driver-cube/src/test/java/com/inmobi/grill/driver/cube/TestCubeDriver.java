@@ -1,18 +1,16 @@
 package com.inmobi.grill.driver.cube;
 
-
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.driver.api.GrillResultSet;
+import com.inmobi.grill.driver.api.DriverQueryPlan;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryStatus;
 
 public class TestCubeDriver {
 
@@ -41,7 +39,7 @@ public class TestCubeDriver {
     Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, setQ);
 
     String query = "select name from table";
-    QueryPlan plan = cubeDriver.explain(query, conf);
+    DriverQueryPlan plan = cubeDriver.explain(query, conf);
     String planString = plan.getPlan();
     Assert.assertEquals(query, planString);
 

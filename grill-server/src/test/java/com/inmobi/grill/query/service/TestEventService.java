@@ -1,13 +1,14 @@
 package com.inmobi.grill.query.service;
 
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryStatus;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryStatus;
 import com.inmobi.grill.server.api.events.*;
 import com.inmobi.grill.server.api.events.query.QueryEnded;
 import com.inmobi.grill.server.api.events.query.QueryFailed;
 import com.inmobi.grill.server.api.events.query.QuerySuccess;
 import com.inmobi.grill.server.api.events.query.QueuePositionChange;
+import com.inmobi.grill.service.EventServiceImpl;
 import com.inmobi.grill.service.GrillServices;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.log4j.Logger;
@@ -87,7 +88,7 @@ public class TestEventService {
 
   @Test
   public void testAddListener() {
-    int listenersBefore = ((EventServiceImpl) service).eventListeners.keySet().size();
+    int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
     genericEventListener = new GenericEventListener();
     service.addListener(genericEventListener);
     endedListener = new MockEndedListener();
@@ -97,7 +98,7 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertEquals(((EventServiceImpl) service).eventListeners.keySet().size() - listenersBefore, 4);
+    assertEquals(((EventServiceImpl) service).getEventListeners().keySet().size() - listenersBefore, 4);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
     assertEquals(service.getListeners(QueryEnded.class).size(), 1);
     assertEquals(service.getListeners(QueuePositionChange.class).size(), 1);

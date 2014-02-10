@@ -7,9 +7,10 @@ import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 
-import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.common.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.service.GrillService;
+import com.inmobi.grill.service.GrillSessionImpl;
 
 public class HiveCommandService extends GrillService {
 
@@ -20,15 +21,16 @@ public class HiveCommandService extends GrillService {
   public void addResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
-      acquire(sessionid.getSessionHandle());
-      getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
+      acquire(sessionid);
+      getCliService().executeStatement(
+          getHiveSessionHandle(sessionid), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     } finally {
       try {
-        release(sessionid.getSessionHandle());
+        release(sessionid);
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }
@@ -39,15 +41,15 @@ public class HiveCommandService extends GrillService {
   public void deleteResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "delete " + type.toLowerCase() + " " + path;
     try {
-      acquire(sessionid.getSessionHandle());
-      getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
+      acquire(sessionid);
+      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     } finally {
       try {
-        release(sessionid.getSessionHandle());
+        release(sessionid);
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }
@@ -65,15 +67,15 @@ public class HiveCommandService extends GrillService {
     }
     OperationHandle handle;
     try {
-      acquire(sessionid.getSessionHandle());
-      handle = getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
+      acquire(sessionid);
+      handle = getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     } finally {
       try {
-        release(sessionid.getSessionHandle());
+        release(sessionid);
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }
@@ -84,15 +86,15 @@ public class HiveCommandService extends GrillService {
   public void setSessionParameter(GrillSessionHandle sessionid, String key, String value) {
     String command = "set" + " " + key + "= " + value;
     try {
-      acquire(sessionid.getSessionHandle());
-      getCliService().executeStatement(sessionid.getSessionHandle(), command, null);
+      acquire(sessionid);
+      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     } finally {
       try {
-        release(sessionid.getSessionHandle());
+        release(sessionid);
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }

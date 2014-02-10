@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
         <groupId>com.inmobi.grill</groupId>
-        <artifactId>grill-api</artifactId>
+        <artifactId>grill-server-api</artifactId>
         <version>${project.version}</version>
         </dependency>
 

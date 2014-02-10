@@ -1,6 +1,5 @@
 package com.inmobi.grill.hivecommand.service;
 
-
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -16,12 +15,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.client.api.APIResult;
-import com.inmobi.grill.client.api.APIResult.Status;
-import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.StringList;
+import com.inmobi.grill.common.APIResult;
+import com.inmobi.grill.common.GrillConf;
+import com.inmobi.grill.common.GrillSessionHandle;
+import com.inmobi.grill.common.StringList;
+import com.inmobi.grill.common.APIResult.Status;
 import com.inmobi.grill.service.GrillJerseyTest;
 
 public class TestHiveCommandResource extends GrillJerseyTest {
@@ -62,7 +60,7 @@ public class TestHiveCommandResource extends GrillJerseyTest {
         "psword"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new QueryConf(),
+        new GrillConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final GrillSessionHandle handle = target.request().post(
@@ -177,7 +175,7 @@ public class TestHiveCommandResource extends GrillJerseyTest {
         "psword"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new QueryConf(),
+        new GrillConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final GrillSessionHandle handle = target.request().post(

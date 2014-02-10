@@ -23,10 +23,10 @@ import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.thrift.TRow;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.client.api.APIResult;
-import com.inmobi.grill.client.api.QueryConf;
-import com.inmobi.grill.client.api.StringList;
+import com.inmobi.grill.common.APIResult;
+import com.inmobi.grill.common.GrillConf;
+import com.inmobi.grill.common.GrillSessionHandle;
+import com.inmobi.grill.common.StringList;
 import com.inmobi.grill.exception.GrillException;
 import com.inmobi.grill.service.GrillService;
 import com.inmobi.grill.service.GrillServices;
@@ -50,7 +50,7 @@ public class CommandResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillSessionHandle openSession(@FormDataParam("username") String username,
       @FormDataParam("password") String password,
-      @DefaultValue("<conf/>") @FormDataParam("sessionconf") QueryConf sessionconf) {
+      @DefaultValue("<conf/>") @FormDataParam("sessionconf") GrillConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {
@@ -58,7 +58,7 @@ public class CommandResource {
       } else{
         conf = new HashMap<String, String>();
       }
-      return new GrillSessionHandle(commandService.openSession(username, password, conf));
+      return commandService.openSession(username, password, conf);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -68,12 +68,12 @@ public class CommandResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@QueryParam("sessionid") GrillSessionHandle sessionid) {
     try {
-      commandService.closeSession(sessionid.getSessionHandle());
+      commandService.closeSession(sessionid);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
     return new APIResult(APIResult.Status.SUCCEEDED,
-        "Close session with id" + sessionid.getSessionHandle() + "succeeded");
+        "Close session with id" + sessionid + "succeeded");
   }
 
   @PUT

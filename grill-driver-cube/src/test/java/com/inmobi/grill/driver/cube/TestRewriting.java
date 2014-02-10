@@ -25,7 +25,7 @@ import org.testng.annotations.Test;
 import org.testng.IObjectFactory;
 import org.testng.annotations.ObjectFactory;
 
-import com.inmobi.grill.api.GrillDriver;
+import com.inmobi.grill.driver.api.GrillDriver;
 import com.inmobi.grill.exception.GrillException;
 
 @PrepareForTest(RewriteUtil.class )

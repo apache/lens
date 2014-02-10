@@ -75,10 +75,19 @@
       <name>Releases</name>
       <url>http://maven.scm.corp.inmobi.com/content/repositories/releases/</url>
     </repository>
+    <repository>
+        <id>projectlombok.org</id>
+        <url>http://projectlombok.org/mavenrepo</url>
+    </repository>
   </repositories>
 
  <dependencyManagement>
    <dependencies>
+     <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.12.4</version>
+     </dependency>
       <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
@@ -425,7 +434,8 @@
  </dependencyManagement>
 
   <modules>
-    <module>grill-api</module>
+    <module>grill-client-api</module>
+    <module>grill-server-api</module>
     <module>grill-cli</module>
     <module>grill-driver-cube</module>
     <module>grill-driver-hive</module>

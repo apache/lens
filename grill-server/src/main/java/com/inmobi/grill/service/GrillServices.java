@@ -8,7 +8,7 @@ import java.util.Map;
 
 import javax.ws.rs.WebApplicationException;
 
-import com.inmobi.grill.query.service.EventServiceImpl;
+import com.inmobi.grill.conf.GrillConfConstants;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,9 +17,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.cli.CLIService;
-
-import com.inmobi.grill.api.GrillConfConstants;
-import com.inmobi.grill.service.session.GrillSessionImpl;
 
 public class GrillServices extends CompositeService {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);

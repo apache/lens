@@ -5,8 +5,6 @@ import static org.testng.Assert.*;
 import java.io.*;
 import java.util.*;
 
-import com.inmobi.grill.api.*;
-
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -17,8 +15,17 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.testng.annotations.*;
 
-import com.inmobi.grill.api.QueryStatus.Status;
+import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.driver.api.GrillResultSet;
+import com.inmobi.grill.driver.api.GrillResultSetMetadata;
+import com.inmobi.grill.driver.api.PreparedQueryContext;
+import com.inmobi.grill.driver.api.QueryContext;
+import com.inmobi.grill.driver.api.DriverQueryPlan;
 import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.query.QueryHandle;
+import com.inmobi.grill.query.QueryStatus;
+import com.inmobi.grill.query.ResultColumn;
+import com.inmobi.grill.query.QueryStatus.Status;
 
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
@@ -133,7 +140,7 @@ public class TestHiveDriver {
 
     List<String> actualRows = new ArrayList<String>();
     while (inmemrs.hasNext()) {
-      List<Object> row = inmemrs.next();
+      List<Object> row = inmemrs.next().getValues();
       actualRows.add((String)row.get(0));
     }
     assertEquals(actualRows, expectedRows);
@@ -257,10 +264,8 @@ public class TestHiveDriver {
 
     while (true) {
       QueryStatus status = driver.getStatus(handle);
-      System.out.println("#W Waiting for query " + handle + " status: " + status.getStatus() + " driverOpHandle:"
-        + status.getDriverOpHandle());
+      System.out.println("#W Waiting for query " + handle + " status: " + status.getStatus());
       assertNotNull(status);
-      assertNotNull(status.getDriverOpHandle());
       if (terminationStates.contains(status.getStatus())) {
         break;
       }
@@ -272,7 +277,7 @@ public class TestHiveDriver {
   @Test
   public void testExplain() throws Exception {
     createTestTable("test_explain");
-    QueryPlan plan = driver.explain("SELECT ID FROM test_explain", conf);
+    DriverQueryPlan plan = driver.explain("SELECT ID FROM test_explain", conf);
     assertTrue(plan instanceof HiveQueryPlan);
     assertEquals(plan.getTableWeight("test_explain"), 500.0);
 
@@ -286,14 +291,16 @@ public class TestHiveDriver {
 
     // test execute prepare async
     driver.executeAsync(qctx);
+    assertNotNull(qctx.getDriverOpHandle());
     validateExecuteAsync(qctx.getQueryHandle(), Status.SUCCESSFUL);
 
     driver.closeQuery(qctx.getQueryHandle());
 
     // for backward compatibility
     qctx = new QueryContext(pctx, null, conf);
-    qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getHandleId()));
+    qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     result = driver.execute(qctx);
+    assertNotNull(qctx.getDriverOpHandle());
     validateExecuteSync(result);
     // test execute prepare async
     driver.executeAsync(qctx);
@@ -314,7 +321,7 @@ public class TestHiveDriver {
     createTestTable("explain_test_1");
     createTestTable("explain_test_2");
 
-    QueryPlan plan = driver.explain("SELECT explain_test_1.ID, count(1) FROM " +
+    DriverQueryPlan plan = driver.explain("SELECT explain_test_1.ID, count(1) FROM " +
         " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID" +
         " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" +
         " GROUP BY explain_test_1.ID", conf);
@@ -335,7 +342,7 @@ public class TestHiveDriver {
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
     PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf);
-    QueryPlan plan2 = driver.explainAndPrepare(pctx);
+    DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
     //assertNotNull(plan2.getResultDestination());
     assertNotNull(plan2.getTablesQueried());
     assertEquals(plan2.getTablesQueried().size(), 1);

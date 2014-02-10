@@ -4,17 +4,20 @@ import java.util.Map;
 
 import javax.ws.rs.NotFoundException;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.auth.HiveAuthFactory;
 import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HandleIdentifier;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 
-import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.common.GrillConf;
+import com.inmobi.grill.common.GrillSessionHandle;
 import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.service.session.GrillSessionImpl;
 
 public abstract class GrillService extends CompositeService {
 
@@ -32,7 +35,7 @@ public abstract class GrillService extends CompositeService {
     return cliService;
   }
 
-  public SessionHandle openSession(String username, String password, Map<String, String> configuration)
+  public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     SessionHandle sessionHandle = null;
     try {
@@ -59,13 +62,14 @@ public abstract class GrillService extends CompositeService {
     } catch (Exception e) {
       throw new GrillException (e);
     }
-    return sessionHandle;
+    return new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
+        sessionHandle.getHandleIdentifier().getSecretId());
   }
 
-  public void closeSession(SessionHandle sessionHandle)
+  public void closeSession(GrillSessionHandle sessionHandle)
       throws GrillException {
     try {
-      cliService.closeSession(sessionHandle);
+      cliService.closeSession(getHiveSessionHandle(sessionHandle));
     } catch (Exception e) {
       throw new GrillException (e);
     }
@@ -75,9 +79,9 @@ public abstract class GrillService extends CompositeService {
     return cliService.getSessionManager();
   }
 
-  public GrillSessionImpl getSession(SessionHandle sessionHandle) throws GrillException {
+  public GrillSessionImpl getSession(GrillSessionHandle sessionHandle) throws GrillException {
     try {
-      return ((GrillSessionImpl)getSessionManager().getSession(sessionHandle));
+      return ((GrillSessionImpl)getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
       throw new NotFoundException("Session not found " + sessionHandle);
     } catch (Exception e) {
@@ -85,7 +89,7 @@ public abstract class GrillService extends CompositeService {
     }
   }
 
-  public void acquire(SessionHandle sessionHandle) throws GrillException {
+  public void acquire(GrillSessionHandle sessionHandle) throws GrillException {
     try {
       getSession(sessionHandle).acquire();
     } catch (HiveSQLException e) {
@@ -93,7 +97,7 @@ public abstract class GrillService extends CompositeService {
     }
   }
 
-  public void release(SessionHandle sessionHandle) throws GrillException {
+  public void release(GrillSessionHandle sessionHandle) throws GrillException {
     getSession(sessionHandle).release();
   }
 
@@ -104,4 +108,22 @@ public abstract class GrillService extends CompositeService {
   public void deleteResource(GrillSessionHandle sessionHandle, String type,
       String path) throws GrillException {
   }
+
+  public static SessionHandle getHiveSessionHandle(GrillSessionHandle grillHandle) {
+    return new SessionHandle(
+        new HandleIdentifier(grillHandle.getPublicId(), grillHandle.getSecretId()));
+  }
+
+  public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf GrillConf) throws GrillException {
+    HiveConf sessionConf;
+    sessionConf = getSession(sessionHandle).getHiveConf();
+    Configuration qconf = new Configuration(sessionConf);
+    if (GrillConf != null && !GrillConf.getProperties().isEmpty()) {
+      for (Map.Entry<String, String> entry : GrillConf.getProperties().entrySet()) {
+        qconf.set(entry.getKey(), entry.getValue());
+      }
+    }
+    return qconf;
+  }
+
 }
