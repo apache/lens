@@ -18,15 +18,15 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
   @BeforeClass
   public static void createHS2Service() throws Exception {
-    conf = new HiveConf(TestRemoteHiveDriver.class);
-    conf.set("hive.server2.thrift.bind.host", HS2_HOST);
-    conf.setInt("hive.server2.thrift.port", HS2_PORT);
     conf = new HiveConf();
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, RemoteThriftConnection.class,
       ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-    conf.set("hive.server2.thrift.bind.host", HS2_HOST);
-    conf.setInt("hive.server2.thrift.port", HS2_PORT);
+    conf.setVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST, HS2_HOST);
+    conf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT, HS2_PORT);
+    conf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
+    conf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
+    conf.setIntVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, 60000);
 
     SessionState.start(conf);
     Hive client = Hive.get(conf);
@@ -39,7 +39,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     server.init(conf);
     server.start();
     // TODO figure out a better way to wait for thrift service to start
-    Thread.sleep(5000);
+    Thread.sleep(7000);
   }
 
   @AfterClass
