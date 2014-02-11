@@ -11,9 +11,9 @@ import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.hadoop.hive.ql.session.SessionState.LogHelper;
 import org.apache.hadoop.util.StringUtils;
 
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
-import com.inmobi.grill.exception.GrillException;
 
 public class CubeCommandProcessor extends Driver {
 

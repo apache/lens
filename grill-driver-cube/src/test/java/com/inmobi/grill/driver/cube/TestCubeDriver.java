@@ -6,11 +6,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.driver.api.GrillResultSet;
-import com.inmobi.grill.driver.api.DriverQueryPlan;
-import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.query.QueryHandle;
-import com.inmobi.grill.query.QueryStatus;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
 
 public class TestCubeDriver {
 

@@ -18,9 +18,9 @@ import com.cloudera.beeswax.api.Query;
 import com.cloudera.beeswax.api.QueryHandle;
 import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
-import com.inmobi.grill.driver.api.GrillResultSet;
 import com.inmobi.grill.driver.impala.ImpalaDriver;
 import com.inmobi.grill.driver.impala.ImpalaResultSet;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
 
 @PowerMockIgnore({"org.apache.commons.logging.*", "org.xml.*", "javax.xml.*", "org.w3c.*"})
 @PrepareForTest(ImpalaDriver.class)

@@ -22,18 +22,18 @@ import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
-import com.inmobi.grill.conf.GrillConfConstants;
-import com.inmobi.grill.driver.api.GrillDriver;
-import com.inmobi.grill.driver.api.GrillResultSet;
-import com.inmobi.grill.driver.api.PreparedQueryContext;
-import com.inmobi.grill.driver.api.QueryCompletionListener;
-import com.inmobi.grill.driver.api.QueryContext;
-import com.inmobi.grill.driver.api.DriverQueryPlan;
-import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.query.QueryHandle;
-import com.inmobi.grill.query.QueryPrepareHandle;
-import com.inmobi.grill.query.QueryStatus;
-import com.inmobi.grill.query.QueryStatus.Status;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.api.query.QueryStatus.Status;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillDriver;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
+import com.inmobi.grill.server.api.driver.QueryCompletionListener;
+import com.inmobi.grill.server.api.query.PreparedQueryContext;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 public class HiveDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);

@@ -47,7 +47,7 @@ import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
 
-import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class CubeDDL {
   private static final Log LOG = LogFactory.getLog(

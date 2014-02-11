@@ -1,6 +1,7 @@
 package com.inmobi.yoda.cube.ddl;
 
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
+
 import org.apache.hadoop.conf.Configuration;
 
 public class CubeSelectorFactory {

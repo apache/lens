@@ -25,8 +25,8 @@ import org.testng.annotations.Test;
 import org.testng.IObjectFactory;
 import org.testng.annotations.ObjectFactory;
 
-import com.inmobi.grill.driver.api.GrillDriver;
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.server.api.driver.GrillDriver;
 
 @PrepareForTest(RewriteUtil.class )
 @PowerMockIgnore("org.apache.log4j.*")

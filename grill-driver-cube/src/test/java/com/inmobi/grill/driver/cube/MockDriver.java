@@ -6,24 +6,24 @@ import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 
-import com.inmobi.grill.driver.api.GrillDriver;
-import com.inmobi.grill.driver.api.GrillResultSet;
-import com.inmobi.grill.driver.api.GrillResultSetMetadata;
-import com.inmobi.grill.driver.api.InMemoryResultSet;
-import com.inmobi.grill.driver.api.PersistentResultSet;
-import com.inmobi.grill.driver.api.PreparedQueryContext;
-import com.inmobi.grill.driver.api.QueryCompletionListener;
-import com.inmobi.grill.driver.api.QueryContext;
-import com.inmobi.grill.driver.api.DriverQueryPlan;
-import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.query.QueryCost;
-import com.inmobi.grill.query.QueryHandle;
-import com.inmobi.grill.query.QueryPrepareHandle;
-import com.inmobi.grill.query.QueryResult;
-import com.inmobi.grill.query.QueryResultSetMetadata;
-import com.inmobi.grill.query.QueryStatus;
-import com.inmobi.grill.query.ResultColumn;
-import com.inmobi.grill.query.ResultRow;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryCost;
+import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.api.query.QueryResult;
+import com.inmobi.grill.api.query.QueryResultSetMetadata;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.api.query.ResultColumn;
+import com.inmobi.grill.api.query.ResultRow;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillDriver;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
+import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
+import com.inmobi.grill.server.api.driver.InMemoryResultSet;
+import com.inmobi.grill.server.api.driver.PersistentResultSet;
+import com.inmobi.grill.server.api.driver.QueryCompletionListener;
+import com.inmobi.grill.server.api.query.PreparedQueryContext;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 public class MockDriver implements GrillDriver {
 

@@ -1,6 +1,6 @@
 package com.inmobi.grill.server.api.events;
 
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
 
 import java.util.concurrent.*;
 

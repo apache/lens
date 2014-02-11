@@ -7,9 +7,9 @@ import org.testng.annotations.Test;
 
 import org.apache.hadoop.conf.Configuration;
 
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.driver.impala.ImpalaDriver;
 import com.inmobi.grill.driver.impala.ImpalaResultSet;
-import com.inmobi.grill.exception.GrillException;
 
 public class ITImpalaDriver {
 

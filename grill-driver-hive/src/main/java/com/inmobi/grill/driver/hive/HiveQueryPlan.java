@@ -8,10 +8,10 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
-import com.inmobi.grill.conf.GrillConfConstants;
-import com.inmobi.grill.driver.api.DriverQueryPlan;
-import com.inmobi.grill.query.QueryCost;
-import com.inmobi.grill.query.QueryPrepareHandle;
+import com.inmobi.grill.api.query.QueryCost;
+import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 
 public class HiveQueryPlan extends DriverQueryPlan {
   enum ParserState {

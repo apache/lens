@@ -9,31 +9,31 @@
 
 <property>
   <name>grill.servicenames</name>
-  <value>command,query,metastore,scheduler,quota</value>
+  <value>session,query,metastore,scheduler,quota</value>
 </property>
 
 <property>
-  <name>grill.command.service.impl</name>
-  <value>com.inmobi.grill.hivecommand.service.HiveCommandService</value>
+  <name>grill.session.service.impl</name>
+  <value>com.inmobi.grill.server.session.HiveSessionService</value>
 </property>
 
 <property>
   <name>grill.query.service.impl</name>
-  <value>com.inmobi.grill.query.service.QueryExecutionServiceImpl</value>
+  <value>com.inmobi.grill.server.query.QueryExecutionServiceImpl</value>
 </property>
 
 <property>
   <name>grill.quota.service.impl</name>
-  <value>com.inmobi.grill.quota.service.QuotaServiceImpl</value>
+  <value>com.inmobi.grill.server.quota.QuotaServiceImpl</value>
 </property>
 
 <property>
   <name>grill.metastore.service.impl</name>
-  <value>com.inmobi.grill.metastore.service.CubeMetastoreServiceImpl</value>
+  <value>com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl</value>
 </property>
 
 <property>
   <name>grill.scheduler.service.impl</name>
-  <value>com.inmobi.grill.queryscheduler.service.QuerySchedulerServiceImpl</value>
+  <value>com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl</value>
 </property>
 </configuration>

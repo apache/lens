@@ -14,11 +14,11 @@ import com.cloudera.beeswax.api.QueryHandle;
 import com.cloudera.beeswax.api.QueryNotFoundException;
 import com.cloudera.beeswax.api.Results;
 import com.cloudera.impala.thrift.ImpalaService.Client;
-import com.inmobi.grill.driver.api.GrillResultSetMetadata;
-import com.inmobi.grill.driver.api.InMemoryResultSet;
-import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.query.QueryResult;
-import com.inmobi.grill.query.ResultRow;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryResult;
+import com.inmobi.grill.api.query.ResultRow;
+import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
+import com.inmobi.grill.server.api.driver.InMemoryResultSet;
 
 public class ImpalaResultSet extends InMemoryResultSet {
 

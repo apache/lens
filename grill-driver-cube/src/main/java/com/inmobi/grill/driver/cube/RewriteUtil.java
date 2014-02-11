@@ -14,8 +14,8 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
-import com.inmobi.grill.driver.api.GrillDriver;
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.server.api.driver.GrillDriver;
 
 public class RewriteUtil {
 

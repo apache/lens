@@ -8,7 +8,7 @@
 
     <filter>
         <filter-name>authentication</filter-name>
-        <filter-class>com.inmobi.grill.service.AuthenticationFilter</filter-class>
+        <filter-class>com.inmobi.grill.server.AuthenticationFilter</filter-class>
     </filter>
 
     <filter-mapping>
@@ -18,7 +18,7 @@
 
     <filter>
         <filter-name>queryauthorization</filter-name>
-        <filter-class>com.inmobi.grill.query.service.AuthorizationFilter</filter-class>
+        <filter-class>com.inmobi.grill.server.query.AuthorizationFilter</filter-class>
     </filter>
 
     <filter-mapping>
@@ -28,7 +28,7 @@
 
     <filter>
         <filter-name>metastoreauthorization</filter-name>
-        <filter-class>com.inmobi.grill.metastore.service.AuthorizationFilter</filter-class>
+        <filter-class>com.inmobi.grill.server.metastore.AuthorizationFilter</filter-class>
     </filter>
 
     <filter-mapping>
@@ -57,7 +57,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.metastore.service.MetastoreApp</param-value>
+            <param-value>com.inmobi.grill.server.metastore.MetastoreApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -71,7 +71,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.quota.service.QuotaApp</param-value>
+            <param-value>com.inmobi.grill.server.quota.QuotaApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -85,7 +85,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.queryscheduler.service.SchedulerApp</param-value>
+            <param-value>com.inmobi.grill.server.scheduler.SchedulerApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -99,7 +99,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.hivecommand.service.CommandApp</param-value>
+            <param-value>com.inmobi.grill.server.session.SessionApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -113,7 +113,7 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.service.MyApplication</param-value>
+            <param-value>com.inmobi.grill.server.IndexApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
@@ -130,7 +130,7 @@
 
     <!-- Servlet context listener to initialize the webapp -->
     <listener>
-        <listener-class>com.inmobi.grill.service.GrillServletContextListener</listener-class>
+        <listener-class>com.inmobi.grill.server.GrillServletContextListener</listener-class>
     </listener>
 
 </web-app>

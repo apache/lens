@@ -434,7 +434,7 @@
  </dependencyManagement>
 
   <modules>
-    <module>grill-client-api</module>
+    <module>grill-api</module>
     <module>grill-server-api</module>
     <module>grill-cli</module>
     <module>grill-driver-cube</module>

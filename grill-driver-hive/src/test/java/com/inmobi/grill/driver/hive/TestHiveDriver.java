@@ -15,17 +15,17 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.testng.annotations.*;
 
-import com.inmobi.grill.conf.GrillConfConstants;
-import com.inmobi.grill.driver.api.GrillResultSet;
-import com.inmobi.grill.driver.api.GrillResultSetMetadata;
-import com.inmobi.grill.driver.api.PreparedQueryContext;
-import com.inmobi.grill.driver.api.QueryContext;
-import com.inmobi.grill.driver.api.DriverQueryPlan;
-import com.inmobi.grill.exception.GrillException;
-import com.inmobi.grill.query.QueryHandle;
-import com.inmobi.grill.query.QueryStatus;
-import com.inmobi.grill.query.ResultColumn;
-import com.inmobi.grill.query.QueryStatus.Status;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.api.query.ResultColumn;
+import com.inmobi.grill.api.query.QueryStatus.Status;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
+import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
+import com.inmobi.grill.server.api.query.PreparedQueryContext;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";

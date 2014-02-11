@@ -32,7 +32,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.conf.GrillConfConstants;
+import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class TestDDL {
 

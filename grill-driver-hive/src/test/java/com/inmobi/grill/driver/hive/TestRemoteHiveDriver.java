@@ -7,8 +7,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
 import org.testng.annotations.*;
 
-import com.inmobi.grill.conf.GrillConfConstants;
-import com.inmobi.grill.driver.api.QueryContext;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 
 import static org.testng.Assert.assertNotNull;

@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
 
 public class EmbeddedThriftConnection implements ThriftConnection {
 
