@@ -59,11 +59,6 @@ import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
-  static {
-    Configuration.addDefaultResource("grill-default.xml");
-    Configuration.addDefaultResource("grill-site.xml");
-  }
-
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
