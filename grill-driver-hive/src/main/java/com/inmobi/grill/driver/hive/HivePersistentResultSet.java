@@ -5,7 +5,10 @@ import java.util.List;
 
 import com.inmobi.grill.api.QueryHandle;
 import org.apache.hadoop.fs.Path;
-import org.apache.hive.service.cli.*;
+import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.OperationHandle;
+import org.apache.hive.service.cli.TableSchema;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 
 import com.inmobi.grill.api.GrillResultSetMetadata;
@@ -15,12 +18,12 @@ import com.inmobi.grill.exception.GrillException;
 public class HivePersistentResultSet implements PersistentResultSet {
 	private final Path path;
 	private final OperationHandle opHandle;
-	private final CLIServiceClient client;
+	private final ThriftCLIServiceClient client;
   private final QueryHandle queryHandle;
 	private TableSchema metadata;
 	
   public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
-  		CLIServiceClient client, QueryHandle queryHandle) {
+  		ThriftCLIServiceClient client, QueryHandle queryHandle) {
   	this.path = resultSetPath;
   	this.client = client;
   	this.opHandle = opHandle;

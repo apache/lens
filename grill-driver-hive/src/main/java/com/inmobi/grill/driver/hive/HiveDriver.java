@@ -16,13 +16,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hive.service.cli.*;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.OperationHandle;
+import org.apache.hive.service.cli.OperationState;
+import org.apache.hive.service.cli.OperationStatus;
+import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TProtocolException;
-import org.apache.thrift.transport.TTransportException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -155,11 +156,7 @@ public class HiveDriver implements GrillDriver {
       }
       return createResultSet(ctx);
     } catch (HiveSQLException hiveErr) {
-      checkIfConnectionShouldReset(hiveErr);
       throw new GrillException("Error executing query" , hiveErr);
-    } catch (GrillException grillError) {
-      checkIfConnectionShouldReset(grillError);
-      throw grillError;
     }
 
   }
@@ -179,11 +176,7 @@ public class HiveDriver implements GrillDriver {
           ctx.conf.getValByRegex(".*"));
       LOG.info("The hive operation handle: " + ctx.hiveHandle);
     } catch (HiveSQLException e) {
-      checkIfConnectionShouldReset(e);
       throw new GrillException("Error executing async query", e);
-    } catch (GrillException grillError) {
-      checkIfConnectionShouldReset(grillError);
-      throw grillError;
     }
     return ctx.queryHandle;
   }
@@ -214,20 +207,13 @@ public class HiveDriver implements GrillDriver {
     LOG.debug("GetStatus: " + handle);
     QueryContext ctx = getContext(handle);
     ByteArrayInputStream in = null;
-    OperationStatus opStatus;
     try {
       // Get operation status from hive server
       LOG.debug("GetStatus hiveHandle: " + ctx.hiveHandle);
-      opStatus = getClient().getOperationStatus(ctx.hiveHandle);
+      OperationStatus opStatus = getClient().getOperationStatus(ctx.hiveHandle);
       LOG.debug("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
-    } catch (HiveSQLException e) {
-      checkIfConnectionShouldReset(e);
-      throw new GrillException("Error getting query status", e);
-    }
+      QueryStatus.Status stat = null;
 
-    QueryStatus.Status stat = null;
-
-    try {
       switch (opStatus.getState()) {
       case CANCELED:
         stat = Status.CANCELED;
@@ -261,7 +247,7 @@ public class HiveDriver implements GrillDriver {
       if (StringUtils.isNotBlank(jsonTaskStatus)) {
         ObjectMapper mapper = new ObjectMapper();
         in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-        List<TaskStatus> taskStatuses =
+        List<TaskStatus> taskStatuses = 
             mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
         int completedTasks = 0;
         StringBuilder message = new StringBuilder();
@@ -278,7 +264,7 @@ public class HiveDriver implements GrillDriver {
         LOG.warn("Empty task statuses");
       }
       return new QueryStatus(progress, stat, msg, false, ctx.hiveHandle.getHandleIdentifier().toString());
-    } catch (IOException e) {
+    } catch (Exception e) {
       throw new GrillException("Error getting query status", e);
     } finally {
       if (in != null) {
@@ -310,7 +296,6 @@ public class HiveDriver implements GrillDriver {
         try {
           getClient().closeOperation(opHandle);
         } catch (HiveSQLException e) {
-          checkIfConnectionShouldReset(e);
           throw new GrillException("Unable to close query", e);
         }
       }
@@ -326,7 +311,6 @@ public class HiveDriver implements GrillDriver {
       getClient().cancelOperation(ctx.hiveHandle);
       return true;
     } catch (HiveSQLException e) {
-      checkIfConnectionShouldReset(e);
       throw new GrillException();
     }
   }
@@ -346,12 +330,11 @@ public class HiveDriver implements GrillDriver {
     try {
       getClient().closeSession(getSession());
     } catch (Exception e) {
-      checkIfConnectionShouldReset(e);
       LOG.error("Unable to close connection", e);
     }
   }
 
-  protected CLIServiceClient getClient() throws GrillException {
+  protected ThriftCLIServiceClient getClient() throws GrillException {
     connectionLock.lock();
     try {
       if (connection == null) {
@@ -414,12 +397,17 @@ public class HiveDriver implements GrillDriver {
     return ctx;
   }
 
-  private SessionHandle getSession() throws HiveSQLException, GrillException {
+  private SessionHandle getSession() throws GrillException {
     sessionLock.lock();
     try {
       if (session == null) {
-        session = getClient().openSession(conf.get(GRILL_USER_NAME_KEY), conf.get(GRILL_PASSWORD_KEY));
-        LOG.info("New session: " + session.getSessionId());
+        try {
+          String userName = conf.getUser();
+          session = getClient().openSession(userName, "");
+          LOG.info("New session: " + session.getSessionId());
+        } catch (Exception e) {
+          throw new GrillException(e);
+        }
       }
     } finally {
       sessionLock.unlock();
@@ -433,18 +421,5 @@ public class HiveDriver implements GrillDriver {
       throw new GrillException("Query not found " + ctx); 
     }
     return ctx;
-  }
-
-  private void checkIfConnectionShouldReset(Exception hiveErr) {
-    Throwable th = hiveErr.getCause();
-    if (th instanceof TException) {
-      connectionLock.lock();
-      try {
-        connection.setNeedsReconnect();
-        LOG.info("Thrift connection will be reset because of: " + hiveErr.getMessage());
-      } finally {
-        connectionLock.unlock();
-      }
-    }
   }
 }
