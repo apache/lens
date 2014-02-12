@@ -425,23 +425,29 @@ public class HiveDriver implements GrillDriver {
   }
 
   protected CLIServiceClient getClient() throws GrillException {
-  	ExpirableConnection connection = thLocalConnection.get();
-    if (connection == null || connection.isExpired()) {
-      Class<? extends ThriftConnection> clazz = conf.getClass(
-          GRILL_HIVE_CONNECTION_CLASS, 
-          EmbeddedThriftConnection.class, 
-          ThriftConnection.class);
-      try {
-        ThriftConnection tconn = clazz.newInstance();
-        connection = new ExpirableConnection(tconn, conf);
-        thriftConnExpiryQueue.offer(connection);
-        thLocalConnection.set(connection);
-        LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
-      } catch (Exception e) {
-        throw new GrillException(e);
-      }
-    }
-    return connection.getConnection().getClient(conf);
+	  	ExpirableConnection connection = thLocalConnection.get();
+	    if (connection == null || connection.isExpired()) {
+	      Class<? extends ThriftConnection> clazz = conf.getClass(
+	          GRILL_HIVE_CONNECTION_CLASS, 
+	          EmbeddedThriftConnection.class, 
+	          ThriftConnection.class);
+	      try {
+	        ThriftConnection tconn = clazz.newInstance();
+	        connection = new ExpirableConnection(tconn, conf);
+	        thriftConnExpiryQueue.offer(connection);
+	        thLocalConnection.set(connection);
+	        LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
+	      } catch (Exception e) {
+	        throw new GrillException(e);
+	      }
+	    } else {
+	    	synchronized(thriftConnExpiryQueue) {
+	    		thriftConnExpiryQueue.remove(connection);
+	    		thriftConnExpiryQueue.offer(connection);
+	    	}
+	    }
+	    
+	  return connection.getConnection().getClient(conf);
   }
 
   private GrillResultSet createResultSet(QueryContext context)
