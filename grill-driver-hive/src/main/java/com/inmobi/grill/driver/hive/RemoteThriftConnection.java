@@ -58,5 +58,8 @@ public class RemoteThriftConnection implements ThriftConnection {
 	@Override
 	public void close() {
 		connected = false;
+		if (hs2Client instanceof RetryingThriftCLIServiceClient.CLIServiceClientWrapper) {
+			((RetryingThriftCLIServiceClient.CLIServiceClientWrapper) hs2Client).closeTransport();
+		}
 	}
 }
