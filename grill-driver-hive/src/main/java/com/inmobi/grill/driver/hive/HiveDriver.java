@@ -48,9 +48,6 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
   public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
   public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
-  public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
-  // Default expiry is 10 minutes
-  public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
   public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
   public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
   // Default expiry is 10 minutes
