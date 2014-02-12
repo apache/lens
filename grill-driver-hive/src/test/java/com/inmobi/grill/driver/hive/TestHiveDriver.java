@@ -38,8 +38,6 @@ public class TestHiveDriver {
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
-    conf.set(HiveDriver.GRILL_PASSWORD_KEY, "password");
-    conf.set(HiveDriver.GRILL_USER_NAME_KEY, "user");
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
 
     SessionState.start(conf);
