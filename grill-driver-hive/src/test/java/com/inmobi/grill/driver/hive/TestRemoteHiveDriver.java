@@ -2,6 +2,7 @@ package com.inmobi.grill.driver.hive;
 
 
 import static org.junit.Assert.assertNotNull;
+import static org.testng.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,10 +25,7 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.driver.hive.HiveDriver.ExpirableConnection;
 import com.inmobi.grill.exception.GrillException;
-
-import static org.testng.Assert.*;
 
 public class TestRemoteHiveDriver extends TestHiveDriver {
 	public static final Log LOG = LogFactory.getLog(TestRemoteHiveDriver.class);
