@@ -48,6 +48,7 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
   // Default expiry is 10 minutes
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
+  public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
 
   private HiveConf conf;
   private SessionHandle session;
@@ -472,8 +473,12 @@ public class HiveDriver implements GrillDriver {
             Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ctx.queryHandle.toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
-      builder.append('"').append(ctx.resultSetPath).append('"')
-      .append(' ').append(ctx.userQuery).append(' ');
+      builder.append('"').append(ctx.resultSetPath).append("\" ");
+      String outputDirFormat = conf.get(GRILL_OUTPUT_DIRECTORY_FORMAT);
+      if (outputDirFormat != null) {
+        builder.append(outputDirFormat);
+      }
+      builder.append(' ').append(ctx.userQuery).append(' ');
       ctx.hiveQuery =  builder.toString();
     } else {
       ctx.hiveQuery = ctx.userQuery;
