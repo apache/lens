@@ -99,12 +99,22 @@ public class TestHiveDriver {
     GrillResultSet resultSet = null;
     // Execute a select query
     System.err.println("Execute select");
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     String select = "SELECT ID FROM test_execute";
     resultSet = driver.execute(select, conf);
-    validateExecuteSync(resultSet);
+    validateInMemoryResult(resultSet);
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    resultSet = driver.execute(select, conf);
+    validatePersistentResult(resultSet, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
+    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+        "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
+        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+        " 'field.delim'=','  ) STORED AS TEXTFILE ");
+    resultSet = driver.execute("SELECT ID, null, ID from test_execute", conf);
+    validatePersistentResult(resultSet, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
   }
 
-  private void validateExecuteSync(GrillResultSet resultSet)
+  private void validateInMemoryResult(GrillResultSet resultSet)
       throws GrillException, IOException {
     assertNotNull(resultSet);
     assertTrue(resultSet instanceof HiveInMemoryResultSet);
@@ -149,7 +159,7 @@ public class TestHiveDriver {
     String expectFail = "SELECT * FROM FOO_BAR";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
     handle = driver.executeAsync(expectFail, conf);
-    validateExecuteAsync(handle, Status.FAILED);
+    validateExecuteAsync(handle, Status.FAILED, true, null, false);
     driver.closeQuery(handle);
 
 
@@ -157,15 +167,40 @@ public class TestHiveDriver {
     String select = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
     handle = driver.executeAsync(select, conf);
-    validateExecuteAsync(handle, Status.SUCCESSFUL);
+    validateExecuteAsync(handle, Status.SUCCESSFUL, false, null, false);
     driver.closeQuery(handle);
+
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    handle = driver.executeAsync(select, conf);
+    validateExecuteAsync(handle, Status.SUCCESSFUL, true,
+        HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
+    driver.closeQuery(handle);
+
+    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+        "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
+        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+        " 'field.delim'=','  ) STORED AS TEXTFILE ");
+    select = "SELECT ID, null, ID FROM test_execute_sync";
+    handle = driver.executeAsync(select, conf);
+    validateExecuteAsync(handle, Status.SUCCESSFUL, true,
+        HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
+    driver.closeQuery(handle);
+
   }
 
-  private void validateExecuteAsync(QueryHandle handle, Status finalState) throws Exception {
+  private void validateExecuteAsync(QueryHandle handle, Status finalState,
+      boolean isPersistent, String outputDir, boolean formatNulls) throws Exception {
     waitForAsyncQuery(handle, driver);
     QueryStatus status = driver.getStatus(handle);
     assertEquals(status.getStatus(), finalState, "Expected query to finish with"
         + finalState);
+    if (finalState.equals(Status.SUCCESSFUL)) {
+      if (!isPersistent) {
+        validateInMemoryResult(driver.fetchResultSet(handle));
+      } else{
+        validatePersistentResult(driver.fetchResultSet(handle), outputDir, formatNulls);
+      }
+    }
   }
 
   @Test
@@ -186,20 +221,15 @@ public class TestHiveDriver {
     }
   }
 
-  @Test
-  public void testPersistentResultSet() throws Exception {
-    createTestTable("test_persistent_result_set");
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
-    GrillResultSet resultSet = driver.execute("SELECT ID FROM test_persistent_result_set", conf);
+  private void validatePersistentResult(GrillResultSet resultSet,
+      String outptuDir, boolean formatNulls) throws Exception {
     assertTrue(resultSet instanceof HivePersistentResultSet);
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();
     QueryHandle handle = persistentResultSet.getQueryHandle();
 
     Path actualPath = new Path(path);
-    assertEquals(actualPath, new Path(TEST_OUTPUT_DIR, handle.toString()));
+    assertEquals(actualPath, new Path(outptuDir, handle.toString()));
     assertTrue(FileSystem.get(conf).exists(actualPath));
 
     // read in data from output
@@ -213,6 +243,7 @@ public class TestHiveDriver {
         String line = "";
 
         while ((line = br.readLine()) != null) {
+          System.out.println("Actual:" +line);
           actualRows.add(line.trim());
         }
       } finally {
@@ -230,7 +261,12 @@ public class TestHiveDriver {
       br = new BufferedReader(new FileReader(new File(TEST_DATA_FILE)));
       String line = "";
       while ((line = br.readLine()) != null) {
-        expectedRows.add(line.trim());
+        String row = line.trim();
+        if (formatNulls) {
+          row += ",-NA-,";
+          row += line.trim();
+        }
+        expectedRows.add(row);
       }
     } finally {
       if (br != null) {
@@ -239,6 +275,29 @@ public class TestHiveDriver {
     }
     assertEquals(actualRows, expectedRows);
     fs.delete(actualPath, true);
+  }
+
+  @Test
+  public void testPersistentResultSet() throws Exception {
+    createTestTable("test_persistent_result_set");
+    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
+    GrillResultSet resultSet = driver.execute("SELECT ID FROM test_persistent_result_set", conf);
+    validatePersistentResult(resultSet, TEST_OUTPUT_DIR, false);
+
+    QueryHandle handle = driver.executeAsync("SELECT ID FROM test_persistent_result_set", conf);
+    validateExecuteAsync(handle, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
+
+    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+        "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
+        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+        " 'field.delim'=','  ) STORED AS TEXTFILE ");
+    resultSet = driver.execute("SELECT ID, null, ID FROM test_persistent_result_set", conf);
+    validatePersistentResult(resultSet, TEST_OUTPUT_DIR, true);
+
+    handle = driver.executeAsync("SELECT ID, null, ID FROM test_persistent_result_set", conf);
+    validateExecuteAsync(handle, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, true);
   }
 
   private void waitForAsyncQuery(QueryHandle handle, HiveDriver driver) throws Exception {
@@ -269,11 +328,11 @@ public class TestHiveDriver {
 
     // test execute prepare
     GrillResultSet result = driver.executePrepare(plan.getHandle(), conf);
-    validateExecuteSync(result);
+    validateInMemoryResult(result);
 
     // test execute prepare async
     driver.executePrepareAsync(plan.getHandle(), conf);
-    validateExecuteAsync(plan.getHandle(), Status.SUCCESSFUL);
+    validateExecuteAsync(plan.getHandle(), Status.SUCCESSFUL, false, null, false);
 
     driver.closeQuery(plan.getHandle());
 

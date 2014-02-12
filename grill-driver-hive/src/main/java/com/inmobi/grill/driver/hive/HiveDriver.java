@@ -46,6 +46,7 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
   public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
   public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
+  public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
 
   private HiveConf conf;
   private SessionHandle session;
@@ -387,8 +388,12 @@ public class HiveDriver implements GrillDriver {
             Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ctx.queryHandle.toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
-      builder.append('"').append(ctx.resultSetPath).append('"')
-      .append(' ').append(ctx.userQuery).append(' ');
+      builder.append('"').append(ctx.resultSetPath).append("\" ");
+      String outputDirFormat = conf.get(GRILL_OUTPUT_DIRECTORY_FORMAT);
+      if (outputDirFormat != null) {
+        builder.append(outputDirFormat);
+      }
+      builder.append(' ').append(ctx.userQuery).append(' ');
       ctx.hiveQuery =  builder.toString();
     } else {
       ctx.hiveQuery = ctx.userQuery;
