@@ -64,7 +64,7 @@ public class TestHiveDriver {
   }
 
 
-  private void createTestTable(String tableName) throws Exception {
+  protected void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)" +
         " TBLPROPERTIES ('" + GrillConfUtil.STORAGE_COST + "'='500')";
