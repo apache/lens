@@ -264,7 +264,8 @@ public class HiveDriver implements GrillDriver {
       ctx.conf.set("mapred.job.name", ctx.queryHandle.toString());
       ctx.hiveHandle = getClient().executeStatementAsync(getSession(), ctx.hiveQuery, 
           ctx.conf.getValByRegex(".*"));
-      LOG.info("The hive operation handle: " + ctx.hiveHandle);
+      LOG.info("QueryHandle: " + ctx.queryHandle.getHandleId() + " HiveHandle:" +
+          ctx.hiveHandle);
     } catch (HiveSQLException e) {
       throw new GrillException("Error executing async query", e);
     }

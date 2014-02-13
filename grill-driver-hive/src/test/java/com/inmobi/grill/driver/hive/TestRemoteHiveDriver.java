@@ -19,6 +19,7 @@ import org.apache.hive.service.server.HiveServer2;
 import org.apache.thrift.TException;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -68,14 +69,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       e.printStackTrace();
     }
     Hive.get(conf).dropDatabase(TestRemoteHiveDriver.class.getSimpleName(), true, true, true);
-    
-    // After this open connections should be closed.
-    long waitTime = 11000;
-   	Thread.sleep(waitTime);
-    if (conf.getLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 
-    		HiveDriver.DEFAULT_EXPIRY_DELAY) <= waitTime) {
-    	assertEquals(HiveDriver.openConnections(), 0, "Expected all connections to be closed");
-    }
   }
 
   @BeforeMethod
@@ -115,7 +108,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   	final int QUERIES = 5;
   	int launchedQueries = 0;
   	final int THREADS = 5;
-  	final long POLL_DELAY = 100;
+  	final long POLL_DELAY = 500;
   	List<Thread> thrs = new ArrayList<Thread>();
   	final AtomicInteger errCount = new AtomicInteger();
   	
