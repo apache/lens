@@ -208,58 +208,83 @@ public class HiveDriver implements GrillDriver {
       OperationStatus opStatus = getClient().getOperationStatus(ctx.hiveHandle);
       LOG.debug("GetStatus on hiveHandle: " + ctx.hiveHandle + " returned state:" + opStatus.getState());
       QueryStatus.Status stat = null;
+      String statusMessage;
 
       switch (opStatus.getState()) {
       case CANCELED:
         stat = Status.CANCELED;
+        statusMessage = "Query has been cancelled!";
         break;
       case CLOSED:
         stat = Status.CLOSED;
+        statusMessage = "Query has been closed!";
         break;
       case ERROR:
         stat = Status.FAILED;
+        statusMessage = "Query failed with errorCode:" +
+        opStatus.getOperationException().getErrorCode() +
+        " with errorMessage: " + opStatus.getOperationException().getMessage();
         break;
       case FINISHED:
+        statusMessage = "Query is successful!"; 
         stat = Status.SUCCESSFUL;
         break;
       case INITIALIZED:
+        statusMessage = "Query is initiazed in HiveServer!";
         stat = Status.RUNNING;
         break;
       case RUNNING:
+        statusMessage = "Query is running in HiveServer!";
         stat = Status.RUNNING;
         break;
       case PENDING:
+        statusMessage = "Query is pending in HiveServer";
         stat = Status.PENDING;
         break;
       case UNKNOWN:
+        statusMessage = "Query is not known to HiveServer yet";
         stat = Status.UNKNOWN;
+        break;
+      default :
+        statusMessage = "";
         break;
       }
 
       float progress = 0f;
       String jsonTaskStatus = opStatus.getTaskStatus();
-      String msg = "";
+      String errorMsg = null;
       if (StringUtils.isNotBlank(jsonTaskStatus)) {
         ObjectMapper mapper = new ObjectMapper();
         in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
         List<TaskStatus> taskStatuses = 
             mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
         int completedTasks = 0;
-        StringBuilder message = new StringBuilder();
+        StringBuilder errorMessage = new StringBuilder();
         for (TaskStatus taskStat : taskStatuses) {
           String state = taskStat.getTaskState();
           if ("FINISHED_STATE".equalsIgnoreCase(state)) {
             completedTasks++;
           }
-          message.append(taskStat.getExternalHandle()).append(":").append(state).append(" ");
+          if ("FAILED_STATE".equalsIgnoreCase(state)) {
+            appendTaskIds(errorMessage, taskStat);
+            errorMessage.append(" has failed! ");
+          }
         }
         progress = taskStatuses.size() == 0 ? 0 : (float)completedTasks/taskStatuses.size();
-        msg = message.toString();
+        errorMsg = errorMessage.toString();
       } else {
         LOG.warn("Empty task statuses");
       }
-      return new QueryStatus(progress, stat, msg, false, ctx.hiveHandle.getHandleIdentifier().toString());
+      QueryStatus status = new QueryStatus(progress, stat, statusMessage, false, ctx.hiveHandle.getHandleIdentifier().toString());
+      status.setProgressMessage(jsonTaskStatus);
+      if (StringUtils.isNotBlank(errorMsg)) {
+        status.setErrorMessage(errorMsg);
+      } else if (stat.equals(Status.FAILED)) {
+        status.setErrorMessage(statusMessage);
+      }
+      return status;
     } catch (Exception e) {
+      LOG.error("Error getting query status", e);
       throw new GrillException("Error getting query status", e);
     } finally {
       if (in != null) {
@@ -270,6 +295,14 @@ public class HiveDriver implements GrillDriver {
         }
       }
     }
+  }
+
+  private void appendTaskIds(StringBuilder message, TaskStatus taskStat) {
+    message.append(taskStat.getTaskId()).append("(");
+    message.append(taskStat.getType()).append("):");
+    if (taskStat.getExternalHandle() != null) {
+      message.append(taskStat.getExternalHandle()).append(":");
+    }    
   }
 
   @Override

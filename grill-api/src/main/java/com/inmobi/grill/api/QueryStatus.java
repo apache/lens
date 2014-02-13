@@ -16,6 +16,8 @@ public class QueryStatus {
 	private final Status status;
 	private boolean hasResultSet = false;
   private final String driverOpHandle;
+  private String errorMessage;
+  private String progressMessage;
 
   public QueryStatus(double progress, Status status, String statusMessage,
       boolean hasResultSet) {
@@ -81,5 +83,33 @@ public class QueryStatus {
   			.append(progress).append(':')
   			.append(hasResultSet).append(':').
   			append(statusMessage).toString();
+  }
+
+  /**
+   * @return the errorMessage
+   */
+  public String getErrorMessage() {
+    return errorMessage;
+  }
+
+  /**
+   * @param errorMessage the errorMessage to set
+   */
+  public void setErrorMessage(String errorMessage) {
+    this.errorMessage = errorMessage;
+  }
+
+  /**
+   * @return the progressMessage
+   */
+  public String getProgressMessage() {
+    return progressMessage;
+  }
+
+  /**
+   * @param progressMessage the progressMessage to set
+   */
+  public void setProgressMessage(String progressMessage) {
+    this.progressMessage = progressMessage;
   }
 }
