@@ -6,6 +6,7 @@ import java.io.*;
 import java.util.*;
 
 import com.inmobi.grill.api.*;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
@@ -39,7 +40,7 @@ public class TestHiveDriver {
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-
+    conf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
     SessionState.start(conf);
     Hive client = Hive.get(conf);
     Database database = new Database();
@@ -64,7 +65,7 @@ public class TestHiveDriver {
   }
 
 
-  private void createTestTable(String tableName) throws Exception {
+  protected void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)" +
         " TBLPROPERTIES ('" + GrillConfUtil.STORAGE_COST + "'='500')";

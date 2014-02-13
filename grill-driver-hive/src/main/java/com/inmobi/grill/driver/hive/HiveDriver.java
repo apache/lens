@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.DelayQueue;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -16,9 +20,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hive.service.cli.*;
+import org.apache.hive.service.cli.CLIServiceClient;
+import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.OperationHandle;
+import org.apache.hive.service.cli.OperationState;
+import org.apache.hive.service.cli.OperationStatus;
+import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.TStringValue;
-import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -41,13 +49,101 @@ public class HiveDriver implements GrillDriver {
   public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
   public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
   public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
+  public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
+  // Default expiry is 10 minutes
+  public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
 
   private HiveConf conf;
   private SessionHandle session;
   private Map<QueryHandle, QueryContext> handleToContext;
-  private ThriftConnection connection;
-  private final Lock connectionLock;
   private final Lock sessionLock;
+  
+  private static ThreadLocal<ExpirableConnection> thLocalConnection = 
+			new ThreadLocal<ExpirableConnection>();
+  private static DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
+  		new DelayQueue<ExpirableConnection>();
+  private static Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
+  private static final AtomicInteger connectionCounter = new AtomicInteger();
+  
+  static {
+  	connectionExpiryThread.setDaemon(true);
+  	connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
+  	connectionExpiryThread.start();
+  }
+  
+  static class ConnectionExpiryRunnable implements Runnable {
+		@Override
+		public void run() {
+			try {
+				while (true) {
+					ExpirableConnection expired = thriftConnExpiryQueue.take();
+					expired.setExpired();
+					ThriftConnection thConn = expired.getConnection();
+					
+					if (thConn != null) {
+						try {
+							LOG.info("Closed connection:" + expired.getConnId());
+							thConn.close();
+						} catch (IOException e) {
+							LOG.error("Error closing connection", e);
+						}
+					}
+				}
+			} catch (InterruptedException intr) {
+				LOG.warn("Connection expiry thread interrupted", intr);
+				return;
+			}
+		}
+  }
+  
+  static class ExpirableConnection implements Delayed {
+  	long accessTime;
+  	private final ThriftConnection conn;
+  	private final long timeout;
+  	private volatile boolean expired;
+  	private final int connId;
+  	
+  	public ExpirableConnection(ThriftConnection conn, HiveConf conf) {
+  		this.conn = conn;
+  		this.timeout = 
+    			conf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+  		connId = connectionCounter.incrementAndGet();
+  		accessTime = System.currentTimeMillis();
+  	}
+  	
+  	private ThriftConnection getConnection() {
+  		accessTime = System.currentTimeMillis();
+  		return conn;
+  	}
+  	
+  	private boolean isExpired() {
+  		return expired;
+  	}
+  	
+  	private void setExpired() {
+  		expired = true;
+  	}
+  	
+  	private int getConnId() {
+  		return connId;
+  	}
+  	
+		@Override
+		public int compareTo(Delayed other) {
+			return (int)(this.getDelay(TimeUnit.MILLISECONDS)
+          - other.getDelay(TimeUnit.MILLISECONDS));
+		}
+
+		@Override
+		public long getDelay(TimeUnit unit) {
+			long age = System.currentTimeMillis() - accessTime;
+			return unit.convert(timeout - age, TimeUnit.MILLISECONDS) ;
+		}
+  }
+  
+  static int openConnections() {
+  	return thriftConnExpiryQueue.size();
+  }
 
   /**
    * Internal class to hold query related info
@@ -85,7 +181,6 @@ public class HiveDriver implements GrillDriver {
   }
 
   public HiveDriver() throws GrillException {
-    this.connectionLock = new ReentrantLock();
     this.sessionLock = new ReentrantLock();
     this.handleToContext = new HashMap<QueryHandle, QueryContext>();
   }
@@ -169,7 +264,8 @@ public class HiveDriver implements GrillDriver {
       ctx.conf.set("mapred.job.name", ctx.queryHandle.toString());
       ctx.hiveHandle = getClient().executeStatementAsync(getSession(), ctx.hiveQuery, 
           ctx.conf.getValByRegex(".*"));
-      LOG.info("The hive operation handle: " + ctx.hiveHandle);
+      LOG.info("QueryHandle: " + ctx.queryHandle.getHandleId() + " HiveHandle:" +
+          ctx.hiveHandle);
     } catch (HiveSQLException e) {
       throw new GrillException("Error executing async query", e);
     }
@@ -363,24 +459,29 @@ public class HiveDriver implements GrillDriver {
   }
 
   protected CLIServiceClient getClient() throws GrillException {
-    connectionLock.lock();
-    try {
-      if (connection == null) {
-        Class<? extends ThriftConnection> clazz = conf.getClass(
-            GRILL_HIVE_CONNECTION_CLASS, 
-            EmbeddedThriftConnection.class, 
-            ThriftConnection.class);
-        try {
-          this.connection = clazz.newInstance();
-          LOG.info("New thrift connection " + clazz.getName());
-        } catch (Exception e) {
-          throw new GrillException(e);
-        }
-      }
-    } finally {
-      connectionLock.unlock();
-    }
-    return connection.getClient(conf);
+	  	ExpirableConnection connection = thLocalConnection.get();
+	    if (connection == null || connection.isExpired()) {
+	      Class<? extends ThriftConnection> clazz = conf.getClass(
+	          GRILL_HIVE_CONNECTION_CLASS, 
+	          EmbeddedThriftConnection.class, 
+	          ThriftConnection.class);
+	      try {
+	        ThriftConnection tconn = clazz.newInstance();
+	        connection = new ExpirableConnection(tconn, conf);
+	        thriftConnExpiryQueue.offer(connection);
+	        thLocalConnection.set(connection);
+	        LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
+	      } catch (Exception e) {
+	        throw new GrillException(e);
+	      }
+	    } else {
+	    	synchronized(thriftConnExpiryQueue) {
+	    		thriftConnExpiryQueue.remove(connection);
+	    		thriftConnExpiryQueue.offer(connection);
+	    	}
+	    }
+	    
+	  return connection.getConnection().getClient(conf);
   }
 
   private GrillResultSet createResultSet(QueryContext context)
