@@ -1,11 +1,6 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
 <suite name="grill-driver-hive" verbose="1" >
-    <test name="TestHiveDriver" >
-        <classes>
-            <class name="com.inmobi.grill.driver.hive.TestHiveDriver" />
-        </classes>
-    </test>
 
     <test name="TestRemoteHiveDriver">
         <classes>
