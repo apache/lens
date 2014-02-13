@@ -194,11 +194,17 @@ public class TestHiveDriver {
     assertEquals(status.getStatus(), finalState, "Expected query to finish with"
         + finalState);
     if (finalState.equals(Status.SUCCESSFUL)) {
+      System.out.println("Progress:" + status.getProgressMessage());
+      assertNotNull(status.getProgressMessage());
       if (!isPersistent) {
         validateInMemoryResult(driver.fetchResultSet(handle));
       } else{
         validatePersistentResult(driver.fetchResultSet(handle), outputDir, formatNulls);
       }
+    } else if (finalState.equals(Status.FAILED)) {
+      System.out.println("Error:" + status.getErrorMessage());
+      System.out.println("Error:" + status.getStatusMessage());
+      assertNotNull(status.getErrorMessage());
     }
   }
 
@@ -313,6 +319,7 @@ public class TestHiveDriver {
       if (terminationStates.contains(status.getStatus())) {
         break;
       }
+      System.out.println("Progress:" + status.getProgressMessage());
       Thread.sleep(1000);
     }
   }
