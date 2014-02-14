@@ -7,7 +7,6 @@ import java.util.*;
 
 import com.inmobi.grill.api.*;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -25,10 +24,10 @@ import com.inmobi.grill.api.GrillConfUtil;
 
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
-  public static final String TEST_OUTPUT_DIR = "test-output";
-  protected static HiveConf conf;
+  public final String TEST_OUTPUT_DIR = this.getClass().getSimpleName() + "/test-output";
+  protected HiveConf conf;
   protected HiveDriver driver;
-  public static final String DATA_BASE = "test_hive_driver";
+  public final String DATA_BASE = this.getClass().getSimpleName();
 
   @BeforeTest
   public void beforeTest() throws Exception {
@@ -107,7 +106,7 @@ public class TestHiveDriver {
     validatePersistentResult(resultSet, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
     conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
-        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+            " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
     resultSet = driver.execute("SELECT ID, null, ID from test_execute", conf);
     validatePersistentResult(resultSet, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
@@ -177,7 +176,7 @@ public class TestHiveDriver {
 
     conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
-        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+            " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
     select = "SELECT ID, null, ID FROM test_execute_sync";
     handle = driver.executeAsync(select, conf);
@@ -293,16 +292,19 @@ public class TestHiveDriver {
 
     QueryHandle handle = driver.executeAsync("SELECT ID FROM test_persistent_result_set", conf);
     validateExecuteAsync(handle, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
+    driver.closeQuery(handle);
 
     conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
-        " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
+            " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
     resultSet = driver.execute("SELECT ID, null, ID FROM test_persistent_result_set", conf);
     validatePersistentResult(resultSet, TEST_OUTPUT_DIR, true);
+    driver.closeQuery(handle);
 
     handle = driver.executeAsync("SELECT ID, null, ID FROM test_persistent_result_set", conf);
     validateExecuteAsync(handle, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, true);
+    driver.closeQuery(handle);
   }
 
   private void waitForAsyncQuery(QueryHandle handle, HiveDriver driver) throws Exception {
@@ -313,7 +315,7 @@ public class TestHiveDriver {
     while (true) {
       QueryStatus status = driver.getStatus(handle);
       System.out.println("#W Waiting for query " + handle + " status: " + status.getStatus() + " driverOpHandle:"
-        + status.getDriverOpHandle());
+          + status.getDriverOpHandle());
       assertNotNull(status);
       assertNotNull(status.getDriverOpHandle());
       if (terminationStates.contains(status.getStatus())) {
