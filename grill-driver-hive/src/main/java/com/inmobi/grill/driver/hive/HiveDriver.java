@@ -58,8 +58,8 @@ public class HiveDriver implements GrillDriver {
   private Map<QueryHandle, QueryContext> handleToContext;
   private final Lock sessionLock;
 
-  private final Map<Long, ExpirableConnection> threadConnections = 
-      new HashMap<Long, ExpirableConnection>();
+  private ThreadLocal<ExpirableConnection> thLocalConnection = 
+      new ThreadLocal<ExpirableConnection>();
   private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
       new DelayQueue<ExpirableConnection>();
   private final Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
@@ -456,7 +456,7 @@ public class HiveDriver implements GrillDriver {
   }
 
   protected CLIServiceClient getClient() throws GrillException {
-    ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
+    ExpirableConnection connection = thLocalConnection.get();
     if (connection == null || connection.isExpired()) {
       Class<? extends ThriftConnection> clazz = conf.getClass(
           GRILL_HIVE_CONNECTION_CLASS, 
@@ -466,7 +466,7 @@ public class HiveDriver implements GrillDriver {
         ThriftConnection tconn = clazz.newInstance();
         connection = new ExpirableConnection(tconn, conf);
         thriftConnExpiryQueue.offer(connection);
-        threadConnections.put(Thread.currentThread().getId(), connection);
+        thLocalConnection.set(connection);
         LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
       } catch (Exception e) {
         throw new GrillException(e);
