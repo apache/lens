@@ -22,9 +22,6 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.15</version>
                 <configuration>
-                    <suiteXmlFiles>
-                        <suiteXmlFile>${project.basedir}/testng.xml</suiteXmlFile>
-                    </suiteXmlFiles>
                     <systemPropertyVariables>
                         <hadoop.bin.path>${pom.basedir}/testutils/hadoop</hadoop.bin.path>
                     </systemPropertyVariables>

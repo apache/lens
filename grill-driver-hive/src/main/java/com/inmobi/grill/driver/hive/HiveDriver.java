@@ -57,92 +57,86 @@ public class HiveDriver implements GrillDriver {
   private SessionHandle session;
   private Map<QueryHandle, QueryContext> handleToContext;
   private final Lock sessionLock;
-  
-  private static ThreadLocal<ExpirableConnection> thLocalConnection = 
-			new ThreadLocal<ExpirableConnection>();
-  private static DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
-  		new DelayQueue<ExpirableConnection>();
-  private static Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
-  private static final AtomicInteger connectionCounter = new AtomicInteger();
-  
-  static {
-  	connectionExpiryThread.setDaemon(true);
-  	connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
-  	connectionExpiryThread.start();
-  }
-  
-  static class ConnectionExpiryRunnable implements Runnable {
-		@Override
-		public void run() {
-			try {
-				while (true) {
-					ExpirableConnection expired = thriftConnExpiryQueue.take();
-					expired.setExpired();
-					ThriftConnection thConn = expired.getConnection();
-					
-					if (thConn != null) {
-						try {
-							LOG.info("Closed connection:" + expired.getConnId());
-							thConn.close();
-						} catch (IOException e) {
-							LOG.error("Error closing connection", e);
-						}
-					}
-				}
-			} catch (InterruptedException intr) {
-				LOG.warn("Connection expiry thread interrupted", intr);
-				return;
-			}
-		}
-  }
-  
-  static class ExpirableConnection implements Delayed {
-  	long accessTime;
-  	private final ThriftConnection conn;
-  	private final long timeout;
-  	private volatile boolean expired;
-  	private final int connId;
-  	
-  	public ExpirableConnection(ThriftConnection conn, HiveConf conf) {
-  		this.conn = conn;
-  		this.timeout = 
-    			conf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
-  		connId = connectionCounter.incrementAndGet();
-  		accessTime = System.currentTimeMillis();
-  	}
-  	
-  	private ThriftConnection getConnection() {
-  		accessTime = System.currentTimeMillis();
-  		return conn;
-  	}
-  	
-  	private boolean isExpired() {
-  		return expired;
-  	}
-  	
-  	private void setExpired() {
-  		expired = true;
-  	}
-  	
-  	private int getConnId() {
-  		return connId;
-  	}
-  	
-		@Override
-		public int compareTo(Delayed other) {
-			return (int)(this.getDelay(TimeUnit.MILLISECONDS)
-          - other.getDelay(TimeUnit.MILLISECONDS));
-		}
 
-		@Override
-		public long getDelay(TimeUnit unit) {
-			long age = System.currentTimeMillis() - accessTime;
-			return unit.convert(timeout - age, TimeUnit.MILLISECONDS) ;
-		}
+  private final Map<Long, ExpirableConnection> threadConnections = 
+      new HashMap<Long, ExpirableConnection>();
+  private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
+      new DelayQueue<ExpirableConnection>();
+  private final Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
+
+  class ConnectionExpiryRunnable implements Runnable {
+    @Override
+    public void run() {
+      try {
+        while (true) {
+          ExpirableConnection expired = thriftConnExpiryQueue.take();
+          expired.setExpired();
+          ThriftConnection thConn = expired.getConnection();
+
+          if (thConn != null) {
+            try {
+              LOG.info("Closed connection:" + expired.getConnId());
+              thConn.close();
+            } catch (IOException e) {
+              LOG.error("Error closing connection", e);
+            }
+          }
+        }
+      } catch (InterruptedException intr) {
+        LOG.warn("Connection expiry thread interrupted", intr);
+        return;
+      }
+    }
   }
-  
-  static int openConnections() {
-  	return thriftConnExpiryQueue.size();
+
+  private static final AtomicInteger connectionCounter = new AtomicInteger();
+  static class ExpirableConnection implements Delayed {
+    long accessTime;
+    private final ThriftConnection conn;
+    private final long timeout;
+    private volatile boolean expired;
+    private final int connId;
+
+    public ExpirableConnection(ThriftConnection conn, HiveConf conf) {
+      this.conn = conn;
+      this.timeout = 
+          conf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+      connId = connectionCounter.incrementAndGet();
+      accessTime = System.currentTimeMillis();
+    }
+
+    private ThriftConnection getConnection() {
+      accessTime = System.currentTimeMillis();
+      return conn;
+    }
+
+    private boolean isExpired() {
+      return expired;
+    }
+
+    private void setExpired() {
+      expired = true;
+    }
+
+    private int getConnId() {
+      return connId;
+    }
+
+    @Override
+    public int compareTo(Delayed other) {
+      return (int)(this.getDelay(TimeUnit.MILLISECONDS)
+          - other.getDelay(TimeUnit.MILLISECONDS));
+    }
+
+    @Override
+    public long getDelay(TimeUnit unit) {
+      long age = System.currentTimeMillis() - accessTime;
+      return unit.convert(timeout - age, TimeUnit.MILLISECONDS) ;
+    }
+  }
+
+  int openConnections() {
+    return thriftConnExpiryQueue.size();
   }
 
   /**
@@ -183,6 +177,9 @@ public class HiveDriver implements GrillDriver {
   public HiveDriver() throws GrillException {
     this.sessionLock = new ReentrantLock();
     this.handleToContext = new HashMap<QueryHandle, QueryContext>();
+    connectionExpiryThread.setDaemon(true);
+    connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
+    connectionExpiryThread.start();
   }
 
   @Override
@@ -318,8 +315,8 @@ public class HiveDriver implements GrillDriver {
       case ERROR:
         stat = Status.FAILED;
         statusMessage = "Query failed with errorCode:" +
-        opStatus.getOperationException().getErrorCode() +
-        " with errorMessage: " + opStatus.getOperationException().getMessage();
+            opStatus.getOperationException().getErrorCode() +
+            " with errorMessage: " + opStatus.getOperationException().getMessage();
         break;
       case FINISHED:
         statusMessage = "Query is successful!"; 
@@ -447,7 +444,7 @@ public class HiveDriver implements GrillDriver {
       try {
         closeQuery(query);
       } catch (GrillException exc) {
-        LOG.warn("Could not close query" +  query, exc);
+        LOG.warn("Could not close query: " +  query, exc);
       }
     }
 
@@ -459,29 +456,29 @@ public class HiveDriver implements GrillDriver {
   }
 
   protected CLIServiceClient getClient() throws GrillException {
-	  	ExpirableConnection connection = thLocalConnection.get();
-	    if (connection == null || connection.isExpired()) {
-	      Class<? extends ThriftConnection> clazz = conf.getClass(
-	          GRILL_HIVE_CONNECTION_CLASS, 
-	          EmbeddedThriftConnection.class, 
-	          ThriftConnection.class);
-	      try {
-	        ThriftConnection tconn = clazz.newInstance();
-	        connection = new ExpirableConnection(tconn, conf);
-	        thriftConnExpiryQueue.offer(connection);
-	        thLocalConnection.set(connection);
-	        LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
-	      } catch (Exception e) {
-	        throw new GrillException(e);
-	      }
-	    } else {
-	    	synchronized(thriftConnExpiryQueue) {
-	    		thriftConnExpiryQueue.remove(connection);
-	    		thriftConnExpiryQueue.offer(connection);
-	    	}
-	    }
-	    
-	  return connection.getConnection().getClient(conf);
+    ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
+    if (connection == null || connection.isExpired()) {
+      Class<? extends ThriftConnection> clazz = conf.getClass(
+          GRILL_HIVE_CONNECTION_CLASS, 
+          EmbeddedThriftConnection.class, 
+          ThriftConnection.class);
+      try {
+        ThriftConnection tconn = clazz.newInstance();
+        connection = new ExpirableConnection(tconn, conf);
+        thriftConnExpiryQueue.offer(connection);
+        threadConnections.put(Thread.currentThread().getId(), connection);
+        LOG.info("New thrift connection " + clazz.getName() + " ID=" + connection.getConnId());
+      } catch (Exception e) {
+        throw new GrillException(e);
+      }
+    } else {
+      synchronized(thriftConnExpiryQueue) {
+        thriftConnExpiryQueue.remove(connection);
+        thriftConnExpiryQueue.offer(connection);
+      }
+    }
+
+    return connection.getConnection().getClient(conf);
   }
 
   private GrillResultSet createResultSet(QueryContext context)
