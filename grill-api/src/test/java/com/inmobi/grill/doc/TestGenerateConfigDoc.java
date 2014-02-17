@@ -1,0 +1,155 @@
+package com.inmobi.grill.doc;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.InetAddress;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.testng.annotations.Test;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+
+public class TestGenerateConfigDoc {
+  public static final String CONF_FILE = "../grill-server/src/main/resources/grill-default.xml";
+  public static final String APT_FILE = "../src/site/apt/grill-config.apt";
+  
+  @Test
+  public void generateConfigDoc() throws Exception {
+    ConfigPrinter printer = new ConfigPrinter(CONF_FILE, APT_FILE);
+    printer.generateDoc();
+  }
+  
+  class ConfigEntry {
+    private String name;
+    private String value;
+    private String description;
+    
+    public void validate() throws IllegalArgumentException {
+      if (name == null || name.isEmpty()) {
+        throw new IllegalArgumentException("Name cannot be empty");
+      }
+      
+      if (value == null || value.isEmpty()) {
+        throw new IllegalArgumentException("Value cannot be empty for property: " + name);
+      }
+      
+//      if (description == null || description.isEmpty()) {
+//        throw new IllegalArgumentException("Description cannot be empty for property: " + name);
+//      }
+    }
+  }
+  
+  class ConfigPrinter extends DefaultHandler {
+    private final String configFile;
+    private final String outputAPTFile;
+    private StringBuilder buf;
+    private ConfigEntry entry;
+    private List<ConfigEntry> entries;
+    boolean inProperty;
+    
+    public ConfigPrinter(String confFile, String outputAPTFile) {
+      configFile = confFile;
+      this.outputAPTFile = outputAPTFile;
+      entries = new ArrayList<ConfigEntry>();
+    }
+    
+    public void readConfigFile() throws IOException, ParserConfigurationException, SAXException {
+      SAXParserFactory factory = SAXParserFactory.newInstance();
+      SAXParser parser = factory.newSAXParser();
+      parser.parse(new File(configFile), this);
+    }
+    
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes)
+        throws SAXException {
+      if ("property".equalsIgnoreCase(qName)) {
+        inProperty = true;
+        entry = new ConfigEntry();
+      }
+      buf = new StringBuilder();
+    }
+    
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+      if (inProperty && "name".equalsIgnoreCase(qName)) {
+        entry.name = buf.toString();
+      } else if (inProperty && "value".equalsIgnoreCase(qName)) {
+        entry.value = buf.toString();
+      } else if (inProperty && "description".equalsIgnoreCase(qName)) {
+        entry.description = buf.toString();
+      } else if (inProperty && "property".equalsIgnoreCase(qName)) {
+        entry.validate();
+        entries.add(entry);
+        inProperty = false;
+      }
+    }
+    
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+      buf.append(ch, start, length);
+    }
+    
+    public void printAPT() throws IOException {
+      PrintWriter apt = null;
+      try {
+        apt = new PrintWriter(new FileWriter(outputAPTFile));
+        
+        // Print header
+        apt.println("    -------");
+        apt.println("    Grill Configuration");
+        apt.println("    -------");
+        // Author
+        apt.println("    " + System.getProperty("user.name") + "@" + 
+        InetAddress.getLocalHost().getHostName());
+        apt.println("    -------");
+        // Date
+        apt.println("    " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z").format(new Date()));
+        apt.println("    -------");
+        apt.println("===");
+        
+        // Print config entries
+        int i = 1;
+        apt.println("*--*--*---*--*");
+        apt.println("|No.|Property Name|Default Value| Description|");
+        for (ConfigEntry entry : entries) {
+          apt.println("*--*--*---*--*");
+          apt.print("|");
+          apt.print(i++);
+          apt.print("|");
+          apt.print(entry.name);
+          apt.print("|");
+          apt.print(entry.value);
+          apt.print("|");
+          apt.print(entry.description == null ? "" : entry.description);
+          apt.println("|");
+        }
+        apt.println("*--*---*--*");
+        apt.println("Grill default configuration options and default values");
+        apt.flush();
+      } finally {
+        if (apt != null) {
+          apt.close();
+        }
+      }
+    }
+    
+    public void generateDoc() throws IOException, ParserConfigurationException, SAXException {
+      readConfigFile();
+      printAPT();
+    }
+    
+  }
+  
+}
+
