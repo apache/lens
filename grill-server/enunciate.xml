@@ -1,12 +1,20 @@
 <?xml version="1.0"?>
 <enunciate label="novaglobalapi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
-
+    <services>
+    <rest>
+			<custom-resource-parameter-annotation qualifiedName="org.glassfish.jersey.media.multipart.FormDataParam" />
+		</rest>
+    </services>
     <api-classes>
         <include pattern="com.inmobi.grill.server.query.*"/>
+        <include pattern="com.inmobi.grill.server.metastore.*"/>
+        <include pattern="com.inmobi.grill.server.quota.*"/>
+        <include pattern="com.inmobi.grill.server.scheduler.*"/>
+        <!--include pattern="com.inmobi.grill.server.session.*"/-->
     </api-classes>
     <modules>
-        <docs docsDir="restapi" title="REST API"/>
+        <docs docsDir="grill-server" title="Grill Server REST API"/>
         <csharp disabled="true"/>
         <c disabled="true"/>
         <obj-c disabled="true"></obj-c>
