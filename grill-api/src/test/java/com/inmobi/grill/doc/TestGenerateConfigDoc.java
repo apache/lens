@@ -44,9 +44,9 @@ public class TestGenerateConfigDoc {
         throw new IllegalArgumentException("Value cannot be empty for property: " + name);
       }
       
-//      if (description == null || description.isEmpty()) {
-//        throw new IllegalArgumentException("Description cannot be empty for property: " + name);
-//      }
+      if (description == null || description.isEmpty()) {
+        throw new IllegalArgumentException("Description cannot be empty for property: " + name);
+      }
     }
   }
   
