@@ -123,7 +123,7 @@ public class TestGenerateConfigDoc {
         // Print config entries
         int i = 1;
         apt.println("*--+--+---+--+");
-        apt.println("|No.|Property Name|Default Value| Description|");
+        apt.println("|<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|");
         for (ConfigEntry entry : entries) {
           apt.println("*--+--+---+--+");
           apt.print("|");
