@@ -20,6 +20,8 @@
   <version>1.0-SNAPSHOT</version>
   <name>grill</name>
   <packaging>pom</packaging>
+	<description>Unified Analytics Platform For InMobi</description>
+  <url>https://github.corop.inmobi.com/platform/grill</url>
 
   <parent>
     <artifactId>inmobi-master-pom</artifactId>
@@ -433,6 +435,28 @@
     </dependencies>
 
  </dependencyManagement>
+
+ <organization>
+    <name>InMobi Tech Platform</name>
+		<url>https://github.corp.inmobi.com/platform/grill</url>
+  </organization>
+
+  <distributionManagement>
+    <site>
+      <id>Grill</id>
+			<url>https://raw.github.corp.inmobi.com/platform/grill-site/grill-server</url>
+    </site>
+  </distributionManagement>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://jira.corp.inmobi.com/browse/GRILL</url>
+  </issueManagement>
+
+  <ciManagement>
+    <system>Jenkins</system>
+    <url>http://build.scm.corp.inmobi.com/job/Platform_Dev_grill/</url>
+  </ciManagement>
 
   <modules>
     <module>grill-api</module>
