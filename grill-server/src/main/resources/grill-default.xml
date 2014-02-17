@@ -5,35 +5,42 @@
 <property>
   <name>grill.drivers</name>
   <value>com.inmobi.grill.driver.hive.HiveDriver</value>
+  <description>Drivers enabled for this grill server instance</description>
 </property>
 
 <property>
   <name>grill.servicenames</name>
   <value>session,query,metastore,scheduler,quota</value>
+  <description>These services would be started in the specified order when grill-server starts up</description>
 </property>
 
 <property>
   <name>grill.session.service.impl</name>
   <value>com.inmobi.grill.server.session.HiveSessionService</value>
+  <description>Implementation class for session service</description>
 </property>
 
 <property>
   <name>grill.query.service.impl</name>
   <value>com.inmobi.grill.server.query.QueryExecutionServiceImpl</value>
+  <description>Implementation class for query execution service</description>
 </property>
 
 <property>
   <name>grill.quota.service.impl</name>
   <value>com.inmobi.grill.server.quota.QuotaServiceImpl</value>
+  <description>Implementation class for quota service</description>
 </property>
 
 <property>
   <name>grill.metastore.service.impl</name>
   <value>com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl</value>
+  <description>Implementation class for metastore service</description>
 </property>
 
 <property>
   <name>grill.scheduler.service.impl</name>
   <value>com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl</value>
+  <description>Implementation class for query scheduler service</description>
 </property>
 </configuration>

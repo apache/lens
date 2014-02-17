@@ -20,7 +20,7 @@
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-client-api</artifactId>
+      <artifactId>grill-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
