@@ -49,8 +49,6 @@ public class JdbcResultSet extends InMemoryResultSet {
   
   @Override
   public GrillResultSetMetadata getMetadata() throws GrillException {
-    ResultSetMetaData meta = getRsMetadata();
-    
     return new GrillResultSetMetadata() {
       @Override
       public List<ResultColumn> getColumns() {

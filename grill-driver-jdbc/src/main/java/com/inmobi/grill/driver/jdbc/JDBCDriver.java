@@ -22,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,6 +33,8 @@ public class JDBCDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(JDBCDriver.class);
   public static final AtomicInteger thid = new AtomicInteger();
 
+  private ConnectionProvider connectionProvider;
+  private boolean configured = false;
   private ExecutorService asyncQueryPool;
   private ConcurrentHashMap<QueryHandle, JdbcQueryContext> queryContextMap;
   private ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter> rewriterCache;
@@ -210,9 +211,11 @@ public class JDBCDriver implements GrillDriver {
   public void configure(Configuration conf) throws GrillException {
     this.conf = conf;
     init(conf);
+    configured = true;
+    LOG.info("JDBC Driver configured");
   }
 
-  protected void init(Configuration conf) {
+  protected void init(Configuration conf) throws GrillException {
     queryContextMap = new ConcurrentHashMap<QueryHandle, JdbcQueryContext>();
     rewriterCache = new ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter>();
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -223,11 +226,28 @@ public class JDBCDriver implements GrillDriver {
         return th;
       }
     });
+    
+    Class<? extends ConnectionProvider> cpClass = conf.getClass(JDBC_CONNECTION_PROVIDER, 
+        DataSourceConnectionProvider.class, ConnectionProvider.class);
+    try {
+      connectionProvider = cpClass.newInstance();
+    } catch (Exception e) {
+      LOG.error("Error initializing connection provider: " + e.getMessage(), e);
+      throw new GrillException(e);
+    }
+  }
+  
+  protected void checkConfigured() throws IllegalStateException {
+    if (!configured) 
+      throw new IllegalStateException("JDBC Driver is not configured!");
   }
 
   protected synchronized Connection getConnection(Configuration conf) throws GrillException {
-    //TODO
-    return null;
+    try {
+      return connectionProvider.getConnection(conf);
+    } catch (SQLException e) {
+      throw new GrillException(e);
+    }
   }
 
   protected synchronized QueryRewriter getQueryRewriter(Configuration conf) throws GrillException {
@@ -275,6 +295,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
+    checkConfigured();
     //TODO
     return null;
   }
@@ -287,6 +308,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void prepare(PreparedQueryContext pContext) throws GrillException {
+    checkConfigured();
     // Only create a prepared statement and then close it
     String rewrittenQuery = rewriteQuery(pContext.getUserQuery(), pContext.getConf());
     Connection conn = null;
@@ -324,6 +346,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws GrillException {
+    checkConfigured();
     //TODO
     return null;
   }
@@ -337,6 +360,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void closePreparedQuery(QueryPrepareHandle handle) throws GrillException {
+    checkConfigured();
     // Do nothing
   }
 
@@ -349,6 +373,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public GrillResultSet execute(QueryContext context) throws GrillException {
+    checkConfigured();
     String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
     JdbcQueryContext queryContext = new JdbcQueryContext();
     queryContext.setPrepared(false);
@@ -368,6 +393,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void executeAsync(QueryContext context) throws GrillException {
+    checkConfigured();
     String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
     JdbcQueryContext jdbcCtx = new JdbcQueryContext();
     jdbcCtx.setGrillContext(context);
@@ -395,6 +421,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, 
       QueryCompletionListener listener) throws GrillException {
+    checkConfigured();
     getQueryContext(handle).setCompletionListener(listener);
   }
 
@@ -406,6 +433,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
+    checkConfigured();
     JdbcQueryContext ctx = getQueryContext(handle);
 
     if (ctx.getResultFuture().isDone()) {
@@ -432,6 +460,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public GrillResultSet fetchResultSet(QueryContext context) throws GrillException {
+    checkConfigured();
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
     QueryResult result = blockingGetResult(ctx);
     return result.createResultSet();
@@ -469,6 +498,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void closeResultSet(QueryHandle handle) throws GrillException {
+    checkConfigured();
     blockingGetResult(getQueryContext(handle)).close();
   }
 
@@ -480,6 +510,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public boolean cancelQuery(QueryHandle handle) throws GrillException {
+    checkConfigured();
     LOG.info("Cancelling query: " + handle);
     return getQueryContext(handle).getResultFuture().cancel(true);
   }
@@ -493,6 +524,7 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void closeQuery(QueryHandle handle) throws GrillException {
+    checkConfigured();
     try {
       LOG.info("Closing query " + handle.getHandleId());
       JdbcQueryContext ctx = getQueryContext(handle);
@@ -510,10 +542,9 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void close() throws GrillException {
-    List<QueryHandle> toClose = new ArrayList<QueryHandle>(queryContextMap.keySet());
-    
+    checkConfigured();
     try {
-      for (QueryHandle query : toClose) {
+      for (QueryHandle query : new ArrayList<QueryHandle>(queryContextMap.keySet())) {
         try {
           closeQuery(query);
         } catch (GrillException e) {
