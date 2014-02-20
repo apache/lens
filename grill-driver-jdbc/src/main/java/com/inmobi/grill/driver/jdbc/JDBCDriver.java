@@ -34,7 +34,7 @@ public class JDBCDriver implements GrillDriver {
   public static final AtomicInteger thid = new AtomicInteger();
 
   private ConnectionProvider connectionProvider;
-  private boolean configured = false;
+  boolean configured = false;
   private ExecutorService asyncQueryPool;
   private ConcurrentHashMap<QueryHandle, JdbcQueryContext> queryContextMap;
   private ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter> rewriterCache;
@@ -108,6 +108,7 @@ public class JDBCDriver implements GrillDriver {
     private Throwable error;
     private Connection conn;
     private Statement stmt;
+    private boolean isClosed;
 
     public ResultSet getResultSet() throws GrillException {
       if (error != null) {
@@ -117,6 +118,10 @@ public class JDBCDriver implements GrillDriver {
     }
     
     protected void close() {
+      if (isClosed) {
+        return;
+      }
+      
       try {
         if (stmt != null) {
           try {
@@ -134,10 +139,11 @@ public class JDBCDriver implements GrillDriver {
           }
         }
       }
+      isClosed = true;
     }
     
     protected GrillResultSet createResultSet() {
-      return new JdbcResultSet(resultSet);
+      return new JDBCResultSet(this, resultSet);
     }
   }
 
@@ -187,7 +193,7 @@ public class JDBCDriver implements GrillDriver {
     }
   }
   
-  protected class DummyQueryRewriter implements QueryRewriter {
+  public static class DummyQueryRewriter implements QueryRewriter {
     @Override
     public String rewrite(Configuration conf, String query) throws GrillException {
       return query;
@@ -309,6 +315,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void prepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
+    LOG.info("Prepare: " + pContext.getPrepareHandle());
     // Only create a prepared statement and then close it
     String rewrittenQuery = rewriteQuery(pContext.getUserQuery(), pContext.getConf());
     Connection conn = null;

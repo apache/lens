@@ -13,20 +13,24 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.api.query.ResultColumnType;
 import com.inmobi.grill.api.query.ResultRow;
+import com.inmobi.grill.driver.jdbc.JDBCDriver.QueryResult;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.InMemoryResultSet;
 
-public class JdbcResultSet extends InMemoryResultSet {
-  public static final Logger LOG = Logger.getLogger(JdbcResultSet.class);
+public class JDBCResultSet extends InMemoryResultSet {
+  public static final Logger LOG = Logger.getLogger(JDBCResultSet.class);
 
   ResultSetMetaData resultMeta;
   private final ResultSet resultSet;
+  private final QueryResult queryResult;
+  private boolean isClosed;
   
-  public JdbcResultSet(ResultSet rs) {
-    if (rs == null) {
+  public JDBCResultSet(QueryResult result,  ResultSet resultSet) {
+    if (result == null || resultSet == null) {
       throw new NullPointerException("Resultset should not be null");
     }
-    resultSet = rs;
+    this.queryResult = result;
+    this.resultSet = resultSet;;
   }
   
   
@@ -142,6 +146,10 @@ public class JdbcResultSet extends InMemoryResultSet {
   
   @Override
   public ResultRow next() throws GrillException {
+    if (isClosed) {
+      throw new GrillException("Result set is already closed");
+    }
+    
     ResultSetMetaData meta = getRsMetadata();
     try {
       List<Object> row = new ArrayList<Object>(meta.getColumnCount());
@@ -157,9 +165,19 @@ public class JdbcResultSet extends InMemoryResultSet {
   @Override
   public boolean hasNext() throws GrillException {
     try {
-      return resultSet.next();
+      boolean hasNext = resultSet.next();
+      if (!hasNext) {
+        queryResult.close();
+        isClosed = true;
+      }
+      return hasNext;
     } catch (SQLException e) {
       throw new GrillException(e);
     }
+  }
+
+
+  public boolean isClosed() {
+    return isClosed;
   }
 }
