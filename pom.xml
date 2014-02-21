@@ -432,6 +432,19 @@
                 <scope>compile</scope>
             </dependency>
 
+						<dependency>
+							<groupId>c3p0</groupId>
+							<artifactId>c3p0</artifactId>
+							<version>0.9.1.2</version>
+						</dependency>
+
+						<dependency>
+							<groupId>org.hsqldb</groupId>
+							<artifactId>hsqldb</artifactId>
+							<version>2.0.0</version>
+							<scope>test</scope>
+						</dependency>
+
     </dependencies>
 
  </dependencyManagement>
@@ -465,6 +478,7 @@
     <module>grill-driver-cube</module>
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
+    <module>grill-driver-jdbc</module>
     <module>grill-yoda</module>
     <module>grill-server</module>
     <module>grill-dist</module>
