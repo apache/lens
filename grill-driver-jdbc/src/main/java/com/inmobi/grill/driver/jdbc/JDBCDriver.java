@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import lombok.Getter;
+import lombok.Setter;
 import static com.inmobi.grill.driver.jdbc.JDBCDriverConfConstants.*;
 /**
  * This driver is responsible for running queries against databases which can be queried using the JDBC API.
@@ -44,50 +46,23 @@ public class JDBCDriver implements GrillDriver {
    * Data related to a query submitted to JDBCDriver
    */
   protected class JdbcQueryContext {
-    private QueryContext grillContext;
-    private Future<QueryResult> resultFuture;
-    private String rewrittenQuery;
-    private boolean isPrepared = false;
-    private QueryCompletionListener listener;
+    @Getter private final QueryContext grillContext;
+    @Getter @Setter private Future<QueryResult> resultFuture;
+    @Getter @Setter private String rewrittenQuery;
+    @Getter @Setter private boolean isPrepared;
+    @Getter @Setter private boolean isCancelled;
+    @Getter private boolean isClosed;
+    @Getter @Setter private QueryCompletionListener listener;
+    @Getter @Setter private QueryResult queryResult;
     
-    public boolean isPrepared() {
-      return isPrepared;
+    public JdbcQueryContext(QueryContext context) {
+      this.grillContext = context;
     }
 
-    public void setPrepared(boolean isPrepared) {
-      this.isPrepared = isPrepared;
-    }
-
-    public QueryContext getGrillContext() {
-      return grillContext;
-    }
-
-    public void setGrillContext(QueryContext grillContext) {
-      this.grillContext = grillContext;
-    }
-
-    public Future<QueryResult> getResultFuture() {
-      return resultFuture;
-    }
-
-    public void setResultFuture(Future<QueryResult> resultFuture) {
-      this.resultFuture = resultFuture;
-    }
-
-    public String getRewrittenQuery() {
-      return rewrittenQuery;
-    }
-
-    public void setRewrittenQuery(String rewrittenQuery) {
-      this.rewrittenQuery = rewrittenQuery;
-    }
-    
-    public void setCompletionListener(QueryCompletionListener listener) {
-      this.listener = listener;
-    }
-    
     public void notifyError(Throwable th) {
-      if (listener != null) {
+      // If query is closed in another thread while the callable is still waiting for result
+      // set, then it throws an SQLException in the callable. We don't want to send that exception
+      if (listener != null && !isClosed) {
         listener.onError(grillContext.getQueryHandle(), th.getMessage());
       }
     }
@@ -96,6 +71,13 @@ public class JDBCDriver implements GrillDriver {
       if (listener != null) {
         listener.onCompletion(grillContext.getQueryHandle());
       }
+    }
+
+    public void closeResult() {
+      if (queryResult != null) {
+        queryResult.close();
+      }
+      isClosed = true;
     }
   }
 
@@ -109,15 +91,9 @@ public class JDBCDriver implements GrillDriver {
     private Connection conn;
     private Statement stmt;
     private boolean isClosed;
+    private JDBCResultSet grillResultSet;
 
-    public ResultSet getResultSet() throws GrillException {
-      if (error != null) {
-        throw new GrillException(error);
-      }
-      return resultSet;
-    }
-    
-    protected void close() {
+    protected synchronized void close() {
       if (isClosed) {
         return;
       }
@@ -142,8 +118,14 @@ public class JDBCDriver implements GrillDriver {
       isClosed = true;
     }
     
-    protected GrillResultSet createResultSet() {
-      return new JDBCResultSet(this, resultSet);
+    protected synchronized GrillResultSet getGrillResultSet() throws GrillException {
+      if (error != null) {
+        throw new GrillException("Query failed!", error);
+      }
+      if (grillResultSet == null) {
+        grillResultSet = new JDBCResultSet(this, resultSet);
+      }
+      return grillResultSet;
     }
   }
 
@@ -161,6 +143,8 @@ public class JDBCDriver implements GrillDriver {
       Statement stmt = null;
       Connection conn = null;
       QueryResult result = new QueryResult();
+      queryContext.setQueryResult(result);
+      
       try {
         conn = getConnection(queryContext.getGrillContext().getConf());
         result.conn = conn;
@@ -176,9 +160,16 @@ public class JDBCDriver implements GrillDriver {
           result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
           queryContext.notifyComplete();
         } catch (SQLException sqlEx) {
-          LOG.error("Error executing SQL query: " + sqlEx.getMessage(), sqlEx);
-          result.error = sqlEx;
-          queryContext.notifyError(sqlEx);
+          if (queryContext.isClosed()) {
+            LOG.info("Ignored exception on already closed query: "
+                + queryContext.getGrillContext().getQueryHandle() +" - " + sqlEx);
+          } else {
+            LOG.error(
+                "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
+                    + " reason: " + sqlEx.getMessage(), sqlEx);
+            result.error = sqlEx;
+            queryContext.notifyError(sqlEx);
+          }
         }
       }
       return result;
@@ -382,13 +373,12 @@ public class JDBCDriver implements GrillDriver {
   public GrillResultSet execute(QueryContext context) throws GrillException {
     checkConfigured();
     String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
-    JdbcQueryContext queryContext = new JdbcQueryContext();
+    JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
-    queryContext.setGrillContext(context);
     queryContext.setRewrittenQuery(rewrittenQuery);
     QueryResult result = new QueryCallable(queryContext).call();
     LOG.info("Execute " + context.getQueryHandle());
-    return result.createResultSet();
+    return result.getGrillResultSet();
   }
 
   /**
@@ -402,8 +392,7 @@ public class JDBCDriver implements GrillDriver {
   public void executeAsync(QueryContext context) throws GrillException {
     checkConfigured();
     String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
-    JdbcQueryContext jdbcCtx = new JdbcQueryContext();
-    jdbcCtx.setGrillContext(context);
+    JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx));
@@ -415,6 +404,7 @@ public class JDBCDriver implements GrillDriver {
           + e.getMessage(), e);
     }
     queryContextMap.put(context.getQueryHandle(), jdbcCtx);
+    LOG.info("ExecuteAsync: " + context.getQueryHandle());
   }
 
   /**
@@ -429,7 +419,7 @@ public class JDBCDriver implements GrillDriver {
   public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, 
       QueryCompletionListener listener) throws GrillException {
     checkConfigured();
-    getQueryContext(handle).setCompletionListener(listener);
+    getQueryContext(handle).setListener(listener);
   }
 
   /**
@@ -442,22 +432,23 @@ public class JDBCDriver implements GrillDriver {
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
     checkConfigured();
     JdbcQueryContext ctx = getQueryContext(handle);
-
+    QueryStatus status;
+    
     if (ctx.getResultFuture().isDone()) {
-      try {
-        QueryResult result = ctx.getResultFuture().get();
-        if (result.error != null) {
-          return new QueryStatus(1.0, Status.FAILED, result.error.getMessage(), false);
-        }
-        return new QueryStatus(1.0, Status.SUCCESSFUL, handle.getHandleId() + " successful", true);
-      } catch (InterruptedException e) {
-        throw new GrillException("Unexpected interrupt", e);
-      } catch (ExecutionException e) {
-        return new QueryStatus(1.0, Status.FAILED, e.getMessage(), false);
+      // Since future is already done, this call should not block
+      if (ctx.isCancelled()) {
+        status = 
+            new QueryStatus(1.0, Status.CANCELED, handle.getHandleId() + " cancelled", true);
+      } else if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
+        status = new QueryStatus(1.0, Status.FAILED, ctx.getQueryResult().error.getMessage(), false);
+      } else {
+        status = 
+            new QueryStatus(1.0, Status.SUCCESSFUL, handle.getHandleId() + " successful", true);
       }
     } else {
-      return new QueryStatus(0.0, Status.RUNNING, handle.getHandleId() + " is running", false);
+      status = new QueryStatus(0.0, Status.RUNNING, handle.getHandleId() + " is running", false);
     }
+    return status;
   }
 
   /**
@@ -469,28 +460,22 @@ public class JDBCDriver implements GrillDriver {
   public GrillResultSet fetchResultSet(QueryContext context) throws GrillException {
     checkConfigured();
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
-    QueryResult result = blockingGetResult(ctx);
-    return result.createResultSet();
-  }
-
-  protected QueryResult blockingGetResult(JdbcQueryContext context) throws GrillException {
-    Future<QueryResult> future = context.getResultFuture();
-    QueryHandle queryHandle = context.getGrillContext().getQueryHandle();
-    Configuration conf = context.getGrillContext().getConf();
-    long timeout = conf.getInt(JDBC_RESULTSET_WAIT_TIMEOUT, Integer.MAX_VALUE);
-    try {
-      
-      return future.get(timeout, TimeUnit.SECONDS);
+    if (ctx.isCancelled()) {
+      throw new GrillException("Result set not available for cancelled query "
+          + context.getQueryHandle());
+    }
     
+    Future<QueryResult> future = ctx.getResultFuture();
+    QueryHandle queryHandle = context.getQueryHandle();
+    
+    try {
+      return future.get().getGrillResultSet();
     } catch (InterruptedException e) {
       throw new GrillException("Interrupted while getting resultset for query "
           + queryHandle.getHandleId(), e);
     } catch (ExecutionException e) {
       throw new GrillException("Error while executing query "
           + queryHandle.getHandleId() + " in background", e);
-    } catch (TimeoutException e) {
-      throw new GrillException("Timed out while getting resultset of query "
-          + queryHandle.getHandleId(), e);
     } catch (CancellationException e) {
       throw new GrillException("Query was already cancelled "
           + queryHandle.getHandleId(), e);
@@ -506,7 +491,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void closeResultSet(QueryHandle handle) throws GrillException {
     checkConfigured();
-    blockingGetResult(getQueryContext(handle)).close();
+    getQueryContext(handle).closeResult();
   }
 
   /**
@@ -518,8 +503,12 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public boolean cancelQuery(QueryHandle handle) throws GrillException {
     checkConfigured();
-    LOG.info("Cancelling query: " + handle);
-    return getQueryContext(handle).getResultFuture().cancel(true);
+    JdbcQueryContext context = getQueryContext(handle);
+    boolean cancelResult = context.getResultFuture().cancel(true);
+    context.setCancelled(true);
+    context.closeResult();
+    LOG.info("Cancelled query: " + handle);
+    return cancelResult;
   }
 
   /**
@@ -533,13 +522,13 @@ public class JDBCDriver implements GrillDriver {
   public void closeQuery(QueryHandle handle) throws GrillException {
     checkConfigured();
     try {
-      LOG.info("Closing query " + handle.getHandleId());
       JdbcQueryContext ctx = getQueryContext(handle);
       ctx.getResultFuture().cancel(true);
-      blockingGetResult(ctx).close();
+      ctx.closeResult();
     } finally {
       queryContextMap.remove(handle);
     }
+    LOG.info("Closed query " + handle.getHandleId());
   }
 
   /**

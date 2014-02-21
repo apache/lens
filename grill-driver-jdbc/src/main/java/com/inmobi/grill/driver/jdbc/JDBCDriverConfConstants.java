@@ -3,7 +3,6 @@ package com.inmobi.grill.driver.jdbc;
 
 public interface JDBCDriverConfConstants {
   public static final String JDBC_CONNECTION_PROVIDER = "grill.driver.jdbc.connection.provider";
-  public static final String JDBC_RESULTSET_WAIT_TIMEOUT = "grill.driver.jdbc.resultset.timeout";
   public static final String JDBC_QUERY_REWRITER_CLASS = "grill.driver.jdbc.query.rewriter";
   public static final String JDBC_DRIVER_CLASS = "grill.driver.jdbc.driver.class";
   public static final String JDBC_DB_URI = "grill.driver.jdbc.db.uri";

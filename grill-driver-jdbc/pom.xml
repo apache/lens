@@ -11,7 +11,11 @@
   <artifactId>grill-driver-jdbc</artifactId>
   <packaging>jar</packaging>
 
-  <dependencies>    
+  <dependencies>   
+	  <dependency>
+       <groupId>org.projectlombok</groupId>
+       <artifactId>lombok</artifactId>
+    </dependency> 
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
