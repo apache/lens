@@ -438,15 +438,19 @@ public class JDBCDriver implements GrillDriver {
       // Since future is already done, this call should not block
       if (ctx.isCancelled()) {
         status = 
-            new QueryStatus(1.0, Status.CANCELED, handle.getHandleId() + " cancelled", true);
+            new QueryStatus(1.0, Status.CANCELED, handle.getHandleId() + " cancelled", true, 
+                "cancelled", null);
       } else if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
-        status = new QueryStatus(1.0, Status.FAILED, ctx.getQueryResult().error.getMessage(), false);
+        status = new QueryStatus(1.0, Status.FAILED, ctx.getQueryResult().error.getMessage(), false,
+            "failed", ctx.getQueryResult().error.getMessage());
       } else {
         status = 
-            new QueryStatus(1.0, Status.SUCCESSFUL, handle.getHandleId() + " successful", true);
+            new QueryStatus(1.0, Status.SUCCESSFUL, handle.getHandleId() + " successful", true,
+                "complete", null);
       }
     } else {
-      status = new QueryStatus(0.0, Status.RUNNING, handle.getHandleId() + " is running", false);
+      status = new QueryStatus(0.0, Status.RUNNING, handle.getHandleId() + " is running", false, 
+          "in progress", null);
     }
     return status;
   }
