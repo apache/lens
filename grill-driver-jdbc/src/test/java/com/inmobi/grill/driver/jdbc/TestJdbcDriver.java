@@ -133,7 +133,7 @@ public class TestJdbcDriver {
     insertData("prepare_test");
     
     String query = "SELECT * from prepare_test";
-    PreparedQueryContext pContext = new PreparedQueryContext(query, "SQ", baseConf);
+    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf);
     driver.prepare(pContext);
   }
   

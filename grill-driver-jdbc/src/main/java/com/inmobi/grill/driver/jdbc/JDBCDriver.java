@@ -306,7 +306,6 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void prepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
-    LOG.info("Prepare: " + pContext.getPrepareHandle());
     // Only create a prepared statement and then close it
     String rewrittenQuery = rewriteQuery(pContext.getUserQuery(), pContext.getConf());
     Connection conn = null;
@@ -333,6 +332,7 @@ public class JDBCDriver implements GrillDriver {
         }
       }
     }
+    LOG.info("Prepared: " + pContext.getPrepareHandle());
   }
 
   /**

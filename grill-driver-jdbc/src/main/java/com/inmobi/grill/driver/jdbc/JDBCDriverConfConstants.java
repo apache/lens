@@ -9,7 +9,12 @@ public interface JDBCDriverConfConstants {
   public static final String JDBC_USER = "grill.driver.jdbc.db.user";
   public static final String JDBC_PASSWORD = "grill.driver.jdbc.db.password";
   public static final String JDBC_POOL_MAX_SIZE = "grill.driver.jdbc.pool.max.size";
+  public static final int JDBC_POOL_MAX_SIZE_DEFAULT = 15;
+
   public static final String JDBC_POOL_IDLE_TIME = "grill.driver.jdbc.pool.idle.time";
+  public static final int JDBC_POOL_IDLE_TIME_DEFAULT = 600;
   public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = 
       "grill.driver.jdbc.pool.max.statements";
+  public static final int JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT = 20;
+  
 }

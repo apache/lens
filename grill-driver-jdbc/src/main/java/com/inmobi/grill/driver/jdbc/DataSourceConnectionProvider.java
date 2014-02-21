@@ -95,16 +95,20 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       cpds.setPassword(config.password);                                  
       
       // Maximum number of connections allowed in the pool
-      cpds.setMaxPoolSize(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, 15));
+      cpds.setMaxPoolSize(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, 
+          JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT));
       // Max idle time before a connection is closed
-      cpds.setMaxIdleTime(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 600));
+      cpds.setMaxIdleTime(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
+          JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
       // Max idel time before connection is closed if 
       // number of connections is > min pool size (default = 3)
       cpds.setMaxIdleTimeExcessConnections(
-          conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 600));
+          conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
+              JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
       // Maximum number of prepared statements to cache per connection
       cpds.setMaxStatementsPerConnection(
-          conf.getInt(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION, 20));
+          conf.getInt(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION, 
+              JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT));
       dataSourceMap.put(config, cpds);
       LOG.info("Created new datasource for config: " + config);
     }
