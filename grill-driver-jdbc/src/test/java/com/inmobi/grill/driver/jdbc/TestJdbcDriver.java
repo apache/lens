@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
 import org.testng.annotations.AfterTest;
@@ -142,9 +144,9 @@ public class TestJdbcDriver {
     String query = "SELECT * FROM execute_async_test";
     QueryContext context = new QueryContext(query, "SA", baseConf);
     System.out.println("@@@ Test_execute_async:" + context.getQueryHandle());
-    
+    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1); 
+
     QueryCompletionListener listener = new QueryCompletionListener() {
-      
       @Override
       public void onError(QueryHandle handle, String error) {
         fail("Query failed " + handle + " message" + error);
@@ -153,12 +155,14 @@ public class TestJdbcDriver {
       @Override
       public void onCompletion(QueryHandle handle) {
         System.out.println("@@@@ Query is complete " + handle);
+        listenerNotificationLatch.countDown();
       }
     };
     
     driver.executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
+    
     while(true) {
       QueryStatus status = driver.getStatus(handle);
       System.out.println("Query: " + handle + " Status: " + status);
@@ -168,6 +172,13 @@ public class TestJdbcDriver {
         break;
       }
       Thread.sleep(500);
+    }
+    // make sure query completion listener was called with onCompletion
+    try {
+      listenerNotificationLatch.await(1, TimeUnit.SECONDS);
+    } catch (Exception e) {
+      fail("query completion listener was not notified - " + e.getMessage());
+      e.printStackTrace();
     }
     
     GrillResultSet grs = driver.fetchResultSet(context);
@@ -236,8 +247,24 @@ public class TestJdbcDriver {
       e.printStackTrace();
     }
     
+    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1); 
+
+    QueryCompletionListener listener = new QueryCompletionListener() {
+      @Override
+      public void onError(QueryHandle handle, String error) {
+        listenerNotificationLatch.countDown();
+      }
+      
+      @Override
+      public void onCompletion(QueryHandle handle) {
+        fail("Was expecting this query to fail " + handle);
+      }
+    };
+    
     driver.executeAsync(ctx);
     QueryHandle handle = ctx.getQueryHandle();
+    driver.registerForCompletionNotification(handle, 0, listener);
+   
     while(true) {
       QueryStatus status = driver.getStatus(handle);
       System.out.println("Query: " + handle + " Status: " + status);
@@ -249,6 +276,7 @@ public class TestJdbcDriver {
       Thread.sleep(500);
     }
     
+    listenerNotificationLatch.await(1, TimeUnit.SECONDS);
     // fetch result should throw error
     try {
       driver.fetchResultSet(ctx);
