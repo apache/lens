@@ -194,7 +194,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           QueryStatus before = ctx.getStatus();
           ctx.setStatus(new QueryStatus(ctx.getStatus().getProgress(),
             QueryStatus.Status.LAUNCHED,
-            "launched on the driver", false));
+            "launched on the driver", false, null, null));
           launchedQueries.add(ctx);
           fireStatusChangeEvent(ctx, ctx.getStatus(), before);
         } catch (GrillException e) {
@@ -327,7 +327,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               finished.getCtx().getQueryHandle());
           allQueries.remove(finished.getCtx().getQueryHandle());
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, Status.CLOSED, "Query purged", false),
+            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
             finished.getCtx().getStatus());
           notifyAllListeners();
         } catch (GrillException e) {
@@ -560,7 +560,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
       ctx.setStatus(new QueryStatus(0.0,
           QueryStatus.Status.QUEUED,
-          "Query is queued", false));
+          "Query is queued", false, null, null));
       acceptedQueries.add(ctx);
       allQueries.put(ctx.getQueryHandle(), ctx);
       fireStatusChangeEvent(ctx, ctx.getStatus(), null);
@@ -584,7 +584,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acceptedQueries.add(ctx);
       ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
-        "Query is queued", false));
+        "Query is queued", false, null, null));
       allQueries.put(ctx.getQueryHandle(), ctx);
       fireStatusChangeEvent(ctx, ctx.getStatus(), null);
       LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
@@ -774,7 +774,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         acceptedQueries.remove(ctx);
       }
       QueryStatus before = ctx.getStatus();
-      ctx.setStatus(new QueryStatus(0.0, Status.CANCELED, "Cancelled", false));
+      ctx.setStatus(new QueryStatus(0.0, Status.CANCELED, "Cancelled", false, null, null));
       fireStatusChangeEvent(ctx, ctx.getStatus(), before);
       updateFinishedQuery(ctx);
       return true;
@@ -869,6 +869,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
+          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
           driver.execute(addQuery);
         }
       }
@@ -888,6 +889,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
+          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
           driver.execute(addQuery);
         }
       }

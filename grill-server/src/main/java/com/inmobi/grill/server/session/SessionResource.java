@@ -17,6 +17,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.RowSet;
@@ -33,6 +35,7 @@ import com.inmobi.grill.server.GrillServices;
 
 @Path("/session")
 public class SessionResource {
+  public static final Log LOG = LogFactory.getLog(SessionResource.class);
   private HiveSessionService sessionService;
 
   @GET
@@ -86,6 +89,7 @@ public class SessionResource {
       try {
         service.addResource(sessionid,  type, path);
       } catch (GrillException e) {
+        LOG.error("Failed to add resource in service:" + service, e);
         return new APIResult(APIResult.Status.PARTIAL,
             "Add resource is partial, failed for service:" + service.getName());
       }
@@ -104,6 +108,7 @@ public class SessionResource {
       try {
         service.deleteResource(sessionid,  type, path);
       } catch (GrillException e) {
+        LOG.error("Failed to delete resource in service:" + service, e);
         return new APIResult(APIResult.Status.PARTIAL,
             "Add resource is partial, failed for service:" + service.getName());
       }

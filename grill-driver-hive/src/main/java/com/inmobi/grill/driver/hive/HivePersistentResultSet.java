@@ -4,16 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.hive.service.cli.HiveSQLException;
-import org.apache.hive.service.cli.OperationHandle;
-import org.apache.hive.service.cli.TableSchema;
-import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
+import org.apache.hive.service.cli.*;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryResult;
-import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.PersistentResultSet;
@@ -21,15 +15,15 @@ import com.inmobi.grill.server.api.driver.PersistentResultSet;
 public class HivePersistentResultSet extends PersistentResultSet {
   private final Path path;
   private final OperationHandle opHandle;
-  private final ThriftCLIServiceClient client;
+	private final CLIServiceClient client;
   private final QueryHandle queryHandle;
   private TableSchema metadata;
 
   public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
-      ThriftCLIServiceClient client, QueryHandle queryHandle) {
-    this.path = resultSetPath;
-    this.client = client;
-    this.opHandle = opHandle;
+  		CLIServiceClient client, QueryHandle queryHandle) {
+  	this.path = resultSetPath;
+  	this.client = client;
+  	this.opHandle = opHandle;
     this.queryHandle = queryHandle;
   }
 

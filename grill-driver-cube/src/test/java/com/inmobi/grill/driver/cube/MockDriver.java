@@ -68,7 +68,7 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
-    return new QueryStatus(1.0, QueryStatus.Status.SUCCESSFUL, "Done", false);
+    return new QueryStatus(1.0, QueryStatus.Status.SUCCESSFUL, "Done", false, null, null);
   }
 
   @Override

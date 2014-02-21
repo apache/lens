@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
@@ -30,7 +31,7 @@ import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.InMemoryResultSet;
 
 public class HiveInMemoryResultSet extends InMemoryResultSet {
-  private final ThriftCLIServiceClient client;
+  private final CLIServiceClient client;
   private final OperationHandle opHandle;
   private TableSchema metadata;
   private TRowSet rowSet;
@@ -38,7 +39,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   private Iterator<TRow> rowItr;
   private boolean noMoreResults;
 
-  public HiveInMemoryResultSet(OperationHandle hiveHandle, ThriftCLIServiceClient client) {
+  public HiveInMemoryResultSet(OperationHandle hiveHandle, CLIServiceClient client) {
     this.client = client;
     this.opHandle = hiveHandle;
   }

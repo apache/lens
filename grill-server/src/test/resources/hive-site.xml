@@ -30,18 +30,13 @@
 </property>
 
 <property>
-  <name>grill.hive.connection.class</name>
-  <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
+  <name>hive.server2.thrift.bind.host</name>
+  <value>localhost</value>
 </property>
 
 <property>
-  <name>grill.hs2.password</name>
-  <value>password</value>
-</property>
-
-<property>
-  <name>grill.hs2.user</name>
-  <value>user</value>
+  <name>hive.server2.thrift.port</name>
+  <value>12345</value>
 </property>
 
 </configuration>

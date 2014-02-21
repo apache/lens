@@ -15,6 +15,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import com.inmobi.grill.driver.hive.TestRemoteHiveDriver;
 import com.inmobi.grill.server.GrillServices;
 
 public abstract class GrillJerseyTest extends JerseyTest {
@@ -31,14 +32,16 @@ public abstract class GrillJerseyTest extends JerseyTest {
   }
 
   @BeforeSuite
-  public void startAll() {
+  public void startAll() throws Exception {
+    TestRemoteHiveDriver.createHS2Service();
     GrillServices.get().init(new HiveConf());
     GrillServices.get().start();
   }
 
   @AfterSuite
-  public void stopAll() {
+  public void stopAll() throws Exception {
     GrillServices.get().stop();
+    TestRemoteHiveDriver.stopHS2Service();
   }
 
 }

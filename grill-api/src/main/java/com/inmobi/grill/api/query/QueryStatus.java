@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @XmlRootElement
 @AllArgsConstructor
@@ -27,6 +28,9 @@ public class QueryStatus {
   @XmlElement @Getter private Status status;
   @XmlElement @Getter private String statusMessage;
   @XmlElement @Getter private boolean isResultSetAvailable = false;
+  @Getter @Setter private String progressMessage;
+  @Getter @Setter private String errorMessage;
+
   @Override
   public String toString() {
   	return new StringBuilder(status.toString()).append(':')
