@@ -8,6 +8,7 @@ die() {
 REPO=https://github.corp.inmobi.com/platform/grill.git
 TMP=/tmp/grill-site-stage
 STAGE=`pwd`/target/staging
+REST_DIR=`pwd`/grill-server/target/site/wsdocs
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
 
@@ -16,6 +17,10 @@ CURR_BRANCH=`git branch | sed -n '/\* /s///p'`
 echo "Running site in current grill branch" $CURR_BRANCH
 mvn clean test -Dtest=TestGenerateConfigDoc || die "Unable to generate config docs"
 mvn clean site site:stage -Ddependency.locations.enabled=false -Ddependency.details.enabled=false || die "unable to generate site"
+mvn install -DskipTests
+cd grill-server
+mvn enunciate:docs
+cd ..
 echo "Site gen complete"
 
 rm -rf $TMP || die "unable to clear $TMP"
@@ -26,10 +31,12 @@ cd $TMP
 git checkout gh-pages || die "unable to checkout gh-pages"
 
 mkdir -p current || die "unable to create dir current"
+mkdir -p wsdocs || die "Unable to create dir for REST docs"
 mkdir -p versions/$VERSION || due "unable to create dir versions/$VERSION"
 
 find current -type f -exec git rm {} \;
-
+echo "Copying REST docs from " $REST_DIR
+cp -r $REST_DIR wsdocs/
 cp -r $STAGE/ . || die "unable to copy to base"
 cp -r $STAGE/ current/ || die "unable to copy to current"
 cp -r $STAGE/ versions/$VERSION/ || die "unable to copy to versions/$VERSION"
