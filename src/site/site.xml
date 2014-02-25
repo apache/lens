@@ -1,0 +1,51 @@
+<project name="Grill">
+	<publishDate position="right"/>
+	<version position="right"/>
+	<bannerLeft>
+    <name>Grill - Unified Analytics Platform for InMobi</name>
+		<title>Grill</title>
+		<src>http://github.corp.inmobi.com/pages/platform/grill/grill-logo.png</src>
+		<href>http://github.corp.inmobi.com/pages/platform/grill</href>
+  </bannerLeft>
+	
+ <body>
+    <menu name="Grill" >
+      <item name="Overview" href="index.html" />
+			<item name="Getting Started" href="quick-start.html" />
+			<item name="Mailing Lists" href="mailing-list.html"/>
+			<item name="Issue Tracking" href="issues.html"/>
+		</menu>
+		<menu name="User Documentation">
+      <item name="Grill User Guide" href="./user/index.html" />
+      <item name="REST API" href="./user/rest.html" />
+      <item name="Grill CLI" href="./user/cli.html" />
+			<item name="Java Client Library" href="./user/java-client.html"/>
+			<item name="JDBC Client" href="./user/jdbc-client.html"/>
+		</menu>
+		<menu name="Developer Documentation">
+      <item name="Grill Design" href="./developer/design.html" />
+      <item name="Driver Developer Guide" href="./developer/driver.html" />
+      <item name="JavaDoc" href="./developer/javadoc.html" />
+    </menu>
+		<menu name="Admin Documentation">
+      <item name="Admin Overview" href="./admin/index.html"/>
+      <item name="Installation" href="./admin/deployment.html"/>
+      <item name="Configuration" href="./admin/config.html"/>
+			<item name="Admin CLI" href="./admin/cli.html" />
+    </menu>
+
+    <breadcrumbs>
+      <item name="InMobi Tech Platform" href="https://github.corp.inmobi.com/platform/" />
+      <item name="Grill" href="https://github.corp.inmobi.com/platform/grill" />
+    </breadcrumbs>
+  </body>
+  <skin>
+    <groupId>org.apache.maven.skins</groupId>
+    <artifactId>maven-classic-skin</artifactId>
+    <version>1.1</version>
+  </skin>
+  <poweredBy>
+    <logo name="inmobi" href="http://www.inmobi.com/"
+          img="../images/inmobi-logo.jpg"/>
+  </poweredBy>
+</project>

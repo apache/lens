@@ -22,7 +22,7 @@ import org.xml.sax.helpers.DefaultHandler;
 
 public class TestGenerateConfigDoc {
   public static final String CONF_FILE = "../grill-server/src/main/resources/grill-default.xml";
-  public static final String APT_FILE = "../src/site/apt/index.apt";
+  public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   
   @Test
   public void generateConfigDoc() throws Exception {
