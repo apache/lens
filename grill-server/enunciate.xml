@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
-<enunciate label="novaglobalapi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<enunciate label="grill" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
+		<deployment protocol="https" host="github.corp.inmobi.com" context="/pages/platform/grill/wsdocs"/>
+		<namespaces>
+			<namespace uri="http://github.corp.inmobi.com/platform/grill" id="grill"/>
+  	</namespaces>
     <services>
-    <rest>
+			<rest defaultRestSubcontext="/">
 			<custom-resource-parameter-annotation qualifiedName="org.glassfish.jersey.media.multipart.FormDataParam" />
 		</rest>
     </services>

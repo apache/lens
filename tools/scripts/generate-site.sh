@@ -9,6 +9,7 @@ REPO=https://github.corp.inmobi.com/platform/grill.git
 TMP=/tmp/grill-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/grill-server/target/site/wsdocs
+LOGO_FILE=`pwd`/grill-logo.png
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
 
@@ -36,9 +37,17 @@ mkdir -p versions/$VERSION || due "unable to create dir versions/$VERSION"
 
 find current -type f -exec git rm {} \;
 echo "Copying REST docs from " $REST_DIR
-cp -r $REST_DIR wsdocs/
+cp $LOGO_FILE .
+# Delete index.html from the source wsdocs as it conflitcs with maven index.html
+echo "DELETE $REST_DIR/index.html"
+rm $REST_DIR/index.html
+echo "Copy enunciate documentation"
+cp -r $REST_DIR/* .
+echo "Copy MVN site"
 cp -r $STAGE/ . || die "unable to copy to base"
+echo "Copy docs to current/"
 cp -r $STAGE/ current/ || die "unable to copy to current"
+echo "Copy docs to version:" $VERSION
 cp -r $STAGE/ versions/$VERSION/ || die "unable to copy to versions/$VERSION"
 
 FILES=$(cd versions; ls -t | grep -v index.html)
