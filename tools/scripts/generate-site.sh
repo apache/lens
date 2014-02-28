@@ -9,6 +9,7 @@ REPO=https://github.corp.inmobi.com/platform/grill.git
 TMP=/tmp/grill-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/grill-server/target/site/wsdocs
+IMAGES_DIR=`pwd`/src/site/apt/figures
 LOGO_FILE=`pwd`/grill-logo.png
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
@@ -43,6 +44,8 @@ echo "DELETE $REST_DIR/index.html"
 rm $REST_DIR/index.html
 echo "Copy enunciate documentation"
 cp -r $REST_DIR/* .
+echo "Copy images"
+cp -r $IMAGES_DIR . 
 echo "Copy MVN site"
 cp -r $STAGE/ . || die "unable to copy to base"
 echo "Copy docs to current/"

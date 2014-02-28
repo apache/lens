@@ -2,8 +2,8 @@
 	<publishDate position="right"/>
 	<version position="right"/>
 	<bannerLeft>
-    <name>Grill - Unified Analytics Platform for InMobi</name>
-		<title>Grill</title>
+    <name>Grill Analytics Platform for InMobi</name>
+		<title>Grill Analytics Platform</title>
 		<src>http://github.corp.inmobi.com/pages/platform/grill/grill-logo.png</src>
 		<href>http://github.corp.inmobi.com/pages/platform/grill</href>
   </bannerLeft>
@@ -23,6 +23,7 @@
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
 		</menu>
 		<menu name="Developer Documentation">
+			<item name="Repository" href="https://github.corp.inmobi.com/platform/grill"/>
       <item name="Grill Design" href="./developer/design.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
       <item name="JavaDoc" href="./developer/javadoc.html" />
