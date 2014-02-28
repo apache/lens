@@ -12,8 +12,8 @@
     <menu name="Grill" >
       <item name="Overview" href="index.html" />
 			<item name="Getting Started" href="quick-start.html" />
-			<item name="Mailing Lists" href="mailing-list.html"/>
-			<item name="Issue Tracking" href="issues.html"/>
+			<item name="Mailing Lists" href="mailto:grill-dev@inmobi.com"/>
+			<item name="Issue Tracking" href="https://jira.corp.inmobi.com/browse/GRILL"/>
 		</menu>
 		<menu name="User Documentation">
       <item name="Grill User Guide" href="./user/index.html" />
