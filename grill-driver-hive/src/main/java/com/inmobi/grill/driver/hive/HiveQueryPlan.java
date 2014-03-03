@@ -3,6 +3,7 @@ package com.inmobi.grill.driver.hive;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -14,6 +15,7 @@ import com.inmobi.grill.api.QueryPlan;
 import com.inmobi.grill.api.GrillConfUtil;
 
 public class HiveQueryPlan extends QueryPlan {
+  private String explainOutput;
   enum ParserState {
     BEGIN,
     FILE_OUTPUT_OPERATOR,
@@ -33,6 +35,7 @@ public class HiveQueryPlan extends QueryPlan {
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
     extractPlanDetails(explainOutput, conf);
+    this.explainOutput = StringUtils.join(explainOutput, '\n');
   }
 
   private void extractPlanDetails(List<String> explainOutput, HiveConf conf) throws HiveException {
@@ -122,7 +125,7 @@ public class HiveQueryPlan extends QueryPlan {
 
   @Override
 	public String getPlan() {
-		return "";
+		return explainOutput;
 	}
 
 	@Override
