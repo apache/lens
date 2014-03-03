@@ -8,6 +8,7 @@ import java.util.concurrent.Delayed;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.server.GrillService;
@@ -367,45 +368,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public void notifyAllListeners() throws GrillException {
     //TODO 
   }
-  /*
- // @Override
-  public String getName() {
-    return "query";
-  }
 
- // @Override
-  public void init() throws GrillException {
-    initializeQueryAcceptorsAndListeners();
-    loadDriversAndSelector();
-  }
-
- // @Override
-  public void start() throws GrillException {
-    querySubmitter.start();
-    statusPoller.start();
-    queryPurger.start();
-    prepareQueryPurger.start();
-  }
-
- // @Override
-  public void stop() throws GrillException {
-    this.stopped = true;
-
-    querySubmitter.interrupt();
-    statusPoller.interrupt();
-    queryPurger.interrupt();
-    prepareQueryPurger.interrupt();
-
-    try {
-      querySubmitter.join();
-      statusPoller.join();
-      queryPurger.join();
-      prepareQueryPurger.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
-   */
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
     this.conf = hiveConf;
@@ -498,17 +461,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     return resultSets.get(queryHandle);
   }
 
-  /* @Override
-  public QueryPlan explain(String query, GrillConf GrillConf)
-      throws GrillException {
-    Configuration qconf = getGrillConf(GrillConf);
-    accept(query, qconf, SubmitOp.EXPLAIN);
-    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        query, drivers);
-    // select driver to run the query
-    return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf);
-  } */
-
   @Override
   public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf GrillConf)
       throws GrillException {
@@ -521,7 +473,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       preparedQueries.put(prepared.getPrepareHandle(), prepared);
       preparedQueryQueue.add(prepared);
       prepared.getSelectedDriver().prepare(prepared);
-      System.out.println("################### returning " + prepared.getPrepareHandle());
       return prepared.getPrepareHandle();
     } finally {
       release(sessionHandle);
@@ -557,15 +508,22 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Configuration qconf = getGrillConf(sessionHandle, GrillConf);
       accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
       QueryContext ctx = new QueryContext(pctx, getSession(sessionHandle).getUserName(), qconf);
-      ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
-      ctx.setStatus(new QueryStatus(0.0,
-          QueryStatus.Status.QUEUED,
-          "Query is queued", false, null, null));
-      acceptedQueries.add(ctx);
-      allQueries.put(ctx.getQueryHandle(), ctx);
-      fireStatusChangeEvent(ctx, ctx.getStatus(), null);
-      LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
-      return ctx.getQueryHandle();
+      return executeAsyncInternal(sessionHandle, ctx, qconf);
+    } finally {
+      release(sessionHandle);
+    }
+  }
+
+  @Override
+  public QueryHandleWithResultSet executePrepare(GrillSessionHandle sessionHandle,
+      QueryPrepareHandle prepareHandle, long timeoutMillis,
+      GrillConf conf) throws GrillException {
+    try {
+      acquire(sessionHandle);
+      PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
+      Configuration qconf = getGrillConf(sessionHandle, conf);
+      QueryContext ctx = new QueryContext(pctx, getSession(sessionHandle).getUserName(), qconf);
+      return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);
     }
@@ -578,8 +536,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, GrillConf);
       accept(query, qconf, SubmitOp.EXECUTE);
-
       QueryContext ctx = new QueryContext(query, getSession(sessionHandle).getUserName(), qconf);
+      
+      return executeAsyncInternal(sessionHandle, ctx, qconf);
+    } finally {
+      release(sessionHandle);
+    }
+  }
+
+  private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
+      Configuration qconf) throws GrillException {
       ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
       acceptedQueries.add(ctx);
       ctx.setStatus(new QueryStatus(0.0,
@@ -589,9 +555,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       fireStatusChangeEvent(ctx, ctx.getStatus(), null);
       LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
       return ctx.getQueryHandle();
-    } finally {
-      release(sessionHandle);
-    }
   }
 
   @Override
@@ -673,36 +636,45 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       GrillConf conf) throws GrillException {
     try {
       acquire(sessionHandle);
-      QueryHandle handle = executeAsync(sessionHandle, query, conf);
-      QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
-      // getQueryContext calls updateStatus, which fires query events if there's a change in status
-      while (getQueryContext(sessionHandle, handle).getStatus().getStatus().equals(
-          QueryStatus.Status.QUEUED)) {
-        try {
-          Thread.sleep(10);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-      QueryCompletionListener listener = new QueryCompletionListenerImpl();
-      getQueryContext(sessionHandle, handle).getSelectedDriver().
-      registerForCompletionNotification(handle, timeoutMillis, listener);
-      try {
-        synchronized (listener) {
-          listener.wait(timeoutMillis);
-        }
-      } catch (InterruptedException e) {
-        LOG.info("Waiting thread interrupted");
-      }
-      if (getQueryContext(sessionHandle, handle).getStatus().isFinished()) {
-        //result.SetResult("Finished");
-      }
-      return result;
+      Configuration qconf = getGrillConf(sessionHandle, conf);
+      accept(query, qconf, SubmitOp.EXECUTE);
+      QueryContext ctx = new QueryContext(query, getSession(sessionHandle).getUserName(), qconf);
+      return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);
     }
   }
 
+  private QueryHandleWithResultSet executeTimeoutInternal(GrillSessionHandle sessionHandle, QueryContext ctx, long timeoutMillis,
+      Configuration conf) throws GrillException {
+    QueryHandle handle = executeAsyncInternal(sessionHandle, ctx, conf);
+    QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
+    // getQueryContext calls updateStatus, which fires query events if there's a change in status
+    while (getQueryContext(sessionHandle, handle).getStatus().getStatus().equals(
+        QueryStatus.Status.QUEUED)) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    QueryCompletionListener listener = new QueryCompletionListenerImpl();
+    getQueryContext(sessionHandle, handle).getSelectedDriver().
+    registerForCompletionNotification(handle, timeoutMillis, listener);
+    try {
+      synchronized (listener) {
+        listener.wait(timeoutMillis);
+      }
+    } catch (InterruptedException e) {
+      LOG.info("Waiting thread interrupted");
+    }
+    if (getQueryContext(sessionHandle, handle).getStatus().isFinished()) {
+      //result.SetResult("Finished");
+    }
+    return result;
+    
+  }
+ 
   class QueryCompletionListenerImpl implements QueryCompletionListener {
     QueryCompletionListenerImpl() {
     }
@@ -788,7 +760,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throws GrillException {
     try {
       acquire(sessionHandle);
-      Status status = StringUtils.isBlank(state) ? null : Status.valueOf(state);
+      Status status = null;
+      try {
+        status = StringUtils.isBlank(state) ? null : Status.valueOf(state);
+      } catch (IllegalArgumentException e) {
+        throw new BadRequestException("Bad state argument passed, possible" +
+          " values are " + Status.values(), e);
+      }
       boolean filterByStatus = status != null;
       boolean filterByUser = StringUtils.isNotBlank(user);
 
