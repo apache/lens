@@ -76,7 +76,7 @@ public abstract class GrillService extends CompositeService {
     }
   }
 
-  public SessionManager getSessionManager() throws GrillException {
+  public SessionManager getSessionManager() {
     return cliService.getSessionManager();
   }
 
@@ -91,11 +91,7 @@ public abstract class GrillService extends CompositeService {
   }
 
   public void acquire(GrillSessionHandle sessionHandle) throws GrillException {
-    try {
-      getSession(sessionHandle).acquire();
-    } catch (HiveSQLException e) {
-      throw new GrillException (e);
-    }
+    getSession(sessionHandle).acquire();
   }
 
   public void release(GrillSessionHandle sessionHandle) throws GrillException {
