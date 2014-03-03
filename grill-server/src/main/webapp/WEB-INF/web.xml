@@ -41,7 +41,9 @@
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.query.service.QueryApp</param-value>
+            <param-value>com.inmobi.grill.server.query.QueryApp</param-value>
+        </init-param>
+        <init-param>
             <param-name>jersey.config.server.provider.packages</param-name>
             <param-value>org.codehaus.jackson.jaxrs</param-value>
         </init-param>
