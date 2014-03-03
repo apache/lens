@@ -13,6 +13,7 @@ import com.inmobi.grill.api.query.QueryPlan;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResult;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
+import com.inmobi.grill.api.query.QueryStatus;
 
 public interface QueryExecutionService {
 
@@ -67,6 +68,20 @@ public interface QueryExecutionService {
    */
   public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
       GrillConf conf) throws GrillException;
+
+  /**
+   * Execute already prepared query with timeout. 
+   * Query can be prepared with explain
+   * 
+   * @param handle The {@link QueryHandle}
+   * @param timeoutmillis The timeout after which it will return handle, if
+   *  query did not finish before.
+   * @param conf The configuration for the query to execute
+   * 
+   * @throws GrillException
+   */
+  public QueryHandleWithResultSet executePrepare(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
+      long timeoutmillis, GrillConf conf) throws GrillException;
 
   /**
    * Asynchronously execute the query

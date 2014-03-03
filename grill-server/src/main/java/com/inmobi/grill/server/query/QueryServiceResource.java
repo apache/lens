@@ -17,6 +17,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.api.APIResult;
@@ -26,23 +28,38 @@ import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.query.GrillPreparedQuery;
 import com.inmobi.grill.api.query.GrillQuery;
 import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryHandleWithResultSet;
+import com.inmobi.grill.api.query.QueryPlan;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResult;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
+import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QuerySubmitResult;
 import com.inmobi.grill.api.query.SubmitOp;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 
+/**
+ * queryapi resource 
+ * 
+ * This provides api for all things query. 
+ *
+ */
 @Path("/queryapi")
 public class QueryServiceResource {
+  public static final Logger LOG = LogManager.getLogger(QueryServiceResource.class);
 
   private QueryExecutionService queryServer;
 
+  /**
+   * API to know if Query service is up and running
+   * 
+   * @return Simple text saying it up
+   */
   @GET
   @Produces(MediaType.TEXT_PLAIN)
   public String getMessage() {
-    return "Hello World! from queryapi";
+    return "Queryapi is up";
   }
 
   public QueryServiceResource() throws GrillException {
@@ -53,6 +70,17 @@ public class QueryServiceResource {
     return queryServer;
   }
 
+  /**
+   * Get all the queries in the query server; can be filtered with state and user.
+   * 
+   * @param sessionid The sessionid in which user is working
+   * @param state If any state is passed, all the queries in that state will be returned,
+   * otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
+   * @param user If any user is passed, all the queries submitted by the user will be returned,
+   * otherwise all the queries will be returned
+   * 
+   * @return List of {@link QueryHandle} objects
+   */
   @GET
   @Path("queries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -66,6 +94,29 @@ public class QueryServiceResource {
     }
   }
 
+  static String submitClue = ". supported values are:" + SubmitOp.EXPLAIN  
+      + ", " + SubmitOp.EXECUTE + " and " + SubmitOp.EXECUTE_WITH_TIMEOUT;
+  static String prepareClue = ". supported values are:" + SubmitOp.PREPARE
+      + " and " + SubmitOp.EXPLAIN_AND_PREPARE;
+  static String submitPreparedClue = ". supported values are:" 
+      + SubmitOp.EXECUTE + " and " + SubmitOp.EXECUTE_WITH_TIMEOUT;
+
+  /**
+   * Submit the query for explain or execute or execute with a timeout
+   * 
+   * @param sessionid The session in which user is submitting the query. Any
+   *  configuration set in the session will be picked up.
+   * @param query The query to run
+   * @param op The operation on the query. Supported operations are 
+   * {@value SubmitOp#EXPLAIN}, {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
+   * @param conf The configuration for the query
+   * @param timeoutmillis The timeout for the query, honored only in case of
+   *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
+   * 
+   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
+   * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation.
+   * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
+   */
   @POST
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -76,9 +127,14 @@ public class QueryServiceResource {
       @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
     try {
-      SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
+      SubmitOp sop = null;
+      try {
+        sop = SubmitOp.valueOf(op.toUpperCase());
+      } catch (IllegalArgumentException e) {
+      }
       if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + op);
+        throw new BadRequestException("Invalid operation type: " + op +
+            submitClue);
       }
       switch (sop) {
       case EXECUTE:
@@ -88,40 +144,74 @@ public class QueryServiceResource {
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(sessionid, query, timeoutmillis, conf);
       default:
-        throw new BadRequestException("Invalid operation type: " + op);
+        throw new BadRequestException("Invalid operation type: " + op + submitClue);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
   }
 
+  /**
+   * Cancel all the queries in query server; can be filtered with state and user
+   * 
+   * @param sessionid The session in which cancel is issued
+   * @param state If any state is passed, all the queries in that state will be cancelled,
+   * otherwise all queries will be cancelled. Possible states are {@value QueryStatus.Status#values()}
+   * The queries in {@value QueryStatus.Status#FAILED},{@value QueryStatus.Status#FAILED},
+    {@value QueryStatus.Status#CLOSED}, {@value QueryStatus.Status#UNKNOWN} cannot be cancelled
+   * @param user If any user is passed, all the queries submitted by the user will be cancelled,
+   * otherwise all the queries will be cancelled
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
+   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial cancellation.
+   */
   @DELETE
   @Path("queries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
       @DefaultValue("") @QueryParam("user") String user) {
-    List<QueryHandle> handles = getAllQueries(sessionid, state, user);
     int numCancelled = 0;
-    for (QueryHandle handle : handles) {
-      if (cancelQuery(sessionid, handle)) {
-        numCancelled++;
+    List<QueryHandle> handles = null;
+    boolean failed = false;
+    try {
+      handles = getAllQueries(sessionid, state, user);
+      for (QueryHandle handle : handles) {
+        if (cancelQuery(sessionid, handle)) {
+          numCancelled++;
+        }
       }
+    } catch (Exception e) {
+      LOG.error("Error canceling queries", e);
+      failed = true;
     }
     String msgString = (StringUtils.isBlank(state) ? "" : " in state" + state)
         + (StringUtils.isBlank(user) ? "" : " for user " + user);
-    if (numCancelled == handles.size()) {
+    if (handles != null && numCancelled == handles.size()) {
       return new APIResult(APIResult.Status.SUCCEEDED, "Cancel all queries "
           + msgString + " is successful");
-    } else if (numCancelled == 0) {
-      return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
-          + msgString + " has failed");        
     } else {
-      return new APIResult(APIResult.Status.PARTIAL, "Cancel on the query "
-          + msgString + " is partial");        
+      assert (failed);
+      if (numCancelled == 0) {
+        return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
+            + msgString + " has failed");        
+      } else {
+        return new APIResult(APIResult.Status.PARTIAL, "Cancel on the query "
+            + msgString + " is partial");        
+      }
     }
   }
 
+  /**
+   * Get all prepared queries in the query server; can be filtered with user
+   * 
+   * @param sessionid The sessionid in which user is working
+   * @param user If any user is passed, all the queries prepared by the user will be returned,
+   * otherwise all the queries will be returned
+   * 
+   * @return List of QueryPrepareHandle objects
+   */
   @GET
   @Path("preparedqueries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -134,6 +224,20 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Prepare a query or 'explain and prepare' the query
+   * 
+   * @param sessionid The session in which user is preparing the query. Any
+   *  configuration set in the session will be picked up.
+   * @param query The query to prepare
+   * @param op The operation on the query. Supported operations are 
+   * {@value SubmitOp#EXPLAIN_AND_PREPARE} or {@value SubmitOp#PREPARE}
+   * @param conf The configuration for preparing the query
+   * 
+   * @return {@link QueryPrepareHandle} incase of {@value SubmitOp#PREPARE} operation.
+   * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE} and the 
+   * query plan will contain the prepare handle as well.
+   */
   @POST
   @Path("preparedqueries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -143,9 +247,13 @@ public class QueryServiceResource {
       @DefaultValue("") @FormDataParam("operation") String op,
       @FormDataParam("conf") GrillConf conf) {
     try {
-      SubmitOp sop = SubmitOp.valueOf(op.toUpperCase());
+      SubmitOp sop = null;
+      try {
+        sop = SubmitOp.valueOf(op.toUpperCase());
+      } catch (IllegalArgumentException e) {
+      }
       if (sop == null) {
-        throw new BadRequestException("Invalid submit operation: " + op);
+        throw new BadRequestException("Invalid operation type: " + op + prepareClue);
       }
       switch (sop) {
       case PREPARE:
@@ -153,35 +261,56 @@ public class QueryServiceResource {
       case EXPLAIN_AND_PREPARE:
         return queryServer.explainAndPrepare(sessionid, query, conf);
       default:
-        throw new BadRequestException("Invalid submit operation: " + op);
+        throw new BadRequestException("Invalid operation type: " + op + prepareClue);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
   }
 
+  /**
+   * Destroy all the prepared queries; Can be filtered with user
+   * 
+   * @param sessionid The session in which cancel is issued
+   * @param user If any user is passed, all the queries prepared by the user will be destroyed,
+   * otherwise all the queries will be destroyed
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of destroy failure.
+   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial destroy.
+   */
   @DELETE
   @Path("preparedqueries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user) {
-    List<QueryPrepareHandle> handles = getAllPreparedQueries(sessionid, user);
     int numDestroyed = 0;
-    for (QueryPrepareHandle prepared : handles) {
-      if (destroyPrepared(sessionid, prepared)) {
-        numDestroyed++;
+    boolean failed = false;
+    List<QueryPrepareHandle> handles = null;
+    try {
+      handles = getAllPreparedQueries(sessionid, user);
+      for (QueryPrepareHandle prepared : handles) {
+        if (destroyPrepared(sessionid, prepared)) {
+          numDestroyed++;
+        }
       }
+    } catch (Exception e) {
+      LOG.error("Error destroying prepared queries", e);
+      failed = true;
     }
     String msgString = (StringUtils.isBlank(user) ? "" : " for user " + user);
-    if (numDestroyed == handles.size()) {
+    if (handles != null && numDestroyed == handles.size()) {
       return new APIResult(APIResult.Status.SUCCEEDED, "Destroy all prepared "
           + "queries " + msgString + " is successful");
-    } else if (numDestroyed == 0) {
-      return new APIResult(APIResult.Status.FAILED, "Destroy all prepared "
-          + "queries " + msgString + " has failed");        
     } else {
-      return new APIResult(APIResult.Status.PARTIAL, "Destroy all prepared "
-          + "queries " + msgString +" is partial");        
+      assert (failed);
+      if (numDestroyed == 0) {
+        return new APIResult(APIResult.Status.FAILED, "Destroy all prepared "
+            + "queries " + msgString + " has failed");        
+      } else {
+        return new APIResult(APIResult.Status.PARTIAL, "Destroy all prepared "
+            + "queries " + msgString +" is partial");        
+      }
     }
   }
 
@@ -201,6 +330,14 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Get a prepared query specified by handle
+   * 
+   * @param sessionid The user session handle
+   * @param prepareHandle The prepare handle
+   * 
+   * @return {@link GrillPreparedQuery}
+   */
   @GET
   @Path("preparedqueries/{preparehandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -214,10 +351,20 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Destroy the prepared query specified by handle
+   * 
+   * @param sessionid The user session handle
+   * @param prepareHandle The prepare handle
+   * 
+   * @return APIResult with state {@link APIResult.Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@link APIResult.Status#FAILED} in case of destroy failure.
+   */
   @DELETE
   @Path("preparedqueries/{preparehandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult destroyPrepared(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("preparehandle") String prepareHandle) {
+  public APIResult destroyPrepared(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("preparehandle") String prepareHandle) {
     boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
       return new APIResult(APIResult.Status.SUCCEEDED, "Destroy on the query "
@@ -228,6 +375,14 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Get grill query and its current status
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * 
+   * @return {@link GrillQuery}
+   */
   @GET
   @Path("queries/{queryhandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -240,6 +395,15 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Cancel the query specified by the handle
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
+   */
   @DELETE
   @Path("queries/{queryhandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -270,7 +434,16 @@ public class QueryServiceResource {
     }
   }
 
-
+  /**
+   * Modify query configuration if it is not running yet.
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * @param conf The new configuration, will be on top of old one
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
+   */
   @PUT
   @Path("queries/{queryhandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -292,6 +465,17 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Modify prepared query's configuration. This would be picked up for subsequent runs
+   * of the prepared queries. The query wont be re-prepared with new configuration.
+   * 
+   * @param sessionid The user session handle
+   * @param prepareHandle The prepare handle
+   * @param conf The new configuration, will be on top of old one
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
+   */
   @PUT
   @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -313,21 +497,62 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Submit prepared query for execution
+   * 
+   * @param sessionid The session in which user is submitting the query. Any
+   *  configuration set in the session will be picked up.
+   * @param prepareHandle The Query to run
+   * @param op The operation on the query. Supported operations are 
+   * {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
+   * @param conf The configuration for the execution of query
+   * @param timeoutmillis The timeout for the query, honored only in case of
+   *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
+   * 
+   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
+   * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
+   */
   @POST
   @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public QueryHandle executePrepared(@FormDataParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("prepareHandle") String prepareHandle, 
-      @FormDataParam("conf") GrillConf conf) {
+  public QuerySubmitResult executePrepared(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("prepareHandle") String prepareHandle,
+      @DefaultValue("EXECUTE") @FormDataParam("operation") String op,
+      @FormDataParam("conf") GrillConf conf,
+      @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
+
     try {
-      return queryServer.executePrepareAsync(sessionid,
-          getPrepareHandle(prepareHandle), conf);
+      SubmitOp sop = null;
+      try {
+        sop = SubmitOp.valueOf(op.toUpperCase());
+      } catch (IllegalArgumentException e) {
+      }
+      if (sop == null) {
+        throw new BadRequestException("Invalid operation type: " + op +
+            submitPreparedClue);
+      }
+      switch (sop) {
+      case EXECUTE:
+        return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf);
+      case EXECUTE_WITH_TIMEOUT:
+        return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf);
+      default:
+        throw new BadRequestException("Invalid operation type: " + op + submitPreparedClue);
+      }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
   }
 
+  /**
+   * Get resultset metadata of the query
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * 
+   * @return {@link QueryResultSetMetadata}
+   */
   @GET
   @Path("queries/{queryhandle}/resultsetmetadata")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -341,6 +566,16 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Fetch the result set
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * @param startIndex start index of the result
+   * @param fetchSize fetch size
+   * 
+   * @return {@link QueryResult}
+   */
   @GET
   @Path("queries/{queryhandle}/resultset")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -356,6 +591,15 @@ public class QueryServiceResource {
     }
   }
 
+  /**
+   * Close the result set once fetching is done
+   * 
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   * 
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful close.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of close failure.
+   */
   @DELETE
   @Path("queries/{queryhandle}/resultset")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})

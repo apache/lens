@@ -14,6 +14,7 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryStatus {
   public enum Status {
+    NEW,
     QUEUED,
     LAUNCHED,
     RUNNING,

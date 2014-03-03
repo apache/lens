@@ -2,6 +2,8 @@ package com.inmobi.grill.server.session;
 
 import java.util.Map;
 
+import javax.ws.rs.NotFoundException;
+
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.HiveSQLException;
@@ -30,8 +32,12 @@ public class GrillSessionImpl extends HiveSessionImpl {
     return cubeClient;
   }
 
-  public synchronized void acquire() throws HiveSQLException {
-    super.acquire();
+  public synchronized void acquire() {
+    try {
+      super.acquire();
+    } catch (HiveSQLException e) {
+      throw new NotFoundException("Could not acquire the session", e);
+    }
   }
 
   public synchronized void release() {
