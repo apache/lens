@@ -71,7 +71,7 @@ public class QueryServiceResource {
   }
 
   /**
-   * Get all the queries in the query server; can be filtered with state and user
+   * Get all the queries in the query server; can be filtered with state and user.
    * 
    * @param sessionid The sessionid in which user is working
    * @param state If any state is passed, all the queries in that state will be returned,
@@ -79,7 +79,7 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries submitted by the user will be returned,
    * otherwise all the queries will be returned
    * 
-   * @return List of QueryHandle objects
+   * @return List of {@link QueryHandle} objects
    */
   @GET
   @Path("queries")
@@ -106,15 +106,15 @@ public class QueryServiceResource {
    * 
    * @param sessionid The session in which user is submitting the query. Any
    *  configuration set in the session will be picked up.
-   * @param query The Query to run
+   * @param query The query to run
    * @param op The operation on the query. Supported operations are 
    * {@value SubmitOp#EXPLAIN}, {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
    * @param conf The configuration for the query
    * @param timeoutmillis The timeout for the query, honored only in case of
    *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
    * 
-   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation,
-   * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation,
+   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
+   * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation.
    * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
    */
   @POST
@@ -162,8 +162,8 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries submitted by the user will be cancelled,
    * otherwise all the queries will be cancelled
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation
-   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
    * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial cancellation.
    */
   @DELETE
@@ -225,18 +225,18 @@ public class QueryServiceResource {
   }
 
   /**
-   * Prepare a query or explain and prepare the query
+   * Prepare a query or 'explain and prepare' the query
    * 
    * @param sessionid The session in which user is preparing the query. Any
    *  configuration set in the session will be picked up.
-   * @param query The Query to prepare
+   * @param query The query to prepare
    * @param op The operation on the query. Supported operations are 
    * {@value SubmitOp#EXPLAIN_AND_PREPARE} or {@value SubmitOp#PREPARE}
    * @param conf The configuration for preparing the query
    * 
    * @return {@link QueryPrepareHandle} incase of {@value SubmitOp#PREPARE} operation.
-   * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE};The 
-   * queryplan will contain the prepare handle as well.
+   * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE} and the 
+   * query plan will contain the prepare handle as well.
    */
   @POST
   @Path("preparedqueries")
@@ -275,8 +275,8 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries prepared by the user will be destroyed,
    * otherwise all the queries will be destroyed
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful destroy
-   * APIResult with state {@value APIResult.Status#FAILED} in case of destroy failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of destroy failure.
    * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial destroy.
    */
   @DELETE
@@ -357,8 +357,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param prepareHandle The prepare handle
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful destroy
-   * APIResult with state {@value APIResult.Status#FAILED} in case of destroy failure
+   * @return APIResult with state {@link APIResult.Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@link APIResult.Status#FAILED} in case of destroy failure.
    */
   @DELETE
   @Path("preparedqueries/{preparehandle}")
@@ -401,8 +401,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation
-   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
    */
   @DELETE
   @Path("queries/{queryhandle}")
@@ -441,8 +441,8 @@ public class QueryServiceResource {
    * @param queryHandle The query handle
    * @param conf The new configuration, will be on top of old one
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update
-   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
    */
   @PUT
   @Path("queries/{queryhandle}")
@@ -473,8 +473,8 @@ public class QueryServiceResource {
    * @param prepareHandle The prepare handle
    * @param conf The new configuration, will be on top of old one
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update
-   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
    */
   @PUT
   @Path("preparedqueries/{prepareHandle}")
@@ -509,7 +509,7 @@ public class QueryServiceResource {
    * @param timeoutmillis The timeout for the query, honored only in case of
    *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
    * 
-   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation,
+   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
    * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
    */
   @POST
@@ -597,8 +597,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful close
-   * APIResult with state {@value APIResult.Status#FAILED} in case of close failure
+   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful close.
+   * APIResult with state {@value APIResult.Status#FAILED} in case of close failure.
    */
   @DELETE
   @Path("queries/{queryhandle}/resultset")
