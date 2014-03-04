@@ -38,6 +38,10 @@ public class SessionResource {
   public static final Log LOG = LogFactory.getLog(SessionResource.class);
   private HiveSessionService sessionService;
 
+  /**
+   * Call to check if the session resource is deployed in this Grill server
+   * @return string indicating session resource is deployed
+   */
   @GET
   @Produces({MediaType.TEXT_PLAIN})
   public String getMessage() {
@@ -48,12 +52,20 @@ public class SessionResource {
     sessionService = (HiveSessionService)GrillServices.get().getService("session");
   }
 
+  /**
+   * Create a new session with Grill server
+   * @param username User name of the Grill server user
+   * @param password Password of the Grill server user
+   * @param sessionconf Key-value properties which will be used to configure this session
+   * @return A Session handle unique to this session
+   * @throws WebApplicationException if there was an exception thrown while creating the session
+   */
   @POST
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillSessionHandle openSession(@FormDataParam("username") String username,
       @FormDataParam("password") String password,
-      @DefaultValue("<conf/>") @FormDataParam("sessionconf") GrillConf sessionconf) {
+      @FormDataParam("sessionconf") GrillConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {
@@ -67,6 +79,13 @@ public class SessionResource {
     }
   }
 
+  /**
+   * Close a Grill server session 
+   * @param sessionid Session handle object of the session to be closed
+   * @return APIResult object indicating if the operation was successful (check result.getStatus())
+   * @throws WebApplicationException if the underlying CLIService threw an exception 
+   * while closing the session
+   */
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@QueryParam("sessionid") GrillSessionHandle sessionid) {
@@ -79,6 +98,25 @@ public class SessionResource {
         "Close session with id" + sessionid + "succeeded");
   }
 
+  /**
+   * Add a resource (a jar, for example) to all GrillServices running in this Grill server
+   * 
+   * <p>
+   * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation
+   * was successful for all services running in this Grill server.
+   * </p>
+   * 
+   * <p>
+   * The call tries to add resource to all services. In case the add operation fails for 
+   * one of the services, the 
+   * API call will return immediately without adding resource on the remaining services.
+   * In such cases, the result object will have status set to APIResult.Status.PARTIAL
+   * </p>
+   * @param sessionid session handle object
+   * @param type type of the resource to be added. For jar files use 'jar'
+   * @param path path of the resource
+   * @return APIResult object indicating if the add operation succeeded
+   */
   @PUT
   @Path("resources/add")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -98,6 +136,20 @@ public class SessionResource {
         "Add resource succeeded");
   }
 
+  /**
+   * Delete a resource from @{link GrillService}s running in this Grill server
+   * <p>
+   * Similar to addResource, this call is successful only if resource was deleted from all services.
+   * 
+   * If the delete operation failed for any of the services, then the call returns immediately with 
+   * status set to APIResult.Status.PARTIAL.
+   * </p>
+   * 
+   * @param sessionid session handle object
+   * @param type type of the resource to be deleted. For jar files, use 'jar'
+   * @param path path of the resource to be deleted
+   * @return APIResult object indicating if the delete resource call was successful
+   */
   @PUT
   @Path("resources/delete")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
@@ -117,6 +169,14 @@ public class SessionResource {
         "Delete resource succeeded");
   }
 
+  /**
+   * Get a list of key=value parameters set for this session
+   * @param sessionid session handle object
+   * @param verbose set this to true if verbose result is required
+   * @param key if this is empty, output will contain all parameters and their values, 
+   * if it is non empty parameters will be filtered by key
+   * @return List of Strings, one entry per key-value pair
+   */
   @GET
   @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -137,6 +197,13 @@ public class SessionResource {
     return new StringList(result);
   }
 
+  /**
+   * Set value for a parameter specified by key
+   * @param sessionid session handle object
+   * @param key parameter key
+   * @param value parameter value
+   * @return APIResult object indicating if set operation was successful
+   */
   @PUT
   @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
