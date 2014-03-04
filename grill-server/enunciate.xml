@@ -15,7 +15,7 @@
         <include pattern="com.inmobi.grill.server.metastore.*"/>
         <include pattern="com.inmobi.grill.server.quota.*"/>
         <include pattern="com.inmobi.grill.server.scheduler.*"/>
-        <!--include pattern="com.inmobi.grill.server.session.*"/-->
+        <include pattern="com.inmobi.grill.server.session.*"/>
     </api-classes>
     <modules>
         <docs docsDir="grill-server" title="Grill Server REST API"/>
