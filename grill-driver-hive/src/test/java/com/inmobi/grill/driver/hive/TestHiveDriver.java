@@ -43,7 +43,6 @@ public class TestHiveDriver {
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-    conf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
     SessionState.start(conf);
     Hive client = Hive.get(conf);
     Database database = new Database();
@@ -397,6 +396,7 @@ public class TestHiveDriver {
     assertTrue(plan.getTableWeights().containsKey("explain_test_1"));
     assertTrue(plan.getTableWeights().containsKey("explain_test_2"));
     assertEquals(plan.getNumJoins(), 1);
+    assertTrue(plan.getPlan() != null && !plan.getPlan().isEmpty());
     driver.closeQuery(plan.getHandle());
   }
 
