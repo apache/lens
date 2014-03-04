@@ -370,6 +370,7 @@ public class TestHiveDriver {
     assertTrue(plan.getTableWeights().containsKey("explain_test_1"));
     assertTrue(plan.getTableWeights().containsKey("explain_test_2"));
     assertEquals(plan.getNumJoins(), 1);
+    assertTrue(plan.getPlan() != null && !plan.getPlan().isEmpty());
     driver.closeQuery(plan.getHandle());
   }
 
