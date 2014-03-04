@@ -62,6 +62,13 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   @Override
   public void setCurrentDatabase(GrillSessionHandle sessionid, String database) throws GrillException {
+    try {
+      if (!Hive.get().databaseExists(database)) {
+        throw new NotFoundException("Database " + database + " does not exist");
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    }
     getSession(sessionid).getSessionState().setCurrentDatabase(database);
     LOG.info("Set database " + database);
   }

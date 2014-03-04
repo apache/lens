@@ -84,8 +84,22 @@ public class TestMetastoreService extends GrillJerseyTest {
   @Test
   public void testSetDatabase() throws Exception {
     WebTarget dbTarget = target().path("metastore").path("databases/current");
-    String dbName = "test_db";
-    APIResult result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
+    String dbName = "test_set_db";
+    try {
+      dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
+      fail("Should get 404");
+    } catch (NotFoundException e) {
+      // expected
+    }
+
+    // create
+    APIResult result = target().path("metastore").path("databases")
+        .queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(dbName), APIResult.class);
+    assertNotNull(result);
+    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // set
+    result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
