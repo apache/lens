@@ -1,15 +1,23 @@
 package com.inmobi.grill.server.metastore;
 
+import antlr.StringUtils;
+
 import com.inmobi.grill.api.metastore.*;
 
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -546,6 +554,30 @@ public class JAXBUtils {
     return storageTableDescFromXStorageTableDesc(storageTableElement.getTableDesc());
   }
 
+  public static XStorageTableElement getXStorageTableFromHiveTable(Table tbl) {
+    XStorageTableElement tblElement = new XStorageTableElement();
+    XStorageTableDesc tblDesc = new XStorageTableDesc();
+    tblDesc.setPartCols(columnsFromFieldSchemaList(tbl.getPartCols()));
+    String timePartCols = tbl.getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
+    if (timePartCols != null) {
+      tblDesc.getTimePartCols().addAll(Arrays.asList(org.apache.commons.lang.StringUtils.split(timePartCols, ",")));
+    }
+    tblDesc.setTableParameters(xPropertiesFromMap(tbl.getParameters()));
+    tblDesc.setSerdeParameters(xPropertiesFromMap(tbl.getTTable().getSd().getSerdeInfo().getParameters()));
+    tblDesc.setExternal(tbl.getTableType().equals(TableType.EXTERNAL_TABLE));
+    tblDesc.setTableLocation(tbl.getDataLocation().toString());
+    tblDesc.setInputFormat(tbl.getInputFormatClass().getCanonicalName());
+    tblDesc.setOutputFormat(tbl.getOutputFormatClass().getCanonicalName());
+    tblDesc.setFieldDelimiter(tbl.getSerdeParam(serdeConstants.FIELD_DELIM));
+    tblDesc.setLineDelimiter(tbl.getSerdeParam(serdeConstants.LINE_DELIM));
+    tblDesc.setCollectionDelimiter(tbl.getSerdeParam(serdeConstants.COLLECTION_DELIM));
+    tblDesc.setMapKeyDelimiter(tbl.getSerdeParam(serdeConstants.MAPKEY_DELIM));
+    tblDesc.setEscapeChar(tbl.getSerdeParam(serdeConstants.ESCAPE_CHAR));
+    tblDesc.setSerdeClassName(tbl.getSerializationLib());
+    tblDesc.setStorageHandlerName(tbl.getStorageHandler().getClass().getCanonicalName());
+    tblElement.setTableDesc(tblDesc);
+    return tblElement;
+  }
   public static Map<String, StorageTableDesc> storageTableMapFromXStorageTables(XStorageTables storageTables) {
     Map<String, StorageTableDesc> storageTableMap = new HashMap<String, StorageTableDesc>();
     for (XStorageTableElement sTbl : storageTables.getStorageTables()) {

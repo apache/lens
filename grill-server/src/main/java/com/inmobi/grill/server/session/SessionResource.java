@@ -33,19 +33,25 @@ import com.inmobi.grill.api.StringList;
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
 
+/**
+ * Session resource api
+ * 
+ * This provides api for all things in session.
+ */
 @Path("/session")
 public class SessionResource {
   public static final Log LOG = LogFactory.getLog(SessionResource.class);
   private HiveSessionService sessionService;
 
   /**
-   * Call to check if the session resource is deployed in this Grill server
-   * @return string indicating session resource is deployed
+   * API to know if session service is up and running
+   * 
+   * @return Simple text saying it up
    */
   @GET
   @Produces({MediaType.TEXT_PLAIN})
   public String getMessage() {
-    return "Hello World! from command";
+    return "session is up!";
   }
 
   public SessionResource() throws GrillException {
@@ -54,10 +60,13 @@ public class SessionResource {
 
   /**
    * Create a new session with Grill server
+   * 
    * @param username User name of the Grill server user
    * @param password Password of the Grill server user
    * @param sessionconf Key-value properties which will be used to configure this session
+   * 
    * @return A Session handle unique to this session
+   * 
    * @throws WebApplicationException if there was an exception thrown while creating the session
    */
   @POST
@@ -81,10 +90,14 @@ public class SessionResource {
 
   /**
    * Close a Grill server session 
+   * 
    * @param sessionid Session handle object of the session to be closed
+   * 
    * @return APIResult object indicating if the operation was successful (check result.getStatus())
+   * 
    * @throws WebApplicationException if the underlying CLIService threw an exception 
    * while closing the session
+   * 
    */
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -92,30 +105,26 @@ public class SessionResource {
     try {
       sessionService.closeSession(sessionid);
     } catch (GrillException e) {
-      throw new WebApplicationException(e);
+      return new APIResult(APIResult.Status.FAILED, e.getMessage());
     }
     return new APIResult(APIResult.Status.SUCCEEDED,
         "Close session with id" + sessionid + "succeeded");
   }
 
   /**
-   * Add a resource (a jar, for example) to all GrillServices running in this Grill server
+   * Add a resource to the session to all GrillServices running in this Grill server
    * 
    * <p>
    * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation
    * was successful for all services running in this Grill server.
    * </p>
    * 
-   * <p>
-   * The call tries to add resource to all services. In case the add operation fails for 
-   * one of the services, the 
-   * API call will return immediately without adding resource on the remaining services.
-   * In such cases, the result object will have status set to APIResult.Status.PARTIAL
-   * </p>
    * @param sessionid session handle object
-   * @param type type of the resource to be added. For jar files use 'jar'
+   * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource
-   * @return APIResult object indicating if the add operation succeeded
+   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link APIResult.Status#PARTIAL}, if add succeeded only for some services.
+   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
    */
   @PUT
   @Path("resources/add")
@@ -123,13 +132,20 @@ public class SessionResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult addResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
+    int numAdded = 0;
     for (GrillService service : GrillServices.get().getGrillServices()) {
       try {
         service.addResource(sessionid,  type, path);
+        numAdded++;
       } catch (GrillException e) {
         LOG.error("Failed to add resource in service:" + service, e);
-        return new APIResult(APIResult.Status.PARTIAL,
-            "Add resource is partial, failed for service:" + service.getName());
+        if (numAdded != 0) { 
+          return new APIResult(APIResult.Status.PARTIAL,
+              "Add resource is partial, failed for service:" + service.getName());
+        } else {
+          return new APIResult(APIResult.Status.FAILED,
+              "Add resource has failed ");          
+        }
       }
     }
     return new APIResult(APIResult.Status.SUCCEEDED,
@@ -137,18 +153,18 @@ public class SessionResource {
   }
 
   /**
-   * Delete a resource from @{link GrillService}s running in this Grill server
+   * Delete a resource from sesssion from all the @{link GrillService}s running in this Grill server
    * <p>
    * Similar to addResource, this call is successful only if resource was deleted from all services.
-   * 
-   * If the delete operation failed for any of the services, then the call returns immediately with 
-   * status set to APIResult.Status.PARTIAL.
    * </p>
    * 
    * @param sessionid session handle object
-   * @param type type of the resource to be deleted. For jar files, use 'jar'
+   * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource to be deleted
-   * @return APIResult object indicating if the delete resource call was successful
+   * 
+   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if delete was successful.
+   * {@link APIResult} with state {@link APIResult.Status#PARTIAL}, if delete succeeded only for some services.
+   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if delete has failed
    */
   @PUT
   @Path("resources/delete")
@@ -156,13 +172,20 @@ public class SessionResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult deleteResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
+    int numDeleted = 0;
     for (GrillService service : GrillServices.get().getGrillServices()) {
       try {
         service.deleteResource(sessionid,  type, path);
+        numDeleted++;
       } catch (GrillException e) {
         LOG.error("Failed to delete resource in service:" + service, e);
-        return new APIResult(APIResult.Status.PARTIAL,
-            "Add resource is partial, failed for service:" + service.getName());
+        if (numDeleted != 0) {
+          return new APIResult(APIResult.Status.PARTIAL,
+              "Delete resource is partial, failed for service:" + service.getName());
+        } else {
+          return new APIResult(APIResult.Status.PARTIAL,
+              "Delete resource has failed");
+        }
       }
     }
     return new APIResult(APIResult.Status.SUCCEEDED,
@@ -171,10 +194,13 @@ public class SessionResource {
 
   /**
    * Get a list of key=value parameters set for this session
+   * 
    * @param sessionid session handle object
-   * @param verbose set this to true if verbose result is required
+   * @param verbose If true, all the parameters will be returned.
+   *  If false, configuration parameters will be returned
    * @param key if this is empty, output will contain all parameters and their values, 
    * if it is non empty parameters will be filtered by key
+   * 
    * @return List of Strings, one entry per key-value pair
    */
   @GET
@@ -199,9 +225,11 @@ public class SessionResource {
 
   /**
    * Set value for a parameter specified by key
+   * 
    * @param sessionid session handle object
    * @param key parameter key
    * @param value parameter value
+   * 
    * @return APIResult object indicating if set operation was successful
    */
   @PUT

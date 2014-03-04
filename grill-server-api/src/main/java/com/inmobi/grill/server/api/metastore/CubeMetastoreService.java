@@ -107,9 +107,8 @@ public interface CubeMetastoreService {
   /**
    * Drop a cube from the metastore in the currently deleted database
    * @param cubeName
-   * @param cascade
    */
-  public void dropCube(GrillSessionHandle sessionid, String cubeName, boolean cascade) throws GrillException;
+  public void dropCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
 
   /**
    * Update an existing cube
@@ -142,7 +141,9 @@ public interface CubeMetastoreService {
 	public void createDimensionStorage(GrillSessionHandle sessionid, String dimName, XStorageTableElement storageTable)
 	throws GrillException;
 	public void dropAllStoragesOfDim(GrillSessionHandle sessionid, String dimName) throws GrillException;
+  public XStorageTableElement getStorageOfDim(GrillSessionHandle sessionid, String dimName, String storageName) throws GrillException;
 	public void dropStorageOfDim(GrillSessionHandle sessionid, String dimName, String storage) throws GrillException;
+  public List<String> getAllDimNames(GrillSessionHandle sessionid) throws GrillException;
 
 
 	public List<FactTable> getAllFactsOfCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
@@ -153,6 +154,8 @@ public interface CubeMetastoreService {
   public List<String> getAllFactNames(GrillSessionHandle sessionid) throws GrillException;
 
   public List<String> getStoragesOfFact(GrillSessionHandle sessionid, String fact) throws GrillException;
+  public void dropAllStoragesOfFact(GrillSessionHandle sessionid, String factName) throws GrillException;
+  public XStorageTableElement getStorageOfFact(GrillSessionHandle sessionid, String fact, String storageName) throws GrillException;
   public void addStorageToFact(GrillSessionHandle sessionid, String fact, XStorageTableElement storageTable) throws GrillException;
   public void dropStorageOfFact(GrillSessionHandle sessionid, String fact, String storage) throws GrillException;
 
