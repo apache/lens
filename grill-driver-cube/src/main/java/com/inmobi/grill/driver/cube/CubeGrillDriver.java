@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -357,13 +358,32 @@ public class CubeGrillDriver implements GrillDriver {
 
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    // TODO Auto-generated method stub
+    drivers.clear();
+    int nDrivers = in.readInt();
+    String[] driverClasses = conf.getStrings(ENGINE_DRIVER_CLASSES);
     
+    for (int i = 0; i < nDrivers; i++) {
+      try {
+        String driverClsName = in.readUTF();
+        Class<? extends GrillDriver> driverCls = 
+            (Class<? extends GrillDriver>)Class.forName(driverClsName);
+        GrillDriver driver = (GrillDriver) driverCls.newInstance();
+        driver.configure(conf);
+        driver.readExternal(in);
+        drivers.add(driver);
+      } catch (Exception exc) {
+        throw new IOException(exc);
+     }
+      
+    }
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    // TODO Auto-generated method stub
-    
+    out.writeInt(drivers.size());
+    for (GrillDriver driver : drivers) {
+      out.writeUTF(driver.getClass().getName());
+      driver.writeExternal(out);
+    }
   }
 }

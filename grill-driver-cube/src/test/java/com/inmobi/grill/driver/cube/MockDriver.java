@@ -22,6 +22,7 @@ public class MockDriver implements GrillDriver {
 
   Configuration conf;
   String query;
+  private int ioTestVal = -1;
 
   public MockDriver() {    
   }
@@ -34,6 +35,7 @@ public class MockDriver implements GrillDriver {
   @Override
   public void configure(Configuration conf) throws GrillException {
     this.conf = conf;
+    ioTestVal = conf.getInt("mock.driver.test.val", -1);
   }
 
   static class MockQueryPlan extends QueryPlan {
@@ -144,14 +146,16 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    // TODO Auto-generated method stub
-    
+    ioTestVal = in.readInt();
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    // TODO Auto-generated method stub
-    
+    out.writeInt(ioTestVal);
+  }
+
+  public int getTestIOVal() {
+    return ioTestVal;
   }
 
 }
