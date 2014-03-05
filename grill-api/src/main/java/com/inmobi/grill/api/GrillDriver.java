@@ -1,11 +1,13 @@
 package com.inmobi.grill.api;
 
 
+import java.io.Externalizable;
+
 import org.apache.hadoop.conf.Configuration;
 
 import com.inmobi.grill.exception.GrillException;
 
-public interface GrillDriver {
+public interface GrillDriver extends Externalizable {
 
   /**
    * Get driver configuration

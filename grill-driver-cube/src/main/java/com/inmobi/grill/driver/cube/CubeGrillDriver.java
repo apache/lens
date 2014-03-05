@@ -1,5 +1,8 @@
 package com.inmobi.grill.driver.cube;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -10,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
@@ -351,5 +353,17 @@ public class CubeGrillDriver implements GrillDriver {
 
   List<GrillDriver> getDrivers() {
     return drivers;
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    // TODO Auto-generated method stub
+    
   }
 }

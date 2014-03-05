@@ -4,6 +4,10 @@ package com.inmobi.grill.driver.hive;
 import static org.junit.Assert.assertNotNull;
 import static org.testng.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -23,6 +27,8 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.QueryHandle;
 import com.inmobi.grill.api.QueryStatus;
+import com.inmobi.grill.api.QueryStatus.Status;
+import com.inmobi.grill.driver.hive.HiveDriver.QueryContext;
 import com.inmobi.grill.exception.GrillException;
 
 public class TestRemoteHiveDriver extends TestHiveDriver {
@@ -167,5 +173,72 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     assertEquals(launchedQueries, QUERIES);
     assertEquals(thrs.size(), QUERIES * THREADS);
     assertEquals(errCount.get(), 0);
+  }
+  
+  @Test
+  public void testHiveDriverPersistence() throws Exception {
+    System.out.println("@@@@ start_persistence_test");
+    HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
+    driverConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
+    
+    final HiveDriver oldDriver = new HiveDriver();
+    oldDriver.configure(driverConf);
+    
+    driverConf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    driverConf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
+    oldDriver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), driverConf);
+    
+    String tableName = "test_hive_driver_persistence";
+
+    // Create some ops with a driver
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)";
+    oldDriver.execute(createTable, driverConf);
+    
+    // Load some data into the table
+    String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
+    oldDriver.execute(dataLoad, driverConf);
+    
+    driverConf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
+    driverConf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    // Fire two queries
+    QueryHandle query1 = oldDriver.executeAsync("SELECT * FROM " + tableName, driverConf);
+    
+    QueryHandle query2 = oldDriver.executeAsync("SELECT ID FROM " + tableName, driverConf);
+    
+    // Write driver to stream
+    ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
+    try {
+      oldDriver.writeExternal(new ObjectOutputStream(driverBytes));
+    } finally {
+      driverBytes.close();
+    }
+    
+    // Create another driver from the stream
+    ByteArrayInputStream driverInput = new ByteArrayInputStream(driverBytes.toByteArray());
+    HiveDriver newDriver = new HiveDriver();
+    newDriver.readExternal(new ObjectInputStream(driverInput));
+    newDriver.configure(driverConf);
+    driverInput.close();
+    
+    // Check status from the new driver, should get all statuses back.
+    while (true) {
+      QueryStatus stat1 = newDriver.getStatus(query1);
+      assertNotNull(stat1);
+      System.out.println("@@ stat1 " + query1 + " > " + stat1.getStatus());
+      QueryStatus stat2 = newDriver.getStatus(query2);
+      assertNotNull(stat2);
+      System.out.println("@@ stat2 " + query2 + " > " + stat2.getStatus());
+      
+      if (isFinished(stat1) && isFinished(stat2)) {
+        break;
+      } else {
+        Thread.sleep(1000);
+      }
+    }
+  }
+  
+  private boolean isFinished(QueryStatus stat) {
+    QueryStatus.Status s = stat.getStatus();
+    return s == Status.CANCELED || s == Status.FAILED || s == Status.CLOSED || s == Status.SUCCESSFUL;
   }
 }
