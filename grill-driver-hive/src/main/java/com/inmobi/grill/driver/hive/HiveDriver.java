@@ -2,6 +2,9 @@ package com.inmobi.grill.driver.hive;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,6 +29,7 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
+import org.apache.hive.service.cli.thrift.TOperationHandle;
 import org.apache.hive.service.cli.thrift.TStringValue;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -142,15 +146,20 @@ public class HiveDriver implements GrillDriver {
   /**
    * Internal class to hold query related info
    */
-  class QueryContext {
-    final QueryHandle queryHandle;
-    OperationHandle hiveHandle;
+  public static class QueryContext implements Serializable {
+    private static final long serialVersionUID = -85736670291184351L;
+    transient QueryHandle queryHandle;
+    transient OperationHandle hiveHandle;
     String userQuery;
     String hiveQuery;
-    Path resultSetPath;
+    transient Path resultSetPath;
     boolean isPersistent;
-    HiveConf conf;
+    transient HiveConf conf;
 
+    public QueryContext(QueryHandle handle) {
+      this.queryHandle = handle;
+    }
+    
     public QueryContext() {
       queryHandle = new QueryHandle(UUID.randomUUID());
     }
@@ -551,5 +560,38 @@ public class HiveDriver implements GrillDriver {
       throw new GrillException("Query not found " + ctx); 
     }
     return ctx;
+  }
+  
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    int numPairs = in.readInt();
+    synchronized(handleToContext) {
+      for (int i = 0; i < numPairs; i++) {
+        QueryHandle handle = new QueryHandle((UUID)in.readObject());
+        String resultSetPath = in.readUTF();
+        Path resultPath = new Path(resultSetPath);
+        OperationHandle opHandle = new OperationHandle((TOperationHandle) in.readObject());
+        QueryContext ctx = (QueryContext) in.readObject();
+        ctx.hiveHandle = opHandle;
+        ctx.resultSetPath = resultPath;
+        ctx.queryHandle = handle;
+        handleToContext.put(ctx.queryHandle, ctx);
+      }
+    }
+  }
+
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    // Write the query handle to hive handle map to output
+    synchronized(handleToContext) {
+      out.writeInt(handleToContext.size());
+      for (QueryContext queryContext : handleToContext.values()) {
+        out.writeObject(queryContext.queryHandle.getHandleId());
+        out.writeUTF(queryContext.resultSetPath.toString());
+        out.writeObject(queryContext.hiveHandle.toTOperationHandle());
+        out.writeObject(queryContext);
+      }
+    }
   }
 }
