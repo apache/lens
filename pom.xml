@@ -475,6 +475,7 @@
     <module>grill-api</module>
     <module>grill-server-api</module>
     <module>grill-cli</module>
+    <module>grill-storage-db</module>
     <module>grill-driver-cube</module>
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
