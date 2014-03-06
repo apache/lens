@@ -226,6 +226,14 @@ public class SessionResource {
   /**
    * Set value for a parameter specified by key
    * 
+   * The parameters can be a system property or a hive variable or a configuration.
+   * To set key as system property, the key should be prefixed with 'system:'.
+   * To set key as a hive variable, the key should be prefixed with 'hivevar:'.
+   * To set key as configuration parameter, the key should be prefixed with 'hiveconf:'.
+   * If no prefix is attached, the parameter is set as configuration.
+   * 
+   * System properties are not restricted to the session, they would be set globally
+   * 
    * @param sessionid session handle object
    * @param key parameter key
    * @param value parameter value
