@@ -45,7 +45,6 @@ public class HiveQueryPlan extends DriverQueryPlan {
     Hive metastore = Hive.get(conf);
 
     for (String line : explainOutput) {
-      //System.out.println("@@ " + states + " [" +state + "] " + line);
       String tr = line.trim();
       prevState = state;
       state = nextState(tr, state);
@@ -81,18 +80,18 @@ public class HiveQueryPlan extends DriverQueryPlan {
           }
           break;
         case SELECT:
-          if (tr.startsWith("expr:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
-            numSels++;
+          if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
+            numSels += StringUtils.split(tr, ",").length;
           }
           break;
         case GROUPBY_EXPRS:
-          if (tr.startsWith("expr:")) {
-            numAggrExprs++;
+          if (tr.startsWith("aggregations:")) {
+            numAggrExprs += StringUtils.split(tr, ",").length;
           }
           break;
         case GROUPBY_KEYS:
-          if (tr.startsWith("expr:")) {
-            numGbys++;
+          if (tr.startsWith("keys:")) {
+            numGbys += StringUtils.split(tr, ",").length;
           }
           break;
       }

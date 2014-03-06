@@ -2,6 +2,7 @@ package com.inmobi.grill.server.session;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -209,16 +210,23 @@ public class SessionResource {
   public StringList getParams(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("false") @QueryParam("verbose") boolean verbose,
       @DefaultValue("") @QueryParam("key") String key) {
-    OperationHandle handle = sessionService.getAllSessionParameters(sessionid, verbose, key);
     RowSet rows = null;
+    boolean failed = false;
+    List<String> result = new ArrayList<String>();
     try {
+      OperationHandle handle = sessionService.getAllSessionParameters(sessionid, verbose, key);
       rows = sessionService.getCliService().fetchResults(handle);
     } catch (HiveSQLException e) {
+      failed = true;
+      result.add(key + " is undefined");
+    } catch (GrillException e) {
       new WebApplicationException(e);
     }
-    List<String> result = new ArrayList<String>();
-    for (TRow row : rows.toTRowSet().getRows()) {
-      result.add(row.getColVals().get(0).getStringVal().getValue()); 
+    if (!failed) {
+      Iterator<Object[]> itr = rows.iterator();
+      while (itr.hasNext()) {
+        result.add((String)itr.next()[0]); 
+      }
     }
     return new StringList(result);
   }

@@ -115,20 +115,20 @@ public class TestSessionResource extends GrillJerseyTest {
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(),"my.property"));
+        FormDataContentDisposition.name("key").build(),"hiveconf:my.conf"));
     setpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("value").build(),"myvalue"));
     result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-    // get the my.property session param
+    // get the my.conf session param
     sessionParams = paramtarget.queryParam("sessionid", handle)
-        .queryParam("key", "my.property").request().get(
+        .queryParam("key", "my.conf").request().get(
         StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("my.property=myvalue"));
+    Assert.assertTrue(sessionParams.getElements().contains("my.conf=myvalue"));
 
     // get all params verbose
     sessionParams = paramtarget.queryParam("sessionid", handle)
@@ -144,19 +144,19 @@ public class TestSessionResource extends GrillJerseyTest {
 
     // get myvar session params on handle2
     sessionParams = paramtarget.queryParam("sessionid", handle2)
-        .queryParam("key", "myvar").request().get(
+        .queryParam("key", "hivevar:myvar").request().get(
         StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("myvar is undefined"));
+    Assert.assertTrue(sessionParams.getElements().contains("hivevar:myvar is undefined"));
 
     // get the my.property session param on handle2
     sessionParams = paramtarget.queryParam("sessionid", handle2)
-        .queryParam("key", "my.property").request().get(
+        .queryParam("key", "my.conf").request().get(
         StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("my.property is undefined"));
+    Assert.assertTrue(sessionParams.getElements().contains("my.conf is undefined"));
 
     // close session
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
@@ -191,7 +191,7 @@ public class TestSessionResource extends GrillJerseyTest {
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
         "file"));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        "test-classes/grill-site.xml"));
+        "target/test-classes/grill-site.xml"));
     APIResult result = resourcetarget.path("add").request().put(
         Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
@@ -203,7 +203,7 @@ public class TestSessionResource extends GrillJerseyTest {
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
         "file"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        "test-classes/grill-site.xml"));
+        "target/test-classes/grill-site.xml"));
     result = resourcetarget.path("delete").request().put(
         Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
