@@ -1,5 +1,6 @@
 package com.inmobi.grill.server.session;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -67,7 +68,7 @@ public class TestSessionResource extends GrillJerseyTest {
     final GrillSessionHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
     Assert.assertNotNull(handle);
-    
+
     // get all session params
     final WebTarget paramtarget = target().path("session/params");
     StringList sessionParams = paramtarget.queryParam("sessionid", handle).request().get(
@@ -105,7 +106,7 @@ public class TestSessionResource extends GrillJerseyTest {
     // get myvar session params
     sessionParams = paramtarget.queryParam("sessionid", handle)
         .queryParam("key", "myvar").request().get(
-        StringList.class);
+            StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
     Assert.assertTrue(sessionParams.getElements().contains("myvar=10"));
@@ -125,7 +126,7 @@ public class TestSessionResource extends GrillJerseyTest {
     // get the my.conf session param
     sessionParams = paramtarget.queryParam("sessionid", handle)
         .queryParam("key", "my.conf").request().get(
-        StringList.class);
+            StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
     Assert.assertTrue(sessionParams.getElements().contains("my.conf=myvalue"));
@@ -133,7 +134,7 @@ public class TestSessionResource extends GrillJerseyTest {
     // get all params verbose
     sessionParams = paramtarget.queryParam("sessionid", handle)
         .queryParam("verbose", true).request().get(
-        StringList.class);
+            StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertTrue(sessionParams.getElements().size() > 1);
 
@@ -143,20 +144,22 @@ public class TestSessionResource extends GrillJerseyTest {
     Assert.assertNotNull(handle);
 
     // get myvar session params on handle2
-    sessionParams = paramtarget.queryParam("sessionid", handle2)
-        .queryParam("key", "hivevar:myvar").request().get(
-        StringList.class);
-    System.out.println("Session params:" + sessionParams.getElements());
-    Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("hivevar:myvar is undefined"));
-
-    // get the my.property session param on handle2
-    sessionParams = paramtarget.queryParam("sessionid", handle2)
-        .queryParam("key", "my.conf").request().get(
-        StringList.class);
-    System.out.println("Session params:" + sessionParams.getElements());
-    Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("my.conf is undefined"));
+    try {
+      sessionParams = paramtarget.queryParam("sessionid", handle2)
+          .queryParam("key", "hivevar:myvar").request().get(
+              StringList.class);
+      Assert.fail("Expected 404");
+    } catch (NotFoundException ne) {
+    }
+    // get the my.conf session param on handle2
+    try {
+      sessionParams = paramtarget.queryParam("sessionid", handle2)
+          .queryParam("key", "my.conf").request().get(
+              StringList.class);
+      System.out.println("sessionParams:" + sessionParams.getElements());
+      Assert.fail("Expected 404");
+    } catch (NotFoundException ne) {
+    }
 
     // close session
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
@@ -182,7 +185,7 @@ public class TestSessionResource extends GrillJerseyTest {
     final GrillSessionHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
     Assert.assertNotNull(handle);
-    
+
     // add a resource
     final WebTarget resourcetarget = target().path("session/resources");
     final FormDataMultiPart mp1 = new FormDataMultiPart();

@@ -10,6 +10,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -23,7 +24,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.RowSet;
-import org.apache.hive.service.cli.thrift.TRow;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.api.APIResult;
@@ -211,22 +211,22 @@ public class SessionResource {
       @DefaultValue("false") @QueryParam("verbose") boolean verbose,
       @DefaultValue("") @QueryParam("key") String key) {
     RowSet rows = null;
-    boolean failed = false;
     List<String> result = new ArrayList<String>();
     try {
       OperationHandle handle = sessionService.getAllSessionParameters(sessionid, verbose, key);
       rows = sessionService.getCliService().fetchResults(handle);
     } catch (HiveSQLException e) {
-      failed = true;
-      result.add(key + " is undefined");
-    } catch (GrillException e) {
-      new WebApplicationException(e);
-    }
-    if (!failed) {
-      Iterator<Object[]> itr = rows.iterator();
-      while (itr.hasNext()) {
-        result.add((String)itr.next()[0]); 
+      if (e.getMessage().contains(key + " is undefined")) {
+        throw new NotFoundException(e.getMessage());
+      } else {
+        throw new WebApplicationException(e);
       }
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    }
+    Iterator<Object[]> itr = rows.iterator();
+    while (itr.hasNext()) {
+      result.add((String)itr.next()[0]); 
     }
     return new StringList(result);
   }
