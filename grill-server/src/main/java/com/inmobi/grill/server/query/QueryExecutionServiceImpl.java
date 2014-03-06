@@ -669,7 +669,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       LOG.info("Waiting thread interrupted");
     }
     if (getQueryContext(sessionHandle, handle).getStatus().isFinished()) {
-      //result.SetResult("Finished");
+      result.setResult(getResultset(handle).toQueryResult());
     }
     return result;
     
