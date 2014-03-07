@@ -21,12 +21,12 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
     Object value = null;
     boolean retrievedData = false;
     FieldDescriptor fd;
-    KeyLessNetworkObject nob;
+    KeyLessNetworkObject.Builder nobBuilder;
 
     protected Object getField() {
       if (!retrievedData) {
-        if (fd != null && nob.hasField(fd)) {
-          Object nobField = nob.getField(fd);
+        if (fd != null && nobBuilder.hasField(fd)) {
+          Object nobField = nobBuilder.getField(fd);
           value = nobField;
           if (nobField instanceof String) {
             if (CubeDDL.isMeasure(fd.getName())) {
@@ -35,7 +35,7 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
                 value = val;
               } catch (NumberFormatException e) {
                 LOG.warn("Error parsing " + fd.getName() 
-                    + ", value " + nob.getField(fd), e);
+                    + ", value " + nobBuilder.getField(fd), e);
               }
             }
           } 
@@ -47,9 +47,9 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
       return value;
     }
 
-    public void init(KeyLessNetworkObject nob,
+    public void init(KeyLessNetworkObject.Builder nob,
         FieldDescriptor fieldDescriptor) {
-      this.nob = nob;
+      this.nobBuilder = nob;
       this.fd = fieldDescriptor;
       retrievedData  = false;
     }
@@ -115,10 +115,8 @@ public class LazyNOBColumnarStruct extends ColumnarStructBase {
         }
       }
     }
-    KeyLessNetworkObject nob = nobBuilder.build();
-
     for (int i = 0; i < numCols; i++) {
-      fieldInfoList[i].init(nob, CubeDDL.getFdListMap().get(i));
+      fieldInfoList[i].init(nobBuilder, CubeDDL.getFdListMap().get(i));
     }
   }
 
