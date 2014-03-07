@@ -1,5 +1,6 @@
 package com.inmobi.grill.server.api.query;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -17,7 +18,9 @@ import com.inmobi.grill.server.api.driver.GrillDriver;
 import lombok.Getter;
 import lombok.Setter;
 
-public class QueryContext implements Comparable<QueryContext> {
+public class QueryContext implements Comparable<QueryContext>, Serializable {
+
+  private static final long serialVersionUID = 1L;
 
   @Getter @Setter private QueryHandle queryHandle;
   @Getter final private String userQuery;

@@ -182,6 +182,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
+  private void setFailedStatus(QueryContext ctx, String statusMsg, String reason) {
+    QueryStatus before = ctx.getStatus();
+    ctx.setStatus(new QueryStatus(0.0f,
+        QueryStatus.Status.FAILED,
+        statusMsg, false, null, reason));
+    fireStatusChangeEvent(ctx, ctx.getStatus(), before);
+    updateFinishedQuery(ctx);
+  }
+
   private class QuerySubmitter implements Runnable {
     @Override
     public void run() {
@@ -190,16 +199,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         try {
           QueryContext ctx = acceptedQueries.take();
           LOG.info("Launching query:" + ctx.getDriverQuery());
-          rewriteAndSelect(ctx);
-          ctx.getSelectedDriver().executeAsync(ctx);
+          try {
+            rewriteAndSelect(ctx);
+            ctx.getSelectedDriver().executeAsync(ctx);
+          } catch (GrillException e) {
+            LOG.error("Error launching query ", e);
+            String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
+            setFailedStatus(ctx, "Launching query failed", reason);
+            continue;
+          }
           QueryStatus before = ctx.getStatus();
           ctx.setStatus(new QueryStatus(ctx.getStatus().getProgress(),
-            QueryStatus.Status.LAUNCHED,
-            "launched on the driver", false, null, null));
+              QueryStatus.Status.LAUNCHED,
+              "launched on the driver", false, null, null));
           launchedQueries.add(ctx);
           fireStatusChangeEvent(ctx, ctx.getStatus(), before);
-        } catch (GrillException e) {
-          LOG.error("Error launching query ", e);
         } catch (InterruptedException e) {
           LOG.info("Query Submitter has been interrupted, exiting");
           return;
@@ -256,29 +270,29 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private StatusChange newStatusChangeEvent(QueryContext ctx, QueryStatus.Status prevState,
-                                            QueryStatus.Status currState) {
+      QueryStatus.Status currState) {
     QueryHandle query = ctx.getQueryHandle();
     // TODO Get event time from status
     switch (currState) {
-      case CANCELED:
-        return new QueryCancelled(ctx.getCancelTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
-      case CLOSED:
-        return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
-      case FAILED:
-        return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
-      case LAUNCHED:
-        return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
-      case QUEUED:
-        long time = ctx.getSubmissionTime() == null ? System.currentTimeMillis() : ctx.getSubmissionTime().getTime();
-        return new QueryQueued(time, prevState, currState, query, ctx.getSubmittedUser());
-      case RUNNING:
-        return new QueryRunning(ctx.getRunningTime(), prevState, currState, query);
-      case SUCCESSFUL:
-        return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
-      case UNKNOWN:
-      default:
-        LOG.warn("Query " + query + " transitioned to UNKNOWN state from " + prevState + " state");
-        return null;
+    case CANCELED:
+      return new QueryCancelled(ctx.getCancelTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+    case CLOSED:
+      return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+    case FAILED:
+      return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+    case LAUNCHED:
+      return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
+    case QUEUED:
+      long time = ctx.getSubmissionTime() == null ? System.currentTimeMillis() : ctx.getSubmissionTime().getTime();
+      return new QueryQueued(time, prevState, currState, query, ctx.getSubmittedUser());
+    case RUNNING:
+      return new QueryRunning(ctx.getRunningTime(), prevState, currState, query);
+    case SUCCESSFUL:
+      return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
+    case UNKNOWN:
+    default:
+      LOG.warn("Query " + query + " transitioned to UNKNOWN state from " + prevState + " state");
+      return null;
     }
   }
 
@@ -310,10 +324,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private void updateFinishedQuery(QueryContext ctx) throws GrillException {
+  private void updateFinishedQuery(QueryContext ctx) {
     launchedQueries.remove(ctx);
     finishedQueries.add(new FinishedQuery(ctx));
-    notifyAllListeners();
   }
 
   private class QueryPurger implements Runnable {
@@ -323,14 +336,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (!stopped && !queryPurger.isInterrupted()) {
         try {
           FinishedQuery finished = finishedQueries.take();
-          notifyAllListeners();
           finished.getCtx().getSelectedDriver().closeQuery(
               finished.getCtx().getQueryHandle());
           allQueries.remove(finished.getCtx().getQueryHandle());
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
-            finished.getCtx().getStatus());
-          notifyAllListeners();
+              new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
+              finished.getCtx().getStatus());
         } catch (GrillException e) {
           LOG.error("Error closing  query ", e);
         } catch (InterruptedException e) {
@@ -352,7 +363,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           PreparedQueryContext prepared = preparedQueryQueue.take();
           prepared.getSelectedDriver().closePreparedQuery(prepared.getPrepareHandle());
           preparedQueries.remove(prepared.getPrepareHandle());
-          notifyAllListeners();
         } catch (GrillException e) {
           LOG.error("Error closing prepared query ", e);
         } catch (InterruptedException e) {
@@ -363,10 +373,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         }
       }
     }
-  }
-
-  public void notifyAllListeners() throws GrillException {
-    //TODO 
   }
 
   public synchronized void init(HiveConf hiveConf) {
@@ -537,7 +543,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Configuration qconf = getGrillConf(sessionHandle, GrillConf);
       accept(query, qconf, SubmitOp.EXECUTE);
       QueryContext ctx = new QueryContext(query, getSession(sessionHandle).getUserName(), qconf);
-      
+
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
       release(sessionHandle);
@@ -546,15 +552,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
       Configuration qconf) throws GrillException {
-      ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
-      acceptedQueries.add(ctx);
-      ctx.setStatus(new QueryStatus(0.0,
+    ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
+    acceptedQueries.add(ctx);
+    ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
         "Query is queued", false, null, null));
-      allQueries.put(ctx.getQueryHandle(), ctx);
-      fireStatusChangeEvent(ctx, ctx.getStatus(), null);
-      LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
-      return ctx.getQueryHandle();
+    allQueries.put(ctx.getQueryHandle(), ctx);
+    fireStatusChangeEvent(ctx, ctx.getStatus(), null);
+    LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
+    return ctx.getQueryHandle();
   }
 
   @Override
@@ -565,10 +571,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
       if (ctx != null && ctx.getStatus().getStatus() == QueryStatus.Status.QUEUED) {
         ctx.updateConf(newconf.getProperties());
-        notifyAllListeners();
+        // TODO COnf changed event tobe raised
         return true;
       } else {
-        notifyAllListeners();
         return false;
       }
     } finally {
@@ -590,19 +595,19 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private QueryContext getQueryContext(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
-    throws GrillException {
-  try {
-    acquire(sessionHandle);
-    QueryContext ctx = allQueries.get(queryHandle);
-    if (ctx == null) {
-      throw new NotFoundException("Query not found " + queryHandle);
+      throws GrillException {
+    try {
+      acquire(sessionHandle);
+      QueryContext ctx = allQueries.get(queryHandle);
+      if (ctx == null) {
+        throw new NotFoundException("Query not found " + queryHandle);
+      }
+      updateStatus(queryHandle);
+      return ctx;
+    } finally {
+      release(sessionHandle);
     }
-    updateStatus(queryHandle);
-    return ctx;
-  } finally {
-    release(sessionHandle);
   }
-}
   @Override
   public GrillQuery getQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
       throws GrillException {
@@ -672,9 +677,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       result.setResult(getResultset(handle).toQueryResult());
     }
     return result;
-    
+
   }
- 
+
   class QueryCompletionListenerImpl implements QueryCompletionListener {
     QueryCompletionListenerImpl() {
     }
@@ -703,7 +708,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         return resultSet.getMetadata().toQueryResultSetMetadata();
       } else {
         throw new NotFoundException("Resultset metadata not found for query: ("
-          + sessionHandle + ", " + queryHandle + ")");
+            + sessionHandle + ", " + queryHandle + ")");
       }
     } finally {
       release(sessionHandle);
@@ -765,7 +770,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         status = StringUtils.isBlank(state) ? null : Status.valueOf(state);
       } catch (IllegalArgumentException e) {
         throw new BadRequestException("Bad state argument passed, possible" +
-          " values are " + Status.values(), e);
+            " values are " + Status.values(), e);
       }
       boolean filterByStatus = status != null;
       boolean filterByUser = StringUtils.isNotBlank(user);
@@ -775,9 +780,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (itr.hasNext()) {
         QueryHandle q = itr.next();
         if ( (filterByStatus && status != allQueries.get(q).getStatus().getStatus())
-          || (filterByUser && !user.equalsIgnoreCase(allQueries.get(q).getSubmittedUser()))
-          ) {
-            itr.remove();
+            || (filterByUser && !user.equalsIgnoreCase(allQueries.get(q).getSubmittedUser()))
+            ) {
+          itr.remove();
         }
       }
       return all;

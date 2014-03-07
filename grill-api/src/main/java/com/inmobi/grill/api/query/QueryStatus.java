@@ -1,5 +1,7 @@
 package com.inmobi.grill.api.query;
 
+import java.io.Serializable;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -12,7 +14,9 @@ import lombok.Setter;
 @XmlRootElement
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class QueryStatus {
+public class QueryStatus implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   public enum Status {
     NEW,
     QUEUED,
