@@ -25,8 +25,7 @@ public class QueryStatus implements Serializable {
     SUCCESSFUL,
     FAILED,
     CANCELED,
-    CLOSED,
-    UNKNOWN
+    CLOSED
   }
   
   @XmlElement @Getter private double progress;
@@ -48,4 +47,56 @@ public class QueryStatus implements Serializable {
     return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) ||
         status.equals(Status.CANCELED);
   }
+
+  public static boolean isValidTransition(Status oldState, Status newState) {
+    switch (oldState) {
+    case NEW:
+      switch (newState) {
+      case QUEUED:
+        return true;
+      }
+      break;
+    case QUEUED:
+      switch (newState) {
+      case LAUNCHED:
+      case FAILED:
+      case CANCELED:
+        return true;
+      }
+      break;
+    case LAUNCHED:
+      switch (newState) {
+      case LAUNCHED:
+      case RUNNING:
+      case CANCELED:
+      case FAILED:
+      case SUCCESSFUL:
+        return true;
+      }
+      break;
+    case RUNNING:
+      switch (newState) {
+      case RUNNING:
+      case CANCELED:
+      case FAILED:
+      case SUCCESSFUL:
+        return true;
+      }
+      break;
+    case FAILED:
+    case CANCELED:
+    case SUCCESSFUL:
+      if (Status.CLOSED.equals(newState)) {
+        return true;
+      }
+    default:
+      // fall-through
+    }
+    return false;
+  }
+
+  public boolean isValidateTransition(Status newState) {
+    return isValidTransition(this.status, newState);
+  }
+
 }

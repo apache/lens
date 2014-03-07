@@ -295,9 +295,7 @@ public class HiveDriver implements GrillDriver {
         statusMessage = "Query is pending in HiveServer";
         break;
       case UNKNOWN:
-        statusMessage = "Query is in unknown state at HiveServer ";
-        stat = Status.UNKNOWN;
-        break;
+        throw new GrillException("Query is in unknown state at HiveServer");
       default :
         statusMessage = "";
         break;

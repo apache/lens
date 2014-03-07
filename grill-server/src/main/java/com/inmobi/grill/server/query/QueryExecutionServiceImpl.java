@@ -182,7 +182,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private void setFailedStatus(QueryContext ctx, String statusMsg, String reason) {
+  private void setFailedStatus(QueryContext ctx, String statusMsg, String reason) throws GrillException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0f,
         QueryStatus.Status.FAILED,
@@ -254,7 +254,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private void updateStatus(final QueryHandle handle) throws GrillException {
     QueryContext ctx = allQueries.get(handle);
     if (ctx != null) {
-      synchronized(handle.getHandleId()) {
+      synchronized(ctx) {
         QueryStatus before = ctx.getStatus();
         if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
             !ctx.getStatus().isFinished()) {
@@ -289,9 +289,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       return new QueryRunning(ctx.getRunningTime(), prevState, currState, query);
     case SUCCESSFUL:
       return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
-    case UNKNOWN:
     default:
-      LOG.warn("Query " + query + " transitioned to UNKNOWN state from " + prevState + " state");
+      LOG.warn("Query " + query + " transitioned to " + currState + " state from " + prevState + " state");
       return null;
     }
   }
@@ -307,7 +306,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       return;
     }
 
-    QueryStatus.Status prevState = before == null ? Status.UNKNOWN : before.getStatus();
+    QueryStatus.Status prevState = before.getStatus();
     QueryStatus.Status currentStatus = current.getStatus();
     if (currentStatus.equals(prevState)) {
       // No need to fire event since the state hasn't changed
@@ -553,12 +552,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
       Configuration qconf) throws GrillException {
     ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
+    QueryStatus before = ctx.getStatus();
     acceptedQueries.add(ctx);
     ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
         "Query is queued", false, null, null));
     allQueries.put(ctx.getQueryHandle(), ctx);
-    fireStatusChangeEvent(ctx, ctx.getStatus(), null);
+    fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
     return ctx.getQueryHandle();
   }
