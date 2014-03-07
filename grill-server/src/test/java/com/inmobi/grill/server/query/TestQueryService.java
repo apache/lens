@@ -29,6 +29,7 @@ import com.inmobi.grill.api.query.QueryPlan;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.driver.hive.TestHiveDriver.FailHook;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
@@ -213,19 +214,20 @@ public class TestQueryService extends GrillJerseyTest {
   public void testQueriesAPI() throws InterruptedException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
-
+    GrillConf conf = new GrillConf();
+    conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query")
         .build(),
-        "select name from table"));
+        "select ID from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
         "operation").build(),
         "execute"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        conf,
         MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -273,7 +275,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
+    conf = new GrillConf();
     conf.addProperty("my.property", "myvalue");
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));

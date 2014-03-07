@@ -11,6 +11,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.ql.HiveDriverRunHook;
+import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.testng.annotations.*;
@@ -155,20 +157,36 @@ public class TestHiveDriver {
     assertEquals(actualRows, expectedRows);
   }
 
+  public static class FailHook implements HiveDriverRunHook {
+
+    @Override
+    public void postDriverRun(HiveDriverRunHookContext arg0) throws Exception {
+      // TODO Auto-generated method stub
+      
+    }
+
+    @Override
+    public void preDriverRun(HiveDriverRunHookContext arg0) throws Exception {
+      throw new GrillException("Failing this run");
+    }
+    
+  }
   // executeAsync
   @Test
   public void testExecuteQueryAsync()  throws Exception {
     createTestTable("test_execute_sync");
 
     // Now run a command that would fail
-    String expectFail = "SELECT * FROM FOO_BAR";
+    String expectFail = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     QueryContext context = new QueryContext(expectFail, null, conf);
     driver.executeAsync(context);
     validateExecuteAsync(context, Status.FAILED, true, null, false);
     driver.closeQuery(context.getQueryHandle());
 
 
+    conf.set("hive.exec.driver.run.hooks", "");
     //  Async select query
     String select = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);

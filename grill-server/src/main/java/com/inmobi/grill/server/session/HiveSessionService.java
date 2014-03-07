@@ -56,7 +56,7 @@ public class HiveSessionService extends GrillService {
   }
 
   public OperationHandle getAllSessionParameters(GrillSessionHandle sessionid,
-      boolean verbose, String key) {
+      boolean verbose, String key) throws GrillException, HiveSQLException {
     String command = "set";
     if (verbose) {
       command += " -v ";
@@ -68,10 +68,6 @@ public class HiveSessionService extends GrillService {
     try {
       acquire(sessionid);
       handle = getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
-    } catch (HiveSQLException e) {
-      throw new WebApplicationException(e);
-    } catch (GrillException e) {
-      throw new WebApplicationException(e);
     } finally {
       try {
         release(sessionid);

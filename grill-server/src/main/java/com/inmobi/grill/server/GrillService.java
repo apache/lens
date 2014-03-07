@@ -108,7 +108,7 @@ public abstract class GrillService extends CompositeService {
 
   public static SessionHandle getHiveSessionHandle(GrillSessionHandle grillHandle) {
     return new SessionHandle(
-        new HandleIdentifier(grillHandle.getPublicId(), grillHandle.getSecretId()));
+        new HandleIdentifier(grillHandle.getPublicId(), grillHandle.getSecretId()), CLIService.SERVER_VERSION);
   }
 
   public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf GrillConf) throws GrillException {

@@ -4,10 +4,12 @@ import java.util.Map;
 
 import javax.ws.rs.NotFoundException;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.session.HiveSessionImpl;
+import org.apache.hive.service.cli.thrift.TProtocolVersion;
 
 import com.inmobi.grill.api.GrillException;
 
@@ -15,9 +17,9 @@ public class GrillSessionImpl extends HiveSessionImpl {
   
   private CubeMetastoreClient cubeClient;
 
-  public GrillSessionImpl(String username, String password,
-      Map<String, String> sessionConf) {
-    super(username, password, sessionConf);
+  public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
+      HiveConf serverConf, Map<String, String> sessionConf) {
+    super(protocol, username, password, serverConf, sessionConf);
   }
 
  
