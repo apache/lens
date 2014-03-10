@@ -20,6 +20,10 @@ package com.inmobi.grill.server;
  * #L%
  */
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.Map;
 
 import javax.ws.rs.NotFoundException;
@@ -40,7 +44,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 
-public abstract class GrillService extends CompositeService {
+public abstract class GrillService extends CompositeService implements Externalizable {
 
   private final CLIService cliService;
 
@@ -141,6 +145,15 @@ public abstract class GrillService extends CompositeService {
       }
     }
     return qconf;
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException,
+      ClassNotFoundException {
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
   }
 
 }

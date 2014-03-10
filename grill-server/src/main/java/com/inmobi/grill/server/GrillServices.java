@@ -20,6 +20,13 @@ package com.inmobi.grill.server;
  * #L%
  */
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -36,6 +43,9 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
@@ -53,10 +63,10 @@ public class GrillServices extends CompositeService {
   public static final String GRILL_SERVICES_NAME = "grill_services";
   private static final GrillServices INSTANCE = new GrillServices(GRILL_SERVICES_NAME);
   private HiveConf conf;
-  private boolean inited = false;
   private CLIService cliService;
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
   private final List<GrillService> grillServices = new ArrayList<GrillService>();
+  private Path persistDir;
 
   public GrillServices(String name) {
     super(name);
@@ -98,8 +108,20 @@ public class GrillServices extends CompositeService {
         services.put(svc.getName(), svc);
       }
 
-      // This will start all services in the order they were added
+      // This will init all services in the order they were added
       super.init(conf);
+
+      //setup persisted state
+      String persistPathStr = conf.get(GrillConfConstants.GRILL_SERVER_PERSIST_LOCATION,
+          GrillConfConstants.DEFAULT_GRILL_SERVER_PERSIST_LOCATION);
+      persistDir = new Path(persistPathStr);
+      try {
+        setupPersistedState();
+      } catch (Exception e) {
+        LOG.error("Could not setup persisted state", e);
+        throw new WebApplicationException(e);
+      }
+
       LOG.info("Initialized grill services: " + services.keySet().toString());
     }
   }
@@ -110,8 +132,57 @@ public class GrillServices extends CompositeService {
     }
   }
 
+  private void setupPersistedState() throws IOException, ClassNotFoundException {
+    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) { 
+      FileSystem fs = persistDir.getFileSystem(conf);
+
+      for (GrillService service : grillServices) {
+        FSDataInputStream fsin;
+        try {
+          fsin = fs.open(getServicePersistPath(service));
+        } catch (FileNotFoundException fe) {
+          LOG.warn("No persist path available for service:" + service.getName());
+          continue;
+        }
+        int length = fsin.available();
+        byte[] bytes = new byte[length];
+        fsin.readFully(bytes);
+        ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
+        service.readExternal(new ObjectInputStream(byteIn));
+        byteIn.close();
+        fsin.close();
+      }
+    }
+  }
+  private void persistGrillServiceState() throws IOException {
+    FileSystem fs = persistDir.getFileSystem(conf);
+
+    for (GrillService service : grillServices) {
+      Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
+      OutputStream fsout = fs.create(serviceWritePath);
+      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+      service.writeExternal(new ObjectOutputStream(byteOut));
+      fsout.write(byteOut.toByteArray());
+      byteOut.close();
+      fsout.close();
+      Path servicePath = getServicePersistPath(service);
+      fs.rename(serviceWritePath, servicePath);
+    }
+  }
+
+  private Path getServicePersistPath(GrillService service) {
+    return new Path(persistDir, service.getName() + ".final");
+  }
+
   public synchronized void stop() {
     if (getServiceState() != STATE.STOPPED) {
+      try {
+        // persist all the services
+        persistGrillServiceState();
+      } catch (IOException e) {
+        LOG.error("Could not persist server state", e);
+      }
       super.stop();
     }
   }

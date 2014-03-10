@@ -45,6 +45,11 @@ public class GrillConfConstants {
   public static final String GRILL_SERVER_BASE_URL = "grill.server.base.url";
   public static final String DEFAULT_GRILL_SERVER_BASE_URL = "http://0.0.0.0:9999/";
 
+  public static final String GRILL_SERVER_RESTART_ENABLED = "grill.server.restart.enabled";
+  public static final boolean DEFAULT_GRILL_SERVER_RESTART_ENABLED = true;
+  public static final String GRILL_SERVER_PERSIST_LOCATION = "grill.server.persist.location";
+  public static final String DEFAULT_GRILL_SERVER_PERSIST_LOCATION = "file:///tmp/grillserver";
+
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }

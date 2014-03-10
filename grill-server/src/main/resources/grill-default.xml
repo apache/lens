@@ -65,6 +65,7 @@
 </property>
 
 <property>
+<<<<<<< HEAD
   <name>grill.server.base.url</name>
   <value>http://localhost:9999/grillapi/</value>
   <description>The base url for the grill server</description>
@@ -139,6 +140,21 @@
   <name>grill.metrics.reporting.period</name>
   <value>10</value>
   <description>The reporting period for metrics. The value is in seconds</description>
+</property>
+
+<property>
+  <name>grill.server.restart.enabled</name>
+  <value>true</value>
+  <description>If restart is enabled, all the services will be started from last
+   saved state, if disabled all the services will start afresh</description>
+</property>
+
+<property>
+  <name>grill.server.persist.location</name>
+  <value>file:///tmp/grillserver</value>
+  <description>Grill server will persist its state in this location when it is
+    going down. Will read from here when it is restarted and restart is enabled.
+  </description>
 </property>
 
 </configuration>
