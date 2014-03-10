@@ -10,6 +10,7 @@ import javax.ws.rs.WebApplicationException;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.GrillEventService;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 
 import org.apache.commons.logging.Log;
@@ -50,7 +51,8 @@ public class GrillServices extends CompositeService {
       // Add default services
       addService(cliService);
       addService(new EventServiceImpl(GrillEventService.NAME));
-
+      addService(new MetricsServiceImpl(MetricsService.NAME));
+      
       // Add configured services, these are instances of GrillService which need a CLIService instance
       // for session management
       String[] serviceNames = conf.getStrings(GrillConfConstants.GRILL_SERVICE_NAMES);
