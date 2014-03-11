@@ -198,8 +198,22 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     mockedDriver.rewriteQuery(q2);
 
-    q2 = "select * from (cube select name from table where" +
-        " (name = 'ABC'||name = 'XYZ')&&(key=100)) a";
+    q2 = "select * from (cube select name from table)a";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    Assert.assertEquals(cubeQueries.size(), 1);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from  (  cube select name from table   )     a";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    Assert.assertEquals(cubeQueries.size(), 1);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from (      cube select name from table where" +
+        " (name = 'ABC'||name = 'XYZ')&&(key=100)   )       a";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(mockedDriver.getReplacedQuery(q2));
     Assert.assertEquals(cubeQueries.size(), 1);
@@ -235,16 +249,46 @@ public class TestCubeDriver {
     q2 = "select * from (cube select name from table union all cube select name2 from table2) u";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(q2);
+    mockedDriver.rewriteQuery(q2);
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
     mockedDriver.rewriteQuery(q2);
 
-    q2 = "select u.* from (select name from table union all cube select name2 from table2) u";
+    q2 = "select u.* from (select name from table    union all       cube select name2 from table2)   u";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select u.* from (select name from table union all cube select name2 from table2)u";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    Assert.assertEquals(cubeQueries.size(), 1);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from (cube select name from table union all cube select name2" +
+      " from table2 union all cube select name3 from table3) u";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    mockedDriver.rewriteQuery(q2);
+    Assert.assertEquals(cubeQueries.size(), 3);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
+    Assert.assertEquals(cubeQueries.get(2).query, "cube select name3 from table3");
+    mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from   (     cube select name from table    union all   cube" +
+      " select name2 from table2   union all  cube select name3 from table3 )  u";
+    Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+    cubeQueries = mockedDriver.findCubePositions(q2);
+    mockedDriver.rewriteQuery(q2);
+    Assert.assertEquals(cubeQueries.size(), 3);
+    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+    Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
+    Assert.assertEquals(cubeQueries.get(2).query, "cube select name3 from table3");
     mockedDriver.rewriteQuery(q2);
 
     q2 = "select * from (cube select name from table union all cube select" +
@@ -255,6 +299,16 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
     mockedDriver.rewriteQuery(q2);
+
+    q2 = "select * from (cube select name from table union all cube select" +
+        " name2 from table2)  u group by u.name";
+   Assert.assertTrue(cubeDriver.isCubeQuery(q2));
+   cubeQueries = mockedDriver.findCubePositions(q2);
+   mockedDriver.rewriteQuery(q2);
+   Assert.assertEquals(cubeQueries.size(), 2);
+   Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
+   Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
+   mockedDriver.rewriteQuery(q2);
   }
   
   @Test
