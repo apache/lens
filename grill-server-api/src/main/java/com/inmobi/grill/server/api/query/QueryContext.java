@@ -48,32 +48,42 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter final private String userQuery;
   @Getter final private Date submissionTime;
   @Getter final private String submittedUser;
-  transient @Getter private Configuration conf;
+  transient @Getter @Setter private Configuration conf;
+  @Getter private GrillConf qconf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
   transient @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;
-  @Getter @Setter private long cancelTime;
-  @Getter @Setter private long closedTime;
-  @Getter @Setter private long endTime;
-  @Getter @Setter private long launchTime;
-  @Getter @Setter private long runningTime;
-  @Getter @Setter private String grillSessionIdentifier;
+  transient @Getter @Setter private long cancelTime;
+  transient @Getter @Setter private long closedTime;
+  transient @Getter @Setter private long endTime;
+  transient @Getter @Setter private long launchTime;
+  transient @Getter @Setter private long runningTime;
   @Getter @Setter private String driverOpHandle;
 
   public QueryContext(String query, String user, Configuration conf) {
-    this(query, user, conf, query, null);
+    this(query, user, new GrillConf(), conf, query, null);
   }
 
-  public QueryContext(PreparedQueryContext prepared, String user,
+  public QueryContext(String query, String user, GrillConf qconf, Configuration conf) {
+    this(query, user, qconf, conf, query, null);
+  }
+
+  public QueryContext(PreparedQueryContext prepared, String user, 
       Configuration conf) {
-    this(prepared.getUserQuery(), user, mergeConf(prepared.getConf(), conf),
+    this(prepared, user, new GrillConf(), conf);
+  }
+
+  public QueryContext(PreparedQueryContext prepared, String user, GrillConf qconf,
+      Configuration conf) {
+    this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf),
         prepared.getDriverQuery(), prepared.getSelectedDriver());
   }
 
-  private QueryContext(String userQuery, String user, Configuration conf,
+  private QueryContext(String userQuery, String user, GrillConf qconf,
+      Configuration conf,
       String driverQuery, GrillDriver selectedDriver) {
     this.submissionTime = new Date();
     this.queryHandle = new QueryHandle(UUID.randomUUID());
@@ -85,6 +95,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.submittedUser = user;
     this.driverQuery = driverQuery;
     this.selectedDriver = selectedDriver;
+    this.qconf = qconf;
   }
 
   private static Configuration mergeConf(Configuration prepared,
@@ -133,7 +144,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
         driverQuery, status, resultSetPath, driverOpHandle, qconf);
   }
 
-  public void setStatus(QueryStatus newStatus) throws GrillException {
+  public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
     if (!this.status.isValidateTransition(newStatus.getStatus())) {
       throw new GrillException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
     }

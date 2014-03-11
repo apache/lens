@@ -38,6 +38,7 @@ import javax.ws.rs.core.MediaType;
 
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillConf;
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.query.GrillPreparedQuery;
 import com.inmobi.grill.api.query.GrillQuery;
@@ -843,6 +844,50 @@ public class TestQueryService extends GrillJerseyTest {
 
   }
 
+  @Test
+  public void testServerRestart() throws InterruptedException, IOException, GrillException {
+    // test post execute op
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select ID, IDSTR from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+        "operation").build(),
+        "execute"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        new GrillConf(),
+        MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+    Assert.assertNotNull(handle);
+
+    // Restart the server
+    queryService.closeSession(grillSessionId);
+    restartGrillServer();
+    queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
+    grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+
+    // Get query
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+
+    // wait till the query finishes
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+    
+    validatePersistedResult(handle);
+  }
+  
   @Override
   protected int getTestPort() {
     return 8083;

@@ -61,15 +61,21 @@ public class GrillServices extends CompositeService {
   }
 
   public static final String GRILL_SERVICES_NAME = "grill_services";
-  private static final GrillServices INSTANCE = new GrillServices(GRILL_SERVICES_NAME);
+  private static GrillServices INSTANCE = new GrillServices(GRILL_SERVICES_NAME);
   private HiveConf conf;
   private CLIService cliService;
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
   private final List<GrillService> grillServices = new ArrayList<GrillService>();
   private Path persistDir;
+  private boolean stopping = false;
 
   public GrillServices(String name) {
     super(name);
+  }
+
+  // This is only for test, to simulate a restart of the server
+  static void setInstance(GrillServices newInstance) {
+    INSTANCE = newInstance;
   }
 
   @Override
@@ -138,20 +144,20 @@ public class GrillServices extends CompositeService {
       FileSystem fs = persistDir.getFileSystem(conf);
 
       for (GrillService service : grillServices) {
-        FSDataInputStream fsin;
+        ObjectInputStream in = null;
         try {
-          fsin = fs.open(getServicePersistPath(service));
-        } catch (FileNotFoundException fe) {
-          LOG.warn("No persist path available for service:" + service.getName());
-          continue;
+          try {
+            in = new ObjectInputStream(fs.open(getServicePersistPath(service)));
+          } catch (FileNotFoundException fe) {
+            LOG.warn("No persist path available for service:" + service.getName());
+            continue;
+          }
+          service.readExternal(in);
+        } finally {
+          if (in != null) {
+            in.close();
+          }
         }
-        int length = fsin.available();
-        byte[] bytes = new byte[length];
-        fsin.readFully(bytes);
-        ByteArrayInputStream byteIn = new ByteArrayInputStream(bytes);
-        service.readExternal(new ObjectInputStream(byteIn));
-        byteIn.close();
-        fsin.close();
       }
     }
   }
@@ -159,13 +165,15 @@ public class GrillServices extends CompositeService {
     FileSystem fs = persistDir.getFileSystem(conf);
 
     for (GrillService service : grillServices) {
+      LOG.info("Persisting state of service:" + service.getName());
       Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
-      OutputStream fsout = fs.create(serviceWritePath);
-      ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-      service.writeExternal(new ObjectOutputStream(byteOut));
-      fsout.write(byteOut.toByteArray());
-      byteOut.close();
-      fsout.close();
+      ObjectOutputStream out = null;
+      try {
+        out = new ObjectOutputStream(fs.create(serviceWritePath));
+        service.writeExternal(out);
+      } finally {
+        out.close();
+      }
       Path servicePath = getServicePersistPath(service);
       fs.rename(serviceWritePath, servicePath);
     }
@@ -177,6 +185,7 @@ public class GrillServices extends CompositeService {
 
   public synchronized void stop() {
     if (getServiceState() != STATE.STOPPED) {
+      stopping = true;
       try {
         // persist all the services
         persistGrillServiceState();
@@ -189,6 +198,10 @@ public class GrillServices extends CompositeService {
 
   public STATE getServiceState() {
     return super.getServiceState();
+  }
+
+  public boolean isStopping() {
+    return stopping;
   }
 
   public static GrillServices get() {

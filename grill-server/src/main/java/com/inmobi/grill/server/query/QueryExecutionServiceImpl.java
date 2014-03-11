@@ -20,6 +20,9 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -146,7 +149,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     driverSelector = new CubeGrillDriver.MinQueryCostSelector();
   }
 
-  private synchronized GrillEventService getEventService() {
+  private GrillEventService getEventService() {
     if (eventService == null) {
       eventService = (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
       if (eventService == null) {
@@ -314,10 +317,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private void updateFinishedQuery(QueryContext ctx, QueryStatus before) {
-    if (before.getStatus().equals(Status.QUEUED)) {
-      acceptedQueries.remove(ctx);
-    } else {
-      launchedQueries.remove(ctx);
+    // before would be null in case of server restart
+    if (before != null) {
+      if (before.getStatus().equals(Status.QUEUED)) {
+        acceptedQueries.remove(ctx);
+      } else {
+        launchedQueries.remove(ctx);
+      }
     }
     finishedQueries.add(new FinishedQuery(ctx));    
   }
@@ -577,16 +583,17 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   @Override
   public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle,
-      QueryPrepareHandle prepareHandle, GrillConf GrillConf)
+      QueryPrepareHandle prepareHandle, GrillConf conf)
           throws GrillException {
     try {
       LOG.info("ExecutePrepareAsync: " + sessionHandle.toString() +
           " query:" + prepareHandle.getPrepareHandleId());
       acquire(sessionHandle);
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
-      Configuration qconf = getGrillConf(sessionHandle, GrillConf);
+      Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(pctx, getSession(sessionHandle).getUserName(), qconf);
+      QueryContext ctx = new QueryContext(pctx,
+          getSession(sessionHandle).getUserName(), conf, qconf);
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
       release(sessionHandle);
@@ -603,7 +610,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
-      QueryContext ctx = new QueryContext(pctx, getSession(sessionHandle).getUserName(), qconf);
+      QueryContext ctx = new QueryContext(pctx,
+          getSession(sessionHandle).getUserName(), conf, qconf);
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);
@@ -612,13 +620,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   @Override
   public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query,
-      GrillConf GrillConf) throws GrillException {
+      GrillConf conf) throws GrillException {
     try {
       LOG.info("ExecuteAsync: "  + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, GrillConf);
+      Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(query, getSession(sessionHandle).getUserName(), qconf);
+      QueryContext ctx = new QueryContext(query,
+          getSession(sessionHandle).getUserName(), conf, qconf);
 
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
@@ -628,7 +637,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
       Configuration qconf) throws GrillException {
-    ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
@@ -724,7 +732,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(query, getSession(sessionHandle).getUserName(), qconf);
+      QueryContext ctx = new QueryContext(query,
+          getSession(sessionHandle).getUserName(), conf, qconf);
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
       release(sessionHandle);
@@ -940,7 +949,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
-          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
           driver.execute(addQuery);
         }
       }
@@ -960,12 +968,97 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
-          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
           driver.execute(addQuery);
         }
       }
     } finally {
       release(sessionHandle);
+    }
+  }
+
+  @Override
+  public void readExternal(ObjectInput in)
+      throws IOException, ClassNotFoundException {
+    Map<String, GrillDriver> driverMap = new HashMap<String, GrillDriver>();
+    synchronized (drivers) {
+      int numDrivers = in.readInt();
+      for (int i =0; i < numDrivers; i++) {
+        String driverClsName = in.readUTF();
+        GrillDriver driver;
+        try {
+          Class<? extends GrillDriver> driverCls = 
+              (Class<? extends GrillDriver>)Class.forName(driverClsName);
+          driver = (GrillDriver) driverCls.newInstance();
+          driver.configure(conf);
+        } catch (Exception e) {
+          LOG.error("Could not instantiate driver:" + driverClsName);
+          throw new IOException(e);
+        }
+        driver.readExternal(in);
+        drivers.add(driver);
+        driverMap.put(driverClsName, driver);
+      }
+    }
+    synchronized (allQueries) {
+      int numQueries = in.readInt();
+      for (int i =0; i < numQueries; i++) {
+        QueryContext ctx = (QueryContext)in.readObject();
+        allQueries.put(ctx.getQueryHandle(), ctx);
+        boolean driverAvailable = in.readBoolean();
+        if (driverAvailable) {
+          String clsName = in.readUTF();
+          ctx.setSelectedDriver(driverMap.get(clsName));
+        }
+        try {
+          ctx.setConf(getGrillConf(null, ctx.getQconf()));
+        } catch (GrillException e) {
+          LOG.error("Could not set query conf");
+        }
+      }
+      
+      // populate the query queues
+      for (QueryContext ctx : allQueries.values()) {
+        switch (ctx.getStatus().getStatus()) {
+        case NEW:
+        case QUEUED:
+          acceptedQueries.add(ctx);
+          break;
+        case LAUNCHED:
+        case RUNNING:
+          launchedQueries.add(ctx);
+          break;
+        case SUCCESSFUL:
+        case FAILED:
+        case CANCELED:
+          updateFinishedQuery(ctx, null);
+        case CLOSED :
+          allQueries.remove(ctx.getQueryHandle());
+        }
+      }
+    }
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    // persist all drivers
+    synchronized (drivers) {
+      out.writeInt(drivers.size());
+      for (GrillDriver driver : drivers) {
+        out.writeUTF(driver.getClass().getName());
+        driver.writeExternal(out);
+      }
+    }
+    // persist allQueries
+    synchronized (allQueries) {
+      out.writeInt(allQueries.size());
+      for (QueryContext ctx : allQueries.values()) {
+        out.writeObject(ctx);
+        boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
+        out.writeBoolean(isDriverAvailable);
+        if (isDriverAvailable) {
+          out.writeUTF(ctx.getSelectedDriver().getClass().getName());
+        }
+      }
     }
   }
 }

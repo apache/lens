@@ -135,12 +135,15 @@ public abstract class GrillService extends CompositeService implements Externali
         new HandleIdentifier(grillHandle.getPublicId(), grillHandle.getSecretId()), CLIService.SERVER_VERSION);
   }
 
-  public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf GrillConf) throws GrillException {
-    HiveConf sessionConf;
-    sessionConf = getSession(sessionHandle).getHiveConf();
-    Configuration qconf = new Configuration(sessionConf);
-    if (GrillConf != null && !GrillConf.getProperties().isEmpty()) {
-      for (Map.Entry<String, String> entry : GrillConf.getProperties().entrySet()) {
+  public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf conf) throws GrillException {
+    Configuration qconf = null;
+    if (sessionHandle != null && getSession(sessionHandle) != null) {
+      qconf = new Configuration(getSession(sessionHandle).getHiveConf());
+    } else {
+      qconf = new Configuration(cliService.getHiveConf());
+    }
+    if (conf != null && !conf.getProperties().isEmpty()) {
+      for (Map.Entry<String, String> entry : conf.getProperties().entrySet()) {
         qconf.set(entry.getKey(), entry.getValue());
       }
     }
