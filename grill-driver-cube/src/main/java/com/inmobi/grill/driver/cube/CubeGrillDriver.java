@@ -98,8 +98,7 @@ public class CubeGrillDriver implements GrillDriver {
           } else if (parent.getChildCount() > ci + 1) {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
               //less for the next start and for close parenthesis
-              cqi.endPos = getEndPos(originalQuery,
-                  getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine()), ")");;
+              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");;
             } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
               //one less for the next start and less the size of string 'UNION ALL'
               cqi.endPos = getEndPos(originalQuery,
@@ -115,8 +114,8 @@ public class CubeGrillDriver implements GrillDriver {
             // one for next AST
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
-            cqi.endPos = getEndPos(originalQuery, getEndPos(originalQuery,
-                parent.getParent().getChild(1).getCharPositionInLine()), ")", "UNION ALL") ;
+            cqi.endPos = getEndPos(originalQuery,
+                parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
         }
         cubeQueries.add(cqi);
@@ -127,10 +126,6 @@ public class CubeGrillDriver implements GrillDriver {
         }
       }
     } 
-  }
-
-  private int getEndPos(String query, int backTrackIndex) {
-    return getEndPos(query, backTrackIndex, (String[])null);
   }
 
   private int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
