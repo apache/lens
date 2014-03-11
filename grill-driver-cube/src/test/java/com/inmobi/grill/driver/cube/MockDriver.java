@@ -1,5 +1,8 @@
 package com.inmobi.grill.driver.cube;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +22,7 @@ public class MockDriver implements GrillDriver {
 
   Configuration conf;
   String query;
+  private int ioTestVal = -1;
 
   public MockDriver() {    
   }
@@ -31,6 +35,7 @@ public class MockDriver implements GrillDriver {
   @Override
   public void configure(Configuration conf) throws GrillException {
     this.conf = conf;
+    ioTestVal = conf.getInt("mock.driver.test.val", -1);
   }
 
   static class MockQueryPlan extends QueryPlan {
@@ -137,6 +142,20 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void close() throws GrillException {
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    ioTestVal = in.readInt();
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    out.writeInt(ioTestVal);
+  }
+
+  public int getTestIOVal() {
+    return ioTestVal;
   }
 
 }

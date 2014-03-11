@@ -1,5 +1,12 @@
 package com.inmobi.grill.driver.cube;
 
+import static org.mockito.Matchers.any;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -11,7 +18,6 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import static org.mockito.Matchers.any;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -38,6 +44,7 @@ public class TestCubeDriver {
     //conf.set(CubeGrillDriver.ENGINE_DRIVER_CLASSES,
     //    MockDriver.class.getCanonicalName());
     cubeDriver = new CubeGrillDriver(conf);
+    conf.setInt("mock.driver.test.val", 5);
   }
 
   @AfterTest
@@ -45,7 +52,7 @@ public class TestCubeDriver {
   }
 
   @Test
-  public void testCubeDriver() throws GrillException {
+  public void testCubeDriver() throws Exception {
     String addQ = "add jar xyz.jar";
     GrillResultSet result = cubeDriver.execute(addQ, conf);
     Assert.assertNotNull(result);
@@ -159,7 +166,7 @@ public class TestCubeDriver {
 
   @Test
   public void testCubeQuery()
-      throws ParseException, SemanticException, GrillException {
+      throws Exception {
     CubeGrillDriver mockedDriver = Mockito.spy(cubeDriver);
     CubeQueryRewriter mockWriter = getMockedRewriter();
     Mockito.doReturn(mockWriter).when(mockedDriver).getRewriter(
@@ -262,7 +269,8 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
     mockedDriver.rewriteQuery(q2);
 
-    q2 = "select * from (cube select name from table union all cube select name2 from table2 union all cube select name3 from table3) u";
+    q2 = "select * from (cube select name from table union all cube select name2" +
+      " from table2 union all cube select name3 from table3) u";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(q2);
     mockedDriver.rewriteQuery(q2);
@@ -272,7 +280,8 @@ public class TestCubeDriver {
     Assert.assertEquals(cubeQueries.get(2).query, "cube select name3 from table3");
     mockedDriver.rewriteQuery(q2);
 
-    q2 = "select * from   (     cube select name from table    union all   cube select name2 from table2   union all  cube select name3 from table3 )  u";
+    q2 = "select * from   (     cube select name from table    union all   cube" +
+      " select name2 from table2   union all  cube select name3 from table3 )  u";
     Assert.assertTrue(cubeDriver.isCubeQuery(q2));
     cubeQueries = mockedDriver.findCubePositions(q2);
     mockedDriver.rewriteQuery(q2);
@@ -300,5 +309,30 @@ public class TestCubeDriver {
    Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
    Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
    mockedDriver.rewriteQuery(q2);
+  }
+  
+  @Test
+  public void testCubeDriverReadWrite() throws Exception {
+    // Test read/write for cube driver
+    CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
+    ByteArrayOutputStream driverOut = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(driverOut);
+    cubeDriver.writeExternal(out);
+    out.close();
+    System.out.println(Arrays.toString(driverOut.toByteArray()));
+    
+    ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
+    conf.setInt("mock.driver.test.val", -1);
+    CubeGrillDriver newDriver = new CubeGrillDriver(conf);
+    newDriver.readExternal(new ObjectInputStream(driverIn));
+    driverIn.close();
+    Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
+    
+    for (GrillDriver driver : newDriver.getDrivers()) {
+      if (driver instanceof MockDriver) {
+        MockDriver md = (MockDriver) driver;
+        Assert.assertEquals(md.getTestIOVal(), 5);
+      }
+    }
   }
 }
