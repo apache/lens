@@ -33,6 +33,7 @@ import com.inmobi.grill.driver.hive.TestHiveDriver.FailHook;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.api.query.QueryEnded;
 import com.inmobi.grill.server.query.QueryApp;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
@@ -42,13 +43,11 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterTest;
@@ -59,12 +58,14 @@ import org.testng.annotations.Test;
 public class TestQueryService extends GrillJerseyTest {
 
   QueryExecutionServiceImpl queryService;
+  MetricsService metricsSvc;
   GrillSessionHandle grillSessionId;
   
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
+    metricsSvc = (MetricsService)GrillServices.get().getService(MetricsService.NAME);
     grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
   }
 
@@ -211,6 +212,8 @@ public class TestQueryService extends GrillJerseyTest {
   @Test
   public void testLaunchFail() throws InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
+    long failedQueries = metricsSvc.getFailedQueries();
+    System.out.println("%% " + failedQueries);
     GrillConf conf = new GrillConf();
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
@@ -235,9 +238,13 @@ public class TestQueryService extends GrillJerseyTest {
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
+      System.out.println("%% query " + ctx.getQueryHandle() + " status:" + stat);
       Thread.sleep(1000);
     }
+    
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+    System.out.println("%% " + metricsSvc.getFailedQueries());
+    Assert.assertEquals(metricsSvc.getFailedQueries(), failedQueries + 1);
   }
 
   // test with execute async post, get all queries, get query context,

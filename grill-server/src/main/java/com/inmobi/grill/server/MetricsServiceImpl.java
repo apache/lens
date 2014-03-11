@@ -19,6 +19,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private AsyncEventListener<StatusChange> queryStatusListener;
   private MetricRegistry metricRegistry;
   
+  
   private Counter queuedQueries;
   private Counter runningQueries;
   private Counter finishedQueries;
@@ -95,17 +96,17 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   
   protected void initCounters() {
     queuedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "queued-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES));
     runningQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "running-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES));
     finishedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "finished-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES));
     acceptedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "accepted-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, ACCEPTED_QUERIES));
     failedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "failed-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FAILED_QUERIES));
     cancelledQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "cancelled-queries"));
+        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, CANCELLED_QUERIES));
   }
 
   @Override
@@ -146,6 +147,54 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public void decrCounter(Class<?> cls, String counter) {
     metricRegistry.counter(MetricRegistry.name(cls, counter)).dec();
+  }
+
+
+  @Override
+  public long getCounter(String counter) {
+    return metricRegistry.counter(MetricRegistry.name(MetricsService.class, counter)).getCount();
+  }
+
+
+  @Override
+  public long getCounter(Class<?> cls, String counter) {
+    return metricRegistry.counter(MetricRegistry.name(cls, counter)).getCount();
+  }
+
+
+  @Override
+  public long getQueuedQueries() {
+    return queuedQueries.getCount();
+  }
+
+
+  @Override
+  public long getRunningQueries() {
+    return runningQueries.getCount();
+  }
+
+
+  @Override
+  public long getFinishedQueries() {
+    return finishedQueries.getCount();
+  }
+
+
+  @Override
+  public long getAcceptedQueries() {
+    return acceptedQueries.getCount();
+  }
+
+
+  @Override
+  public long getCancelledQueries() {
+    return cancelledQueries.getCount();
+  }
+
+
+  @Override
+  public long getFailedQueries() {
+    return failedQueries.getCount();
   }
 
 }
