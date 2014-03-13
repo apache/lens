@@ -50,43 +50,17 @@ public interface MetricsService {
   public static final String QUEUED_QUERIES = "queued-queries";
   public static final String RUNNING_QUERIES = "running-queries";
   public static final String FINISHED_QUERIES = "finished-queries";
-  public static final String ACCEPTED_QUERIES = "accepted-queries";
   public static final String CANCELLED_QUERIES = "cancelled-queries";
   public static final String FAILED_QUERIES = "failed-queries";
   
-  /**
-   * Get value of queueud query metric
-   * @return number of queued queries
-   */
   public long getQueuedQueries();
-  
-  /**
-   * Get value of running query metric
-   * @return number of running queries
-   */
   public long getRunningQueries();
-  
-  /**
-   * Get value of finished query metric
-   * @return number of finished queries
-   */
   public long getFinishedQueries();
   
-  /**
-   * Get value of accepted query metric
-   * @return number of accepted queries
-   */
-  public long getAcceptedQueries();
-  
-  /**
-   * Get value of cancelled query metric
-   * @return number of cancelled queries
-   */
-  public long getCancelledQueries();
-  
-  /**
-   * Get value of failed query metric
-   * @return number of failed queries
-   */
-  public long getFailedQueries();
+  public long getTotalQueuedQueries();
+  public long getTotalSuccessQueries();
+  public long getTotalFinishedQueries();
+  public long getTotalCancelledQueries();
+  public long getTotalFailedQueries();
+  public void publishReport();
 }

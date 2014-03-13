@@ -3,11 +3,13 @@ package com.inmobi.grill.server.query;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import com.inmobi.grill.server.GrillApplicationListener;
 
 @ApplicationPath("/queryapi")
 public class QueryApp extends Application {
@@ -18,6 +20,7 @@ public class QueryApp extends Application {
       classes.add(QueryServiceResource.class);
       classes.add(MultiPartFeature.class);
       classes.add(LoggingFilter.class);
+      classes.add(GrillApplicationListener.class);
       return classes;
   }
 }

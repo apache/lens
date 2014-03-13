@@ -212,7 +212,7 @@ public class TestQueryService extends GrillJerseyTest {
   @Test
   public void testLaunchFail() throws InterruptedException {
     final WebTarget target = target().path("queryapi/queries");
-    long failedQueries = metricsSvc.getFailedQueries();
+    long failedQueries = metricsSvc.getTotalFailedQueries();
     System.out.println("%% " + failedQueries);
     GrillConf conf = new GrillConf();
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -243,8 +243,8 @@ public class TestQueryService extends GrillJerseyTest {
     }
     
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
-    System.out.println("%% " + metricsSvc.getFailedQueries());
-    Assert.assertEquals(metricsSvc.getFailedQueries(), failedQueries + 1);
+    System.out.println("%% " + metricsSvc.getTotalFailedQueries());
+    Assert.assertEquals(metricsSvc.getTotalFailedQueries(), failedQueries + 1);
   }
 
   // test with execute async post, get all queries, get query context,

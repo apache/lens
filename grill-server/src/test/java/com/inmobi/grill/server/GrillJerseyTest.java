@@ -1,6 +1,7 @@
 package com.inmobi.grill.server;
 
 import java.net.URI;
+
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.Application;
 
@@ -17,6 +18,7 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.driver.hive.TestRemoteHiveDriver;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 
 public abstract class GrillJerseyTest extends JerseyTest {
 
@@ -40,6 +42,9 @@ public abstract class GrillJerseyTest extends JerseyTest {
 
   @AfterSuite
   public void stopAll() throws Exception {
+    // print final metrics
+    System.out.println("Final report");
+    ((MetricsService) GrillServices.get().getService(MetricsService.NAME)).publishReport();
     GrillServices.get().stop();
     TestRemoteHiveDriver.stopHS2Service();
   }

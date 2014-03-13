@@ -52,18 +52,6 @@ public class QueryServiceResource {
 
   private QueryExecutionService queryServer;
 
-  private void incrCounter(String counter) {
-    MetricsService metricsService = 
-        (MetricsService) GrillServices.get().getService(MetricsService.NAME);
-    metricsService.incrCounter(QueryServiceResource.class, counter);
-  }
-  
-  private void decrCounter(String counter) {
-    MetricsService metricsService = 
-        (MetricsService) GrillServices.get().getService(MetricsService.NAME);
-    metricsService.decrCounter(QueryServiceResource.class, counter);
-  }
-  
   /**
    * API to know if Query service is up and running
    * 
@@ -103,7 +91,6 @@ public class QueryServiceResource {
     try {
       return queryServer.getAllQueries(sessionid, state, user);
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -147,7 +134,6 @@ public class QueryServiceResource {
       } catch (IllegalArgumentException e) {
       }
       if (sop == null) {
-        incrCounter(BadRequestException.class.getSimpleName());
         throw new BadRequestException("Invalid operation type: " + op +
             submitClue);
       }
@@ -159,11 +145,9 @@ public class QueryServiceResource {
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(sessionid, query, timeoutmillis, conf);
       default:
-        incrCounter(BadRequestException.class.getSimpleName());
         throw new BadRequestException("Invalid operation type: " + op + submitClue);
       }
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -200,7 +184,6 @@ public class QueryServiceResource {
         }
       }
     } catch (Exception e) {
-      incrCounter(e.getClass().getSimpleName());
       LOG.error("Error canceling queries", e);
       failed = true;
     }
@@ -238,7 +221,6 @@ public class QueryServiceResource {
     try {
       return queryServer.getAllPreparedQueries(sessionid, user);
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -272,7 +254,6 @@ public class QueryServiceResource {
       } catch (IllegalArgumentException e) {
       }
       if (sop == null) {
-        incrCounter(BadRequestException.class.getSimpleName());
         throw new BadRequestException("Invalid operation type: " + op + prepareClue);
       }
       switch (sop) {
@@ -284,7 +265,6 @@ public class QueryServiceResource {
         throw new BadRequestException("Invalid operation type: " + op + prepareClue);
       }
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -316,7 +296,6 @@ public class QueryServiceResource {
         }
       }
     } catch (Exception e) {
-      incrCounter(e.getClass().getSimpleName());
       LOG.error("Error destroying prepared queries", e);
       failed = true;
     }
@@ -340,7 +319,6 @@ public class QueryServiceResource {
     try {
       return QueryHandle.fromString(queryHandle);
     } catch (Exception e) {
-      incrCounter(BadRequestException.class.getSimpleName());
       throw new BadRequestException("Invalid query handle: "  + queryHandle, e);
     }
   }
@@ -349,7 +327,6 @@ public class QueryServiceResource {
     try {
       return QueryPrepareHandle.fromString(prepareHandle);
     } catch (Exception e) {
-      incrCounter(BadRequestException.class.getSimpleName());
       throw new BadRequestException("Invalid prepared query handle: " + prepareHandle, e);
     }
   }
@@ -371,7 +348,6 @@ public class QueryServiceResource {
       return queryServer.getPreparedQuery(sessionid,
           getPrepareHandle(prepareHandle));
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -416,7 +392,6 @@ public class QueryServiceResource {
       return queryServer.getQuery(sessionid,
           getQueryHandle(queryHandle));
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -448,7 +423,6 @@ public class QueryServiceResource {
     try {
       return queryServer.cancelQuery(sessionid, queryHandle);
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -457,7 +431,6 @@ public class QueryServiceResource {
     try {
       return queryServer.destroyPrepared(sessionid, queryHandle);
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -489,7 +462,6 @@ public class QueryServiceResource {
             + queryHandle + " failed");        
       }
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -522,7 +494,6 @@ public class QueryServiceResource {
             + prepareHandle + " failed");        
       }
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -559,7 +530,6 @@ public class QueryServiceResource {
       } catch (IllegalArgumentException e) {
       }
       if (sop == null) {
-        incrCounter(BadRequestException.class.getSimpleName());
         throw new BadRequestException("Invalid operation type: " + op +
             submitPreparedClue);
       }
@@ -572,7 +542,6 @@ public class QueryServiceResource {
         throw new BadRequestException("Invalid operation type: " + op + submitPreparedClue);
       }
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -594,7 +563,6 @@ public class QueryServiceResource {
     try {
       return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -620,7 +588,6 @@ public class QueryServiceResource {
     try {
       return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }
@@ -646,7 +613,6 @@ public class QueryServiceResource {
           + " for query " + queryHandle + " is successful");
 
     } catch (GrillException e) {
-      incrCounter(e.getClass().getSimpleName());
       throw new WebApplicationException(e);
     }
   }

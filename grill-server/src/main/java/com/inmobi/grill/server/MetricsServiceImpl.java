@@ -1,11 +1,17 @@
 package com.inmobi.grill.server;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 import org.apache.log4j.Logger;
 
+import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.ScheduledReporter;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
@@ -18,14 +24,17 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public static final Logger LOG = Logger.getLogger(MetricsService.class);
   private AsyncEventListener<StatusChange> queryStatusListener;
   private MetricRegistry metricRegistry;
+  private List<ScheduledReporter> reporters;
   
   
   private Counter queuedQueries;
   private Counter runningQueries;
   private Counter finishedQueries;
-  private Counter acceptedQueries;
-  private Counter cancelledQueries;
-  private Counter failedQueries;
+  private Counter totalQueuedQueries;
+  private Counter totalSuccessQueries;
+  private Counter totalFinishedQueries;
+  private Counter totalFailedQueries;
+  private Counter totalCancelledQueries;
   
   
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
@@ -37,19 +46,10 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
     protected void processPrevStatus(Status previousValue) {
       switch (previousValue) {
-      case LAUNCHED:
-        acceptedQueries.dec(); break;
       case QUEUED:
         queuedQueries.dec(); break;
       case RUNNING:
         runningQueries.dec(); break;
-      // One of the end states could be previous values if query is closed
-      case CANCELED:
-        cancelledQueries.dec(); break;
-      case FAILED:
-        failedQueries.dec(); break;
-      case SUCCESSFUL:
-        finishedQueries.dec(); break;
       default:
         break;
       }
@@ -58,19 +58,29 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
     protected void processCurrentStatus(Status currentValue) {
       switch(currentValue) {
-      case LAUNCHED:
-        acceptedQueries.inc(); break;
       case QUEUED:
-        queuedQueries.inc(); break;
+        queuedQueries.inc();
+        totalQueuedQueries.inc();
+        break;
       case RUNNING:
-        runningQueries.inc(); break;
+        runningQueries.inc(); 
+        break;
       // One of the end states could be previous values if query is closed
       case CANCELED:
-        cancelledQueries.inc(); break;
+        totalCancelledQueries.inc();
+        totalFinishedQueries.inc();
+        break;
       case FAILED:
-        failedQueries.inc(); break;
+        totalFailedQueries.inc();
+        totalFinishedQueries.inc();
+        break;
       case SUCCESSFUL:
-        finishedQueries.inc(); break;
+        finishedQueries.inc();
+        totalFinishedQueries.inc();
+        totalSuccessQueries.inc();
+        break;
+      case CLOSED:
+        finishedQueries.dec();
       default:
         break;
       }
@@ -90,6 +100,18 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
     initCounters();
+    
+    reporters = new ArrayList<ScheduledReporter>();
+    // Start console reporter
+    ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
+        .convertRatesTo(TimeUnit.SECONDS)
+        .convertDurationsTo(TimeUnit.MILLISECONDS)
+        .build();
+    reporter.start(1, TimeUnit.MINUTES);
+    
+    // TODO Add ganglia reporter
+    
+    reporters.add(reporter);
     LOG.info("Started metrics service");
     super.init(hiveConf);
   }
@@ -97,16 +119,25 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   protected void initCounters() {
     queuedQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES));
+    totalQueuedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
+        "total-" + QUEUED_QUERIES));
+    
     runningQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES));
+    
+    totalSuccessQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+        "total-success-queries"));
+    
     finishedQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES));
-    acceptedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, ACCEPTED_QUERIES));
-    failedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FAILED_QUERIES));
-    cancelledQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, CANCELLED_QUERIES));
+    totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+        "total-" + FINISHED_QUERIES));
+    
+    totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+        "total-" + FAILED_QUERIES));
+    
+    totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+        "total-" + CANCELLED_QUERIES));
   }
 
   @Override
@@ -166,8 +197,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public long getQueuedQueries() {
     return queuedQueries.getCount();
   }
-
-
+  
   @Override
   public long getRunningQueries() {
     return runningQueries.getCount();
@@ -181,20 +211,42 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
 
   @Override
-  public long getAcceptedQueries() {
-    return acceptedQueries.getCount();
+  public long getTotalQueuedQueries() {
+    return totalQueuedQueries.getCount();
   }
 
 
   @Override
-  public long getCancelledQueries() {
-    return cancelledQueries.getCount();
+  public long getTotalFinishedQueries() {
+    return totalFinishedQueries.getCount();
   }
 
 
   @Override
-  public long getFailedQueries() {
-    return failedQueries.getCount();
+  public long getTotalCancelledQueries() {
+    return totalCancelledQueries.getCount();
+  }
+
+
+  @Override
+  public long getTotalFailedQueries() {
+    return totalFailedQueries.getCount();
+  }
+
+
+  @Override
+  public void publishReport() {
+    if (reporters != null) {
+      for (ScheduledReporter reporter : reporters) {
+        reporter.report();
+      }
+    }
+  }
+
+
+  @Override
+  public long getTotalSuccessQueries() {
+    return totalSuccessQueries.getCount();
   }
 
 }
