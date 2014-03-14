@@ -29,6 +29,7 @@ import com.inmobi.grill.api.query.QueryPlan;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.driver.hive.TestHiveDriver.FailHook;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
@@ -579,7 +580,9 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Get query
     GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) || 
+        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
+        ctx.getStatus().getStatus().equals(Status.RUNNING));
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
@@ -688,7 +691,9 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Get query
     GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
+    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) || 
+        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
+        ctx.getStatus().getStatus().equals(Status.RUNNING));
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
