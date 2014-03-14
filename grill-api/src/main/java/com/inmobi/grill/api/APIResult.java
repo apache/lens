@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 @XmlAccessorType(XmlAccessType.FIELD)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class APIResult {
-  @XmlElement @Getter private String requestId;
   @XmlElement @Getter private Status status;
   @XmlElement @Getter private String message;
 
@@ -48,12 +47,6 @@ public class APIResult {
     super();
     this.status = status;
     this.message = message;
-    requestId = NDC.peek();
-    try {
-      UUID.fromString(requestId);
-    } catch (IllegalArgumentException e) {
-      requestId = null;
-    }
   }
 
   @Override
