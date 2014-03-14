@@ -31,7 +31,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private Counter runningQueries;
   private Counter finishedQueries;
   private Counter totalQueuedQueries;
-  private Counter totalSuccessQueries;
+  private Counter totalSuccessfulQueries;
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
@@ -65,19 +65,20 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       case RUNNING:
         runningQueries.inc(); 
         break;
-      // One of the end states could be previous values if query is closed
       case CANCELED:
+        finishedQueries.inc();
         totalCancelledQueries.inc();
         totalFinishedQueries.inc();
         break;
       case FAILED:
+        finishedQueries.inc();
         totalFailedQueries.inc();
         totalFinishedQueries.inc();
         break;
       case SUCCESSFUL:
         finishedQueries.inc();
+        totalSuccessfulQueries.inc();
         totalFinishedQueries.inc();
-        totalSuccessQueries.inc();
         break;
       case CLOSED:
         finishedQueries.dec();
@@ -125,7 +126,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     runningQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES));
     
-    totalSuccessQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+    totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-success-queries"));
     
     finishedQueries = 
@@ -245,8 +246,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
 
   @Override
-  public long getTotalSuccessQueries() {
-    return totalSuccessQueries.getCount();
+  public long getTotalSuccessfulQueries() {
+    return totalSuccessfulQueries.getCount();
   }
 
 }

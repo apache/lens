@@ -1,23 +1,17 @@
 package com.inmobi.grill.server;
 
+import static org.testng.Assert.*;
+
 import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.Application;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.spi.TestContainerException;
-import org.glassfish.jersey.test.spi.TestContainerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
 
 import com.inmobi.grill.driver.hive.TestRemoteHiveDriver;
-import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.metrics.MetricsService;
 
 public abstract class GrillJerseyTest extends JerseyTest {
@@ -42,11 +36,46 @@ public abstract class GrillJerseyTest extends JerseyTest {
 
   @AfterSuite
   public void stopAll() throws Exception {
-    // print final metrics
-    System.out.println("Final report");
-    ((MetricsService) GrillServices.get().getService(MetricsService.NAME)).publishReport();
+    verifyMetrics();
     GrillServices.get().stop();
     TestRemoteHiveDriver.stopHS2Service();
+  }
+
+  protected void verifyMetrics() {
+    // print final metrics
+    System.out.println("Final report");
+    MetricsService metrics = ((MetricsService) GrillServices.get().getService(MetricsService.NAME));
+    metrics.publishReport();
+    
+    // validate http error count
+    long httpClientErrors = metrics.getCounter(GrillRequestListener.class,
+        GrillRequestListener.HTTP_CLIENT_ERROR);
+    long httpServerErrors = metrics.getCounter(GrillRequestListener.class,
+        GrillRequestListener.HTTP_SERVER_ERROR);
+    long httpOtherErrors = metrics.getCounter(GrillRequestListener.class,
+        GrillRequestListener.HTTP_UNKOWN_ERROR);
+    long httpErrors = metrics.getCounter(GrillRequestListener.class, 
+        GrillRequestListener.HTTP_ERROR);
+    assertEquals(httpClientErrors + httpServerErrors + httpOtherErrors, httpErrors, 
+        "Server + Client error should equal total errors");
+    
+    // validate http metrics
+    long httpReqStarted = metrics.getCounter(GrillRequestListener.class, 
+        GrillRequestListener.HTTP_REQUESTS_STARTED);
+    long httpReqFinished = metrics.getCounter(GrillRequestListener.class,
+        GrillRequestListener.HTTP_REQUESTS_FINISHED);
+    assertEquals(httpReqStarted, httpReqFinished, 
+        "Total requests started should equal total requests finished");
+    
+    // validate queries in the final state
+    long queriesSuccessful = metrics.getTotalSuccessfulQueries();
+    long queriesFailed = metrics.getTotalFailedQueries();
+    long queriesCancelled = metrics.getTotalCancelledQueries();
+    long queriesFinished = metrics.getTotalFinishedQueries();
+    
+    assertEquals(queriesFinished, queriesSuccessful + queriesFailed + queriesCancelled,
+        "Total finished queries should be sum of successful, failed and cancelled queries");
+    
   }
 
 }

@@ -6,6 +6,8 @@ import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
+import com.inmobi.grill.server.api.metrics.MetricsService;
+
 public class GrillApplicationListener implements ApplicationEventListener {
   public static final Logger LOG = Logger.getLogger(GrillApplicationListener.class);
 
@@ -13,6 +15,15 @@ public class GrillApplicationListener implements ApplicationEventListener {
 
   @Override
   public RequestEventListener onRequest(RequestEvent requestEvent) {
+    // Request start events are sent to application listener and not request listener
+    if (RequestEvent.Type.START == requestEvent.getType()) {
+      MetricsService metricsSvc = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      if (metricsSvc != null) {
+        metricsSvc.incrCounter(GrillRequestListener.class, 
+            GrillRequestListener.HTTP_REQUESTS_STARTED);
+      }
+    }
+    
     return reqListener;
   }
 

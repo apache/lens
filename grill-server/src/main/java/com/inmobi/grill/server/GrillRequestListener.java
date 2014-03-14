@@ -13,6 +13,15 @@ import com.inmobi.grill.server.api.metrics.MetricsService;
  *
  */
 public class GrillRequestListener implements RequestEventListener {
+  public static final String HTTP_REQUESTS_STARTED = "http-requests-started";
+  public static final String HTTP_REQUESTS_FINISHED = "http-requests-finished";
+  public static final String HTTP_ERROR = "http-error";
+  public static final String HTTP_SERVER_ERROR = "http-server-error";
+  public static final String HTTP_CLIENT_ERROR = "http-client-error";
+  public static final String HTTP_UNKOWN_ERROR = "http-unkown-error";
+  public static final String EXCEPTION_COUNT = "count";
+  
+  
   @Override
   public void onEvent(RequestEvent event) {
     if (RequestEvent.Type.ON_EXCEPTION == event.getType()) {
@@ -23,30 +32,26 @@ public class GrillRequestListener implements RequestEventListener {
             (MetricsService) GrillServices.get().getService(MetricsService.NAME);
         if (metrics != null) {
           // overall error counter
-          metrics.incrCounter(GrillRequestListener.class, "http-error");
+          metrics.incrCounter(GrillRequestListener.class, HTTP_ERROR);
           // detailed per excepetion counter
-          metrics.incrCounter(errorClass, "count");
+          metrics.incrCounter(errorClass, EXCEPTION_COUNT);
           
           if (error instanceof ServerErrorException) {
             // All 5xx errors (ex - internal server error)
-            metrics.incrCounter(GrillRequestListener.class, "http-server-error"); 
+            metrics.incrCounter(GrillRequestListener.class, HTTP_SERVER_ERROR); 
           } else if (error instanceof ClientErrorException) {
             // Error due to invalid request - bad request, 404, 403
-            metrics.incrCounter(GrillRequestListener.class, "http-client-error");
+            metrics.incrCounter(GrillRequestListener.class, HTTP_CLIENT_ERROR);
+          } else {
+            metrics.incrCounter(GrillRequestListener.class, HTTP_UNKOWN_ERROR);
+            error.printStackTrace();
           }
         }
       }
-    } else if (RequestEvent.Type.START == event.getType()) {
-      System.err.println("%%%% Request start " + event.getUriInfo() == null ? "/" :event.getUriInfo().getPath());
-      MetricsService metrics = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
-      if (metrics != null) {
-        metrics.incrCounter(GrillRequestListener.class, "http-requests-start");
-      }
     } else if (RequestEvent.Type.FINISHED == event.getType()) {
-      System.err.println("%%%% Request end " + event.getUriInfo() == null ? "/" :event.getUriInfo().getPath());
       MetricsService metrics = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
       if (metrics != null) {
-        metrics.incrCounter(GrillRequestListener.class, "http-requests-finished");
+        metrics.incrCounter(GrillRequestListener.class, HTTP_REQUESTS_FINISHED);
       }
     }
 
