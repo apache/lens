@@ -15,9 +15,21 @@ public interface GrillEventService {
    * @param listener
    */
   public void addListener(GrillEventListener listener);
+  
+  
+  /**
+   * Add a listener for the given event type. Use this method to register if the same class
+   * is expected to receive events of different types
+   */
+  public void addListenerForType(GrillEventListener listener, Class<? extends GrillEvent> eventType);
+  
+  /**
+   * Remove listener for a given event type
+   */
+  public void removeListenerForType(GrillEventListener listener, Class<? extends GrillEvent> eventType);
 
   /**
-   * Remove this listener instance
+   * Remove this listener instance from all subscribed event types
    * @param listener
    */
   public void removeListener(GrillEventListener listener);

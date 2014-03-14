@@ -9,6 +9,8 @@ import javax.ws.rs.core.Application;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.inmobi.grill.server.GrillApplicationListener;
+
 
 @ApplicationPath("/session")
 public class SessionApp extends Application {
@@ -19,6 +21,7 @@ public class SessionApp extends Application {
       classes.add(SessionResource.class);
       classes.add(MultiPartFeature.class);
       classes.add(LoggingFilter.class);
+      classes.add(GrillApplicationListener.class);
       return classes;
   }
 
