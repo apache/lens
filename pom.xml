@@ -386,6 +386,17 @@
             <artifactId>jersey-media-multipart</artifactId>
             <version>${jersey.version}</version>
         </dependency>
+
+				<dependency>
+					<groupId>com.codahale.metrics</groupId>
+					<artifactId>metrics-core</artifactId>
+					<version>3.0.1</version>
+				</dependency>
+				<dependency>
+					<groupId>com.codahale.metrics</groupId>
+					<artifactId>metrics-ganglia</artifactId>
+					<version>3.0.1</version>
+				</dependency>
 <dependency>
 <groupId>org.glassfish.jersey.media</groupId>
 <artifactId>jersey-media-json-jackson</artifactId>

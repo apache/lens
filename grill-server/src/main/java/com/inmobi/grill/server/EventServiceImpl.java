@@ -55,15 +55,14 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
         eventListeners.put(listenerEventType, listeners);
       }
       listeners.add(listener);
-      LOG.info("Added listener " + listener);
     }
+    LOG.info("Added listener " + listener);
   }
 
   @Override
   public void removeListener(GrillEventListener listener) {
     synchronized (eventListeners) {
-      List<GrillEventListener> listeners = eventListeners.get(getListenerType(listener));
-      if (listeners != null) {
+      for (List<GrillEventListener> listeners : eventListeners.values()) {
         if (listeners.remove(listener)) {
           LOG.info("Removed listener " + listener);
         }
@@ -149,5 +148,31 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
 
   public Map<Class<? extends GrillEvent>, List<GrillEventListener>> getEventListeners() {
     return eventListeners;
+  }
+
+  @Override
+  public void addListenerForType(GrillEventListener listener, Class<? extends GrillEvent> eventType) {
+    synchronized (eventListeners) {
+      List<GrillEventListener> listeners = eventListeners.get(eventType);
+      if (listeners == null) {
+        listeners = new ArrayList<GrillEventListener>();
+        eventListeners.put(eventType, listeners);
+      }
+      listeners.add(listener);
+    }
+    LOG.info("Added listener " + listener + " for type:" + eventType.getName());
+  }
+
+  @Override
+  public void removeListenerForType(GrillEventListener listener,
+      Class<? extends GrillEvent> eventType) {
+    synchronized (eventListeners) {
+      List<GrillEventListener> listeners = eventListeners.get(eventType);
+      if (listeners != null) {
+        if (listeners.remove(listener)) {
+          LOG.info("Removed listener " + listener);
+        }
+      }
+    }
   }
 }

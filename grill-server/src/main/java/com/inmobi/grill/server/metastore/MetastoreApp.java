@@ -4,6 +4,8 @@ package com.inmobi.grill.server.metastore;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import com.inmobi.grill.server.GrillApplicationListener;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -19,6 +21,7 @@ public class MetastoreApp extends Application {
       classes.add(MetastoreResource.class);
       classes.add(LoggingFilter.class);
       classes.add(MultiPartFeature.class);
+      classes.add(GrillApplicationListener.class);
       return classes;
   }
 }
