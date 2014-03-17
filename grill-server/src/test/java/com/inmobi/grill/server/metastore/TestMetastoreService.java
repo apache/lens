@@ -452,6 +452,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     }
   }
 
+  @Test
   public void testStorage() throws Exception {
     final String DB = dbPFX + "test_storage";
     String prevDb = getCurrentDatabase();
@@ -462,22 +463,22 @@ public class TestMetastoreService extends GrillJerseyTest {
       final WebTarget target = target().path("metastore").path("storages");
 
       StringList storages = target.queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
-      boolean foundcube = false;
+      boolean foundStorage = false;
       for (String c : storages.getElements()) {
         if (c.equalsIgnoreCase("store1")) {
-          foundcube = true;
+          foundStorage = true;
           break;
         }
       }
 
-      assertTrue(foundcube);
+      assertTrue(foundStorage);
 
       XStorage store1 = target.path("store1").queryParam("sessionid", grillSessionId).request(mediaType).get(XStorage.class);
       assertEquals(store1.getName(), "store1");
       assertEquals(store1.getClassname(), HDFSStorage.class.getCanonicalName());
       assertTrue(store1.getProperties().getProperties().size() >= 1);
-      assertEquals(store1.getProperties().getProperties().get(0).getName(), "prop1.name");
-      assertEquals(store1.getProperties().getProperties().get(0).getValue(), "prop1.value");
+      assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop1.name"));
+      assertEquals(JAXBUtils.mapFromXProperties(store1.getProperties()).get("prop1.name"), "prop1.value");
 
       // alter storage
       XProperty prop = cubeObjectFactory.createXProperty();
@@ -494,10 +495,10 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(store1.getName(), "store1");
       assertEquals(store1.getClassname(), HDFSStorage.class.getCanonicalName());
       assertTrue(store1.getProperties().getProperties().size() >= 2);
-      assertEquals(store1.getProperties().getProperties().get(0).getName(), "prop1.name");
-      assertEquals(store1.getProperties().getProperties().get(0).getValue(), "prop1.value");
-      assertEquals(store1.getProperties().getProperties().get(1).getName(), "prop2.name");
-      assertEquals(store1.getProperties().getProperties().get(1).getValue(), "prop2.value");
+      assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop1.name"));
+      assertEquals(JAXBUtils.mapFromXProperties(store1.getProperties()).get("prop1.name"), "prop1.value");
+      assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop2.name"));
+      assertEquals(JAXBUtils.mapFromXProperties(store1.getProperties()).get("prop2.name"), "prop2.value");
       
       // drop the storage
       dropStorage("store1");

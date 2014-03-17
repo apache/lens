@@ -413,7 +413,7 @@ public class MetastoreResource {
    * @return JAXB representation of {@link XStorage} 
    */
   @GET @Path("/storages/{storage}")
-  public JAXBElement<XStorage> getStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storgae") String storageName) throws Exception{
+  public JAXBElement<XStorage> getStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName) throws Exception{
     try {
       return xCubeObjectFactory.createXStorage(getSvc().getStorage(sessionid, storageName));
     } catch (GrillException e) {
