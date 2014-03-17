@@ -43,4 +43,11 @@
   <value>com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl</value>
   <description>Implementation class for query scheduler service</description>
 </property>
+
+<property>
+  <name>grill.server.base.url</name>
+  <value>http://localhost:9999/grillapi/</value>
+  <description>The base url for the grill server</description>
+</property>
+
 </configuration>

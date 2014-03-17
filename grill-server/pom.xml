@@ -157,7 +157,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.inmobi.grill.service.EmbeddedServer</mainClass>
+                    <mainClass>com.inmobi.grill.server.EmbeddedServer</mainClass>
                 </configuration>
             </plugin>
             <plugin>
