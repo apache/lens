@@ -269,6 +269,11 @@ public class TestQueryService extends GrillJerseyTest {
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
         MediaType.APPLICATION_XML_TYPE));
+    
+    long queuedQueries = metricsSvc.getQueuedQueries();
+    long runningQueries = metricsSvc.getRunningQueries();
+    long finishedQueries = metricsSvc.getFinishedQueries();
+    
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
@@ -310,9 +315,20 @@ public class TestQueryService extends GrillJerseyTest {
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
+      switch (stat.getStatus()) {
+      case RUNNING:
+        assertEquals(metricsSvc.getRunningQueries(), runningQueries + 1);
+        break;
+      case QUEUED:
+        assertEquals(metricsSvc.getQueuedQueries(), queuedQueries + 1);
+        break;
+      default: // nothing
+      }
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
+    assertEquals(metricsSvc.getFinishedQueries(), finishedQueries + 1);
+    
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
     conf = new GrillConf();
@@ -567,7 +583,10 @@ public class TestQueryService extends GrillJerseyTest {
   public void testExecuteAsync() throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
-
+    
+    long queuedQueries = metricsSvc.getQueuedQueries();
+    long runningQueries = metricsSvc.getRunningQueries();
+    
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));
@@ -596,6 +615,15 @@ public class TestQueryService extends GrillJerseyTest {
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
+      switch (stat.getStatus()) {
+      case RUNNING:
+        assertEquals(metricsSvc.getRunningQueries(), runningQueries + 1, "Asserting queries for " + ctx.getQueryHandle());
+        break;
+      case QUEUED:
+        assertEquals(metricsSvc.getQueuedQueries(), queuedQueries + 1);
+        break;
+      default: // nothing
+      }
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
