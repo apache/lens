@@ -256,5 +256,4 @@ public class SessionResource {
     sessionService.setSessionParameter(sessionid, key, value);
     return new APIResult(APIResult.Status.SUCCEEDED, "Set param succeeded");
   }
-
 }

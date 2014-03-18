@@ -1,11 +1,11 @@
 package com.inmobi.grill.server.session;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
-
+import com.inmobi.grill.api.APIResult;
+import com.inmobi.grill.api.APIResult.Status;
+import com.inmobi.grill.api.GrillConf;
+import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.api.StringList;
+import com.inmobi.grill.server.GrillJerseyTest;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -16,13 +16,11 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.GrillConf;
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.api.StringList;
-import com.inmobi.grill.api.APIResult.Status;
-import com.inmobi.grill.server.GrillJerseyTest;
-import com.inmobi.grill.server.session.SessionApp;
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
 
 public class TestSessionResource extends GrillJerseyTest {
 
@@ -81,9 +79,9 @@ public class TestSessionResource extends GrillJerseyTest {
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(),"system:my.property"));
+        FormDataContentDisposition.name("key").build(), "system:my.property"));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(),"myvalue"));
+        FormDataContentDisposition.name("value").build(), "myvalue"));
     APIResult result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
@@ -96,9 +94,9 @@ public class TestSessionResource extends GrillJerseyTest {
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(),"hivevar:myvar"));
+        FormDataContentDisposition.name("key").build(), "hivevar:myvar"));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(),"10"));
+        FormDataContentDisposition.name("value").build(), "10"));
     result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
@@ -116,9 +114,9 @@ public class TestSessionResource extends GrillJerseyTest {
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(),"hiveconf:my.conf"));
+        FormDataContentDisposition.name("key").build(), "hiveconf:my.conf"));
     setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(),"myvalue"));
+        FormDataContentDisposition.name("value").build(), "myvalue"));
     result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
@@ -198,6 +196,7 @@ public class TestSessionResource extends GrillJerseyTest {
     APIResult result = resourcetarget.path("add").request().put(
         Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
+
 
     // delete the resource
     final FormDataMultiPart mp2 = new FormDataMultiPart();

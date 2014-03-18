@@ -836,7 +836,7 @@ public class MetastoreResource {
    */
   @GET @Path("/dimensions")
   public StringList getAllDims(@QueryParam("sessionid") GrillSessionHandle sessionid) throws GrillException {
-    return new StringList(getSvc().getAllDatabases(sessionid));
+    return new StringList(getSvc().getAllDimNames(sessionid));
   }
 
   /**
