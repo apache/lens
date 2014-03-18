@@ -1,4 +1,4 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
@@ -10,12 +10,12 @@ import java.util.Properties;
 /**
  * JDBC connection class which handles connection level operations to grill server.
  */
-public class GrillJDBCConnection implements Connection {
+public class GrillJdbcConnection implements Connection {
 
 
   private final GrillConnection connection;
 
-  public GrillJDBCConnection(String uri, Properties info) {
+  public GrillJdbcConnection(String uri, Properties info) {
     GrillConnectionParams params = JDBCUtils.parseUrl(uri);
     connection = new GrillConnection(params);
     connection.open();
@@ -43,7 +43,7 @@ public class GrillJDBCConnection implements Connection {
       throw new SQLException("Statements with resultset type: "
           + resultSetType + " is not supported");
     }
-    return new GrillJDBCStatement(this);
+    return new GrillJdbcStatement(this);
   }
 
   @Override

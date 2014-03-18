@@ -34,4 +34,9 @@
     <value>queryapi</value>
     <description>resource path to query webservice</description>
   </property>
+  <property>
+    <name>grill.metastore.resource.path</name>
+    <value>metastore</value>
+    <description>resource path to query webservice</description>
+  </property>
 </configuration>

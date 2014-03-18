@@ -27,6 +27,8 @@ public class GrillClientConfig extends Configuration {
   private static final String DEFAULT_QUERY_RESOURCE_PATH = "queryapi";
   private static final String GRILL_QUERY_POLL_INTERVAL_KEY = "grill.query.poll.interval";
   private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000l;
+  private static final String GRILL_METASTORE_RESOURCE_PATH = "grill.metastore.resource.path";
+  private static final String DEFAULT_GRILL_METASTORE_RESOURCE_PATH = "metastore";
 
 
   /**
@@ -115,5 +117,9 @@ public class GrillClientConfig extends Configuration {
 
   public long getQueryPollInterval() {
     return this.getLong(GRILL_QUERY_POLL_INTERVAL_KEY, DEFAULT_QUERY_POLL_INTERVAL);
+  }
+
+  public String getMetastoreResourcePath() {
+    return this.get(GRILL_METASTORE_RESOURCE_PATH, DEFAULT_GRILL_METASTORE_RESOURCE_PATH);
   }
 }

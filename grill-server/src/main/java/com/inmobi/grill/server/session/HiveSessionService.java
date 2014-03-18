@@ -95,25 +95,4 @@ public class HiveSessionService extends GrillService {
       }
     }
   }
-
-
-  public void setSessionDatabase(GrillSessionHandle sessionid, String database) {
-    String command = "use " + " " + database ;
-    try {
-      acquire(sessionid);
-      getCliService().executeStatement(getHiveSessionHandle(sessionid),
-          command, null);
-    } catch (HiveSQLException e) {
-      throw new WebApplicationException(e);
-    } catch (GrillException e) {
-      throw new WebApplicationException(e);
-    } finally {
-      try{
-        release(sessionid);
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
-      }
-    }
-  }
-
 }

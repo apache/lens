@@ -1,4 +1,4 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
 
 import com.inmobi.grill.api.query.QueryResultSetMetadata;

@@ -2,6 +2,7 @@ package com.inmobi.grill.jdbc;
 
 import com.inmobi.grill.client.GrillClientConfig;
 import com.inmobi.grill.client.GrillConnectionParams;
+import com.inmobi.grill.client.jdbc.JDBCUtils;
 import junit.framework.Assert;
 import org.testng.annotations.Test;
 

@@ -1,18 +1,18 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
 import com.inmobi.grill.client.GrillStatement;
 
 import java.sql.*;
 
-public class GrillJDBCStatement implements Statement {
+public class GrillJdbcStatement implements Statement {
 
 
-  private final GrillJDBCConnection connection;
+  private final GrillJdbcConnection connection;
   private final GrillStatement statement;
 
   private boolean closed;
 
-  public GrillJDBCStatement(GrillJDBCConnection connection) {
+  public GrillJdbcStatement(GrillJdbcConnection connection) {
     this.connection = connection;
     statement = new GrillStatement(connection.getConnection());
   }
@@ -21,7 +21,7 @@ public class GrillJDBCStatement implements Statement {
   @Override
   public ResultSet executeQuery(String s) throws SQLException {
     statement.execute(s);
-    return new GrillJDBCResultSet(statement.getResultSet(),
+    return new GrillJdbcResultSet(statement.getResultSet(),
         statement.getResultSetMetaData(), this);
   }
 
@@ -71,7 +71,7 @@ public class GrillJDBCStatement implements Statement {
     if (closed) {
       throw new SQLException("Cannot get resultset for closed statements");
     }
-    return new GrillJDBCResultSet(statement.getResultSet(),
+    return new GrillJdbcResultSet(statement.getResultSet(),
         statement.getResultSetMetaData(), this);
   }
 

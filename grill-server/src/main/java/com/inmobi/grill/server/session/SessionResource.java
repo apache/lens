@@ -256,18 +256,4 @@ public class SessionResource {
     sessionService.setSessionParameter(sessionid, key, value);
     return new APIResult(APIResult.Status.SUCCEEDED, "Set param succeeded");
   }
-
-  @PUT
-  @Path("database")
-  @Produces({MediaType.APPLICATION_JSON,
-      MediaType.APPLICATION_XML,
-      MediaType.TEXT_PLAIN})
-  public APIResult setDatabase(@FormDataParam("sessionid")
-                                 GrillSessionHandle sessionid,
-                               @FormDataParam("database") String database) {
-    sessionService.setSessionDatabase(sessionid, database);
-    return new APIResult(APIResult.Status.SUCCEEDED,
-        "Successfully swiched to database " + database);
-  }
-
 }

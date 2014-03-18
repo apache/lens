@@ -197,17 +197,6 @@ public class TestSessionResource extends GrillJerseyTest {
         Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
 
-    //switch to default database
-    final FormDataMultiPart mpd = new FormDataMultiPart();
-    mpd.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        handle, MediaType.APPLICATION_XML_TYPE));
-    mpd.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("database").build(),
-        "default", MediaType.APPLICATION_XML_TYPE));
-    final WebTarget databaseresourcetarget = target().path("session");
-    APIResult result1 = databaseresourcetarget.path("database").request().put(
-        Entity.entity(mpd, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    Assert.assertEquals(result1.getStatus(), Status.SUCCEEDED);
-
 
     // delete the resource
     final FormDataMultiPart mp2 = new FormDataMultiPart();

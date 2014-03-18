@@ -1,4 +1,4 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
 import java.sql.*;
 import java.util.Properties;
@@ -9,11 +9,11 @@ import java.util.regex.Pattern;
 /**
  * Top level JDBC driver for Grill
  */
-public class GrillJDBCDriver implements Driver {
+public class GrillJdbcDriver implements Driver {
 
   static {
     try {
-      DriverManager.registerDriver(new GrillJDBCDriver());
+      DriverManager.registerDriver(new GrillJdbcDriver());
     } catch (SQLException e) {
       e.printStackTrace();
     }

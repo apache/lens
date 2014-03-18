@@ -52,7 +52,7 @@ public class GrillStatement {
     while (!query.getStatus().isFinished()) {
       query = getQuery(handle);
       try {
-        Thread.sleep(connection.getParams().getQueryPollInterval());
+        Thread.sleep(connection.getGrillConnectionParams().getQueryPollInterval());
       } catch (InterruptedException e) {
         throw new IllegalStateException(e);
       }
@@ -61,8 +61,8 @@ public class GrillStatement {
 
   private WebTarget getQueryWebTarget(Client client) {
     return client.target(
-        connection.getParams().getBaseConnectionUrl()).path(
-        connection.getParams().getQueryResourcePath());
+        connection.getGrillConnectionParams().getBaseConnectionUrl()).path(
+        connection.getGrillConnectionParams().getQueryResourcePath());
   }
 
   private GrillQuery getQuery(QueryHandle handle) {

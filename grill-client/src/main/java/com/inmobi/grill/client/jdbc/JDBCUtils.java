@@ -1,7 +1,5 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
-import com.inmobi.grill.api.query.ResultColumn;
-import com.inmobi.grill.api.query.ResultColumnType;
 import com.inmobi.grill.client.GrillConnectionParams;
 
 import java.io.IOException;

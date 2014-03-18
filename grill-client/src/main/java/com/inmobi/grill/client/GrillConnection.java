@@ -2,6 +2,7 @@ package com.inmobi.grill.client;
 
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.api.StringList;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -12,6 +13,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -34,77 +36,6 @@ public class GrillConnection {
     this.params = params;
   }
 
-
-
-  /**
-   * Construct a connection to grill server hosted at specified host using default port and database, anonymously
-   *
-   * @param host name of host which grill server is hosted. If null is passed, default host is used.
-   */
-  public GrillConnection(String host) {
-    this(host, -1, null, null, null);
-  }
-
-  /**
-   * Construct a connection to grill server hosted at specified host and port, using default database anonymously
-   *
-   * @param host name of host which grill server is hosted. If null is passed, default host is used.
-   * @param port which grill server is listening. If -1 is passed, default port is used
-   */
-  public GrillConnection(String host, int port) {
-    this(host, port, null, null, null);
-  }
-
-  /**
-   * Construct a connection to grill server hosted database at specified host and port, anonymously
-   *
-   * @param host     name of host which grill server is hosted. If null is passed, default host is used.
-   * @param port     which grill server is listening. If -1 is passed, default port is used
-   * @param database to which client is connected. If null is passed, default database is used.
-   */
-
-  public GrillConnection(String host, int port, String database) {
-    this(host, port, database, null, null);
-  }
-
-  /**
-   * Constructs a connection to grill server hosted database as specified user.
-   *
-   * @param host     name of host which grill server is hosted. If null is passed, default host is used.
-   * @param port     which grill server is listening. If -1 is passed, default port is used
-   * @param database to which client is connected. If null is passed, default database is used.
-   * @param user     name of user who is accessing the database
-   */
-  public GrillConnection(String host, int port, String database, String user) {
-    this(host, port, database, user, null);
-  }
-
-  /**
-   * Constructs a connection to grill server hosted database with specified user credentials.
-   *
-   * @param host     name of host which grill server is hosted. If null is passed, default host is used.
-   * @param port     which grill server is listening. If -1 is passed, default port is used
-   * @param database to which client is connected. If null is passed, default database is used.
-   * @param user     name of user who is accessing the database
-   * @param password of the user.
-   */
-  public GrillConnection(String host, int port, String database, String user, String password) {
-    this.params = new GrillConnectionParams();
-    this.params.setHost(host);
-    if (database != null) {
-      this.params.setDbName(database);
-    }
-    if (port > 0) {
-      this.params.setPort(port);
-    }
-    if (user != null && !user.isEmpty()) {
-      this.params.getSessionVars().put("user.name", user);
-    }
-    if (password != null && !password.isEmpty()) {
-      this.params.getSessionVars().put("user.pass", password);
-    }
-  }
-
   /**
    * Check if the connection is opened. Please note that,grill connections are
    * persistent connections. But a session mapped by ID running on the grill
@@ -117,10 +48,14 @@ public class GrillConnection {
   }
 
 
-
   private WebTarget getSessionWebTarget(Client client) {
     return client.target(params.getBaseConnectionUrl()).path(
         params.getSessionResourcePath());
+  }
+
+  private WebTarget getMetastoreWebTarget(Client client) {
+    return client.target(params.getBaseConnectionUrl()).path(
+        params.getMetastoreResourcePath());
   }
 
   private WebTarget getSessionWebTarget(Class<?> featureType) {
@@ -131,6 +66,11 @@ public class GrillConnection {
   private WebTarget getSessionWebTarget() {
     Client client = ClientBuilder.newClient();
     return getSessionWebTarget(client);
+  }
+
+  private WebTarget getMetastoreWebTarget() {
+    Client client = ClientBuilder.newClient();
+    return getMetastoreWebTarget(client);
   }
 
 
@@ -154,7 +94,7 @@ public class GrillConnection {
         GrillSessionHandle.class);
 
 
-    if(sessionHandle!=null) {
+    if (sessionHandle != null) {
       this.sessionHandle = sessionHandle;
     } else {
       throw new IllegalStateException("Unable to connect to grill " +
@@ -162,7 +102,7 @@ public class GrillConnection {
     }
     APIResult result = attachDatabaseToSession();
 
-    if(result.getStatus() != APIResult.Status.SUCCEEDED)  {
+    if (result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new IllegalStateException("Unable to connect to grill database "
           + params.getDbName());
     }
@@ -172,15 +112,12 @@ public class GrillConnection {
     return sessionHandle;
   }
 
-  private APIResult attachDatabaseToSession() {
-    WebTarget target = getSessionWebTarget();
-    FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        sessionHandle, MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("database").build(),
-        params.getDbName(), MediaType.APPLICATION_XML_TYPE));
-    APIResult result = target.path("database").request().put(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+  public APIResult attachDatabaseToSession() {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("databases").path("current").queryParam(
+        "sessionid", this.sessionHandle).request(
+        MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
+        APIResult.class);
     return result;
 
   }
@@ -220,7 +157,7 @@ public class GrillConnection {
 
   public APIResult removeResourceFromConnection(String type, String resourcePath) {
     WebTarget target = getSessionWebTarget();
-    FormDataMultiPart mp  = new FormDataMultiPart();
+    FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
@@ -232,7 +169,29 @@ public class GrillConnection {
     return result;
   }
 
-  GrillConnectionParams getParams() {
+  public APIResult setConnectionParams(String key, String value) {
+    WebTarget target = getSessionWebTarget();
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("key").build(), key));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("value").build(), value));
+    APIResult result = target.path("params").request().put(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    return result;
+  }
+
+
+  public List<String> getConnectionParams() {
+    WebTarget target = getSessionWebTarget();
+    StringList list = target.queryParam("sessionid",
+        this.sessionHandle).queryParam("verbose", true).request().get(StringList.class);
+    return list.getElements();
+  }
+
+  GrillConnectionParams getGrillConnectionParams() {
     return this.params;
   }
 }

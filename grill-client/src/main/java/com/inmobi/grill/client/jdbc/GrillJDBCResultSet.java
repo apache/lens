@@ -1,4 +1,4 @@
-package com.inmobi.grill.jdbc;
+package com.inmobi.grill.client.jdbc;
 
 import com.inmobi.grill.api.query.*;
 
@@ -10,21 +10,21 @@ import java.sql.Date;
 import java.util.*;
 
 
-public class GrillJDBCResultSet implements ResultSet {
+public class GrillJdbcResultSet implements ResultSet {
 
 
   private final InMemoryQueryResult result;
   private final Iterator<ResultRow> iterators;
   private ResultRow currentRow;
   private final QueryResultSetMetadata metadata;
-  private final GrillJDBCStatement statement;
+  private final GrillJdbcStatement statement;
   private final List<String> colNames;
   private final List<ResultColumnType> colTypes;
   private boolean closed;
   private boolean wasnull;
 
-  public GrillJDBCResultSet(InMemoryQueryResult result, QueryResultSetMetadata metadata,
-                            GrillJDBCStatement statement) {
+  public GrillJdbcResultSet(InMemoryQueryResult result, QueryResultSetMetadata metadata,
+                            GrillJdbcStatement statement) {
     this.result = result;
     this.metadata = metadata;
     this.statement = statement;
