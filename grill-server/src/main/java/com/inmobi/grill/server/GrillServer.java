@@ -11,11 +11,11 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
 
-public class EmbeddedServer {
+public class GrillServer {
   final HttpServer server;
   final HiveConf conf;
   
-  EmbeddedServer(HiveConf conf) throws IOException {
+  GrillServer(HiveConf conf) throws IOException {
     this.conf = conf;
     startServices(conf);
     String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
@@ -29,15 +29,39 @@ public class EmbeddedServer {
     GrillServices.get().start();
   }
 
+  public void start() throws IOException {
+    server.start();
+  }
+
   public void stop() {
     server.shutdownNow();
     GrillServices.get().stop();
   }
 
   public static void main(String[] args) throws Exception {
-    EmbeddedServer thisServer = new EmbeddedServer(new HiveConf());
+    GrillServer thisServer = new GrillServer(new HiveConf());
+    Runtime.getRuntime().addShutdownHook(
+        new Thread(new ServerShutdownHook(thisServer), "Shutdown Thread"));
+    thisServer.start();
     System.in.read();
-    thisServer.stop();
+  }
+
+  public static class ServerShutdownHook implements Runnable {
+
+    private final GrillServer thisServer;
+
+    public ServerShutdownHook(GrillServer server) {
+      this.thisServer = server;
+    }
+
+    @Override
+    public void run() {
+      try {
+        // Stop the Composite Service
+        thisServer.stop();
+      } catch (Throwable t) {
+      }
+    }
   }
 
 }

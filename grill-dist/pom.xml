@@ -45,7 +45,17 @@
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-driver-jdbc</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.inmobi.grill</groupId>
       <artifactId>grill-yoda</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-storage-db</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
@@ -58,7 +68,8 @@
         <configuration>
           <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
           <descriptors>
-            <descriptor>src/main/assembly/dist.xml</descriptor>
+            <descriptor>src/main/assembly/client-dist.xml</descriptor>
+            <descriptor>src/main/assembly/server-dist.xml</descriptor>
           </descriptors>
         </configuration>
         <executions>
@@ -93,10 +104,10 @@
             </goals>
             <configuration>
               <installDir>/usr/local/grill</installDir>
-              <deb>${project.build.directory}/${artifactId}_${version}.deb</deb>
+              <deb>${project.build.directory}/grill_${version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/grill-dist-${project.version}-pkg</src>
+                  <src>target/grill-dist-${project.version}-server</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -104,12 +115,20 @@
                   </mapper>
                 </data>
                 <data>
-                  <src>target/grill-dist-${project.version}-pkg/bin</src>
+                  <src>target/grill-dist-${project.version}-server/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
                     <prefix>/usr/local/grill/bin</prefix>
                     <filemode>755</filemode>
+                  </mapper>
+                </data>
+                <data>
+                  <src>target/grill-dist-${project.version}-server/webapp</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/usr/local/grill/webapp</prefix>
                   </mapper>
                 </data>
               </dataSet>
