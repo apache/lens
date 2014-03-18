@@ -29,4 +29,4 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-exec ${BASEDIR}/bin/service-start.sh prism $ARGS $*
+exec ${BASEDIR}/bin/service-start.sh $ARGS $*
