@@ -456,6 +456,13 @@
 							<scope>test</scope>
 						</dependency>
 
+     <!-- Jersey client for grill client-->
+     <dependency>
+       <groupId>org.glassfish.jersey.core</groupId>
+       <artifactId>jersey-client</artifactId>
+       <version>${jersey.version}</version>
+     </dependency>
+
     </dependencies>
 
  </dependencyManagement>
@@ -494,6 +501,7 @@
     <module>grill-yoda</module>
     <module>grill-server</module>
     <module>grill-dist</module>
+    <module>grill-client</module>
   </modules>
   
   <profiles>

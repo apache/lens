@@ -95,5 +95,4 @@ public class HiveSessionService extends GrillService {
       }
     }
   }
-
 }
