@@ -43,7 +43,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="x_property" name="properties" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="x_property" name="property" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="x_measure">
@@ -69,7 +69,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="x_measure" name="measures" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element type="x_measure" name="measure" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="x_dimension">
@@ -94,7 +94,7 @@
     </xs:complexType>
     <xs:complexType name="x_tablereferences">
         <xs:sequence>
-            <xs:element type="x_tablereference" name="table_references" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element type="x_tablereference" name="table_reference" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
  
@@ -105,7 +105,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element type="x_dimension" name="dimensions" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element type="x_dimension" name="dimension" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -115,7 +115,7 @@
     <xs:complexType name="dimension_table">
         <xs:sequence>
             <xs:element type="columns" name="columns"/>
-            <xs:element type="dimension_references" name="dimensions_references"/>
+            <xs:element type="dimension_references" name="dimension_references"/>
             <xs:element type="update_periods" name="storage_dump_periods"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
         </xs:sequence>
@@ -125,7 +125,7 @@
 
     <xs:complexType name="columns">
         <xs:sequence>
-            <xs:element name="columns" type="column" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element name="column" type="column" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
@@ -137,13 +137,13 @@
 
     <xs:complexType name="dimension_references">
         <xs:sequence>
-            <xs:element name="dim_references" type="dimension_reference" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element name="dim_reference" type="dimension_reference" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 
     <xs:complexType name="dimension_reference">
         <xs:sequence>
-            <xs:element name="table_references" type="x_tablereference" maxOccurs="unbounded" minOccurs="1"/>
+            <xs:element name="table_reference" type="x_tablereference" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
         <xs:attribute name="dimension_column" type="xs:string" use="required"/>
     </xs:complexType>
@@ -161,7 +161,7 @@
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
-            <xs:element name="update_periods" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+            <xs:element name="update_period" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute name="storage_name" type="xs:string"/>
     </xs:complexType>
