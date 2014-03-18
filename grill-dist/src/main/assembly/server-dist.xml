@@ -92,6 +92,7 @@
         <include>grill-env.sh</include>
         <include>grill-site.xml</include>
         <include>hive-site.xml</include>
+        <include>log4j.properties</include>
       </includes>
     </fileSet>
   </fileSets>
