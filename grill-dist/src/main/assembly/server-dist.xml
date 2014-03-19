@@ -20,13 +20,13 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-  <id>pkg</id>
+  <id>server</id>
 
   <formats>
     <format>dir</format>
   </formats>
 
-  <baseDirectory>grill-${project.version}</baseDirectory>
+  <baseDirectory>grill-server-${project.version}</baseDirectory>
   <includeBaseDirectory>false</includeBaseDirectory>
 
   <dependencySets>
@@ -34,21 +34,25 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
+      <includes>
+        <include>com.inmobi.grill:grill-api</include>
+        <include>com.inmobi.grill:grill-server-api</include>
+        <include>com.inmobi.grill:grill-driver-cube</include>
+        <include>com.inmobi.grill:grill-driver-hive</include>
+        <include>com.inmobi.grill:grill-driver-impala</include>
+        <include>com.inmobi.grill:grill-driver-jdbc</include>
+        <include>com.inmobi.grill:grill-storage-db</include>
+      </includes>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
   </dependencySets>
 
   <moduleSets>
     <moduleSet>
       <includes>
-        <include>com.inmobi.grill:grill-api</include>
-        <include>com.inmobi.grill:grill-cli</include>
-        <include>com.inmobi.grill:grill-driver-cube</include>
-        <include>com.inmobi.grill:grill-driver</include>
-        <include>com.inmobi.grill:grill-driver-hive</include>
-        <include>com.inmobi.grill:grill-driver-impala</include>
-        <include>com.inmobi.grill:grill-yoda</include>
+        <include>com.inmobi.grill:grill-server</include>
       </includes>
-
       <binaries>
         <unpack>false</unpack>
       </binaries>
@@ -72,8 +76,36 @@
       <directory>../tools/scripts</directory>
       <outputDirectory>/bin/</outputDirectory>
       <includes>
+        <include>grill-config.sh</include>
+        <include>service-start.sh</include>
+        <include>service-stop.sh</include>
+        <include>grill-server-start</include>
+        <include>grill-server-stop</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>grill-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/server</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
         <include>**</include>
       </includes>
     </fileSet>
   </fileSets>
+    
+    <files>
+      <file>
+       <source>../grill-server/target/grill-server-${project.version}.war</source>
+       <outputDirectory>/webapp/</outputDirectory>
+       <destName>grill-server.war</destName>
+    </file>
+    </files>
 </assembly>

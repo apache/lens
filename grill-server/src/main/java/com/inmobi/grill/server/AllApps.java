@@ -3,6 +3,7 @@ package com.inmobi.grill.server;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.filter.LoggingFilter;
@@ -14,6 +15,7 @@ import com.inmobi.grill.server.quota.QuotaResource;
 import com.inmobi.grill.server.scheduler.ScheduleResource;
 import com.inmobi.grill.server.session.SessionResource;
 
+@ApplicationPath("/")
 public class AllApps extends Application {
 
   public Set<Class<?>> getClasses() {
@@ -28,6 +30,7 @@ public class AllApps extends Application {
     classes.add(MultiPartFeature.class);
     classes.add(LoggingFilter.class);
     classes.add(AuthenticationFilter.class);
+    classes.add(GrillApplicationListener.class);
     return classes;
 }
 

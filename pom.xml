@@ -500,8 +500,8 @@
     <module>grill-driver-jdbc</module>
     <module>grill-yoda</module>
     <module>grill-server</module>
-    <module>grill-dist</module>
     <module>grill-client</module>
+    <module>grill-dist</module>
   </modules>
   
   <profiles>

@@ -1,0 +1,86 @@
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+  <id>client</id>
+
+  <formats>
+    <format>dir</format>
+  </formats>
+
+  <baseDirectory>grill-client-${project.version}</baseDirectory>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <outputDirectory>lib</outputDirectory>
+      <excludes>
+        <exclude>com.inmobi.grill:grill-server-api</exclude>      
+        <exclude>com.inmobi.grill:grill-driver-cube</exclude>
+        <exclude>com.inmobi.grill:grill-driver-hive</exclude>
+        <exclude>com.inmobi.grill:grill-driver-impala</exclude>
+        <exclude>com.inmobi.grill:grill-driver-jdbc</exclude>
+        <exclude>com.inmobi.grill:grill-dist</exclude>
+      </excludes>
+    </dependencySet>
+  </dependencySets>
+
+  <fileSets>
+    <fileSet>
+      <directory>../doc/</directory>
+      <outputDirectory>/doc/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+      <excludes>
+        <exclude>target/**</exclude>
+        <exclude>lib/**</exclude>
+      </excludes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/scripts</directory>
+      <outputDirectory>/bin/</outputDirectory>
+      <includes>
+        <include>yoda-cube.sh</include>
+      </includes>
+    </fileSet>
+    
+    <fileSet>
+      <directory>../tools/conf/</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>grill-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/client</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+    
+  </fileSets>
+</assembly>
