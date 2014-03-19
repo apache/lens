@@ -58,6 +58,11 @@
       <artifactId>grill-storage-db</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
