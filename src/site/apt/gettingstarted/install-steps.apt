@@ -1,0 +1,115 @@
+Installing and running grill
+
+* Building Grill from source
+
+  Here are the commands to build from source.
+
++---+
+
+   git clone https://github.corp.inmobi.com/platform/grill
+
+   cd grill
+
+   mvn clean package
+   
++---+
+
+  Once above package command completes successfully, <grill-dist/target> will have <grill-dist-${project.version}-server> and <grill-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <grill-dist/target>.
+
+* Installing and running grill-server
+
+  Use can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/grill> and </usr/local/grill-client> respectively.
+
+  Let us go over how the install looks, in the subsections below.
+
+** Server install and configuration
+
+  The directory structure of the server installation :
+
++---+
+
+  ├── bin
+  │   ├── grill-config.sh
+  │   ├── grill-server-start
+  │   ├── grill-server-stop
+  │   ├── service-start.sh
+  │   └── service-stop.sh
+  ├── conf
+  │   ├── grill-env.sh
+  │   ├── grill-site.xml
+  │   ├── hive-site.xml
+  │   └── log4j.properties
+  ├── lib
+  │   ├── ST4-4.0.4.jar
+  │   ├── activation-1.1.jar
+  │   ├── ant-1.9.1.jar
+  │   ├── ant-launcher-1.9.1.jar
+  │   ├── antlr-2.7.7.jar
+  …….
+  │   └── zookeeper-3.4.5.jar
+  └── webapp
+      └── grill-server.war
++---+
+
+  The <bin> folder provides <grill-server-start> and <grill-server-stop> commands for starting and stopping the grill server. Other .sh files in <bin> are the scripts used by start and stop scripts.
+
+  The server war is available in webapp/ folder, which would be expanded in the same directory, if not overridden. And the lib folder contains all the dependent libraries.
+
+  Server configuration can be overridden in grill-site.xml. See {{{../admin/config.html}server configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in grill-env.sh.
+
+  The server logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
+
+*** Driver configuration
+
+  If server has HiveDriver as one of the drivers, the configuration for hive driver should be set up in hive-site.xml. For all the available configuration of the HiveDriver, follow the <link>.
+
+** Running the server
+
+  The command to start the server:
+
++---+
+
+  bin/grill-server-start
+
++---+
+
+  Once the server is up, you can go to the browser and open the server <baseurl>. You would see a message saying ‘Grill server is up’.
+
+  To check all other services are up and running, try <baseurl>/session, <baseurl>/queryapi, <baseurl>/metastore and all of them will respond with respective service is up.
+
+  You can try out examples described below or use the REST api <link> for each service.
+
+  The command to stop the server:
+
++---+
+
+  bin/grill-server-stop
+
++---+
+
+** Client install and configuration
+
+  The directory structure of the client installation :
+
++---+
+
+  ├── bin
+  │   └── yoda-cube.sh
+  ├── conf
+  │   ├── grill-env.sh
+  │   └── grill-client-site.xml
+  └── lib
+      ├── ST4-4.0.4.ja
+       …….
+      ├── xmlenc-0.52.jar
+      ├── yoda-commons-0.6.77-20140123.065959-22.jar
+      └── yoda-udfs-0.6.77-20140113.091948-15.jar
++---+
+
+  The <bin> folder provides various scripts for the client.
+
+    * <<yoda-cube.sh>> provides ddl for yoda cubes - create/alter the cubes, facts and dimensions; and populate the partitions
+
+    * <<run-examples.sh>> provides commands to run examples - create a sample metastore, populate metastore with sample data and run some example queries. This would validate your server is all up and running fine.
+
+

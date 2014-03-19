@@ -1,4 +1,7 @@
-<project name="Grill">
+<project name="Grill" xmlns="http://maven.apache.org/DECORATION/1.3.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
+
 	<publishDate position="right"/>
 	<version position="right"/>
 	<bannerLeft>
@@ -11,10 +14,12 @@
  <body>
     <menu name="Grill" >
       <item name="Overview" href="index.html" />
-			<item name="Getting Started" href="quick-start.html" />
 			<item name="Mailing Lists" href="mailto:grill-dev@inmobi.com"/>
 			<item name="Issue Tracking" href="https://jira.corp.inmobi.com/browse/GRILL"/>
-		</menu>
+      <item name="Getting Started" href="./gettingstarted/quick-start.html" />
+      <item name="Install and Run" href="./gettingstarted/install-steps.html" />
+      <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
+    </menu>
 		<menu name="User Documentation">
       <item name="Grill User Guide" href="./user/index.html" />
       <item name="REST API" href="./rest.html" />
@@ -34,7 +39,6 @@
       <item name="Configuration" href="./admin/config.html"/>
 			<item name="Admin CLI" href="./admin/cli.html" />
     </menu>
-
     <breadcrumbs>
       <item name="InMobi Tech Platform" href="https://github.corp.inmobi.com/platform/" />
       <item name="Grill" href="https://github.corp.inmobi.com/platform/grill" />
