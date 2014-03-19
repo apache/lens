@@ -4,16 +4,13 @@ package com.inmobi.grill.jdbc;
 import com.inmobi.grill.client.GrillClientConfig;
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
-import com.inmobi.grill.server.GrillJerseyTest;
-import com.inmobi.grill.server.session.SessionApp;
+import com.inmobi.grill.server.GrillAllApplicationJerseyTest;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.core.Application;
 
-
-public class GrillConnectionTest extends GrillJerseyTest {
+public class GrillConnectionTest extends GrillAllApplicationJerseyTest {
   @Override
   protected int getTestPort() {
     return 8080;
@@ -28,11 +25,6 @@ public class GrillConnectionTest extends GrillJerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
-  }
-
-  @Override
-  protected Application configure() {
-    return new SessionApp();
   }
 
   @Test
