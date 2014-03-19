@@ -1,5 +1,7 @@
 Installing and running grill
 
+%{toc|section=1|fromDepth=0}
+
 * Building Grill from source
 
   Here are the commands to build from source.
