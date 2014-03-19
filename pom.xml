@@ -4,8 +4,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <powermock.version>1.4.12</powermock.version>
-    <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
     <hive.version>0.13.0-SNAPSHOT</hive.version>
     <hadoop.version>0.20.2-cdh3u5</hadoop.version>
     <jetty.version>6.1.26</jetty.version>
@@ -35,9 +35,33 @@
     <developerConnection>scm:git:git@github.corp.inmobi.com:platform/grill.git</developerConnection>
   </scm>
 
+  <reporting>
+          <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            </plugin>
+          </plugins>
+  
+  </reporting>
+  
   <build>
      <pluginManagement>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-compiler-plugin</artifactId>
@@ -45,6 +69,18 @@
                <source>1.6</source>
                 <target>1.6</target>
              </configuration>
+           </plugin>
+           <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-site-plugin</artifactId>
+             <version>3.2</version>
+             <dependencies>
+             <dependency> <!-- add support for markdown -->
+              <groupId>org.apache.maven.doxia</groupId>
+              <artifactId>doxia-module-markdown</artifactId>
+              <version>1.3</version>
+            </dependency>            
+             </dependencies>
            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
