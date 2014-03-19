@@ -41,14 +41,9 @@
     <moduleSet>
       <includes>
         <include>com.inmobi.grill:grill-api</include>
-        <include>com.inmobi.grill:grill-cli</include>
-        <include>com.inmobi.grill:grill-server-api</include>
-        <include>com.inmobi.grill:grill-driver</include>
-        <include>com.inmobi.grill:grill-driver-cube</include>
-        <include>com.inmobi.grill:grill-driver-hive</include>
-        <include>com.inmobi.grill:grill-driver-impala</include>
-        <include>com.inmobi.grill:grill-driver-jdbc</include>
         <include>com.inmobi.grill:grill-storage-db</include>
+        <include>com.inmobi.grill:grill-client</include>
+        <include>com.inmobi.grill:grill-cli</include>
         <include>com.inmobi.grill:grill-yoda</include>
       </includes>
 
@@ -75,19 +70,23 @@
       <directory>../tools/scripts</directory>
       <outputDirectory>/bin/</outputDirectory>
       <includes>
-        <include>ext</include>
-        <include>beeline</include>
-        <include>hive</include>
-        <include>hive-config.sh</include>
         <include>yoda-cube.sh</include>
       </includes>
     </fileSet>
     
     <fileSet>
-      <directory>../tools/scripts</directory>
+      <directory>../tools/conf/</directory>
       <outputDirectory>/conf/</outputDirectory>
       <includes>
         <include>grill-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/client</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
       </includes>
     </fileSet>
     

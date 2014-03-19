@@ -41,7 +41,6 @@
     <moduleSet>
       <includes>
         <include>com.inmobi.grill:grill-api</include>
-        <include>com.inmobi.grill:grill-cli</include>
         <include>com.inmobi.grill:grill-server-api</include>
         <include>com.inmobi.grill:grill-driver</include>
         <include>com.inmobi.grill:grill-driver-cube</include>
@@ -49,7 +48,6 @@
         <include>com.inmobi.grill:grill-driver-impala</include>
         <include>com.inmobi.grill:grill-driver-jdbc</include>
         <include>com.inmobi.grill:grill-storage-db</include>
-        <include>com.inmobi.grill:grill-yoda</include>
         <include>com.inmobi.grill:grill-server</include>
       </includes>
 
@@ -81,18 +79,22 @@
         <include>service-stop.sh</include>
         <include>grill-server-start</include>
         <include>grill-server-stop</include>
-        <include>yoda-cube.sh</include>
       </includes>
     </fileSet>
 
     <fileSet>
-      <directory>../tools/scripts</directory>
+      <directory>../tools/conf/</directory>
       <outputDirectory>/conf/</outputDirectory>
       <includes>
         <include>grill-env.sh</include>
-        <include>grill-site.xml</include>
-        <include>hive-site.xml</include>
-        <include>log4j.properties</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/server</directory>
+      <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
       </includes>
     </fileSet>
   </fileSets>
