@@ -34,11 +34,6 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
-    </dependencySet>
-  </dependencySets>
-
-  <moduleSets>
-    <moduleSet>
       <includes>
         <include>com.inmobi.grill:grill-api</include>
         <include>com.inmobi.grill:grill-storage-db</include>
@@ -46,12 +41,10 @@
         <include>com.inmobi.grill:grill-cli</include>
         <include>com.inmobi.grill:grill-yoda</include>
       </includes>
-
-      <binaries>
-        <unpack>false</unpack>
-      </binaries>
-    </moduleSet>
-  </moduleSets>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <useTransitiveDependencies>true</useTransitiveDependencies>      
+    </dependencySet>
+  </dependencySets>
 
   <fileSets>
     <fileSet>

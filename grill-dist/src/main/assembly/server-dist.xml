@@ -34,11 +34,6 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
-    </dependencySet>
-  </dependencySets>
-
-  <moduleSets>
-    <moduleSet>
       <includes>
         <include>com.inmobi.grill:grill-api</include>
         <include>com.inmobi.grill:grill-server-api</include>
@@ -48,9 +43,17 @@
         <include>com.inmobi.grill:grill-driver-impala</include>
         <include>com.inmobi.grill:grill-driver-jdbc</include>
         <include>com.inmobi.grill:grill-storage-db</include>
+      </includes>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
+
+  <moduleSets>
+    <moduleSet>
+      <includes>
         <include>com.inmobi.grill:grill-server</include>
       </includes>
-
       <binaries>
         <unpack>false</unpack>
       </binaries>
