@@ -172,7 +172,12 @@
                     <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                </configuration>
            </plugin>
-        </plugins>
+         <plugin>
+           <artifactId>jdeb</artifactId>
+           <groupId>org.vafer</groupId>
+           <version>0.9</version>
+         </plugin>
+       </plugins>
     </pluginManagement>
             <plugins>
                <plugin>
@@ -573,13 +578,6 @@
 							<version>2.0.0</version>
 							<scope>test</scope>
 						</dependency>
-
-     <!-- Jersey client for grill client-->
-     <dependency>
-       <groupId>org.glassfish.jersey.core</groupId>
-       <artifactId>jersey-client</artifactId>
-       <version>${jersey.version}</version>
-     </dependency>
 
     </dependencies>
 
