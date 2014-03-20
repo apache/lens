@@ -89,6 +89,16 @@
               <verbose>false</verbose>
               <includeDependencySources>false</includeDependencySources>
               <show>public</show>
+              <groups>
+                <group>
+                <title> Clien api </title>
+                <packages>com.inmobi.grill.api*:com.inmobi.grill.client*</packages>
+                </group>
+                <group>
+                <title> Developer api </title>
+                <packages>com.inmobi.grill.server.api*</packages>
+                </group>
+              </groups>
             </configuration>
             <reports>
               <report>aggregate</report>
