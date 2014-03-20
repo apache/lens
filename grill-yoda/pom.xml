@@ -11,6 +11,7 @@
 
   <artifactId>grill-yoda</artifactId>
   <packaging>jar</packaging>
+  <description>Yoda specific module</description>
 
   <properties>
      <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>

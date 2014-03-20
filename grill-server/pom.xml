@@ -17,6 +17,7 @@
 
     <artifactId>grill-server</artifactId>
     <packaging>war</packaging>
+    <description> Grill server</description>
 
     <dependencies>
         <dependency>

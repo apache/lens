@@ -11,6 +11,7 @@
     
     <artifactId>grill-driver-cube</artifactId>
     <packaging>jar</packaging>
+    <description> The driver implementation accepting cube queries</description>
 
     <dependencies>
         <dependency>

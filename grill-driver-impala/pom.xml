@@ -11,6 +11,7 @@
     
     <artifactId>grill-driver-impala</artifactId>
     <packaging>jar</packaging>
+    <description> Impala execution driver </description>
     
     <dependencies>
         <dependency>

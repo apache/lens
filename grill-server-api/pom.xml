@@ -9,6 +9,7 @@
     
   <artifactId>grill-server-api</artifactId>
   <packaging>jar</packaging>
+  <description> API for server and extensions</description>
 
   <dependencies>    
     <dependency>

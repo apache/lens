@@ -10,6 +10,7 @@
     
   <artifactId>grill-driver-jdbc</artifactId>
   <packaging>jar</packaging>
+  <description> JDBC execution driver </description>
 
   <dependencies>   
 	  <dependency>

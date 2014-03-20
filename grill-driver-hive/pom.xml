@@ -15,6 +15,7 @@
 
   <artifactId>grill-driver-hive</artifactId>
   <packaging>jar</packaging>
+  <description> Hive execution driver </description>
 
     <build>
         <plugins>

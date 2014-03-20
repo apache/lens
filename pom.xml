@@ -75,6 +75,23 @@
                <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
                <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
             </configuration>
+            <reportSets>
+          <reportSet>
+            <reports>
+              <report>summary</report>
+              <report>project-team</report>
+              <report>mailing-list</report>
+              <report>cim</report>
+              <report>issue-tracking</report>
+              <report>license</report>
+              <report>scm</report>
+              <report>modules</report>
+              <report>distribution-management</report>
+              <report>dependency-convergence</report>
+              <report>dependency-management</report>
+            </reports>
+          </reportSet>
+        </reportSets>
             </plugin>
         <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -320,11 +337,6 @@
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-exec</artifactId>
-        <version>${hive.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hive-builtins</artifactId>
         <version>${hive.version}</version>
       </dependency>
       <dependency>
