@@ -14,8 +14,6 @@
  <body>
     <menu name="Grill" >
       <item name="Overview" href="index.html" />
-			<item name="Mailing Lists" href="mailto:grill-dev@inmobi.com"/>
-			<item name="Issue Tracking" href="https://jira.corp.inmobi.com/browse/GRILL"/>
       <item name="Getting Started" href="./gettingstarted/quick-start.html" />
       <item name="Install and Run" href="./gettingstarted/install-steps.html" />
       <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
@@ -39,6 +37,7 @@
       <item name="Configuration" href="./admin/config.html"/>
 			<item name="Admin CLI" href="./admin/cli.html" />
     </menu>
+    <menu ref="reports"/>
     <breadcrumbs>
       <item name="InMobi Tech Platform" href="https://github.corp.inmobi.com/platform/" />
       <item name="Grill" href="https://github.corp.inmobi.com/platform/grill" />
