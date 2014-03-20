@@ -113,12 +113,15 @@ public class CubeSelectorServiceImpl implements CubeSelectorService {
 
   /**
    * Select only the cubes which have all the dimensions and at least one measure.
+   * 
    * Assume we can check if a column is dimension based on its name. Assumption is that a column with same name will not be
    * dim in one table and measure in another.
    * If a cube can answer all columns, return that cube
    * If multiple cubes can answer all columns, return min cost cube from each path group.
+   * 
    * @param columns
-   * @return
+   * 
+   * @return Map of set of columns to set of cube tables
    */
   @Override
   public Map<Set<String>, Set<AbstractCubeTable>> select(Collection<String> columns) {

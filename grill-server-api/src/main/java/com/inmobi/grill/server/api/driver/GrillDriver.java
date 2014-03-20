@@ -85,8 +85,6 @@ public interface GrillDriver {
    * 
    * @param context The query context
    * 
-   * @return a query handle, which can used to know the status.
-   * 
    * @throws GrillException
    */
   public void executeAsync(QueryContext context)
@@ -98,6 +96,7 @@ public interface GrillDriver {
    * @param handle
    * @param timeoutMillis
    * @param listener
+   * 
    * @throws GrillException
    */
   public void registerForCompletionNotification(QueryHandle handle,
@@ -115,7 +114,7 @@ public interface GrillDriver {
   /**
    * Fetch the results of the query, specified by the handle
    * 
-   * @param handle The query handle
+   * @param context The query context
    * 
    * @return returns the result set
    */

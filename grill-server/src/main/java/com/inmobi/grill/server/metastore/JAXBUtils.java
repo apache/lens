@@ -35,17 +35,19 @@ public class JAXBUtils {
 
   /**
    * Create a hive ql cube obejct from corresponding JAXB object
+   * 
    * @param cube JAXB Cube
-   * @return
+   * 
+   * @return {@link Cube}
    */
   public static Cube hiveCubeFromXCube(XCube cube) {
     Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
-    for (XDimension xd : cube.getDimensions().getDimensions()) {
+    for (XDimension xd : cube.getDimensions().getDimension()) {
       dims.add(hiveDimFromXDim(xd));
     }
 
     Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
-    for (XMeasure xm : cube.getMeasures().getMeasures()) {
+    for (XMeasure xm : cube.getMeasures().getMeasure()) {
       measures.add(hiveMeasureFromXMeasure(xm));
     }
 
@@ -56,8 +58,10 @@ public class JAXBUtils {
 
   /**
    * Get XCube from hive.ql.metadata.Cube
+   * 
    * @param c
-   * @return
+   * 
+   * @return {@link XCube}
    */
   public static XCube xCubeFromHiveCube(Cube c) {
     XCube xc = XCF.createXCube();
@@ -85,8 +89,10 @@ public class JAXBUtils {
 
   /**
    * Create a hive ql CubeDimension from JAXB counterpart
+   * 
    * @param xd
-   * @return
+   * 
+   * @return {@link CubeDimension}
    */
   public static CubeDimension hiveDimFromXDim(XDimension xd) {
     Date startDate = getDateFromXML(xd.getStartTime());
@@ -198,8 +204,10 @@ public class JAXBUtils {
 
   /**
    * Create hive ql CubeMeasure from JAXB counterpart
+   * 
    * @param xm
-   * @return
+   * 
+   * @return {@link CubeMeasure}
    */
   public static CubeMeasure hiveMeasureFromXMeasure(XMeasure xm) {
     Date startDate = xm.getStartTime() == null ? null : xm.getStartTime().toGregorianCalendar().getTime();
@@ -230,8 +238,10 @@ public class JAXBUtils {
 
   /**
    * Convert JAXB properties to Map<String, String>
+   * 
    * @param xProperties
-   * @return
+   * 
+   * @return {@link Map}
    */
   public static Map<String, String> mapFromXProperties(XProperties xProperties) {
     Map<String, String> properties = new HashMap<String, String>();

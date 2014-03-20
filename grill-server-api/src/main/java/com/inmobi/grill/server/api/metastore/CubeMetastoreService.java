@@ -6,22 +6,27 @@ import com.inmobi.grill.api.metastore.*;
 
 import java.util.List;
 
+import org.apache.hadoop.hive.ql.metadata.Dimension;
+
 
 public interface CubeMetastoreService {
   /**
    * Get current database used by the CubeMetastoreClient
-   * @return
+   * 
+   * @return the current database name
    */
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException;
 
   /**
    * Change the current database used by the CubeMetastoreClient
+   * 
    * @param database
    */
   public void setCurrentDatabase(GrillSessionHandle sessionid, String database) throws GrillException;
 
   /**
    * Drop a database from cube metastore
+   * 
    * @param database database name
    * @param cascade flag indicating if the tables in the database should be dropped as well
    */
@@ -29,6 +34,7 @@ public interface CubeMetastoreService {
 
   /**
    * Create a database in the metastore
+   * 
    * @param database database name
    * @param ignore ignore if database already exists
    */
@@ -81,13 +87,15 @@ public interface CubeMetastoreService {
    * Get all storage names in current database
    * 
    * @param sessionid
-   * @return
+   * 
+   * @return returns list of the storage names
    * @throws GrillException
    */
   public List<String> getAllStorageNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
    * Get names of all cubes in the current database
+   * 
    * @return list of cube names
    */
   public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException;
@@ -99,19 +107,23 @@ public interface CubeMetastoreService {
 
   /**
    * Get a cube from the metastore
+   * 
    * @param cubeName
+   * 
    * @return JAXB Cube object
    */
   public XCube getCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
 
   /**
    * Drop a cube from the metastore in the currently deleted database
+   * 
    * @param cubeName
    */
   public void dropCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
 
   /**
    * Update an existing cube
+   * 
    * @param cube JAXB Cube object
    */
   public void updateCube(GrillSessionHandle sessionid, XCube cube) throws GrillException;
@@ -123,16 +135,20 @@ public interface CubeMetastoreService {
 
   /**
    * Drop a dimension table from the cube metastore
+   * 
+   * @param sessionid
    * @param dimension
    * @param cascade
+   * 
    * @throws GrillException
    */
   public void dropDimensionTable(GrillSessionHandle sessionid, String dimension, boolean cascade) throws GrillException;
 
   /**
    * Get the dimension table from metastore
+   * 
    * @param dimName
-   * @return
+   * @return The {@link DimensionTable}
    */
 	public DimensionTable getDimensionTable(GrillSessionHandle sessionid, String dimName) throws GrillException;
 	public void updateDimensionTable(GrillSessionHandle sessionid, DimensionTable dimensionTable) throws GrillException;

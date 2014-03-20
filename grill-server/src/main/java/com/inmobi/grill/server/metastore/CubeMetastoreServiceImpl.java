@@ -48,7 +48,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   /**
    * Get current database used by the CubeMetastoreClient
    *
-   * @return
+   * @return database name
    */
   @Override
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException {
@@ -134,7 +134,9 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
   /**
    * Get list of all cubes names in the current database
-   * @return
+   * 
+   * @return List of cube names
+   * 
    * @throws GrillException
    */
   @Override
@@ -177,8 +179,10 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
   /**
    * Get a cube from the metastore
+   * 
    * @param cubeName
-   * @return
+   * 
+   * @return The cube object as {@link XCube}
    * @throws GrillException
    */
   @Override
@@ -199,8 +203,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
   /**
    * Drop a cube from the metastore in the currently deleted database
+   * 
    * @param cubeName
-   * @param cascade
    */
   public void dropCube(GrillSessionHandle sessionid, String cubeName) throws GrillException {
     try {
