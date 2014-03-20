@@ -28,4 +28,10 @@ public class GrillConfConstants {
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }
+
+  public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
+
+  public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
+
+  public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
 }

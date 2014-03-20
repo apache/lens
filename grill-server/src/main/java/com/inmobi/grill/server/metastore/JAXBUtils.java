@@ -42,12 +42,12 @@ public class JAXBUtils {
    */
   public static Cube hiveCubeFromXCube(XCube cube) {
     Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
-    for (XDimension xd : cube.getDimensions().getDimension()) {
+    for (XDimension xd : cube.getDimensions().getDimensions()) {
       dims.add(hiveDimFromXDim(xd));
     }
 
     Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
-    for (XMeasure xm : cube.getMeasures().getMeasure()) {
+    for (XMeasure xm : cube.getMeasures().getMeasures()) {
       measures.add(hiveMeasureFromXMeasure(xm));
     }
 

@@ -6,8 +6,6 @@ import com.inmobi.grill.api.metastore.*;
 
 import java.util.List;
 
-import org.apache.hadoop.hive.ql.metadata.Dimension;
-
 
 public interface CubeMetastoreService {
   /**

@@ -45,14 +45,7 @@ import com.inmobi.grill.server.api.query.QueryContext;
 public class HiveDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
 
-  public static final String GRILL_USER_NAME_KEY = "grill.hs2.user";
-  public static final String GRILL_PASSWORD_KEY = "grill.hs2.password";
-  public static final String GRILL_PERSISTENT_RESULT_SET = "grill.persistent.resultset";
-  public static final String GRILL_RESULT_SET_PARENT_DIR = "grill.result.parent.dir";
   public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
-  public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
-  public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
-  public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
   public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
   // Default expiry is 10 minutes
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
@@ -464,7 +457,7 @@ public class HiveDriver implements GrillDriver {
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
     if (context.isPersistent() &&
-        context.getConf().getBoolean(GRILL_ADD_INSERT_OVEWRITE, true)) {
+        context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true)) {
       // store persistent data into user specified location
       // If absent, take default home directory
       String resultSetParentDir = context.getResultSetPersistentPath();
@@ -477,13 +470,13 @@ public class HiveDriver implements GrillDriver {
       } else {
         // Write to /tmp/grillreports
         resultSetPath = new
-            Path(GRILL_RESULT_SET_PARENT_DIR_DEFAULT, context.getQueryHandle().toString());
+            Path(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, context.getQueryHandle().toString());
         builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
       }
       context.setResultSetPath(resultSetPath.makeQualified(
           resultSetPath.getFileSystem(context.getConf())).toString());
       builder.append('"').append(resultSetPath).append("\" ");
-      String outputDirFormat = context.getConf().get(GRILL_OUTPUT_DIRECTORY_FORMAT);
+      String outputDirFormat = context.getConf().get(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT);
       if (outputDirFormat != null) {
         builder.append(outputDirFormat);
       }
