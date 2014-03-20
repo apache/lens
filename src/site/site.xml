@@ -26,10 +26,8 @@
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
 		</menu>
 		<menu name="Developer Documentation">
-			<item name="Repository" href="https://github.corp.inmobi.com/platform/grill"/>
       <item name="Grill Design" href="./developer/design.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
-      <item name="JavaDoc" href="./developer/javadoc.html" />
     </menu>
 		<menu name="Admin Documentation">
       <item name="Admin Overview" href="./admin/index.html"/>
