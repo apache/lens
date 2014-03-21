@@ -1,1 +1,5 @@
 Grill Design Docs
+
+	Following figure shows the main componenents inside a Grill server
+
+[../figures/serverdesign.png] Grill Server Modules 

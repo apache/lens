@@ -1,1 +1,5 @@
 Grill User Guide
+
+	The following diagram shows query state transition in the Grill Server 
+
+[../figures/querystate.png] Query States in Grill
