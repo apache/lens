@@ -2,73 +2,107 @@ Grill User Guide
 
 %{toc}
 
-* Creating a session
+	Grill Server runs several services which can be used from their REST endpoints. This document coveres some of the important services, their purpose and key API calls. {{{../rest.html}Detailed documentation of the REST API}} is also available. 
 
-* Creating cubes
+* Session Service
 
-** Creating cube tables
-
-** Creating fact tables
-
-** Creating dimension tables
-
-** Creating storage tables
-
-** Managing storage partitions
-
-* Searching for cubes
-
-* Submitting queries
-
-	Submitting queries is done in these steps:
+	To use any Grill service the user must first create a session. The {{{../resource_SessionResource.html}sesion service}} deals with session management. Each Grill session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Grill Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
+	
+	Sessions also allow users to set configuration or resources which could be shared across a group of queries. For example, if a group of queries need to call a UDF available in some specific jar, then the jar file can be added as a resource in the session. All queries started within the same session can make use of the jar file.
 
 
-** [Optional] Set query options and add resources (for ex - jar files) for the Query
+	The important API calls exposed by the session resource are -
+	
+	* {{{../resource_SessionResource.html#path__session.html}/session}} - Endpoint to create or delete a session. 
 
-** Submit queries
+	* {{{../resource_SessionResource.html#path__session_params.html}/session/params}} - Endpoint to maintain session settings
 
-	* Submit the query using either execute or executeAsync call
-
-	* In case of async execution, poll for query status using getStatus. Once the query reaches SUCCESSFUL state, its results can be retrieved using the fetchResultSet call
-
-	* For blocking execute call, its necessary to pass a timeout value. If the query completes before this timeout is reached, the call immediately returns with the query result set. If however, the query doesn't finish, only the query handle is returned, and users can further poll for query status and fetch results when the query is SUCCESSFUL.
-
-	* At any time, user can cancel the execution of the query using the cancelQuery call.
-
-	* A query can be run once, but its results can be fetched any number of times until its purged from server memory.
+	* {{{../resource_SessionResource.html#path__session_resources_add.html}/session/resources}} - Adding or removing resources from the session
 
 []
 
-* Getting query results
+* Query Execution Service
+	
+	The {{{../resource_QueryResource.html}Query Execution Service}} is used to query data exposed by Grill. 
+
+** Query Submission Workflow
+
+	* Create a session using the session service
+
+	* Submit a query by sending a POST to the <<</queryapi/queries>>> endpoint. By default this call should return immediately with the query handle of the newly created query. Each query in Grill is associated with a unique query handle. Query handle can be used to check query status and get results. If users want to wait until the call is finished, the '<<<op>>>' parameter must be set to <<<EXECUTE_WITH_TIMEOUT>>>. This behaviour is explained in detail below.
+
+	* In case of async execution, poll for query status by sending a GET to <<</queryapi/queries/{queryhandle}>>>. Once the query reaches <<SUCCESSFUL>> state, its results can be retrieved using the <<</queryapi/queries/{queryhandle}/resultset>>> endpoint.
+
+	* By default the create query call returns immediately. This behaviour is intended to suit batch queries. However, for interactive queries it may be necessary to issue the query and get its result in a single call to the server. For such cases the create query call takes an 'op' argument. If the op parameter is set to <<<EXECUTE_WITH_TIMEOUT>>>, then an additional <<<timeout>>> value must also be passed. If the query completes before this timeout is reached, the call immediately returns with the query result set. If however, the query doesn't finish, only the query handle is returned, and users can further poll for query status and fetch results when the query is <<SUCCESSFUL>>.
+
+	* At any time, user can cancel the execution of the query by sending a DELETE to <<</queryapi/queries/{queryhandle}>>>
+
+[]
+
+	To summarize, given below are steps for async queries
+
+	[[1]] Create session, note returned session handle
+	
+	[[2]] Create query by passing session handle, note returned query handle
+
+	[[3]] Poll for query status by passing session handle and query handle
+
+	[[4]] If query is SUCCESSFUL, get results.
+
+[]
+	
+	Steps for synchronous queries
+
+	[[1]] Create a session
+
+	[[2]] Create a query by setting <<<op=EXECUTE_WITH_TIMEOUT>>>, Also set the <<<timeout>>>
+
+	[[3]] Check the response, if it contains only the query handle, then poll for status as is the case in async queries. If it contains both query handle and result set, then that means query did complete successfully within the timeout. 
 
 
-* Life of a Query in Grill Server
+[]
+
+** Getting query results
+	
+	A query can be run once, but its results can be fetched any number of times until its purged from server memory. Results can be obtained by sending a GET to <<</queryapi/queries/{queryhandle}/resultset>>>. This endpoint takes optional <<<fromindex>>> and <<<fetchsize>>> parameters which can be used for pagination of results.
+
+** Life of a Query in the Grill Server
 
 	The following diagram shows query state transition in the Grill Server 
 
 [../figures/querystate.png] Query States in Grill
 
 
-	When user submits a query to the Grill Server, its starts in the NEW state. After the query is submitted, it moves into the QUEUED state. Until Grill server is free to take up the query, it remains in the QUEUED state. As soon as Grill server starts processing the query, it enters the LAUNCHED state. 
+	When user submits a query to the Grill Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Grill server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Grill server starts processing the query, it enters the <<LAUNCHED>> state. 
 
 	The next step is when the query service selects the driver to be used for processing the query using the driver selector implementation. Driver selector is an interface which can be used to implement policies for selecting backend engines to execute the queries. Here are some examples of possible selector implementations -
 
-	* Min cost selector - get the query cost from all drivers and select the one with the lowest cost
+	* <<Min cost selector>> - get the query cost from all drivers and select the one with the lowest cost
 
-	* Rule based selector - select driver on user specified rules like data availability, or the tables stored in a particular engine.
+	* <<Rule based selector>> - select driver on user specified rules like data availability, or the tables stored in a particular engine.
 
-	* Load based selector - select the driver with the least loaded backend
+	* <<Load based selector>> - select the driver with the least loaded backend
 
 []
 
-		After the driver is selected the query service submits the query to the driver, and query enters the LAUNCHED state. Once the query is submitted to the driver, the driver is responsible for monitoring execution of the query and updating query status. The Hive Driver for example, will periodically poll Hive Server for getting status of the query. Any getStatus call on the Grill server returns latest query status as reported by the driver.
+		After the driver is selected the query service submits the query to the driver, and query enters the <<LAUNCHED>> state. Once the query is submitted to the driver, the driver is responsible for monitoring execution of the query and updating query status. The Hive Driver for example, will periodically poll Hive Server for getting status of the query. Any GET /queryapi/queries/{queryhandle} call on the Grill server returns latest query status as reported by the driver.
 
-		The RUNNING state indicates that the query is currently being processed by the query backend. In case of Hive it means that the query has been submitted to HiveServer, and HiveServer has started execution of the query.
+		The <<RUNNING>> state indicates that the query is currently being processed by the query backend. In case of Hive it means that the query has been submitted to HiveServer, and HiveServer has started execution of the query.
 
-		After the RUNNING state, the query can enter either the SUCCESSFUL or FAILED states, depending on the result of query execution. If the query is SUCCESSFUL, its result set can be retrieved using the fetchResultSet API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Grill server state.
+		After the <<RUNNING>> state, the query can enter either the <<SUCCESSFUL>> or <<FAILED>> states, depending on the result of query execution. If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Grill server state.
 
-	In any state, if the user requests that the query be cancelled through the cancelQuery call, the query will enter into CANCELLED state. The query service will also call cancelQuery for the selected driver, so that the driver can release resources associated with the query.
+	In any state, if the user requests that the query be cancelled through the cancelQuery call, the query will enter into <<CANCELLED>> state. The query service will also call cancelQuery for the selected driver, so that the driver can release resources associated with the query.
 
-	FAILED, SUCCESSFUL and CANCELLED are end states for a query. Once a query reaches these states, it becomes eligible to purging. The query is purged when its purge delay expires, after which it is not possible to retrieve results of the query. This purge delay is configurable.
+	<<FAILED>>, <<SUCCESSFUL>> and <<CANCELLED>> are end states for a query. Once a query reaches these states, it becomes eligible to purging. The query is purged when its purge delay expires, after which it is not possible to retrieve results of the query. This purge delay is configurable.
+
+* Metastore service
+
+** Creating, updating cubes
+
+** Searching for cubes
+
+* Quota service
+
+
 
 
