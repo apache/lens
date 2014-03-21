@@ -31,6 +31,9 @@
                       <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                       <GRILL_YODA_CLASSES>${pom.basedir}/target/classes</GRILL_YODA_CLASSES>
                   </environmentVariables>
+                  <suiteXmlFiles>
+                      <suiteXmlFile>${project.basedir}/testng.xml</suiteXmlFile>
+                  </suiteXmlFiles>                  
               </configuration>
           </plugin>
           <plugin>
