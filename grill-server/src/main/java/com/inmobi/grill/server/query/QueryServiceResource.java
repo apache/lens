@@ -22,6 +22,7 @@ import org.apache.log4j.Logger;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.api.APIResult;
+import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
@@ -163,9 +164,9 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries submitted by the user will be cancelled,
    * otherwise all the queries will be cancelled
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
-   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial cancellation.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value Status#FAILED} in case of cancellation failure.
+   * APIResult with state {@value Status#PARTIAL} in case of partial cancellation.
    */
   @DELETE
   @Path("queries")
@@ -190,15 +191,15 @@ public class QueryServiceResource {
     String msgString = (StringUtils.isBlank(state) ? "" : " in state" + state)
         + (StringUtils.isBlank(user) ? "" : " for user " + user);
     if (handles != null && numCancelled == handles.size()) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Cancel all queries "
+      return new APIResult(Status.SUCCEEDED, "Cancel all queries "
           + msgString + " is successful");
     } else {
       assert (failed);
       if (numCancelled == 0) {
-        return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
+        return new APIResult(Status.FAILED, "Cancel on the query "
             + msgString + " has failed");        
       } else {
-        return new APIResult(APIResult.Status.PARTIAL, "Cancel on the query "
+        return new APIResult(Status.PARTIAL, "Cancel on the query "
             + msgString + " is partial");        
       }
     }
@@ -276,9 +277,9 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries prepared by the user will be destroyed,
    * otherwise all the queries will be destroyed
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful destroy.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of destroy failure.
-   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial destroy.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@value Status#FAILED} in case of destroy failure.
+   * APIResult with state {@value Status#PARTIAL} in case of partial destroy.
    */
   @DELETE
   @Path("preparedqueries")
@@ -301,15 +302,15 @@ public class QueryServiceResource {
     }
     String msgString = (StringUtils.isBlank(user) ? "" : " for user " + user);
     if (handles != null && numDestroyed == handles.size()) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Destroy all prepared "
+      return new APIResult(Status.SUCCEEDED, "Destroy all prepared "
           + "queries " + msgString + " is successful");
     } else {
       assert (failed);
       if (numDestroyed == 0) {
-        return new APIResult(APIResult.Status.FAILED, "Destroy all prepared "
+        return new APIResult(Status.FAILED, "Destroy all prepared "
             + "queries " + msgString + " has failed");        
       } else {
-        return new APIResult(APIResult.Status.PARTIAL, "Destroy all prepared "
+        return new APIResult(Status.PARTIAL, "Destroy all prepared "
             + "queries " + msgString +" is partial");        
       }
     }
@@ -358,8 +359,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param prepareHandle The prepare handle
    * 
-   * @return APIResult with state {@link APIResult.Status#SUCCEEDED} in case of successful destroy.
-   * APIResult with state {@link APIResult.Status#FAILED} in case of destroy failure.
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful destroy.
+   * APIResult with state {@link Status#FAILED} in case of destroy failure.
    */
   @DELETE
   @Path("preparedqueries/{preparehandle}")
@@ -368,10 +369,10 @@ public class QueryServiceResource {
       @PathParam("preparehandle") String prepareHandle) {
     boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Destroy on the query "
+      return new APIResult(Status.SUCCEEDED, "Destroy on the query "
           + prepareHandle + " is successful");
     } else {
-      return new APIResult(APIResult.Status.FAILED, "Destroy on the query "
+      return new APIResult(Status.FAILED, "Destroy on the query "
           + prepareHandle + " failed");        
     }
   }
@@ -402,8 +403,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful cancellation.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of cancellation failure.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation.
+   * APIResult with state {@value Status#FAILED} in case of cancellation failure.
    */
   @DELETE
   @Path("queries/{queryhandle}")
@@ -411,10 +412,10 @@ public class QueryServiceResource {
   public APIResult cancelQuery(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
     boolean ret = cancelQuery(sessionid, getQueryHandle(queryHandle));
     if (ret) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Cancel on the query "
+      return new APIResult(Status.SUCCEEDED, "Cancel on the query "
           + queryHandle + " is successful");
     } else {
-      return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
+      return new APIResult(Status.FAILED, "Cancel on the query "
           + queryHandle + " failed");        
     }
   }
@@ -442,8 +443,8 @@ public class QueryServiceResource {
    * @param queryHandle The query handle
    * @param conf The new configuration, will be on top of old one
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value Status#FAILED} in case of udpate failure.
    */
   @PUT
   @Path("queries/{queryhandle}")
@@ -455,10 +456,10 @@ public class QueryServiceResource {
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getQueryHandle(queryHandle), conf);
       if (ret) {
-        return new APIResult(APIResult.Status.SUCCEEDED, "Update on the query conf for "
+        return new APIResult(Status.SUCCEEDED, "Update on the query conf for "
             + queryHandle + " is successful");
       } else {
-        return new APIResult(APIResult.Status.FAILED, "Update on the query conf for "
+        return new APIResult(Status.FAILED, "Update on the query conf for "
             + queryHandle + " failed");        
       }
     } catch (GrillException e) {
@@ -474,8 +475,8 @@ public class QueryServiceResource {
    * @param prepareHandle The prepare handle
    * @param conf The new configuration, will be on top of old one
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful update.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of udpate failure.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful update.
+   * APIResult with state {@value Status#FAILED} in case of udpate failure.
    */
   @PUT
   @Path("preparedqueries/{prepareHandle}")
@@ -487,10 +488,10 @@ public class QueryServiceResource {
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getPrepareHandle(prepareHandle), conf);
       if (ret) {
-        return new APIResult(APIResult.Status.SUCCEEDED, "Update on the query conf for "
+        return new APIResult(Status.SUCCEEDED, "Update on the query conf for "
             + prepareHandle + " is successful");
       } else {
-        return new APIResult(APIResult.Status.FAILED, "Update on the query conf for "
+        return new APIResult(Status.FAILED, "Update on the query conf for "
             + prepareHandle + " failed");        
       }
     } catch (GrillException e) {
@@ -598,8 +599,8 @@ public class QueryServiceResource {
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * 
-   * @return APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful close.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of close failure.
+   * @return APIResult with state {@value Status#SUCCEEDED} in case of successful close.
+   * APIResult with state {@value Status#FAILED} in case of close failure.
    */
   @DELETE
   @Path("queries/{queryhandle}/resultset")
@@ -609,7 +610,7 @@ public class QueryServiceResource {
       @PathParam("queryhandle") String queryHandle){
     try {
       queryServer.closeResultSet(sessionid, getQueryHandle(queryHandle));
-      return new APIResult(APIResult.Status.SUCCEEDED, "Close on the result set"
+      return new APIResult(Status.SUCCEEDED, "Close on the result set"
           + " for query " + queryHandle + " is successful");
 
     } catch (GrillException e) {

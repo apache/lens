@@ -18,7 +18,8 @@ public class QueryQueued extends StatusChange {
 
   /**
    * Get the submitting user
-   * @return
+   * 
+   * @return user
    */
   public final String getUser() {
     return user;

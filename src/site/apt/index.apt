@@ -10,7 +10,7 @@ Welcome to Grill!
 
 	* Single <<shared schema>> server based on the Hive Metastore - This schema is shared by data pipelines (HCatalog) and analytics applications.
 
-	* <<Grill application server>> - a REST server which allows users to query data, make schema changes, shceduling queries and enforcing quota limits on queries.
+	* <<Grill application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
 
 	* <<Driver based architecture>> allows plugging in reporting systems like Yoda, InfoBright, Redshift, Impala etc.
 

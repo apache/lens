@@ -4,8 +4,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <powermock.version>1.4.12</powermock.version>
-    <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
     <hive.version>0.13.0-SNAPSHOT</hive.version>
     <hadoop.version>0.20.2-cdh3u5</hadoop.version>
     <jetty.version>6.1.26</jetty.version>
@@ -18,7 +18,7 @@
   <groupId>com.inmobi.grill</groupId>
   <artifactId>grill-parent</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <name>grill</name>
+  <name>Grill</name>
   <packaging>pom</packaging>
 	<description>Unified Analytics Platform For InMobi</description>
   <url>https://github.corop.inmobi.com/platform/grill</url>
@@ -29,15 +29,115 @@
     <version>1.0.1</version>
   </parent>
 
+    <organization>
+        <name>Inmobi</name>
+        <url>http://www.inmobi.com</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://jira.corp.inmobi.com/browse/GRILL</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://build.corp.inmobi.com/view/Platform/</url>
+    </ciManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>grill-user</name>
+            <subscribe>TODO</subscribe>
+            <unsubscribe>TODO</unsubscribe>
+            <post>grill-user@inmobi.com</post>
+        </mailingList>
+        <mailingList>
+            <name>grill-dev</name>
+            <subscribe>TODO</subscribe>
+            <unsubscribe>TODO</unsubscribe>
+            <post>grill-dev@inmobi.com</post>
+        </mailingList>
+    </mailingLists>
+
   <scm>
     <connection>scm:git:git://github.corp.inmobi.com/platform/grill</connection>
     <url>https://github.corp.inmobi.com/platform/grill</url>
     <developerConnection>scm:git:git@github.corp.inmobi.com:platform/grill.git</developerConnection>
   </scm>
 
+  <reporting>
+          <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.7</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            <reportSets>
+          <reportSet>
+            <reports>
+              <report>summary</report>
+              <report>project-team</report>
+              <report>mailing-list</report>
+              <report>cim</report>
+              <report>issue-tracking</report>
+              <report>license</report>
+              <report>scm</report>
+              <report>modules</report>
+              <report>distribution-management</report>
+              <report>dependency-convergence</report>
+              <report>dependency-management</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+            </plugin>
+        <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <inherited>false</inherited>
+        <reportSets>
+          <reportSet>
+            <id>aggregate</id>
+            <configuration>
+              <quiet>true</quiet>
+              <verbose>false</verbose>
+              <includeDependencySources>false</includeDependencySources>
+              <show>public</show>
+              <groups>
+                <group>
+                <title> Clien api </title>
+                <packages>com.inmobi.grill.api*:com.inmobi.grill.client*</packages>
+                </group>
+                <group>
+                <title> Developer api </title>
+                <packages>com.inmobi.grill.server.api*</packages>
+                </group>
+              </groups>
+            </configuration>
+            <reports>
+              <report>aggregate</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+     </plugins>
+  </reporting>
+  
   <build>
      <pluginManagement>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-compiler-plugin</artifactId>
@@ -45,6 +145,11 @@
                <source>1.6</source>
                 <target>1.6</target>
              </configuration>
+           </plugin>
+           <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-site-plugin</artifactId>
+             <version>3.2</version>
            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
@@ -67,8 +172,31 @@
                     <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                </configuration>
            </plugin>
-        </plugins>
+         <plugin>
+           <artifactId>jdeb</artifactId>
+           <groupId>org.vafer</groupId>
+           <version>0.9</version>
+         </plugin>
+       </plugins>
     </pluginManagement>
+            <plugins>
+               <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-site-plugin</artifactId>
+              <executions>
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>prepare-package</phase>
+                    </execution>
+                </executions>
+            <configuration>
+              <generateReports>true</generateReports>
+            </configuration>        
+           </plugin>
+         </plugins>
+    
   </build>
 
   <repositories>
@@ -214,11 +342,6 @@
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-exec</artifactId>
-        <version>${hive.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hive</groupId>
-        <artifactId>hive-builtins</artifactId>
         <version>${hive.version}</version>
       </dependency>
       <dependency>
@@ -456,21 +579,9 @@
 							<scope>test</scope>
 						</dependency>
 
-     <!-- Jersey client for grill client-->
-     <dependency>
-       <groupId>org.glassfish.jersey.core</groupId>
-       <artifactId>jersey-client</artifactId>
-       <version>${jersey.version}</version>
-     </dependency>
-
     </dependencies>
 
  </dependencyManagement>
-
- <organization>
-    <name>InMobi</name>
-		<url>https://github.corp.inmobi.com/platform/grill</url>
-  </organization>
 
   <distributionManagement>
     <site>
@@ -478,16 +589,6 @@
 			<url>https://raw.github.corp.inmobi.com/platform/grill-site/grill-server</url>
     </site>
   </distributionManagement>
-
-  <issueManagement>
-    <system>JIRA</system>
-    <url>https://jira.corp.inmobi.com/browse/GRILL</url>
-  </issueManagement>
-
-  <ciManagement>
-    <system>Jenkins</system>
-    <url>http://build.scm.corp.inmobi.com/job/Platform_Dev_grill/</url>
-  </ciManagement>
 
   <modules>
     <module>grill-api</module>
