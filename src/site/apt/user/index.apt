@@ -1,5 +1,74 @@
 Grill User Guide
 
+%{toc}
+
+* Creating a session
+
+* Creating cubes
+
+** Creating cube tables
+
+** Creating fact tables
+
+** Creating dimension tables
+
+** Creating storage tables
+
+** Managing storage partitions
+
+* Searching for cubes
+
+* Submitting queries
+
+	Submitting queries is done in these steps:
+
+
+** [Optional] Set query options and add resources (for ex - jar files) for the Query
+
+** Submit queries
+
+	* Submit the query using either execute or executeAsync call
+
+	* In case of async execution, poll for query status using getStatus. Once the query reaches SUCCESSFUL state, its results can be retrieved using the fetchResultSet call
+
+	* For blocking execute call, its necessary to pass a timeout value. If the query completes before this timeout is reached, the call immediately returns with the query result set. If however, the query doesn't finish, only the query handle is returned, and users can further poll for query status and fetch results when the query is SUCCESSFUL.
+
+	* At any time, user can cancel the execution of the query using the cancelQuery call.
+
+	* A query can be run once, but its results can be fetched any number of times until its purged from server memory.
+
+[]
+
+* Getting query results
+
+
+* Life of a Query in Grill Server
+
 	The following diagram shows query state transition in the Grill Server 
 
 [../figures/querystate.png] Query States in Grill
+
+
+	When user submits a query to the Grill Server, its starts in the NEW state. After the query is submitted, it moves into the QUEUED state. Until Grill server is free to take up the query, it remains in the QUEUED state. As soon as Grill server starts processing the query, it enters the LAUNCHED state. 
+
+	The next step is when the query service selects the driver to be used for processing the query using the driver selector implementation. Driver selector is an interface which can be used to implement policies for selecting backend engines to execute the queries. Here are some examples of possible selector implementations -
+
+	* Min cost selector - get the query cost from all drivers and select the one with the lowest cost
+
+	* Rule based selector - select driver on user specified rules like data availability, or the tables stored in a particular engine.
+
+	* Load based selector - select the driver with the least loaded backend
+
+[]
+
+		After the driver is selected the query service submits the query to the driver, and query enters the LAUNCHED state. Once the query is submitted to the driver, the driver is responsible for monitoring execution of the query and updating query status. The Hive Driver for example, will periodically poll Hive Server for getting status of the query. Any getStatus call on the Grill server returns latest query status as reported by the driver.
+
+		The RUNNING state indicates that the query is currently being processed by the query backend. In case of Hive it means that the query has been submitted to HiveServer, and HiveServer has started execution of the query.
+
+		After the RUNNING state, the query can enter either the SUCCESSFUL or FAILED states, depending on the result of query execution. If the query is SUCCESSFUL, its result set can be retrieved using the fetchResultSet API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Grill server state.
+
+	In any state, if the user requests that the query be cancelled through the cancelQuery call, the query will enter into CANCELLED state. The query service will also call cancelQuery for the selected driver, so that the driver can release resources associated with the query.
+
+	FAILED, SUCCESSFUL and CANCELLED are end states for a query. Once a query reaches these states, it becomes eligible to purging. The query is purged when its purge delay expires, after which it is not possible to retrieve results of the query. This purge delay is configurable.
+
+
