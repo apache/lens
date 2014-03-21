@@ -385,7 +385,7 @@ public class JDBCDriver implements GrillDriver {
    * Asynchronously execute the query
    *
    * @param context The query context
-   * @return a query handle, which can used to know the status.
+   * 
    * @throws com.inmobi.grill.api.GrillException
    */
   @Override
@@ -454,7 +454,9 @@ public class JDBCDriver implements GrillDriver {
   /**
    * Fetch the results of the query, specified by the handle
    *
-   * @param context@return returns the result set
+   * @param context
+   * 
+   * @return returns the {@link GrillResultSet}.
    */
   @Override
   public GrillResultSet fetchResultSet(QueryContext context) throws GrillException {

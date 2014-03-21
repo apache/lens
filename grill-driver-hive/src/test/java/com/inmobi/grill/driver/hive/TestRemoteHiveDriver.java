@@ -86,10 +86,10 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
   }
 

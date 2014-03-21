@@ -27,6 +27,7 @@ import org.apache.hive.service.cli.RowSet;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import com.inmobi.grill.api.APIResult;
+import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
@@ -106,9 +107,9 @@ public class SessionResource {
     try {
       sessionService.closeSession(sessionid);
     } catch (GrillException e) {
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
-    return new APIResult(APIResult.Status.SUCCEEDED,
+    return new APIResult(Status.SUCCEEDED,
         "Close session with id" + sessionid + "succeeded");
   }
 
@@ -123,9 +124,9 @@ public class SessionResource {
    * @param sessionid session handle object
    * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link APIResult.Status#PARTIAL}, if add succeeded only for some services.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link Status#PARTIAL}, if add succeeded only for some services.
+   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
   @PUT
   @Path("resources/add")
@@ -141,15 +142,15 @@ public class SessionResource {
       } catch (GrillException e) {
         LOG.error("Failed to add resource in service:" + service, e);
         if (numAdded != 0) { 
-          return new APIResult(APIResult.Status.PARTIAL,
+          return new APIResult(Status.PARTIAL,
               "Add resource is partial, failed for service:" + service.getName());
         } else {
-          return new APIResult(APIResult.Status.FAILED,
+          return new APIResult(Status.FAILED,
               "Add resource has failed ");          
         }
       }
     }
-    return new APIResult(APIResult.Status.SUCCEEDED,
+    return new APIResult(Status.SUCCEEDED,
         "Add resource succeeded");
   }
 
@@ -163,9 +164,9 @@ public class SessionResource {
    * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource to be deleted
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if delete was successful.
-   * {@link APIResult} with state {@link APIResult.Status#PARTIAL}, if delete succeeded only for some services.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if delete has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
+   * {@link APIResult} with state {@link Status#PARTIAL}, if delete succeeded only for some services.
+   * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
    */
   @PUT
   @Path("resources/delete")
@@ -181,15 +182,15 @@ public class SessionResource {
       } catch (GrillException e) {
         LOG.error("Failed to delete resource in service:" + service, e);
         if (numDeleted != 0) {
-          return new APIResult(APIResult.Status.PARTIAL,
+          return new APIResult(Status.PARTIAL,
               "Delete resource is partial, failed for service:" + service.getName());
         } else {
-          return new APIResult(APIResult.Status.PARTIAL,
+          return new APIResult(Status.PARTIAL,
               "Delete resource has failed");
         }
       }
     }
-    return new APIResult(APIResult.Status.SUCCEEDED,
+    return new APIResult(Status.SUCCEEDED,
         "Delete resource succeeded");
   }
 
@@ -254,6 +255,6 @@ public class SessionResource {
   public APIResult setParam(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("key") String key, @FormDataParam("value") String value) {
     sessionService.setSessionParameter(sessionid, key, value);
-    return new APIResult(APIResult.Status.SUCCEEDED, "Set param succeeded");
+    return new APIResult(Status.SUCCEEDED, "Set param succeeded");
   }
 }

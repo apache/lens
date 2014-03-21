@@ -50,4 +50,45 @@
   <description>The base url for the grill server</description>
 </property>
 
+<property>
+  <name>grill.persistent.resultset</name>
+  <value>true</value>
+  <description>Whether to enable persistent resultset for queries</description>
+</property>
+
+<property>
+  <name>grill.result.parent.dir</name>
+  <value>/tmp/grillreports</value>
+  <description>The directory for storing persisted results</description>
+</property>
+
+<property>
+  <name>grill.add.insert.overwrite</name>
+  <value>true</value>
+  <description>Prefix query with insert overwrite clause if the query is persistent.
+   User can disable if user gave the clause himself. </description>
+</property>
+
+<property>
+  <name>grill.result.output.dir.format</name>
+  <value></value>
+  <description>The format of the output if result is persisted. The format
+   should be expressed in HQL</description>
+</property>
+
+<property>
+  <name>grill.query.state.logger.enabled</name>
+  <value>true</value>
+  <description>Disable or enable the query state logger with this config.
+   The location for the logger can be specified in log4j properties for the class
+   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
+</property>
+
+<property>
+  <name>grill.event.service.thread.pool.size</name>
+  <value></value>
+  <description>The size of thread pool for notifying events. The no value is specified,
+   it uses the available processors as the number.</description>
+</property>
+
 </configuration>

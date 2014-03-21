@@ -1,10 +1,10 @@
 package com.inmobi.grill.server.metastore;
 
 import com.inmobi.grill.api.APIResult;
+import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.StringList;
-import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.metastore.*;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
@@ -29,7 +29,7 @@ import java.util.List;
 @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class MetastoreResource {
   public static final Logger LOG = LogManager.getLogger(MetastoreResource.class);
-  public static final APIResult SUCCESS = new APIResult(APIResult.Status.SUCCEEDED, "");
+  public static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
   public static final ObjectFactory xCubeObjectFactory = new ObjectFactory();
 
   public CubeMetastoreService getSvc() {
@@ -90,8 +90,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param dbName The db name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if set was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if set has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if set was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if set has failed
    */
   @PUT @Path("databases/current")
   @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
@@ -101,7 +101,7 @@ public class MetastoreResource {
       getSvc().setCurrentDatabase(sessionid, dbName);
     } catch (GrillException e) {
       LOG.error("Error changing current database", e);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -114,8 +114,8 @@ public class MetastoreResource {
    * @param dbName The db name
    * @param cascade if true, all the tables inside the db will also be dropped.
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if delete was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if delete has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
    */
   @DELETE @Path("databases/{dbname}")
   public APIResult dropDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbname") String dbName, 
@@ -125,7 +125,7 @@ public class MetastoreResource {
       getSvc().dropDatabase(sessionid, dbName, cascade);
     } catch (GrillException e) {
       LOG.error("Error dropping " + dbName, e);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -138,8 +138,8 @@ public class MetastoreResource {
    *  otherwise it fails.
    * @param dbName The db name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @POST @Path("databases")
   public APIResult createDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -150,7 +150,7 @@ public class MetastoreResource {
     try {
       getSvc().createDatabase(sessionid, dbName, ignoreIfExisting);
     } catch (GrillException e) {
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -179,9 +179,9 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * 
    * @return
-   * APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of delete failure.
-   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@value Status#FAILED} in case of delete failure.
+   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("cubes")
   public APIResult deleteAllCubes(@QueryParam("sessionid") GrillSessionHandle sessionid) {
@@ -199,15 +199,15 @@ public class MetastoreResource {
       failed = true;
     }
     if (cubeNames != null && numDeleted == cubeNames.size()) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Delete of all "
+      return new APIResult(Status.SUCCEEDED, "Delete of all "
           + "cubes is successful");
     } else {
       assert (failed);
       if (numDeleted == 0) {
-        return new APIResult(APIResult.Status.FAILED, "Delete of all "
+        return new APIResult(Status.FAILED, "Delete of all "
             + "cubes has failed");        
       } else {
-        return new APIResult(APIResult.Status.PARTIAL, "Delete of all "
+        return new APIResult(Status.PARTIAL, "Delete of all "
             + "cubes is partial");        
       }
     }
@@ -219,8 +219,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param cube The {@link XCube} representation of the cube definition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @POST @Path("cubes")
   public APIResult createNewCube(@QueryParam("sessionid") GrillSessionHandle sessionid, XCube cube) {
@@ -228,7 +228,7 @@ public class MetastoreResource {
       getSvc().createCube(sessionid, cube);
     } catch (GrillException e) {
       LOG.error("Error creating cube " + cube.getName(), e);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -249,8 +249,8 @@ public class MetastoreResource {
    * @param cubename The cube name
    * @param cube The {@link XCube} representation of the updated cube definition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
   @PUT @Path("/cubes/{cubename}")
   public APIResult updateCube(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -259,7 +259,7 @@ public class MetastoreResource {
       getSvc().updateCube(sessionid, cube);
     } catch (GrillException e) {
       checkTableNotFound(e, cube.getName());
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -290,8 +290,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param cubeName The cube name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/cubes/{cubename}")
   public APIResult dropCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) {
@@ -299,7 +299,7 @@ public class MetastoreResource {
       getSvc().dropCube(sessionid, cubeName);
     } catch (GrillException e) {
       checkTableNotFound(e, cubeName);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -329,8 +329,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param storage The XStorage representation of storage
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @POST @Path("storages")
   public APIResult createNewStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, XStorage storage) {
@@ -338,7 +338,7 @@ public class MetastoreResource {
       getSvc().createStorage(sessionid, storage);
     } catch (GrillException e) {
       LOG.error("Error creating storage " + storage.getName(), e);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -349,9 +349,9 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * 
    * @return
-   * APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of delete failure.
-   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@value Status#FAILED} in case of delete failure.
+   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("storages")
   public APIResult deleteAllStoragess(@QueryParam("sessionid") GrillSessionHandle sessionid) {
@@ -369,15 +369,15 @@ public class MetastoreResource {
       failed = true;
     }
     if (storageNames != null && numDeleted == storageNames.size()) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Delete of all "
+      return new APIResult(Status.SUCCEEDED, "Delete of all "
           + "cubes is successful");
     } else {
       assert (failed);
       if (numDeleted == 0) {
-        return new APIResult(APIResult.Status.FAILED, "Delete of all "
+        return new APIResult(Status.FAILED, "Delete of all "
             + "storages has failed");        
       } else {
-        return new APIResult(APIResult.Status.PARTIAL, "Delete of all "
+        return new APIResult(Status.PARTIAL, "Delete of all "
             + "storages is partial");        
       }
     }
@@ -390,8 +390,8 @@ public class MetastoreResource {
    * @param storageName The storage name
    * @param storage The {@link XStorage} representation of the updated storage definition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
   @PUT @Path("/storages/{storage}")
   public APIResult updateStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName, XStorage storage) {
@@ -399,7 +399,7 @@ public class MetastoreResource {
       getSvc().alterStorage(sessionid, storageName, storage);
     } catch (GrillException e) {
       checkTableNotFound(e, storageName);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -426,10 +426,10 @@ public class MetastoreResource {
    * Drop the storage, specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param stoageName The storage name
+   * @param storageName The storage name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/storages/{storage}")
   public APIResult dropStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName) {
@@ -437,7 +437,7 @@ public class MetastoreResource {
       getSvc().dropStorage(sessionid, storageName);
     } catch (GrillException e) {
       checkTableNotFound(e, storageName);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -480,9 +480,9 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * 
    * @return
-   * APIResult with state {@value APIResult.Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value APIResult.Status#FAILED} in case of delete failure.
-   * APIResult with state {@value APIResult.Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@value Status#FAILED} in case of delete failure.
+   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("facts")
   public APIResult deleteAllFacts(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -501,15 +501,15 @@ public class MetastoreResource {
       failed = true;
     }
     if (factNames != null && numDeleted == factNames.size()) {
-      return new APIResult(APIResult.Status.SUCCEEDED, "Delete of all "
+      return new APIResult(Status.SUCCEEDED, "Delete of all "
           + "fact tables is successful");
     } else {
       assert (failed);
       if (numDeleted == 0) {
-        return new APIResult(APIResult.Status.FAILED, "Delete of all "
+        return new APIResult(Status.FAILED, "Delete of all "
             + "fact tables has failed");        
       } else {
-        return new APIResult(APIResult.Status.PARTIAL, "Delete of all "
+        return new APIResult(Status.PARTIAL, "Delete of all "
             + "fact tables is partial");        
       }
     }
@@ -541,8 +541,8 @@ public class MetastoreResource {
    * @param fact The {@link FactTable} representation of the fact table definition
    * @param storageTables The Storage table description of fact in each storage
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @POST @Path("/facts")
@@ -553,7 +553,7 @@ public class MetastoreResource {
     try {
       getSvc().createFactTable(sessionid, fact, storageTables);
     } catch (GrillException exc) {
-      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+      return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
   }
@@ -564,8 +564,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param fact The {@link FactTable} representation of the updated fact table definition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
   @PUT @Path("/facts/{factname}")
   public APIResult updateFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -575,7 +575,7 @@ public class MetastoreResource {
       getSvc().updateFactTable(sessionid, fact);
     } catch (GrillException exc) {
       checkTableNotFound(exc, factName);
-      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+      return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
   }
@@ -585,10 +585,10 @@ public class MetastoreResource {
    * 
    * @param sessionid The sessionid in which user is working
    * @param fact The fact table name
-   * @param cascase If true, all the storage tables of the fact will also be dropped
+   * @param cascade If true, all the storage tables of the fact will also be dropped
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factname}")
   public APIResult dropFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String  fact, 
@@ -598,7 +598,7 @@ public class MetastoreResource {
       getSvc().dropFactTable(sessionid, fact, cascade);
     } catch (GrillException exc) {
       checkTableNotFound(exc, fact);
-      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+      return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
   }
@@ -629,8 +629,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factname}/storages")
   public APIResult dropAllStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String factName) {
@@ -650,8 +650,8 @@ public class MetastoreResource {
    * @param fact The fact table name
    * @param storageTable The Storage table description
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
   @POST @Path("/facts/{factname}/storages")
   public APIResult addStorageToFact(
@@ -673,8 +673,8 @@ public class MetastoreResource {
    * @param fact The fact table name
    * @param storage The storage name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factname}/storages/{storage}")
   public APIResult dropStorageFromFact(
@@ -757,8 +757,8 @@ public class MetastoreResource {
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factname}/storages/{storage}/partitions")
   public APIResult dropPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -782,8 +782,8 @@ public class MetastoreResource {
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
   @POST @Path("/facts/{factname}/storages/{storage}/partitions")
   public APIResult addPartitionToFactStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -807,8 +807,8 @@ public class MetastoreResource {
    * @param storage The storage name
    * @param values Comma separated values
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factname}/storages/{storage}/partition")
   public APIResult dropPartitionOfFactStorageByValues(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -846,8 +846,8 @@ public class MetastoreResource {
    * @param dimensionTable The {@link DimensionTable} representation of the dimension table definition
    * @param storageTables The Storage table description of dimension table in each storage
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @POST @Path("/dimensions")
   public APIResult createCubeDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid,
@@ -857,7 +857,7 @@ public class MetastoreResource {
       getSvc().createCubeDimensionTable(sessionid, dimensionTable, storageTables);
     } catch (GrillException exc) {
       LOG.error("Error creating cube dimension table " + dimensionTable.getName(), exc);
-      return new APIResult(APIResult.Status.FAILED, exc.getMessage());
+      return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
   }
@@ -868,8 +868,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param dimensionTable The {@link DimensionTable} representation of the updated dim table definition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
   @PUT @Path("/dimensions/{dimname}")
   public APIResult updateCubeDimension(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -891,8 +891,8 @@ public class MetastoreResource {
    * @param dimension The dimneison table name
    * @param cascade if true, all the storage tables of dimension table will also be dropped
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimensions/{dimname}")
   public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension, 
@@ -901,7 +901,7 @@ public class MetastoreResource {
       getSvc().dropDimensionTable(sessionid, dimension, cascade);
     } catch (GrillException e) {
       checkTableNotFound(e, dimension);
-      return new APIResult(APIResult.Status.FAILED, e.getMessage());
+      return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
   }
@@ -946,10 +946,10 @@ public class MetastoreResource {
    * 
    * @param sessionid The sessionid in which user is working
    * @param dimName The dimension table name
-   * @param storageTable The Storage table description
+   * @param storageTbl The Storage table description
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
   @POST @Path("/dimensions/{dimname}/storages")
   public APIResult createDimensionStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
@@ -983,10 +983,10 @@ public class MetastoreResource {
    * Drop all the storage tables of a dimension table
    * 
    * @param sessionid The sessionid in which user is working
-   * @param dimension The dimension table name
+   * @param dimName The dimension table name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimensions/{dimname}/storages")
   public APIResult dropAllStoragesOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) {
@@ -1006,8 +1006,8 @@ public class MetastoreResource {
    * @param dimName The dimension table name
    * @param storage The storage name
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}")
   public APIResult dropStorageOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName,
@@ -1054,8 +1054,8 @@ public class MetastoreResource {
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partitions")
   public APIResult dropPartitionsOfDimStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -1078,8 +1078,8 @@ public class MetastoreResource {
    * @param storage The storage name
    * @param values Comma separated values
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partition")
   public APIResult dropPartitionsOfDimStorageByValue(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -1103,8 +1103,8 @@ public class MetastoreResource {
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
    * 
-   * @return {@link APIResult} with state {@link APIResult.Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link APIResult.Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
   @POST @Path("/dimensions/{dimname}/storages/{storage}/partitions")
   public APIResult addPartitionToDimStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,

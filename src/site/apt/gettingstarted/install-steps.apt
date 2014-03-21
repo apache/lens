@@ -63,7 +63,8 @@ Installing and running grill
 
 *** Driver configuration
 
-  If server has HiveDriver as one of the drivers, the configuration for hive driver should be set up in hive-site.xml. For all the available configuration of the HiveDriver, follow the <link>.
+  If server has HiveDriver as one of the drivers, the configuration for hive driver should be set up in hive-site.xml.
+   All the available configuration of the HiveDriver can be found {{{../admin/hivedriver-config.html}here}}.
 
 ** Running the server
 

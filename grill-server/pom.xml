@@ -17,6 +17,7 @@
 
     <artifactId>grill-server</artifactId>
     <packaging>war</packaging>
+    <description> Grill server</description>
 
     <dependencies>
         <dependency>
@@ -143,18 +144,6 @@
             </executions>
           </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>jar</goal>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.mortbay.jetty</groupId>
                 <artifactId>maven-jetty-plugin</artifactId>
                 <version>${jetty.version}</version>
@@ -162,6 +151,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
+                <version>1.2.1</version>
                 <configuration>
                     <mainClass>com.inmobi.grill.server.GrillServer</mainClass>
                 </configuration>
@@ -177,6 +167,7 @@
                     <environmentVariables>
                         <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                     </environmentVariables>
+                   <argLine>-Xms256m -Xmx512m</argLine>
                 </configuration>
             </plugin>
             <plugin>
@@ -195,13 +186,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                   <argLine>-Xms256m -Xmx512m</argLine>
-                </configuration>
             </plugin>
 
 					<plugin>

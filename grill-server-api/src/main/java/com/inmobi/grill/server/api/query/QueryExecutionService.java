@@ -32,7 +32,8 @@ public interface QueryExecutionService {
 
   /**
    * Prepare the query
-   * @param sessionHandle TODO
+   * 
+   * @param sessionHandle 
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
@@ -45,7 +46,8 @@ public interface QueryExecutionService {
 
   /**
    * Explain the given query and prepare it as well.
-   * @param sessionHandle TODO
+   * 
+   * @param sessionHandle 
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
    * 
@@ -61,9 +63,10 @@ public interface QueryExecutionService {
    * Execute already prepared query asynchronously. 
    * Query can be prepared with explain
    * 
-   * @param handle The {@link QueryHandle}
+   * @param prepareHandle The {@link QueryPrepareHandle}
    * @param conf The configuration for the query to execute
    * 
+   * @return Returns the query handle
    * @throws GrillException
    */
   public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
@@ -73,7 +76,7 @@ public interface QueryExecutionService {
    * Execute already prepared query with timeout. 
    * Query can be prepared with explain
    * 
-   * @param handle The {@link QueryHandle}
+   * @param prepareHandle The {@link QueryPrepareHandle}
    * @param timeoutmillis The timeout after which it will return handle, if
    *  query did not finish before.
    * @param conf The configuration for the query to execute
@@ -124,9 +127,9 @@ public interface QueryExecutionService {
       GrillConf conf) throws GrillException;
 
   /**
-   * Get status of the query, specified by the handle
+   * Get the query, specified by the handle
    * 
-   * @param handle The query handle
+   * @param queryHandle The query handle
    * 
    * @return query status
    */

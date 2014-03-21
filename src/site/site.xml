@@ -14,8 +14,6 @@
  <body>
     <menu name="Grill" >
       <item name="Overview" href="index.html" />
-			<item name="Mailing Lists" href="mailto:grill-dev@inmobi.com"/>
-			<item name="Issue Tracking" href="https://jira.corp.inmobi.com/browse/GRILL"/>
       <item name="Getting Started" href="./gettingstarted/quick-start.html" />
       <item name="Install and Run" href="./gettingstarted/install-steps.html" />
       <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
@@ -28,10 +26,8 @@
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
 		</menu>
 		<menu name="Developer Documentation">
-			<item name="Repository" href="https://github.corp.inmobi.com/platform/grill"/>
       <item name="Grill Design" href="./developer/design.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
-      <item name="JavaDoc" href="./developer/javadoc.html" />
     </menu>
 		<menu name="Admin Documentation">
       <item name="Admin Overview" href="./admin/index.html"/>
@@ -39,6 +35,7 @@
       <item name="Configuration" href="./admin/config.html"/>
 			<item name="Admin CLI" href="./admin/cli.html" />
     </menu>
+    <menu ref="reports"/>
     <breadcrumbs>
       <item name="InMobi Tech Platform" href="https://github.corp.inmobi.com/platform/" />
       <item name="Grill" href="https://github.corp.inmobi.com/platform/grill" />
