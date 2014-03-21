@@ -11,6 +11,7 @@
 
   <artifactId>grill-storage-db</artifactId>
   <packaging>jar</packaging>
+  <description> DB storage implementation</description>
 
   <dependencies>
     <dependency>

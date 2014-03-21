@@ -10,6 +10,7 @@
     
   <artifactId>grill-api</artifactId>
   <packaging>jar</packaging>
+  <description> The client api </description>
 
   <dependencies>    
     <dependency>

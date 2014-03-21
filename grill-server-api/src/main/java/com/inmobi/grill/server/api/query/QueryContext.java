@@ -87,7 +87,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   /**
-   * @param conf the conf to set
+   * @param confoverlay the conf to set
    */
   public void updateConf(Map<String,String> confoverlay) {
     for (Map.Entry<String,String> prop : confoverlay.entrySet()) {

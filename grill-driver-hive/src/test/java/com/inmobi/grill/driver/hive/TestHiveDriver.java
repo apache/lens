@@ -54,12 +54,12 @@ public class TestHiveDriver {
 
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     QueryContext context = new QueryContext(
         "USE " + TestHiveDriver.class.getSimpleName(), null, conf);
     driver.execute(context);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     System.out.println("Driver created");
   }
@@ -92,7 +92,7 @@ public class TestHiveDriver {
   @Test
   public void testInsertOverwriteConf() throws Exception {
     createTestTable("test_insert_overwrite");
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
     String query = "SELECT ID FROM test_insert_overwrite";
     QueryContext context = new QueryContext(query, null, conf);
     driver.addPersistentPath(context);
@@ -111,18 +111,18 @@ public class TestHiveDriver {
     QueryContext context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
     validateInMemoryResult(resultSet);
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
-    validatePersistentResult(resultSet, TEST_DATA_FILE, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
-    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+    validatePersistentResult(resultSet, TEST_DATA_FILE, GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
+    conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
     select = "SELECT ID, null, ID FROM test_execute";
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
-    validatePersistentResult(resultSet, TEST_DATA_FILE, HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
+    validatePersistentResult(resultSet, TEST_DATA_FILE, GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
   }
 
   private void validateInMemoryResult(GrillResultSet resultSet)
@@ -189,20 +189,20 @@ public class TestHiveDriver {
     conf.set("hive.exec.driver.run.hooks", "");
     //  Async select query
     String select = "SELECT ID FROM test_execute_sync";
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
     validateExecuteAsync(context, Status.SUCCESSFUL, false, null, false);
     driver.closeQuery(context.getQueryHandle());
 
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
     validateExecuteAsync(context, Status.SUCCESSFUL, true,
-        HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
     driver.closeQuery(context.getQueryHandle());
 
-    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+    conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
@@ -210,7 +210,7 @@ public class TestHiveDriver {
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
     validateExecuteAsync(context, Status.SUCCESSFUL, true,
-        HiveDriver.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
     driver.closeQuery(context.getQueryHandle());
 
   }
@@ -310,9 +310,9 @@ public class TestHiveDriver {
   @Test
   public void testPersistentResultSet() throws Exception {
     createTestTable("test_persistent_result_set");
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.set(HiveDriver.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
     QueryContext ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
     GrillResultSet resultSet = driver.execute(ctx);
     validatePersistentResult(resultSet, TEST_DATA_FILE, TEST_OUTPUT_DIR, false);
@@ -322,7 +322,7 @@ public class TestHiveDriver {
     validateExecuteAsync(ctx, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
     driver.closeQuery(ctx.getQueryHandle());
 
-    conf.set(HiveDriver.GRILL_OUTPUT_DIRECTORY_FORMAT,
+    conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");

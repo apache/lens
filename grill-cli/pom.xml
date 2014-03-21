@@ -11,6 +11,7 @@
 
   <artifactId>grill-cli</artifactId>
   <packaging>jar</packaging>
+  <description> The CLI for grill client </description>
 
   <dependencies>
     <dependency>

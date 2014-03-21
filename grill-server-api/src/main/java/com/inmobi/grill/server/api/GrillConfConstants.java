@@ -21,8 +21,17 @@ public class GrillConfConstants {
   public static final String GRILL_SERVICE_IMPL_SFX = ".service.impl";
   public static final String GRILL_QUERY_STATE_LOGGER_ENABLED = "grill.query.state.logger.enabled";
   public static final String EVENT_SERVICE_THREAD_POOL_SIZE = "grill.event.service.thread.pool.size";
+  
+  public static final String GRILL_SERVER_BASE_URL = "grill.server.base.url";
+  public static final String DEFAULT_GRILL_SERVER_BASE_URL = "http://0.0.0.0:9999/";
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }
+
+  public static final String GRILL_RESULT_SET_PARENT_DIR_DEFAULT = "/tmp/grillreports";
+
+  public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
+
+  public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
 }
