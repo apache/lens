@@ -96,9 +96,12 @@ Grill User Guide
 
 * Metastore service
 
-** Creating, updating cubes
+	The Metastore service is used for DDL operations like creating, updating cubes, fact tables and dimensions. It also pprovides endpoints to create storage tables and to add partitions to a storage table. For more detailed information see the {{{../resource_MetastoreResource.html}metastore service resource}} documentation.
 
-** Searching for cubes
+	For resource exposed endpoint for cubes, facts, dimensions and storage tables. For each of the resource, HTTP methods specify the operation to be performed. For example, a POST on the cubes resource creates a cube, whereas a GET on the cubes reource will get list of all cubes. Similar convention is followed for fact, dimension, and storage tables.
+
+	For Java clients, JAXB classes corresponding to each of the endpoints are available.
+
 
 * Quota service
 
