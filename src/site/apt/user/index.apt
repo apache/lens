@@ -23,7 +23,7 @@ Grill User Guide
 
 * Query Execution Service
 	
-	The {{{../resource_QueryResource.html}Query Execution Service}} is used to query data exposed by Grill. 
+	The {{{../resource_QueryServiceResource.html}Query Execution Service}} is used to query data exposed by Grill. 
 
 ** Query Submission Workflow
 
