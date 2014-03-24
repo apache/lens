@@ -16,4 +16,4 @@ Configuring grill server
   configuration should be specified in hive-site.xml. Supported drivers in this version
   are com.inmobi.grill.driver.hive.HiveDriver and com.inmobi.grill.driver.jdbc.JDBCDriver.
   The configuration parameters and
-  their detailed description and default values for HiveDriver are available {{{./config.html} here}}
+  their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}

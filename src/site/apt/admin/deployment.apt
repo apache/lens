@@ -8,6 +8,7 @@ Grill server deployment
   of the execution engines.
 
   Deployment suggested at Inmobi is depicted in the following  diagram
+
 [../figures/deployment.png] Grill Server deployment
 
   It requires HiveMetastore server, HiveServer2 and Grill Server running on different machines.

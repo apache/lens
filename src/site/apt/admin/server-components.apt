@@ -4,6 +4,7 @@ Grill server components
   session management, metastore and query. 
   
   Here is the diagram describing all the components:
+
 [../figures/serverdesign.png] Grill Server components
 
 * Grill services
