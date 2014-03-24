@@ -1,5 +1,9 @@
 package com.inmobi.grill.server;
 
+import info.ganglia.gmetric4j.gmetric.GMetric;
+import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +16,9 @@ import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.ganglia.GangliaReporter;
 import com.inmobi.grill.api.query.QueryStatus.Status;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
@@ -25,8 +31,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private AsyncEventListener<StatusChange> queryStatusListener;
   private MetricRegistry metricRegistry;
   private List<ScheduledReporter> reporters;
-  
-  
+
+
   private Counter queuedQueries;
   private Counter runningQueries;
   private Counter finishedQueries;
@@ -35,8 +41,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
-  
-  
+
+
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
     @Override
     public void process(StatusChange event) {
@@ -54,7 +60,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         break;
       }
     }
-    
+
 
     protected void processCurrentStatus(Status currentValue) {
       switch(currentValue) {
@@ -87,11 +93,12 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       }
     }
   }
-  
+
   public MetricsServiceImpl(String name) {
     super(METRICS_SVC_NAME);
   }
-  
+
+  private static int timeBetweenPolls = 10;
 
   @Override
   public synchronized void init(HiveConf hiveConf) {
@@ -101,51 +108,70 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
     initCounters();
-    
+    timeBetweenPolls = hiveConf.getInt(GrillConfConstants.REPORTING_PERIOD , 10);
+
     reporters = new ArrayList<ScheduledReporter>();
-    // Start console reporter
-    ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
-        .convertRatesTo(TimeUnit.SECONDS)
-        .convertDurationsTo(TimeUnit.MILLISECONDS)
-        .build();
-    reporter.start(1, TimeUnit.MINUTES);
-    
-    // TODO Add ganglia reporter
-    
-    reporters.add(reporter);
+    if (hiveConf.getBoolean(GrillConfConstants.ENABLE_CONSOLE_METRICS, false)) {
+      // Start console reporter
+      ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
+          .convertRatesTo(TimeUnit.SECONDS)
+          .convertDurationsTo(TimeUnit.MILLISECONDS)
+          .build();
+      reporters.add(reporter);
+    }
+
+    if (hiveConf.getBoolean(GrillConfConstants.ENABLE_CONSOLE_METRICS, false)) {
+      GMetric ganglia;
+      try {
+        ganglia = new GMetric(hiveConf.get(GrillConfConstants.GANGLIA_SERVERNAME),
+            hiveConf.getInt(GrillConfConstants.GANGLIA_PORT, 8080),
+            UDPAddressingMode.MULTICAST, 1);
+        GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry)
+            .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS)
+            .build(ganglia);
+
+        reporters.add(greporter);
+      } catch (IOException e) {
+        LOG.error("Could not start ganglia reporter", e);
+      }
+    }
     LOG.info("Started metrics service");
     super.init(hiveConf);
   }
-  
+
   protected void initCounters() {
     queuedQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES));
     totalQueuedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-" + QUEUED_QUERIES));
-    
+
     runningQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES));
-    
+
     totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-success-queries"));
-    
+
     finishedQueries = 
         metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES));
     totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + FINISHED_QUERIES));
-    
+
     totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + FAILED_QUERIES));
-    
+
     totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + CANCELLED_QUERIES));
   }
 
   @Override
   public synchronized void start() {
+    for (ScheduledReporter reporter : reporters) {
+      reporter.start(timeBetweenPolls, TimeUnit.SECONDS);
+    }
     super.start();
+
   }
-  
+
   @Override
   public synchronized void stop() {
     // unregister 
@@ -153,6 +179,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
     eventService.removeListener(queryStatusListener);
     queryStatusListener.stop();
+    for (ScheduledReporter reporter : reporters) {
+      reporter.stop();
+    }
     LOG.info("Stopped metrics service");
     super.stop();
   }
@@ -198,7 +227,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public long getQueuedQueries() {
     return queuedQueries.getCount();
   }
-  
+
   @Override
   public long getRunningQueries() {
     return runningQueries.getCount();

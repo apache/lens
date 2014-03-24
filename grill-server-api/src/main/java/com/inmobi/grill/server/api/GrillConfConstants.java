@@ -34,4 +34,10 @@ public class GrillConfConstants {
   public static final String GRILL_OUTPUT_DIRECTORY_FORMAT = "grill.result.output.dir.format";
 
   public static final String GRILL_ADD_INSERT_OVEWRITE = "grill.add.insert.overwrite";
+
+  public static final String ENABLE_CONSOLE_METRICS = "grill.enable.console.metrics";
+  public static final String ENABLE_GANGLIA_METRICS = "grill.enable.ganglia.metrics";
+  public final static String GANGLIA_SERVERNAME = "grill.metrics.ganglia.host";
+  public final static String GANGLIA_PORT = "grill.metrics.ganglia.port";
+  public final static String REPORTING_PERIOD = "grill.metrics.reporting.period";
 }
