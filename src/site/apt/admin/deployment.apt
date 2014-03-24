@@ -1,1 +1,15 @@
-Installation and deployment
+Grill server deployment
+
+  This document describes the deployment of grill server in a distributed cluster.
+  Make sure you have finished {{{../gettingstarted/install-steps.html} Install and run}} doc,
+  before proceeding.
+
+  Grill server requires Hive metastore. Hive server is required if Hive is one
+  of the execution engines.
+
+  Deployment suggested at Inmobi is depicted in the following  diagram
+[../figures/deployment.png] Grill Server deployment
+
+  It requires HiveMetastore server, HiveServer2 and Grill Server running on different machines.
+
+
