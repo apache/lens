@@ -59,7 +59,6 @@ Grill User Guide
 
 	[[3]] Check the response, if it contains only the query handle, then poll for status as is the case in async queries. If it contains both query handle and result set, then that means query did complete successfully within the timeout. 
 
-
 []
 
 ** Getting query results
@@ -102,7 +101,5 @@ Grill User Guide
 ** Searching for cubes
 
 * Quota service
-
-
 
 
