@@ -33,4 +33,14 @@ Grill configuration
 *--+--+---+--+
 |14|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified,   it uses the available processors as the number.|
 *--+--+---+--+
+|15|grill.enable.console.metrics|false|Enable metrics to be reported on console|
+*--+--+---+--+
+|16|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
+*--+--+---+--+
+|17|grill.metrics.ganglia.host| |The ganglia host name|
+*--+--+---+--+
+|18|grill.metrics.ganglia.port| |The ganglia port|
+*--+--+---+--+
+|19|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+*--+--+---+--+
 The default configuration options and default values
