@@ -10,6 +10,8 @@ Installing and running grill
 
    git clone https://github.corp.inmobi.com/platform/grill
 
+   git checkout grill-server
+
    cd grill
 
    mvn clean package
