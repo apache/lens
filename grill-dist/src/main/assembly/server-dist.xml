@@ -73,6 +73,7 @@
     </fileSet>
 
     <fileSet>
+      <fileMode>755</fileMode>  
       <directory>../tools/scripts</directory>
       <outputDirectory>/bin/</outputDirectory>
       <includes>

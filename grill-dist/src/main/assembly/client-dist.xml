@@ -59,10 +59,12 @@
     </fileSet>
 
     <fileSet>
+      <fileMode>755</fileMode>  
       <directory>../tools/scripts</directory>
       <outputDirectory>/bin/</outputDirectory>
       <includes>
         <include>yoda-cube.sh</include>
+        <include>run-examples.sh</include>
       </includes>
     </fileSet>
     
@@ -71,6 +73,14 @@
       <outputDirectory>/conf/</outputDirectory>
       <includes>
         <include>grill-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/resources</outputDirectory>
+      <includes>
+        <include>**</include>
       </includes>
     </fileSet>
 
