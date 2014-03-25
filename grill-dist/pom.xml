@@ -108,6 +108,7 @@
         <groupId>org.vafer</groupId>
         <executions>
           <execution>
+            <id>server</id>          
             <phase>package</phase>
             <goals>
               <goal>jdeb</goal>
@@ -144,19 +145,14 @@
               </dataSet>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <artifactId>jdeb</artifactId>
-        <groupId>org.vafer</groupId>
-        <executions>
           <execution>
+            <id>client</id>
             <phase>package</phase>
             <goals>
               <goal>jdeb</goal>
             </goals>
             <configuration>
+              <controlDir>${project.basedir}/src/deb/client</controlDir>
               <installDir>/usr/local/grill-client</installDir>
               <deb>${project.build.directory}/grill-client_${version}.deb</deb>
               <dataSet>
