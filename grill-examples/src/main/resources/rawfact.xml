@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fact_table cube_name="sample_cube" name="rawfact" weight="500.0"
+ xmlns="uri:grill:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+  <columns>
+    <column comment="" name="dim1" type="int"/>
+    <column comment="" name="dim2" type="int"/>
+    <column comment="" name="dim3" type="int"/>
+    <column comment="" name="measure1" type="long"/>
+    <column comment="" name="measure2" type="int"/>
+    <column comment="" name="measure3" type="float"/>
+    <column comment="" name="measure4" type="float"/>
+  </columns>
+  <storage_update_periods>
+    <update_period_element storage_name="local">
+    <update_period>hourly</update_period>
+    </update_period_element>
+  </storage_update_periods>
+  <properties>
+    <property name="rawfact.prop" value="raw"/>
+    <property name="cube.fact.is.aggregated" value="false"/>
+  </properties>
+</fact_table>

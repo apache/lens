@@ -8,7 +8,7 @@
 
   <property>
     <name>grill.port</name>
-    <value>8080</value>
+    <value>9999</value>
     <description>Default Grill server port</description>
   </property>
 
@@ -20,7 +20,7 @@
 
   <property>
     <name>grill.base.path</name>
-    <value></value>
+    <value>grillapi</value>
     <description>default grill server base path</description>
   </property>
 

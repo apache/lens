@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dimension_table name="dim_table2" weight="0.0" xmlns="uri:grill:cube:0.1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+  <columns>
+    <column comment="ID" name="id" type="int"/>
+    <column comment="name" name="name" type="string"/>
+    <column comment="more details for dim2" name="detail2" type="string"/>
+  </columns>
+  <dimensions_references/>
+  <storage_dump_periods>
+    <update_period_element storage_name="local">
+    <update_period>hourly</update_period>
+    </update_period_element>
+    <update_period_element storage_name="mydb"/>
+  </storage_dump_periods>
+  <properties>
+    <property name="dim2.prop" value="d2"/>
+  </properties>
+</dimension_table>

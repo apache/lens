@@ -11,16 +11,22 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 public class DBStorage extends Storage {
 
   public static final String DB_URL ="grill.storage.db.url";
-  private final String dbUrl;
+  private String dbUrl = null;
   protected DBStorage(String dbUrl, String name, Map<String, String> properties) {
     super(name, properties);
     this.dbUrl = dbUrl;
     addProperties();
   }
 
+  public DBStorage(String name) {
+    this(name, null);
+  }
+
   protected DBStorage(String name, Map<String, String> properties) {
     super(name, properties);
-    this.dbUrl = properties.get(DB_URL);
+    if (properties != null) {
+      this.dbUrl = properties.get(DB_URL);
+    }
   }
 
   public DBStorage(Table hiveTable) {
@@ -30,7 +36,9 @@ public class DBStorage extends Storage {
 
   protected void addProperties() {
     super.addProperties();
-    getProperties().put(DB_URL, dbUrl);
+    if (dbUrl != null) {
+      getProperties().put(DB_URL, dbUrl);
+    }
   }
 
   public String getDbUrl() {

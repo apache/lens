@@ -393,7 +393,7 @@ public class JAXBUtils {
       storage.addProperties(mapFromXProperties(xs.getProperties()));
       return storage;
     } catch (Exception e) {
-      throw new WebApplicationException("Could not create storage class" + xs.getClassname() + "with name" + xs.getName(), e);
+      throw new WebApplicationException("Could not create storage class" + xs.getClassname() + "with name:" + xs.getName(), e);
     }
   }
 

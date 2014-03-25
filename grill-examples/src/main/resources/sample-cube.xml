@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x_cube name="sample_cube" xmlns="uri:grill:cube:0.1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+  <measures>
+    <measure name="measure1" type="long"/>
+    <measure name="measure2" type="int" default_aggr="SUM"/>
+    <measure name="measure3" type="float" default_aggr="MAX" start_time=2013-12-12-00:00/>
+    <measure name="measure4" type="double" default_aggr="MIN"/>
+    <measure name="expr_msr5" type="double" expr="measure1 + measure2" />
+  </measures>
+  <dimensions>
+    <dimension name="dim1" type="int"/>
+    <dimension name="dim2" type="int" start_time=2013-12-01-00:00/>
+    <dimension name="dim3" type="int">
+      <references>
+        <table_references dest_table="dim_table" dest_column="id"/>
+      </references>
+    </dimension>
+  </dimensions>
+  <properties>
+  <property name="sample_cube.prop" value="sample" />
+  </properties>
+</x_cube>
