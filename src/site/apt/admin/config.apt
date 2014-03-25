@@ -5,42 +5,42 @@ Grill configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
+|1|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent.   User can disable if user gave the clause himself. |
 *--+--+---+--+
-|2|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|2|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
 *--+--+---+--+
-|3|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|3|grill.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+
-|4|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|4|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
 *--+--+---+--+
-|5|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|5|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified,   it uses the available processors as the number.|
 *--+--+---+--+
 |6|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|7|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|7|grill.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|8|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
+|8|grill.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|9|grill.persistent.resultset|true|Whether to enable persistent resultset for queries|
+|9|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|10|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted results|
+|10|grill.persistent.resultset|true|Whether to enable persistent resultset for queries|
 *--+--+---+--+
-|11|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent.   User can disable if user gave the clause himself. |
+|11|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|12|grill.result.output.dir.format| |The format of the output if result is persisted. The format   should be expressed in HQL|
+|12|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config.   The location for the logger can be specified in log4j properties for the class   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|13|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config.   The location for the logger can be specified in log4j properties for the class   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|13|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|14|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified,   it uses the available processors as the number.|
+|14|grill.result.output.dir.format| |The format of the output if result is persisted. The format   should be expressed in HQL|
 *--+--+---+--+
-|15|grill.enable.console.metrics|false|Enable metrics to be reported on console|
+|15|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted results|
 *--+--+---+--+
-|16|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
+|16|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|17|grill.metrics.ganglia.host| |The ganglia host name|
+|17|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|18|grill.metrics.ganglia.port| |The ganglia port|
+|18|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|19|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|19|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The default configuration options and default values
