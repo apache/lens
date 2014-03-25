@@ -14,3 +14,9 @@ Grill server deployment
   It requires HiveMetastore server, HiveServer2 and Grill Server running on different machines.
 
 
+* Dependencies and their versions
+
+   * Requires java 1.6+
+   * Requires Hadoop cdh3u5+
+   * Requires Hive metastore 0.13+
+   * Requires Hive server2 0.13+
