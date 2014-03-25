@@ -1,0 +1,19 @@
+Configuring grill server
+
+  This document guides you through configuring grill server.
+  
+* Server configuration
+
+  Grill server provides you with various configuration options. Administrator
+  can configure the offered services from server, available drivers for query execution,
+  query output options, enabling metrics from server and etc. The configuration parameters and
+  their detailed description and default values are available {{{./config.html} here}}
+
+* Driver configuration
+
+  The supported drivers are configured through classnames in this release. The configuration 
+  for each driver can be specified in their site.xml file. For example, HiveDriver's
+  configuration should be specified in hive-site.xml. Supported drivers in this version
+  are com.inmobi.grill.driver.hive.HiveDriver and com.inmobi.grill.driver.jdbc.JDBCDriver.
+  The configuration parameters and
+  their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}

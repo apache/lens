@@ -31,8 +31,8 @@
     </menu>
 		<menu name="Admin Documentation">
       <item name="Admin Overview" href="./admin/index.html"/>
-      <item name="Installation" href="./admin/deployment.html"/>
-      <item name="Configuration" href="./admin/config.html"/>
+      <item name="Deployment" href="./admin/deployment.html"/>
+      <item name="Configuration" href="./admin/config-server.html"/>
 			<item name="Admin CLI" href="./admin/cli.html" />
     </menu>
     <menu ref="reports"/>

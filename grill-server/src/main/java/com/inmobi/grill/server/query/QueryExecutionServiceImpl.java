@@ -246,13 +246,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           List<QueryContext> launched = new ArrayList<QueryContext>();
           launched.addAll(launchedQueries);
           for (QueryContext ctx : launched) {
+            LOG.info("Polled status for " + ctx.getQueryHandle());
             try {
               updateStatus(ctx.getQueryHandle());
             } catch (GrillException e) {
               LOG.error("Error updating status ", e);
             }
           }
-          LOG.info("Polled status");
           Thread.sleep(pollInterval);
         } catch (InterruptedException e) {
           LOG.info("Status poller has been interrupted, exiting");

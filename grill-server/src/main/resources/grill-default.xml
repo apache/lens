@@ -91,4 +91,34 @@
    it uses the available processors as the number.</description>
 </property>
 
+<property>
+  <name>grill.enable.console.metrics</name>
+  <value>false</value>
+  <description>Enable metrics to be reported on console</description>
+</property>
+
+<property>
+  <name>grill.enable.ganglia.metrics</name>
+  <value>false</value>
+  <description>Enable metrics to be reported on ganglia</description>
+</property>
+
+<property>
+  <name>grill.metrics.ganglia.host</name>
+  <value></value>
+  <description>The ganglia host name</description>
+</property>
+
+<property>
+  <name>grill.metrics.ganglia.port</name>
+  <value></value>
+  <description>The ganglia port</description>
+</property>
+
+<property>
+  <name>grill.metrics.reporting.period</name>
+  <value>10</value>
+  <description>The reporting period for metrics. The value is in seconds</description>
+</property>
+
 </configuration>

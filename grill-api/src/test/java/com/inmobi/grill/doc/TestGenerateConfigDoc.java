@@ -7,6 +7,8 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -116,7 +118,14 @@ public class TestGenerateConfigDoc {
       PrintWriter apt = null;
       try {
         apt = new PrintWriter(new FileWriter(outputAPTFile));
-        
+        Collections.sort(entries, new Comparator<ConfigEntry>() {
+
+          @Override
+          public int compare(ConfigEntry e1, ConfigEntry e2) {
+            return e1.name.compareTo(e2.name);
+          }
+          
+        });
         // Print header
         apt.println(heading);
         apt.println();
