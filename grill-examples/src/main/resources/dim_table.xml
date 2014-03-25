@@ -10,7 +10,7 @@
   </columns>
   <dimensions_references>
     <dim_reference dimension_column="d2id">
-      <table_reference dest_column="id" dest_table="dim_table2"/>
+      <table_references dest_column="id" dest_table="dim_table2"/>
     </dim_reference>
   </dimensions_references>
   <storage_dump_periods>

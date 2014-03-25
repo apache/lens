@@ -7,8 +7,12 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import com.inmobi.grill.api.metastore.DimensionTable;
+import com.inmobi.grill.api.metastore.FactTable;
 import com.inmobi.grill.api.metastore.ObjectFactory;
+import com.inmobi.grill.api.metastore.XCube;
 import com.inmobi.grill.api.metastore.XStorage;
+import com.inmobi.grill.api.metastore.XStorageTables;
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.client.GrillMetadataClient;
@@ -33,7 +37,11 @@ public class SampleMetastore {
     connection.close();
   }
 
-  public void createCube() {    
+  public void createCube() throws JAXBException {
+    XCube cube = (XCube)readFromXML("sample-cube.xml");
+    if (cube != null) {
+      metaClient.createCube(cube);
+    }
   }
 
   private Object readFromXML(String filename) throws JAXBException {
@@ -47,26 +55,52 @@ public class SampleMetastore {
 
   public void createStorages() throws JAXBException {
     XStorage local = (XStorage)readFromXML("local-storage.xml");
-
     if (local != null) {
       metaClient.createNewStorage(local);
+    }
+
+    XStorage cluster = (XStorage)readFromXML("local-cluster-storage.xml");
+    if (cluster != null) {
+      metaClient.createNewStorage(cluster);
+    }
+
+    XStorage db = (XStorage)readFromXML("db-storage.xml");
+    if (db != null) {
+      metaClient.createNewStorage(db);
     }
   }
 
   public void createAll() throws JAXBException {
     createStorages();
     createCube();
-    createFacts();
-    createDimensions();
-  }
-  private void createDimensions() {
-    // TODO Auto-generated method stub
-    
+    //createFacts();
+    //createDimensions();
   }
 
-  private void createFacts() {
-    // TODO Auto-generated method stub
-    
+  private void createDimensions() throws JAXBException {
+    DimensionTable dim = (DimensionTable)readFromXML("dim_table.xml");
+    if (dim != null) {
+      metaClient.createDimensionTable(dim, new XStorageTables());
+    }
+    dim = (DimensionTable)readFromXML("dim_table2.xml");
+    if (dim != null) {
+      metaClient.createDimensionTable(dim, new XStorageTables());
+    }
+  }
+
+  private void createFacts() throws JAXBException {
+    FactTable fact = (FactTable)readFromXML("fact1.xml");
+    if (fact != null) {
+      metaClient.createFactTable(fact, new XStorageTables());
+    }
+    fact = (FactTable)readFromXML("fact2.xml");
+    if (fact != null) {
+      metaClient.createFactTable(fact, new XStorageTables());
+    }
+    fact = (FactTable)readFromXML("rawfact.xml");
+    if (fact != null) {
+      metaClient.createFactTable(fact, new XStorageTables());
+    }
   }
 
   public static void main(String[] args) throws Exception {

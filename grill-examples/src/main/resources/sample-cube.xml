@@ -10,10 +10,10 @@
   </measures>
   <dimensions>
     <dimension name="dim1" type="int"/>
-    <dimension name="dim2" type="int" start_time=start_time=2013-12-01-00:00/>
+    <dimension name="dim2" type="int" start_time=2013-12-01-00:00/>
     <dimension name="dim3" type="int">
       <references>
-        <table_reference dest_table="dim_table" dest_column="id">
+        <table_references dest_table="dim_table" dest_column="id"/>
       </references>
     </dimension>
   </dimensions>
