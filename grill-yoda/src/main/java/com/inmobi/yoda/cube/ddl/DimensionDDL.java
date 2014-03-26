@@ -274,7 +274,6 @@ public class DimensionDDL {
   public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(DimensionDDL.class);
     SessionState.start(conf);
-    DimensionDDL cd = new DimensionDDL(conf);
     if (args.length > 0) {
       if (args[0].equals("-db")) {
         String dbName = args[1];
@@ -284,6 +283,7 @@ public class DimensionDDL {
         SessionState.get().setCurrentDatabase(dbName);
       }
     }
+    DimensionDDL cd = new DimensionDDL(conf);
     LOG.info("Creating all dimensions");
     cd.createAllDimensions();
     System.out.println("Created all dimensions");

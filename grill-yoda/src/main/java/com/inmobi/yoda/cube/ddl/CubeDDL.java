@@ -458,9 +458,6 @@ public class CubeDDL {
   public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(CubeDDL.class);
     SessionState.start(conf);
-
-    DimensionDDL dimDDL = new DimensionDDL(conf);
-    CubeDDL cc = new CubeDDL(dimDDL, conf);
     if (args.length > 0) {
       if (args[0].equals("-db")) {
         String dbName = args[1];
@@ -470,6 +467,8 @@ public class CubeDDL {
         SessionState.get().setCurrentDatabase(dbName);
       }
     }
+    DimensionDDL dimDDL = new DimensionDDL(conf);
+    CubeDDL cc = new CubeDDL(dimDDL, conf);
     LOG.info("Creating all cubes ");
     cc.createAllCubes();
   }
