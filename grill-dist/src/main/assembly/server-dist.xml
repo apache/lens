@@ -39,7 +39,6 @@
         <include>com.inmobi.grill:grill-server-api</include>
         <include>com.inmobi.grill:grill-driver-cube</include>
         <include>com.inmobi.grill:grill-driver-hive</include>
-        <include>com.inmobi.grill:grill-driver-impala</include>
         <include>com.inmobi.grill:grill-driver-jdbc</include>
         <include>com.inmobi.grill:grill-storage-db</include>
       </includes>

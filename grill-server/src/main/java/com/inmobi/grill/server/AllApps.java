@@ -28,7 +28,6 @@ public class AllApps extends Application {
     classes.add(ScheduleResource.class);
     classes.add(IndexResource.class);
     classes.add(MultiPartFeature.class);
-    classes.add(LoggingFilter.class);
     classes.add(AuthenticationFilter.class);
     classes.add(GrillApplicationListener.class);
     return classes;

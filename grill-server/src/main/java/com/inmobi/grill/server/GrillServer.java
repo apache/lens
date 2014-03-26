@@ -1,12 +1,15 @@
 package com.inmobi.grill.server;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
@@ -14,14 +17,26 @@ import com.inmobi.grill.server.api.GrillConfConstants;
 public class GrillServer {
   final HttpServer server;
   final HiveConf conf;
-  
-  GrillServer(HiveConf conf) throws IOException {
+
+  static {
+    SLF4JBridgeHandler.removeHandlersForRootLogger();
+    SLF4JBridgeHandler.install();
+  }
+
+  private GrillServer(HiveConf conf) throws IOException {
     this.conf = conf;
     startServices(conf);
     String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
         GrillConfConstants.DEFAULT_GRILL_SERVER_BASE_URL);
     server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(),
-        ResourceConfig.forApplicationClass(AllApps.class));
+        getApp());
+  }
+
+  private ResourceConfig getApp() {
+    ResourceConfig app = ResourceConfig.forApplicationClass(AllApps.class);
+    app.register(new LoggingFilter(Logger.getLogger(GrillServer.class.getName() + ".request"), true));
+    app.setApplicationName("AllApps");
+    return app;
   }
 
   public void startServices(HiveConf conf) {
