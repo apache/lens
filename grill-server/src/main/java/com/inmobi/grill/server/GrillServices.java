@@ -19,6 +19,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
+import org.apache.hive.service.Service.STATE;
 import org.apache.hive.service.cli.CLIService;
 
 public class GrillServices extends CompositeService {
@@ -93,6 +94,10 @@ public class GrillServices extends CompositeService {
     if (getServiceState() != STATE.STOPPED) {
       super.stop();
     }
+  }
+
+  public STATE getServiceState() {
+    return super.getServiceState();
   }
 
   public static GrillServices get() {
