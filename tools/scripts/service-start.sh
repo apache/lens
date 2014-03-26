@@ -51,7 +51,7 @@ while [[ ${1} =~ ^\-D ]]; do
 done
 TIME=`date +%Y%m%d%H%M%s`
 
-nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grill-server.out.$TIME" 2>&1 < /dev/null &
+nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
 echo $! > $GRILL_PID_FILE
 popd > /dev/null
 
