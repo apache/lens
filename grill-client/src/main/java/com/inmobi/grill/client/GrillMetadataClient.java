@@ -7,6 +7,7 @@ import com.inmobi.grill.api.metastore.*;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -37,7 +38,7 @@ public class GrillMetadataClient {
 
 
   private WebTarget getMetastoreWebTarget() {
-    Client client = ClientBuilder.newClient();
+    Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).build();
     return getMetastoreWebTarget(client);
   }
 

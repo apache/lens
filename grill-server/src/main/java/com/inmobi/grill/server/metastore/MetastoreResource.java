@@ -150,6 +150,7 @@ public class MetastoreResource {
     try {
       getSvc().createDatabase(sessionid, dbName, ignoreIfExisting);
     } catch (GrillException e) {
+      LOG.error("Error creating database " + dbName, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -259,6 +260,7 @@ public class MetastoreResource {
       getSvc().updateCube(sessionid, cube);
     } catch (GrillException e) {
       checkTableNotFound(e, cube.getName());
+      LOG.error("Error updating cube " + cube.getName(), e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -299,6 +301,7 @@ public class MetastoreResource {
       getSvc().dropCube(sessionid, cubeName);
     } catch (GrillException e) {
       checkTableNotFound(e, cubeName);
+      LOG.error("Error droping cube " + cubeName, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -399,6 +402,7 @@ public class MetastoreResource {
       getSvc().alterStorage(sessionid, storageName, storage);
     } catch (GrillException e) {
       checkTableNotFound(e, storageName);
+      LOG.error("Error updating storage" + storageName, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -413,7 +417,8 @@ public class MetastoreResource {
    * @return JAXB representation of {@link XStorage} 
    */
   @GET @Path("/storages/{storage}")
-  public JAXBElement<XStorage> getStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName) throws Exception{
+  public JAXBElement<XStorage> getStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("storage") String storageName) throws Exception {
     try {
       return xCubeObjectFactory.createXStorage(getSvc().getStorage(sessionid, storageName));
     } catch (GrillException e) {
@@ -432,11 +437,13 @@ public class MetastoreResource {
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/storages/{storage}")
-  public APIResult dropStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName) {
+  public APIResult dropStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("storage") String storageName) {
     try {
       getSvc().dropStorage(sessionid, storageName);
     } catch (GrillException e) {
       checkTableNotFound(e, storageName);
+      LOG.error("Error dropping storage" + storageName, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -551,8 +558,10 @@ public class MetastoreResource {
       @FormDataParam("storagetables") XStorageTables storageTables) 
           throws GrillException {
     try {
+      LOG.info("Create fact table");
       getSvc().createFactTable(sessionid, fact, storageTables);
     } catch (GrillException exc) {
+      LOG.error("Exception creating fact:" , exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -575,6 +584,7 @@ public class MetastoreResource {
       getSvc().updateFactTable(sessionid, fact);
     } catch (GrillException exc) {
       checkTableNotFound(exc, factName);
+      LOG.error("Error updating fact" + factName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -598,6 +608,7 @@ public class MetastoreResource {
       getSvc().dropFactTable(sessionid, fact, cascade);
     } catch (GrillException exc) {
       checkTableNotFound(exc, fact);
+      LOG.error("Error dropping fact" + fact, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -638,6 +649,7 @@ public class MetastoreResource {
       getSvc().dropAllStoragesOfFact(sessionid, factName);
     } catch (GrillException exc) {
       checkTableNotFound(exc, factName);
+      LOG.error("Error dropping storages of fact" + factName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -661,6 +673,7 @@ public class MetastoreResource {
       getSvc().addStorageToFact(sessionid, fact, storageTable);
     } catch (GrillException exc) {
       checkTableNotFound(exc, fact);
+      LOG.error("Error adding storage to fact" + fact, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -685,6 +698,7 @@ public class MetastoreResource {
       getSvc().dropStorageOfFact(sessionid, fact, storage);
     } catch (GrillException exc) {
       checkTableNotFound(exc, fact);
+      LOG.error("Error dropping storage of fact" + fact, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return  SUCCESS;
@@ -794,6 +808,7 @@ public class MetastoreResource {
       getSvc().addPartitionToFactStorage(sessionid, fact, storage, partition);
     } catch (GrillException exc) {
       checkTableNotFound(exc, fact);
+      LOG.error("Error adding partition to storage of fact" + fact + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -821,6 +836,7 @@ public class MetastoreResource {
 
     } catch (GrillException e) {
       checkTableNotFound(e, fact);
+      LOG.error("Error dropping partition to storage of fact" + fact + ":" + storage, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -879,6 +895,7 @@ public class MetastoreResource {
       getSvc().updateDimensionTable(sessionid, dimensionTable);
     } catch (GrillException exc) {
       checkTableNotFound(exc, dimName);
+      LOG.error("Error updating cube dimension table " + dimName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -901,6 +918,7 @@ public class MetastoreResource {
       getSvc().dropDimensionTable(sessionid, dimension, cascade);
     } catch (GrillException e) {
       checkTableNotFound(e, dimension);
+      LOG.error("Error dropping cube dimension table " + dimension, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -958,6 +976,7 @@ public class MetastoreResource {
       getSvc().createDimensionStorage(sessionid, dimName, storageTbl);
     } catch (GrillException e) {
       checkTableNotFound(e, dimName);
+      LOG.error("Error creating dimension table storage " + dimName + ":" + storageTbl.getStorageName(), e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -994,6 +1013,7 @@ public class MetastoreResource {
       getSvc().dropAllStoragesOfDim(sessionid, dimName);
     } catch (GrillException exc) {
       checkTableNotFound(exc, dimName);
+      LOG.error("Error dropping storages of dimension table " + dimName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -1016,6 +1036,7 @@ public class MetastoreResource {
       getSvc().dropStorageOfDim(sessionid, dimName, storage);
     } catch (GrillException exc) {
       checkTableNotFound(exc, dimName);
+      LOG.error("Error dropping storage of dimension table " + dimName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -1065,6 +1086,7 @@ public class MetastoreResource {
     try {
       getSvc().dropPartitionFromStorageByFilter(sessionid, dimension, storage, filter);
     } catch (GrillException exc) {
+      LOG.error("Error dropping partition on storage of dimension table " + dimension + ":" + storage, exc);
       return new APIResult(Status.PARTIAL, exc.getMessage());
     }
     return SUCCESS;
@@ -1090,6 +1112,7 @@ public class MetastoreResource {
       getSvc().dropPartitionFromStorageByValues(sessionid, dimension, storage,
           values);
     } catch (GrillException exc) {
+      LOG.error("Error dropping partitions on storage of dimension table " + dimension + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -1114,6 +1137,7 @@ public class MetastoreResource {
     try {
       getSvc().addPartitionToDimStorage(sessionid, dimension, storage, partition);
     } catch (GrillException exc) {
+      LOG.error("Error adding partition to storage of dimension table " + dimension + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;

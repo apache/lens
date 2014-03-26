@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x_storage_tables xmlns="uri:grill:cube:0.1"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+  <storage_tables>
+    <update_periods>hourly</update_periods>
+    <storage_name>local</storage_name>
+    <table_desc 
+    external="true" 
+    field_delimiter="," 
+    table_location="/tmp/examples/dim1">
+      <table_parameters/>
+      <serde_parameters/>
+      <part_cols>
+        <columns comment="Time column" name="dt" type="string"/>
+      </part_cols>
+      <time_part_cols>dt</time_part_cols>
+    </table_desc>
+  </storage_tables>
+</x_storage_tables>

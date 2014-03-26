@@ -1,5 +1,6 @@
 package com.inmobi.grill.examples;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.xml.bind.JAXBContext;
@@ -7,6 +8,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
+import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.metastore.DimensionTable;
 import com.inmobi.grill.api.metastore.FactTable;
 import com.inmobi.grill.api.metastore.ObjectFactory;
@@ -22,6 +24,8 @@ public class SampleMetastore {
   private GrillMetadataClient metaClient;
   private JAXBContext jaxbContext;
   private Unmarshaller jaxbUnmarshaller;
+  private APIResult result;
+  private int retCode = 0;
 
   public SampleMetastore() throws JAXBException {
     GrillConnectionParams params = new GrillConnectionParams();
@@ -37,69 +41,97 @@ public class SampleMetastore {
     connection.close();
   }
 
-  public void createCube() throws JAXBException {
+  public void createCube() throws JAXBException, IOException {
     XCube cube = (XCube)readFromXML("sample-cube.xml");
     if (cube != null) {
-      metaClient.createCube(cube);
+      result = metaClient.createCube(cube);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating cube from:sample-cube.xml failed");
+        retCode = 1;
+      }
     }
   }
 
-  private Object readFromXML(String filename) throws JAXBException {
+  private Object readFromXML(String filename) throws JAXBException, IOException {
     InputStream file = getClass().getClassLoader().getResourceAsStream(filename);
     if (file == null) {
-      System.out.println("File not found:" + filename);
-      return null;
-    }
+      throw new IOException("File not found:" + filename);
+     }
     return ((JAXBElement)jaxbUnmarshaller.unmarshal(file)).getValue();
   }
 
-  public void createStorages() throws JAXBException {
-    XStorage local = (XStorage)readFromXML("local-storage.xml");
+  private void createStorage(String fileName)
+      throws JAXBException, IOException {
+    XStorage local = (XStorage)readFromXML(fileName);
     if (local != null) {
-      metaClient.createNewStorage(local);
-    }
-
-    XStorage cluster = (XStorage)readFromXML("local-cluster-storage.xml");
-    if (cluster != null) {
-      metaClient.createNewStorage(cluster);
-    }
-
-    XStorage db = (XStorage)readFromXML("db-storage.xml");
-    if (db != null) {
-      metaClient.createNewStorage(db);
+      result = metaClient.createNewStorage(local);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating storage from:" + fileName + " failed");
+        retCode = 1;
+      }
     }
   }
+  public void createStorages() throws JAXBException, IOException {
+    createStorage("local-storage.xml");
+    createStorage("local-cluster-storage.xml");
+    createStorage("db-storage.xml");
+  }
 
-  public void createAll() throws JAXBException {
+  public void createAll() throws JAXBException, IOException {
     createStorages();
     createCube();
-    //createFacts();
-    //createDimensions();
+    createFacts();
+    createDimensions();
   }
 
-  private void createDimensions() throws JAXBException {
+  private void createDimensions() throws JAXBException, IOException {
     DimensionTable dim = (DimensionTable)readFromXML("dim_table.xml");
-    if (dim != null) {
-      metaClient.createDimensionTable(dim, new XStorageTables());
+    XStorageTables storageTables = (XStorageTables)readFromXML("dim1-storage-tables.xml");
+    if (dim != null && storageTables != null) {
+      result = metaClient.createDimensionTable(dim, storageTables);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating dim table from: dim_table.xml and dim1-storage-tables.xml failed");
+        retCode = 1;
+      }
     }
     dim = (DimensionTable)readFromXML("dim_table2.xml");
-    if (dim != null) {
-      metaClient.createDimensionTable(dim, new XStorageTables());
+    storageTables = (XStorageTables)readFromXML("dim2-storage-tables.xml");
+    if (dim != null && storageTables != null) {
+      result = metaClient.createDimensionTable(dim, storageTables);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating dim table from: dim_table2.xml and dim2-storage-tables.xml failed");
+        retCode = 1;
+      }
     }
   }
 
-  private void createFacts() throws JAXBException {
+  private void createFacts() throws JAXBException, IOException {
     FactTable fact = (FactTable)readFromXML("fact1.xml");
-    if (fact != null) {
-      metaClient.createFactTable(fact, new XStorageTables());
-    }
+    XStorageTables storageTables = (XStorageTables)readFromXML("fact1-storage-tables.xml");
+    if (fact != null && storageTables != null) {
+      result = metaClient.createFactTable(fact, storageTables);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating fact table from: fact1.xml and fact1-storage-tables.xml failed");
+        retCode = 1;
+      }
+    } 
     fact = (FactTable)readFromXML("fact2.xml");
-    if (fact != null) {
-      metaClient.createFactTable(fact, new XStorageTables());
+    storageTables = (XStorageTables)readFromXML("fact2-storage-tables.xml");
+    if (fact != null && storageTables != null) {
+      result = metaClient.createFactTable(fact, new XStorageTables());
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating fact table from: fact2.xml and fact2-storage-tables.xml failed");
+        retCode = 1;
+      }
     }
     fact = (FactTable)readFromXML("rawfact.xml");
-    if (fact != null) {
-      metaClient.createFactTable(fact, new XStorageTables());
+    storageTables = (XStorageTables)readFromXML("rawfact-storage-tables.xml");
+    if (fact != null && storageTables != null) {
+      result = metaClient.createFactTable(fact, new XStorageTables());
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating fact table from: rawfact.xml and rawfact-storage-tables.xml failed");
+        retCode = 1;
+      }
     }
   }
 
@@ -121,6 +153,9 @@ public class SampleMetastore {
     System.out.println("Cubes:" + metastore.metaClient.getAllCubes());;
     System.out.println("Fact tables:" + metastore.metaClient.getAllFactTables());;
     System.out.println("Dimension tables:" + metastore.metaClient.getAllDimensionTables());
+    if (metastore.retCode != 0) {
+      System.exit(metastore.retCode);
+    }
     } finally {
       if (metastore != null) {
         metastore.close();
