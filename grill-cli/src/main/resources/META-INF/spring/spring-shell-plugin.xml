@@ -34,4 +34,9 @@
     <property name="client" ref="client"/>
   </bean>
 
+  <bean id="grillQueryCommands"
+        class="com.inmobi.grill.cli.commands.GrillQueryCommands">
+    <property name="client" ref="client"/>
+  </bean>
+
 </beans>

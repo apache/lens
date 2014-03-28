@@ -677,5 +677,38 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult addPartitionToDimension(String dimName, String storage,
+                                           String partition) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName)
+        .path("storages").path(storage).path("partitions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(partition)), APIResult.class);
+    return result;
+  }
+
+
+  public APIResult addPartitionToFact(String fact, String storage,
+                                           XPartition partition) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+        .path("storages").path(storage).path("partitions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
+    return result;
+  }
+
+  public APIResult addPartitionToFact(String fact, String storage,
+                                      String partition) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+        .path("storages").path(storage).path("partitions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(partition)), APIResult.class);
+    return result;
+  }
 
 }

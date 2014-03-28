@@ -292,7 +292,7 @@ public class GrillJdbcResultSet implements ResultSet {
 
   @Override
   public ResultSetMetaData getMetaData() throws SQLException {
-    return new GrillResultSetMetaData(metadata);
+    return new GrillJdbcResultSetMetadata(metadata);
   }
 
   @Override
