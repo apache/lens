@@ -19,6 +19,24 @@
 # under the License.
 #
 
+# resolve links - $0 may be a softlink
+PRG="${0}"
+
+while [ -h "${PRG}" ]; do
+  ls=`ls -ld "${PRG}"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "${PRG}"`/"$link"
+  fi
+done
+
+BASEDIR=`dirname ${PRG}`
+BASEDIR=`cd ${BASEDIR}/..;pwd`
+. ${BASEDIR}/bin/grill-config.sh 'client'
+
+JAVA_PROPERTIES="$GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
 
 ################################
 # constants
@@ -75,18 +93,13 @@ run_client() {
   fi
 
   set -x
-  exec $JAVA_HOME/bin/java $JAVA_OPTS -cp "$CLIENT_CLASSPATH" \
+  exec ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} \
       "$CLIENT_APPLICATION_CLASS" $*
 }
 
 ################################
 # main
 ################################
-
-# set default params
-CLIENT_CLASSPATH=""
-CLIENT_JAVA_LIBRARY_PATH=""
-JAVA_OPTS="-Xmx128M"
 
 opt_conf=""
 
@@ -131,7 +144,7 @@ while [ -n "$*" ] ; do
       shift
       ;;
     -D*)
-      JAVA_OPTS="${JAVA_OPTS} $arg"
+      JAVA_PROPERTIES="${JAVA_PROPERTIES} $arg"
       ;;
     *)
       args="$args $arg"
@@ -140,38 +153,14 @@ while [ -n "$*" ] ; do
 done
 
 
-# find java
-if [ -z "${JAVA_HOME}" ] ; then
-  echo "Warning: JAVA_HOME not set!"
-    JAVA_DEFAULT=`type -p java`
-    [ -n "$JAVA_DEFAULT" ] || error "Unable to find java executable. Is it in your PATH?" 1
-    JAVA_HOME=$(cd $(dirname $JAVA_DEFAULT)/..; pwd)
-fi
-
-[ -n "${JAVA_HOME}" ] || error "Unable to find a suitable JAVA_HOME" 1
-
-# figure out where the client distribution is
-if [ -z "${CLIENT_HOME}" ] ; then
-  CLIENT_HOME=$(cd $(dirname $0)/..; pwd)
-fi
-#echo CLIENT_HOME is $CLIENT_HOME
-
-# Append to the classpath
-if [ -n "${CLIENT_CLASSPATH}" ] ; then
-  CLIENT_CLASSPATH="${CLIENT_HOME}/lib/*:$DEV_CLASSPATH:$CLIENT_CLASSPATH"
-else
-  CLIENT_CLASSPATH="${CLIENT_HOME}/lib/*:$DEV_CLASSPATH"
-fi
 
 # prepend conf dir to classpath
 if [ -n "$opt_conf" ]; then
-  CLIENT_CLASSPATH="$opt_conf:$CLIENT_CLASSPATH"
-else 
-  CLIENT_CLASSPATH="${CLIENT_HOME}/conf:$CLIENT_CLASSPATH"
+  GRILLCPPATH="$opt_conf:$GRILLCPPATH"
 fi
 
 # prepend resources dir to classpath
-CLIENT_CLASSPATH="${CLIENT_HOME}/examples/resources:$CLIENT_CLASSPATH"
+GRILLCPPATH="${GRILL_HOME_DIR}/examples/resources:${GRILL_HOME_DIR}/examples/queries:$GRILLCPPATH"
 
 # finally, invoke the appropriate command
 if [ -n "$opt_meta" ] ; then

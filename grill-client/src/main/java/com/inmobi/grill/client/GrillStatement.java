@@ -38,7 +38,7 @@ public class GrillStatement {
     this.query = getQuery(handle);
   }
 
-  private QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
+  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
     QueryHandle handle = executeQuery(sql);
 
     if (waitForQueryToComplete) {

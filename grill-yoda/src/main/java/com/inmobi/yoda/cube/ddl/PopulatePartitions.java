@@ -25,7 +25,6 @@ import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
-import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.StoragePartitionDesc;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.Hive;

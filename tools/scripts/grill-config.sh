@@ -62,11 +62,12 @@ shift
 case $type in
   client)
     # set the client class path
-    GRILLCPPATH="$GRILL_CONF:${BASEDIR}/client/lib/*"
-    for i in `ls ${BASEDIR}/server/webapp`; do
-      GRILLCPPATH="${GRILLCPPATH}:${i}/WEB-INF/lib/*"
-    done
+    GRILLCPPATH="$GRILL_CONF:${BASEDIR}/lib/*"
     GRILL_OPTS="$GRILL_OPTS $GRILL_CLIENT_OPTS $GRILL_CLIENT_HEAP"
+    GRILL_LOG_DIR="${GRILL_LOG_DIR:-$BASEDIR/logs}"
+    export GRILL_LOG_DIR    
+    GRILL_HOME_DIR="${GRILL_HOME_DIR:-$BASEDIR}"
+    export GRILL_HOME_DIR    
   ;;
   server)
     GRILL_OPTS="$GRILL_OPTS $GRILL_SERVER_OPTS $GRILL_SERVER_HEAP"

@@ -1,0 +1,1 @@
+cube select id,name from dim_table

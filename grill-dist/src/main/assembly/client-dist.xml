@@ -80,7 +80,31 @@
       <directory>../grill-examples/src/main/resources/</directory>
       <outputDirectory>/examples/resources</outputDirectory>
       <includes>
-        <include>**</include>
+        <include>*.xml</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/dim1_local</outputDirectory>
+      <includes>
+        <include>dim1-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/dim2_local</outputDirectory>
+      <includes>
+        <include>dim2-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/queries</outputDirectory>
+      <includes>
+        <include>*.txt</include>
       </includes>
     </fileSet>
 

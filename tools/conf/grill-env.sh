@@ -33,7 +33,7 @@
 # java heap size we want to set for the grill server. Default is 1024MB
 #export GRILL_SERVER_HEAP=
 
-# What is is considered as grill home dir. Default is the base locaion of the installed software
+# What is is considered as grill home dir. Default is the base location of the installed software
 #export GRILL_HOME_DIR=
 
 # Where log files are stored. Default is logs directory under the base install location
