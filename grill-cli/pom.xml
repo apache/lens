@@ -16,14 +16,56 @@
   <dependencies>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-cube</artifactId>
+      <artifactId>grill-client</artifactId>
       <version>${project.version}</version>
     </dependency>
-
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
+      <groupId>org.springframework.shell</groupId>
+      <artifactId>spring-shell</artifactId>
     </dependency>
-
   </dependencies>
+
+  <build>
+    <plugins>
+      <!-- copy all dependencies into a lib/ directory -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.1</version>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${project.build.directory}/lib</outputDirectory>
+              <overWriteReleases>true</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <overWriteIfNewer>true</overWriteIfNewer>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- make the jar executable by adding a Main-Class and Class-Path to the manifest -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>lib/</classpathPrefix>
+              <mainClass>org.springframework.shell.Bootstrap</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+
 </project>    
