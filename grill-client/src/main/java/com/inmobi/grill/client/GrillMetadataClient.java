@@ -1,9 +1,12 @@
 package com.inmobi.grill.client;
 
 import com.google.common.base.Joiner;
+import com.google.common.io.Files;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.StringList;
 import com.inmobi.grill.api.metastore.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -16,9 +19,14 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBElement;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 
 public class GrillMetadataClient {
+
+  private static final Log LOG = LogFactory.getLog(GrillMetadataClient.class);
 
   private final GrillConnection connection;
   private final GrillConnectionParams params;
@@ -120,12 +128,30 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult createCube( String cubeSpec) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("cubes")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(cubeSpec)), APIResult.class);
+    return result;
+  }
+
   public APIResult updateCube(String cubeName, XCube cube) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("cubes").path(cubeName)
         .queryParam("sessionid", this.connection.getSessionHandle())
         .request(MediaType.APPLICATION_XML)
         .put(Entity.xml(objFact.createXCube(cube)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updateCube(String cubeName, String cubespec) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("cubes").path(cubeName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(cubespec), APIResult.class);
     return result;
   }
 
@@ -164,6 +190,16 @@ public class GrillMetadataClient {
     return result;
   }
 
+
+  public APIResult createNewStorage(String storage) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("storages")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(storage)), APIResult.class);
+    return result;
+  }
+
   public APIResult dropAllStorages() {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("storages")
@@ -182,6 +218,15 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult updateStorage(String storageName, String storage) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("storages").path(storageName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(getContent(storage)), APIResult.class);
+    return result;
+  }
+
   public XStorage getStorage(String storageName) {
     WebTarget target = getMetastoreWebTarget();
     JAXBElement<XStorage> result = target.path("storages").path(storageName)
@@ -192,7 +237,7 @@ public class GrillMetadataClient {
     return result.getValue();
   }
 
-  public APIResult deleteStorage(String storageName) {
+  public APIResult dropStorage(String storageName) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("storages").path(storageName)
         .queryParam("sessionid", this.connection.getSessionHandle())
@@ -259,6 +304,35 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult createFactTable(String factSpec,
+                                   String storageSpecPath) {
+    WebTarget target = getMetastoreWebTarget();
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid")
+        .build(), this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("fact").fileName("fact").build(),
+        getContent(factSpec), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        getContent(storageSpecPath), MediaType.APPLICATION_XML_TYPE));
+    APIResult result = target.path("facts")
+        .request(MediaType.APPLICATION_XML_TYPE)
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+            APIResult.class);
+    return result;
+  }
+
+  private String getContent(String path) {
+    try {
+      List<String> content = Files.readLines(new File(path),
+          Charset.defaultCharset());
+      return Joiner.on("\n").skipNulls().join(content);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
 
   public APIResult updateFactTable(String factName, FactTable table) {
     WebTarget target = getMetastoreWebTarget();
@@ -269,7 +343,16 @@ public class GrillMetadataClient {
     return result;
   }
 
-  public APIResult deleteFactTable(String factName, boolean cascade) {
+  public APIResult updateFactTable(String factName, String table) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(factName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML_TYPE)
+        .put(Entity.xml(getContent(table)), APIResult.class);
+    return result;
+  }
+
+  public APIResult dropFactTable(String factName, boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("facts").path(factName)
         .queryParam("sessionid", this.connection.getSessionHandle())
@@ -279,8 +362,8 @@ public class GrillMetadataClient {
     return result;
   }
 
-  public APIResult deleteFactTable(String factName) {
-    return deleteFactTable(factName, false);
+  public APIResult dropFactTable(String factName) {
+    return dropFactTable(factName, false);
   }
 
   public List<String> getAllStoragesOfFactTable(String factName) {
@@ -307,6 +390,15 @@ public class GrillMetadataClient {
         .queryParam("sessionid", this.connection.getSessionHandle())
         .request(MediaType.APPLICATION_XML)
         .post(Entity.xml(objFact.createXStorageTableElement(storage)), APIResult.class);
+    return result;
+  }
+
+  public APIResult addStorageToFactTable(String factname, String storage) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(factname).path("storages")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(storage)), APIResult.class);
     return result;
   }
 
@@ -405,6 +497,27 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult createDimensionTable(String table,
+                                        String storageTables) {
+    WebTarget target = getMetastoreWebTarget();
+
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("dimtable").fileName("dimtable").build(),
+        getContent(table), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        getContent(storageTables), MediaType.APPLICATION_XML_TYPE));
+
+    APIResult result = target.path("dimensions")
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    return result;
+  }
+
+
   public APIResult updateDimensionTable(DimensionTable table) {
     String dimName = table.getName();
     WebTarget target = getMetastoreWebTarget();
@@ -412,6 +525,15 @@ public class GrillMetadataClient {
         .queryParam("sessionid", this.connection.getSessionHandle())
         .request(MediaType.APPLICATION_XML)
         .put(Entity.xml(objFact.createDimensionTable(table)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updateDimensionTable(String dimName, String dimSpec) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(getContent(dimSpec)), APIResult.class);
     return result;
   }
 
@@ -458,6 +580,15 @@ public class GrillMetadataClient {
     return result;
   }
 
+  public APIResult addStorageToDimension(String dimName, String table) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName).path("storages")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(table)), APIResult.class);
+    return result;
+  }
+
   public XStorageTableElement getStorageOfDimension(String dimName, String storage) {
     WebTarget target = getMetastoreWebTarget();
     JAXBElement<XStorageTableElement> result = target.path("dimensions").path(dimName)
@@ -489,7 +620,7 @@ public class GrillMetadataClient {
     return result;
   }
 
-  public PartitionList getAllPartitionsOfDimension(String dimName, String storage,
+  public List<XPartition> getAllPartitionsOfDimension(String dimName, String storage,
                                                    String filter) {
     WebTarget target = getMetastoreWebTarget();
     JAXBElement<PartitionList> partList = target.path("dimensions").path(dimName)
@@ -499,10 +630,10 @@ public class GrillMetadataClient {
         .request(MediaType.APPLICATION_XML)
         .get(new GenericType<JAXBElement<PartitionList>>() {
         });
-    return partList.getValue();
+    return partList.getValue().getXPartition();
   }
 
-  public PartitionList getAllPartitionsOfDimension(String dimName, String storage) {
+  public List<XPartition> getAllPartitionsOfDimension(String dimName, String storage) {
     return getAllPartitionsOfDimension(dimName, storage, "");
   }
 

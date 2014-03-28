@@ -213,6 +213,11 @@
         <id>projectlombok.org</id>
         <url>http://projectlombok.org/mavenrepo</url>
     </repository>
+    <!-- see https://jira.springsource.org/browse/SHL-52 -->
+    <repository>
+      <id>ext-release-local</id>
+      <url>http://repo.springsource.org/simple/ext-release-local/</url>
+    </repository>
   </repositories>
 
  <dependencyManagement>
@@ -577,6 +582,12 @@
 							<version>2.0.0</version>
 							<scope>test</scope>
 						</dependency>
+
+     <dependency>
+       <groupId>org.springframework.shell</groupId>
+       <artifactId>spring-shell</artifactId>
+       <version>1.0.0.RELEASE</version>
+     </dependency>
 
     </dependencies>
 
