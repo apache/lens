@@ -3,6 +3,8 @@ package com.inmobi.grill.client;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.StringList;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -20,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Top level client connection class which is used to connect to a grill server
  */
 public class GrillConnection {
-
+  private static final Log LOG = LogFactory.getLog(GrillConnection.class);
 
   private final GrillConnectionParams params;
 
@@ -58,25 +60,27 @@ public class GrillConnection {
         params.getMetastoreResourcePath());
   }
 
-  private WebTarget getSessionWebTarget(Class<?> featureType) {
-    Client client = ClientBuilder.newBuilder().register(featureType).build();
-    return getSessionWebTarget(client);
-  }
 
   private WebTarget getSessionWebTarget() {
-    Client client = ClientBuilder.newClient();
+    Client client = ClientBuilder
+        .newBuilder()
+        .register(MultiPartFeature.class)
+        .build();
     return getSessionWebTarget(client);
   }
 
   private WebTarget getMetastoreWebTarget() {
-    Client client = ClientBuilder.newClient();
+    Client client = ClientBuilder
+        .newBuilder()
+        .register(MultiPartFeature.class)
+        .build();
     return getMetastoreWebTarget(client);
   }
 
 
   public GrillSessionHandle open() {
 
-    WebTarget target = getSessionWebTarget(MultiPartFeature.class);
+    WebTarget target = getSessionWebTarget();
 
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
@@ -88,7 +92,6 @@ public class GrillConnection {
             fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-
     final GrillSessionHandle sessionHandle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
         GrillSessionHandle.class);
@@ -96,12 +99,13 @@ public class GrillConnection {
 
     if (sessionHandle != null) {
       this.sessionHandle = sessionHandle;
+      LOG.debug("Created a new session " + sessionHandle.getPublicId());
     } else {
       throw new IllegalStateException("Unable to connect to grill " +
           "server with following paramters" + params);
     }
     APIResult result = attachDatabaseToSession();
-
+    LOG.debug("Successfully switched to database " + params.getDbName());
     if (result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new IllegalStateException("Unable to connect to grill database "
           + params.getDbName());
@@ -178,6 +182,7 @@ public class GrillConnection {
         FormDataContentDisposition.name("key").build(), key));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("value").build(), value));
+    LOG.debug("Setting connection params " + key + "=" + value);
     APIResult result = target.path("params").request().put(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
@@ -186,12 +191,34 @@ public class GrillConnection {
 
   public List<String> getConnectionParams() {
     WebTarget target = getSessionWebTarget();
-    StringList list = target.queryParam("sessionid",
-        this.sessionHandle).queryParam("verbose", true).request().get(StringList.class);
+    StringList list = target.path("params")
+        .queryParam("sessionid", this.sessionHandle)
+        .queryParam("verbose", true)
+        .request()
+        .get(StringList.class);
     return list.getElements();
   }
 
+  public List<String> getConnectionParams(String key) {
+    WebTarget target = getSessionWebTarget();
+    StringList value = target.path("params")
+        .queryParam("sessionid",this.sessionHandle)
+        .queryParam("key", key)
+        .request()
+        .get(StringList.class);
+    return value.getElements();
+  }
+
+
   GrillConnectionParams getGrillConnectionParams() {
     return this.params;
+  }
+
+  @Override
+  public String toString() {
+    final StringBuilder sb = new StringBuilder("GrillConnection{");
+    sb.append("sessionHandle=").append(sessionHandle.getPublicId());
+    sb.append('}');
+    return sb.toString();
   }
 }

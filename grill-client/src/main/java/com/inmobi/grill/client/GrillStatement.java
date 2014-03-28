@@ -38,7 +38,7 @@ public class GrillStatement {
     this.query = getQuery(handle);
   }
 
-  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
+  private QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
     QueryHandle handle = executeQuery(sql);
 
     if (waitForQueryToComplete) {
@@ -179,4 +179,12 @@ public class GrillStatement {
     return query.getStatus().equals(QueryStatus.Status.SUCCESSFUL);
   }
 
+  public QueryStatus getStatus() {
+    GrillQuery query = getQuery();
+    return query.getStatus();
+  }
+
+  public GrillQuery getQuery() {
+    return this.query;
+  }
 }
