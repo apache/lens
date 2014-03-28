@@ -60,6 +60,9 @@ public class HiveDriver implements GrillDriver {
   private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
       new DelayQueue<ExpirableConnection>();
   private final Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
+  
+  // assigned only in case of embedded connection
+  private ThriftConnection embeddedConnection;
   // Store mapping of Grill session ID to Hive session identifier
   private Map<String, SessionHandle> grillToHiveSession;
 
@@ -138,7 +141,8 @@ public class HiveDriver implements GrillDriver {
     return thriftConnExpiryQueue.size();
   }
 
-
+  private Class<? extends ThriftConnection> connectionClass;
+  private boolean isEmbedded;
   public HiveDriver() throws GrillException {
     this.sessionLock = new ReentrantLock();
     grillToHiveSession = new HashMap<String, SessionHandle>();
@@ -156,6 +160,11 @@ public class HiveDriver implements GrillDriver {
   @Override
   public void configure(Configuration conf) throws GrillException {
     this.conf = new HiveConf(conf, HiveDriver.class);
+    connectionClass = conf.getClass(
+        GRILL_HIVE_CONNECTION_CLASS, 
+        EmbeddedThriftConnection.class, 
+        ThriftConnection.class);
+    isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
   }
 
   @Override
@@ -416,18 +425,25 @@ public class HiveDriver implements GrillDriver {
   }
 
   protected CLIServiceClient getClient() throws GrillException {
+    if (isEmbedded) {
+      if (embeddedConnection == null) {
+        try {
+          embeddedConnection = connectionClass.newInstance();
+        } catch (Exception e) {
+          throw new GrillException(e);
+        }
+        LOG.info("New thrift connection " + connectionClass);
+      }
+      return embeddedConnection.getClient(conf);
+    } else {
     ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
     if (connection == null || connection.isExpired()) {
-      Class<? extends ThriftConnection> clazz = conf.getClass(
-          GRILL_HIVE_CONNECTION_CLASS, 
-          EmbeddedThriftConnection.class, 
-          ThriftConnection.class);
       try {
-        ThriftConnection tconn = clazz.newInstance();
+        ThriftConnection tconn = connectionClass.newInstance();
         connection = new ExpirableConnection(tconn, conf);
         thriftConnExpiryQueue.offer(connection);
         threadConnections.put(Thread.currentThread().getId(), connection);
-        LOG.info("New thrift connection " + clazz.getName() + " for thread:"
+        LOG.info("New thrift connection " + connectionClass + " for thread:"
         + Thread.currentThread().getId() + " connection ID=" + connection.getConnId());
       } catch (Exception e) {
         throw new GrillException(e);
@@ -440,6 +456,7 @@ public class HiveDriver implements GrillDriver {
     }
 
     return connection.getConnection().getClient(conf);
+    }
   }
 
   private GrillResultSet createResultSet(QueryContext context)
