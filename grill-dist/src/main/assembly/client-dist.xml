@@ -65,6 +65,8 @@
       <includes>
         <include>yoda-cube.sh</include>
         <include>run-examples.sh</include>
+        <include>grill-config.sh</include>
+        <include>grill-cli.sh</include>
       </includes>
     </fileSet>
     
