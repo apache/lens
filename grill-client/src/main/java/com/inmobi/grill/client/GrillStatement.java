@@ -48,7 +48,7 @@ public class GrillStatement {
   }
 
   private void waitForQueryToComplete(QueryHandle handle) {
-    GrillQuery query = getQuery(handle);
+    query = getQuery(handle);
     while (!query.getStatus().isFinished()) {
       query = getQuery(handle);
       try {
@@ -62,7 +62,7 @@ public class GrillStatement {
   private WebTarget getQueryWebTarget(Client client) {
     return client.target(
         connection.getGrillConnectionParams().getBaseConnectionUrl()).path(
-        connection.getGrillConnectionParams().getQueryResourcePath());
+        connection.getGrillConnectionParams().getQueryResourcePath()).path("queries");
   }
 
   private GrillQuery getQuery(QueryHandle handle) {
@@ -180,8 +180,7 @@ public class GrillStatement {
   }
 
   public QueryStatus getStatus() {
-    GrillQuery query = getQuery();
-    return query.getStatus();
+    return getQuery().getStatus();
   }
 
   public GrillQuery getQuery() {
