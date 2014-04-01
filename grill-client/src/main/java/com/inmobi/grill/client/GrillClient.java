@@ -3,15 +3,12 @@ package com.inmobi.grill.client;
 import com.google.common.collect.Maps;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.metastore.*;
-import com.inmobi.grill.api.query.GrillQuery;
-import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryResult;
-import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.api.query.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.util.HashMap;
 import java.util.List;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 
 public class GrillClient {
@@ -41,14 +38,44 @@ public class GrillClient {
     return query.getQueryHandle();
   }
 
+  public GrillClientResultSet getResults(String sql) {
+    GrillStatement statement = new GrillStatement(conn);
+    LOG.debug("Executing query " + sql);
+    statement.execute(sql, true);
+    return new GrillClientResultSet(statement.getResultSet(),
+        statement.getResultSetMetaData());
+  }
+
+  public GrillClientResultSet getAsyncResults(QueryHandle q) {
+    GrillStatement statement = new GrillStatement(conn);
+    GrillQuery query = statement.getQuery(q);
+
+    return new GrillClientResultSet(statement.getResultSet(query),
+        statement.getResultSetMetaData(query));
+  }
+
   private GrillStatement getGrillStatement(QueryHandle query) {
     return this.statementMap.get(query);
   }
 
   public QueryStatus getQueryStatus(QueryHandle query) {
-    return getGrillStatement(query).getStatus();
+    return new GrillStatement(conn).getQuery(query).getStatus();
   }
 
+  public QueryStatus getQueryStatus(String q) {
+    QueryHandle qh = QueryHandle.fromString(q);
+    return getQueryStatus(q);
+  }
+
+  public QueryPlan getQueryPlan(String q) {
+    return new GrillStatement(conn).explainQuery(q);
+  }
+
+  public boolean killQuery(QueryHandle q) {
+    GrillStatement statement = new GrillStatement(conn);
+
+    return statement.kill(statement.getQuery(q));
+  }
 
 
   public QueryResult getResults(QueryHandle query) {
@@ -61,6 +88,10 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
+  public List<QueryHandle> getQueries() {
+    return new GrillStatement(conn).getAllQueries();
+  }
+
 
   private void connectToGrillServer() {
     LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
@@ -69,10 +100,6 @@ public class GrillClient {
     LOG.debug("Successfully connected to server " + conn);
   }
 
-  public boolean killQuery(QueryHandle query) {
-    LOG.debug("Killing the query  " + query);
-    return getGrillStatement(query).kill();
-  }
 
   public List<String> getAllDatabases() {
     LOG.debug("Getting all database");
@@ -122,7 +149,7 @@ public class GrillClient {
   }
 
   public APIResult createDatabase(String database, boolean ignoreIfExists) {
-    LOG.debug("Creating database " + database + " ignore " + ignoreIfExists );
+    LOG.debug("Creating database " + database + " ignore " + ignoreIfExists);
     GrillMetadataClient mc = new GrillMetadataClient(conn);
     APIResult result = mc.createDatabase(database, ignoreIfExists);
     LOG.debug("Create database result " + result);
@@ -137,7 +164,7 @@ public class GrillClient {
     return this.conn.getConnectionParams();
   }
 
-  public List<String> getConnectionParam(String key){
+  public List<String> getConnectionParam(String key) {
     return this.conn.getConnectionParams(key);
   }
 
@@ -146,7 +173,7 @@ public class GrillClient {
   }
 
   public APIResult addJarResource(String path) {
-    return this.conn.addResourceToConnection("jar",path);
+    return this.conn.addResourceToConnection("jar", path);
   }
 
   public APIResult removeJarResource(String path) {
@@ -193,7 +220,7 @@ public class GrillClient {
   }
 
   public APIResult dropFactTable(String fact, boolean cascade) {
-    return new GrillMetadataClient(conn).dropFactTable(fact,cascade);
+    return new GrillMetadataClient(conn).dropFactTable(fact, cascade);
   }
 
   public APIResult dropCube(String cube) {
@@ -229,7 +256,7 @@ public class GrillClient {
   }
 
   public XCube getCube(String cubeName) {
-   return new GrillMetadataClient(conn).getCube(cubeName);
+    return new GrillMetadataClient(conn).getCube(cubeName);
   }
 
   public XStorage getStorage(String storageName) {
@@ -261,7 +288,7 @@ public class GrillClient {
   }
 
   public XStorageTableElement getStorageFromFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).getStorageOfFactTable(fact,storage);
+    return new GrillMetadataClient(conn).getStorageOfFactTable(fact, storage);
   }
 
   public APIResult addStorageToDim(String dim, String storage) {
@@ -269,19 +296,19 @@ public class GrillClient {
   }
 
   public APIResult dropStorageFromDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).dropStoragesOfDimension(dim,storage);
+    return new GrillMetadataClient(conn).dropStoragesOfDimension(dim, storage);
   }
 
   public XStorageTableElement getStorageFromDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).getStorageOfDimension(dim,storage);
+    return new GrillMetadataClient(conn).getStorageOfDimension(dim, storage);
   }
 
   public List<XPartition> getAllPartitionsOfFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact,storage);
+    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact, storage);
   }
 
   public List<XPartition> getAllPartitionsOfFact(String fact, String storage, String list) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact,storage, list);
+    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact, storage, list);
   }
 
   public List<XPartition> getAllPartitionsOfDim(String dim, String storage) {
@@ -292,20 +319,29 @@ public class GrillClient {
     return new GrillMetadataClient(conn).getAllPartitionsOfDimension(dim, storage);
   }
 
-  public List<XPartition> dropAllPartitionsOfFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact,storage);
+  public APIResult dropAllPartitionsOfFact(String fact, String storage) {
+    return new GrillMetadataClient(conn).dropPartitionsOfFactTable(fact, storage);
   }
 
-  public List<XPartition> dropAllPartitionsOfFact(String fact, String storage, String list) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact,storage, list);
+  public APIResult dropAllPartitionsOfFact(String fact, String storage, String list) {
+    return new GrillMetadataClient(conn).dropPartitionsOfFactTable(fact, storage, list);
   }
 
-  public List<XPartition> dropAllPartitionsOfDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).getAllPartitionsOfDimension(dim, storage);
+  public APIResult dropAllPartitionsOfDim(String dim, String storage) {
+    return new GrillMetadataClient(conn).dropAllPartitionsOfDimension(dim, storage);
   }
 
-  public List<XPartition> dropAllPartitionsOfDim(String dim, String storage, String list) {
-    return new GrillMetadataClient(conn).getAllPartitionsOfDimension(dim, storage);
+  public APIResult dropAllPartitionsOfDim(String dim, String storage, String list) {
+    return new GrillMetadataClient(conn).dropAllPartitionsOfDimension(dim, storage, list);
   }
+
+  public APIResult addPartitionToFact(String table, String storage, String partSpec) {
+    return new GrillMetadataClient(conn).addPartitionToFact(table, storage, partSpec);
+  }
+
+  public APIResult addPartitionToDim(String table, String storage, String partSpec) {
+    return new GrillMetadataClient(conn).addPartitionToDimension(table, storage, partSpec);
+  }
+
 
 }

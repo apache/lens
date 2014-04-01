@@ -9,14 +9,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GrillResultSetMetaData implements ResultSetMetaData {
+public class GrillJdbcResultSetMetadata implements ResultSetMetaData {
 
   private final QueryResultSetMetadata metadata;
   private final List<String> colNames;
   private final List<String> colTypes;
 
 
-  public GrillResultSetMetaData(QueryResultSetMetadata metadata) {
+  public GrillJdbcResultSetMetadata(QueryResultSetMetadata metadata) {
     this.metadata = metadata;
     colNames = new ArrayList<String>();
     colTypes = new ArrayList<String>();

@@ -46,7 +46,7 @@ public class GrillDatabaseCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "create database")
+  @CliCommand(value = "create database", help = "create a database with specified name")
   public String createDatabase(
       @CliOption(key = {"", "db"}, mandatory = true, help = "Database to create")
       String database,
@@ -61,7 +61,7 @@ public class GrillDatabaseCommands implements CommandMarker {
     }
   }
 
-  @CliCommand(value = "drop database")
+  @CliCommand(value = "drop database", help = "drop a database with specified name")
   public String dropDatabase(
       @CliOption(key = {"", "db"}, mandatory = true, help = "Database to drop")
       String database) {

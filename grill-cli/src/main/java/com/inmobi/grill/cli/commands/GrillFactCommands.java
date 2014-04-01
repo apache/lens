@@ -207,7 +207,7 @@ public class GrillFactCommands implements CommandMarker {
 
 
 
-  @CliCommand(value = "fact drop storage", help = "adds a new storage to fact")
+  @CliCommand(value = "fact drop storage", help = "drop a storage from fact")
   public String dropStorageFromFact(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storage>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -243,7 +243,7 @@ public class GrillFactCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "fact get storage", help = "adds a new storage to fact")
+  @CliCommand(value = "fact get storage", help = "get storage of fact table")
   public String getStorageFromFact(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storage>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -283,7 +283,7 @@ public class GrillFactCommands implements CommandMarker {
   }
 
   @CliCommand(value = "fact drop partitions",
-      help = "get all partitions associated with fact")
+      help = "drop all partitions associated with fact")
   public String dropAllPartitionsOfFact(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storageName> [<list>]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
@@ -291,16 +291,49 @@ public class GrillFactCommands implements CommandMarker {
         .omitEmptyStrings()
         .split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
     if(pair.length == 2) {
-      List<XPartition> partitions = client.dropAllPartitionsOfFact(pair[0], pair[1]);
-      return FormatUtils.formatPartitions(partitions);
+      result = client.dropAllPartitionsOfFact(pair[0], pair[1]);
     }
     if (pair.length == 3) {
-      List<XPartition> partitions = client.dropAllPartitionsOfFact(pair[0], pair[1], pair[3]);
-      return FormatUtils.formatPartitions(partitions);
+      result = client.dropAllPartitionsOfFact(pair[0], pair[1], pair[3]);
+    } else {
+      return "Syntax error, please try in following " +
+          "format. fact drop partitions <table> <storage> [partition values]";
     }
-    return "Syntax error, please try in following " +
-        "format. fact drop partitions <table> <storage> [partition values]";
+
+    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
+      return "Successfully dropped partition of "  + pair[0];
+    } else {
+      return "failure in  dropping partition of "  + pair[0];
+    }
+  }
+
+  @CliCommand(value = "fact add partition", help = "add a partition to fact table")
+  public String addPartitionToFact(@CliOption(key = {"","table"},
+      mandatory = true, help = "<table> <storage> <partspec>") String specPair) {
+    Iterable<String> parts = Splitter.on(' ')
+        .trimResults()
+        .omitEmptyStrings()
+        .split(specPair);
+    String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
+    if(pair.length != 3) {
+      return "Syntax error, please try in following " +
+          "format. fact add partition <table> <storage> <partition spec>";
+    }
+
+    File f = new File(pair[2]);
+    if(!f.exists()) {
+      return "Partition spec does not exist";
+    }
+
+    result = client.addPartitionToFact(pair[0], pair[1], pair[2]);
+    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
+      return "Successfully added partition to "  + pair[0];
+    } else {
+      return "failure in  addition of partition to "  + pair[0];
+    }
   }
 
 }

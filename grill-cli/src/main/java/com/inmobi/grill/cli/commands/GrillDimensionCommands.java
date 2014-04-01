@@ -235,7 +235,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
 
 
-  @CliCommand(value = "dim drop storage", help = "adds a new storage to fact")
+  @CliCommand(value = "dim drop storage", help = "drop storage to dimension table")
   public String dropStorageFromDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -271,7 +271,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "dim get storage", help = "adds a new storage to fact")
+  @CliCommand(value = "dim get storage", help = "describe storage of dimension table")
   public String getStorageFromDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table-name> <storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -289,7 +289,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
   @CliCommand(value = "dim list partitions",
-      help = "get all partitions associated with fact")
+      help = "get all partitions associated with dimension table")
   public String getAllPartitionsOfDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storageName> [<part-vals]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
@@ -313,7 +313,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
 
   @CliCommand(value = "dim drop partitions",
-      help = "get all partitions associated with fact")
+      help = "drop all partitions associated with dimension table")
   public String dropAllPartitionsOfDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table> <storageName> [<list>]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
@@ -321,16 +321,51 @@ public class GrillDimensionCommands implements CommandMarker {
         .omitEmptyStrings()
         .split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
     if(pair.length == 2) {
-      List<XPartition> partitions = client.dropAllPartitionsOfDim(pair[0], pair[1]);
-      return FormatUtils.formatPartitions(partitions);
+      result = client.dropAllPartitionsOfDim(pair[0], pair[1]);
     }
     if (pair.length == 3) {
-      List<XPartition> partitions = client.dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
-      return FormatUtils.formatPartitions(partitions);
+      result = client.dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
+    } else {
+      return "Syntax error, please try in following " +
+          "format. fact drop partitions <table> <storage> [partition values]";
     }
-    return "Syntax error, please try in following " +
-        "format. dimshow drop partitions <table> <storage> [partition values]";
+
+    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
+      return "Successfully dropped partition of "  + pair[0];
+    } else {
+      return "failure in  dropping partition of "  + pair[0];
+    }
+
+  }
+
+
+  @CliCommand(value = "dim add partition", help = "add a partition to dim table")
+  public String addPartitionToFact(@CliOption(key = {"","table"},
+      mandatory = true, help = "<table> <storage> <partspec>") String specPair) {
+    Iterable<String> parts = Splitter.on(' ')
+        .trimResults()
+        .omitEmptyStrings()
+        .split(specPair);
+    String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
+    if(pair.length != 3) {
+      return "Syntax error, please try in following " +
+          "format. fact add partition <table> <storage> <partition spec>";
+    }
+
+    File f = new File(pair[2]);
+    if(!f.exists()) {
+      return "Partition spec does not exist";
+    }
+
+    result = client.addPartitionToDim(pair[0], pair[1], pair[2]);
+    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
+      return "Successfully added partition to "  + pair[0];
+    } else {
+      return "failure in  addition of partition to "  + pair[0];
+    }
   }
 
 }

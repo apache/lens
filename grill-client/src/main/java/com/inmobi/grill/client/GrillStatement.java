@@ -3,7 +3,6 @@ package com.inmobi.grill.client;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.query.*;
-
 import com.inmobi.grill.server.api.GrillConfConstants;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -14,7 +13,9 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 /**
  * Top level class which is used to execute grill queries.
@@ -65,7 +66,7 @@ public class GrillStatement {
         connection.getGrillConnectionParams().getQueryResourcePath()).path("queries");
   }
 
-  private GrillQuery getQuery(QueryHandle handle) {
+  public GrillQuery getQuery(QueryHandle handle) {
     Client client = ClientBuilder.newClient();
     WebTarget target = getQueryWebTarget(client);
     return target.path(handle.toString()).queryParam(
@@ -81,18 +82,12 @@ public class GrillStatement {
 
     Client client = ClientBuilder.newBuilder().register(
         MultiPartFeature.class).build();
-    GrillConf conf  = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionid").build(),
         connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         sql));
-    mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        conf,
-        MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
 
@@ -103,7 +98,44 @@ public class GrillStatement {
     return handle;
   }
 
+  public QueryPlan explainQuery(String sql) {
+    if (!connection.isOpen()) {
+      throw new IllegalStateException("Grill Connection has to be " +
+          "established before querying");
+    }
+
+    Client client = ClientBuilder.newBuilder().register(
+        MultiPartFeature.class).build();
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionid").build(),
+        connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        sql));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "explain"));
+
+    WebTarget target = getQueryWebTarget(client);
+
+    QueryPlan handle = target.request().post(Entity.entity(mp,
+        MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+    return handle;
+  }
+
+
+  public List<QueryHandle> getAllQueries() {
+    WebTarget target = getQueryWebTarget(ClientBuilder
+        .newBuilder().register(MultiPartFeature.class).build());
+    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle()).request().get(
+        new GenericType<List<QueryHandle>>() {
+        });
+    return handles;
+  }
   public QueryResultSetMetadata getResultSetMetaData() {
+    return this.getResultSetMetaData(query);
+  }
+
+  public QueryResultSetMetadata getResultSetMetaData(GrillQuery query) {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalArgumentException("Result set metadata " +
           "can be only queries for successful queries");
@@ -119,6 +151,10 @@ public class GrillStatement {
   }
 
   public InMemoryQueryResult getResultSet() {
+     return this.getResultSet(this.query);
+  }
+
+  public InMemoryQueryResult getResultSet(GrillQuery query) {
     if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalArgumentException("Result set metadata " +
           "can be only queries for successful queries");
@@ -134,6 +170,9 @@ public class GrillStatement {
 
 
   public boolean kill() {
+    return this.kill(query);
+  }
+  public boolean kill(GrillQuery query) {
 
     if (query.getStatus().isFinished()) {
       return false;

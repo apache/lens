@@ -21,7 +21,7 @@ public class GrillConnectionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "set")
+  @CliCommand(value = "set", help = "sets a session parameter.")
   public String setParam(
       @CliOption(key={"","param"}, mandatory = true, help = "key=val")
       String keyval) {
@@ -34,13 +34,13 @@ public class GrillConnectionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value="show params")
+  @CliCommand(value="show params", help = "list of all session parameter")
   public String showParameters(){
     List<String> params = client.getConnectionParam();
     return Joiner.on("\n").skipNulls().join(params);
   }
 
-  @CliCommand(value="get")
+  @CliCommand(value="get", help = "gets value of session parameter")
   public String getParam(
       @CliOption(key={"","param"},
           mandatory = true,
@@ -50,7 +50,7 @@ public class GrillConnectionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value="add jar")
+  @CliCommand(value="add jar", help = "adds a jar resource to session")
   public String addJar(
       @CliOption(key={"","param"}, mandatory = true, help = "path to jar on serverside")
       String path){
@@ -58,7 +58,7 @@ public class GrillConnectionCommands implements CommandMarker {
     return result.getMessage();
   }
 
-  @CliCommand(value="remove jar")
+  @CliCommand(value="remove jar", help = "removes a jar resource from session")
   public String removeJar(
       @CliOption(key={"","param"}, mandatory = true, help = "path to jar on serverside")
       String path){
@@ -66,7 +66,7 @@ public class GrillConnectionCommands implements CommandMarker {
     return result.getMessage();
   }
 
-  @CliCommand(value="add file")
+  @CliCommand(value="add file", help = "adds a file resource to session")
   public String addFile(
       @CliOption(key={"","param"}, mandatory = true, help = "path to file on serverside")
       String path){
@@ -74,7 +74,7 @@ public class GrillConnectionCommands implements CommandMarker {
     return result.getMessage();
   }
 
-  @CliCommand(value="remove file")
+  @CliCommand(value="remove file", help = "removes a file resource from session")
   public String removeFile(
       @CliOption(key={"","param"}, mandatory = true, help = "path to file on serverside")
       String path){
