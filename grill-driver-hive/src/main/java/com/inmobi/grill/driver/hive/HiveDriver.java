@@ -21,6 +21,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
@@ -514,7 +515,10 @@ public class HiveDriver implements GrillDriver {
   private SessionHandle getSession(QueryContext ctx) throws GrillException {
     sessionLock.lock();
     try {
-      String grillSession = ctx.getGrillSessionIdentifier();
+      String grillSession = null;
+      if (SessionState.get() != null) {
+        grillSession = SessionState.get().getSessionId();
+      }
       SessionHandle userSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
@@ -622,7 +626,6 @@ public class HiveDriver implements GrillDriver {
       }
     }
   }
-
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {

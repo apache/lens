@@ -28,10 +28,10 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter final private String userQuery;
   @Getter final private Date submissionTime;
   @Getter final private String submittedUser;
-  @Getter private Configuration conf;
+  transient @Getter private Configuration conf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
-  @Getter @Setter private GrillDriver selectedDriver;
+  transient @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;

@@ -1,5 +1,6 @@
 package com.inmobi.grill.api.query;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
@@ -15,7 +16,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = false)
-public class QueryHandle extends QuerySubmitResult {
+public class QueryHandle extends QuerySubmitResult implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   @XmlElement @Getter
   private UUID handleId;
 

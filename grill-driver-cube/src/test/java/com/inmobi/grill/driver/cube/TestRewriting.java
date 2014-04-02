@@ -29,7 +29,8 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 
 @PrepareForTest(RewriteUtil.class )
-@PowerMockIgnore("org.apache.log4j.*")
+@PowerMockIgnore({"org.apache.log4j.*", "javax.management.*", "javax.xml.parsers.*",
+  "com.sun.org.apache.xerces.internal.jaxp.*", "ch.qos.logback.*", "org.slf4j.*", "org.w3c.dom*"})
 public class TestRewriting {
 
   /**
