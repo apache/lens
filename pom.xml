@@ -615,7 +615,6 @@
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
     <module>grill-driver-jdbc</module>
-    <module>grill-yoda</module>
     <module>grill-server</module>
     <module>grill-client</module>
     <module>grill-examples</module>
