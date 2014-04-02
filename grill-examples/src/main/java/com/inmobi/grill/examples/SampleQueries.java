@@ -51,7 +51,9 @@ public class SampleQueries {
         System.exit(queries.retCode);
       }
     }finally {
-      queries.close();
+      if (queries != null) {
+        queries.close();
+      }
     }
   }
 
