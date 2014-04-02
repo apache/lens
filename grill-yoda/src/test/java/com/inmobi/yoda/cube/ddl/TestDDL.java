@@ -32,7 +32,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillConfUtil;
+import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class TestDDL {
 
@@ -163,11 +163,11 @@ public class TestDDL {
       }
       // storage cost validation
       for (String storage : fact.getStorages()) {
-        String tableName = MetastoreUtil.getStorageTableName(
-            fact.getName(), Storage.getPrefix(storage));
+        String tableName = MetastoreUtil.getFactStorageTableName(
+            fact.getName(), storage);
         Table tbl = cc.getHiveTable(tableName);
         Assert.assertEquals(Double.toString(fact.weight()),
-            tbl.getParameters().get(GrillConfUtil.STORAGE_COST));
+            tbl.getParameters().get(GrillConfConstants.STORAGE_COST));
       }
     }
 
@@ -185,7 +185,7 @@ public class TestDDL {
     for (CubeDimensionTable dim : cc.getAllDimensionTables()) {
       String dimName = dim.getName();
       String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
-          Storage.getPrefix(CubeDDL.YODA_STORAGE));
+          CubeDDL.YODA_STORAGE);
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(DimensionDDL.dim_time_part_column, cal.getTime());
       Assert.assertTrue(cc.partitionExists(storageTableName,
@@ -195,7 +195,7 @@ public class TestDDL {
 
   @Test
   public void testPartitions() throws HiveException, IOException,
-  ParseException, MetaException, NoSuchObjectException, TException {
+      ParseException, MetaException, NoSuchObjectException, TException {
     Calendar cal = Calendar.getInstance();
     Date now = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
@@ -214,13 +214,13 @@ public class TestDDL {
       }
     }
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
-        "summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary1", CubeDDL.YODA_STORAGE);
     String storageTableName2 = MetastoreUtil.getFactStorageTableName(
-        "summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary2", CubeDDL.YODA_STORAGE);
     String storageTableName3 = MetastoreUtil.getFactStorageTableName(
-        "summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary3", CubeDDL.YODA_STORAGE);
     String storageTableName4 = MetastoreUtil.getFactStorageTableName(
-        rawFactName, Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        rawFactName, CubeDDL.YODA_STORAGE);
 
     cal.setTime(before);
     StringBuilder filter = new StringBuilder();
@@ -292,13 +292,13 @@ public class TestDDL {
       }
     }
     String storageTableName1 = MetastoreUtil.getFactStorageTableName(
-        "summary1", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary1", CubeDDL.YODA_STORAGE);
     String storageTableName2 = MetastoreUtil.getFactStorageTableName(
-        "summary2", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary2", CubeDDL.YODA_STORAGE);
     String storageTableName3 = MetastoreUtil.getFactStorageTableName(
-        "summary3", Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        "summary3", CubeDDL.YODA_STORAGE);
     String storageTableName4 = MetastoreUtil.getFactStorageTableName(
-        rawFactName, Storage.getPrefix(CubeDDL.YODA_STORAGE));
+        rawFactName, CubeDDL.YODA_STORAGE);
 
     cal.setTime(before);
     StringBuilder filter = new StringBuilder();

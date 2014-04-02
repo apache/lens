@@ -4,18 +4,25 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <powermock.version>1.4.12</powermock.version>
-    <!-- <hive.version>0.9.0-cdh3u4c-SNAPSHOT</hive.version> -->
-    <hive.version>0.12.3-SNAPSHOT</hive.version>
+    <hive.version>0.13.0-SNAPSHOT</hive.version>
     <hadoop.version>0.20.2-cdh3u5</hadoop.version>
+    <jetty.version>6.1.26</jetty.version>
+    <jersey.version>2.3.1</jersey.version>
+    <grizzly.version>2.3.6</grizzly.version>
+    <servlet3.version>3.0.1</servlet3.version>
+    <slf4j.version>1.7.6</slf4j.version>
     <yoda.version>0.6.77-SNAPSHOT</yoda.version>
   </properties>
 
   <groupId>com.inmobi.grill</groupId>
   <artifactId>grill-parent</artifactId>
-  <version>0.2-SNAPSHOT</version>
-  <name>grill</name>
+  <version>1.0-SNAPSHOT</version>
+  <name>Grill</name>
   <packaging>pom</packaging>
+	<description>Unified Analytics Platform For InMobi</description>
+  <url>https://github.corop.inmobi.com/platform/grill</url>
 
   <parent>
     <artifactId>inmobi-master-pom</artifactId>
@@ -23,15 +30,116 @@
     <version>1.0.1</version>
   </parent>
 
+    <organization>
+        <name>Inmobi</name>
+        <url>http://www.inmobi.com</url>
+    </organization>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>https://jira.corp.inmobi.com/browse/GRILL</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://build.corp.inmobi.com/view/Platform/</url>
+    </ciManagement>
+
+    <mailingLists>
+        <mailingList>
+            <name>grill-user</name>
+            <subscribe>TODO</subscribe>
+            <unsubscribe>TODO</unsubscribe>
+            <post>grill-user@inmobi.com</post>
+        </mailingList>
+        <mailingList>
+            <name>grill-dev</name>
+            <subscribe>TODO</subscribe>
+            <unsubscribe>TODO</unsubscribe>
+            <post>grill-dev@inmobi.com</post>
+        </mailingList>
+    </mailingLists>
+
   <scm>
     <connection>scm:git:git://github.corp.inmobi.com/platform/grill</connection>
     <url>https://github.corp.inmobi.com/platform/grill</url>
     <developerConnection>scm:git:git@github.corp.inmobi.com:platform/grill.git</developerConnection>
   </scm>
 
+  <reporting>
+          <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.7</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            <reportSets>
+          <reportSet>
+            <inherited>false</inherited>
+            <reports>
+              <report>summary</report>
+              <report>project-team</report>
+              <report>mailing-list</report>
+              <report>cim</report>
+              <report>issue-tracking</report>
+              <report>license</report>
+              <report>scm</report>
+              <report>modules</report>
+              <report>distribution-management</report>
+              <report>dependency-convergence</report>
+              <report>dependency-management</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+            </plugin>
+        <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <inherited>false</inherited>
+        <reportSets>
+          <reportSet>
+            <id>aggregate</id>
+            <configuration>
+              <quiet>true</quiet>
+              <verbose>false</verbose>
+              <includeDependencySources>false</includeDependencySources>
+              <show>public</show>
+              <groups>
+                <group>
+                <title> Clien api </title>
+                <packages>com.inmobi.grill.api*:com.inmobi.grill.client*</packages>
+                </group>
+                <group>
+                <title> Developer api </title>
+                <packages>com.inmobi.grill.server.api*</packages>
+                </group>
+              </groups>
+            </configuration>
+            <reports>
+              <report>aggregate</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+     </plugins>
+  </reporting>
+  
   <build>
      <pluginManagement>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-project-info-reports-plugin</artifactId>
+            <version>2.4</version>
+            <configuration>
+               <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
+               <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+            </configuration>
+            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
              <artifactId>maven-compiler-plugin</artifactId>
@@ -39,6 +147,14 @@
                <source>1.6</source>
                 <target>1.6</target>
              </configuration>
+           </plugin>
+           <plugin>
+             <groupId>org.apache.maven.plugins</groupId>
+             <artifactId>maven-site-plugin</artifactId>
+             <version>3.3</version>
+             <configuration>
+              <generateReports>true</generateReports>
+             </configuration>           
            </plugin>
            <plugin>
              <groupId>org.apache.maven.plugins</groupId>
@@ -58,10 +174,34 @@
                <version>2.15</version>
                <configuration>
                     <failIfNoTests>false</failIfNoTests>
+                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
                </configuration>
            </plugin>
-        </plugins>
+         <plugin>
+           <artifactId>jdeb</artifactId>
+           <groupId>org.vafer</groupId>
+           <version>0.9</version>
+         </plugin>
+       </plugins>
     </pluginManagement>
+      <plugins>
+       <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>3.3</version>
+        <executions>
+          <execution>
+            <id>attach-descriptor</id>
+            <goals>
+              <goal>attach-descriptor</goal>
+            </goals>
+            <configuration>
+              <generateReports>true</generateReports>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    
   </build>
 
   <repositories>
@@ -70,10 +210,24 @@
       <name>Releases</name>
       <url>http://maven.scm.corp.inmobi.com/content/repositories/releases/</url>
     </repository>
+    <repository>
+        <id>projectlombok.org</id>
+        <url>http://projectlombok.org/mavenrepo</url>
+    </repository>
+    <!-- see https://jira.springsource.org/browse/SHL-52 -->
+    <repository>
+      <id>ext-release-local</id>
+      <url>http://repo.springsource.org/simple/ext-release-local/</url>
+    </repository>
   </repositories>
 
  <dependencyManagement>
    <dependencies>
+     <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+        <version>1.12.4</version>
+     </dependency>
       <dependency>
         <groupId>log4j</groupId>
         <artifactId>log4j</artifactId>
@@ -88,6 +242,7 @@
         <groupId>org.testng</groupId>
         <artifactId>testng</artifactId>
         <version>6.8</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
@@ -98,7 +253,89 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-core</artifactId>
         <version>${hadoop.version}</version>
-        <scope>provided</scope>
+       <!-- <scope>provided</scope> -->
+        <exclusions>
+          <exclusion>
+            <groupId>net.sf.kosmosfs</groupId>
+            <artifactId>kfs</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>oro</groupId>
+            <artifactId>oro</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-el</groupId>
+            <artifactId>commons-el</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+          </exclusion>
+           <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-core</artifactId>
+          </exclusion>
+           <exclusion>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-json</artifactId>
+          </exclusion>
+           <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-core-asl</artifactId>
+          </exclusion>
+           <exclusion>
+            <groupId>org.codehaus.jackson</groupId>
+            <artifactId>jackson-mapper-asl</artifactId>
+          </exclusion>
+           <exclusion>
+            <groupId>org.mortbay.jetty</groupId>
+            <artifactId>jetty-util</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.eclipse.jdt</groupId>
+            <artifactId>core</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>jetty</groupId>
+            <artifactId>jetty</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>tomcat</groupId>
+            <artifactId>jasper-compiler</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>tomcat</groupId>
+            <artifactId>jasper-runtime</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>jsp-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>asm</groupId>
+            <artifactId>asm</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
        <dependency>
            <groupId>org.apache.hadoop</groupId>
@@ -119,11 +356,6 @@
       </dependency>
       <dependency>
         <groupId>org.apache.hive</groupId>
-        <artifactId>hive-builtins</artifactId>
-        <version>${hive.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hive</groupId>
         <artifactId>hive-cli</artifactId>
         <version>${hive.version}</version>
       </dependency>
@@ -136,6 +368,12 @@
            <groupId>org.apache.hive</groupId>
            <artifactId>hive-shims</artifactId>
            <version>${hive.version}</version>
+           <exclusions>
+             <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging-api</artifactId>
+             </exclusion>
+           </exclusions>
        </dependency>
 
       <dependency>
@@ -147,11 +385,6 @@
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
         <version>13.0.1</version>
-      </dependency>
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>5.1.21</version>
       </dependency>
       <dependency>
         <groupId>org.elasticsearch</groupId>
@@ -179,7 +412,12 @@
       <dependency>
        <groupId>org.slf4j</groupId>
        <artifactId>slf4j-api</artifactId>
-       <version>1.6.4</version>
+       <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>org.slf4j</groupId>
+       <artifactId>jul-to-slf4j</artifactId>
+       <version>${slf4j.version}</version>
       </dependency>
       <dependency>
         <groupId>com.inmobi.dw.yoda</groupId>
@@ -227,17 +465,160 @@
                </exclusion>
            </exclusions>
        </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-moxy</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.glassfish.jersey.containers</groupId>
+                <artifactId>jersey-container-servlet</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javax.ws.rs</groupId>
+                <artifactId>javax.ws.rs-api</artifactId>
+                <version>2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-client</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.connectors</groupId>
+                <artifactId>jersey-grizzly-connector</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+                <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+                <version>${jersey.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+              <groupId>org.glassfish.jersey.test-framework</groupId>
+              <artifactId>jersey-test-framework-core</artifactId>
+              <version>${jersey.version}</version>
+                <scope>test</scope>
+            </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${servlet3.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-grizzly2-servlet</artifactId>
+    <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>${jersey.version}</version>
+        </dependency>
+
+				<dependency>
+					<groupId>com.codahale.metrics</groupId>
+					<artifactId>metrics-core</artifactId>
+					<version>3.0.1</version>
+				</dependency>
+				<dependency>
+					<groupId>com.codahale.metrics</groupId>
+					<artifactId>metrics-ganglia</artifactId>
+					<version>3.0.1</version>
+				</dependency>
+<dependency>
+<groupId>org.glassfish.jersey.media</groupId>
+<artifactId>jersey-media-json-jackson</artifactId>
+            <version>${jersey.version}</version>
+</dependency>
+
+       <dependency>
+         <groupId>org.glassfish.grizzly</groupId>
+         <artifactId>grizzly-framework</artifactId>
+         <version>${grizzly.version}</version>
+       </dependency>
+    <dependency>
+        <groupId>org.glassfish.grizzly</groupId>
+        <artifactId>grizzly-http-server</artifactId>
+        <version>${grizzly.version}</version>
+    </dependency>
+       <dependency>
+         <groupId>javax.servlet</groupId>
+         <artifactId>servlet-api</artifactId>
+         <version>2.5</version>
+       </dependency>
+            <dependency>
+                <groupId>javax.xml.bind</groupId>
+                <artifactId>jaxb-api</artifactId>
+                <version>2.1</version>
+                <scope>compile</scope>
+            </dependency>
+            <dependency>
+                <groupId>javax.servlet.jsp</groupId>
+                <artifactId>jsp-api</artifactId>
+                <version>2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty</artifactId>
+                <version>${jetty.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.mortbay.jetty</groupId>
+                <artifactId>jetty-plus</artifactId>
+                <version>${jetty.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+						<dependency>
+							<groupId>c3p0</groupId>
+							<artifactId>c3p0</artifactId>
+							<version>0.9.1.2</version>
+						</dependency>
+
+						<dependency>
+							<groupId>org.hsqldb</groupId>
+							<artifactId>hsqldb</artifactId>
+							<version>2.0.0</version>
+							<scope>test</scope>
+						</dependency>
+
+     <dependency>
+       <groupId>org.springframework.shell</groupId>
+       <artifactId>spring-shell</artifactId>
+       <version>1.0.0.RELEASE</version>
+     </dependency>
+
     </dependencies>
 
  </dependencyManagement>
 
+  <distributionManagement>
+    <site>
+      <id>Grill</id>
+			<url>https://raw.github.corp.inmobi.com/platform/grill-site/grill-server</url>
+    </site>
+  </distributionManagement>
+
   <modules>
     <module>grill-api</module>
+    <module>grill-server-api</module>
     <module>grill-cli</module>
+    <module>grill-storage-db</module>
     <module>grill-driver-cube</module>
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
+    <module>grill-driver-jdbc</module>
     <module>grill-yoda</module>
+    <module>grill-server</module>
+    <module>grill-client</module>
+    <module>grill-examples</module>
     <module>grill-dist</module>
   </modules>
   
@@ -246,6 +627,17 @@
         <id>integration-tests</id>
         <build>
             <plugins>
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                  <systemPropertyVariables>
+                    <project.version>${project.version}</project.version>
+                  </systemPropertyVariables>
+
+                </configuration>
+              </plugin>
+         
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>

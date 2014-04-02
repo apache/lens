@@ -4,9 +4,10 @@
 *\.classpath
 *\.idea
 */\.settings/*
-
+target/*
 */target/*
 */test-output/*
+*/query_logs/*
 ## generic files to ignore
 *~
 *.lock

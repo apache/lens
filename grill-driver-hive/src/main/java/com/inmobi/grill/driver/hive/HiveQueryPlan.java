@@ -9,12 +9,12 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
-import com.inmobi.grill.api.QueryCost;
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.GrillConfUtil;
+import com.inmobi.grill.api.query.QueryCost;
+import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 
-public class HiveQueryPlan extends QueryPlan {
+public class HiveQueryPlan extends DriverQueryPlan {
   private String explainOutput;
   enum ParserState {
     BEGIN,
@@ -29,9 +29,9 @@ public class HiveQueryPlan extends QueryPlan {
     MAP_REDUCE,
   };
 
-  public HiveQueryPlan(List<String> explainOutput, QueryHandle queryHandle,
+  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
       HiveConf conf) throws HiveException {
-    setHandle(queryHandle);
+    setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
     extractPlanDetails(explainOutput, conf);
@@ -45,7 +45,6 @@ public class HiveQueryPlan extends QueryPlan {
     Hive metastore = Hive.get(conf);
 
     for (String line : explainOutput) {
-      //System.out.println("@@ " + states + " [" +state + "] " + line);
       String tr = line.trim();
       prevState = state;
       state = nextState(tr, state);
@@ -66,7 +65,7 @@ public class HiveQueryPlan extends QueryPlan {
             String tableName = tr.replace("alias:", "").trim();
             tablesQueried.add(tableName);
             Table tbl = metastore.getTable(tableName);
-            String costStr = tbl.getParameters().get(GrillConfUtil.STORAGE_COST);
+            String costStr = tbl.getParameters().get(GrillConfConstants.STORAGE_COST);
             
             Double weight = 1d;
             if (costStr != null) {
@@ -81,18 +80,18 @@ public class HiveQueryPlan extends QueryPlan {
           }
           break;
         case SELECT:
-          if (tr.startsWith("expr:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
-            numSels++;
+          if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
+            numSels += StringUtils.split(tr, ",").length;
           }
           break;
         case GROUPBY_EXPRS:
-          if (tr.startsWith("expr:")) {
-            numDefaultAggrExprs++;
+          if (tr.startsWith("aggregations:")) {
+            numAggrExprs += StringUtils.split(tr, ",").length;
           }
           break;
         case GROUPBY_KEYS:
-          if (tr.startsWith("expr:")) {
-            numGbys++;
+          if (tr.startsWith("keys:")) {
+            numGbys += StringUtils.split(tr, ",").length;
           }
           break;
       }

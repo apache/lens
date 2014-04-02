@@ -1,0 +1,22 @@
+Welcome to Grill!
+
+  Grill is the new analytics platform for InMobi
+
+	Grill aims to provide a unified interface to all analytics users within InMobi. At a high level the project provides these features - 
+
+	* <<Cube QL>> which is a high level SQL like language to query and describe data sets organized in data cubes.
+
+	* A <<JDBC driver>> and <<Java client libraries>> to issue cube queries, and a CLI for ad hoc queries.
+
+	* Single <<shared schema>> server based on the Hive Metastore - This schema is shared by data pipelines (HCatalog) and analytics applications.
+
+	* <<Grill application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
+
+	* <<Driver based architecture>> allows plugging in reporting systems like Yoda, InfoBright, Redshift, Impala etc.
+
+	* <<Cost based engine selection>> - allows optimal use of resources by selecting the best execution engine for a given query based on the query cost.
+
+
+	The following diagram shows Grill architecture.
+
+[./figures/arch.png] Grill Architecture

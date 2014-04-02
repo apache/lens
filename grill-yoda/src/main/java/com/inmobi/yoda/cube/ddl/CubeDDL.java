@@ -44,10 +44,10 @@ import org.joda.time.format.DateTimeFormatter;
 
 import com.google.protobuf.Descriptors.FieldDescriptor;
 import com.inmobi.dw.yoda.proto.NetworkObject.KeyLessNetworkObject;
-import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReader;
 import com.inmobi.dw.yoda.tools.util.cube.CubeDefinitionReaderFactory;
 import com.inmobi.dw.yoda.tools.util.cube.Grain;
-import com.inmobi.grill.api.GrillConfUtil;
+
+import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class CubeDDL {
   private static final Log LOG = LogFactory.getLog(
@@ -125,6 +125,7 @@ public class CubeDDL {
     this.dimDDL = dimDDL;
     this.client = CubeMetastoreClient.getInstance(conf);
     loadCubeDefinition();
+    createStorages(conf);
   }
 
   static DateTimeFormatter dateFormatter = DateTimeFormat.forPattern("yyyy-MM-dd-HH").withZoneUTC();
@@ -228,6 +229,16 @@ public class CubeDDL {
     }
   }
 
+  public static void createStorages(HiveConf conf) throws HiveException {
+    CubeMetastoreClient cc = CubeMetastoreClient.getInstance(conf);
+    if (!cc.tableExists(YODA_STORAGE)) {
+      cc.createStorage(new HDFSStorage(YODA_STORAGE));
+    }
+    if (!cc.tableExists(YODA_PIE_STORAGE)) {
+      cc.createStorage(new HDFSStorage(YODA_PIE_STORAGE));
+    }
+  }
+
   public void createAllCubes() throws HiveException {
     for (String cubeName : cubes.keySet()) {
       if (Hive.get().getTable(cubes.get(cubeName).getName(), false) == null) {
@@ -327,7 +338,7 @@ public class CubeDDL {
   private void createOrAlterFactTable(List<String> cubeNames, String summary, double cost,
       Map<String, String> props, Set<Grain> grains) throws HiveException {
     List<FieldSchema> columns = getNobColList();
-    Map<Storage, StorageTableDesc> storageTables = new HashMap<Storage, StorageTableDesc>();
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = createStorages(
         summary, grains, cost,
         cubeReader.getCubeColoPath(cubeNames.get(0).substring(CUBE_NAME_PFX.length())) != null,
@@ -358,14 +369,13 @@ public class CubeDDL {
 
   public Map<String, Set<UpdatePeriod>> createStorages(
       String summary, Set<Grain> grains, double cost, boolean hasPIEStorage,
-      Map<Storage, StorageTableDesc> storageTables) {
+      Map<String, StorageTableDesc> storageTables) {
     //Path summaryPath = new Path(cubeReader.getCubePath(cubeName), summary);
     //Path storagePath = new Path(summaryPath, updatePeriod.getName());
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = 
         new HashMap<String, Set<UpdatePeriod>>();
     Map<String, String> tableParams = new HashMap<String, String>();
-    tableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
-    Storage storage = new HDFSStorage(YODA_STORAGE);
+    tableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
     StorageTableDesc sTbl = new StorageTableDesc();
     ArrayList<FieldSchema> partCols = new ArrayList<FieldSchema>();
     List<String> timePartCols = new ArrayList<String>();
@@ -390,14 +400,13 @@ public class CubeDDL {
             .toUpperCase()));          
       }
     }
-    storageAggregatePeriods.put(storage.getName(), updatePeriods);
-    storageTables.put(storage, sTbl);
+    storageAggregatePeriods.put(YODA_STORAGE, updatePeriods);
+    storageTables.put(YODA_STORAGE, sTbl);
 
     // create storage with PIE partitions
     if (hasPIEStorage) {
       Map<String, String> pieTableParams = new HashMap<String, String>();
-      pieTableParams.put(GrillConfUtil.STORAGE_COST, Double.toString(cost));
-      Storage piestorage = new HDFSStorage(YODA_PIE_STORAGE);
+      pieTableParams.put(GrillConfConstants.STORAGE_COST, Double.toString(cost));
       StorageTableDesc pieTbl = new StorageTableDesc();
       ArrayList<FieldSchema> piePartCols = new ArrayList<FieldSchema>();
       List<String> pieTimePartCols = new ArrayList<String>();
@@ -420,8 +429,8 @@ public class CubeDDL {
       pieTbl.setTblProps(pieTableParams);
       pieTbl.setPartCols(piePartCols);
       pieTbl.setTimePartCols(pieTimePartCols);
-      storageAggregatePeriods.put(piestorage.getName(), updatePeriods);
-      storageTables.put(piestorage, pieTbl);
+      storageAggregatePeriods.put(YODA_PIE_STORAGE, updatePeriods);
+      storageTables.put(YODA_PIE_STORAGE, pieTbl);
     }
     return storageAggregatePeriods;
   }
@@ -449,9 +458,6 @@ public class CubeDDL {
   public static void main(String[] args) throws Exception {
     HiveConf conf = new HiveConf(CubeDDL.class);
     SessionState.start(conf);
-
-    DimensionDDL dimDDL = new DimensionDDL(conf);
-    CubeDDL cc = new CubeDDL(dimDDL, conf);
     if (args.length > 0) {
       if (args[0].equals("-db")) {
         String dbName = args[1];
@@ -461,6 +467,8 @@ public class CubeDDL {
         SessionState.get().setCurrentDatabase(dbName);
       }
     }
+    DimensionDDL dimDDL = new DimensionDDL(conf);
+    CubeDDL cc = new CubeDDL(dimDDL, conf);
     LOG.info("Creating all cubes ");
     cc.createAllCubes();
   }

@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+	<name>Grill Hive Driver</name>
 
   <parent>
     <artifactId>grill-parent</artifactId>
     <groupId>com.inmobi.grill</groupId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
   </parent>
 
   <properties>
@@ -14,6 +15,7 @@
 
   <artifactId>grill-driver-hive</artifactId>
   <packaging>jar</packaging>
+  <description> Hive execution driver </description>
 
     <build>
         <plugins>
@@ -54,7 +56,7 @@
   <dependencies>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-api</artifactId>
+      <artifactId>grill-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -86,15 +88,13 @@
           <groupId>org.apache.hive</groupId>
           <artifactId>hive-shims</artifactId>
       </dependency>
-
       <dependency>
-          <groupId>org.apache.hadoop</groupId>
-          <artifactId>hadoop-core</artifactId>
+          <groupId>org.testng</groupId>
+          <artifactId>testng</artifactId>
       </dependency>
       <dependency>
           <groupId>org.apache.hadoop</groupId>
           <artifactId>hadoop-test</artifactId>
-          <scope>test</scope>
       </dependency>
   </dependencies>
 </project>    

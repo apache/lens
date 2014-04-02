@@ -17,8 +17,7 @@ import org.apache.thrift.transport.TSocket;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
-import com.inmobi.grill.api.GrillConfConstatnts;
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
 
 import javax.security.sasl.SaslException;
 
@@ -38,14 +37,13 @@ public class RemoteThriftConnection implements ThriftConnection {
 	}
 
 	@Override
-	public CLIServiceClient getClient(Configuration conf) throws GrillException {
+	public CLIServiceClient getClient(HiveConf conf) throws GrillException {
 		if (!connected) {
       try {
-        HiveConf hConf = new HiveConf(conf, RemoteThriftConnection.class);
         hs2Client =
-          RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(hConf);
-        LOG.info("HiveDriver connected to HiveServer @ " + hConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST)
-          + ":" + hConf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
+          RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(conf);
+        LOG.info("HiveDriver connected to HiveServer @ " + conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST)
+          + ":" + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
 
       } catch (HiveSQLException e) {
         throw new GrillException(e);

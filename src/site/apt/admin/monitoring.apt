@@ -1,0 +1,24 @@
+Grill server monitoring
+
+  Grill server emits following metrics for query service
+  
+  * Number of queued queries;
+  
+  * Number of running queries;
+  
+  * Number of finished queries in server's memory;
+  
+  * Total number of accepted queries;
+  
+  * Total number of successful queries;
+  
+  * Total number of finished queries;
+  
+  * Total number of failed queries;
+  
+  * Total number of cancelled queries;
+  
+  Ganglia metrics can be enabled by configuring the parameters :
+  <grill.enable.gangla.metrics>, <grill.metrics.ganglia.serverName>, <grill.metrics.ganglia.port>,
+   <grill.metrics.reporting.period>.
+  

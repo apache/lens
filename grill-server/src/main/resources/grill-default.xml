@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+<property>
+  <name>grill.drivers</name>
+  <value>com.inmobi.grill.driver.hive.HiveDriver</value>
+  <description>Drivers enabled for this grill server instance</description>
+</property>
+
+<property>
+  <name>grill.servicenames</name>
+  <value>session,query,metastore,scheduler,quota</value>
+  <description>These services would be started in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+  <name>grill.session.service.impl</name>
+  <value>com.inmobi.grill.server.session.HiveSessionService</value>
+  <description>Implementation class for session service</description>
+</property>
+
+<property>
+  <name>grill.query.service.impl</name>
+  <value>com.inmobi.grill.server.query.QueryExecutionServiceImpl</value>
+  <description>Implementation class for query execution service</description>
+</property>
+
+<property>
+  <name>grill.quota.service.impl</name>
+  <value>com.inmobi.grill.server.quota.QuotaServiceImpl</value>
+  <description>Implementation class for quota service</description>
+</property>
+
+<property>
+  <name>grill.metastore.service.impl</name>
+  <value>com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl</value>
+  <description>Implementation class for metastore service</description>
+</property>
+
+<property>
+  <name>grill.scheduler.service.impl</name>
+  <value>com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl</value>
+  <description>Implementation class for query scheduler service</description>
+</property>
+
+<property>
+  <name>grill.server.base.url</name>
+  <value>http://localhost:9999/grillapi/</value>
+  <description>The base url for the grill server</description>
+</property>
+
+<property>
+  <name>grill.persistent.resultset</name>
+  <value>true</value>
+  <description>Whether to enable persistent resultset for queries</description>
+</property>
+
+<property>
+  <name>grill.result.parent.dir</name>
+  <value>/tmp/grillreports</value>
+  <description>The directory for storing persisted results</description>
+</property>
+
+<property>
+  <name>grill.add.insert.overwrite</name>
+  <value>true</value>
+  <description>Prefix query with insert overwrite clause if the query is persistent.
+   User can disable if user gave the clause himself. </description>
+</property>
+
+<property>
+  <name>grill.result.output.dir.format</name>
+  <value></value>
+  <description>The format of the output if result is persisted. The format
+   should be expressed in HQL</description>
+</property>
+
+<property>
+  <name>grill.query.state.logger.enabled</name>
+  <value>true</value>
+  <description>Disable or enable the query state logger with this config.
+   The location for the logger can be specified in log4j properties for the class
+   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
+</property>
+
+<property>
+  <name>grill.event.service.thread.pool.size</name>
+  <value></value>
+  <description>The size of thread pool for notifying events. The no value is specified,
+   it uses the available processors as the number.</description>
+</property>
+
+<property>
+  <name>grill.enable.console.metrics</name>
+  <value>false</value>
+  <description>Enable metrics to be reported on console</description>
+</property>
+
+<property>
+  <name>grill.enable.ganglia.metrics</name>
+  <value>false</value>
+  <description>Enable metrics to be reported on ganglia</description>
+</property>
+
+<property>
+  <name>grill.metrics.ganglia.host</name>
+  <value></value>
+  <description>The ganglia host name</description>
+</property>
+
+<property>
+  <name>grill.metrics.ganglia.port</name>
+  <value></value>
+  <description>The ganglia port</description>
+</property>
+
+<property>
+  <name>grill.metrics.reporting.period</name>
+  <value>10</value>
+  <description>The reporting period for metrics. The value is in seconds</description>
+</property>
+
+</configuration>

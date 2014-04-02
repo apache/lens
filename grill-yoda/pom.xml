@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+	<name>Grill-Yoda Module</name>
 
   <parent>
     <artifactId>grill-parent</artifactId>
     <groupId>com.inmobi.grill</groupId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>grill-yoda</artifactId>
   <packaging>jar</packaging>
+  <description>Yoda specific module</description>
 
   <properties>
      <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
@@ -17,16 +19,6 @@
 
   <build>
       <plugins>
-          <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-surefire-plugin</artifactId>
-              <configuration>
-                  <suiteXmlFiles>
-                      <suiteXmlFile>${project.basedir}/testng.xml</suiteXmlFile>
-                  </suiteXmlFiles>
-              </configuration>
-          </plugin>
-
           <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
@@ -39,6 +31,9 @@
                       <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                       <GRILL_YODA_CLASSES>${pom.basedir}/target/classes</GRILL_YODA_CLASSES>
                   </environmentVariables>
+                  <suiteXmlFiles>
+                      <suiteXmlFile>${project.basedir}/testng.xml</suiteXmlFile>
+                  </suiteXmlFiles>                  
               </configuration>
           </plugin>
           <plugin>
@@ -65,7 +60,7 @@
   <dependencies>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-api</artifactId>
+      <artifactId>grill-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -101,6 +96,10 @@
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
     </dependency>
   </dependencies>
 </project>    

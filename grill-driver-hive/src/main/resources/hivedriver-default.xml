@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+<property>
+  <name>grill.hive.connection.class</name>
+  <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
+  <description>The connection class from HiveDriver to HiveServer. The default is
+   an embedded connection which does not require a remote hive server.
+   For connecting to a hiveserver end point, remote connection should be used. 
+  The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection
+   and com.inmobi.grill.driver.hive.RemoteThriftConnection. </description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.bind.host</name>
+  <value></value>
+  <description>The host on which hive server is running</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.port</name>
+  <value>10000</value>
+  <description>The port on which hive server is running</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.user</name>
+  <value>anonymous</value>
+  <description>The client user name</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.password</name>
+  <value>anonymous</value>
+  <description>The client user's password</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.retry.limit</name>
+  <value>1</value>
+  <description>Number of times to retry a Thrift service call upon failure </description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.connect.retry.limit</name>
+  <value>1</value>
+  <description>Number of times to retry a connection to a Thrift hive server</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.retry.delay.seconds</name>
+  <value>1</value>
+  <description>Number of seconds the client should wait between connection attempts.</description>
+</property>
+
+<property>
+  <name>hive.server.tcp.keepalive</name>
+  <value>true</value>
+  <description>TCP Keep alive socket option for HiveServer connection</description>
+</property>
+
+<property>
+  <name>hive.server.read.socket.timeout</name>
+  <value>10</value>
+  <description>Socket timeout for the client connection</description>
+</property>
+
+<property>
+  <name>grill.hs2.connection.expiry.delay</name>
+  <value>600000</value>
+  <description>The idle time (in milliseconds) for expiring a hivedriver connection</description>
+</property>
+</configuration>

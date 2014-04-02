@@ -1,0 +1,16 @@
+Admin Documentation Overview
+
+  Grill server gets shipped in a state where it can be used straight away. Install the
+  server, setup configuration and start the server. This guide covers more 
+  complex details on deployment options, server components, configuration,
+  monitoring, tuning and etc.
+  
+   * {{{./server-components.html} Server Components}} : Describes various server components
+   
+   * {{{./deployment.html} Deployment guide}} : Describes typical deployment model
+   
+   * {{{./config-server.html} Configuration guide}} : Describes various configuration options
+   
+   * {{{./monitoring.html} Monitoring}} : Describes various monitoring options and how to enable metrics
+   
+   * {{{./auth.html} Authentication and Authorization}} : Gives details on how to setup access control for various services  

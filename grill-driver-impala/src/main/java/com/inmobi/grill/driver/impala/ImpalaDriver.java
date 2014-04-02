@@ -20,11 +20,15 @@ import com.cloudera.beeswax.api.QueryNotFoundException;
 import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
 import com.cloudera.impala.thrift.ImpalaService.Client;
-import com.inmobi.grill.api.GrillDriver;
-import com.inmobi.grill.api.GrillResultSet;
-import com.inmobi.grill.api.QueryPlan;
-import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillDriver;
+import com.inmobi.grill.server.api.driver.GrillResultSet;
+import com.inmobi.grill.server.api.driver.QueryCompletionListener;
+import com.inmobi.grill.server.api.query.PreparedQueryContext;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 public class ImpalaDriver implements GrillDriver {
 
@@ -37,7 +41,7 @@ public class ImpalaDriver implements GrillDriver {
   }
 
   @Override
-  public QueryPlan explain(String query, Configuration conf) {
+  public DriverQueryPlan explain(String query, Configuration conf) {
     /*QueryCost q = new QueryCost();
     q.setExecMode(ExecMode.INTERACTIVE);
     q.setScanMode(ScanMode.FULL_SCAN);
@@ -47,7 +51,6 @@ public class ImpalaDriver implements GrillDriver {
     return null;
   }
 
-  @Override
   public GrillResultSet execute(String query, Configuration conf)
       throws GrillException {
     Query q = new Query();
@@ -114,26 +117,13 @@ public class ImpalaDriver implements GrillDriver {
   }
 
   @Override
-  public com.inmobi.grill.api.QueryHandle executeAsync(
-      String breezeQueryContext, Configuration conf) {
+  public QueryStatus getStatus(com.inmobi.grill.api.query.QueryHandle handle) {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public QueryStatus getStatus(com.inmobi.grill.api.QueryHandle handle) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public GrillResultSet fetchResultSet(com.inmobi.grill.api.QueryHandle handle) {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
-  @Override
-  public boolean cancelQuery(com.inmobi.grill.api.QueryHandle handle) {
+  public boolean cancelQuery(com.inmobi.grill.api.query.QueryHandle handle) {
     // TODO Auto-generated method stub
     return false;
   }
@@ -151,23 +141,63 @@ public class ImpalaDriver implements GrillDriver {
 	}
 
   @Override
-  public void closeQuery(com.inmobi.grill.api.QueryHandle arg0)
+  public void closeQuery(com.inmobi.grill.api.query.QueryHandle arg0)
       throws GrillException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public GrillResultSet executePrepare(com.inmobi.grill.api.QueryHandle arg0,
-      Configuration arg1) throws GrillException {
+  public void prepare(PreparedQueryContext pContext) throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
+      throws GrillException {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public void executePrepareAsync(com.inmobi.grill.api.QueryHandle arg0,
-      Configuration arg1) throws GrillException {
+  public void closePreparedQuery(QueryPrepareHandle handle)
+      throws GrillException {
     // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public GrillResultSet execute(QueryContext context) throws GrillException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public void executeAsync(QueryContext context) throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public GrillResultSet fetchResultSet(QueryContext context)
+      throws GrillException {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public void closeResultSet(com.inmobi.grill.api.query.QueryHandle handle)
+      throws GrillException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void registerForCompletionNotification(
+      com.inmobi.grill.api.query.QueryHandle handle, long timeoutMillis,
+      QueryCompletionListener listener) throws GrillException {
+    throw new GrillException("Not implemented");    
   }
 
   @Override

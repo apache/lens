@@ -1,4 +1,4 @@
-Package: grill
+Package: grill-server
 Version: [[project.version]] 
 Section:  misc
 Priority: high

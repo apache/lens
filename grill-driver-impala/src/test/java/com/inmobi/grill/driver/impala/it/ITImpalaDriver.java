@@ -7,9 +7,9 @@ import org.testng.annotations.Test;
 
 import org.apache.hadoop.conf.Configuration;
 
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.driver.impala.ImpalaDriver;
 import com.inmobi.grill.driver.impala.ImpalaResultSet;
-import com.inmobi.grill.exception.GrillException;
 
 public class ITImpalaDriver {
 
@@ -25,11 +25,11 @@ public class ITImpalaDriver {
 			ImpalaResultSet iResultSet = (ImpalaResultSet) iDriver
 					.execute("select * from emp", null);
 			if (iResultSet.hasNext()) {
-				row = iResultSet.next();
+				row = iResultSet.next().getValues();
 				System.out.println("Row1" + row);
 			}
 			if (iResultSet.hasNext()) {
-				row = iResultSet.next();
+				row = iResultSet.next().getValues();
 				System.out.println("Row2" + row);
 			}
 			Assert.assertTrue(true);

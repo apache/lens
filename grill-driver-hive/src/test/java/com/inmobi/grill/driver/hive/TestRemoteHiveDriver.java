@@ -1,7 +1,6 @@
 package com.inmobi.grill.driver.hive;
 
 
-import static org.junit.Assert.assertNotNull;
 import static org.testng.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
@@ -19,17 +18,18 @@ import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.QueryHandle;
-import com.inmobi.grill.api.QueryStatus;
-import com.inmobi.grill.api.QueryStatus.Status;
-import com.inmobi.grill.driver.hive.HiveDriver.QueryContext;
-import com.inmobi.grill.exception.GrillException;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.query.QueryContext;
 
 public class TestRemoteHiveDriver extends TestHiveDriver {
   public static final Log LOG = LogFactory.getLog(TestRemoteHiveDriver.class);
@@ -39,6 +39,17 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   private static HiveConf remoteConf = new HiveConf();
 
   @BeforeClass
+  public static void setupTest() throws Exception {
+    createHS2Service();
+
+    SessionState.start(remoteConf);
+    Hive client = Hive.get(remoteConf);
+    Database database = new Database();
+    database.setName(TestRemoteHiveDriver.class.getSimpleName());
+    client.createDatabase(database, true);
+    SessionState.get().setCurrentDatabase(TestRemoteHiveDriver.class.getSimpleName());
+  }
+
   public static void createHS2Service() throws Exception {
     remoteConf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, RemoteThriftConnection.class,
         ThriftConnection.class);
@@ -49,14 +60,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     remoteConf.setIntVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, 60000);
     remoteConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
-
-    SessionState.start(remoteConf);
-    Hive client = Hive.get(remoteConf);
-    Database database = new Database();
-    database.setName(TestRemoteHiveDriver.class.getSimpleName());
-    client.createDatabase(database, true);
-    SessionState.get().setCurrentDatabase(TestRemoteHiveDriver.class.getSimpleName());
-
     server = new HiveServer2();
     server.init(remoteConf);
     server.start();
@@ -65,13 +68,17 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   }
 
   @AfterClass
+  public static void cleanupTest() throws Exception  {
+    stopHS2Service();
+    Hive.get(remoteConf).dropDatabase(TestRemoteHiveDriver.class.getSimpleName(), true, true, true);
+  }
+
   public static void stopHS2Service() throws Exception  {
     try {
       server.stop();
     } catch (Exception e) {
       e.printStackTrace();
     }
-    Hive.get(remoteConf).dropDatabase(TestRemoteHiveDriver.class.getSimpleName(), true, true, true);
   }
 
   @BeforeMethod
@@ -80,14 +87,14 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf = new HiveConf(remoteConf);
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
-    assertNotNull(System.getProperty("hadoop.bin.path"));
+    Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
-    driver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), conf);
-    conf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
   }
 
   @AfterMethod
@@ -105,7 +112,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     thConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
-    thrDriver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), conf);
+    QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf);
+    driver.execute(ctx);
 
     // Launch a select query
     final int QUERIES = 5;
@@ -116,18 +124,18 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final AtomicInteger errCount = new AtomicInteger();
 
     for (int q = 0; q < QUERIES; q++) {
-      QueryHandle qhandle;
       try {
-        qhandle = thrDriver.executeAsync("SELECT * FROM test_multithreads", conf);
+        ctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
+        driver.executeAsync(ctx);
       } catch (GrillException e) {
         errCount.incrementAndGet();
         LOG.info(q + " executeAsync error: " + e.getCause());
         continue;
       }
-      LOG.info("@@ Launched query: " + q + " " + qhandle.getHandleId());
+      LOG.info("@@ Launched query: " + q + " " + ctx.getQueryHandle());
       launchedQueries++;
       // Launch many threads to poll for status
-      final QueryHandle handle = qhandle;
+      final QueryHandle handle = ctx.getQueryHandle();
 
       for (int i = 0; i < THREADS; i++) {
         int thid = q * THREADS + i;
