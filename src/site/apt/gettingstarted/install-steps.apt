@@ -95,22 +95,16 @@ Installing and running grill
 
 +---+
 
-  ├── bin
-  │   └── yoda-cube.sh
   ├── conf
   │   ├── grill-env.sh
   │   └── grill-client-site.xml
   └── lib
       ├── ST4-4.0.4.ja
        …….
-      ├── xmlenc-0.52.jar
-      ├── yoda-commons-0.6.77-20140123.065959-22.jar
-      └── yoda-udfs-0.6.77-20140113.091948-15.jar
+      └── xmlenc-0.52.jar 
 +---+
 
   The <bin> folder provides various scripts for the client.
-
-    * <<yoda-cube.sh>> provides ddl for yoda cubes - create/alter the cubes, facts and dimensions; and populate the partitions
 
     * <<run-examples.sh>> provides commands to run examples - create a sample metastore, populate metastore with sample data and run some example queries. This would validate your server is all up and running fine.
 

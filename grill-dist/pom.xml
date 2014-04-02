@@ -46,11 +46,6 @@
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-yoda</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.inmobi.grill</groupId>
       <artifactId>grill-storage-db</artifactId>
       <version>${project.version}</version>
     </dependency>
