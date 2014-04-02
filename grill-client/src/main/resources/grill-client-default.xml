@@ -39,4 +39,14 @@
     <value>metastore</value>
     <description>resource path to query webservice</description>
   </property>
+  <property>
+    <name>grill.user.name</name>
+    <value>anonymous</value>
+    <description>Grill client user name</description>
+  </property>
+  <property>
+    <name>grill.persistent.resultset</name>
+    <value>false</value>
+    <description>Whether to enable persistent resultset for queries</description>
+  </property>
 </configuration>

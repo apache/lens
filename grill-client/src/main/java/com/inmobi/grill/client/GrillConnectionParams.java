@@ -97,8 +97,10 @@ public class GrillConnectionParams {
   }
 
   public String getUser() {
+    return this.conf.getUser();
+    /*
     return this.sessionVars.get("user.name")!= null ?
-        this.sessionVars.get("user.name") : "";
+        this.sessionVars.get("user.name") : "";*/
   }
 
   public String getPassword() {

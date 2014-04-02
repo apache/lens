@@ -29,7 +29,18 @@ public class GrillClientConfig extends Configuration {
   private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000l;
   private static final String GRILL_METASTORE_RESOURCE_PATH = "grill.metastore.resource.path";
   private static final String DEFAULT_GRILL_METASTORE_RESOURCE_PATH = "metastore";
+  private static final String GRILL_USER_NAME = "grill.user.name";
+  public static final String DEFAULT_USER_NAME = "anonymous";
 
+
+  /** 
+   * Get the username from config
+   * 
+   * @return Returns grill client user name
+   */
+  public String getUser() {
+    return this.get(GRILL_USER_NAME, DEFAULT_USER_NAME);
+  }
 
   /**
    * Returns the configured grill server hostname

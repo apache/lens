@@ -215,7 +215,7 @@ public class GrillStatement {
   }
 
   public boolean wasQuerySuccessful() {
-    return query.getStatus().equals(QueryStatus.Status.SUCCESSFUL);
+    return query.getStatus().getStatus().equals(QueryStatus.Status.SUCCESSFUL);
   }
 
   public QueryStatus getStatus() {
