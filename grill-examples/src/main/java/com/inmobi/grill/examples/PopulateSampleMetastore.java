@@ -71,10 +71,10 @@ public class PopulateSampleMetastore {
     }
     result = metaClient.addPartitionToDimension("dim_table2", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Adding partition from:dim1-local-part.xml failed");
+      System.out.println("Adding partition from:dim2-local-part.xml failed");
       retCode = 1;
     } else {
-      System.out.println("Added partition from:dim1-local-part.xml");
+      System.out.println("Added partition from:dim2-local-part.xml");
     }
   }
 }
