@@ -9,7 +9,8 @@
     
   <artifactId>grill-client</artifactId>
   <packaging>jar</packaging>
-  <description> The grill client </description>
+  <name>Grill client </name>
+  <description>Grill client </description>
 
   <dependencies>
     <dependency>
