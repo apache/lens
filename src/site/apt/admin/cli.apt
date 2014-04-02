@@ -1,1 +1,28 @@
 Admin Command Line Interface Documentation
+
+* Server administration
+
+  The grill server installation comes with grill-ctl which provides following
+commands.
+
++---+
+
+       bin/grill-ctl start // Start the server
+       bin/grill-ctl stop // Stop the server
+       bin/grill-ctl restart // Restart the server, stop followed by stop
+       bin/grill-ctl force [stop|restart] // Forcefully stop the server 
+       bin/grill-ctl status // Server status
+       bin/grill-ctl stack // Dump the thread stacks
+       bin/grill-ctl memory-histogram // Server's memory histogram
+       bin/grill-ctl memory-dump // Server's memory dump dumped to file in log directory
+
++---+
+
+  grill-ctl accepts the following options for all the commands
+  
+  * "--conf" : User can pass optional conf directory
+  
+  * "--classpath" : User can pass optional classpath entries
+  
+  * "-D" : User can pass optional optional java properies
+

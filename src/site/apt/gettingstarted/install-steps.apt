@@ -34,10 +34,7 @@ Installing and running grill
 
   ├── bin
   │   ├── grill-config.sh
-  │   ├── grill-server-start
-  │   ├── grill-server-stop
-  │   ├── service-start.sh
-  │   └── service-stop.sh
+  │   └── grill-ctl
   ├── conf
   │   ├── grill-env.sh
   │   ├── grill-site.xml
@@ -55,7 +52,7 @@ Installing and running grill
       └── grill-server.war
 +---+
 
-  The <bin> folder provides <grill-server-start> and <grill-server-stop> commands for starting and stopping the grill server. Other .sh files in <bin> are the scripts used by start and stop scripts.
+  The <bin> folder provides <grill-ctl> which provides commands for starting and stopping the grill server. Other .sh files in <bin> are the scripts used by grill-ctl.
 
   The server war is available in webapp/ folder, which would be expanded in the same directory, if not overridden. And the lib folder contains all the dependent libraries.
 
@@ -74,7 +71,7 @@ Installing and running grill
 
 +---+
 
-  bin/grill-server-start
+  bin/grill-ctl start
 
 +---+
 
@@ -88,7 +85,7 @@ Installing and running grill
 
 +---+
 
-  bin/grill-server-stop
+  bin/grill-ctl stop
 
 +---+
 

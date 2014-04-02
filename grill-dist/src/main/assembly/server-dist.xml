@@ -77,10 +77,7 @@
       <outputDirectory>/bin/</outputDirectory>
       <includes>
         <include>grill-config.sh</include>
-        <include>service-start.sh</include>
-        <include>service-stop.sh</include>
-        <include>grill-server-start</include>
-        <include>grill-server-stop</include>
+        <include>grill-ctl</include>
       </includes>
     </fileSet>
 

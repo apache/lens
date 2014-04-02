@@ -72,19 +72,6 @@ case $type in
   server)
     GRILL_OPTS="$GRILL_OPTS $GRILL_SERVER_OPTS $GRILL_SERVER_HEAP"
     GRILLCPPATH="$GRILL_CONF" 
-    HADOOPDIR=`which hadoop`
-    if [ "$HADOOPDIR" != "" ]; then
-      echo "Hadoop is installed, using the installed hadoop for execution"
-#      echo "Hadoop is installed, adding hadoop classpath to grill classpath"
-#      GRILLCPPATH="${GRILLCPPATH}:`hadoop classpath`"
-    elif [ "$HADOOP_HOME" != "" ]; then
-      echo "Hadoop home is set, using the configured hadoop for execution"
-#      echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into grill classpath"
-#      GRILLCPPATH="${GRILLCPPATH}:${HADOOP_HOME}/lib/*"
-    else
-      echo "Could not find installed hadoop and HADOOP_HOME is not set."
-      exit 1
-    fi
     GRILL_EXPANDED_WEBAPP_DIR=${GRILL_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
     export GRILL_EXPANDED_WEBAPP_DIR
     # set the server classpath
