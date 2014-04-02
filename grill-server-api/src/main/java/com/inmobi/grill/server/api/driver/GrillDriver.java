@@ -1,5 +1,7 @@
 package com.inmobi.grill.server.api.driver;
 
+import java.io.Externalizable;
+
 import org.apache.hadoop.conf.Configuration;
 
 import com.inmobi.grill.api.GrillException;
@@ -9,7 +11,7 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
-public interface GrillDriver {
+public interface GrillDriver extends Externalizable {
 
   /**
    * Get driver configuration

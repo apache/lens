@@ -1,5 +1,8 @@
 package com.inmobi.grill.driver.impala;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -195,6 +198,18 @@ public class ImpalaDriver implements GrillDriver {
       com.inmobi.grill.api.query.QueryHandle handle, long timeoutMillis,
       QueryCompletionListener listener) throws GrillException {
     throw new GrillException("Not implemented");    
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    // TODO Auto-generated method stub
+    
   }
 
 }

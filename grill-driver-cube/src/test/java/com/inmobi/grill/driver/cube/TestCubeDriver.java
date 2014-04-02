@@ -1,5 +1,11 @@
 package com.inmobi.grill.driver.cube;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.Arrays;
+
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -10,6 +16,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 
 public class TestCubeDriver {
@@ -20,6 +27,7 @@ public class TestCubeDriver {
   @BeforeTest
   public void beforeTest() throws Exception {
     cubeDriver = new CubeGrillDriver(conf);
+    conf.setInt("mock.driver.test.val", 5);
   }
 
   @AfterTest
@@ -27,7 +35,7 @@ public class TestCubeDriver {
   }
 
   @Test
-  public void testCubeDriver() throws GrillException {
+  public void testCubeDriver() throws Exception {
     String addQ = "add jar xyz.jar";
     GrillResultSet result = cubeDriver.execute(addQ, conf);
     Assert.assertNotNull(result);
@@ -85,5 +93,30 @@ public class TestCubeDriver {
       th = e;
     }
     Assert.assertNotNull(th);
+  }
+
+  @Test
+  public void testCubeDriverReadWrite() throws Exception {
+    // Test read/write for cube driver
+    CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
+    ByteArrayOutputStream driverOut = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(driverOut);
+    cubeDriver.writeExternal(out);
+    out.close();
+    System.out.println(Arrays.toString(driverOut.toByteArray()));
+    
+    ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
+    conf.setInt("mock.driver.test.val", -1);
+    CubeGrillDriver newDriver = new CubeGrillDriver(conf);
+    newDriver.readExternal(new ObjectInputStream(driverIn));
+    driverIn.close();
+    Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
+    
+    for (GrillDriver driver : newDriver.getDrivers()) {
+      if (driver instanceof MockDriver) {
+        MockDriver md = (MockDriver) driver;
+        Assert.assertEquals(md.getTestIOVal(), 5);
+      }
+    }
   }
 }

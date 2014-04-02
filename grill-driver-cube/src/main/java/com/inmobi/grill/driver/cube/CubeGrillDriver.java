@@ -1,5 +1,8 @@
 package com.inmobi.grill.driver.cube;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -8,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 
@@ -27,7 +29,6 @@ import com.inmobi.grill.server.api.query.QueryContext;
 
 public class CubeGrillDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(CubeGrillDriver.class);
-  public static final String ENGINE_CONF_PREFIX = "grill.cube";
 
   private final List<GrillDriver> drivers;
   private final DriverSelector driverSelector;
@@ -271,4 +272,32 @@ public class CubeGrillDriver implements GrillDriver {
     throw new GrillException("Not implemented");
   }
 
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    drivers.clear();
+    int nDrivers = in.readInt();    
+    for (int i = 0; i < nDrivers; i++) {
+      try {
+        String driverClsName = in.readUTF();
+        Class<? extends GrillDriver> driverCls = 
+            (Class<? extends GrillDriver>)Class.forName(driverClsName);
+        GrillDriver driver = (GrillDriver) driverCls.newInstance();
+        driver.configure(conf);
+        driver.readExternal(in);
+        drivers.add(driver);
+      } catch (Exception exc) {
+        throw new IOException(exc);
+     }
+      
+    }
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    out.writeInt(drivers.size());
+    for (GrillDriver driver : drivers) {
+      out.writeUTF(driver.getClass().getName());
+      driver.writeExternal(out);
+    }
+  }
 }

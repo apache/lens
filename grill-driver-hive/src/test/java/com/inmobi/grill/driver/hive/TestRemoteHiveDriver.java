@@ -3,6 +3,10 @@ package com.inmobi.grill.driver.hive;
 
 import static org.testng.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -177,5 +181,69 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     assertEquals(launchedQueries, QUERIES);
     assertEquals(thrs.size(), QUERIES * THREADS);
     assertEquals(errCount.get(), 0);
+  }
+  
+  @Test
+  public void testHiveDriverPersistence() throws Exception {
+    System.out.println("@@@@ start_persistence_test");
+    HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
+    driverConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
+    
+    final HiveDriver oldDriver = new HiveDriver();
+    oldDriver.configure(driverConf);
+    
+    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
+    oldDriver.execute(ctx);
+    
+    String tableName = "test_hive_driver_persistence";
+
+    // Create some ops with a driver
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tableName +"(ID STRING)";
+    ctx = new QueryContext(createTable, null, driverConf);
+    oldDriver.execute(ctx);
+    
+    // Load some data into the table
+    String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
+    ctx = new QueryContext(dataLoad, null, driverConf);
+    oldDriver.execute(ctx);
+    
+    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    // Fire two queries
+    QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
+    oldDriver.executeAsync(ctx1);
+    QueryContext ctx2 = new QueryContext("SELECT ID FROM " + tableName, null, driverConf);
+    oldDriver.executeAsync(ctx2);
+    
+    // Write driver to stream
+    ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
+    try {
+      oldDriver.writeExternal(new ObjectOutputStream(driverBytes));
+    } finally {
+      driverBytes.close();
+    }
+    
+    // Create another driver from the stream
+    ByteArrayInputStream driverInput = new ByteArrayInputStream(driverBytes.toByteArray());
+    HiveDriver newDriver = new HiveDriver();
+    newDriver.readExternal(new ObjectInputStream(driverInput));
+    newDriver.configure(driverConf);
+    driverInput.close();
+    
+    // Check status from the new driver, should get all statuses back.
+    while (true) {
+      QueryStatus stat1 = newDriver.getStatus(ctx1.getQueryHandle());
+      Assert.assertNotNull(stat1);
+      QueryStatus stat2 = newDriver.getStatus(ctx2.getQueryHandle());
+      Assert.assertNotNull(stat2);
+      
+      if (stat1.isFinished() && stat2.isFinished()) {
+        break;
+      } else {
+        Thread.sleep(1000);
+      }
+    }
   }
 }
