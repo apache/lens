@@ -16,6 +16,9 @@ import com.inmobi.grill.server.api.query.QueryContext;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -552,5 +555,18 @@ public class JDBCDriver implements GrillDriver {
     } finally {
       queryContextMap.clear();
     }
+  }
+
+  @Override
+  public void readExternal(ObjectInput arg0) throws IOException,
+      ClassNotFoundException {
+    // TODO Auto-generated method stub
+    
+  }
+
+  @Override
+  public void writeExternal(ObjectOutput arg0) throws IOException {
+    // TODO Auto-generated method stub
+    
   }
 }

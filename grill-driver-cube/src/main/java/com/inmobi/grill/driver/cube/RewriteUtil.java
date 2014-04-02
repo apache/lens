@@ -30,26 +30,26 @@ public class RewriteUtil {
     ASTNode cubeAST;
   }
 
-  static List<RewriteUtil.CubeQueryInfo> findCubePositions(String query)
+  static List<CubeQueryInfo> findCubePositions(String query)
       throws SemanticException, ParseException {
     ASTNode ast = HQLParser.parseHQL(query);
     CubeGrillDriver.LOG.debug("User query AST:" + ast.dump());
-    List<RewriteUtil.CubeQueryInfo> cubeQueries = new ArrayList<RewriteUtil.CubeQueryInfo>();
-    RewriteUtil.findCubePositions(ast, cubeQueries, query.length());
-    for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+    List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
+    findCubePositions(ast, cubeQueries, query);
+    for (CubeQueryInfo cqi : cubeQueries) {
       cqi.query = query.substring(cqi.startPos, cqi.endPos);
     }
     return cubeQueries;
   }
 
-  static void findCubePositions(ASTNode ast, List<RewriteUtil.CubeQueryInfo> cubeQueries,
-      int queryEndPos)
+  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries,
+      String originalQuery)
           throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
           ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
-        RewriteUtil.CubeQueryInfo cqi = new RewriteUtil.CubeQueryInfo();
+        CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
           ASTNode parent = (ASTNode) ast.getParent();
@@ -58,14 +58,16 @@ public class RewriteUtil {
           if (parent.getToken() == null ||
               parent.getToken().getType() == HiveParser.TOK_EXPLAIN) {
             // Not a sub query
-            cqi.endPos = queryEndPos;
+            cqi.endPos = originalQuery.length();
           } else if (parent.getChildCount() > ci + 1) {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
-              //one less for the next start and one for close parenthesis
-              cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine() - 2;
+              //less for the next start and for close parenthesis
+              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");;
             } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
-              //one less for the next start and less the size of string ' UNION ALL'
-              cqi.endPos = parent.getChild(ci + 1).getCharPositionInLine() - 11;
+              //one less for the next start and less the size of string 'UNION ALL'
+              cqi.endPos = getEndPos(originalQuery,
+                  parent.getChild(ci + 1).getCharPositionInLine() - 1,
+                  "UNION ALL");
             } else {
               // Not expected to reach here
               CubeGrillDriver.LOG.warn("Unknown query pattern found with AST:" + ast.dump());
@@ -73,17 +75,37 @@ public class RewriteUtil {
             }
           } else {
             // last child of union all query
-            cqi.endPos = parent.getParent().getChild(1).getCharPositionInLine() - 2;
+            // one for next AST
+            // and one for the close parenthesis if there are no more unionall
+            // or one for the string 'UNION ALL' if there are more union all
+            cqi.endPos = getEndPos(originalQuery,
+                parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
         }
         cubeQueries.add(cqi);
       }
       else {
         for (int child_pos = 0; child_pos < child_count; ++child_pos) {
-          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, queryEndPos);
+          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, originalQuery);
         }
       }
     } 
+  }
+
+  private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
+    if (backTrackStr != null) {
+      String q = query.substring(0, backTrackIndex).toLowerCase();
+      for (int i = 0; i < backTrackStr.length; i++) {
+      if (q.trim().endsWith(backTrackStr[i].toLowerCase())) {
+        backTrackIndex = q.lastIndexOf(backTrackStr[i].toLowerCase());
+        break;
+      }
+      }
+    }
+    while (Character.isSpaceChar(query.charAt(backTrackIndex - 1))) {
+      backTrackIndex--;
+    }
+    return backTrackIndex;
   }
 
   static CubeQueryRewriter getRewriter(GrillDriver driver) throws SemanticException {

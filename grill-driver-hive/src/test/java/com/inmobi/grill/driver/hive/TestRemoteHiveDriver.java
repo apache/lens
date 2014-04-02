@@ -192,26 +192,30 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final HiveDriver oldDriver = new HiveDriver();
     oldDriver.configure(driverConf);
     
-    driverConf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, false);
-    driverConf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, false);
-    oldDriver.execute("USE " + TestRemoteHiveDriver.class.getSimpleName(), driverConf);
+    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
+    oldDriver.execute(ctx);
     
     String tableName = "test_hive_driver_persistence";
 
     // Create some ops with a driver
-    String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)";
-    oldDriver.execute(createTable, driverConf);
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tableName +"(ID STRING)";
+    ctx = new QueryContext(createTable, null, driverConf);
+    oldDriver.execute(ctx);
     
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
-    oldDriver.execute(dataLoad, driverConf);
+    ctx = new QueryContext(dataLoad, null, driverConf);
+    oldDriver.execute(ctx);
     
-    driverConf.setBoolean(HiveDriver.GRILL_ADD_INSERT_OVEWRITE, true);
-    driverConf.setBoolean(HiveDriver.GRILL_PERSISTENT_RESULT_SET, true);
+    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     // Fire two queries
-    QueryHandle query1 = oldDriver.executeAsync("SELECT * FROM " + tableName, driverConf);
-    
-    QueryHandle query2 = oldDriver.executeAsync("SELECT ID FROM " + tableName, driverConf);
+    QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
+    oldDriver.executeAsync(ctx1);
+    QueryContext ctx2 = new QueryContext("SELECT ID FROM " + tableName, null, driverConf);
+    oldDriver.executeAsync(ctx2);
     
     // Write driver to stream
     ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
@@ -230,23 +234,16 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     
     // Check status from the new driver, should get all statuses back.
     while (true) {
-      QueryStatus stat1 = newDriver.getStatus(query1);
-      assertNotNull(stat1);
-      System.out.println("@@ stat1 " + query1 + " > " + stat1.getStatus());
-      QueryStatus stat2 = newDriver.getStatus(query2);
-      assertNotNull(stat2);
-      System.out.println("@@ stat2 " + query2 + " > " + stat2.getStatus());
+      QueryStatus stat1 = newDriver.getStatus(ctx1.getQueryHandle());
+      Assert.assertNotNull(stat1);
+      QueryStatus stat2 = newDriver.getStatus(ctx2.getQueryHandle());
+      Assert.assertNotNull(stat2);
       
-      if (isFinished(stat1) && isFinished(stat2)) {
+      if (stat1.isFinished() && stat2.isFinished()) {
         break;
       } else {
         Thread.sleep(1000);
       }
     }
-  }
-  
-  private boolean isFinished(QueryStatus stat) {
-    QueryStatus.Status s = stat.getStatus();
-    return s == Status.CANCELED || s == Status.FAILED || s == Status.CLOSED || s == Status.SUCCESSFUL;
   }
 }

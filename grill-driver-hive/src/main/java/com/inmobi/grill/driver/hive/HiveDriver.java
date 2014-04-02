@@ -2,7 +2,12 @@ package com.inmobi.grill.driver.hive;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.*;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -23,8 +28,9 @@ import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.OperationState;
 import org.apache.hive.service.cli.OperationStatus;
 import org.apache.hive.service.cli.SessionHandle;
-import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
-import org.apache.hive.service.cli.thrift.TStringValue;
+import org.apache.hive.service.cli.thrift.TProtocolVersion;
+import org.apache.hive.service.cli.thrift.TSessionHandle;
+import org.apache.hive.service.cli.thrift.TOperationHandle;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -509,7 +515,10 @@ public class HiveDriver implements GrillDriver {
   private SessionHandle getSession(QueryContext ctx) throws GrillException {
     sessionLock.lock();
     try {
-      String grillSession = ctx.getGrillSessionIdentifier();
+      String grillSession = null;
+      if (SessionState.get() != null) {
+        grillSession = SessionState.get().getSessionId();
+      }
       SessionHandle userSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
@@ -601,34 +610,36 @@ public class HiveDriver implements GrillDriver {
   
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-    int numPairs = in.readInt();
-    synchronized(handleToContext) {
-      for (int i = 0; i < numPairs; i++) {
-        QueryHandle handle = new QueryHandle((UUID)in.readObject());
-        String resultSetPath = in.readUTF();
-        Path resultPath = new Path(resultSetPath);
+    synchronized(hiveHandles) {
+      int numHiveHnadles = in.readInt();
+      for (int i = 0; i < numHiveHnadles; i++) {
+        QueryHandle qhandle = (QueryHandle)in.readObject();
         OperationHandle opHandle = new OperationHandle((TOperationHandle) in.readObject());
-        QueryContext ctx = (QueryContext) in.readObject();
-        ctx.hiveHandle = opHandle;
-        ctx.resultSetPath = resultPath;
-        ctx.queryHandle = handle;
-        handleToContext.put(ctx.queryHandle, ctx);
+        hiveHandles.put(qhandle, opHandle);
+      }
+      int numSessions = in.readInt();
+      for (int i = 0; i < numSessions; i++) {
+        String grillId = in.readUTF();
+        SessionHandle sHandle = new SessionHandle((TSessionHandle) in.readObject(),
+            TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6);
+        grillToHiveSession.put(grillId, sHandle);
       }
     }
   }
-
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // Write the query handle to hive handle map to output
-    synchronized(handleToContext) {
-      out.writeInt(handleToContext.size());
-      for (QueryContext queryContext : handleToContext.values()) {
-        out.writeObject(queryContext.queryHandle.getHandleId());
-        out.writeUTF(queryContext.resultSetPath.toString());
-        out.writeObject(queryContext.hiveHandle.toTOperationHandle());
-        out.writeObject(queryContext);
+    synchronized (hiveHandles) {
+      out.writeInt(hiveHandles.size());
+      for (Map.Entry<QueryHandle, OperationHandle> entry : hiveHandles.entrySet()) {
+        out.writeObject(entry.getKey());
+        out.writeObject(entry.getValue().toTOperationHandle());
+      }
+      out.writeInt(grillToHiveSession.size());
+      for (Map.Entry<String, SessionHandle> entry : grillToHiveSession.entrySet()) {
+        out.writeUTF(entry.getKey());
+        out.writeObject(entry.getValue().toTSessionHandle());
       }
     }
-  }
-}
+  }}
