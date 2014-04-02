@@ -13,7 +13,6 @@
     <grizzly.version>2.3.6</grizzly.version>
     <servlet3.version>3.0.1</servlet3.version>
     <slf4j.version>1.7.6</slf4j.version>
-    <yoda.version>0.6.77-SNAPSHOT</yoda.version>
   </properties>
 
   <groupId>com.inmobi.grill</groupId>
@@ -419,52 +418,6 @@
        <artifactId>jul-to-slf4j</artifactId>
        <version>${slf4j.version}</version>
       </dependency>
-      <dependency>
-        <groupId>com.inmobi.dw.yoda</groupId>
-        <artifactId>yoda-commons</artifactId>
-        <version>${yoda.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.apache.hadoop.hive</groupId>
-            <artifactId>hive-exec</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-       <dependency>
-           <groupId>com.inmobi.dw.yoda</groupId>
-           <artifactId>yoda-udfs</artifactId>
-           <version>${yoda.version}</version>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.apache.hadoop.hive</groupId>
-                   <artifactId>hive-exec</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
-       <dependency>
-           <groupId>com.inmobi.dw.yoda</groupId>
-           <artifactId>fpjamr</artifactId>
-           <version>${yoda.version}</version>
-           <classifier>without-dependency</classifier>
-           <exclusions>
-               <exclusion>
-                   <groupId>org.apache.hadoop.hive</groupId>
-                   <artifactId>hive-exec</artifactId>
-               </exclusion>
-           </exclusions>
-       </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-moxy</artifactId>
