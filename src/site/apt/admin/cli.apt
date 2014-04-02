@@ -20,9 +20,12 @@ commands.
 
   grill-ctl accepts the following options for all the commands
   
-  * "--conf" : User can pass optional conf directory
+  * "--conf or -c" : User can pass optional conf directory
   
-  * "--classpath" : User can pass optional classpath entries
+  * "--classpath or -C" : User can pass optional classpath entries
   
   * "-D" : User can pass optional optional java properies
+  
+  * "--verbose or -v" : Do the action in verbose mode. Currently applicable only to 'Start' command, which will start server is in non-daemon mode.
+
 

@@ -69,6 +69,9 @@ Usage: $0 start // Start the server
        $0 stack // Dump the thread stacks
        $0 memory-histogram // Server's memory histogram
        $0 memory-dump // Server's memory dump dumped to file in log directory
+       
+  Optional parameters for the commands --conf/-c, --classpath/-C, -D, --verbose/-v
+  
 EOF
 }
 
@@ -81,39 +84,44 @@ start() {
     fi
   fi
 
-    HADOOPDIR=`which hadoop`
-    if [ "$HADOOPDIR" != "" ]; then  
-      echo "Hadoop is installed, using the installed hadoop for execution"
-#      echo "Hadoop is installed, adding hadoop classpath to grill classpath"
-#      GRILLCPPATH="${GRILLCPPATH}:`hadoop classpath`"
-    elif [ "$HADOOP_HOME" != "" ]; then    
-      echo "Hadoop home is set, using the configured hadoop for execution"
-#      echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into grill classpath"
-#      GRILLCPPATH="${GRILLCPPATH}:${HADOOP_HOME}/lib/*"
-    else
-      echo "Could not find installed hadoop and HADOOP_HOME is not set."
-      exit 1
-    fi
+  HADOOPDIR=`which hadoop`
+  if [ "$HADOOPDIR" != "" ]; then  
+    echo "Hadoop is installed, using the installed hadoop for execution"
+#   echo "Hadoop is installed, adding hadoop classpath to grill classpath"
+#   GRILLCPPATH="${GRILLCPPATH}:`hadoop classpath`"
+  elif [ "$HADOOP_HOME" != "" ]; then    
+    echo "Hadoop home is set, using the configured hadoop for execution"
+#   echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into grill classpath"
+#   GRILLCPPATH="${GRILLCPPATH}:${HADOOP_HOME}/lib/*"
+  else
+    echo "Could not find installed hadoop and HADOOP_HOME is not set."
+    exit 1
+  fi
 
   mkdir -p $GRILL_LOG_DIR
 
-  pushd ${BASEDIR} > /dev/null
-
-  JAVA_PROPERTIES="$GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
+  JAVA_PROPERTIES="${JAVA_PROPERTIES} $GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
   shift
 
   while [[ ${1} =~ ^\-D ]]; do
     JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
   shift
   done
-  TIME=`date +%Y%m%d%H%M%s`
+  
+  if [ -n "$opt_verbose" ] ; then
+    JAVA_PROPERTIES="-Dgrillserver.root.logger=INFO,CONSOLE -Dgrillserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
+    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $*
+  else 
+  pushd ${BASEDIR} > /dev/null
+    TIME=`date +%Y%m%d%H%M%s`
 
-  nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
-  echo $! > $GRILL_PID_FILE
-  popd > /dev/null
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
+    echo $! > $GRILL_PID_FILE
+    popd > /dev/null
 
-  echo Started grill server!
-  exit 0
+    echo Started grill server!
+    exit 0
+  fi
 }
 
 restart() {
@@ -268,6 +276,10 @@ while [ -n "$*" ] ; do
     --conf|-c)
       [ -n "$1" ] || error "Option --conf requires an argument" 1
       opt_conf=$1
+      shift
+      ;;
+    --verbose|-v)
+      opt_verbose=1
       shift
       ;;
     --classpath|-C)
