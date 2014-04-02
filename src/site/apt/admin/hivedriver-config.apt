@@ -27,4 +27,4 @@ Hive driver configuration
 *--+--+---+--+
 |11|hive.server2.thrift.port|10000|The port on which hive server is running|
 *--+--+---+--+
-The default configuration options and default values
+The configuration parameters and their default values

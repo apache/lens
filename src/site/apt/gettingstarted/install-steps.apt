@@ -94,12 +94,41 @@ Installing and running grill
   The directory structure of the client installation :
 
 +---+
-
+  ├── bin
+  │   ├── grill-cli.sh
+  │   ├── grill-config.sh
+  │   └── run-examples.sh
   ├── conf
-  │   ├── grill-env.sh
-  │   └── grill-client-site.xml
+  │   ├── grill-client-site.xml
+  │   ├── grill-env.sh
+  │   └── log4j.properties
+  ├── examples
+  │   ├── data
+  │   │   ├── dim1_local
+  │   │   │   └── dim1-local.data
+  │   │   └── dim2_local
+  │   │       └── dim2-local.data
+  │   ├── queries
+  │   │   └── dimension-queries.txt
+  │   └── resources
+  │       ├── db-storage.xml
+  │       ├── dim1-local-part.xml
+  │       ├── dim1-storage-tables.xml
+  │       ├── dim2-local-part.xml
+  │       ├── dim2-storage-tables.xml
+  │       ├── dim_table.xml
+  │       ├── dim_table2.xml
+  │       ├── fact1-storage-tables.xml
+  │       ├── fact1.xml
+  │       ├── fact2-storage-tables.xml
+  │       ├── fact2.xml
+  │       ├── local-cluster-storage.xml
+  │       ├── local-storage.xml
+  │       ├── rawfact-storage-tables.xml
+  │       ├── rawfact.xml
+  │       └── sample-cube.xml
   └── lib
-      ├── ST4-4.0.4.ja
+      ├── ST4-4.0.4.jar
        …….
       └── xmlenc-0.52.jar 
 +---+
@@ -108,4 +137,13 @@ Installing and running grill
 
     * <<run-examples.sh>> provides commands to run examples - create a sample metastore, populate metastore with sample data and run some example queries. This would validate your server is all up and running fine.
 
+    * <<grill-cli.sh>> provides CLI shell for running various commands. Its usage is more described in CLI user guide.
+    
+    * <<grill-config.sh>> is used internally by other scripts
+    
+  Client configuration can be overridden in grill-client-site.xml. See {{{../user/client-config.html}client configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in grill-env.sh.
 
+  The client logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
+  
+  Examples folder contains sample resource files, data files and query files which will be used by <<run-examples.sh>> script.
+  

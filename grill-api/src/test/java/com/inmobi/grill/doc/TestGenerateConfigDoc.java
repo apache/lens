@@ -4,12 +4,9 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -25,19 +22,27 @@ import org.xml.sax.helpers.DefaultHandler;
 public class TestGenerateConfigDoc {
   public static final String SERVER_CONF_FILE = "../grill-server/src/main/resources/grill-default.xml";
   public static final String HIVE_DRIVER_CONF_FILE = "../grill-driver-hive/src/main/resources/hivedriver-default.xml";
+  public static final String CLIENT_CONF_FILE = "../grill-client/src/main/resources/grill-client-default.xml";
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";
+  public static final String CLIENT_APT_FILE = "../src/site/apt/user/client-config.apt";
   
   @Test
   public void generateServerConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(SERVER_CONF_FILE, APT_FILE);
-    printer.generateDoc("Grill configuration");
+    printer.generateDoc("Grill server configuration");
   }
 
   @Test
   public void generateHivedriverConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(HIVE_DRIVER_CONF_FILE, HIVE_DRIVER_APT_FILE);
     printer.generateDoc("Hive driver configuration");
+  }
+
+  @Test
+  public void generateClientConfigDoc() throws Exception {
+    ConfigPrinter printer = new ConfigPrinter(CLIENT_CONF_FILE, CLIENT_APT_FILE);
+    printer.generateDoc("Grill client configuration");
   }
 
   class ConfigEntry {
@@ -151,7 +156,7 @@ public class TestGenerateConfigDoc {
           apt.println("|");
         }
         apt.println("*--+--+---+--+");
-        apt.println("The default configuration options and default values");
+        apt.println("The configuration parameters and their default values");
         apt.flush();
       } finally {
         if (apt != null) {

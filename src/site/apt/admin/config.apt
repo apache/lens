@@ -1,4 +1,4 @@
-Grill configuration
+Grill server configuration
 
 ===
 
@@ -43,4 +43,4 @@ Grill configuration
 *--+--+---+--+
 |19|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-The default configuration options and default values
+The configuration parameters and their default values
