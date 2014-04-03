@@ -5,7 +5,7 @@ die() {
     exit 1
 }
 
-REPO=git@github.com:jdhok/grill.git
+REPO=git@github.com:InMobi/grill.git
 TMP=/tmp/grill-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/grill-server/target/site/wsdocs

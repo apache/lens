@@ -26,8 +26,8 @@
 	<bannerLeft>
     <name>Grill Analytics Platform for InMobi</name>
 		<title>Grill Analytics Platform</title>
-		<src>http://github.corp.inmobi.com/pages/platform/grill/grill-logo.png</src>
-		<href>http://github.corp.inmobi.com/pages/platform/grill</href>
+		<src>http://inmobi.github.io/grill/grill-logo.png</src>
+		<href>http://inmobi.github.io/grill</href>
   </bannerLeft>
 	
  <body>
@@ -56,8 +56,8 @@
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>
-      <item name="InMobi Tech Platform" href="https://github.corp.inmobi.com/platform/" />
-      <item name="Grill" href="https://github.corp.inmobi.com/platform/grill" />
+      <item name="InMobi" href="https://github.com/InMobi" />
+			<item name="Grill" href="https://github.com/InMobi/grill" />
     </breadcrumbs>
   </body>
   <skin>
