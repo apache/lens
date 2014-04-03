@@ -51,6 +51,8 @@ public class GrillClientConfig extends Configuration {
   private static final String DEFAULT_GRILL_METASTORE_RESOURCE_PATH = "metastore";
   private static final String GRILL_USER_NAME = "grill.user.name";
   public static final String DEFAULT_USER_NAME = "anonymous";
+  private static final String GRILL_USER_PASS = "grill.user.password";
+  public static final String DEFAULT_USER_PASS = "";
 
 
   /** 
@@ -152,5 +154,9 @@ public class GrillClientConfig extends Configuration {
 
   public String getMetastoreResourcePath() {
     return this.get(GRILL_METASTORE_RESOURCE_PATH, DEFAULT_GRILL_METASTORE_RESOURCE_PATH);
+  }
+
+  public String getPassword() {
+    return this.get(GRILL_USER_PASS, DEFAULT_USER_PASS);
   }
 }
