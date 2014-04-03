@@ -211,14 +211,14 @@
   <repositories>
      <repository>
        <id>inmobi.repo</id>
-       <url>https://raw.github.com/InMobi/mvn-repo/master/releases</url>
+       <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
        <snapshots>
           <enabled>false</enabled>
        </snapshots>
      </repository>
      <repository>
        <id>inmobi.snapshots</id>
-       <url>https://raw.github.com/InMobi/mvn-repo/master/snapshots</url>
+       <url>https://github.com/InMobi/mvn-repo/raw/master/snapshots</url>
        <releases>
          <enabled>false</enabled>
        </releases>
@@ -270,11 +270,17 @@
          <repository>
         <id>projectlombok.org</id>
         <url>http://projectlombok.org/mavenrepo</url>
-    </repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
     <!-- see https://jira.springsource.org/browse/SHL-52 -->
     <repository>
       <id>ext-release-local</id>
       <url>http://repo.springsource.org/simple/ext-release-local/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
     </repository>
   </repositories>
 
