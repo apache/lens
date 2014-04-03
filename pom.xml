@@ -617,11 +617,22 @@
  </dependencyManagement>
 
   <distributionManagement>
+    <repository>
+      <id>InMobiReleases</id>
+      <name>InMobi release Repository</name>
+      <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
+    </repository>
+    <snapshotRepository>
+      <id>InMobiSnapshots</id>
+      <name>InMobi snapshot Repository</name>
+      <url>https://github.com/InMobi/mvn-repo/raw/master/snapshots</url>
+    </snapshotRepository>
     <site>
-      <id>Grill</id>
-			<url>https://raw.github.corp.inmobi.com/platform/grill-site/grill-server</url>
+      <id>grill-site</id>
+      <url>https://inmobi.github.io/grill/</url>
     </site>
   </distributionManagement>
+
 
   <modules>
     <module>grill-api</module>

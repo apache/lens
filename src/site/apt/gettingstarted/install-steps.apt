@@ -27,9 +27,9 @@ Installing and running grill
 
 +---+
 
-   git clone https://github.corp.inmobi.com/platform/grill
+   git clone https://github.com/InMobi/grill
 
-   git checkout grill-server
+   git checkout develop
 
    cd grill
 
