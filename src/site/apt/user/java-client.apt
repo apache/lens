@@ -18,3 +18,19 @@
 ~~ #L%
 ~~~
 Grill Java Client Library Guide
+
+  This document describes how to use Grill Java Client library in your projects.
+
+
+  <<Configuring Grill Client>>
+
+    Add <<<grill-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
+
+
+  <<Running and Managing queries>>
+
+    For connecting to Grill Server please take a look at {{{../apidocs/com/inmobi/grill/client/package-summary.html}GrillConnection}}
+
+    For Running queries please take a look at {{{../apidocs/com/inmobi/grill/client/package-summary.html}GrillStatement}}
+
+    For Metadata operation please take a look at {{{../apidocs/com/inmobi/grill/client/package-summary.html}GrillMetadataClient}}
