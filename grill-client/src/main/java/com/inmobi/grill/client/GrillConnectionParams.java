@@ -128,8 +128,7 @@ public class GrillConnectionParams {
   }
 
   public String getPassword() {
-    return this.sessionVars.get("user.password") != null ?
-        this.sessionVars.get("user.password") : "";
+    return this.conf.getPassword();
   }
 
   public String getSessionResourcePath() {

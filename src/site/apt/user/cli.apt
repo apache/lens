@@ -17,4 +17,158 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-User CLI Docs
+User CLI Commands
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| query execute <sql-text> [async] | Executes Query specified in <sql-text> in synchronous manner unless <async> flag is passed. If <async> flag is passed then query handle is printed which can be used for query management|
+*--+--+
+| query status <query-handle> | Prints the Status of query mentioned in Query Handle|
+*--+--+
+| query explain <sql-text> | Prints query execution plan of  <sql-text>|
+*--+--+
+| query list | Prints list of queries associated to the current session|
+*--+--+
+| query kill <query-handle> | Kill the execution of query specified by <query-handle>|
+*--+--+
+| query results <query-handle> | Prints the result of Async query specified by <query-handle>|
+*--+--+
+<<Grill Query management Command>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| set <name>=<value> | Assign <<value>> to session parameter specified with <<name>> on grill server|
+*--+--+
+| get <name>| Fetches and prints session parameter specified with name <<name>> from grill server|
+*--+--+
+| show params| Fetches and prints  all session parameter from grill server|
+*--+--+
+| show params| Fetches and prints  all session parameter from grill server|
+*--+--+
+| add jar <path to jar file>| Adds jar resource to the session|
+*--+--+
+| add file <path to file>| Adds the file resource to the session|
+*--+--+
+| remove jar <path to file> | removes jar resource from the session|
+*--+--+
+| remove file <path to file> | remove the file resource from the session|
+*--+--+
+| close| Closes the session on the grill server and exits the shell|
+*--+--+
+<<Grill Session Management Command list>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| show cubes| Displays list of cubes|
+*--+--+
+| create cube <path to cube-spec.xml>| Creates a cube specified in <cube-spec.xml>|
+*--+--+
+| drop cube <cube-name>| Drops a cube specified by the name|
+*--+--+
+| update cube <cube-name> <cube-spec>| updates the cube with <cube-name> to cube specification specified in <cube-spec> file|
+*--+--+
+| describe cube <cube-name> | Print the schema of the cube|
+*--+--+
+<<Grill Cube Management Command list>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| show database | prints a list of databases on grill server|
+*--+--+
+| use <database-name>| Sets the session database to database specified by <database-name>|
+*--+--+
+| create database <database-name>| creates a database specified by <database-name>|
+*--+--+
+| drop database <database-name> | drops the database specified by <database-name>|
+*--+--+
+<<Grill Database Management Command list>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| show dimensions| print all the dimension tables present in the current database|
+*--+--+
+| create dimension <dimension-spec> <storage-spec>| Creates a new dimesion table with specification specified in <dimension-spec> file  and storage specified in <storage-spec> file|
+*--+--+
+| update dimension <dimension-table> <dimension-spec>| Updates dimension table <dimension-table> as specified in the <dimension-spec> file|
+*--+--+
+| drop dimension <dimension-table> | drops dimension table <dimension-table> |
+*--+--+
+| describe dimension <dimension-table> | Prints the Schema and property of Dimension table <dimension-table> |
+*--+--+
+| dim list storage <dimension-table> | Prints list of storages associated to a particular <dimension-table> |
+*--+--+
+| dim add storage <dimension-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <dimension-table> |
+*--+--+
+| dim drop storage <dimension-table> <storage-name>| Drops <storage-name> specified in <dimension-table> |
+*--+--+
+| dim get storage <dimension-table> <storage-name>| Prints schema of the <storage-name> in <dimension-table>|
+*--+--+
+| dim list partitions <dimension-table> <storage-name> | Prints list of partitions from <storage-name> in <dimension-table>|
+*--+--+
+| dim drop partitions <dimension-table> <storage-name> | drops all partitions from  <storage-name> in <dimension-table>|
+*--+--+
+| dim add partition <dimension-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <dimension-table>|
+*--+--+
+<<Grill Dimension Table Management Command list>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| show facts| print all the fact tables present in the current database|
+*--+--+
+| create fact <fact-spec> <storage-spec>| Creates a new fact table with specification specified in <fact-spec> file  and storage specified in <storage-spec> file|
+*--+--+
+| update fact <fact-table> <fact-spec>| Updates fact table <fact-table> as specified in the <fact-spec> file|
+*--+--+
+| drop fact <fact-table> | drops fact table <fact-table> |
+*--+--+
+| describe fact <fact-table> | Prints the Schema and property of fact table <fact-table> |
+*--+--+
+| fact list storage <fact-table> | Prints list of storages associated to a particular <fact-table> |
+*--+--+
+| fact add storage <fact-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <fact-table> |
+*--+--+
+| fact drop storage <fact-table> <storage-name>| Drops <storage-name> specified in <fact-table> |
+*--+--+
+| fact get storage <fact-table> <storage-name>| Prints schema of the <storage-name> in <fact-table>|
+*--+--+
+| fact list partitions <fact-table> <storage-name> | Prints list of partitions from <storage-name> in <fact-table>|
+*--+--+
+| fact drop partitions <fact-table> <storage-name> | drops all partitions from  <storage-name> in <fact-table>|
+*--+--+
+| fact add partition <fact-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <fact-table>|
+*--+--+
+<<Grill Fact table Management list>>
+
+===
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+| show storage| print all the storages present in the current database|
+*--+--+
+| create storage <storage-spec>| Creates a new storage specified in <storage-spec> file|
+*--+--+
+| update storage <storage-table> <storage-spec>| Updates storage <storage-table> as specified in the <storage-spec> file|
+*--+--+
+| drop storage <storage-table> | drops storage table <dimension-table> |
+*--+--+
+| describe storage <storage-table> | Prints the Schema and properties of Storage table <storage-table> |
+*--+--+
+<<Grill Storage Management List>>
+

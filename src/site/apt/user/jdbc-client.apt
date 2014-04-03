@@ -18,3 +18,21 @@
 ~~ #L%
 ~~~
 JDBC Client
+
+  This document describes how to use Grill JDBC Client library in your projects.
+
+
+  <<Using JDBC driver.>>
+
+    The main driver class for accessing grill server is <<<com.inmobi.grill.client.jdbc.GrillJdbcDriver.java>>>
+
+    Add <<<grill-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
+
+    The URI format for connecting to the grill server is of following format :
+
+
+    <<<jdbc:grill://<hostname>:<port>/<database>;<session confs key value pairs delimited by ;>?<grill-conf key value pair delimited by ;>#<session variables key value pair seperated by ;> >>>
+
+    For Example:
+
+    <<<jdbc:grill://localhost:9000/default;key1=val1;key2=val2?gck1=val1#sess-var1=val1>>>
