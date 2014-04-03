@@ -139,13 +139,13 @@ User CLI Commands
 *--+--+
 | describe fact <fact-table> | Prints the Schema and property of fact table <fact-table> |
 *--+--+
-| dim list storage <fact-table> | Prints list of storages associated to a particular <fact-table> |
+| fact list storage <fact-table> | Prints list of storages associated to a particular <fact-table> |
 *--+--+
-| dim add storage <fact-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <fact-table> |
+| fact add storage <fact-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <fact-table> |
 *--+--+
-| dim drop storage <fact-table> <storage-name>| Drops <storage-name> specified in <fact-table> |
+| fact drop storage <fact-table> <storage-name>| Drops <storage-name> specified in <fact-table> |
 *--+--+
-| dim get storage <fact-table> <storage-name>| Prints schema of the <storage-name> in <fact-table>|
+| fact get storage <fact-table> <storage-name>| Prints schema of the <storage-name> in <fact-table>|
 *--+--+
 | dim list partitions <fact-table> <storage-name> | Prints list of partitions from <storage-name> in <fact-table>|
 *--+--+
