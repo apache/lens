@@ -24,6 +24,7 @@ package com.inmobi.grill.client;
 import com.inmobi.grill.api.GrillConf;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -32,9 +33,9 @@ import java.util.Map;
  */
 public class GrillConnectionParams {
 
-  private Map<String,String> grillConfs = new HashMap<String, String>();
-  private Map<String,String> grillVars = new HashMap<String, String>();
-  private Map<String,String> sessionVars = new HashMap<String, String>();
+  private Map<String, String> grillConfs = new HashMap<String, String>();
+  private Map<String, String> grillVars = new HashMap<String, String>();
+  private Map<String, String> sessionVars = new HashMap<String, String>();
 
   private final GrillClientConfig conf;
 
@@ -58,6 +59,7 @@ public class GrillConnectionParams {
 
   /**
    * Gets host to which grill client should connect to.
+   *
    * @return hostname of grill server
    */
   public String getHost() {
@@ -66,6 +68,7 @@ public class GrillConnectionParams {
 
   /**
    * Gets the port to which grill client should connect to.
+   *
    * @return portnumber of grill server
    */
   public int getPort() {
@@ -74,6 +77,7 @@ public class GrillConnectionParams {
 
   /**
    * Gets the Database to which grill client should connect to.
+   *
    * @return database to connect to
    */
   public String getDbName() {
@@ -107,9 +111,9 @@ public class GrillConnectionParams {
 
 
   public String getBaseConnectionUrl() {
-    return "http://"+this.getHost()+":"
-        +this.getPort()+"/"
-        +this.conf.getAppBasePath();
+    return "http://" + this.getHost() + ":"
+        + this.getPort() + "/"
+        + this.conf.getAppBasePath();
   }
 
   public GrillClientConfig getConf() {
@@ -124,7 +128,7 @@ public class GrillConnectionParams {
   }
 
   public String getPassword() {
-    return this.sessionVars.get("user.password") != null?
+    return this.sessionVars.get("user.password") != null ?
         this.sessionVars.get("user.password") : "";
   }
 
@@ -147,13 +151,18 @@ public class GrillConnectionParams {
 
   public GrillConf getSessionConf() {
     GrillConf conf = new GrillConf();
-    for(Map.Entry<String, String> entry: grillConfs.entrySet()) {
+    Iterator<Map.Entry<String, String>> itr = this.conf.iterator();
+    while (itr.hasNext()) {
+      Map.Entry<String, String> entry = itr.next();
       conf.addProperty(entry.getKey(), entry.getValue());
     }
-    for(Map.Entry<String, String> entry: sessionVars.entrySet()) {
+    for (Map.Entry<String, String> entry : grillConfs.entrySet()) {
       conf.addProperty(entry.getKey(), entry.getValue());
     }
-    for(Map.Entry<String, String> entry : grillVars.entrySet()) {
+    for (Map.Entry<String, String> entry : sessionVars.entrySet()) {
+      conf.addProperty(entry.getKey(), entry.getValue());
+    }
+    for (Map.Entry<String, String> entry : grillVars.entrySet()) {
       conf.addProperty(entry.getKey(), entry.getValue());
     }
     return conf;
