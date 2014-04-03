@@ -147,11 +147,11 @@ User CLI Commands
 *--+--+
 | fact get storage <fact-table> <storage-name>| Prints schema of the <storage-name> in <fact-table>|
 *--+--+
-| dim list partitions <fact-table> <storage-name> | Prints list of partitions from <storage-name> in <fact-table>|
+| fact list partitions <fact-table> <storage-name> | Prints list of partitions from <storage-name> in <fact-table>|
 *--+--+
-| dim drop partitions <fact-table> <storage-name> | drops all partitions from  <storage-name> in <fact-table>|
+| fact drop partitions <fact-table> <storage-name> | drops all partitions from  <storage-name> in <fact-table>|
 *--+--+
-| dim add partition <fact-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <fact-table>|
+| fact add partition <fact-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <fact-table>|
 *--+--+
 <<Grill Fact table Management list>>
 
