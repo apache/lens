@@ -21,14 +21,39 @@ Grill User Guide
 
 %{toc}
 
-	Grill Server runs several services which can be used from their REST endpoints. This document coveres some of the important services, their purpose and key API calls. {{{../rest.html}Detailed documentation of the REST API}} is also available. 
+* Overview
 
+	Grill Server runs several services which can be used from their REST endpoints.
+	This document covers some of the important services, their purpose and key API calls.
+	
+	Grill server provides metastore service for managing metadata. Metadata exposed by grill 
+	is inspired by OLAP data cubes. See {{{./olap-cube.html#Metastore_model} Metastore Model}} for metastore constructs
+	that grill provides.
+	
+	Grill server also provides query service for querying data exposed by grill. See
+	{{{./olap-cube.html#Query_Language} Query Language}} for the grammar of the query.
+	
+	To access any service on grill, user should be working in a session. User can also pass 
+	various configuration parameters from client.
+	
+	The sections below give more details on each service and configuration. 
+
+* Configuration
+
+  Client configuration can be overridden in grill-client-site.xml.
+  See {{{./client-config.html}client configuration}} for all the configuration parameters
+  available and their default values.
+   
 * Session Service
 
-	To use any Grill service the user must first create a session. The {{{../resource_SessionResource.html}sesion service}} deals with session management. Each Grill session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Grill Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
+	To use any Grill service the user must first create a session. Each Grill session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Grill Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
 	
 	Sessions also allow users to set configuration or resources which could be shared across a group of queries. For example, if a group of queries need to call a UDF available in some specific jar, then the jar file can be added as a resource in the session. All queries started within the same session can make use of the jar file.
 
+
+  GRILL provides {{{../resource_SessionResource.html} REST api}},
+  {{{apidocs/com/inmobi/grill/client/GrillConnection.html} Java client api}}
+  and {{{./cli.html#Session_management} CLI}} for doing all session level operations.
 
 	The important API calls exposed by the session resource are -
 	

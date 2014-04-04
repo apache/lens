@@ -47,4 +47,3 @@ commands.
   
   * "--verbose or -v" : Do the action in verbose mode. Currently applicable only to 'Start' command, which will start server is in non-daemon mode.
 
-

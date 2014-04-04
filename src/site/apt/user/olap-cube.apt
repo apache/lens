@@ -1,0 +1,182 @@
+~~~
+~~ #%L
+~~ Grill
+~~ %%
+~~ Copyright (C) 2014 Inmobi
+~~ %%
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~ 
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~ 
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+~~ #L%
+~~~
+OLAP Data cube concepts
+
+%{toc}
+
+* Introduction
+
+  Typical data layout in a data ware house is to have fact data rolled up with time and 
+  reduce dimensions at each level. Fact data will have dimension keys sothat it can be
+  joined with actual dimension tables to get more information on dimension attributes.
+  
+  The typical data layout is depicted in the following diagram.
+  
+[../figures/data-layout.png] Fact data and dimension data
+  
+  Grill provide an abstraction to represent above layout to define schema of the data at warehousing level
+  and also query the same, without knowing the physical storages and rollups, which is described in below sections.
+
+* Metastore model
+
+  Metastore model introduces constructs Storage, Cube, Fact table and Dimension table, Partition.
+ 
+** Storage
+
+  Storage represents a physical storage. It can be Hadoop File system or a data base. It is defined by 
+  name, endpoint and properties associated with.
+
+** Cube
+
+  A cube is a set of dimensions and measures in a particular subject, which users can query.
+  Cubes also have timed dimensions, which can be used query cube for a time range.
+
+*** Measure
+
+  A measure is a quantity that you are interested in measuring.
+  
+  Measure will have name, type, default aggregator, a format string, start time and end time. Measure can be
+  simple column measure or an expression measure which is associated with an expression.
+  
+*** Dimension
+
+  A dimension is an attribute, or set of attributes, by which you can divide measures into sub-categories.
+
+  * A dimension can be as simple as having name and type. // BaseDimension
+  
+  * A dimension can also refer to a dimension table // ReferencedDimension
+  
+  * A dimension can be associated with an expression  // ExpressionDimension
+
+  * A dimension can be a hierarchy of dimensions. // HierachicalDimension
+  
+  * A dimension can define all the possible values it can take. // InlineDimension
+  
+** Fact Tables
+
+  A fact table is table having columns. Columns are subset of measures and dimensions. The fact table is
+  associated with cube, specified by name. Fact can be available in multiple storages.
+
+** Dimension tables
+
+  A table with list of columns. It can have references to other dimension tables. 
+  Theses tables can be joined with cubes while querying. These tables can be available in multiple storages. 
+
+** Update Period
+
+  Fact or dimension tables can be updated at regular intervals. Supports SECONDLY, MINUTELY, HOURLY, DAILY, WEEKLY, MONTHLY,
+QUARTERLY, YEARLY update periods.
+
+** Storage tables
+
+  The physical tables, either fact or dimension tables, present on a storage.
+  It will have the same schema as fact/dimension table definition. Each physical table can have
+  its own storage descriptor. These tables can be partitioned by
+  columns. Usually partition columns are dimensions. They can be timed dimensions or other dimensions.
+
+*** Fact storage table
+
+  Fact storage table is the physical fact table for the associated storage, for the specified update
+  period.  The storage table can be associated with multiple update periods.
+
+*** Dimension storage table
+
+  Dimension storage table is the physical dimension table for the associated storage. Dimension storage
+  table can have snapshot dumps at specified regular intervals or a table with no dumps, so the storage
+  table can have zero or one update period.
+
+*** Naming convention
+
+   The name of the storage table is storage name followed fact/dimensions table, seperated by '_".
+   
+   Ex: For fact table name: FACT1, for storage:S1, the storage table name is S1_FACT1
+   For dimension table name: DIM1, for storage:S1, the storage table name is S1_DIM1
+
+*** Partition
+
+  Each partition on the storage table can have its own storage descriptor.
+
+
+* Metastore API
+
+  GRILL provides {{{../resource_MetastoreResource.html} REST api}},
+  {{{../apidocs/com/inmobi/grill/client/GrillMetadataClient.html} Java client api}}
+  and {{{./cli.html#OLAP_Data_cube_metadata_management} CLI}} for doing CRUD on metastore.
+
+
+* Query Language
+
+  User can query the grill through OLAP Cube QL, which is subset of Hive QL.
+  
+  Here is the grammar:
+
++---+
+
+  CUBE SELECT [DISTINCT] select_expr, select_expr, ...
+  FROM cube_table_reference
+  WHERE [where_condition AND] TIME_RANGE_IN(from, to)
+  [GROUP BY col_list]
+  [HAVING having_expr]
+  [ORDER BY colList]
+  [LIMIT number]
+  
+  cube_table_reference:
+  cube_table_factor
+  | join_table
+  join_table:
+  cube_table_reference JOIN cube_table_factor [join_condition]
+  | cube_table_reference {LEFT|RIGHT|FULL} [OUTER] JOIN cube_table_reference [join_condition]
+  cube_table_factor:
+  cube_name or dimension_name [alias]
+  | ( cube_table_reference )
+  join_condition:
+  ON equality_expression ( AND equality_expression )*
+  equality_expression:
+  expression = expression
+  colOrder: ( ASC | DESC )
+  colList : colName colOrder? (',' colName colOrder?)*
+  
+  TIME_RANGE_IN(from, to) : The time range inclusive of ‘from’ and exclusive of ‘to’.
+
++---+
+
+  OLAP Cube QL supports all the functions that hive supports as documented in Hive Functions
+
+  Query engine provides following features :
+  
+  * Figure out which dimension tables contain data needed to satisfy the query.
+  
+  * Figure out the exact fact tables and their partitions based on the time range in the query.
+   While doing this, it will try to minimize computation needed to complete the queries.
+  
+  * If No Join condition is passed for Joins,join condition will be inferred from the relationship definition.
+  
+  * Projected fields can be added to group by col list automatically, if not present and 
+  if the group by keys specified are not projected, they can be projected
+
+  * Automatically add aggregate functions to measures specified as measure's default aggregate.
+
+* Query API
+
+  GRILL provides {{{../resource_QueryServiceResource.html} REST api}},
+  {{{../apidocs/com/inmobi/grill/client/GrillStatement.html} Java client api}},
+  {{{./jdbc-client.html} JDBC client}} 
+  and {{{./cli.html#Query_Management} CLI}} for doing submitting queries, checking status and fetching results.
+
