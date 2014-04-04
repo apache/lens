@@ -31,8 +31,9 @@ OLAP Data cube concepts
   
 [../figures/data-layout.png] Fact data and dimension data
   
-  Grill provide an abstraction to represent above layout to define schema of the data at warehousing level
-  and also query the same, without knowing the physical storages and rollups, which is described in below sections.
+  Grill provides an abstraction to represent above layout, and allows user to define schema
+  of the data at conceptual level and also query the same, without knowing
+  the physical storages and rollups, which is described in below sections.
 
 * Metastore model
 
