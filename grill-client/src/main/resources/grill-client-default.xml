@@ -67,7 +67,7 @@
   <property>
     <name>grill.user.password</name>
     <value></value>
-    <description>Grill client user name</description>
+    <description>Grill client user password</description>
   </property>
   <property>
     <name>grill.persistent.resultset</name>
