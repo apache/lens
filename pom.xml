@@ -44,16 +44,18 @@
     
     <mailingLists>
         <mailingList>
-            <name>grill-user</name>
-            <subscribe>TODO</subscribe>
-            <unsubscribe>TODO</unsubscribe>
-            <post>TODO</post>
+            <name>grill-users@googlegroups.com</name>
+            <subscribe>grill-users+subscribe@googlegroups.com</subscribe>
+            <unsubscribe>grill-users+unsubscribe@googlegroups.com</unsubscribe>
+            <post>grill-users@googlegroups.com</post>
+						<archive>https://groups.google.com/forum/?hl=en#!forum/grill-users</archive>
         </mailingList>
         <mailingList>
-            <name>grill-dev</name>
-            <subscribe>TODO</subscribe>
-            <unsubscribe>TODO</unsubscribe>
-            <post>TODO</post>
+            <name>grill-dev@googlegroups.com</name>
+            <subscribe>grill-dev+subscribe@googlegroups.com</subscribe>
+            <unsubscribe>grill-dev+unsubscribe@googlegroups.com</unsubscribe>
+            <post>grill-dev@googlegroups.com</post>
+						<archive>https://groups.google.com/forum/?hl=en#!forum/grill-dev</archive>
         </mailingList>
     </mailingLists>
 
@@ -77,7 +79,7 @@
           <reportSet>
             <inherited>false</inherited>
             <reports>
-              <report>summary</report>
+              <!--report>summary</report-->
               <report>project-team</report>
               <report>mailing-list</report>
               <report>cim</report>
