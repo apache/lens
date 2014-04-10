@@ -137,6 +137,14 @@ public abstract class GrillService extends CompositeService {
     getSession(sessionHandle).release();
   }
 
+  /**
+   * Releases a grill session specified by the public UUID
+   * @throws GrillException if session cannot be released
+   */
+  public void release(String sessionHandle) throws GrillException {
+    getSession(sessionMap.get(sessionHandle)).release();
+  }
+
   public void addResource(GrillSessionHandle sessionHandle, String type,
       String path) throws GrillException {
   }
