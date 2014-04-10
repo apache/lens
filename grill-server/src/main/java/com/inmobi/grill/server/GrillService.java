@@ -21,6 +21,7 @@ package com.inmobi.grill.server;
  */
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.NotFoundException;
 
@@ -43,6 +44,11 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 public abstract class GrillService extends CompositeService {
 
   private final CLIService cliService;
+
+  //Static session map which is used by query submission thread to get the
+  //grill session before submitting a query to hive server
+  private static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
+      new ConcurrentHashMap<String, GrillSessionHandle>();
 
   protected GrillService(String name, CLIService cliService) {
     super(name);
@@ -83,14 +89,18 @@ public abstract class GrillService extends CompositeService {
     } catch (Exception e) {
       throw new GrillException (e);
     }
-    return new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
+    GrillSessionHandle grillSession = new GrillSessionHandle(
+        sessionHandle.getHandleIdentifier().getPublicId(),
         sessionHandle.getHandleIdentifier().getSecretId());
+    sessionMap.put(grillSession.getPublicId().toString(), grillSession);
+    return grillSession;
   }
 
   public void closeSession(GrillSessionHandle sessionHandle)
       throws GrillException {
     try {
       cliService.closeSession(getHiveSessionHandle(sessionHandle));
+      sessionMap.remove(sessionHandle.getPublicId().toString());
     } catch (Exception e) {
       throw new GrillException (e);
     }
@@ -114,8 +124,25 @@ public abstract class GrillService extends CompositeService {
     getSession(sessionHandle).acquire();
   }
 
+  /**
+   * Acquire a grill session specified by the public UUID
+   * @param sessionHandle public UUID of the session
+   * @throws GrillException if session cannot be acquired
+   */
+  public void acquire(String sessionHandle) throws GrillException {
+    getSession(sessionMap.get(sessionHandle)).acquire();
+  }
+
   public void release(GrillSessionHandle sessionHandle) throws GrillException {
     getSession(sessionHandle).release();
+  }
+
+  /**
+   * Releases a grill session specified by the public UUID
+   * @throws GrillException if session cannot be released
+   */
+  public void release(String sessionHandle) throws GrillException {
+    getSession(sessionMap.get(sessionHandle)).release();
   }
 
   public void addResource(GrillSessionHandle sessionHandle, String type,

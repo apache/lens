@@ -234,6 +234,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
               LOG.info("Launching query:" + ctx.getDriverQuery());
               try {
+                //acquire session before any query operation.
+                acquire(ctx.getGrillSessionIdentifier());
                 rewriteAndSelect(ctx);
                 ctx.getSelectedDriver().executeAsync(ctx);
               } catch (GrillException e) {
@@ -241,6 +243,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                 String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
                 setFailedStatus(ctx, "Launching query failed", reason);
                 continue;
+              } finally {
+                release(ctx.getGrillSessionIdentifier());
               }
               setLaunchedStatus(ctx);
               LOG.info("Launched query " + ctx.getQueryHandle());
@@ -268,9 +272,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           for (QueryContext ctx : launched) {
             LOG.info("Polled status for " + ctx.getQueryHandle());
             try {
+              acquire(ctx.getGrillSessionIdentifier());
               updateStatus(ctx.getQueryHandle());
             } catch (GrillException e) {
               LOG.error("Error updating status ", e);
+            } finally {
+              release(ctx.getGrillSessionIdentifier());
             }
           }
           Thread.sleep(pollInterval);
@@ -398,8 +405,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     public void run() {
       LOG.info("Starting Query purger thread");
       while (!stopped && !queryPurger.isInterrupted()) {
+        FinishedQuery finished = null;
         try {
-          FinishedQuery finished = finishedQueries.take();
+          finished = finishedQueries.take();
+        } catch (InterruptedException e) {
+          LOG.info("QueryPurger has been interrupted, exiting");
+          return;
+        }
+        try {
+          acquire(finished.getCtx().getGrillSessionIdentifier());
           finished.getCtx().getSelectedDriver().closeQuery(
               finished.getCtx().getQueryHandle());
           allQueries.remove(finished.getCtx().getQueryHandle());
@@ -409,11 +423,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
         } catch (GrillException e) {
           LOG.error("Error closing  query ", e);
-        } catch (InterruptedException e) {
-          LOG.info("QueryPurger has been interrupted, exiting");
-          return;
-        } catch (Exception e) {
+        }  catch (Exception e) {
           LOG.error("Error in query purger", e);
+        } finally {
+          try {
+            release(finished.getCtx().getGrillSessionIdentifier());
+          } catch (GrillException ignore) {
+          }
         }
       }
     }
