@@ -234,6 +234,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
               LOG.info("Launching query:" + ctx.getDriverQuery());
               try {
+                //acquire session before any query operation.
+                acquire(ctx.getGrillSessionIdentifier());
                 rewriteAndSelect(ctx);
                 ctx.getSelectedDriver().executeAsync(ctx);
               } catch (GrillException e) {
