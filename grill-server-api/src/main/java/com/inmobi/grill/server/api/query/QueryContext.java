@@ -61,6 +61,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   transient @Getter @Setter private long endTime;
   transient @Getter @Setter private long launchTime;
   transient @Getter @Setter private long runningTime;
+  @Getter @Setter private String grillSessionIdentifier;
   @Getter @Setter private String driverOpHandle;
 
   public QueryContext(String query, String user, Configuration conf) {

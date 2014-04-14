@@ -61,7 +61,6 @@ public abstract class GrillJerseyTest extends JerseyTest {
     TestRemoteHiveDriver.stopHS2Service();
   }
 
-<<<<<<< HEAD
   protected void verifyMetrics() {
     // print final metrics
     System.out.println("Final report");
@@ -99,12 +98,10 @@ public abstract class GrillJerseyTest extends JerseyTest {
     
   }
 
-=======
   public void restartGrillServer() {
     GrillServices.get().stop();
     GrillServices.setInstance(new GrillServices(GrillServices.GRILL_SERVICES_NAME));
     GrillServices.get().init(new HiveConf());
     GrillServices.get().start();
   }
->>>>>>> 572cd17... Add persistence to query service
 }

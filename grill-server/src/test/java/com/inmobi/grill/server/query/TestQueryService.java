@@ -864,28 +864,33 @@ public class TestQueryService extends GrillJerseyTest {
 
     Assert.assertNotNull(handle);
 
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    // wait till the query is launched
+    QueryStatus stat = ctx.getStatus();
+    while (stat.getStatus().equals(Status.QUEUED)) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(100);
+    }
     // Restart the server
-    queryService.closeSession(grillSessionId);
+    System.out.println("Restarting grill server!");
     restartGrillServer();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
     grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
 
-    // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
-
     // wait till the query finishes
-    QueryStatus stat = ctx.getStatus();
+    ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    stat = ctx.getStatus();
     while (!stat.isFinished()) {
+      System.out.println("Status:" + stat);
       ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-    
     validatePersistedResult(handle);
   }
-  
+
   @Override
   protected int getTestPort() {
     return 8083;

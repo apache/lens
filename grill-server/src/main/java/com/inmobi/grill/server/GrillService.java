@@ -25,12 +25,12 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.NotFoundException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -43,6 +43,7 @@ import org.apache.hive.service.cli.session.SessionManager;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 
 public abstract class GrillService extends CompositeService implements Externalizable {
@@ -180,10 +181,27 @@ public abstract class GrillService extends CompositeService implements Externali
   @Override
   public void readExternal(ObjectInput in) throws IOException,
       ClassNotFoundException {
+    /* Can be uncommented when we have session restart-abilities
+     * synchronized (sessionMap) {
+      int n = in.readInt();
+      for (int i = 0; i < n; i++) {
+        GrillSessionHandle sid = new GrillSessionHandle(
+            UUID.fromString(in.readUTF()), UUID.fromString(in.readUTF()));
+        sessionMap.put(sid.getPublicId().toString(), sid);
+      }
+    }*/
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
+    /* Can be uncommented when we have session restart-abilities
+     * synchronized (sessionMap) {
+      out.writeInt(sessionMap.size());
+      for (GrillSessionHandle sid : sessionMap.values()) {
+        out.writeUTF(sid.getSecretId().toString());
+        out.writeUTF(sid.getPublicId().toString());
+      }
+    }*/
   }
 
 }

@@ -65,7 +65,6 @@
 </property>
 
 <property>
-<<<<<<< HEAD
   <name>grill.server.base.url</name>
   <value>http://localhost:9999/grillapi/</value>
   <description>The base url for the grill server</description>
