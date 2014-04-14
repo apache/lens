@@ -20,20 +20,16 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.WebApplicationException;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.GrillEventService;
@@ -43,13 +39,11 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
-import org.apache.hive.service.Service.STATE;
 import org.apache.hive.service.cli.CLIService;
 
 public class GrillServices extends CompositeService {
@@ -106,7 +100,7 @@ public class GrillServices extends CompositeService {
           grillServices.add(service);
         } catch (Exception e) {
           LOG.warn("Could not add service:" + sName, e);
-          throw new WebApplicationException(e);
+          throw new RuntimeException("Could not add service:" + sName, e);
         }
       }
 
@@ -124,8 +118,8 @@ public class GrillServices extends CompositeService {
       try {
         setupPersistedState();
       } catch (Exception e) {
-        LOG.error("Could not setup persisted state", e);
-        throw new WebApplicationException(e);
+        LOG.error("Could not recover from persisted state", e);
+        throw new RuntimeException("Could not recover from persisted state", e);
       }
 
       LOG.info("Initialized grill services: " + services.keySet().toString());
@@ -139,8 +133,8 @@ public class GrillServices extends CompositeService {
   }
 
   private void setupPersistedState() throws IOException, ClassNotFoundException {
-    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) { 
+    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RECOVER_ON_RESTART,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART)) { 
       FileSystem fs = persistDir.getFileSystem(conf);
 
       for (GrillService service : grillServices) {
@@ -153,6 +147,7 @@ public class GrillServices extends CompositeService {
             continue;
           }
           service.readExternal(in);
+          LOG.info("Recovered service " + service.getName() + " from persisted state");
         } finally {
           if (in != null) {
             in.close();
@@ -162,20 +157,24 @@ public class GrillServices extends CompositeService {
     }
   }
   private void persistGrillServiceState() throws IOException {
-    FileSystem fs = persistDir.getFileSystem(conf);
+    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) { 
+      FileSystem fs = persistDir.getFileSystem(conf);
 
-    for (GrillService service : grillServices) {
-      LOG.info("Persisting state of service:" + service.getName());
-      Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
-      ObjectOutputStream out = null;
-      try {
-        out = new ObjectOutputStream(fs.create(serviceWritePath));
-        service.writeExternal(out);
-      } finally {
-        out.close();
+      for (GrillService service : grillServices) {
+        LOG.info("Persisting state of service:" + service.getName());
+        Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
+        ObjectOutputStream out = null;
+        try {
+          out = new ObjectOutputStream(fs.create(serviceWritePath));
+          service.writeExternal(out);
+        } finally {
+          out.close();
+        }
+        Path servicePath = getServicePersistPath(service);
+        fs.rename(serviceWritePath, servicePath);
+        LOG.info("Persisted service " + service.getName() + " to " + servicePath);
       }
-      Path servicePath = getServicePersistPath(service);
-      fs.rename(serviceWritePath, servicePath);
     }
   }
 

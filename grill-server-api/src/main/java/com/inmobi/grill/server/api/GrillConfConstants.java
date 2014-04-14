@@ -49,6 +49,8 @@ public class GrillConfConstants {
   public static final boolean DEFAULT_GRILL_SERVER_RESTART_ENABLED = true;
   public static final String GRILL_SERVER_PERSIST_LOCATION = "grill.server.persist.location";
   public static final String DEFAULT_GRILL_SERVER_PERSIST_LOCATION = "file:///tmp/grillserver";
+  public static final String GRILL_SERVER_RECOVER_ON_RESTART = "grill.server.recover.onrestart";
+  public static final boolean DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART = true;
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;

@@ -144,7 +144,14 @@
 <property>
   <name>grill.server.restart.enabled</name>
   <value>true</value>
-  <description>If restart is enabled, all the services will be started from last
+  <description>If flag is enabled, all the services will be persisted to persistent
+   location passed</description>
+</property>
+
+<property>
+  <name>grill.server.recover.onrestart</name>
+  <value>true</value>
+  <description>If the flag is enabled, all the services will be started from last
    saved state, if disabled all the services will start afresh</description>
 </property>
 
