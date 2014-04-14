@@ -50,6 +50,7 @@ public class AllApps extends Application {
     classes.add(MultiPartFeature.class);
     classes.add(AuthenticationFilter.class);
     classes.add(GrillApplicationListener.class);
+    classes.add(ConsistentStateFilter.class);
     return classes;
 }
 

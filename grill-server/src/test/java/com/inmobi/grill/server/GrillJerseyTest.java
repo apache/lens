@@ -98,4 +98,10 @@ public abstract class GrillJerseyTest extends JerseyTest {
     
   }
 
+  public void restartGrillServer() {
+    GrillServices.get().stop();
+    GrillServices.setInstance(new GrillServices(GrillServices.GRILL_SERVICES_NAME));
+    GrillServices.get().init(new HiveConf());
+    GrillServices.get().start();
+  }
 }

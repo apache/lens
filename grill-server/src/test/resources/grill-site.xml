@@ -48,4 +48,9 @@
   <description>Enable metrics to be reported on console</description>
 </property>
 
+<property>
+  <name>grill.server.persist.location</name>
+  <value>target/persist-dir</value>
+</property>
+
 </configuration>
