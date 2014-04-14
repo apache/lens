@@ -656,20 +656,18 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     Assert.assertNotNull(handle2);
-    APIResult result = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().delete(APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    APIResult result = target.path(handle2.toString())
+        .queryParam("sessionid", grillSessionId).request().delete(APIResult.class);
+    // cancel would fail query is already successful
+    Assert.assertTrue(result.getStatus().equals(APIResult.Status.SUCCEEDED) ||
+        result.getStatus().equals(APIResult.Status.FAILED));
 
-    while (true) {
-      Thread.sleep(1000);
-      GrillQuery ctx2 = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-      if (QueryEnded.END_STATES.contains(ctx2.getStatus().getStatus())) {
-        // It's possible that the query we tried to cancel had already completed
-        Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED
-         || ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL, "Query should be either cancelled or completed");
-        break;
-      } else {
-        System.out.println(handle2 + " " + ctx2.getStatus().getStatus());
-      }
+    GrillQuery ctx2 = target.path(handle2.toString()).queryParam("sessionid",
+        grillSessionId).request().get(GrillQuery.class);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL);
+    } else {
+      Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED);
     }
   }
 

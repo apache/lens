@@ -41,5 +41,6 @@
   </storage_dump_periods>
   <properties>
     <properties name="dim1.prop" value="d1"/>
+    <properties name="cube.dimensiontable.timed.dimension" value="dt"/>
   </properties>
 </dimension_table>
