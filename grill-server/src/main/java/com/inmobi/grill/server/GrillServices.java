@@ -169,7 +169,9 @@ public class GrillServices extends CompositeService {
           out = new ObjectOutputStream(fs.create(serviceWritePath));
           service.writeExternal(out);
         } finally {
-          out.close();
+          if (out != null) {
+            out.close();
+          }
         }
         Path servicePath = getServicePersistPath(service);
         fs.rename(serviceWritePath, servicePath);
