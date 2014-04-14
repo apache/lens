@@ -29,9 +29,9 @@ Installing and running grill
 
    git clone https://github.com/InMobi/grill
 
-   git checkout develop
-
    cd grill
+
+   git checkout develop
 
    mvn clean package
    
