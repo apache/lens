@@ -24,7 +24,7 @@ Grill server configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent.   User can disable if user gave the clause himself. |
+|1|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself. |
 *--+--+---+--+
 |2|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
 *--+--+---+--+
@@ -32,7 +32,7 @@ Grill server configuration
 *--+--+---+--+
 |4|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
 *--+--+---+--+
-|5|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified,   it uses the available processors as the number.|
+|5|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
 |6|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
@@ -46,11 +46,11 @@ Grill server configuration
 *--+--+---+--+
 |11|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|12|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config.   The location for the logger can be specified in log4j properties for the class   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|12|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
 |13|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|14|grill.result.output.dir.format| |The format of the output if result is persisted. The format   should be expressed in HQL|
+|14|grill.result.output.dir.format| |The format of the output if result is persisted. The format should be expressed in HQL|
 *--+--+---+--+
 |15|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted results|
 *--+--+---+--+
@@ -58,12 +58,14 @@ Grill server configuration
 *--+--+---+--+
 |17|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|18|grill.server.persist.location|file:///tmp/grillserver|Grill server will persist its state in this location when it is    going down. Will read from here when it is restarted and restart is enabled.  |
+|18|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
 *--+--+---+--+
-|19|grill.server.restart.enabled|true|If restart is enabled, all the services will be started from last   saved state, if disabled all the services will start afresh|
+|19|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|20|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|20|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|21|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|21|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+*--+--+---+--+
+|22|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The configuration parameters and their default values

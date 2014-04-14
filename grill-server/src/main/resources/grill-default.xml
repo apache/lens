@@ -86,29 +86,29 @@
   <name>grill.add.insert.overwrite</name>
   <value>true</value>
   <description>Prefix query with insert overwrite clause if the query is persistent.
-   User can disable if user gave the clause himself. </description>
+ User can disable if user gave the clause himself. </description>
 </property>
 
 <property>
   <name>grill.result.output.dir.format</name>
   <value></value>
   <description>The format of the output if result is persisted. The format
-   should be expressed in HQL</description>
+ should be expressed in HQL</description>
 </property>
 
 <property>
   <name>grill.query.state.logger.enabled</name>
   <value>true</value>
   <description>Disable or enable the query state logger with this config.
-   The location for the logger can be specified in log4j properties for the class
-   com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
+ The location for the logger can be specified in log4j properties for the class
+ com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
 </property>
 
 <property>
   <name>grill.event.service.thread.pool.size</name>
   <value></value>
   <description>The size of thread pool for notifying events. The no value is specified,
-   it uses the available processors as the number.</description>
+ it uses the available processors as the number.</description>
 </property>
 
 <property>
@@ -145,21 +145,23 @@
   <name>grill.server.restart.enabled</name>
   <value>true</value>
   <description>If flag is enabled, all the services will be persisted to persistent
-   location passed</description>
+ location passed. </description>
 </property>
 
 <property>
   <name>grill.server.recover.onrestart</name>
   <value>true</value>
   <description>If the flag is enabled, all the services will be started from last
-   saved state, if disabled all the services will start afresh</description>
+ saved state, if disabled all the services will start afresh</description>
 </property>
 
 <property>
   <name>grill.server.persist.location</name>
   <value>file:///tmp/grillserver</value>
-  <description>Grill server will persist its state in this location when it is
-    going down. Will read from here when it is restarted and restart is enabled.
+  <description>The directory in which grill server will persist its state when it is
+ going down. The location be on any Hadoop compatible file system. Server will read from
+ the location when it is restarted and recovery is enabled. So, Server should have
+ both read and write permissions to the location
   </description>
 </property>
 
