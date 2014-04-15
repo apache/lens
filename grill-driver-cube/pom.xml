@@ -6,7 +6,7 @@
      <parent>
        <artifactId>grill-parent</artifactId>
        <groupId>com.inmobi.grill</groupId>
-       <version>1.0-SNAPSHOT</version>
+       <version>1.0.0-SNAPSHOT</version>
     </parent>
     
     <artifactId>grill-driver-cube</artifactId>
