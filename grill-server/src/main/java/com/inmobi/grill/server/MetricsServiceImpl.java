@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import lombok.Getter;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 import org.apache.log4j.Logger;
@@ -37,6 +39,11 @@ import com.codahale.metrics.Counter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.ganglia.GangliaReporter;
+import com.codahale.metrics.health.HealthCheckRegistry;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
+import com.codahale.metrics.JvmAttributeGaugeSet;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
@@ -49,9 +56,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public static final String METRICS_SVC_NAME = "metrics";
   public static final Logger LOG = Logger.getLogger(MetricsService.class);
   private AsyncEventListener<StatusChange> queryStatusListener;
-  private MetricRegistry metricRegistry;
+  @Getter private MetricRegistry metricRegistry;
   private List<ScheduledReporter> reporters;
-
+  @Getter private HealthCheckRegistry healthCheck;
 
   private Counter queuedQueries;
   private Counter runningQueries;
@@ -127,6 +134,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
+    healthCheck = new HealthCheckRegistry(); 
     initCounters();
     timeBetweenPolls = hiveConf.getInt(GrillConfConstants.REPORTING_PERIOD , 10);
 
@@ -181,6 +189,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
     totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + CANCELLED_QUERIES));
+
+    metricRegistry.register("gc", new GarbageCollectorMetricSet());
+    metricRegistry.register("memory", new MemoryUsageGaugeSet());
+    metricRegistry.register("threads", new ThreadStatesGaugeSet());
+    metricRegistry.register("jvm", new JvmAttributeGaugeSet());
   }
 
   @Override
@@ -293,10 +306,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     }
   }
 
-
   @Override
   public long getTotalSuccessfulQueries() {
     return totalSuccessfulQueries.getCount();
   }
-
 }

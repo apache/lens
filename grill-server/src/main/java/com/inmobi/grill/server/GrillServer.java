@@ -28,10 +28,13 @@ import javax.ws.rs.core.UriBuilder;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.servlet.ServletRegistration;
+import org.glassfish.grizzly.servlet.WebappContext;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
+import com.codahale.metrics.servlets.AdminServlet;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class GrillServer {
@@ -49,7 +52,20 @@ public class GrillServer {
     String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
         GrillConfConstants.DEFAULT_GRILL_SERVER_BASE_URL);
     server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(),
-        getApp());
+        getApp(), false);
+
+    WebappContext adminCtx = new WebappContext("admin", "");
+    adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry",
+        ((MetricsServiceImpl)GrillServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME))
+        .getMetricRegistry());
+    adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
+        ((MetricsServiceImpl)GrillServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME))
+        .getHealthCheck());
+
+    final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
+    sgMetrics.addMapping("/admin/*");
+
+    adminCtx.deploy(this.server);
   }
 
   private ResourceConfig getApp() {

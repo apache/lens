@@ -119,6 +119,14 @@
 	        <artifactId>metrics-ganglia</artifactId>
     		</dependency>
         <dependency>
+	        <groupId>com.codahale.metrics</groupId>
+	        <artifactId>metrics-jvm</artifactId>
+    		</dependency>
+        <dependency>
+	        <groupId>com.codahale.metrics</groupId>
+	        <artifactId>metrics-servlets</artifactId>
+    		</dependency>
+        <dependency>
 	        <groupId>org.slf4j</groupId>
 	        <artifactId>jul-to-slf4j</artifactId>
     		</dependency>
