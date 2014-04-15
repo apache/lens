@@ -35,7 +35,6 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
 import com.codahale.metrics.servlets.AdminServlet;
-import com.codahale.metrics.servlets.MetricsServlet;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class GrillServer {

@@ -26,7 +26,6 @@ import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
@@ -37,9 +36,7 @@ import org.apache.log4j.Logger;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.ganglia.GangliaReporter;
 import com.codahale.metrics.health.HealthCheckRegistry;
@@ -193,21 +190,10 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + CANCELLED_QUERIES));
 
-    registerAll("gc", new GarbageCollectorMetricSet(), metricRegistry);
-    registerAll("memory", new MemoryUsageGaugeSet(), metricRegistry);
-    registerAll("threads", new ThreadStatesGaugeSet(), metricRegistry);
-    registerAll("jvm", new JvmAttributeGaugeSet(), metricRegistry);
-  }
-
-  private void registerAll(String prefix, MetricSet metricSet, MetricRegistry registry) {
-    for (Entry<String, Metric> entry : metricSet.getMetrics().entrySet()) {
-      if (entry.getValue() instanceof MetricSet) {
-        registerAll(prefix + "." + entry.getKey(), (MetricSet) entry.getValue(), registry);
-      } else {
-        System.out.println("Registering " + prefix + "." + entry.getKey() + ":" + entry.getValue());
-        registry.register(prefix + "." + entry.getKey(), entry.getValue());
-      }
-    }
+    metricRegistry.register("gc", new GarbageCollectorMetricSet());
+    metricRegistry.register("memory", new MemoryUsageGaugeSet());
+    metricRegistry.register("threads", new ThreadStatesGaugeSet());
+    metricRegistry.register("jvm", new JvmAttributeGaugeSet());
   }
 
   @Override
