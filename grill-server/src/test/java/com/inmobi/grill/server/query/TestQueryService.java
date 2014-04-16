@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
@@ -364,6 +365,38 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(confpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
     Assert.assertEquals(updateConf.getStatus(), APIResult.Status.FAILED);
+  }
+
+
+  @Test
+  public void testExecuteWithoutSessionId() throws Exception {
+    // test post execute op
+    final WebTarget target = target().path("queryapi/queries");
+    GrillConf conf = new GrillConf();
+    conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    /**
+     * We are not passing session id in this test
+     */
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query")
+      .build(),
+      "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+      "operation").build(),
+      "execute"));
+    mp.bodyPart(new FormDataBodyPart(
+      FormDataContentDisposition.name("conf").fileName("conf").build(),
+      conf,
+      MediaType.APPLICATION_XML_TYPE));
+
+    try {
+      final QueryHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      Assert.fail("Should have thrown bad request error");
+    } catch (BadRequestException badReqeust) {
+      // pass
+    }
   }
 
   // Test explain query

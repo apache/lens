@@ -73,6 +73,17 @@ public class QueryServiceResource {
 
   private QueryExecutionService queryServer;
 
+  private void checkSessionId(GrillSessionHandle sessionHandle) {
+    if (sessionHandle == null) {
+      throw new BadRequestException("Invalid session handle");
+    }
+  }
+
+  private void checkQuery(String query) {
+    if (StringUtils.isBlank(query)) {
+      throw new BadRequestException("Invalid query");
+    }
+  }
   /**
    * API to know if Query service is up and running
    * 
@@ -109,6 +120,7 @@ public class QueryServiceResource {
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
       @DefaultValue("") @QueryParam("user") String user) {
+    checkSessionId(sessionid);
     try {
       return queryServer.getAllQueries(sessionid, state, user);
     } catch (GrillException e) {
@@ -148,11 +160,14 @@ public class QueryServiceResource {
       @FormDataParam("operation") String op,
       @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
+    checkQuery(query);
+    checkSessionId(sessionid);
     try {
       SubmitOp sop = null;
       try {
         sop = SubmitOp.valueOf(op.toUpperCase());
       } catch (IllegalArgumentException e) {
+        throw new BadRequestException(e);
       }
       if (sop == null) {
         throw new BadRequestException("Invalid operation type: " + op +
@@ -194,6 +209,7 @@ public class QueryServiceResource {
   public APIResult cancelAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
       @DefaultValue("") @QueryParam("user") String user) {
+    checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
@@ -239,6 +255,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user) {
+    checkSessionId(sessionid);
     try {
       return queryServer.getAllPreparedQueries(sessionid, user);
     } catch (GrillException e) {
@@ -269,6 +286,8 @@ public class QueryServiceResource {
       @DefaultValue("") @FormDataParam("operation") String op,
       @FormDataParam("conf") GrillConf conf) {
     try {
+      checkSessionId(sessionid);
+      checkQuery(query);
       SubmitOp sop = null;
       try {
         sop = SubmitOp.valueOf(op.toUpperCase());
@@ -306,6 +325,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user) {
+    checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
     List<QueryPrepareHandle> handles = null;
@@ -365,6 +385,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillPreparedQuery getPreparedQuery(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("preparehandle") String prepareHandle) {
+    checkSessionId(sessionid);
     try {
       return queryServer.getPreparedQuery(sessionid,
           getPrepareHandle(prepareHandle));
@@ -387,6 +408,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPrepared(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("preparehandle") String prepareHandle) {
+    checkSessionId(sessionid);
     boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
       return new APIResult(Status.SUCCEEDED, "Destroy on the query "
@@ -409,6 +431,7 @@ public class QueryServiceResource {
   @Path("queries/{queryhandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillQuery getStatus(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
+    checkSessionId(sessionid);
     try {
       return queryServer.getQuery(sessionid,
           getQueryHandle(queryHandle));
@@ -430,6 +453,7 @@ public class QueryServiceResource {
   @Path("queries/{queryhandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
+    checkSessionId(sessionid);
     boolean ret = cancelQuery(sessionid, getQueryHandle(queryHandle));
     if (ret) {
       return new APIResult(Status.SUCCEEDED, "Cancel on the query "
@@ -473,6 +497,7 @@ public class QueryServiceResource {
   public APIResult updateConf(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("queryhandle") String queryHandle, 
       @FormDataParam("conf") GrillConf conf) {
+    checkSessionId(sessionid);
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getQueryHandle(queryHandle), conf);
       if (ret) {
@@ -505,6 +530,7 @@ public class QueryServiceResource {
   public APIResult updatePreparedConf(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("prepareHandle") String prepareHandle, 
       @FormDataParam("conf") GrillConf conf) {
+    checkSessionId(sessionid);
     try {
       boolean ret = queryServer.updateQueryConf(sessionid, getPrepareHandle(prepareHandle), conf);
       if (ret) {
@@ -543,7 +569,7 @@ public class QueryServiceResource {
       @DefaultValue("EXECUTE") @FormDataParam("operation") String op,
       @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
-
+    checkSessionId(sessionid);
     try {
       SubmitOp sop = null;
       try {
