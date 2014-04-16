@@ -79,7 +79,7 @@
           <reportSet>
             <inherited>false</inherited>
             <reports>
-              <!--report>summary</report-->
+              <report>summary</report>
               <report>project-team</report>
               <report>mailing-list</report>
               <report>cim</report>
