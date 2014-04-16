@@ -607,6 +607,7 @@ public class QueryServiceResource {
   public QueryResultSetMetadata getResultSetMetadata(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("queryhandle") String queryHandle) {
+    checkSessionId(sessionid);
     try {
       return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
     } catch (GrillException e) {
@@ -632,6 +633,7 @@ public class QueryServiceResource {
       @PathParam("queryhandle") String queryHandle,
       @QueryParam("fromindex") long startIndex,
       @QueryParam("fetchsize") int fetchSize) {
+    checkSessionId(sessionid);
     try {
       return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
     } catch (GrillException e) {
@@ -654,6 +656,7 @@ public class QueryServiceResource {
   public APIResult closeResultSet(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("queryhandle") String queryHandle){
+    checkSessionId(sessionid);
     try {
       queryServer.closeResultSet(sessionid, getQueryHandle(queryHandle));
       return new APIResult(Status.SUCCEEDED, "Close on the result set"
