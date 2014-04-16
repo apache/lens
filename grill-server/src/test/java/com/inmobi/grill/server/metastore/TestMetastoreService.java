@@ -62,6 +62,7 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+@Test(groups="test1")
 public class TestMetastoreService extends GrillJerseyTest {
   public static final Logger LOG = LogManager.getLogger(TestMetastoreService.class);
   private ObjectFactory cubeObjectFactory;

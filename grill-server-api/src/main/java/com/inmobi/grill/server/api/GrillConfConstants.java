@@ -67,4 +67,7 @@ public class GrillConfConstants {
   public final static String GANGLIA_SERVERNAME = "grill.metrics.ganglia.host";
   public final static String GANGLIA_PORT = "grill.metrics.ganglia.port";
   public final static String REPORTING_PERIOD = "grill.metrics.reporting.period";
+
+  public static final String GRILL_SERVER_MODE = "grill.server.mode";
+  public final static String DEFAULT_GRILL_SERVER_MODE = "OPEN";
 }

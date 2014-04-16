@@ -58,7 +58,6 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QuerySubmitResult;
 import com.inmobi.grill.api.query.SubmitOp;
 import com.inmobi.grill.server.GrillServices;
-import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 
 /**

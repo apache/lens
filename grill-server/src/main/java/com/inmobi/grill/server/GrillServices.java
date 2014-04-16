@@ -30,6 +30,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.Setter;
+
 
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.GrillEventService;
@@ -62,6 +65,15 @@ public class GrillServices extends CompositeService {
   private final List<GrillService> grillServices = new ArrayList<GrillService>();
   private Path persistDir;
   private boolean stopping = false;
+  @Getter @Setter private SERVICE_MODE serviceMode;
+
+  public enum SERVICE_MODE {
+    READ_ONLY, // Only GET requests are accepted
+    METASTORE_READONLY, // Only GET requests on metastore service and 
+                //all other requests on other services are accepted
+    METASTOTE_NODROP, // DELETE requests on metastore are not accepted
+    OPEN // All requests are accepted
+  };
 
   public GrillServices(String name) {
     super(name);
@@ -77,6 +89,8 @@ public class GrillServices extends CompositeService {
     if (getServiceState() == STATE.NOTINITED) {
       conf = hiveConf;
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getCanonicalName());
+      serviceMode = conf.getEnum(GrillConfConstants.GRILL_SERVER_MODE,
+          SERVICE_MODE.valueOf(GrillConfConstants.DEFAULT_GRILL_SERVER_MODE));
       cliService = new CLIService();
 
       // Add default services
