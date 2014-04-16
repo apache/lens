@@ -165,4 +165,16 @@
   </description>
 </property>
 
+<property>
+  <name>grill.server.mode</name>
+  <value>OPEN</value>
+  <description>The mode in which server should run. Allowed values are OPEN, READ_ONLY,
+ METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode
+ will allow all requests on session resouce and only GET requests on all other resources.
+ METASTORE_READONLY will allow GET on metastore and all other requests in other services.
+ METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.
+ </description>
+
+</property>
+
 </configuration>

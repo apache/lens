@@ -51,6 +51,7 @@ public class AllApps extends Application {
     classes.add(AuthenticationFilter.class);
     classes.add(GrillApplicationListener.class);
     classes.add(ConsistentStateFilter.class);
+    classes.add(ServerModeFilter.class);
     return classes;
 }
 

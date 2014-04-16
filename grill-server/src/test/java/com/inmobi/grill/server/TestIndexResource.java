@@ -20,15 +20,9 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.net.URI;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.UriBuilder;
 
-import org.glassfish.jersey.test.JerseyTest;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -36,6 +30,7 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.server.IndexApp;
 
+@Test(groups="unit-test")
 public class TestIndexResource extends GrillJerseyTest {
 
   @BeforeTest

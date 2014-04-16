@@ -42,6 +42,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
+@Test(groups="unit-test")
 public class TestSessionResource extends GrillJerseyTest {
 
   @BeforeTest

@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
+@Test(groups="unit-test")
 public class TestEventService {
   public static final Logger LOG = Logger.getLogger(TestEventService.class);
   EventServiceImpl service;

@@ -78,6 +78,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+@Test(groups="unit-test")
 public class TestQueryService extends GrillJerseyTest {
 
   QueryExecutionServiceImpl queryService;
