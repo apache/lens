@@ -22,6 +22,7 @@ package com.inmobi.grill.server.metastore;
 
 import java.util.*;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.*;
@@ -122,6 +123,14 @@ public class TestMetastoreService extends GrillJerseyTest {
     result = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // set without session id, we should get bad request
+    try {
+      result = dbTarget.request(mediaType).put(Entity.xml(dbName), APIResult.class);
+      fail("Should have thrown bad request exception");
+    } catch (BadRequestException badReq) {
+      // expected
+    }
 
     String current = dbTarget.queryParam("sessionid", grillSessionId).request(mediaType).get(String.class);
     assertEquals(current, dbName);
@@ -316,7 +325,15 @@ public class TestMetastoreService extends GrillJerseyTest {
     try {
       final XCube cube = createTestCube("testCube1");
       final WebTarget target = target().path("metastore").path("cubes");
-      APIResult result = target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+      APIResult result = null;
+      try {
+        // first try without a session id
+        result = target.request(mediaType).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+        fail("Should have thrown bad request exception");
+      } catch (BadRequestException badReq) {
+        // expected
+      }
+      result = target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
