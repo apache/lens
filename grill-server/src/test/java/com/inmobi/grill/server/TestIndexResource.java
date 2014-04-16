@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.server.IndexApp;
 
-@Test(groups="test1")
+@Test(groups="unit-test")
 public class TestIndexResource extends GrillJerseyTest {
 
   @BeforeTest

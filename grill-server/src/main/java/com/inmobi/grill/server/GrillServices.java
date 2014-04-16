@@ -68,7 +68,7 @@ public class GrillServices extends CompositeService {
   @Getter @Setter private SERVICE_MODE serviceMode;
 
   public enum SERVICE_MODE {
-    READ_ONLY, // Only GET requests are accepted
+    READ_ONLY, // All requests on sesssion resource and Only GET requests on all other resources
     METASTORE_READONLY, // Only GET requests on metastore service and 
                 //all other requests on other services are accepted
     METASTOTE_NODROP, // DELETE requests on metastore are not accepted

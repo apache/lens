@@ -27,7 +27,7 @@ import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.GrillServices.SERVICE_MODE;
 
-@Test(groups="test2",dependsOnGroups="test1")
+@Test(groups="filter-test",dependsOnGroups="unit-test")
 public class TestServerMode extends GrillAllApplicationJerseyTest {
 
   @BeforeTest
