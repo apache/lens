@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 import org.apache.commons.logging.Log;
@@ -95,24 +97,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     return clauseName;
   }
 
-  // String query to ASTNode conversion
-  public void getAST() {
-    try {
-      if (query.toLowerCase().matches("(.*)union all(.*)")) {
-        String[] queries = query.toLowerCase().split("union all");
-        for (int i = 0; i < queries.length; i++) {
-          ast = HQLParser.parseHQL(queries[i]);
-          System.out.println(ast);
-        }
-      } else {
-        ast = HQLParser.parseHQL(query);
-        HQLParser.printAST(ast);
-      }
-    } catch (ParseException e) {
-      e.printStackTrace();
-    }
-  }
-
   // Analyze query AST and split into sub trees
   public void analyzeInternal() throws SemanticException {
     HiveConf conf = new HiveConf();
@@ -172,42 +156,47 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     if (node == null) {
       return;
     }
-    int rootType = node.getToken().getType();
-    if (rootType == TOK_JOIN || rootType == TOK_LEFTOUTERJOIN
-        || rootType == TOK_RIGHTOUTERJOIN || rootType == TOK_FULLOUTERJOIN
-        || rootType == TOK_LEFTSEMIJOIN || rootType == TOK_UNIQUEJOIN) {
 
-      ASTNode left = (ASTNode) node.getChild(0);
-      ASTNode right = (ASTNode) node.getChild(1);
+    try {
+      int rootType = node.getToken().getType();
+      if (rootType == TOK_JOIN || rootType == TOK_LEFTOUTERJOIN
+          || rootType == TOK_RIGHTOUTERJOIN || rootType == TOK_FULLOUTERJOIN
+          || rootType == TOK_LEFTSEMIJOIN || rootType == TOK_UNIQUEJOIN) {
 
-      String joinType = "";
-      String JoinToken = node.getToken().getText();
+        ASTNode left = (ASTNode) node.getChild(0);
+        ASTNode right = (ASTNode) node.getChild(1);
 
-      if (JoinToken.equals("TOK_JOIN")) {
-        joinType = "inner join";
-      } else if (JoinToken.equals("TOK_LEFTOUTERJOIN")) {
-        joinType = "left outer join";
-      } else if (JoinToken.equals("TOK_RIGHTOUTERJOIN")) {
-        joinType = "right outer join";
-      } else if (JoinToken.equals("TOK_FULLOUTERJOIN")) {
-        joinType = "full outer join";
-      } else if (JoinToken.equals("TOK_LEFTSEMIJOIN")) {
-        joinType = "left semi join";
-      } else if (JoinToken.equals("TOK_UNIQUEJOIN")) {
-        joinType = "unique join";
-      } else {
-        LOG.info("Non supported join type : " + JoinToken);
+        String joinType = "";
+        String JoinToken = node.getToken().getText();
+
+        if (JoinToken.equals("TOK_JOIN")) {
+          joinType = "inner join";
+        } else if (JoinToken.equals("TOK_LEFTOUTERJOIN")) {
+          joinType = "left outer join";
+        } else if (JoinToken.equals("TOK_RIGHTOUTERJOIN")) {
+          joinType = "right outer join";
+        } else if (JoinToken.equals("TOK_FULLOUTERJOIN")) {
+          joinType = "full outer join";
+        } else if (JoinToken.equals("TOK_LEFTSEMIJOIN")) {
+          joinType = "left semi join";
+        } else if (JoinToken.equals("TOK_UNIQUEJOIN")) {
+          joinType = "unique join";
+        } else {
+          LOG.info("Non supported join type : " + JoinToken);
+        }
+        String joinCond = "";
+
+        if (node.getChildCount() > 2) {
+          // User has specified a join condition for filter pushdown.
+          joinCond = HQLParser.getString((ASTNode) node.getChild(2));
+        }
+
+        String joinClause = joinType.concat(HQLParser.getString(right))
+            .concat(" on ").concat(joinCond);
+        joinCondition.append(" ").append(joinClause);
       }
-      String joinCond = "";
-
-      if (node.getChildCount() > 2) {
-        // User has specified a join condition for filter pushdown.
-        joinCond = HQLParser.getString((ASTNode) node.getChild(2));
-      }
-
-      String joinClause = joinType.concat(HQLParser.getString(right))
-          .concat(" on ").concat(joinCond);
-      joinCondition.append(" ").append(joinClause);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
     for (int i = 0; i < node.getChildCount(); i++) {
       ASTNode child = (ASTNode) node.getChild(i);
@@ -246,6 +235,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ASTNode left = (ASTNode) node.getChild(0);
         ASTNode right = (ASTNode) node.getChild(1);
 
+        // Get the fact and dimension columns in table_name.column_name format
         String factJoinKeys = HQLParser.getString((ASTNode) left).toString()
             .replaceAll("\\s+", "").replaceAll("[(,)]", "");
         String dimJoinKeys = HQLParser.getString((ASTNode) right).toString()
@@ -255,6 +245,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             .substring(0, dimJoinKeys.indexOf("."));
         factKeys.append(factJoinKeys).append(",");
 
+        // Construct the fact subquery using the corresponding join key used
+        // from dimension
+        // eg. "fact_key in ( select dim_key from dim_table where "
         String queryphase1 = factJoinKeys.concat(" in ").concat(" ( ")
             .concat(" select ").concat(dimJoinKeys).concat(" from ")
             .concat(dimTableName).concat(" where ");
@@ -264,11 +257,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
         Set<String> setAllFilters = new HashSet<String>(rightFilter);
 
-        // build other filters sub query
+        // Check the occurrence of dimension table in the filter list and
+        // combine all filters of same dimension table with and clause.
+        // eg. dim_table.key1 = 'abc' and dim_table.key2 = 'xyz'
         if (setAllFilters.toString().matches(
-            "(.*)".toString().concat(dimTableName).concat("(.*)"))
-            || setAllFilters.toString().matches(
-                "(.*)".toString().concat(dimTableName).concat("(.*)"))) {
+            "(.*)".toString().concat(dimTableName).concat("(.*)"))) {
 
           factFilters.delete(0, factFilters.length());
 
@@ -284,6 +277,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             }
           }
 
+          // Merge fact subquery and dim subqury to construct the final subquery
+          // eg. "fact_key in ( select dim_key from dim_table where
+          // dim_table.key2 = 'abc' and dim_table.key3 = 'xyz'"
           subquery = queryphase1.concat(
               factFilters.toString().substring(0,
                   factFilters.toString().lastIndexOf("and"))).concat(")");
@@ -385,35 +381,19 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   }
 
+  // Get the fact table name and alias
   public void getFactNameAlias() {
-    if (query.matches("(.*)where(.*)")) {
-      String joinString = query.substring(query.indexOf("from"),
-          query.indexOf("where"));
-      String[] keys = joinString.split(" ");
+    Pattern p = Pattern.compile("from(.*)");
+    Matcher m = p.matcher(query.toLowerCase());
+    if (m.find()) {
+      String fromClause = m.group(1);
+      String[] keys = fromClause.split(" ");
       factTable = keys[1];
       factAlias = keys[2];
-
-    } else if (query.matches("(.*)group by(.*)")) {
-      String joinString = query.substring(query.indexOf("from"),
-          query.indexOf("group by"));
-      String[] keys = joinString.split(" ");
-      factTable = keys[1];
-      factAlias = keys[2];
-      LOG.info("Input query missing where clause");
-    } else if (query.matches("(.*)order by(.*)")) {
-      String joinString = query.substring(query.indexOf("from"),
-          query.indexOf("order by"));
-      String[] keys = joinString.split(" ");
-      factTable = keys[1];
-      factAlias = keys[2];
-      LOG.info("Input query missing where clause and group by clause");
-    } else {
-      LOG.info("Input query missing where, group by and order by clause");
     }
   }
 
   public void reset() {
-    // rewrittenQuery.delete(0, rewrittenQuery.length());
     factInLineQuery.delete(0, factInLineQuery.length());
     factKeys.delete(0, factKeys.length());
     aggColumn.clear();
@@ -422,7 +402,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     allSubQueries.delete(0, allSubQueries.length());
     rightFilter.clear();
     joinCondition.delete(0, joinCondition.length());
-    // mergedQuery.delete(0, mergedQuery.length());
   }
 
   public void buildQuery() {
@@ -503,7 +482,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   }
 
   @Override
-  public String rewrite(Configuration conf, String query) throws GrillException {
+  public synchronized String rewrite(Configuration conf, String query)
+      throws GrillException {
     this.query = query;
     this.conf = conf;
 
@@ -516,7 +496,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           mergedQuery = rewrittenQuery.append(" union all ");
           finalRewrittenQuery = mergedQuery.toString().substring(0,
               mergedQuery.lastIndexOf("union all"));
-
           LOG.info("Input Query : " + query);
           LOG.info("Rewritten Query :  " + finalRewrittenQuery);
           reset();
@@ -525,6 +504,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ast = HQLParser.parseHQL(query);
         buildQuery();
         finalRewrittenQuery = rewrittenQuery.toString();
+        LOG.info("Input Query : " + query);
+        LOG.info("Rewritten Query :  " + finalRewrittenQuery);
       }
     } catch (ParseException e) {
       e.printStackTrace();
