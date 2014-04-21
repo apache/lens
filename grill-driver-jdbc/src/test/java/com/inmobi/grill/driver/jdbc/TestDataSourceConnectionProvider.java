@@ -67,7 +67,7 @@ public class TestDataSourceConnectionProvider {
             Assert.assertNotNull(st);
             passed.incrementAndGet();
           } catch (SQLException e) {
-            LOG.error("error getting connection to db!");
+            LOG.error("error getting connection to db!", e);
           } finally {
             if (st != null) {
               try {
