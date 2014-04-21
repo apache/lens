@@ -132,7 +132,7 @@ QUARTERLY, YEARLY update periods.
 
   CUBE SELECT [DISTINCT] select_expr, select_expr, ...
   FROM cube_table_reference
-  WHERE [where_condition AND] TIME_RANGE_IN(from, to)
+  [WHERE [where_condition AND] [TIME_RANGE_IN(colName, from, to)]]
   [GROUP BY col_list]
   [HAVING having_expr]
   [ORDER BY colList]
@@ -154,7 +154,8 @@ QUARTERLY, YEARLY update periods.
   colOrder: ( ASC | DESC )
   colList : colName colOrder? (',' colName colOrder?)*
   
-  TIME_RANGE_IN(from, to) : The time range inclusive of ‘from’ and exclusive of ‘to’.
+  TIME_RANGE_IN(colName, from, to) : The time range inclusive of ‘from’ and exclusive of ‘to’.
+  time range clause is applicable only if cube_table_reference has cube_name.
 
 +---+
 
