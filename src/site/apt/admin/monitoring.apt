@@ -37,7 +37,11 @@ Grill server monitoring
   
   * Total number of cancelled queries;
   
+  Grill server also emits jvm, gc, memory and thread level metrics.
+
   Ganglia metrics can be enabled by configuring the parameters :
   <grill.enable.gangla.metrics>, <grill.metrics.ganglia.serverName>, <grill.metrics.ganglia.port>,
    <grill.metrics.reporting.period>.
+   
+  
   
