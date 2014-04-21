@@ -73,7 +73,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
 
   @Test
   public void testMetastoreNoDropMode() throws InterruptedException {
-    testMode(SERVICE_MODE.METASTOTE_NODROP);
+    testMode(SERVICE_MODE.METASTORE_NODROP);
   }
 
   @Test
@@ -130,7 +130,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
       assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
       if (mode.equals(SERVICE_MODE.READ_ONLY) || mode.equals(SERVICE_MODE.METASTORE_READONLY)
-          || mode.equals(SERVICE_MODE.METASTOTE_NODROP)) {
+          || mode.equals(SERVICE_MODE.METASTORE_NODROP)) {
         // expected
         System.out.println("Drop databse not allowed in mode:" + mode);
       } else {

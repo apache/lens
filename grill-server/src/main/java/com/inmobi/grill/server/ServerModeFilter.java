@@ -48,7 +48,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
         }
       }
       break;
-    case METASTOTE_NODROP:
+    case METASTORE_NODROP:
       // Does not allows DROP on metastore, all other request are allowed
       if (requestContext.getUriInfo().getPath().startsWith("/metastore")) {
         if (requestContext.getMethod().equals("DELETE")) {

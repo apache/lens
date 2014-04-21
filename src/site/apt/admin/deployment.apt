@@ -42,4 +42,35 @@ Grill server deployment
    * Requires Hive metastore 0.13+
 
    * Requires Hive server2 0.13+
+   
+* Restart and recovery
+
+  Grill server should not have problems with Hive Metastore server, Hive Server2 or Hadoop restarts. Grill server can persist its state before going and recover from previous state upon restart. 
+  
+  * Recoverability
+  
+  ** To enable grill server with recoverability, i.e. to allow users access queries before restart, grill server should be started with grill.server.restart.enabled set to true.
+  Admin can set this to false if no recoverability is required.
+
+  * Restarting 
+
+  ** To start the grill server a fresh grill.server.recover.onrestart should be disabled. If it is true, the server will load its persisted state before restart.
+  
+  
+* Server modes
+
+  Grill server can be started in various modes. The server mode can be specified via configuration when it is starting up. Available modes are
+  
+  * READ_ONLY : Allows all requests on sesssion resource and Only GET requests on all other resources
+  
+  * METASTORE_READONLY : Allows Only GET requests on metastore service and all other requests on other services
+  
+  * METASTORE_NODROP: DELETE requests on metastore are not accepted, all other requests are accepted
+  
+  * OPEN: This is the default mode. All requests are accepted
+  
+  
+  
+  
+  
 
