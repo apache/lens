@@ -140,7 +140,7 @@ public class QueryServiceResource {
    * @param sessionid The session in which user is submitting the query. Any
    *  configuration set in the session will be picked up.
    * @param query The query to run
-   * @param op The operation on the query. Supported operations are 
+   * @param operation The operation on the query. Supported operations are
    * {@value SubmitOp#EXPLAIN}, {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
    * @param conf The configuration for the query
    * @param timeoutmillis The timeout for the query, honored only in case of
@@ -156,7 +156,7 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult query(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
-      @FormDataParam("operation") String op,
+      @FormDataParam("operation") String operation,
       @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
     checkQuery(query);
@@ -164,12 +164,12 @@ public class QueryServiceResource {
     try {
       SubmitOp sop = null;
       try {
-        sop = SubmitOp.valueOf(op.toUpperCase());
+        sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
         throw new BadRequestException(e);
       }
       if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + op +
+        throw new BadRequestException("Invalid operation type: " + operation +
             submitClue);
       }
       switch (sop) {
@@ -180,7 +180,7 @@ public class QueryServiceResource {
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.execute(sessionid, query, timeoutmillis, conf);
       default:
-        throw new BadRequestException("Invalid operation type: " + op + submitClue);
+        throw new BadRequestException("Invalid operation type: " + operation + submitClue);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
@@ -268,7 +268,7 @@ public class QueryServiceResource {
    * @param sessionid The session in which user is preparing the query. Any
    *  configuration set in the session will be picked up.
    * @param query The query to prepare
-   * @param op The operation on the query. Supported operations are 
+   * @param operation The operation on the query. Supported operations are
    * {@value SubmitOp#EXPLAIN_AND_PREPARE} or {@value SubmitOp#PREPARE}
    * @param conf The configuration for preparing the query
    * 
@@ -282,18 +282,18 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
-      @DefaultValue("") @FormDataParam("operation") String op,
+      @DefaultValue("") @FormDataParam("operation") String operation,
       @FormDataParam("conf") GrillConf conf) {
     try {
       checkSessionId(sessionid);
       checkQuery(query);
       SubmitOp sop = null;
       try {
-        sop = SubmitOp.valueOf(op.toUpperCase());
+        sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
       }
       if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + op + prepareClue);
+        throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
       }
       switch (sop) {
       case PREPARE:
@@ -301,7 +301,7 @@ public class QueryServiceResource {
       case EXPLAIN_AND_PREPARE:
         return queryServer.explainAndPrepare(sessionid, query, conf);
       default:
-        throw new BadRequestException("Invalid operation type: " + op + prepareClue);
+        throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);
@@ -550,7 +550,7 @@ public class QueryServiceResource {
    * @param sessionid The session in which user is submitting the query. Any
    *  configuration set in the session will be picked up.
    * @param prepareHandle The Query to run
-   * @param op The operation on the query. Supported operations are 
+   * @param operation The operation on the query. Supported operations are
    * {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
    * @param conf The configuration for the execution of query
    * @param timeoutmillis The timeout for the query, honored only in case of
@@ -565,18 +565,18 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult executePrepared(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @PathParam("prepareHandle") String prepareHandle,
-      @DefaultValue("EXECUTE") @FormDataParam("operation") String op,
+      @DefaultValue("EXECUTE") @FormDataParam("operation") String operation,
       @FormDataParam("conf") GrillConf conf,
       @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
     checkSessionId(sessionid);
     try {
       SubmitOp sop = null;
       try {
-        sop = SubmitOp.valueOf(op.toUpperCase());
+        sop = SubmitOp.valueOf(operation.toUpperCase());
       } catch (IllegalArgumentException e) {
       }
       if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + op +
+        throw new BadRequestException("Invalid operation type: " + operation +
             submitPreparedClue);
       }
       switch (sop) {
@@ -585,7 +585,7 @@ public class QueryServiceResource {
       case EXECUTE_WITH_TIMEOUT:
         return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf);
       default:
-        throw new BadRequestException("Invalid operation type: " + op + submitPreparedClue);
+        throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
       }
     } catch (GrillException e) {
       throw new WebApplicationException(e);

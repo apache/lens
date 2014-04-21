@@ -59,51 +59,29 @@ public class TestDataSourceConnectionProvider {
         public void run() {
           Connection conn = null;
           Statement st = null;
-          List<Integer> expected;
-          List<Integer> actual;
           try {
             conn = cp.getConnection(conf);
-            conn.setAutoCommit(false);
-
-            sem.acquire();
-            try {
-              st = conn.createStatement();
-              st.execute("CREATE TABLE TEST_" + thid + "(ID INT)");
-              st.close();
-              conn.commit();
-            } finally {
-              sem.release();
-            }
-
-            PreparedStatement ps = conn.prepareStatement("INSERT INTO TEST_" + thid + " VALUES(?)");
-            expected = new ArrayList<Integer>();
-            for (int j = 0; j < 10; j++) {
-              ps.setInt(1, j);
-              ps.executeUpdate();
-              expected.add(j);
-            }
-            ps.close();
-            conn.commit();
-
+            Assert.assertNotNull(conn);
+            // Make sure the connection is usable
             st = conn.createStatement();
-            ResultSet rs = st.executeQuery("SELECT * FROM TEST_" + thid);
-            actual = new ArrayList<Integer>();
-            while (rs.next()) {
-              actual.add(rs.getInt(1));
-            }
-            Assert.assertEquals(actual, expected);
-            System.out.println("Test:" + thid + " passs");
+            Assert.assertNotNull(st);
             passed.incrementAndGet();
           } catch (SQLException e) {
-            LOG.error("Error in test:" + thid, e);
-          } catch (InterruptedException e1) {
-            LOG.error("Interrupted:" + thid + " : " + e1.getMessage());
+            LOG.error("error getting connection to db!", e);
           } finally {
-            try {
-              st.close();
-              conn.close();
-            } catch (SQLException e) {
-              e.printStackTrace();
+            if (st != null) {
+              try {
+                st.close();
+              } catch (SQLException e) {
+                e.printStackTrace();
+              }
+            }
+            if (conn != null) {
+              try {
+                conn.close();
+              } catch (SQLException e) {
+                e.printStackTrace();
+              }
             }
           }
         }
