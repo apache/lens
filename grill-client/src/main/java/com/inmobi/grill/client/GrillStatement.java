@@ -21,9 +21,7 @@ package com.inmobi.grill.client;
  */
 
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.query.*;
-import com.inmobi.grill.server.api.GrillConfConstants;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
