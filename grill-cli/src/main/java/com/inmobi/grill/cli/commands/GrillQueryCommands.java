@@ -21,6 +21,7 @@ package com.inmobi.grill.cli.commands;
  */
 
 import com.google.common.base.Joiner;
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.*;
 import com.inmobi.grill.client.GrillClient;
 import com.inmobi.grill.client.GrillClientResultSet;
@@ -29,6 +30,7 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
 
@@ -107,7 +109,8 @@ public class GrillQueryCommands implements CommandMarker {
   @CliCommand(value = "query explain", help = "Explain query plan")
   public String getQueries(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to execute") String sql, @CliOption(key = {"save"},
-      mandatory = false, help = "Sync query execution") String location) {
+      mandatory = false, help = "Sync query execution") String location)
+          throws UnsupportedEncodingException {
 
     QueryPlan plan = client.getQueryPlan(sql);
     return plan.getPlanString();

@@ -38,8 +38,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
   private CubeMetastoreClient cubeClient;
 
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
-      HiveConf serverConf, Map<String, String> sessionConf) {
-    super(protocol, username, password, serverConf, sessionConf);
+      HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
+    super(protocol, username, password, serverConf, sessionConf, ipAddress);
   }
 
  

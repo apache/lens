@@ -20,6 +20,8 @@ package com.inmobi.grill.api.query;
  * #L%
  */
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +59,10 @@ public class QueryPlan extends QuerySubmitResult {
   @XmlElement @Getter private Double obyWeight;
   @XmlElement @Getter private Double selectWeight;
   @Getter @Setter private QueryPrepareHandle prepareHandle;
-  @XmlElement @Getter private String planString;
+  @XmlElement private String planString;
   @XmlElement @Getter private QueryCost queryCost;
+  
+  public String getPlanString() throws UnsupportedEncodingException {
+    return URLDecoder.decode(planString, "UTF-8");
+  }
 }
