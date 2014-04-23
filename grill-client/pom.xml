@@ -19,9 +19,12 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-server-api</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>

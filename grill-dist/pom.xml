@@ -10,7 +10,6 @@
   </parent>
     
   <artifactId>grill-dist</artifactId>
-  <packaging>jar</packaging>
   <description> Packaging and distribution </description>
 
   <dependencies>
@@ -59,6 +58,10 @@
       <artifactId>grill-examples</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -83,15 +86,6 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-deploy-plugin</artifactId>
-        <version>2.7</version>
-        <configuration>
-          <skip>true</skip>
-        </configuration>
-      </plugin>
-
       <!--Plugin to build deb-->
       <plugin>
         <artifactId>jdeb</artifactId>

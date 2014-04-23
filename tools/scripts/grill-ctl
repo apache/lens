@@ -87,17 +87,20 @@ start() {
   HADOOPDIR=`which hadoop`
   if [ "$HADOOPDIR" != "" ]; then  
     echo "Hadoop is installed, using the installed hadoop for execution"
-#   echo "Hadoop is installed, adding hadoop classpath to grill classpath"
-#   GRILLCPPATH="${GRILLCPPATH}:`hadoop classpath`"
   elif [ "$HADOOP_HOME" != "" ]; then    
     echo "Hadoop home is set, using the configured hadoop for execution"
-#   echo "Hadoop home is set, adding ${HADOOP_HOME}/lib/* into grill classpath"
-#   GRILLCPPATH="${GRILLCPPATH}:${HADOOP_HOME}/lib/*"
   else
-    echo "Could not find installed hadoop and HADOOP_HOME is not set."
-    exit 1
+    echo "WARNING : Could not find installed hadoop and HADOOP_HOME is not set. If Hadoop is used execution of queries. Set HADOOP_HOME and proceed"
   fi
 
+  if [ "$HIVE_HOME" != "" ]; then    
+    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into grill classpath"
+    GRILLCPPATH="${GRILLCPPATH}:${HIVE_HOME}/lib/*"
+  else
+    echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
+    exit 1
+  fi
+  
   mkdir -p $GRILL_LOG_DIR
 
   JAVA_PROPERTIES="${JAVA_PROPERTIES} $GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
