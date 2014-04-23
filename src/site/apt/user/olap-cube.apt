@@ -156,6 +156,7 @@ QUARTERLY, YEARLY update periods.
   
   TIME_RANGE_IN(colName, from, to) : The time range inclusive of ‘from’ and exclusive of ‘to’.
   time range clause is applicable only if cube_table_reference has cube_name.
+  Format of the time range is <yyyy-MM-dd-HH:mm:ss,SSS>
 
 +---+
 
