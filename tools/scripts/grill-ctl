@@ -101,6 +101,12 @@ start() {
     exit 1
   fi
   
+  # Add HIVE_HOME to HADOOP_CLASS_PATH
+  HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
+  export HADOOP_CLASSPATH
+  
+  echo $HADOOP_CLASSPATH
+  
   mkdir -p $GRILL_LOG_DIR
 
   JAVA_PROPERTIES="${JAVA_PROPERTIES} $GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"

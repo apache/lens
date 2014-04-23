@@ -37,7 +37,7 @@ Installing and running grill
    
 +---+
 
-  Once above package command completes successfully, <grill-dist/target> will have <grill-dist-${project.version}-server> and <grill-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <grill-dist/target>.
+  Once above package command completes successfully, <grill-dist/target> will have <grill-dist-${project.version}-server> and <grill-client-dist/target> will have <grill-client-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <grill-client-dist/target> and <grill-dist/target>, respectively.
 
 * Installing and running grill-server
 
