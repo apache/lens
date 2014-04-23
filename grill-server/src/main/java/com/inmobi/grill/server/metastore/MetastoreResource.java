@@ -125,7 +125,7 @@ public class MetastoreResource {
   @Consumes({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
   public APIResult setDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, String dbName) {
     checkSessionId(sessionid);
-    LOG.info("Set database");
+    LOG.info("Set database:" + dbName);
     try {
       getSvc().setCurrentDatabase(sessionid, dbName);
     } catch (GrillException e) {
@@ -146,8 +146,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
    */
-  @DELETE @Path("databases/{dbname}")
-  public APIResult dropDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbname") String dbName, 
+  @DELETE @Path("databases/{dbName}")
+  public APIResult dropDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dbName") String dbName,
       @QueryParam("cascade") boolean cascade) {
     checkSessionId(sessionid);
     LOG.info("Drop database " + dbName+ " cascade?" + cascade);
@@ -173,7 +173,7 @@ public class MetastoreResource {
    */
   @POST @Path("databases")
   public APIResult createDatabase(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @QueryParam("ignoreifexist") @DefaultValue("true") boolean ignoreIfExisting,
+      @QueryParam("ignoreIfExisting") @DefaultValue("true") boolean ignoreIfExisting,
       String dbName ) {
     checkSessionId(sessionid);
     LOG.info("Create database " + dbName + " Ignore Existing? " + ignoreIfExisting);
@@ -212,9 +212,9 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * 
    * @return
-   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value Status#FAILED} in case of delete failure.
-   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@link Status#FAILED} in case of delete failure.
+   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("cubes")
   public APIResult deleteAllCubes(@QueryParam("sessionid") GrillSessionHandle sessionid) {
@@ -281,15 +281,15 @@ public class MetastoreResource {
    * Update cube definition
    * 
    * @param sessionid The sessionid in which user is working
-   * @param cubename The cube name
+   * @param cubeName The cube name
    * @param cube The {@link XCube} representation of the updated cube definition
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
-  @PUT @Path("/cubes/{cubename}")
+  @PUT @Path("/cubes/{cubeName}")
   public APIResult updateCube(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("cubename") String cubename, XCube cube) {
+      @PathParam("cubeName") String cubeName, XCube cube) {
     checkSessionId(sessionid);
     try {
       getSvc().updateCube(sessionid, cube);
@@ -309,9 +309,9 @@ public class MetastoreResource {
    * 
    * @return JAXB representation of {@link XCube} 
    */
-  @GET @Path("/cubes/{cubename}")
+  @GET @Path("/cubes/{cubeName}")
   public JAXBElement<XCube> getCube(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("cubename") String cubeName)  {
+      @PathParam("cubeName") String cubeName)  {
     checkSessionId(sessionid);
     try {
       return xCubeObjectFactory.createXCube(getSvc().getCube(sessionid, cubeName));
@@ -331,8 +331,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/cubes/{cubename}")
-  public APIResult dropCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) {
+  @DELETE @Path("/cubes/{cubeName}")
+  public APIResult dropCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubeName") String cubeName) {
     checkSessionId(sessionid);
     try {
       getSvc().dropCube(sessionid, cubeName);
@@ -391,9 +391,9 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * 
    * @return
-   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value Status#FAILED} in case of delete failure.
-   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@link Status#FAILED} in case of delete failure.
+   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("storages")
   public APIResult deleteAllStoragess(@QueryParam("sessionid") GrillSessionHandle sessionid) {
@@ -434,10 +434,10 @@ public class MetastoreResource {
    * @param storage The {@link XStorage} representation of the updated storage definition
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
+   * {@link APIResult} with state {@link Status#FAILED}, if update has failed
    */
-  @PUT @Path("/storages/{storage}")
-  public APIResult updateStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storage") String storageName, XStorage storage) {
+  @PUT @Path("/storages/{storageName}")
+  public APIResult updateStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("storageName") String storageName, XStorage storage) {
     checkSessionId(sessionid);
     try {
       getSvc().alterStorage(sessionid, storageName, storage);
@@ -453,7 +453,7 @@ public class MetastoreResource {
    * Get the storage specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param storageName The stroage name
+   * @param storageName The storage name
    * 
    * @return JAXB representation of {@link XStorage} 
    */
@@ -493,15 +493,16 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all facts that belong to a cube in the metastores
+   * Get all facts that belong to a cube in the metastore
    * 
    * @param sessionid The sessionid in which user is working
+   * @param cubeName name of the cube
    * 
    * @return List of {@link FactTable} objects 
    * 
    */
-  @GET @Path("/cubes/{cubename}/facts")
-  public List<FactTable> getAllFactsOfCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubename") String cubeName) 
+  @GET @Path("/cubes/{cubeName}/facts")
+  public List<FactTable> getAllFactsOfCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubeName") String cubeName)
       throws GrillException {
     checkSessionId(sessionid);
     try {
@@ -513,7 +514,7 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all fact tables in the metastores
+   * Get all fact tables in the metastore in the current database
    * 
    * @param sessionid The sessionid in which user is working
    * 
@@ -530,11 +531,12 @@ public class MetastoreResource {
    * Delete all fact tables
    * 
    * @param sessionid The sessionid in which user is working
+   * @param cascade if set to true, all the underlying tables will be dropped, if set to false, only the fact table will be dropped
    * 
    * @return
-   * APIResult with state {@value Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@value Status#FAILED} in case of delete failure.
-   * APIResult with state {@value Status#PARTIAL} in case of partial delete.
+   * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@link Status#FAILED} in case of delete failure.
+   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("facts")
   public APIResult deleteAllFacts(@QueryParam("sessionid") GrillSessionHandle sessionid,
@@ -572,18 +574,18 @@ public class MetastoreResource {
    * Get the fact table specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * 
    * @return JAXB representation of {@link FactTable} 
    */
-  @GET @Path("/facts/{factname}")
-  public JAXBElement<FactTable> getFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) 
+  @GET @Path("/facts/{factName}")
+  public JAXBElement<FactTable> getFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factName") String factName)
       throws GrillException {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createFactTable(getSvc().getFactTable(sessionid, fact));
+      return xCubeObjectFactory.createFactTable(getSvc().getFactTable(sessionid, factName));
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
+      checkTableNotFound(exc, factName);
       throw exc;
     }
   }
@@ -602,7 +604,7 @@ public class MetastoreResource {
   @POST @Path("/facts")
   public APIResult createFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("fact") FactTable fact,
-      @FormDataParam("storagetables") XStorageTables storageTables) 
+      @FormDataParam("storageTables") XStorageTables storageTables)
           throws GrillException {
     checkSessionId(sessionid);
     try {
@@ -619,14 +621,15 @@ public class MetastoreResource {
    * Update fact table definition
    * 
    * @param sessionid The sessionid in which user is working
+   * @param factName name of the fact table
    * @param fact The {@link FactTable} representation of the updated fact table definition
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
-  @PUT @Path("/facts/{factname}")
+  @PUT @Path("/facts/{factName}")
   public APIResult updateFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String  factName, FactTable fact) 
+      @PathParam("factName") String  factName, FactTable fact)
           throws GrillException {
     checkSessionId(sessionid);
     try {
@@ -643,22 +646,22 @@ public class MetastoreResource {
    * Drop the fact table, specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param cascade If true, all the storage tables of the fact will also be dropped
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/facts/{factname}")
-  public APIResult dropFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String  fact, 
+  @DELETE @Path("/facts/{factName}")
+  public APIResult dropFactTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factName") String  factName,
       @DefaultValue("false") @QueryParam("cascade") boolean cascade)  
           throws GrillException {
     checkSessionId(sessionid);
     try {
-      getSvc().dropFactTable(sessionid, fact, cascade);
+      getSvc().dropFactTable(sessionid, factName, cascade);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
-      LOG.error("Error dropping fact" + fact, exc);
+      checkTableNotFound(exc, factName);
+      LOG.error("Error dropping fact" + factName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -668,19 +671,19 @@ public class MetastoreResource {
    * Get all storages of the fact table in the metastore
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * 
-   * @return StringList consisting of all the storage names
+   * @return {@link StringList} consisting of all the storage names
    * 
    * @throws GrillException
    */
-  @GET @Path("/facts/{factname}/storages")
-  public StringList getStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact) throws GrillException {
+  @GET @Path("/facts/{factName}/storages")
+  public StringList getStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factName") String factName) throws GrillException {
     checkSessionId(sessionid);
     try {
-    return new StringList(getSvc().getStoragesOfFact(sessionid, fact));
+    return new StringList(getSvc().getStoragesOfFact(sessionid, factName));
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
+      checkTableNotFound(exc, factName);
       throw new WebApplicationException(exc);
     }
   }
@@ -694,8 +697,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/facts/{factname}/storages")
-  public APIResult dropAllStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String factName) {
+  @DELETE @Path("/facts/{factName}/storages")
+  public APIResult dropAllStoragesOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factName") String factName) {
     checkSessionId(sessionid);
     try {
       getSvc().dropAllStoragesOfFact(sessionid, factName);
@@ -711,22 +714,22 @@ public class MetastoreResource {
    * Add storage to fact table
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
-   * @param storageTable The Storage table description
+   * @param factName The fact table name
+   * @param storageTable The storage table description
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
-  @POST @Path("/facts/{factname}/storages")
+  @POST @Path("/facts/{factName}/storages")
   public APIResult addStorageToFact(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact, XStorageTableElement storageTable) {
+      @PathParam("factName") String factName, XStorageTableElement storageTable) {
     checkSessionId(sessionid);
     try {
-      getSvc().addStorageToFact(sessionid, fact, storageTable);
+      getSvc().addStorageToFact(sessionid, factName, storageTable);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
-      LOG.error("Error adding storage to fact" + fact, exc);
+      checkTableNotFound(exc, factName);
+      LOG.error("Error adding storage to fact" + factName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -736,23 +739,23 @@ public class MetastoreResource {
    * Drop the storage of a fact, specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param storage The storage name
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/facts/{factname}/storages/{storage}")
+  @DELETE @Path("/facts/{factName}/storages/{storage}")
   public APIResult dropStorageFromFact(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact,
+      @PathParam("factName") String factName,
       @PathParam("storage") String storage) {
     checkSessionId(sessionid);
     try {
-      getSvc().dropStorageOfFact(sessionid, fact, storage);
+      getSvc().dropStorageOfFact(sessionid, factName, storage);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
-      LOG.error("Error dropping storage of fact" + fact, exc);
+      checkTableNotFound(exc, factName);
+      LOG.error("Error dropping storage of fact" + factName, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return  SUCCESS;
@@ -762,57 +765,42 @@ public class MetastoreResource {
    * Get the fact storage table 
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param storage The storage name
    * 
    * @return JAXB representation of {@link XStorageTableElement} 
    */
-  @GET @Path("/facts/{factname}/storages/{storage}")
+  @GET @Path("/facts/{factName}/storages/{storage}")
   public JAXBElement<XStorageTableElement> getStorageOfFact(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact,
+      @PathParam("factName") String factName,
       @PathParam("storage") String storage) throws  GrillException {
-    return xCubeObjectFactory.createXStorageTableElement(getSvc().getStorageOfFact(sessionid, fact, storage));
+    return xCubeObjectFactory.createXStorageTableElement(getSvc().getStorageOfFact(sessionid, factName, storage));
   }
 
-  /*
-  @PUT @Path("/facts/{factname}/storages/{storage}")
-  public APIResult alterFactStorageUpdatePeriod(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
-                                                 @PathParam("storage") String storage,
-                                                 StorageUpdatePeriodList periods) {
-    try {
-      getSvc().alterFactStorageUpdatePeriod(sessionid, fact, storage, periods);
-    } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
-      return new APIResult(Status.FAILED, exc.getMessage());
-    }
-    return SUCCESS;
-  }
-
-   */
   /**
    * Get all partitions of the fact table in the specified storage;
    *  can be filtered as well.
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
    * 
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
-  @GET @Path("/facts/{factname}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factname") String fact,
+  @GET @Path("/facts/{factName}/storages/{storage}/partitions")
+  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("factName") String factName,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter) throws GrillException {
     checkSessionId(sessionid);
     try {
-      List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(sessionid, fact, storage, filter);
+      List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(sessionid, factName, storage, filter);
       PartitionList partList = xCubeObjectFactory.createPartitionList();
       partList.getXPartition().addAll(partitions);
       return xCubeObjectFactory.createPartitionList(partList);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
+      checkTableNotFound(exc, factName);
       throw exc;
     }
   }
@@ -821,7 +809,7 @@ public class MetastoreResource {
    * Drop the partitions in the storage of a fact; can specified filter as well
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
@@ -829,16 +817,16 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/facts/{factname}/storages/{storage}/partitions")
+  @DELETE @Path("/facts/{factName}/storages/{storage}/partitions")
   public APIResult dropPartitionsOfFactStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact,
+      @PathParam("factName") String factName,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter) {
     checkSessionId(sessionid);
     try {
-      getSvc().dropPartitionFromStorageByFilter(sessionid, fact, storage, filter);
+      getSvc().dropPartitionFromStorageByFilter(sessionid, factName, storage, filter);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
+      checkTableNotFound(exc, factName);
       return new APIResult(Status.PARTIAL, exc.getMessage());
     }
     return SUCCESS;
@@ -848,24 +836,24 @@ public class MetastoreResource {
    * Add a new partition for a storage of fact
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact fact table name
+   * @param factName fact table name
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
-  @POST @Path("/facts/{factname}/storages/{storage}/partitions")
+  @POST @Path("/facts/{factName}/storages/{storage}/partitions")
   public APIResult addPartitionToFactStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact,
+      @PathParam("factName") String factName,
       @PathParam("storage") String storage,
       XPartition partition) {
     checkSessionId(sessionid);
     try {
-      getSvc().addPartitionToFactStorage(sessionid, fact, storage, partition);
+      getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition);
     } catch (GrillException exc) {
-      checkTableNotFound(exc, fact);
-      LOG.error("Error adding partition to storage of fact" + fact + ":" + storage, exc);
+      checkTableNotFound(exc, factName);
+      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -875,26 +863,26 @@ public class MetastoreResource {
    * Drop the partitions in the storage of a fact table, specified by exact values
    * 
    * @param sessionid The sessionid in which user is working
-   * @param fact The fact table name
+   * @param factName The fact table name
    * @param storage The storage name
    * @param values Comma separated values
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/facts/{factname}/storages/{storage}/partition")
+  @DELETE @Path("/facts/{factName}/storages/{storage}/partition")
   public APIResult dropPartitionOfFactStorageByValues(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("factname") String fact,
+      @PathParam("factName") String factName,
       @PathParam("storage") String storage,
       @QueryParam("values") String values) {
     checkSessionId(sessionid);
     try {
-      getSvc().dropPartitionFromStorageByValues(sessionid, fact, storage,
+      getSvc().dropPartitionFromStorageByValues(sessionid, factName, storage,
           values);
 
     } catch (GrillException e) {
-      checkTableNotFound(e, fact);
-      LOG.error("Error dropping partition to storage of fact" + fact + ":" + storage, e);
+      checkTableNotFound(e, factName);
+      LOG.error("Error dropping partition to storage of fact" + factName + ":" + storage, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -914,7 +902,7 @@ public class MetastoreResource {
   }
 
   /**
-   * Create a new dimension tabble
+   * Create a new dimension table
    * 
    * @param sessionid The sessionid in which user is working
    * @param dimensionTable The {@link DimensionTable} representation of the dimension table definition
@@ -925,8 +913,8 @@ public class MetastoreResource {
    */
   @POST @Path("/dimensions")
   public APIResult createCubeDimension(@FormDataParam("sessionid") GrillSessionHandle sessionid,
-      @FormDataParam("dimtable") DimensionTable dimensionTable,
-      @FormDataParam("storagetables") XStorageTables storageTables) {
+      @FormDataParam("dimensionTable") DimensionTable dimensionTable,
+      @FormDataParam("storageTables") XStorageTables storageTables) {
     checkSessionId(sessionid);
     try {
       getSvc().createCubeDimensionTable(sessionid, dimensionTable, storageTables);
@@ -946,9 +934,9 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
-  @PUT @Path("/dimensions/{dimname}")
+  @PUT @Path("/dimensions/{dimName}")
   public APIResult updateCubeDimension(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimName, 
+      @PathParam("dimName") String dimName,
       DimensionTable dimensionTable) {
     checkSessionId(sessionid);
     try {
@@ -965,14 +953,14 @@ public class MetastoreResource {
    * Drop the dimension table, specified by name
    * 
    * @param sessionid The sessionid in which user is working
-   * @param dimension The dimneison table name
+   * @param dimension The dimension table name
    * @param cascade if true, all the storage tables of dimension table will also be dropped
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/dimensions/{dimname}")
-  public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension, 
+  @DELETE @Path("/dimensions/{dimName}")
+  public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimension,
       @QueryParam("cascade") boolean cascade) {
     checkSessionId(sessionid);
     try {
@@ -993,8 +981,8 @@ public class MetastoreResource {
    * 
    * @return JAXB representation of {@link DimensionTable} 
    */
-  @GET @Path("/dimensions/{dimname}")
-  public JAXBElement<DimensionTable> getDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) 
+  @GET @Path("/dimensions/{dimName}")
+  public JAXBElement<DimensionTable> getDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimName)
       throws GrillException {
     checkSessionId(sessionid);
     try {
@@ -1015,8 +1003,8 @@ public class MetastoreResource {
    * 
    * @throws GrillException
    */
-  @GET @Path("/dimensions/{dimname}/storages")
-  public StringList getDimensionStorages(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimension) 
+  @GET @Path("/dimensions/{dimName}/storages")
+  public StringList getDimensionStorages(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimension)
       throws GrillException {
     checkSessionId(sessionid);
     return new StringList(getSvc().getDimensionStorages(sessionid, dimension));
@@ -1032,8 +1020,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
-  @POST @Path("/dimensions/{dimname}/storages")
-  public APIResult createDimensionStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName, 
+  @POST @Path("/dimensions/{dimName}/storages")
+  public APIResult createDimensionStorage(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimName,
       XStorageTableElement storageTbl) {
     checkSessionId(sessionid);
     try {
@@ -1055,9 +1043,9 @@ public class MetastoreResource {
    * 
    * @return JAXB representation of {@link XStorageTableElement} 
    */
-  @GET @Path("/dimensions/{dimname}/storages/{storage}")
+  @GET @Path("/dimensions/{dimName}/storages/{storage}")
   public JAXBElement<XStorageTableElement> getStorageOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimName,
+      @PathParam("dimName") String dimName,
       @PathParam("storage") String storage) throws  GrillException {
     checkSessionId(sessionid);
     return xCubeObjectFactory.createXStorageTableElement(getSvc().getStorageOfDim(sessionid, dimName, storage));
@@ -1072,8 +1060,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/dimensions/{dimname}/storages")
-  public APIResult dropAllStoragesOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName) {
+  @DELETE @Path("/dimensions/{dimName}/storages")
+  public APIResult dropAllStoragesOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimName) {
     checkSessionId(sessionid);
     try {
       getSvc().dropAllStoragesOfDim(sessionid, dimName);
@@ -1095,8 +1083,8 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/dimensions/{dimname}/storages/{storage}")
-  public APIResult dropStorageOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimname") String dimName,
+  @DELETE @Path("/dimensions/{dimName}/storages/{storage}")
+  public APIResult dropStorageOfDim(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimName") String dimName,
       @PathParam("storage") String storage) {
     checkSessionId(sessionid);
     try {
@@ -1121,9 +1109,9 @@ public class MetastoreResource {
    * 
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
-  @GET @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  @GET @Path("/dimensions/{dimName}/storages/{storage}/partitions")
   public JAXBElement<PartitionList> getAllPartitionsOfDimStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimension,
+      @PathParam("dimName") String dimension,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter)
           throws GrillException {
@@ -1138,7 +1126,7 @@ public class MetastoreResource {
    * Drop the partitions in the storage of a dimension table; can specified filter as well
    * 
    * @param sessionid The sessionid in which user is working
-   * @param dimension The dimension table name
+   * @param dimName The dimension table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
@@ -1146,16 +1134,16 @@ public class MetastoreResource {
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  @DELETE @Path("/dimensions/{dimName}/storages/{storage}/partitions")
   public APIResult dropPartitionsOfDimStorageByFilter(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimension,
+      @PathParam("dimName") String dimName,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter) {
     checkSessionId(sessionid);
     try {
-      getSvc().dropPartitionFromStorageByFilter(sessionid, dimension, storage, filter);
+      getSvc().dropPartitionFromStorageByFilter(sessionid, dimName, storage, filter);
     } catch (GrillException exc) {
-      LOG.error("Error dropping partition on storage of dimension table " + dimension + ":" + storage, exc);
+      LOG.error("Error dropping partition on storage of dimension table " + dimName + ":" + storage, exc);
       return new APIResult(Status.PARTIAL, exc.getMessage());
     }
     return SUCCESS;
@@ -1165,24 +1153,24 @@ public class MetastoreResource {
    * Drop the partitions in the storage of a dimension table, specified by exact values
    * 
    * @param sessionid The sessionid in which user is working
-   * @param dimension The dimension table name
+   * @param dimName The dimension table name
    * @param storage The storage name
    * @param values Comma separated values
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
-  @DELETE @Path("/dimensions/{dimname}/storages/{storage}/partition")
+  @DELETE @Path("/dimensions/{dimName}/storages/{storage}/partition")
   public APIResult dropPartitionsOfDimStorageByValue(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimension,
+      @PathParam("dimName") String dimName,
       @PathParam("storage") String storage,
       @QueryParam("values") String values) {
     checkSessionId(sessionid);
     try {
-      getSvc().dropPartitionFromStorageByValues(sessionid, dimension, storage,
+      getSvc().dropPartitionFromStorageByValues(sessionid, dimName, storage,
           values);
     } catch (GrillException exc) {
-      LOG.error("Error dropping partitions on storage of dimension table " + dimension + ":" + storage, exc);
+      LOG.error("Error dropping partitions on storage of dimension table " + dimName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
@@ -1192,23 +1180,23 @@ public class MetastoreResource {
    * Add a new partition for a storage of dimension
    * 
    * @param sessionid The sessionid in which user is working
-   * @param dimension dimension table name
+   * @param dimName dimension table name
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
-  @POST @Path("/dimensions/{dimname}/storages/{storage}/partitions")
+  @POST @Path("/dimensions/{dimName}/storages/{storage}/partitions")
   public APIResult addPartitionToDimStorage(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("dimname") String dimension,
+      @PathParam("dimName") String dimName,
       @PathParam("storage") String storage,
       XPartition partition) {
     checkSessionId(sessionid);
     try {
-      getSvc().addPartitionToDimStorage(sessionid, dimension, storage, partition);
+      getSvc().addPartitionToDimStorage(sessionid, dimName, storage, partition);
     } catch (GrillException exc) {
-      LOG.error("Error adding partition to storage of dimension table " + dimension + ":" + storage, exc);
+      LOG.error("Error adding partition to storage of dimension table " + dimName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());
     }
     return SUCCESS;
