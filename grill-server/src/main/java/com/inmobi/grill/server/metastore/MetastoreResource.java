@@ -595,7 +595,7 @@ public class MetastoreResource {
    * 
    * @param sessionid The sessionid in which user is working
    * @param fact The {@link FactTable} representation of the fact table definition
-   * @param storagetables The Storage table description of fact in each storage
+   * @param storageTables The Storage table description of fact in each storage
    * 
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
@@ -604,12 +604,12 @@ public class MetastoreResource {
   @POST @Path("/facts")
   public APIResult createFactTable(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("fact") FactTable fact,
-      @FormDataParam("storagetables") XStorageTables storagetables)
+      @FormDataParam("storageTables") XStorageTables storageTables)
           throws GrillException {
     checkSessionId(sessionid);
     try {
       LOG.info("Create fact table");
-      getSvc().createFactTable(sessionid, fact, storagetables);
+      getSvc().createFactTable(sessionid, fact, storageTables);
     } catch (GrillException exc) {
       LOG.error("Exception creating fact:" , exc);
       return new APIResult(Status.FAILED, exc.getMessage());

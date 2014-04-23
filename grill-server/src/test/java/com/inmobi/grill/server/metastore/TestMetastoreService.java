@@ -974,7 +974,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")
@@ -1094,7 +1094,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")
@@ -1191,7 +1191,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")
