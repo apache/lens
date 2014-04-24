@@ -62,6 +62,10 @@ public class GrillClient {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
     statement.execute(sql, true);
+    if(statement.getStatus().getStatus()
+        != QueryStatus.Status.SUCCESSFUL) {
+      throw new IllegalStateException(statement.getStatus().getErrorMessage());
+    }
     return new GrillClientResultSet(statement.getResultSet(),
         statement.getResultSetMetaData());
   }
@@ -69,7 +73,10 @@ public class GrillClient {
   public GrillClientResultSet getAsyncResults(QueryHandle q) {
     GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
-
+    if (query.getStatus().getStatus()
+        != QueryStatus.Status.SUCCESSFUL) {
+      throw new IllegalStateException(query.getStatus().getErrorMessage());
+    }
     return new GrillClientResultSet(statement.getResultSet(query),
         statement.getResultSetMetaData(query));
   }
