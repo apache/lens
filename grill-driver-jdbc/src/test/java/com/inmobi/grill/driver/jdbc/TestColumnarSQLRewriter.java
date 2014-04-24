@@ -75,14 +75,14 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
+        + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -106,14 +106,14 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
+        + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -135,7 +135,7 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end, "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -143,7 +143,7 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
+        + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -166,7 +166,7 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end, "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -175,7 +175,7 @@ public class TestColumnarSQLRewriter {
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
+        + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -195,7 +195,7 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end, "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -205,7 +205,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
+        + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -229,7 +229,7 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end, "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -239,7 +239,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  ";
+        + "order by dollars_sold  ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -249,7 +249,7 @@ public class TestColumnarSQLRewriter {
     String rwq = qtest.rewrite(conf, query);
     String expected = "select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ), "
         + "( item_dim  .  item_key ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
-        + "else sum(sum_fact_dollars_sold) end , sum(sum_fact_units_sold), avg(avg_fact_dollars_sold), "
+        + "else sum(sum_fact_dollars_sold) end dollars_sold , sum(sum_fact_units_sold), avg(avg_fact_dollars_sold), "
         + "min(min_fact_dollars_sold), max(max_fact_dollars_sold) "
         + "from  (select fact.time_key,fact.location_key,fact.item_key,"
         + "sum(( fact  .  units_sold )) as sum_fact_units_sold, min(( fact  .  dollars_sold )) as min_fact_dollars_sold,"
@@ -267,7 +267,7 @@ public class TestColumnarSQLRewriter {
         + "where (( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'  "
         + "and (( item_dim  .  item_name ) =  'item_1' )) "
         + "group by ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ), ( item_dim  .  item_key ) "
-        + "order by  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end ";
+        + "order by  dollars_sold asc ";
     String actual = qtest.finalRewrittenQuery;
     compareQueries(expected, actual);
   }
@@ -279,34 +279,34 @@ public class TestColumnarSQLRewriter {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  "
+        + "order by dollars_sold  "
         + "union all"
         + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-02-01' and '2013-02-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  "
+        + "order by dollars_sold "
         + "union all"
         + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end "
+        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  ";
+        + "order by dollars_sold ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -315,7 +315,7 @@ public class TestColumnarSQLRewriter {
 
     String rwq = qtest.rewrite(conf, query);
     String expected = "select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ),  "
-        + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end  "
+        + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end dollars_sold "
         + "from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
         + "from sales_fact fact where fact.time_key in  (  select time_dim.time_key from time_dim where "
         + "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-05'  ) and fact.location_key in "
@@ -325,10 +325,9 @@ public class TestColumnarSQLRewriter {
         + "and (( location_dim  .  location_name ) =  'test123' )) inner join time_dim  "
         + "time_dim  on (( fact  .  time_key ) = ( time_dim  .  time_key )) where ( time_dim  .  time_key ) "
         + "between  '2013-01-01'  and  '2013-01-05'  group by ( fact  .  time_key ), ( time_dim  .  day_of_week ), "
-        + "( time_dim  .  day ) order by  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
-        + "else sum(sum_fact_dollars_sold) end  union all select ( fact  .  time_key ), ( time_dim  .  day_of_week ), "
+        + "( time_dim  .  day ) order by  dollars_sold asc union all select ( fact  .  time_key ), ( time_dim  .  day_of_week ), "
         + "( time_dim  .  day ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) "
-        + "end  from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
+        + "end dollars_sold from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
         + "from sales_fact fact where fact.time_key in  (  select time_dim.time_key from time_dim where ( time_dim  .  time_key ) "
         + "between  '2013-02-01'  and  '2013-02-05'  ) and fact.location_key in  "
         + "(  select location_dim.location_key from location_dim where (( location_dim  .  location_name ) =  'test123' ) )  "
@@ -336,10 +335,9 @@ public class TestColumnarSQLRewriter {
         + "location_dim  on ((( fact  .  location_key ) = ( location_dim  .  location_key )) and "
         + "(( location_dim  .  location_name ) =  'test123' )) inner join time_dim  time_dim  on (( fact  .  time_key ) = "
         + "( time_dim  .  time_key )) where ( time_dim  .  time_key ) between  '2013-02-01'  and  '2013-02-05'  group by "
-        + "( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  case  "
-        + "when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end  "
+        + "( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ) order by dollars_sold asc "
         + "union all select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ),  "
-        + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end  "
+        + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end dollars_sold "
         + "from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
         + "from sales_fact fact where fact.time_key in  (  select time_dim.time_key from time_dim where "
         + "( time_dim  .  time_key ) between  '2013-03-01'  and  '2013-03-05'  ) and fact.location_key in  "
@@ -348,8 +346,7 @@ public class TestColumnarSQLRewriter {
         + "((( fact  .  location_key ) = ( location_dim  .  location_key )) and (( location_dim  .  location_name ) =  'test123' )) "
         + "inner join time_dim  time_dim  on (( fact  .  time_key ) = ( time_dim  .  time_key )) "
         + "where ( time_dim  .  time_key ) between  '2013-03-01'  and  '2013-03-05'  group by ( fact  .  time_key ), "
-        + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
-        + "else sum(sum_fact_dollars_sold)  end ";
+        + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  dollars_sold asc";
     String actual = qtest.finalRewrittenQuery.toString();
     compareQueries(expected, actual);
   }

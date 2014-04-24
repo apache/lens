@@ -142,11 +142,12 @@ public class TestJDBCFinal {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "sum(fact.dollars_sold) dollars_sold " + "from sales_fact fact "
+        + "sum(fact.dollars_sold) dollars_sold " 
+        + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "where time_dim.day between '1900-01-01' and '1900-01-03' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by sum(fact.dollars_sold) desc";
+        + "order by dollars_sold desc";
 
     QueryContext context = new QueryContext(query, "SA", baseConf);
     GrillResultSet resultSet = driver.execute(context);
@@ -200,7 +201,7 @@ public class TestJDBCFinal {
         + "where time_dim.day between '1900-01-01' and '1900-01-04' "
         + "and location_dim.location_name = 'loc2' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by sum(fact.dollars_sold)  desc "; 
+        + "order by dollars_sold  desc "; 
 
     QueryContext context = new QueryContext(query, "SA", baseConf);
     GrillResultSet resultSet = driver.execute(context);
