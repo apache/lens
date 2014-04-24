@@ -49,16 +49,14 @@ public class TestJDBCFinal {
   JDBCDriver driver;
 
   @BeforeTest
-  // Create database - grill_jdbc, user - jdbc_test with password - jdbc_test
-  // Grant r/w permission on grill_jdbc database to user jdbc_test
+
   public void testCreateJdbcDriver() throws Exception {
     baseConf = new Configuration();
-    baseConf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS,
-        "com.mysql.jdbc.Driver");
+    baseConf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS, "org.h2.Driver");
     baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI,
-        "jdbc:mysql://localhost:3306/grill_jdbc");
-    baseConf.set(JDBCDriverConfConstants.JDBC_USER, "jdbc_test");
-    baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "jdbc_test");
+        "jdbc:h2:mem:jdbcTestDB;MODE=MYSQL");
+    baseConf.set(JDBCDriverConfConstants.JDBC_USER, "sa");
+    baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
     baseConf.set(JDBCDriverConfConstants.JDBC_QUERY_REWRITER_CLASS,
         ColumnarSQLRewriter.class.getName());
 
@@ -68,9 +66,6 @@ public class TestJDBCFinal {
     assertTrue(driver.configured);
     System.out.println("Driver configured!");
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    // Configuration conf = new Configuration();
-    // ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
   }
 
@@ -85,24 +80,20 @@ public class TestJDBCFinal {
     Connection conn = null;
     Statement stmt = null;
 
-    String dropTables = "drop table if exists sales_fact,time_dim,item_dim,"
-        + "branch_dim,location_dim";
-
-    String createFact = "create table if not exists sales_fact (time_key integer, item_key integer, branch_key integer, "
+    String createFact = "create table  sales_fact (time_key integer, item_key integer, branch_key integer, "
         + "location_key integer, dollars_sold double, units_sold integer)";
 
-    String createDim1 = "create table if not exists time_dim ( time_key integer, day datetime, day_of_week integer, "
+    String createDim1 = "create table  time_dim ( time_key integer, day date, day_of_week integer, "
         + "month integer, quarter integer, year integer )";
 
-    String createDim2 = "create table if not exists item_dim ( item_key integer, item_name varchar(500))";
+    String createDim2 = "create table item_dim ( item_key integer, item_name varchar(500))";
 
-    String createDim3 = "create table if not exists branch_dim ( branch_key integer, branch_name varchar(100))";
+    String createDim3 = "create table branch_dim ( branch_key integer, branch_name varchar(100))";
 
-    String createDim4 = "create table if not exists location_dim (location_key integer,location_name varchar(100))";
+    String createDim4 = "create table location_dim (location_key integer,location_name varchar(100))";
 
     String insertFact = "insert into sales_fact values "
-        + " (1001,234,119,223,3000.58,56)," + " (1002,235,120,224,3456.26,62),"
-        + " (1003,236,121,225,6745.23,97)," + " (1004,237,122,226,8753.49,106)";
+        + "(1001,234,119,223,3000.58,56), (1002,235,120,224,3456.26,62), (1003,236,121,225,6745.23,97),(1004,237,122,226,8753.49,106)";
 
     String insertDim1 = "insert into time_dim values "
         + "(1001,'1900-01-01',1,1,1,1900),(1002,'1900-01-02',2,1,1,1900),(1003,'1900-01-03',3,1,1,1900),(1004,'1900-01-04',4,1,1,1900)";
@@ -118,7 +109,7 @@ public class TestJDBCFinal {
     try {
       conn = driver.getConnection(baseConf);
       stmt = conn.createStatement();
-      stmt.execute(dropTables);
+      // stmt.execute(dropTables);
       stmt.execute(createFact);
       stmt.execute(createDim1);
       stmt.execute(createDim2);
@@ -151,14 +142,13 @@ public class TestJDBCFinal {
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  dollars_sold "
-        + "from sales_fact fact "
+        + "sum(fact.dollars_sold) dollars_sold " + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "where time_dim.day between '1900-01-01' and '1900-01-03' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc";
+        + "order by sum(fact.dollars_sold) desc";
 
-    QueryContext context = new QueryContext(query, "root", baseConf);
+    QueryContext context = new QueryContext(query, "SA", baseConf);
     GrillResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 
@@ -169,19 +159,19 @@ public class TestJDBCFinal {
 
       ResultColumn col1 = rsMeta.getColumns().get(0);
       assertEquals(col1.getType(), ResultColumnType.INT);
-      assertEquals(col1.getName(), "time_key");
+      assertEquals(col1.getName(), "time_key".toUpperCase());
 
       ResultColumn col2 = rsMeta.getColumns().get(1);
       assertEquals(col2.getType(), ResultColumnType.INT);
-      assertEquals(col2.getName(), "day_of_week");
+      assertEquals(col2.getName(), "day_of_week".toUpperCase());
 
       ResultColumn col3 = rsMeta.getColumns().get(2);
-      assertEquals(col3.getType(), ResultColumnType.TIMESTAMP);
-      assertEquals(col3.getName(), "day");
+      assertEquals(col3.getType(), ResultColumnType.DATE);
+      assertEquals(col3.getName(), "day".toUpperCase());
 
       ResultColumn col4 = rsMeta.getColumns().get(3);
       assertEquals(col4.getType(), ResultColumnType.DOUBLE);
-      assertEquals(col4.getName(), "dollars_sold");
+      assertEquals(col4.getName(), "dollars_sold".toUpperCase());
 
       while (rs.hasNext()) {
         ResultRow row = rs.next();
@@ -200,8 +190,8 @@ public class TestJDBCFinal {
     testCreateJdbcDriver();
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end  dollars_sold "
+   "select fact.time_key,time_dim.day_of_week,time_dim.day, "
+        + "sum(fact.dollars_sold) dollars_sold "
         + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join item_dim on fact.item_key = item_dim.item_key and item_name = 'item2' "
@@ -210,8 +200,9 @@ public class TestJDBCFinal {
         + "where time_dim.day between '1900-01-01' and '1900-01-04' "
         + "and location_dim.location_name = 'loc2' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end desc ";
-    QueryContext context = new QueryContext(query, "user1", baseConf);
+        + "order by sum(fact.dollars_sold)  desc "; 
+
+    QueryContext context = new QueryContext(query, "SA", baseConf);
     GrillResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 
@@ -222,19 +213,19 @@ public class TestJDBCFinal {
 
       ResultColumn col1 = rsMeta.getColumns().get(0);
       assertEquals(col1.getType(), ResultColumnType.INT);
-      assertEquals(col1.getName(), "time_key");
+      assertEquals(col1.getName(), "time_key".toUpperCase());
 
       ResultColumn col2 = rsMeta.getColumns().get(1);
       assertEquals(col2.getType(), ResultColumnType.INT);
-      assertEquals(col2.getName(), "day_of_week");
+      assertEquals(col2.getName(), "day_of_week".toUpperCase());
 
       ResultColumn col3 = rsMeta.getColumns().get(2);
-      assertEquals(col3.getType(), ResultColumnType.TIMESTAMP);
-      assertEquals(col3.getName(), "day");
+      assertEquals(col3.getType(), ResultColumnType.DATE);
+      assertEquals(col3.getName(), "day".toUpperCase());
 
       ResultColumn col4 = rsMeta.getColumns().get(3);
       assertEquals(col4.getType(), ResultColumnType.DOUBLE);
-      assertEquals(col4.getName(), "dollars_sold");
+      assertEquals(col4.getName(), "dollars_sold".toUpperCase());
 
       while (rs.hasNext()) {
         ResultRow row = rs.next();

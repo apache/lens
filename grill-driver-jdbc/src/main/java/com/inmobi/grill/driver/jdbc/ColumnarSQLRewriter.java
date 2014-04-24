@@ -207,6 +207,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   // Get filter conditions if user has specified a join
   // condition for filter pushdown.
   public void getFilterInJoinCond(ASTNode node) {
+    
+    if (node == null) {
+      LOG.debug("Join AST is null " + node);
+      return;
+    }
 
     if (node.getToken().getType() == HiveParser.KW_AND) {
       ASTNode right = (ASTNode) node.getChild(1);
@@ -245,8 +250,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             .substring(0, dimJoinKeys.indexOf("."));
         factKeys.append(factJoinKeys).append(",");
 
-        // Construct the fact subquery using the corresponding join key used
-        // from dimension
+        // Construct part of subquery by referring join condition   
+        // fact.fact_key = dim_table.dim_key
         // eg. "fact_key in ( select dim_key from dim_table where "
         String queryphase1 = factJoinKeys.concat(" in ").concat(" ( ")
             .concat(" select ").concat(dimJoinKeys).concat(" from ")
@@ -258,8 +263,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         Set<String> setAllFilters = new HashSet<String>(rightFilter);
 
         // Check the occurrence of dimension table in the filter list and
-        // combine all filters of same dimension table with and clause.
-        // eg. dim_table.key1 = 'abc' and dim_table.key2 = 'xyz'
+        // combine all filters of same dimension table with and .
+        // eg. "dim_table.key1 = 'abc' and dim_table.key2 = 'xyz'"
         if (setAllFilters.toString().matches(
             "(.*)".toString().concat(dimTableName).concat("(.*)"))) {
 
@@ -295,6 +300,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   // Get aggregate columns
   public ArrayList<String> getAggregateColumns(ASTNode node) {
+    
     StringBuilder aggmeasures = new StringBuilder();
     if (HQLParser.isAggregateAST(node)) {
       if (node.getToken().getType() == HiveParser.TOK_FUNCTION
