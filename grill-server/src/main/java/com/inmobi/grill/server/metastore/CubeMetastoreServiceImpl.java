@@ -266,7 +266,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     String dimName = xDimTable.getName();
     List<FieldSchema> columns = JAXBUtils.fieldSchemaListFromColumns(xDimTable.getColumns());
     Map<String, List<TableReference>> references =
-        JAXBUtils.mapFromDimensionReferences(xDimTable.getDimensionsReferences());
+        JAXBUtils.mapFromDimensionReferences(xDimTable.getDimensionReferences());
     Map<String, UpdatePeriod> updatePeriodMap =
         JAXBUtils.dumpPeriodsFromUpdatePeriods(xDimTable.getStorageDumpPeriods());
 

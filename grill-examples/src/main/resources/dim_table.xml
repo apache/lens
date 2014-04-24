@@ -28,11 +28,12 @@
     <columns comment="more details" name="detail" type="string"/>
     <columns comment="d2 ID" name="d2id" type="int"/>
   </columns>
-  <dimensions_references>
-    <dim_reference dimension_column="d2id">
+  <dimension_references>
+    <dim_references dimension_column="d2id">
       <table_references dest_column="id" dest_table="dim_table2"/>
-    </dim_reference>
-  </dimensions_references>
+    </dim_references>
+  </dimension_references>
+  
   <storage_dump_periods>
     <update_period_element storage_name="local">
     <update_periods>hourly</update_periods>

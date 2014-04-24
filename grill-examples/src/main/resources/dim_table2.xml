@@ -27,7 +27,7 @@
     <columns comment="name" name="name" type="string"/>
     <columns comment="more details for dim2" name="detail2" type="string"/>
   </columns>
-  <dimensions_references/>
+  <dimension_references/>
   <storage_dump_periods>
     <update_period_element storage_name="local">
     <update_periods>hourly</update_periods>

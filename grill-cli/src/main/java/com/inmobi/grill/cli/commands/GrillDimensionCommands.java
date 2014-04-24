@@ -157,13 +157,13 @@ public class GrillDimensionCommands implements CommandMarker {
     if(table.getProperties()!= null) {
      buf.append(FormatUtils.formatProperties(table.getProperties().getProperties()));
     }
-    if(table.getDimensionsReferences() != null ) {
+    if(table.getDimensionReferences() != null ) {
       buf.append("References : ").append("\n");
       buf.append("\t").append("reference column name")
           .append("\t")
           .append("list of table reference <table>.<col>")
           .append("\n");
-      for (DimensionReference ref : table.getDimensionsReferences().getDimReferences()) {
+      for (DimensionReference ref : table.getDimensionReferences().getDimReferences()) {
         buf.append("\t")
             .append(ref.getDimensionColumn())
             .append("\t")
