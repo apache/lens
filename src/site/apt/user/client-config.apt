@@ -44,4 +44,6 @@ Grill client configuration
 *--+--+---+--+
 |10|grill.user.password| |Grill client user password|
 *--+--+---+--+
+|11|hive.cube.disable.auto.join|false|Enable automatic join resolution from grill client|
+*--+--+---+--+
 The configuration parameters and their default values

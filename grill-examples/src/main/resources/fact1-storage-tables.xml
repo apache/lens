@@ -28,7 +28,7 @@
     <table_desc 
     external="true" 
     field_delimiter="," 
-    table_location="examples/fact1_local">
+    table_location="/tmp/examples/fact1_local">
       <table_parameters/>
       <serde_parameters/>
       <part_cols>
