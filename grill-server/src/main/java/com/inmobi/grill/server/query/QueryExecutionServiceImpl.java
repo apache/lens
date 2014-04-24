@@ -506,7 +506,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private void rewriteAndSelect(QueryContext ctx) throws GrillException {
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers);
+        ctx.getUserQuery(), drivers, ctx.getConf());
 
     // 2. select driver to run the query
     GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
@@ -517,7 +517,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private void rewriteAndSelect(PreparedQueryContext ctx) throws GrillException {
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers);
+        ctx.getUserQuery(), drivers, ctx.getConf());
 
     // 2. select driver to run the query
     GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
@@ -950,7 +950,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Configuration qconf = getGrillConf(sessionHandle, GrillConf);
       accept(query, qconf, SubmitOp.EXPLAIN);
       Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-          query, drivers);
+          query, drivers, qconf);
       // select driver to run the query
       return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf).toQueryPlan();
     } finally {
