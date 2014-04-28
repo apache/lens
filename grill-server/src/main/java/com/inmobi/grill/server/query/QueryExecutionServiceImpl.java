@@ -23,6 +23,7 @@ package com.inmobi.grill.server.query;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -595,6 +596,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
+    } catch (UnsupportedEncodingException e) {
+      throw new GrillException(e);
     } finally {
       release(sessionHandle);
     }
@@ -943,16 +946,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   @Override
   public QueryPlan explain(GrillSessionHandle sessionHandle, String query,
-      GrillConf GrillConf) throws GrillException {
+      GrillConf grillConf) throws GrillException {
     try {
       LOG.info("Explain: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, GrillConf);
+      Configuration qconf = getGrillConf(sessionHandle, grillConf);
       accept(query, qconf, SubmitOp.EXPLAIN);
       Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
           query, drivers, qconf);
       // select driver to run the query
       return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf).toQueryPlan();
+    } catch (UnsupportedEncodingException e) {
+      throw new GrillException(e);
     } finally {
       release(sessionHandle);
     }
