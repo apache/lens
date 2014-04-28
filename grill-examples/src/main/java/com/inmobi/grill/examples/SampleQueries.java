@@ -90,8 +90,8 @@ public class SampleQueries {
       if (StringUtils.isBlank(query)) {
         continue;
       }
-      QueryHandle handle = queryClient.executeQuery(query, true);
       System.out.println("Query:" + query);
+      QueryHandle handle = queryClient.executeQuery(query, true);
       System.out.println("Status:" + queryClient.getQuery().getStatus());
       if (queryClient.wasQuerySuccessful()) {
         System.out.println("Result:");
@@ -101,9 +101,9 @@ public class SampleQueries {
         }
         queryClient.closeResultSet();
       } else {
-        System.out.println("query failed!");
         retCode = 1;
       }
+      System.out.println("--------------------");
     }
 
   }

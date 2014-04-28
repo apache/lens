@@ -75,7 +75,7 @@ public class PopulateSampleMetastore {
     XPartition partition = (XPartition)SampleMetastore.readFromXML("dim1-local-part.xml");
     String partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
-      partition.setLocation(System.getProperty("grill.home") + "/" + partLocation);
+      partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
     result = metaClient.addPartitionToDimension("dim_table", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
@@ -87,7 +87,7 @@ public class PopulateSampleMetastore {
     partition = (XPartition)SampleMetastore.readFromXML("dim2-local-part.xml");
     partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
-      partition.setLocation(System.getProperty("grill.home") + "/" + partLocation);
+      partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
     result = metaClient.addPartitionToDimension("dim_table2", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {

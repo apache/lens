@@ -100,7 +100,7 @@ public class GrillMetadataClient {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases")
         .queryParam("sessionid", this.connection.getSessionHandle())
-        .queryParam("ignoreifexist", ignoreIfExists)
+        .queryParam("ignoreIfExisting", ignoreIfExists)
         .request(MediaType.APPLICATION_XML)
         .post(Entity.xml(database), APIResult.class);
     return result;
@@ -315,7 +315,7 @@ public class GrillMetadataClient {
         FormDataContentDisposition.name("fact").fileName("fact").build(),
         objFact.createFactTable(f), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
         objFact.createXStorageTables(tables), MediaType.APPLICATION_XML_TYPE));
     APIResult result = target.path("facts")
         .request(MediaType.APPLICATION_XML_TYPE)
@@ -334,7 +334,7 @@ public class GrillMetadataClient {
         FormDataContentDisposition.name("fact").fileName("fact").build(),
         getContent(factSpec), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
         getContent(storageSpecPath), MediaType.APPLICATION_XML_TYPE));
     APIResult result = target.path("facts")
         .request(MediaType.APPLICATION_XML_TYPE)
@@ -505,10 +505,10 @@ public class GrillMetadataClient {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("dimtable").fileName("dimtable").build(),
+        FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
         objFact.createDimensionTable(table), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
         objFact.createXStorageTables(storageTables), MediaType.APPLICATION_XML_TYPE));
 
     APIResult result = target.path("dimensions")
@@ -525,10 +525,10 @@ public class GrillMetadataClient {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         this.connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("dimtable").fileName("dimtable").build(),
+        FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
         getContent(table), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
         getContent(storageTables), MediaType.APPLICATION_XML_TYPE));
 
     APIResult result = target.path("dimensions")

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-	<name>Grill Distribution</name>
+	<name>Grill Client Distribution</name>
    
   <parent>
     <artifactId>grill-parent</artifactId>
@@ -9,38 +9,23 @@
     <version>1.0.0-SNAPSHOT</version>
   </parent>
     
-  <artifactId>grill-dist</artifactId>
-  <description> Packaging and distribution </description>
+  <artifactId>grill-client-dist</artifactId>
+  <description> Packaging and distribution for grill client </description>
 
   <dependencies>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-api</artifactId>
+      <artifactId>grill-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-server-api</artifactId>
+      <artifactId>grill-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-hive</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-cube</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-jdbc</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-storage-db</artifactId>
+      <artifactId>grill-examples</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>
@@ -53,7 +38,7 @@
         <configuration>
           <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
           <descriptors>
-            <descriptor>src/main/assembly/server-dist.xml</descriptor>
+            <descriptor>src/main/assembly/client-dist.xml</descriptor>
           </descriptors>
         </configuration>
         <executions>
@@ -72,38 +57,31 @@
         <groupId>org.vafer</groupId>
         <executions>
           <execution>
-            <id>server</id>          
+            <id>client</id>
             <phase>package</phase>
             <goals>
               <goal>jdeb</goal>
             </goals>
             <configuration>
-              <installDir>/usr/local/grill</installDir>
-              <deb>${project.build.directory}/grill-server_${version}.deb</deb>
+              <controlDir>${project.basedir}/src/deb/client</controlDir>
+              <installDir>/usr/local/grill-client</installDir>
+              <deb>${project.build.directory}/grill-client_${version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/grill-dist-${project.version}-server</src>
+                  <src>target/grill-client-dist-${project.version}-client</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/local/grill</prefix>
+                    <prefix>/usr/local/grill-client</prefix>
                   </mapper>
                 </data>
                 <data>
-                  <src>target/grill-dist-${project.version}-server/bin</src>
+                  <src>target/grill-client-dist-${project.version}-client/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/local/grill/bin</prefix>
+                    <prefix>/usr/local/grill-client/bin</prefix>
                     <filemode>755</filemode>
-                  </mapper>
-                </data>
-                <data>
-                  <src>target/grill-dist-${project.version}-server/webapp</src>
-                  <type>directory</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>/usr/local/grill/webapp</prefix>
                   </mapper>
                 </data>
               </dataSet>

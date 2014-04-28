@@ -18,6 +18,12 @@
 # The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
 #export JAVA_HOME=
 
+# The hadoop installation location. If Grill is configured to run queries through Hive, which in turn uses Hadoop for execution, the variable is required
+#export HADOOP_HOME=
+
+# The Hive installation location. Grill adds hive lib in the classpath.
+#export HIVE_HOME=
+
 # any additional java opts you want to set. This will apply to both client and server operations
 #export GRILL_OPTS=
 

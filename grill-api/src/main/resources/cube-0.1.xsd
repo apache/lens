@@ -115,7 +115,7 @@
     <xs:complexType name="dimension_table">
         <xs:sequence>
             <xs:element type="columns" name="columns"/>
-            <xs:element type="dimension_references" name="dimensions_references"/>
+            <xs:element type="dimension_references" name="dimension_references"/>
             <xs:element type="update_periods" name="storage_dump_periods"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
         </xs:sequence>

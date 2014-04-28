@@ -147,7 +147,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
     // Create again
-    result = dbTarget.queryParam("sessionid", grillSessionId).queryParam("ignoreifexist", false).request(mediaType).post(Entity.xml(newDb), APIResult.class);
+    result = dbTarget.queryParam("sessionid", grillSessionId).queryParam("ignoreIfExisting", false).request(mediaType).post(Entity.xml(newDb), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.FAILED);
     LOG.info(">> Result message " + result.getMessage());
 
@@ -585,7 +585,7 @@ public class TestMetastoreService extends GrillJerseyTest {
     drf.getTableReferences().add(tref1);
     drf.getTableReferences().add(tref2);
     refs.getDimReferences().add(drf);
-    dt.setDimensionsReferences(refs);
+    dt.setDimensionReferences(refs);
 
     UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
 
@@ -637,10 +637,10 @@ public class TestMetastoreService extends GrillJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, medType));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("dimtable").fileName("dimtable").build(),
+        FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
         cubeObjectFactory.createDimensionTable(dt), medType));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
         cubeObjectFactory.createXStorageTables(storageTables), medType));
     APIResult result = target()
         .path("metastore")
@@ -704,8 +704,8 @@ public class TestMetastoreService extends GrillJerseyTest {
       DimensionTable dt2 = dtElement.getValue();
       assertTrue (dt1 != dt2);
       assertEquals(dt2.getName(), table);
-      assertEquals(dt2.getDimensionsReferences().getDimReferences().size(), 
-          dt1.getDimensionsReferences().getDimReferences().size());
+      assertEquals(dt2.getDimensionReferences().getDimReferences().size(), 
+          dt1.getDimensionReferences().getDimReferences().size());
       assertEquals(dt2.getWeight(), dt1.getWeight());
       Map<String, String> props = JAXBUtils.mapFromXProperties(dt2.getProperties());
       assertTrue(props.containsKey("foodim"));
@@ -974,7 +974,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")
@@ -1094,7 +1094,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")
@@ -1191,7 +1191,7 @@ public class TestMetastoreService extends GrillJerseyTest {
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
       mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storagetables").fileName("storagetables").build(),
+          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
           cubeObjectFactory.createXStorageTables(storageTables), medType));
       APIResult result = target()
           .path("metastore")

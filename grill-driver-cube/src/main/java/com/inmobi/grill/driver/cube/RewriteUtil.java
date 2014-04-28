@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
@@ -128,8 +129,16 @@ public class RewriteUtil {
     return backTrackIndex;
   }
 
-  static CubeQueryRewriter getRewriter(GrillDriver driver) throws SemanticException {
-    return new CubeQueryRewriter(driver.getConf());
+  static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
+    Configuration conf = new Configuration(driver.getConf());
+    for (Map.Entry<String, String> entry : queryConf) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
+    return conf;
+  }
+
+  static CubeQueryRewriter getRewriter(GrillDriver driver, Configuration queryConf) throws SemanticException {
+    return new CubeQueryRewriter(getFinalQueryConf(driver, queryConf));
   }
 
   /**
@@ -146,7 +155,7 @@ public class RewriteUtil {
   }
 
   public static Map<GrillDriver, String> rewriteQuery(final String query,
-      List<GrillDriver> drivers) throws GrillException {
+      List<GrillDriver> drivers, Configuration queryconf) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
@@ -159,7 +168,7 @@ public class RewriteUtil {
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
         for (GrillDriver driver : drivers) {
-          CubeQueryRewriter rewriter = getRewriter(driver);
+          CubeQueryRewriter rewriter = getRewriter(driver, queryconf);
           StringBuilder builder = new StringBuilder();
           int start = 0;
           for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {

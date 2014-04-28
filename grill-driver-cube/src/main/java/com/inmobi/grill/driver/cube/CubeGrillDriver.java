@@ -135,7 +135,7 @@ public class CubeGrillDriver implements GrillDriver {
   private void rewriteAndSelect(QueryContext ctx) throws GrillException {
     queryContexts.put(ctx.getQueryHandle(), ctx);
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers);
+        ctx.getUserQuery(), drivers, ctx.getConf());
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries, conf);
@@ -218,7 +218,7 @@ public class CubeGrillDriver implements GrillDriver {
       throws GrillException {
     preparedQueries.put(ctx.getPrepareHandle(), ctx);
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers);
+        ctx.getUserQuery(), drivers, ctx.getConf());
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries, conf);
@@ -235,7 +235,8 @@ public class CubeGrillDriver implements GrillDriver {
       PreparedQueryContext ctx = new PreparedQueryContext(query, null, conf);
       return explainAndPrepare(ctx);
     }
-    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(query, drivers);
+    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
+        query, drivers, conf);
     GrillDriver driver = selectDriver(driverQueries, conf);
     return driver.explain(driverQueries.get(driver), conf);
   }

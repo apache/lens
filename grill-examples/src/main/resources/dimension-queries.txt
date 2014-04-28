@@ -1,1 +1,23 @@
 cube select id,name from dim_table
+cube select id,name from dim_table where name != "first"
+cube select id,name from dim_table order by name
+cube select id,name from dim_table order by name desc
+cube select id,name from dim_table where name != "first" order by name
+cube select id,name from dim_table where name != "first" order by name desc
+cube select id,name from dim_table limit 2
+cube select id,name from dim_table order by name limit 2 
+cube select id,name from dim_table order by name desc limit 2 
+cube select id,name from dim_table where name != "first" limit 2
+cube select id,name from dim_table where name != "first" order by name limit 2
+cube select id,name from dim_table where name != "first" order by name desc limit 2
+cube select count(id) from dim_table
+cube select count(id) from dim_table group by name
+cube select count(distinct id) from dim_table
+cube select dim_table.name, dim_table2.name from dim_table
+cube select dim_table.name, dim_table2.name from dim_table join dim_table2
+cube select dim_table.name, dim_table2.name from dim_table left outer join dim_table2
+cube select dim_table.name, dim_table2.name from dim_table right outer join dim_table2
+cube select count(id) from dim_table where name != "first"
+cube select count(distinct id) from dim_table where name != "first"
+cube select dim_table.name, dim_table2.name from dim_table where dim_table.name != "first"
+select * from (cube select dim_table.name name1, dim_table2.name name2 from dim_table where dim_table.name != "first") a

@@ -111,7 +111,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
         throw new IllegalArgumentException("Unable to set driver class:" + config.driverClass, e);
       }
       cpds.setJdbcUrl(config.jdbcURI);
-      cpds.setUser(config.jdbcURI);                                  
+      cpds.setUser(config.user);                                  
       cpds.setPassword(config.password);                                  
       
       // Maximum number of connections allowed in the pool

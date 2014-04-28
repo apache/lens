@@ -49,8 +49,12 @@ public class GrillQueryCommands implements CommandMarker {
       @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
           specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
     if (!asynch) {
-      GrillClientResultSet result = client.getResults(sql);
-      return formatResultSet(result);
+      try {
+        GrillClientResultSet result = client.getResults(sql);
+        return formatResultSet(result);
+      } catch (Throwable t) {
+        return t.getMessage();
+      }
     } else {
       QueryHandle handle = client.executeQueryAsynch(sql);
       return handle.getHandleId().toString();
@@ -140,8 +144,12 @@ public class GrillQueryCommands implements CommandMarker {
   @CliCommand(value = "query results", help ="get results of async query")
   public String getQueryResults(@CliOption(key = {"", "query"},
       mandatory = true, help = "Query to execute") String qh)   {
-    GrillClientResultSet result = client.getAsyncResults(
-        new QueryHandle(UUID.fromString(qh)));
-    return formatResultSet(result);
+    try {
+      GrillClientResultSet result = client.getAsyncResults(
+          new QueryHandle(UUID.fromString(qh)));
+      return formatResultSet(result);
+    } catch (Throwable t) {
+      return t.getMessage();
+    }
   }
 }

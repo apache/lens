@@ -456,7 +456,7 @@ public class JAXBUtils {
         ref.getTableReferences().addAll(dimRefListFromTabRefList(entry.getValue()));
         dimRefs.getDimReferences().add(ref);
       }
-      dimTab.setDimensionsReferences(dimRefs);
+      dimTab.setDimensionReferences(dimRefs);
     }
 
     dimTab.setProperties(xPropertiesFromMap(cubeDimTable.getProperties()));
@@ -498,10 +498,10 @@ public class JAXBUtils {
   public static CubeDimensionTable cubeDimTableFromDimTable(DimensionTable dimensionTable) {
     Map<String, List<TableReference>> tabrefs = new HashMap<String, List<TableReference>>();
 
-    if (dimensionTable.getDimensionsReferences() != null &&
-        dimensionTable.getDimensionsReferences().getDimReferences() != null &&
-        !dimensionTable.getDimensionsReferences().getDimReferences().isEmpty()) {
-      for (DimensionReference drf : dimensionTable.getDimensionsReferences().getDimReferences()) {
+    if (dimensionTable.getDimensionReferences() != null &&
+        dimensionTable.getDimensionReferences().getDimReferences() != null &&
+        !dimensionTable.getDimensionReferences().getDimReferences().isEmpty()) {
+      for (DimensionReference drf : dimensionTable.getDimensionReferences().getDimReferences()) {
         String col = drf.getDimensionColumn();
         List<TableReference> refs = tableRefFromDimensionRef(drf);
         List<TableReference> val = tabrefs.get(col);

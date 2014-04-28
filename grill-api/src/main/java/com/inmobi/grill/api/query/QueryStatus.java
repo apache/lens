@@ -57,10 +57,22 @@ public class QueryStatus implements Serializable {
 
   @Override
   public String toString() {
-  	return new StringBuilder(status.toString()).append(':')
-  			.append(progress).append(':')
-  			.append(isResultSetAvailable).append(':').
-  			append(statusMessage).toString();
+  	StringBuilder str = new StringBuilder(status.toString()).append(':').
+    append(statusMessage);
+  	if (status.equals(Status.RUNNING)) {
+  	  str.append(" - Progress:").append(progress).append(":").append(progressMessage);
+  	}
+  	if (status.equals(Status.SUCCESSFUL)) {
+  	  if (isResultSetAvailable) {
+  	    str.append(" - Result Available");
+  	  } else {
+        str.append(" - Result Not Available");
+  	  }
+  	}
+    if (status.equals(Status.FAILED)) {
+      str.append(" - Cause:").append(errorMessage);
+    }
+    return str.toString();
   }
 
   public boolean isFinished() {

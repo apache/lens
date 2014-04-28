@@ -42,6 +42,17 @@ Grill server monitoring
   Ganglia metrics can be enabled by configuring the parameters :
   <grill.enable.gangla.metrics>, <grill.metrics.ganglia.serverName>, <grill.metrics.ganglia.port>,
    <grill.metrics.reporting.period>.
-   
   
+* REST end points
+
+  Grill server provides admin endpoint at <host>:<port>/admin. It provides
+  end points for ping, metrics, threads and healthcheck.
+  
+  * ping : admin/ping will respond with pong, if server is up
+  
+  * metrics : admin/metrics will respond with all metrics in a text file, written in json
+  
+  * healthcheck : admin/healthcheck is not implemented yet.
+  
+  * threads : admin/threads will give a thread dump of the server   
   

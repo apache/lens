@@ -53,14 +53,14 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
-      <excludes>
-        <exclude>com.inmobi.grill:grill-server-api</exclude>      
-        <exclude>com.inmobi.grill:grill-driver-cube</exclude>
-        <exclude>com.inmobi.grill:grill-driver-hive</exclude>
-        <exclude>com.inmobi.grill:grill-driver-impala</exclude>
-        <exclude>com.inmobi.grill:grill-driver-jdbc</exclude>
-        <exclude>com.inmobi.grill:grill-dist</exclude>
-      </excludes>
+      <includes>
+        <include>com.inmobi.grill:grill-api</include>
+        <include>com.inmobi.grill:grill-cli</include>
+        <include>com.inmobi.grill:grill-client</include>
+        <include>com.inmobi.grill:grill-examples</include>
+      </includes>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
   </dependencySets>
 

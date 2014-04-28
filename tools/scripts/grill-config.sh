@@ -84,13 +84,13 @@ case $type in
     GRILLCPPATH="${GRILLCPPATH}:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/classes"
     GRILLCPPATH="${GRILLCPPATH}:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/lib/*:${BASEDIR}/lib/*"
 
-    HADOOP_CLASSPATH="${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/lib/*"
+    HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/lib/*"
     export HADOOP_CLASSPATH
     
     # log and pid dirs for applications
     GRILL_LOG_DIR="${GRILL_LOG_DIR:-$BASEDIR/logs}"
     export GRILL_LOG_DIR
-    GRILL_PID_DIR="${GRILL_PID_DIR:-$BASEDIR/logs}"
+    GRILL_PID_DIR="${GRILL_PID_DIR:-$GRILL_LOG_DIR}"
     # create the pid dir if its not there
     [ -w "$GRILL_PID_DIR" ] ||  mkdir -p "$GRILL_PID_DIR"
     export GRILL_PID_DIR
