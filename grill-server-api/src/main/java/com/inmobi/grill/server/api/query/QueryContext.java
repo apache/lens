@@ -142,7 +142,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     return new GrillQuery(queryHandle, userQuery, submissionTime,
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
-        driverQuery, status, resultSetPath, driverOpHandle, qconf);
+        driverQuery, status, resultSetPath, driverOpHandle, qconf, endTime);
   }
 
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
