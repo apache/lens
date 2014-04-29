@@ -49,7 +49,11 @@ public class GrillDatabaseCommands implements CommandMarker {
       help = "displays list of all databases")
   public String showAllDatabases() {
     List<String> databases = client.getAllDatabases();
-    return Joiner.on("\n").join(databases);
+    if(databases != null) {
+      return Joiner.on("\n").join(databases);
+    } else {
+      return "No Dabases found";
+    }
   }
 
   @CliCommand(value = "use",

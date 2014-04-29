@@ -48,7 +48,11 @@ public class GrillFactCommands implements CommandMarker {
       help = "display list of fact tables in database")
   public String showFacts() {
     List<String> facts = client.getAllFactTables();
-    return Joiner.on("\n").join(facts);
+    if (facts != null) {
+      return Joiner.on("\n").join(facts);
+    } else {
+      return "No Facts Found";
+    }
   }
 
   @CliCommand(value = "create fact", help = "create a fact table")

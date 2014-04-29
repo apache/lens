@@ -48,7 +48,7 @@ public class GrillQueryCommands implements CommandMarker {
           specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
     if (!asynch) {
       try {
-        GrillClientResultSet result = client.getResults(sql);
+        GrillClient.GrillClientResultSetWithStats result = client.getResults(sql);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
@@ -59,25 +59,35 @@ public class GrillQueryCommands implements CommandMarker {
     }
   }
 
-  private String formatResultSet(GrillClientResultSet result) {
+  private String formatResultSet(GrillClient.GrillClientResultSetWithStats rs) {
     StringBuilder b = new StringBuilder();
-    QueryResultSetMetadata resultSetMetadata = result.getResultSetMetadata();
+    QueryResultSetMetadata resultSetMetadata = rs.getResultSet().getResultSetMetadata();
     for (ResultColumn column : resultSetMetadata.getColumns()) {
       b.append(column.getName()).append("\t");
     }
     b.append("\n");
-    QueryResult r = result.getResult();
+    QueryResult r = rs.getResultSet().getResult();
+    int i = 0;
     if (r instanceof InMemoryQueryResult) {
       InMemoryQueryResult temp = (InMemoryQueryResult) r;
       for (ResultRow row : temp.getRows()) {
         for (Object col : row.getValues()) {
           b.append(col).append("\t");
         }
+        i++;
         b.append("\n");
       }
     } else {
       PersistentQueryResult temp = (PersistentQueryResult) r;
       b.append("Results of query stored at : " + temp.getPersistedURI());
+    }
+
+    if(rs.getQuery() != null) {
+      long submissionTime = rs.getQuery().getSubmissionTime().getTime();
+      long endTime = rs.getQuery().getFinishTime();
+      b.append(i).append(" rows process in (").
+          append(endTime>0?((endTime - submissionTime)/1000): 0).
+          append(") seconds.\n");
     }
     return b.toString();
   }
@@ -142,7 +152,7 @@ public class GrillQueryCommands implements CommandMarker {
   public String getQueryResults(@CliOption(key = {"", "query"},
       mandatory = true, help = "Query to execute") String qh)   {
     try {
-      GrillClientResultSet result = client.getAsyncResults(
+      GrillClient.GrillClientResultSetWithStats result = client.getAsyncResults(
           new QueryHandle(UUID.fromString(qh)));
       return formatResultSet(result);
     } catch (Throwable t) {
