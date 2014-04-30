@@ -46,7 +46,11 @@ public class GrillCubeCommands implements CommandMarker {
   @CliCommand(value = "show cubes", help = "show list of cubes in database")
   public String showCubes() {
     List<String> cubes = client.getAllCubes();
-    return Joiner.on("\n").join(cubes);
+    if( cubes != null) {
+      return Joiner.on("\n").join(cubes);
+    } else {
+      return "No Cubes found";
+    }
   }
 
   @CliCommand(value = "create cube", help = "Create a new Cube")

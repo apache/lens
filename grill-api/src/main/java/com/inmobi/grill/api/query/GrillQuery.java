@@ -50,4 +50,5 @@ public class GrillQuery {
   @XmlElement @Getter private String resultSetPath;
   @XmlElement @Getter private String driverOpHandle;
   @XmlElement @Getter private GrillConf queryConf;
+  @XmlElement @Getter private long finishTime;
 }

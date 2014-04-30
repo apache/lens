@@ -47,7 +47,11 @@ public class GrillDimensionCommands implements CommandMarker {
       help = "show list of dimension tables in database")
   public String showDimensions() {
     List<String> dims = client.getAllDimensionTables();
-    return Joiner.on("\n").join(dims);
+    if (dims!=null) {
+      return Joiner.on("\n").join(dims);
+    } else {
+      return "No Dimensions Found";
+    }
   }
 
   @CliCommand(value = "create dimension", help = "Create a new dimension table")

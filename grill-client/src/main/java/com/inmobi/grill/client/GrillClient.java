@@ -58,7 +58,26 @@ public class GrillClient {
     return query.getQueryHandle();
   }
 
-  public GrillClientResultSet getResults(String sql) {
+  public static class GrillClientResultSetWithStats {
+    private final GrillClientResultSet resultSet;
+    private final GrillQuery query;
+
+    public GrillClientResultSetWithStats(GrillClientResultSet resultSet,
+                                         GrillQuery query) {
+      this.resultSet = resultSet;
+      this.query = query;
+    }
+
+    public GrillClientResultSet getResultSet() {
+      return resultSet;
+    }
+
+    public GrillQuery getQuery() {
+      return query;
+    }
+  }
+
+  public GrillClientResultSetWithStats getResults(String sql) {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
     statement.execute(sql, true);
@@ -66,19 +85,19 @@ public class GrillClient {
         == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(statement.getStatus().getErrorMessage());
     }
-    return new GrillClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData());
+    return new GrillClientResultSetWithStats(new GrillClientResultSet(statement.getResultSet(),
+        statement.getResultSetMetaData()), statement.getQuery());
   }
 
-  public GrillClientResultSet getAsyncResults(QueryHandle q) {
+  public GrillClientResultSetWithStats getAsyncResults(QueryHandle q) {
     GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
         == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
-    return new GrillClientResultSet(statement.getResultSet(query),
-        statement.getResultSetMetaData(query));
+    return new GrillClientResultSetWithStats(new GrillClientResultSet(statement.getResultSet(),
+        statement.getResultSetMetaData()), statement.getQuery());
   }
 
   private GrillStatement getGrillStatement(QueryHandle query) {
