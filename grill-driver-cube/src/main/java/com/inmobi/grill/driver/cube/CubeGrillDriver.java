@@ -145,7 +145,7 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   private QueryContext createQueryContext(String query, Configuration conf) {
-    return new QueryContext(query, conf.get("grill.hs2.user"), conf);
+    return new QueryContext(query, null, conf);
   }
 
   public QueryHandle executeAsync(String query, Configuration conf)
