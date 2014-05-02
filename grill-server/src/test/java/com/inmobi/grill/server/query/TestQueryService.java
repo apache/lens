@@ -889,11 +889,11 @@ public class TestQueryService extends GrillJerseyTest {
     QueryResultSetMetadata metadata = target.path(handle.toString()).path(
         "resultsetmetadata").queryParam("sessionid", grillSessionId).request().get(QueryResultSetMetadata.class);
     Assert.assertEquals(metadata.getColumns().size(), 2);
-    assertTrue(metadata.getColumns().get(0).getName().toLowerCase().equals(outputTablePfx + "ID".toLowerCase()) ||
-        metadata.getColumns().get(0).getName().toLowerCase().equals("ID"));
+    assertTrue(metadata.getColumns().get(0).getName().toLowerCase().equals((outputTablePfx + "ID").toLowerCase()) ||
+        metadata.getColumns().get(0).getName().toLowerCase().equals("ID".toLowerCase()));
     assertEquals("INT".toLowerCase(), metadata.getColumns().get(0).getType().name().toLowerCase());
-    assertTrue(metadata.getColumns().get(1).getName().toLowerCase().equals(outputTablePfx + "IDSTR".toLowerCase()) ||
-        metadata.getColumns().get(0).getName().toLowerCase().equals("IDSTR"));
+    assertTrue(metadata.getColumns().get(1).getName().toLowerCase().equals((outputTablePfx + "IDSTR").toLowerCase()) ||
+        metadata.getColumns().get(0).getName().toLowerCase().equals("IDSTR".toLowerCase()));
     assertEquals("STRING".toLowerCase(), metadata.getColumns().get(1).getType().name().toLowerCase());    
   }
 
