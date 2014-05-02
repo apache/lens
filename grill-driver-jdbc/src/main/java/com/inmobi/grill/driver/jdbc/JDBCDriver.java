@@ -27,6 +27,7 @@ import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.QueryCompletionListener;
@@ -77,6 +78,8 @@ public class JDBCDriver implements GrillDriver {
     @Getter private boolean isClosed;
     @Getter @Setter private QueryCompletionListener listener;
     @Getter @Setter private QueryResult queryResult;
+    @Getter @Setter private long startTime;
+    @Getter @Setter private long endTime;
     
     public JdbcQueryContext(QueryContext context) {
       this.grillContext = context;
@@ -165,6 +168,7 @@ public class JDBCDriver implements GrillDriver {
     public QueryResult call() {
       Statement stmt = null;
       Connection conn = null;
+      queryContext.setStartTime(System.currentTimeMillis());
       QueryResult result = new QueryResult();
       queryContext.setQueryResult(result);
       
@@ -193,6 +197,8 @@ public class JDBCDriver implements GrillDriver {
             result.error = sqlEx;
             queryContext.notifyError(sqlEx);
           }
+        } finally {
+          queryContext.setEndTime(System.currentTimeMillis());
         }
       }
       return result;
@@ -448,30 +454,33 @@ public class JDBCDriver implements GrillDriver {
   /**
    * Get status of the query, specified by the handle
    *
-   * @param handle The query handle
-   * @return query status
+   * @param context The query handle
    */
   @Override
-  public QueryStatus getStatus(QueryHandle handle) throws GrillException {
+  public void updateStatus(QueryContext context) throws GrillException {
     checkConfigured();
-    JdbcQueryContext ctx = getQueryContext(handle);
-    QueryStatus status;
-    
+    JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
+    context.getDriverStatus().setDriverStartTime(ctx.getStartTime());
     if (ctx.getResultFuture().isDone()) {
       // Since future is already done, this call should not block
+      context.getDriverStatus().setProgress(1.0);
+      context.getDriverStatus().setDriverFinishTime(ctx.getEndTime());
       if (ctx.isCancelled()) {
-        status = 
-            new QueryStatus(1.0, Status.CANCELED, handle.getHandleId() + " cancelled", true, null, null);
+        context.getDriverStatus().setState(DriverQueryState.CANCELED);
+        context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " cancelled");
       } else if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
-        status = new QueryStatus(1.0, Status.FAILED, ctx.getQueryResult().error.getMessage(), false, null, null);
+        context.getDriverStatus().setState(DriverQueryState.FAILED);
+        context.getDriverStatus().setStatusMessage(ctx.getQueryResult().error.getMessage());
       } else {
-        status = 
-            new QueryStatus(1.0, Status.SUCCESSFUL, handle.getHandleId() + " successful", true, null, null);
+        context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
+        context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " successful");
+        context.getDriverStatus().setResultSetAvailable(true);
       }
     } else {
-      status = new QueryStatus(0.0, Status.RUNNING, handle.getHandleId() + " is running", false, null, null);
+      context.getDriverStatus().setProgress(0.0);
+      context.getDriverStatus().setState(DriverQueryState.RUNNING);
+      context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " is running");
     }
-    return status;
   }
 
   /**

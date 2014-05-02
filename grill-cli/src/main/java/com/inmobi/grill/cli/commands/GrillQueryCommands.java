@@ -87,7 +87,7 @@ public class GrillQueryCommands implements CommandMarker {
     }
 
     if (rs.getQuery() != null) {
-      long submissionTime = rs.getQuery().getSubmissionTime().getTime();
+      long submissionTime = rs.getQuery().getSubmissionTime();
       long endTime = rs.getQuery().getFinishTime();
       b.append(i).append(" rows process in (").
           append(endTime>0?((endTime - submissionTime)/1000): 0).

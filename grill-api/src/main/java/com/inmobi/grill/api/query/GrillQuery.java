@@ -20,8 +20,6 @@ package com.inmobi.grill.api.query;
  * #L%
  */
 
-import java.util.Date;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -32,6 +30,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @XmlRootElement
 @AllArgsConstructor
@@ -40,7 +39,6 @@ public class GrillQuery {
 
   @XmlElement @Getter private QueryHandle queryHandle;
   @XmlElement @Getter private String userQuery;
-  @XmlElement @Getter private Date submissionTime;
   @XmlElement @Getter private String submittedUser;
   @XmlElement @Getter private Priority priority;
   @XmlElement @Getter private boolean isPersistent;
@@ -50,5 +48,11 @@ public class GrillQuery {
   @XmlElement @Getter private String resultSetPath;
   @XmlElement @Getter private String driverOpHandle;
   @XmlElement @Getter private GrillConf queryConf;
+  @XmlElement @Getter private long submissionTime;
+  @XmlElement @Getter private long launchTime;
+  @XmlElement @Getter private long driverStartTime;
+  @XmlElement @Getter private long driverFinishTime;
   @XmlElement @Getter private long finishTime;
+  @XmlElement @Getter private long closedTime;
+
 }
