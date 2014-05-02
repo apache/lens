@@ -21,6 +21,7 @@ package com.inmobi.grill.server.query;
  */
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -888,9 +889,11 @@ public class TestQueryService extends GrillJerseyTest {
     QueryResultSetMetadata metadata = target.path(handle.toString()).path(
         "resultsetmetadata").queryParam("sessionid", grillSessionId).request().get(QueryResultSetMetadata.class);
     Assert.assertEquals(metadata.getColumns().size(), 2);
-    assertEquals(outputTablePfx + "ID".toLowerCase(), metadata.getColumns().get(0).getName().toLowerCase());
+    assertTrue(metadata.getColumns().get(0).getName().toLowerCase().equals(outputTablePfx + "ID".toLowerCase()) ||
+        metadata.getColumns().get(0).getName().toLowerCase().equals("ID"));
     assertEquals("INT".toLowerCase(), metadata.getColumns().get(0).getType().name().toLowerCase());
-    assertEquals(outputTablePfx + "IDSTR".toLowerCase(), metadata.getColumns().get(1).getName().toLowerCase());
+    assertTrue(metadata.getColumns().get(1).getName().toLowerCase().equals(outputTablePfx + "IDSTR".toLowerCase()) ||
+        metadata.getColumns().get(0).getName().toLowerCase().equals("IDSTR"));
     assertEquals("STRING".toLowerCase(), metadata.getColumns().get(1).getType().name().toLowerCase());    
   }
 
