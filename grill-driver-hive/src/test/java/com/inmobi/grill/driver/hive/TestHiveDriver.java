@@ -180,7 +180,7 @@ public class TestHiveDriver {
       expectedCol += outputTable + ".";
     }
     expectedCol += "ID";
-    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase()) || columns.get(0).getName().toLowerCase().equals("ID"));
+    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase()) || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
     assertEquals(columns.get(0).getType().name().toLowerCase(), "STRING".toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
