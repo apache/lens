@@ -90,16 +90,22 @@ public class SampleQueries {
       if (StringUtils.isBlank(query)) {
         continue;
       }
+      if (query.startsWith("--")) {
+        // skip comments
+        continue;
+      }
       System.out.println("Query:" + query);
       QueryHandle handle = queryClient.executeQuery(query, true);
       System.out.println("Status:" + queryClient.getQuery().getStatus());
       if (queryClient.wasQuerySuccessful()) {
-        System.out.println("Result:");
-        InMemoryQueryResult result = queryClient.getResultSet();
-        for (ResultRow row : result.getRows()) {
-          System.out.println(StringUtils.join(row.getValues(), "\t"));
+        if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
+          System.out.println("Result:");
+          InMemoryQueryResult result = queryClient.getResultSet();
+          for (ResultRow row : result.getRows()) {
+            System.out.println(StringUtils.join(row.getValues(), "\t"));
+          }
+          queryClient.closeResultSet();
         }
-        queryClient.closeResultSet();
       } else {
         retCode = 1;
       }

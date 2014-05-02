@@ -85,8 +85,12 @@ public class GrillClient {
         == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(statement.getStatus().getErrorMessage());
     }
-    return new GrillClientResultSetWithStats(new GrillClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData()), statement.getQuery());
+    GrillClientResultSet result = null;
+    if (statement.getStatus().isResultSetAvailable()) {
+      result = new GrillClientResultSet(statement.getResultSet(),
+          statement.getResultSetMetaData());
+    }
+    return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
 
   public GrillClientResultSetWithStats getAsyncResults(QueryHandle q) {
@@ -96,8 +100,12 @@ public class GrillClient {
         == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
-    return new GrillClientResultSetWithStats(new GrillClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData()), statement.getQuery());
+    GrillClientResultSet result = null;
+    if (statement.getStatus().isResultSetAvailable()) {
+      result = new GrillClientResultSet(statement.getResultSet(),
+          statement.getResultSetMetaData());
+    }
+    return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
 
   private GrillStatement getGrillStatement(QueryHandle query) {
