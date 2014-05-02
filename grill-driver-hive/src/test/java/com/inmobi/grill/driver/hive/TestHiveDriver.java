@@ -99,13 +99,13 @@ public class TestHiveDriver {
     // Craete again
     QueryContext context = new QueryContext(createTable, null, conf);
     GrillResultSet resultSet = driver.execute(context);
-    assertNotNull(resultSet);
-    assertTrue(resultSet instanceof HiveInMemoryResultSet, "expecting in-memory result set");
+    assertNull(resultSet);
 
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
     context = new QueryContext(dataLoad, null, conf);
     resultSet = driver.execute(context);
+    assertNull(resultSet);
   }
 
   // Tests
@@ -119,6 +119,22 @@ public class TestHiveDriver {
     assertEquals(context.getUserQuery(), query);
     assertNotNull(context.getDriverQuery());
     assertEquals(context.getDriverQuery(), context.getUserQuery());
+  }
+
+  @Test
+  public void testTemptable() throws Exception {
+    createTestTable("test_temp");
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    String query = "CREATE TABLE test_temp_output AS SELECT ID FROM test_insert_overwrite";
+    QueryContext context = new QueryContext(query, null, conf);
+    GrillResultSet resultSet = driver.execute(context);
+    assertNull(resultSet);
+
+    // fetch results from temp table
+    String select = "SELECT * FROM test_temp_output";
+    context = new QueryContext(select, null, conf);
+    resultSet = driver.execute(context);
+    validateInMemoryResult(resultSet, "test_temp_output");    
   }
 
   @Test
@@ -145,7 +161,11 @@ public class TestHiveDriver {
     validatePersistentResult(resultSet, TEST_DATA_FILE, GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
   }
 
-  private void validateInMemoryResult(GrillResultSet resultSet)
+  private void validateInMemoryResult(GrillResultSet resultSet) throws GrillException, IOException {
+    validateInMemoryResult(resultSet, null);
+  }
+
+  private void validateInMemoryResult(GrillResultSet resultSet, String outputTable)
       throws GrillException, IOException {
     assertNotNull(resultSet);
     assertTrue(resultSet instanceof HiveInMemoryResultSet);
@@ -156,8 +176,13 @@ public class TestHiveDriver {
     List<ResultColumn>  columns = rsMeta.getColumns();
     assertNotNull(columns);
     assertEquals(columns.size(), 1);
-    assertEquals("ID".toLowerCase(), columns.get(0).getName().toLowerCase());
-    assertEquals("STRING".toLowerCase(), columns.get(0).getType().name().toLowerCase());
+    String expectedCol = "";
+    if (outputTable != null) {
+      expectedCol += outputTable + ".";
+    }
+    expectedCol += "ID";
+    assertEquals(columns.get(0).getName().toLowerCase(), expectedCol.toLowerCase());
+    assertEquals(columns.get(0).getType().name().toLowerCase(), "STRING".toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
     // Read data from the test file into expectedRows

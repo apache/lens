@@ -57,6 +57,7 @@ import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.metrics.MetricsService;
+import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryEnded;
 import com.inmobi.grill.server.query.QueryApp;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
@@ -800,15 +801,96 @@ public class TestQueryService extends GrillJerseyTest {
     validateInmemoryResult(resultset);
   }
 
+  @Test
+  public void testExecuteAsyncTempTable() throws InterruptedException, IOException {
+    // test post execute op
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "create table temp_output as select ID, IDSTR from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+        "operation").build(),
+        "execute"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+    Assert.assertNotNull(handle);
+
+    // Get query
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) || 
+        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
+        ctx.getStatus().getStatus().equals(Status.RUNNING));
+
+    // wait till the query finishes
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    String select = "SELECT * FROM temp_output";
+    final FormDataMultiPart fetch = new FormDataMultiPart();
+    fetch.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+    fetch.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        select));
+    fetch.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+        "operation").build(),
+        "execute"));
+    fetch.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle handle2 = target.request().post(
+        Entity.entity(fetch, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+    Assert.assertNotNull(handle2);
+
+    // Get query
+    ctx = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+
+    // wait till the query finishes
+    stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+      ctx = target.path(handle2.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    // fetch results
+    validateResultSetMetadata(handle2, "temp_output.");
+
+    InMemoryQueryResult resultset = target.path(handle2.toString()).path(
+        "resultset").queryParam("sessionid", grillSessionId).request().get(InMemoryQueryResult.class);
+    validateInmemoryResult(resultset);
+  }
+
   private void validateResultSetMetadata(QueryHandle handle) {
+    validateResultSetMetadata(handle, "");
+  }
+
+  private void validateResultSetMetadata(QueryHandle handle, String outputTablePfx) {
     final WebTarget target = target().path("queryapi/queries");
 
     QueryResultSetMetadata metadata = target.path(handle.toString()).path(
         "resultsetmetadata").queryParam("sessionid", grillSessionId).request().get(QueryResultSetMetadata.class);
     Assert.assertEquals(metadata.getColumns().size(), 2);
-    assertEquals("ID".toLowerCase(), metadata.getColumns().get(0).getName().toLowerCase());
+    assertEquals(outputTablePfx + "ID".toLowerCase(), metadata.getColumns().get(0).getName().toLowerCase());
     assertEquals("INT".toLowerCase(), metadata.getColumns().get(0).getType().name().toLowerCase());
-    assertEquals("IDSTR".toLowerCase(), metadata.getColumns().get(1).getName().toLowerCase());
+    assertEquals(outputTablePfx + "IDSTR".toLowerCase(), metadata.getColumns().get(1).getName().toLowerCase());
     assertEquals("STRING".toLowerCase(), metadata.getColumns().get(1).getType().name().toLowerCase());    
   }
 

@@ -551,7 +551,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
 
     if (resultSet == null) {
-      if (allQueries.get(queryHandle).getStatus().isResultSetAvailable()) {
+      if (allQueries.get(queryHandle).getStatus().isResultSetAvailable() || allQueries.get(queryHandle).isPersistent()) {
         resultSet = allQueries.get(queryHandle).getSelectedDriver().
             fetchResultSet(allQueries.get(queryHandle));
         resultSets.put(queryHandle, resultSet);

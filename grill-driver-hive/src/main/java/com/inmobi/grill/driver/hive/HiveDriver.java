@@ -86,7 +86,7 @@ public class HiveDriver implements GrillDriver {
   private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
       new DelayQueue<ExpirableConnection>();
   private final Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
-  
+
   // assigned only in case of embedded connection
   private ThriftConnection embeddedConnection;
   // Store mapping of Grill session ID to Hive session identifier
@@ -308,7 +308,7 @@ public class HiveDriver implements GrillDriver {
       case FINISHED:
         statusMessage = "Query is successful!"; 
         stat = Status.SUCCESSFUL;
-        hasResult = true;
+        hasResult = hiveHandle.hasResultSet();
         break;
       case INITIALIZED:
         statusMessage = "Query is initiazed in HiveServer!";
@@ -462,38 +462,42 @@ public class HiveDriver implements GrillDriver {
       }
       return embeddedConnection.getClient(conf);
     } else {
-    ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
-    if (connection == null || connection.isExpired()) {
-      try {
-        ThriftConnection tconn = connectionClass.newInstance();
-        connection = new ExpirableConnection(tconn, conf);
-        thriftConnExpiryQueue.offer(connection);
-        threadConnections.put(Thread.currentThread().getId(), connection);
-        LOG.info("New thrift connection " + connectionClass + " for thread:"
-        + Thread.currentThread().getId() + " connection ID=" + connection.getConnId());
-      } catch (Exception e) {
-        throw new GrillException(e);
+      ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
+      if (connection == null || connection.isExpired()) {
+        try {
+          ThriftConnection tconn = connectionClass.newInstance();
+          connection = new ExpirableConnection(tconn, conf);
+          thriftConnExpiryQueue.offer(connection);
+          threadConnections.put(Thread.currentThread().getId(), connection);
+          LOG.info("New thrift connection " + connectionClass + " for thread:"
+              + Thread.currentThread().getId() + " connection ID=" + connection.getConnId());
+        } catch (Exception e) {
+          throw new GrillException(e);
+        }
+      } else {
+        synchronized(thriftConnExpiryQueue) {
+          thriftConnExpiryQueue.remove(connection);
+          thriftConnExpiryQueue.offer(connection);
+        }
       }
-    } else {
-      synchronized(thriftConnExpiryQueue) {
-        thriftConnExpiryQueue.remove(connection);
-        thriftConnExpiryQueue.offer(connection);
-      }
-    }
 
-    return connection.getConnection().getClient(conf);
+      return connection.getConnection().getClient(conf);
     }
   }
 
   private GrillResultSet createResultSet(QueryContext context)
       throws GrillException {
     LOG.info("Creating result set for hiveHandle:" + hiveHandles.get(context.getQueryHandle()));
-    if (context.isPersistent()) {
-      return new HivePersistentResultSet(new Path(context.getResultSetPath()),
-          hiveHandles.get(context.getQueryHandle()), getClient(), context.getQueryHandle());
+    OperationHandle op = hiveHandles.get(context.getQueryHandle());
+    if (op.hasResultSet() || context.isPersistent()) {
+      if (context.isPersistent()) {
+        return new HivePersistentResultSet(new Path(context.getResultSetPath()),
+            op, getClient(), context.getQueryHandle());
+      } else {
+        return new HiveInMemoryResultSet(op, getClient());
+      }
     } else {
-      return new HiveInMemoryResultSet(
-          hiveHandles.get(context.getQueryHandle()), getClient());
+      return null;
     }
   }
 
@@ -628,7 +632,7 @@ public class HiveDriver implements GrillDriver {
     Thread th = new Thread(new QueryCompletionNotifier(handle, timeoutMillis, listener));
     th.start();
   }
-  
+
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     synchronized(hiveHandles) {
