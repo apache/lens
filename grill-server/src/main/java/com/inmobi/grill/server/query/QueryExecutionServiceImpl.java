@@ -955,7 +955,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
           query, drivers, qconf);
       // select driver to run the query
-      return driverSelector.select(drivers, driverQueries, conf).explain(query, qconf).toQueryPlan();
+      GrillDriver selectedDriver = driverSelector.select(drivers, driverQueries, conf);
+      return selectedDriver.explain(driverQueries.get(selectedDriver), qconf).toQueryPlan();
     } catch (UnsupportedEncodingException e) {
       throw new GrillException(e);
     } finally {
