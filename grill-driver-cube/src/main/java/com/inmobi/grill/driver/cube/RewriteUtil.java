@@ -34,7 +34,6 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.mortbay.log.Log;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.server.api.driver.GrillDriver;
@@ -69,8 +68,12 @@ public class RewriteUtil {
           throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
+      if (ast.getChild(0) != null) {
+        CubeGrillDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:" + ((ASTNode) ast.getChild(0)).getToken().getType());
+      }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
           ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
+        CubeGrillDriver.LOG.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
@@ -104,6 +107,7 @@ public class RewriteUtil {
                 parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
         }
+        CubeGrillDriver.LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
         cubeQueries.add(cqi);
       }
       else {
@@ -111,7 +115,9 @@ public class RewriteUtil {
           findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, originalQuery);
         }
       }
-    } 
+    } else {
+      CubeGrillDriver.LOG.warn("Null AST!");
+    }
   }
 
   private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
@@ -173,12 +179,12 @@ public class RewriteUtil {
           StringBuilder builder = new StringBuilder();
           int start = 0;
           for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-            Log.info("Rewriting cube query:" + cqi.query);
+            CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
             if (start != cqi.startPos) {
               builder.append(replacedQuery.substring(start, cqi.startPos));
             }
             String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
-            Log.info("Rewritten query:" + hqlQuery);
+            CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
             builder.append(hqlQuery);
             start = cqi.endPos;
           }
