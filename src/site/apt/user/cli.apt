@@ -170,6 +170,12 @@ User CLI Commands
 
   This section provides commands for query life cycle - submit, check status,
   fetch results, kill or list all the queries.
+
+  Please note that, character <<<">>> is used as delimiter by the Spring Shell
+  framework, which is used to build grill cli. So queries which require <<<">>>,
+  should be prefixed with another double quote. For example
+  <<<query execute cube select id,name from dim_table where name != ""first"">>>,
+  will be parsed as <<<cube select id,name from dim_table where name != "first">>>
   
 *--+--+
 |<<Command>>|<<Description>>|
@@ -187,6 +193,6 @@ User CLI Commands
 | query results <query-handle> | Prints the result of Async query specified by <query-handle>|
 *--+--+
   <<Grill Query management Command>>
-  
+
 ===
 
