@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.mortbay.log.Log;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.server.api.driver.GrillDriver;
@@ -172,16 +173,19 @@ public class RewriteUtil {
           StringBuilder builder = new StringBuilder();
           int start = 0;
           for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+            Log.info("Rewriting cube query:" + cqi.query);
             if (start != cqi.startPos) {
               builder.append(replacedQuery.substring(start, cqi.startPos));
             }
             String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
+            Log.info("Rewritten query:" + hqlQuery);
             builder.append(hqlQuery);
             start = cqi.endPos;
           }
           builder.append(replacedQuery.substring(start));
-          CubeGrillDriver.LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
-          driverQueries.put(driver, builder.toString());
+          String finalQuery = builder.toString();
+          CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
+          driverQueries.put(driver, finalQuery);
         }
       }
       return driverQueries;
