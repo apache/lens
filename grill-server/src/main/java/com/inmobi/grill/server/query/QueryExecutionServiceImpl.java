@@ -313,6 +313,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         QueryStatus.Status.LAUNCHED,
         "launched on the driver", false, null, null));
     launchedQueries.add(ctx);
+    ctx.setLaunchTime(System.currentTimeMillis());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
 

@@ -154,6 +154,7 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
     assertTrue(ctx.getDriverStartTime() > 0);
     assertTrue(ctx.getDriverFinishTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
@@ -271,6 +272,7 @@ public class TestQueryService extends GrillJerseyTest {
     }
     
     assertTrue(ctx.getSubmissionTime() > 0);
+    assertEquals(ctx.getLaunchTime(), 0);
     assertEquals(ctx.getDriverStartTime(), 0);
     assertEquals(ctx.getDriverFinishTime(), 0);
     assertTrue(ctx.getFinishTime() > 0);
@@ -358,6 +360,7 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
     assertTrue(ctx.getDriverStartTime() > 0);
     assertTrue(ctx.getDriverFinishTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
@@ -694,6 +697,7 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
     assertTrue(ctx.getDriverStartTime() > 0);
     assertTrue(ctx.getDriverFinishTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
