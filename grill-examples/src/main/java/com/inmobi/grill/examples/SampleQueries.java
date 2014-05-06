@@ -100,8 +100,8 @@ public class SampleQueries {
       System.out.println("Query:" + query);
       QueryHandle handle = queryClient.executeQuery(query, true);
       System.out.println("Status:" + queryClient.getQuery().getStatus());
-      System.out.println("Total time:" + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
-      System.out.println("Driver run time:" + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
+      System.out.println("Total time in millis:" + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
+      System.out.println("Driver run time in millis:" + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
       if (queryClient.wasQuerySuccessful()) {
         success++;
         if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
