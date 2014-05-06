@@ -58,10 +58,10 @@ import org.codehaus.jackson.type.TypeReference;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
-import com.inmobi.grill.api.query.QueryStatus;
-import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.QueryCompletionListener;
@@ -277,56 +277,51 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public QueryStatus getStatus(QueryHandle handle)  throws GrillException {
-    LOG.debug("GetStatus: " + handle);
-    OperationHandle hiveHandle = getHiveHandle(handle);
+  public synchronized void updateStatus(QueryContext context)  throws GrillException {
+    LOG.debug("GetStatus: " + context.getQueryHandle());
+    OperationHandle hiveHandle = getHiveHandle(context.getQueryHandle());
     ByteArrayInputStream in = null;
-    boolean hasResult = false;
     try {
       // Get operation status from hive server
       LOG.debug("GetStatus hiveHandle: " + hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
       LOG.debug("GetStatus on hiveHandle: " + hiveHandle + " returned state:" + opStatus);
-      QueryStatus.Status stat = null;
-      String statusMessage;
 
       switch (opStatus.getState()) {
       case CANCELED:
-        stat = Status.CANCELED;
-        statusMessage = "Query has been cancelled!";
+        context.getDriverStatus().setState(DriverQueryState.CANCELED);
+        context.getDriverStatus().setStatusMessage("Query has been cancelled!");
         break;
       case CLOSED:
-        stat = Status.CLOSED;
-        statusMessage = "Query has been closed!";
+        context.getDriverStatus().setState(DriverQueryState.CLOSED);
+        context.getDriverStatus().setStatusMessage("Query has been closed!");
         break;
       case ERROR:
-        stat = Status.FAILED;
-        statusMessage = "Query failed with errorCode:" +
+        context.getDriverStatus().setState(DriverQueryState.FAILED);
+        context.getDriverStatus().setStatusMessage("Query failed with errorCode:" +
             opStatus.getOperationException().getErrorCode() +
-            " with errorMessage: " + opStatus.getOperationException().getMessage();
+            " with errorMessage: " + opStatus.getOperationException().getMessage());
         break;
       case FINISHED:
-        statusMessage = "Query is successful!"; 
-        stat = Status.SUCCESSFUL;
-        hasResult = hiveHandle.hasResultSet();
+        context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
+        context.getDriverStatus().setStatusMessage("Query is successful!");
+        context.getDriverStatus().setResultSetAvailable(hiveHandle.hasResultSet());
         break;
       case INITIALIZED:
-        statusMessage = "Query is initiazed in HiveServer!";
-        stat = Status.RUNNING;
+        context.getDriverStatus().setState(DriverQueryState.INITIALIZED);
+        context.getDriverStatus().setStatusMessage("Query is initiazed in HiveServer!");
         break;
       case RUNNING:
-        statusMessage = "Query is running in HiveServer!";
-        stat = Status.RUNNING;
+        context.getDriverStatus().setState(DriverQueryState.RUNNING);
+        context.getDriverStatus().setStatusMessage("Query is running in HiveServer!");
         break;
       case PENDING:
-        stat = Status.LAUNCHED;
-        statusMessage = "Query is pending in HiveServer";
+        context.getDriverStatus().setState(DriverQueryState.PENDING);
+        context.getDriverStatus().setStatusMessage("Query is pending in HiveServer");
         break;
       case UNKNOWN:
-        throw new GrillException("Query is in unknown state at HiveServer");
       default :
-        statusMessage = "";
-        break;
+        throw new GrillException("Query is in unknown state at HiveServer");
       }
 
       float progress = 0f;
@@ -340,11 +335,11 @@ public class HiveDriver implements GrillDriver {
         int completedTasks = 0;
         StringBuilder errorMessage = new StringBuilder();
         for (TaskStatus taskStat : taskStatuses) {
-          String state = taskStat.getTaskState();
-          if ("FINISHED_STATE".equalsIgnoreCase(state)) {
+          String tstate = taskStat.getTaskState();
+          if ("FINISHED_STATE".equalsIgnoreCase(tstate)) {
             completedTasks++;
           }
-          if ("FAILED_STATE".equalsIgnoreCase(state)) {
+          if ("FAILED_STATE".equalsIgnoreCase(tstate)) {
             appendTaskIds(errorMessage, taskStat);
             errorMessage.append(" has failed! ");
           }
@@ -357,10 +352,14 @@ public class HiveDriver implements GrillDriver {
       String error = null;
       if (StringUtils.isNotBlank(errorMsg)) {
         error = errorMsg;
-      } else if (stat.equals(Status.FAILED)) {
-        error = statusMessage;
+      } else if (opStatus.getState().equals(OperationState.ERROR)) {
+        error = context.getDriverStatus().getStatusMessage();
       }
-      return new QueryStatus(progress, stat, statusMessage, hasResult, jsonTaskStatus, error);
+      context.getDriverStatus().setErrorMessage(error);
+      context.getDriverStatus().setProgressMessage(jsonTaskStatus);
+      context.getDriverStatus().setProgress(progress);
+      context.getDriverStatus().setDriverStartTime(opStatus.getOperationStarted());
+      context.getDriverStatus().setDriverFinishTime(opStatus.getOperationCompleted());
     } catch (Exception e) {
       LOG.error("Error getting query status", e);
       throw new GrillException("Error getting query status", e);

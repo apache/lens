@@ -163,7 +163,12 @@ public class CubeGrillDriver implements GrillDriver {
   }
 
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
-    return getContext(handle).getSelectedDriver().getStatus(handle);
+    updateStatus(getContext(handle));
+    return getContext(handle).getDriverStatus().toQueryStatus();
+  }
+
+  public void updateStatus(QueryContext context) throws GrillException {
+    context.getSelectedDriver().updateStatus(context);
   }
 
   @Override

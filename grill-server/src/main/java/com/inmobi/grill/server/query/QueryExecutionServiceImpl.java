@@ -192,6 +192,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     FinishedQuery(QueryContext ctx) {
       this.ctx = ctx;
       this.finishTime = new Date();
+      ctx.setEndTime(this.finishTime.getTime());
     }
     @Override
     public int compareTo(Delayed o) {
@@ -312,6 +313,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         QueryStatus.Status.LAUNCHED,
         "launched on the driver", false, null, null));
     launchedQueries.add(ctx);
+    ctx.setLaunchTime(System.currentTimeMillis());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
 
@@ -345,7 +347,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
             !ctx.getStatus().isFinished()) {
           LOG.info("Updating status for " + ctx.getQueryHandle());
-          ctx.setStatus(ctx.getSelectedDriver().getStatus(ctx.getQueryHandle()));
+          ctx.getSelectedDriver().updateStatus(ctx);
+          ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
           if (ctx.getStatus().isFinished()) {
             updateFinishedQuery(ctx, before);
           }
@@ -361,7 +364,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     // TODO Get event time from status
     switch (currState) {
     case CANCELED:
-      return new QueryCancelled(ctx.getCancelTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+      return new QueryCancelled(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
     case CLOSED:
       return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
     case FAILED:
@@ -369,10 +372,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     case LAUNCHED:
       return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
     case QUEUED:
-      long time = ctx.getSubmissionTime() == null ? System.currentTimeMillis() : ctx.getSubmissionTime().getTime();
-      return new QueryQueued(time, prevState, currState, query, ctx.getSubmittedUser());
+      return new QueryQueued(ctx.getSubmissionTime(), prevState, currState, query, ctx.getSubmittedUser());
     case RUNNING:
-      return new QueryRunning(ctx.getRunningTime(), prevState, currState, query);
+      return new QueryRunning(System.currentTimeMillis() - ctx.getDriverStatus().getDriverStartTime(), prevState, currState, query);
     case SUCCESSFUL:
       return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
     default:

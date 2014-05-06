@@ -27,7 +27,6 @@ import org.apache.hadoop.conf.Configuration;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
-import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -125,13 +124,11 @@ public interface GrillDriver extends Externalizable {
       long timeoutMillis, QueryCompletionListener listener) throws GrillException;
 
   /**
-   * Get status of the query, specified by the handle
+   * Update driver query status in the context object.
    * 
-   * @param handle The query handle
-   * 
-   * @return query status
+   * @param context The query context
    */
-  public QueryStatus getStatus(QueryHandle handle) throws GrillException;
+  public void updateStatus(QueryContext context) throws GrillException;
 
   /**
    * Fetch the results of the query, specified by the handle

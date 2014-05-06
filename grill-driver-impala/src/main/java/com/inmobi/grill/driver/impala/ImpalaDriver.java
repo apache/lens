@@ -42,7 +42,6 @@ import com.cloudera.impala.thrift.ImpalaService;
 import com.cloudera.impala.thrift.ImpalaService.Client;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
-import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
@@ -137,9 +136,9 @@ public class ImpalaDriver implements GrillDriver {
   }
 
   @Override
-  public QueryStatus getStatus(com.inmobi.grill.api.query.QueryHandle handle) {
+  public void updateStatus(QueryContext context) {
     // TODO Auto-generated method stub
-    return null;
+    return;
   }
 
   @Override

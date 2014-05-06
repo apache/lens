@@ -86,6 +86,8 @@ public class SampleQueries {
     InputStream file = SampleMetastore.class.getClassLoader().getResourceAsStream("dimension-queries.txt");
     BufferedReader reader = new BufferedReader(new InputStreamReader(file));
     String query;
+    int total = 0;
+    int success = 0;
     while ((query = reader.readLine()) != null) {
       if (StringUtils.isBlank(query)) {
         continue;
@@ -94,10 +96,14 @@ public class SampleQueries {
         // skip comments
         continue;
       }
+      total++;
       System.out.println("Query:" + query);
       QueryHandle handle = queryClient.executeQuery(query, true);
       System.out.println("Status:" + queryClient.getQuery().getStatus());
+      System.out.println("Total time in millis:" + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
+      System.out.println("Driver run time in millis:" + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
       if (queryClient.wasQuerySuccessful()) {
+        success++;
         if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
           System.out.println("Result:");
           InMemoryQueryResult result = queryClient.getResultSet();
@@ -112,6 +118,7 @@ public class SampleQueries {
       System.out.println("--------------------");
     }
 
+    System.out.println("Successful queries " + success + " out of " + total + "queries");
   }
 
 }

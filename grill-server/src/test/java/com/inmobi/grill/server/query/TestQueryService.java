@@ -58,8 +58,6 @@ import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.metrics.MetricsService;
-import com.inmobi.grill.server.api.query.QueryContext;
-import com.inmobi.grill.server.api.query.QueryEnded;
 import com.inmobi.grill.server.query.QueryApp;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
@@ -155,6 +153,11 @@ public class TestQueryService extends GrillJerseyTest {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
+    assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
+    assertTrue(ctx.getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverFinishTime() > 0);
+    assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
@@ -268,6 +271,11 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     
+    assertTrue(ctx.getSubmissionTime() > 0);
+    assertEquals(ctx.getLaunchTime(), 0);
+    assertEquals(ctx.getDriverStartTime(), 0);
+    assertEquals(ctx.getDriverFinishTime(), 0);
+    assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
     System.out.println("%% " + metricsSvc.getTotalFailedQueries());
     Assert.assertEquals(metricsSvc.getTotalFailedQueries(), failedQueries + 1);
@@ -351,6 +359,11 @@ public class TestQueryService extends GrillJerseyTest {
       }
       Thread.sleep(1000);
     }
+    assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
+    assertTrue(ctx.getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverFinishTime() > 0);
+    assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
     assertEquals(metricsSvc.getFinishedQueries(), finishedQueries + 1);
     
@@ -683,6 +696,11 @@ public class TestQueryService extends GrillJerseyTest {
       }
       Thread.sleep(1000);
     }
+    assertTrue(ctx.getSubmissionTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
+    assertTrue(ctx.getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverFinishTime() > 0);
+    assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     
     validatePersistedResult(handle);

@@ -34,11 +34,10 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryStatus;
-import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.api.query.ResultColumnType;
 import com.inmobi.grill.api.query.ResultRow;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.InMemoryResultSet;
@@ -184,15 +183,17 @@ public class TestJdbcDriver {
     driver.registerForCompletionNotification(handle, 0, listener);
     
     while(true) {
-      QueryStatus status = driver.getStatus(handle);
-      System.out.println("Query: " + handle + " Status: " + status);
-      if (status.isFinished()) {
-        assertEquals(status.getStatus(), QueryStatus.Status.SUCCESSFUL);
-        assertEquals(status.getProgress(), 1.0);
+      driver.updateStatus(context);
+      System.out.println("Query: " + handle + " Status: " + context.getDriverStatus());
+      if (context.getDriverStatus().isFinished()) {
+        assertEquals(context.getDriverStatus().getState(), DriverQueryState.SUCCESSFUL);
+        assertEquals(context.getDriverStatus().getProgress(), 1.0);
         break;
       }
       Thread.sleep(500);
     }
+    assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     // make sure query completion listener was called with onCompletion
     try {
       listenerNotificationLatch.await(1, TimeUnit.SECONDS);
@@ -251,8 +252,10 @@ public class TestJdbcDriver {
     driver.executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
     driver.cancelQuery(handle);
-    QueryStatus status = driver.getStatus(handle);
-    assertEquals(status.getStatus(), Status.CANCELED);
+    driver.updateStatus(context);
+    assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
+    assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     driver.closeQuery(handle);
   }
   
@@ -286,15 +289,17 @@ public class TestJdbcDriver {
     driver.registerForCompletionNotification(handle, 0, listener);
    
     while(true) {
-      QueryStatus status = driver.getStatus(handle);
-      System.out.println("Query: " + handle + " Status: " + status);
-      if (status.isFinished()) {
-        assertEquals(status.getStatus(), QueryStatus.Status.FAILED);
-        assertEquals(status.getProgress(), 1.0);
+      driver.updateStatus(ctx);
+      System.out.println("Query: " + handle + " Status: " + ctx.getDriverStatus());
+      if (ctx.getDriverStatus().isFinished()) {
+        assertEquals(ctx.getDriverStatus().getState(), DriverQueryState.FAILED);
+        assertEquals(ctx.getDriverStatus().getProgress(), 1.0);
         break;
       }
       Thread.sleep(500);
     }
+    assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
     
     listenerNotificationLatch.await(1, TimeUnit.SECONDS);
     // fetch result should throw error

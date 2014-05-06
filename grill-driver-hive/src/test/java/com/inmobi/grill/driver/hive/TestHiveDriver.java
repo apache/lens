@@ -39,11 +39,10 @@ import org.testng.annotations.*;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.ResultColumn;
-import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
@@ -181,7 +180,8 @@ public class TestHiveDriver {
       expectedCol += outputTable + ".";
     }
     expectedCol += "ID";
-    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase()) || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
+    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase())
+        || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
     assertEquals(columns.get(0).getType().name().toLowerCase(), "STRING".toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
@@ -227,7 +227,7 @@ public class TestHiveDriver {
     conf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     QueryContext context = new QueryContext(expectFail, null, conf);
     driver.executeAsync(context);
-    validateExecuteAsync(context, Status.FAILED, true, null, false);
+    validateExecuteAsync(context, DriverQueryState.FAILED, true, null, false);
     driver.closeQuery(context.getQueryHandle());
 
 
@@ -237,13 +237,13 @@ public class TestHiveDriver {
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
-    validateExecuteAsync(context, Status.SUCCESSFUL, false, null, false);
+    validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, false, null, false);
     driver.closeQuery(context.getQueryHandle());
 
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
-    validateExecuteAsync(context, Status.SUCCESSFUL, true,
+    validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, true,
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
     driver.closeQuery(context.getQueryHandle());
 
@@ -254,30 +254,31 @@ public class TestHiveDriver {
     select = "SELECT ID, null, ID FROM test_execute_sync";
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
-    validateExecuteAsync(context, Status.SUCCESSFUL, true,
+    validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, true,
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
     driver.closeQuery(context.getQueryHandle());
 
   }
 
-  private void validateExecuteAsync(QueryContext ctx, Status finalState,
+  private void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState,
       boolean isPersistent, String outputDir, boolean formatNulls) throws Exception {
-    waitForAsyncQuery(ctx.getQueryHandle(), driver);
-    QueryStatus status = driver.getStatus(ctx.getQueryHandle());
-    assertEquals(status.getStatus(), finalState, "Expected query to finish with"
+    waitForAsyncQuery(ctx, driver);
+    driver.updateStatus(ctx);
+    assertEquals(ctx.getDriverStatus().getState(), finalState, "Expected query to finish with"
         + finalState);
-    if (finalState.equals(Status.SUCCESSFUL)) {
-      System.out.println("Progress:" + status.getProgressMessage());
-      assertNotNull(status.getProgressMessage());
+    assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
+    if (finalState.equals(DriverQueryState.SUCCESSFUL)) {
+      System.out.println("Progress:" + ctx.getDriverStatus().getProgressMessage());
+      assertNotNull(ctx.getDriverStatus().getProgressMessage());
       if (!isPersistent) {
         validateInMemoryResult(driver.fetchResultSet(ctx));
       } else{
         validatePersistentResult(driver.fetchResultSet(ctx), TEST_DATA_FILE, outputDir, formatNulls);
       }
-    } else if (finalState.equals(Status.FAILED)) {
-      System.out.println("Error:" + status.getErrorMessage());
-      System.out.println("Error:" + status.getStatusMessage());
-      assertNotNull(status.getErrorMessage());
+    } else if (finalState.equals(DriverQueryState.FAILED)) {
+      System.out.println("Error:" + ctx.getDriverStatus().getErrorMessage());
+      System.out.println("Status:" + ctx.getDriverStatus().getStatusMessage());
+      assertNotNull(ctx.getDriverStatus().getErrorMessage());
     }
   }
 
@@ -288,8 +289,8 @@ public class TestHiveDriver {
     QueryContext context = new QueryContext("SELECT ID FROM test_cancel_async", null, conf);
     driver.executeAsync(context);
     driver.cancelQuery(context.getQueryHandle());
-    QueryStatus status = driver.getStatus(context.getQueryHandle());
-    assertEquals(status.getStatus(), Status.CANCELED, "Expecting query to be cancelled");
+    driver.updateStatus(context);
+    assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED, "Expecting query to be cancelled");
     driver.closeQuery(context.getQueryHandle());
 
     try {
@@ -364,7 +365,7 @@ public class TestHiveDriver {
 
     ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
     driver.executeAsync(ctx);
-    validateExecuteAsync(ctx, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
+    validateExecuteAsync(ctx, DriverQueryState.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
     driver.closeQuery(ctx.getQueryHandle());
 
     conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
@@ -378,24 +379,22 @@ public class TestHiveDriver {
 
     ctx = new QueryContext("SELECT ID, null, ID FROM test_persistent_result_set", null, conf);
     driver.executeAsync(ctx);
-    validateExecuteAsync(ctx, Status.SUCCESSFUL, true, TEST_OUTPUT_DIR, true);
+    validateExecuteAsync(ctx, DriverQueryState.SUCCESSFUL, true, TEST_OUTPUT_DIR, true);
     driver.closeQuery(ctx.getQueryHandle());
   }
 
-  private void waitForAsyncQuery(QueryHandle handle, HiveDriver driver) throws Exception {
-    Set<Status> terminationStates =
-        EnumSet.of(Status.CANCELED, Status.CLOSED, Status.FAILED,
-            Status.SUCCESSFUL);
-
+  private void waitForAsyncQuery(QueryContext ctx, HiveDriver driver) throws Exception {
     while (true) {
-      QueryStatus status = driver.getStatus(handle);
-      System.out.println("#W Waiting for query " + handle + " status: " + status.getStatus());
-      assertNotNull(status);
-      if (terminationStates.contains(status.getStatus())) {
+      driver.updateStatus(ctx);
+      System.out.println("#W Waiting for query " + ctx.getQueryHandle() + " status: " + ctx.getDriverStatus().getState());
+      assertNotNull(ctx.getDriverStatus());
+      if (ctx.getDriverStatus().isFinished()) {
+        assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
         break;
       }
-      System.out.println("Progress:" + status.getProgressMessage());
+      System.out.println("Progress:" + ctx.getDriverStatus().getProgressMessage());
       Thread.sleep(1000);
+      assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
     }
   }
 
@@ -413,12 +412,12 @@ public class TestHiveDriver {
     plan = driver.explainAndPrepare(pctx);
     QueryContext qctx = new QueryContext(pctx, null, conf);
     GrillResultSet result = driver.execute(qctx);
-    validateExecuteAsync(qctx, Status.SUCCESSFUL, false, null, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
 
     // test execute prepare async
     driver.executeAsync(qctx);
     assertNotNull(qctx.getDriverOpHandle());
-    validateExecuteAsync(qctx, Status.SUCCESSFUL, false, null, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
 
     driver.closeQuery(qctx.getQueryHandle());
 
@@ -427,10 +426,10 @@ public class TestHiveDriver {
     qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     result = driver.execute(qctx);
     assertNotNull(qctx.getDriverOpHandle());
-    validateExecuteAsync(qctx, Status.SUCCESSFUL, false, null, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
     // test execute prepare async
     driver.executeAsync(qctx);
-    validateExecuteAsync(qctx, Status.SUCCESSFUL, false, null, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
 
     driver.closeQuery(qctx.getQueryHandle());
     driver.closePreparedQuery(pctx.getPrepareHandle());

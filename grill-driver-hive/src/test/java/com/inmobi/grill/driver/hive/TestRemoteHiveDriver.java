@@ -47,7 +47,6 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -142,11 +141,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final long POLL_DELAY = 500;
     List<Thread> thrs = new ArrayList<Thread>();
     final AtomicInteger errCount = new AtomicInteger();
-
     for (int q = 0; q < QUERIES; q++) {
+      final QueryContext qctx;
       try {
-        ctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
-        driver.executeAsync(ctx);
+        qctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
+        driver.executeAsync(qctx);
       } catch (GrillException e) {
         errCount.incrementAndGet();
         LOG.info(q + " executeAsync error: " + e.getCause());
@@ -164,12 +163,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
           public void run() {
             for (int i = 0; i < 1000; i++) {
               try {
-                QueryStatus status = thrDriver.getStatus(handle);
-                if (status.getStatus() == QueryStatus.Status.CANCELED
-                    || status.getStatus() == QueryStatus.Status.CLOSED
-                    || status.getStatus() == QueryStatus.Status.SUCCESSFUL
-                    || status.getStatus() == QueryStatus.Status.FAILED) {
-                  LOG.info("@@ " + handle.getHandleId() + " >> " + status.getStatus());
+                thrDriver.updateStatus(qctx);
+                if (qctx.getDriverStatus().isFinished()) {
+                  LOG.info("@@ " + handle.getHandleId() + " >> " + qctx.getDriverStatus().getState());
                   break;
                 }
 
@@ -254,12 +250,12 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     
     // Check status from the new driver, should get all statuses back.
     while (true) {
-      QueryStatus stat1 = newDriver.getStatus(ctx1.getQueryHandle());
-      Assert.assertNotNull(stat1);
-      QueryStatus stat2 = newDriver.getStatus(ctx2.getQueryHandle());
-      Assert.assertNotNull(stat2);
+      newDriver.updateStatus(ctx1);
+      Assert.assertNotNull(ctx1.getDriverStatus());
+      newDriver.updateStatus(ctx2);
+      Assert.assertNotNull(ctx2.getDriverStatus());
       
-      if (stat1.isFinished() && stat2.isFinished()) {
+      if (ctx1.getDriverStatus().isFinished() && ctx1.getDriverStatus().isFinished()) {
         break;
       } else {
         Thread.sleep(1000);

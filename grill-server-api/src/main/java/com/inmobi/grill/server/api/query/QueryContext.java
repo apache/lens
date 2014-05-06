@@ -35,6 +35,7 @@ import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 
 import lombok.Getter;
@@ -46,7 +47,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
 
   @Getter @Setter private QueryHandle queryHandle;
   @Getter final private String userQuery;
-  @Getter final private Date submissionTime;
   @Getter final private String submittedUser;
   transient @Getter @Setter private Configuration conf;
   @Getter private GrillConf qconf;
@@ -56,13 +56,13 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;
-  transient @Getter @Setter private long cancelTime;
-  transient @Getter @Setter private long closedTime;
-  transient @Getter @Setter private long endTime;
-  transient @Getter @Setter private long launchTime;
-  transient @Getter @Setter private long runningTime;
+  @Getter final private long submissionTime;
+  @Getter @Setter private long launchTime;
+  @Getter @Setter private long endTime;
+  @Getter @Setter private long closedTime;
   @Getter @Setter private String grillSessionIdentifier;
   @Getter @Setter private String driverOpHandle;
+  @Getter final DriverQueryStatus driverStatus;
 
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new GrillConf(), conf, query, null);
@@ -86,7 +86,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   private QueryContext(String userQuery, String user, GrillConf qconf,
       Configuration conf,
       String driverQuery, GrillDriver selectedDriver) {
-    this.submissionTime = new Date();
+    this.submissionTime = new Date().getTime();
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
@@ -97,6 +97,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.driverQuery = driverQuery;
     this.selectedDriver = selectedDriver;
     this.qconf = qconf;
+    this.driverStatus = new DriverQueryStatus();
   }
 
   private static Configuration mergeConf(Configuration prepared,
@@ -112,7 +113,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   public int compareTo(QueryContext other) {
     int pcomp = this.priority.compareTo(other.priority);
     if (pcomp == 0) {
-      return this.submissionTime.compareTo(other.submissionTime);
+      return (int)(this.submissionTime - other.submissionTime);
     } else {
       return pcomp;
     }
@@ -135,14 +136,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public GrillQuery toGrillQuery() {
-    GrillConf qconf = new GrillConf();
-    for (Map.Entry<String, String> p : conf) {
-      qconf.addProperty(p.getKey(), p.getValue());
-    }
-    return new GrillQuery(queryHandle, userQuery, submissionTime,
+    return new GrillQuery(queryHandle, userQuery,
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
-        driverQuery, status, resultSetPath, driverOpHandle, qconf, endTime);
+        driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
+        launchTime, driverStatus.getDriverStartTime(), driverStatus.getDriverFinishTime(), endTime, closedTime);
   }
 
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {

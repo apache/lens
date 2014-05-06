@@ -39,6 +39,7 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.api.query.ResultRow;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
@@ -92,8 +93,10 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public QueryStatus getStatus(QueryHandle handle) throws GrillException {
-    return new QueryStatus(1.0, QueryStatus.Status.SUCCESSFUL, "Done", false, null, null);
+  public void updateStatus(QueryContext context) throws GrillException {
+    context.getDriverStatus().setProgress(1.0);
+    context.getDriverStatus().setStatusMessage("Done");
+    context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
   }
 
   @Override
