@@ -68,8 +68,12 @@ public class RewriteUtil {
           throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
+      if (ast.getChild(0) != null) {
+        CubeGrillDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:" + ((ASTNode) ast.getChild(0)).getToken().getType());
+      }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
           ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
+        CubeGrillDriver.LOG.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
@@ -103,6 +107,7 @@ public class RewriteUtil {
                 parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
         }
+        CubeGrillDriver.LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
         cubeQueries.add(cqi);
       }
       else {
@@ -110,7 +115,9 @@ public class RewriteUtil {
           findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, originalQuery);
         }
       }
-    } 
+    } else {
+      CubeGrillDriver.LOG.warn("Null AST!");
+    }
   }
 
   private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
@@ -172,16 +179,19 @@ public class RewriteUtil {
           StringBuilder builder = new StringBuilder();
           int start = 0;
           for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+            CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
             if (start != cqi.startPos) {
               builder.append(replacedQuery.substring(start, cqi.startPos));
             }
             String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
+            CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
             builder.append(hqlQuery);
             start = cqi.endPos;
           }
           builder.append(replacedQuery.substring(start));
-          CubeGrillDriver.LOG.info("Rewritten query for driver:" + driver + " is: " + builder.toString());
-          driverQueries.put(driver, builder.toString());
+          String finalQuery = builder.toString();
+          CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
+          driverQueries.put(driver, finalQuery);
         }
       }
       return driverQueries;

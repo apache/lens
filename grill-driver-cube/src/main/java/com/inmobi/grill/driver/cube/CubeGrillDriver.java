@@ -81,6 +81,7 @@ public class CubeGrillDriver implements GrillDriver {
           GrillDriver driver = (GrillDriver) clazz.newInstance();
           driver.configure(conf);
           drivers.add(driver);
+          LOG.info("Cube driver loaded driver " + driverClass);
         } catch (Exception e) {
           LOG.warn("Could not load the driver:" + driverClass, e);
           throw new GrillException("Could not load driver " + driverClass, e);
@@ -273,6 +274,7 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
       throws GrillException {
+    LOG.info("In explainAndPrepare, preparing :" + pContext.getUserQuery());
     rewriteAndSelectForPrepare(pContext);
     return pContext.getSelectedDriver().explainAndPrepare(pContext);
   }

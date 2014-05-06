@@ -50,3 +50,6 @@
 
 # Where do you want to expand the war file. By Default it is in /webapp dir under the base install dir.
 #export GRILL_EXPANDED_WEBAPP_DIR=
+
+#Classpath for grill server or client
+#export GRILLCPPATH=

@@ -90,7 +90,7 @@ while [ -n "$*" ] ; do
       ;;
     --classpath|-C)
       [ -n "$1" ] || error "Option --classpath requires an argument" 1
-      CLIENT_CLASSPATH=$1
+      GRILLCPPATH="GRILLCPPATH:$1"
       shift
       ;;
     -D*)
