@@ -24,8 +24,6 @@ package com.inmobi.grill.driver.jdbc;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
-import com.inmobi.grill.api.query.QueryStatus;
-import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
@@ -65,7 +63,7 @@ public class JDBCDriver implements GrillDriver {
   private ConcurrentHashMap<QueryHandle, JdbcQueryContext> queryContextMap;
   private ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter> rewriterCache;
   private Configuration conf;
-  
+
   /**
    * Data related to a query submitted to JDBCDriver
    */
@@ -80,7 +78,7 @@ public class JDBCDriver implements GrillDriver {
     @Getter @Setter private QueryResult queryResult;
     @Getter @Setter private long startTime;
     @Getter @Setter private long endTime;
-    
+
     public JdbcQueryContext(QueryContext context) {
       this.grillContext = context;
     }
@@ -92,7 +90,7 @@ public class JDBCDriver implements GrillDriver {
         listener.onError(grillContext.getQueryHandle(), th.getMessage());
       }
     }
-    
+
     public void notifyComplete() {
       if (listener != null) {
         listener.onCompletion(grillContext.getQueryHandle());
@@ -123,7 +121,7 @@ public class JDBCDriver implements GrillDriver {
       if (isClosed) {
         return;
       }
-      
+
       try {
         if (stmt != null) {
           try {
@@ -143,7 +141,7 @@ public class JDBCDriver implements GrillDriver {
       }
       isClosed = true;
     }
-    
+
     protected synchronized GrillResultSet getGrillResultSet() throws GrillException {
       if (error != null) {
         throw new GrillException("Query failed!", error);
@@ -170,49 +168,51 @@ public class JDBCDriver implements GrillDriver {
       Connection conn = null;
       queryContext.setStartTime(System.currentTimeMillis());
       QueryResult result = new QueryResult();
-      queryContext.setQueryResult(result);
-      
       try {
-        conn = getConnection(queryContext.getGrillContext().getConf());
-        result.conn = conn;
-      } catch (GrillException e) {
-        LOG.error("Error obtaining connection: " + e.getMessage(), e);
-        result.error = e;
-      }
+        queryContext.setQueryResult(result);
 
-      if (conn != null) {
         try {
-          stmt = getStatement(conn);
-          result.stmt = stmt;
-          result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
-          queryContext.notifyComplete();
-        } catch (SQLException sqlEx) {
-          if (queryContext.isClosed()) {
-            LOG.info("Ignored exception on already closed query: "
-                + queryContext.getGrillContext().getQueryHandle() +" - " + sqlEx);
-          } else {
-            LOG.error(
-                "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
-                    + " reason: " + sqlEx.getMessage(), sqlEx);
-            result.error = sqlEx;
-            queryContext.notifyError(sqlEx);
-          }
-        } finally {
-          queryContext.setEndTime(System.currentTimeMillis());
+          conn = getConnection(queryContext.getGrillContext().getConf());
+          result.conn = conn;
+        } catch (GrillException e) {
+          LOG.error("Error obtaining connection: " + e.getMessage(), e);
+          result.error = e;
         }
+
+        if (conn != null) {
+          try {
+            stmt = getStatement(conn);
+            result.stmt = stmt;
+            result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
+            queryContext.notifyComplete();
+          } catch (SQLException sqlEx) {
+            if (queryContext.isClosed()) {
+              LOG.info("Ignored exception on already closed query: "
+                  + queryContext.getGrillContext().getQueryHandle() +" - " + sqlEx);
+            } else {
+              LOG.error(
+                  "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
+                  + " reason: " + sqlEx.getMessage(), sqlEx);
+              result.error = sqlEx;
+              queryContext.notifyError(sqlEx);
+            }
+          }
+        }
+      } finally {
+        queryContext.setEndTime(System.currentTimeMillis());
       }
       return result;
     }
-    
+
     public Statement getStatement(Connection conn) throws SQLException {
       Statement stmt = 
           queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery())
               : conn.createStatement();
-      stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
-      return stmt;
+          stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
+          return stmt;
     }
   }
-  
+
   public static class DummyQueryRewriter implements QueryRewriter {
     @Override
     public String rewrite(Configuration conf, String query) throws GrillException {
@@ -252,7 +252,7 @@ public class JDBCDriver implements GrillDriver {
         return th;
       }
     });
-    
+
     Class<? extends ConnectionProvider> cpClass = conf.getClass(JDBC_CONNECTION_PROVIDER, 
         DataSourceConnectionProvider.class, ConnectionProvider.class);
     try {
@@ -262,7 +262,7 @@ public class JDBCDriver implements GrillDriver {
       throw new GrillException(e);
     }
   }
-  
+
   protected void checkConfigured() throws IllegalStateException {
     if (!configured) 
       throw new IllegalStateException("JDBC Driver is not configured!");
@@ -293,13 +293,13 @@ public class JDBCDriver implements GrillDriver {
     }
     return rewriter;
   }
-  
+
   protected JdbcQueryContext getQueryContext(QueryHandle handle) throws GrillException {
-     JdbcQueryContext ctx = queryContextMap.get(handle);
-     if (ctx == null) {
-       throw new GrillException("Query not found:" + handle.getHandleId());
-     }
-     return ctx;
+    JdbcQueryContext ctx = queryContextMap.get(handle);
+    if (ctx == null) {
+      throw new GrillException("Query not found:" + handle.getHandleId());
+    }
+    return ctx;
   }
 
   protected String rewriteQuery(String query, Configuration conf) throws GrillException {
@@ -352,7 +352,7 @@ public class JDBCDriver implements GrillDriver {
           LOG.error("Error closing statement: " + pContext.getPrepareHandle(), e);
         }
       }
-      
+
       if (conn != null) {
         try {
           conn.close();
@@ -498,10 +498,10 @@ public class JDBCDriver implements GrillDriver {
       throw new GrillException("Result set not available for cancelled query "
           + context.getQueryHandle());
     }
-    
+
     Future<QueryResult> future = ctx.getResultFuture();
     QueryHandle queryHandle = context.getQueryHandle();
-    
+
     try {
       return future.get().getGrillResultSet();
     } catch (InterruptedException e) {
@@ -539,9 +539,16 @@ public class JDBCDriver implements GrillDriver {
     checkConfigured();
     JdbcQueryContext context = getQueryContext(handle);
     boolean cancelResult = context.getResultFuture().cancel(true);
-    context.setCancelled(true);
-    context.closeResult();
-    LOG.info("Cancelled query: " + handle);
+    if (cancelResult) {
+      context.setCancelled(true);
+      // this is required because future.cancel does not guarantee
+      // that finally block is always called.
+      if (context.getEndTime() == 0) {
+        context.setEndTime(System.currentTimeMillis());
+      }
+      context.closeResult();
+      LOG.info("Cancelled query: " + handle);
+    }
     return cancelResult;
   }
 
@@ -588,14 +595,14 @@ public class JDBCDriver implements GrillDriver {
 
   @Override
   public void readExternal(ObjectInput arg0) throws IOException,
-      ClassNotFoundException {
+  ClassNotFoundException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void writeExternal(ObjectOutput arg0) throws IOException {
     // TODO Auto-generated method stub
-    
+
   }
 }
