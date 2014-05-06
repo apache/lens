@@ -124,9 +124,9 @@ public interface GrillDriver extends Externalizable {
       long timeoutMillis, QueryCompletionListener listener) throws GrillException;
 
   /**
-   * Get status of the query, specified by the handle
+   * Update driver query status in the context object.
    * 
-   * @param context The query handle
+   * @param context The query context
    */
   public void updateStatus(QueryContext context) throws GrillException;
 

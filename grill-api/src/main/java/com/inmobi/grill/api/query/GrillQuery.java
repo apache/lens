@@ -30,7 +30,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @XmlRootElement
 @AllArgsConstructor

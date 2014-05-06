@@ -28,8 +28,8 @@ public class DriverQueryStatus implements Serializable {
   @Getter @Setter private boolean isResultSetAvailable = false;
   @Getter @Setter private String progressMessage;
   @Getter @Setter private String errorMessage;
-  @Getter @Setter private Long driverStartTime;
-  @Getter @Setter private Long driverFinishTime;
+  @Getter @Setter private Long driverStartTime = 0L;
+  @Getter @Setter private Long driverFinishTime = 0L;
   
   public QueryStatus toQueryStatus() {
     QueryStatus.Status qstate = null;
@@ -57,6 +57,26 @@ public class DriverQueryStatus implements Serializable {
     }
     
     return new QueryStatus(progress, qstate, statusMessage, isResultSetAvailable, progressMessage, errorMessage);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder str = new StringBuilder(state.toString()).append(':').
+    append(statusMessage);
+    if (state.equals(DriverQueryState.RUNNING)) {
+      str.append(" - Progress:").append(progress).append(":").append(progressMessage);
+    }
+    if (state.equals(DriverQueryState.SUCCESSFUL)) {
+      if (isResultSetAvailable) {
+        str.append(" - Result Available");
+      } else {
+        str.append(" - Result Not Available");
+      }
+    }
+    if (state.equals(DriverQueryState.FAILED)) {
+      str.append(" - Cause:").append(errorMessage);
+    }
+    return str.toString();
   }
 
   public boolean isFinished() {

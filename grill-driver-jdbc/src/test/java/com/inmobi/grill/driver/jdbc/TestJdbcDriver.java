@@ -192,6 +192,8 @@ public class TestJdbcDriver {
       }
       Thread.sleep(500);
     }
+    assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     // make sure query completion listener was called with onCompletion
     try {
       listenerNotificationLatch.await(1, TimeUnit.SECONDS);
@@ -252,6 +254,8 @@ public class TestJdbcDriver {
     driver.cancelQuery(handle);
     driver.updateStatus(context);
     assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
+    assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     driver.closeQuery(handle);
   }
   
@@ -294,6 +298,8 @@ public class TestJdbcDriver {
       }
       Thread.sleep(500);
     }
+    assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
     
     listenerNotificationLatch.await(1, TimeUnit.SECONDS);
     // fetch result should throw error

@@ -180,7 +180,8 @@ public class TestHiveDriver {
       expectedCol += outputTable + ".";
     }
     expectedCol += "ID";
-    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase()) || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
+    assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase())
+        || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
     assertEquals(columns.get(0).getType().name().toLowerCase(), "STRING".toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
@@ -265,6 +266,7 @@ public class TestHiveDriver {
     driver.updateStatus(ctx);
     assertEquals(ctx.getDriverStatus().getState(), finalState, "Expected query to finish with"
         + finalState);
+    assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
     if (finalState.equals(DriverQueryState.SUCCESSFUL)) {
       System.out.println("Progress:" + ctx.getDriverStatus().getProgressMessage());
       assertNotNull(ctx.getDriverStatus().getProgressMessage());
@@ -387,10 +389,12 @@ public class TestHiveDriver {
       System.out.println("#W Waiting for query " + ctx.getQueryHandle() + " status: " + ctx.getDriverStatus().getState());
       assertNotNull(ctx.getDriverStatus());
       if (ctx.getDriverStatus().isFinished()) {
+        assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
         break;
       }
       System.out.println("Progress:" + ctx.getDriverStatus().getProgressMessage());
       Thread.sleep(1000);
+      assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
     }
   }
 
