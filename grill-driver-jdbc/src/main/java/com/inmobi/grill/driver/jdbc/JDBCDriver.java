@@ -160,13 +160,13 @@ public class JDBCDriver implements GrillDriver {
     private final JdbcQueryContext queryContext;
     public QueryCallable(JdbcQueryContext queryContext) {
       this.queryContext = queryContext;
+      queryContext.setStartTime(System.currentTimeMillis());
     }
 
     @Override
     public QueryResult call() {
       Statement stmt = null;
       Connection conn = null;
-      queryContext.setStartTime(System.currentTimeMillis());
       QueryResult result = new QueryResult();
       try {
         queryContext.setQueryResult(result);
