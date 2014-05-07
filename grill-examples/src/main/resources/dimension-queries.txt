@@ -25,14 +25,13 @@ select * from (cube select dim_table.name name1, dim_table2.name name2 from dim_
 drop table temp1
 create table temp1 as cube select id,name from dim_table
 select * from temp1
--- Following queries are not yet working
---cube insert overwrite local directory '/tmp/example-output' select id,name from dim_table
---cube insert overwrite local directory '/tmp/example-output2' ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE select id,name from dim_table
---drop table temp2
---create table temp2(id int, name string)
---cube insert overwrite table temp2 select id,name from dim_table
---select * from temp2
---drop table temp3
---create table temp3(id int, name string) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
---cube insert overwrite table temp3 select id,name from dim_table
---select * from temp3
+insert overwrite local directory '/tmp/example-output' cube select id,name from dim_table
+insert overwrite local directory '/tmp/example-output2' ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE cube select id,name from dim_table
+drop table temp2
+create table temp2(id int, name string)
+insert overwrite table temp2 cube select id,name from dim_table
+select * from temp2
+drop table temp3
+create table temp3(id int, name string) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
+insert overwrite table temp3 cube select id,name from dim_table
+select * from temp3

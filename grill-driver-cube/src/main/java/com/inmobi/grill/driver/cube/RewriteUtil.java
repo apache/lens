@@ -183,7 +183,7 @@ public class RewriteUtil {
             if (start != cqi.startPos) {
               builder.append(replacedQuery.substring(start, cqi.startPos));
             }
-            String hqlQuery = rewriter.rewrite(cqi.cubeAST).toHQL();
+            String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
             CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
             builder.append(hqlQuery);
             start = cqi.endPos;
