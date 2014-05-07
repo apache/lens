@@ -26,6 +26,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.servlet.ServletRegistration;
@@ -34,10 +36,15 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
 import com.codahale.metrics.servlets.AdminServlet;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class GrillServer {
+  public static final Log LOG = LogFactory.getLog(GrillServer.class);
+
   final HttpServer server;
   final HiveConf conf;
 
@@ -89,30 +96,34 @@ public class GrillServer {
     GrillServices.get().stop();
   }
 
+  private static GrillServer thisServer;
+
+  @SuppressWarnings("restriction")
   public static void main(String[] args) throws Exception {
-    GrillServer thisServer = new GrillServer(new HiveConf());
-    Runtime.getRuntime().addShutdownHook(
-        new Thread(new ServerShutdownHook(thisServer), "Shutdown Thread"));
-    thisServer.start();
-    System.in.read();
-  }
+    Signal.handle(new Signal("TERM"), new SignalHandler() {
 
-  public static class ServerShutdownHook implements Runnable {
-
-    private final GrillServer thisServer;
-
-    public ServerShutdownHook(GrillServer server) {
-      this.thisServer = server;
-    }
-
-    @Override
-    public void run() {
-      try {
-        // Stop the Composite Service
-        thisServer.stop();
-      } catch (Throwable t) {
+      @Override
+      public void handle(Signal signal) {
+        try {
+          LOG.info("Request for stopping grill server received");
+          if (thisServer != null) {
+            synchronized (thisServer) {
+              thisServer.notify();
+            }
+          }
+        }
+        catch (Exception e) {
+          LOG.warn("Error in shutting down databus", e);
+        }
       }
-    }
-  }
+    });
 
+    thisServer = new GrillServer(new HiveConf());
+    thisServer.start();
+    synchronized (thisServer) {
+      thisServer.wait();
+    }
+    thisServer.stop();
+    System.exit(0);
+  }
 }

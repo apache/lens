@@ -1068,10 +1068,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         case FAILED:
         case CANCELED:
           updateFinishedQuery(ctx, null);
+          break;
         case CLOSED :
           allQueries.remove(ctx.getQueryHandle());
         }
       }
+      LOG.info("Recovered " + allQueries.size() + " queries");
     }
   }
 
@@ -1098,5 +1100,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         }
       }
     }
+    LOG.info("Persisted " + allQueries.size() + " queries");
   }
 }
