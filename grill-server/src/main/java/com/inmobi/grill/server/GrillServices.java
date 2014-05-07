@@ -174,6 +174,7 @@ public class GrillServices extends CompositeService {
     if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
         GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) { 
       FileSystem fs = persistDir.getFileSystem(conf);
+      LOG.info("Persisting server state in " + persistDir);
 
       for (GrillService service : grillServices) {
         LOG.info("Persisting state of service:" + service.getName());
@@ -191,6 +192,8 @@ public class GrillServices extends CompositeService {
         fs.rename(serviceWritePath, servicePath);
         LOG.info("Persisted service " + service.getName() + " to " + servicePath);
       }
+    } else {
+      LOG.info("Server restart is not enabled. Not persisting the server state");
     }
   }
 
@@ -200,6 +203,7 @@ public class GrillServices extends CompositeService {
 
   public synchronized void stop() {
     if (getServiceState() != STATE.STOPPED) {
+      LOG.info("Stopping grill server");
       stopping = true;
       try {
         // persist all the services
