@@ -86,7 +86,9 @@ Installing and running grill
 
 ** Running the server
 
-  The command to start the server:
+  Before starting the server, you need to set <<HADOOP_HOME>> and <<HIVE_HOME>> environment variables. These should point to the Hadoop and Hive installation locations on the server.
+
+  Once env variables are set, you can use the following command to start the server:
 
 +---+
 
