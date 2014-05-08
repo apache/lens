@@ -43,9 +43,11 @@ public class TestGenerateConfigDoc {
   public static final String SERVER_CONF_FILE = "../grill-server/src/main/resources/grill-default.xml";
   public static final String HIVE_DRIVER_CONF_FILE = "../grill-driver-hive/src/main/resources/hivedriver-default.xml";
   public static final String CLIENT_CONF_FILE = "../grill-client/src/main/resources/grill-client-default.xml";
+  public static final String CUBE_QUERY_CONF_FILE = "../grill-driver-cube/src/main/resources/olap-query-conf.xml";
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";
   public static final String CLIENT_APT_FILE = "../src/site/apt/user/client-config.apt";
+  public static final String CUBE_QUERY_CONF_APT_FILE = "../src/site/apt/user/olap-query-conf.apt";
   
   @Test
   public void generateServerConfigDoc() throws Exception {
@@ -63,6 +65,12 @@ public class TestGenerateConfigDoc {
   public void generateClientConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(CLIENT_CONF_FILE, CLIENT_APT_FILE);
     printer.generateDoc("Grill client configuration");
+  }
+
+  @Test
+  public void generateOLAPQueryConfigDoc() throws Exception {
+    ConfigPrinter printer = new ConfigPrinter(CUBE_QUERY_CONF_FILE, CUBE_QUERY_CONF_APT_FILE);
+    printer.generateDoc("OLAP query configuration");
   }
 
   class ConfigEntry {
