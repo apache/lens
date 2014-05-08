@@ -175,6 +175,8 @@ QUARTERLY, YEARLY update periods.
   if the group by keys specified are not projected, they can be projected
 
   * Automatically add aggregate functions to measures specified as measure's default aggregate.
+  
+  Various configurations available for running an OLAP query are documented at {{{./olap-query-conf.html} OLAP query configurations}} 
 
 * Query API
 
