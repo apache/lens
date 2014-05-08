@@ -44,6 +44,7 @@
       <item name="Grill CLI" href="./user/cli.html" />
 			<item name="Java Client Library" href="./user/java-client.html"/>
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
+			<item name="FAQ" href="./user/faq.html"/>
 		</menu>
 		<menu name="Developer Documentation">
       <item name="Grill Design" href="./developer/design.html" />
