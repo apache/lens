@@ -425,14 +425,6 @@ public class HiveDriver implements GrillDriver {
   public void close() {
     LOG.info("CloseDriver");
     // Close this driver and release all resources
-    for (QueryHandle query : new ArrayList<QueryHandle>(hiveHandles.keySet())) {
-      try {
-        closeQuery(query);
-      } catch (GrillException exc) {
-        LOG.warn("Could not close query: " +  query, exc);
-      }
-    }
-
     sessionLock.lock();
     try {
       for (String grillSession : grillToHiveSession.keySet()) {
