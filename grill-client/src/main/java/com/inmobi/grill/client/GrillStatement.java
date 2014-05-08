@@ -81,14 +81,18 @@ public class GrillStatement {
   private WebTarget getQueryWebTarget(Client client) {
     return client.target(
         connection.getGrillConnectionParams().getBaseConnectionUrl()).path(
-        connection.getGrillConnectionParams().getQueryResourcePath()).path("queries");
+            connection.getGrillConnectionParams().getQueryResourcePath()).path("queries");
   }
 
   public GrillQuery getQuery(QueryHandle handle) {
-    Client client = ClientBuilder.newClient();
-    WebTarget target = getQueryWebTarget(client);
-    return target.path(handle.toString()).queryParam(
-        "sessionid", connection.getSessionHandle()).request().get(GrillQuery.class);
+    try {
+      Client client = ClientBuilder.newClient();
+      WebTarget target = getQueryWebTarget(client);
+      return target.path(handle.toString()).queryParam(
+          "sessionid", connection.getSessionHandle()).request().get(GrillQuery.class);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
+    }
   }
 
 
@@ -160,16 +164,20 @@ public class GrillStatement {
     }
     Client client = ClientBuilder.newClient();
 
-    WebTarget target = getQueryWebTarget(client);
+    try {
+      WebTarget target = getQueryWebTarget(client);
 
-    return target.path(query.getQueryHandle().toString()).
-        path("resultsetmetadata").queryParam(
-        "sessionid", connection.getSessionHandle()).request().get(
-        QueryResultSetMetadata.class);
+      return target.path(query.getQueryHandle().toString()).
+          path("resultsetmetadata").queryParam(
+              "sessionid", connection.getSessionHandle()).request().get(
+                  QueryResultSetMetadata.class);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to get resultset metadata, cause:" + e.getMessage());
+    }
   }
 
   public InMemoryQueryResult getResultSet() {
-     return this.getResultSet(this.query);
+    return this.getResultSet(this.query);
   }
 
   public InMemoryQueryResult getResultSet(GrillQuery query) {
@@ -179,11 +187,15 @@ public class GrillStatement {
     }
     Client client = ClientBuilder.newClient();
 
-    WebTarget target = getQueryWebTarget(client);
-    return target.path(query.getQueryHandle().toString()).
-        path("resultset").queryParam(
-        "sessionid", connection.getSessionHandle()).request().get(
-        InMemoryQueryResult.class);
+    try {
+      WebTarget target = getQueryWebTarget(client);
+      return target.path(query.getQueryHandle().toString()).
+          path("resultset").queryParam(
+              "sessionid", connection.getSessionHandle()).request().get(
+                  InMemoryQueryResult.class);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
+    }
   }
 
 

@@ -83,7 +83,7 @@ public class GrillClient {
     statement.execute(sql, true);
     if(statement.getStatus().getStatus()
         == QueryStatus.Status.FAILED) {
-      throw new IllegalStateException(statement.getStatus().getErrorMessage());
+      throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {

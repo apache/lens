@@ -244,7 +244,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                 rewriteAndSelect(ctx);
                 ctx.getSelectedDriver().executeAsync(ctx);
               } catch (GrillException e) {
-                LOG.error("Error launching query ", e);
+                LOG.error("Error launching query " + ctx.getQueryHandle(), e);
                 String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
                 setFailedStatus(ctx, "Launching query failed", reason);
                 continue;
