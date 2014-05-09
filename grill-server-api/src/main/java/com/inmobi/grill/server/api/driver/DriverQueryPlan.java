@@ -471,6 +471,15 @@ public abstract class DriverQueryPlan {
     return numAggrExprs;
   }
 
+  /**
+   * Get list of partitions queried for each table
+   * @return
+   */
+  public Map<String, List<String>> getPartitions() {
+    return null;
+  }
+
+
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
         numHaving, numObys, numAggrExprs, numFilters, tablesQueried, hasSubQuery,

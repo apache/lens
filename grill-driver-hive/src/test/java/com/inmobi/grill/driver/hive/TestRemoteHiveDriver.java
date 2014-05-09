@@ -23,14 +23,14 @@ package com.inmobi.grill.driver.hive;
 
 import static org.testng.Assert.assertEquals;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -261,5 +261,67 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
         Thread.sleep(1000);
       }
     }
+  }
+
+
+  private void createPartitionedTable(String tableName, int partitions) throws Exception {
+    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+
+    QueryContext ctx =
+      new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS "
+        + tableName + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", null, conf);
+
+    driver.execute(ctx);
+
+    File dataDir = new File("target/partdata");
+    dataDir.mkdir();
+
+    // Add partitions
+    for (int i = 0;i < partitions; i++) {
+      // Create partition paths
+      File tableDir = new File(dataDir, tableName);
+      tableDir.mkdir();
+      File partDir = new File(tableDir, "p" + i);
+      partDir.mkdir();
+
+      // Create data file
+      File data = new File(partDir, "data.txt");
+      FileUtils.writeLines(data, Arrays.asList("one", "two", "three", "four", "five"));
+
+      System.out.println("@@ Adding partition " + i);
+      QueryContext partCtx = new QueryContext("ALTER TABLE "
+        + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i + "', ET='1') LOCATION '" + partDir.getPath() +  "'", null, conf);
+      driver.execute(partCtx);
+    }
+  }
+
+  @Test
+  public void testPartitionInQueryPlan() throws Exception {
+    // Create tables with 10 & 1 partitions respectively
+    createPartitionedTable("table_1", 10);
+    createPartitionedTable("table_2", 1);
+
+    // Query should select 5 partitions of table 1 and 1 partitions of table 2
+    String explainQuery = "SELECT table_1.ID  " +
+      "FROM table_1 LEFT OUTER JOIN table_2 ON table_1.ID = table_2.ID AND table_2.DT='p0' " +
+      "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' " +
+      "AND table_1.ET='1'";
+
+    DriverQueryPlan plan = driver.explain(explainQuery, conf);
+
+    System.out.println("@@ partitions" + plan.getPartitions());
+
+    Assert.assertEquals(plan.getPartitions().size(), 2);
+
+    String dbName = TestRemoteHiveDriver.class.getSimpleName().toLowerCase();
+    Assert.assertTrue(plan.getPartitions().containsKey(dbName + ".table_1"));
+    Assert.assertEquals(plan.getPartitions().get(dbName + ".table_1").size(), 5);
+
+    
+    Assert.assertTrue(plan.getPartitions().containsKey(dbName + ".table_2"));
+    Assert.assertEquals(plan.getPartitions().get(dbName + ".table_2").size(), 1);
+
+    FileUtils.deleteDirectory(new File("target/partdata"));
   }
 }
