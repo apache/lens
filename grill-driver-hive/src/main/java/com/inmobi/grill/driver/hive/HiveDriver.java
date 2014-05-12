@@ -633,6 +633,7 @@ public class HiveDriver implements GrillDriver {
         OperationHandle opHandle = new OperationHandle((TOperationHandle) in.readObject());
         hiveHandles.put(qhandle, opHandle);
       }
+      LOG.info("HiveDriver recovered " + hiveHandles.size() + " queries");
       int numSessions = in.readInt();
       for (int i = 0; i < numSessions; i++) {
         String grillId = in.readUTF();
@@ -640,6 +641,7 @@ public class HiveDriver implements GrillDriver {
             TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6);
         grillToHiveSession.put(grillId, sHandle);
       }
+      LOG.info("HiveDriver recovered " + grillToHiveSession.size() + " sessions");
     }
   }
 
@@ -652,10 +654,12 @@ public class HiveDriver implements GrillDriver {
         out.writeObject(entry.getKey());
         out.writeObject(entry.getValue().toTOperationHandle());
       }
+      LOG.info("HiveDriver persisted " + hiveHandles.size() + " queries");
       out.writeInt(grillToHiveSession.size());
       for (Map.Entry<String, SessionHandle> entry : grillToHiveSession.entrySet()) {
         out.writeUTF(entry.getKey());
         out.writeObject(entry.getValue().toTSessionHandle());
       }
+      LOG.info("HiveDriver persisted " + grillToHiveSession.size() + " sessions");
     }
   }}
