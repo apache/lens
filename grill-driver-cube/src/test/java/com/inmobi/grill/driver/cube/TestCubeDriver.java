@@ -139,4 +139,35 @@ public class TestCubeDriver {
       }
     }
   }
+  
+  @Test
+  public void testCubeDriverRestart() throws Exception {
+    // Test read/write for cube driver
+    CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
+    String query = "select name from table";
+    DriverQueryPlan plan = cubeDriver.explain(query, conf);
+    String planString = plan.getPlan();
+    Assert.assertEquals(query, planString);
+
+    // execute async from handle
+    cubeDriver.executePrepareAsync(plan.getHandle(), conf);
+    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
+        QueryStatus.Status.SUCCESSFUL); 
+
+    ByteArrayOutputStream driverOut = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(driverOut);
+    cubeDriver.writeExternal(out);
+    out.close();
+    System.out.println(Arrays.toString(driverOut.toByteArray()));
+    
+    ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
+    CubeGrillDriver newDriver = new CubeGrillDriver(conf);
+    newDriver.readExternal(new ObjectInputStream(driverIn));
+    driverIn.close();
+    Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
+    
+    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
+        QueryStatus.Status.SUCCESSFUL); 
+  }
+
 }

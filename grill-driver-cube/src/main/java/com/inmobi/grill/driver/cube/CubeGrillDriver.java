@@ -303,29 +303,66 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     drivers.clear();
-    int nDrivers = in.readInt();    
-    for (int i = 0; i < nDrivers; i++) {
-      try {
+    Map<String, GrillDriver> driverMap = new HashMap<String, GrillDriver>();
+    synchronized (drivers) {
+      drivers.clear();
+      int numDrivers = in.readInt();
+      for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
-        Class<? extends GrillDriver> driverCls = 
-            (Class<? extends GrillDriver>)Class.forName(driverClsName);
-        GrillDriver driver = (GrillDriver) driverCls.newInstance();
-        driver.configure(conf);
+        GrillDriver driver;
+        try {
+          Class<? extends GrillDriver> driverCls = 
+              (Class<? extends GrillDriver>)Class.forName(driverClsName);
+          driver = (GrillDriver) driverCls.newInstance();
+          driver.configure(conf);
+        } catch (Exception e) {
+          LOG.error("Could not instantiate driver:" + driverClsName);
+          throw new IOException(e);
+        }
         driver.readExternal(in);
         drivers.add(driver);
-      } catch (Exception exc) {
-        throw new IOException(exc);
-     }
-      
+        driverMap.put(driverClsName, driver);
+      }
+    }
+
+    synchronized (queryContexts) {
+      int numQueries = in.readInt();
+      for (int i =0; i < numQueries; i++) {
+        QueryContext ctx = (QueryContext)in.readObject();
+        queryContexts.put(ctx.getQueryHandle(), ctx);
+        boolean driverAvailable = in.readBoolean();
+        if (driverAvailable) {
+          String clsName = in.readUTF();
+          ctx.setSelectedDriver(driverMap.get(clsName));
+        }
+      }
+      LOG.info("Recovered " + queryContexts.size() + " queries");
     }
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    out.writeInt(drivers.size());
-    for (GrillDriver driver : drivers) {
-      out.writeUTF(driver.getClass().getName());
-      driver.writeExternal(out);
+    // persist all drivers
+    synchronized (drivers) {
+      out.writeInt(drivers.size());
+      for (GrillDriver driver : drivers) {
+        out.writeUTF(driver.getClass().getName());
+        driver.writeExternal(out);
+      }
     }
+    // persist allQueries
+    synchronized (queryContexts) {
+      out.writeInt(queryContexts.size());
+      for (QueryContext ctx : queryContexts.values()) {
+        out.writeObject(ctx);
+        boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
+        out.writeBoolean(isDriverAvailable);
+        if (isDriverAvailable) {
+          out.writeUTF(ctx.getSelectedDriver().getClass().getName());
+        }
+      }
+    }
+    LOG.info("Persisted " + queryContexts.size() + " queries");
+
   }
 }
