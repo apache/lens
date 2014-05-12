@@ -118,7 +118,13 @@ public class GrillServer {
       }
     });
 
-    thisServer = new GrillServer(new HiveConf());
+    try {
+      thisServer = new GrillServer(new HiveConf());
+    } catch (Exception exc) {
+      LOG.fatal("Error while creating Grill server", exc);
+      System.exit(1);
+    }
+
     thisServer.start();
     synchronized (thisServer) {
       thisServer.wait();

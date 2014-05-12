@@ -123,7 +123,12 @@ public class GrillServices extends CompositeService {
       }
 
       // This will init all services in the order they were added
-      super.init(conf);
+      try {
+        super.init(conf);
+      } catch(Exception e) {
+        LOG.fatal("One of the services failed to start", e);
+        System.exit(1);
+      }
 
       //setup persisted state
       String persistPathStr = conf.get(GrillConfConstants.GRILL_SERVER_PERSIST_LOCATION,
