@@ -20,7 +20,6 @@ package com.inmobi.grill.server.metastore;
  * #L%
  */
 
-import antlr.StringUtils;
 
 import com.inmobi.grill.api.metastore.*;
 
@@ -35,9 +34,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -413,7 +409,8 @@ public class JAXBUtils {
       storage.addProperties(mapFromXProperties(xs.getProperties()));
       return storage;
     } catch (Exception e) {
-      throw new WebApplicationException("Could not create storage class" + xs.getClassname() + "with name:" + xs.getName(), e);
+      LOG.error("Could not create storage class" + xs.getClassname() + "with name:" + xs.getName());
+      throw new WebApplicationException(e);
     }
   }
 
