@@ -21,7 +21,9 @@ package com.inmobi.grill.driver.hive;
  */
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -36,6 +38,8 @@ import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 
 public class HiveQueryPlan extends DriverQueryPlan {
   private String explainOutput;
+  private Map<String, List<String>> partitions;
+
   enum ParserState {
     BEGIN,
     FILE_OUTPUT_OPERATOR,
@@ -47,6 +51,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
     GROUPBY_EXPRS,
     MOVE,
     MAP_REDUCE,
+    PARTITION_LIST,
+    PARTITION,
   };
 
   public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
@@ -54,6 +60,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
+    partitions = new LinkedHashMap<String, List<String>>();
     extractPlanDetails(explainOutput, conf);
     this.explainOutput = StringUtils.join(explainOutput, '\n');
   }
@@ -63,8 +70,10 @@ public class HiveQueryPlan extends DriverQueryPlan {
     ParserState prevState = state;
     ArrayList<ParserState> states = new ArrayList<ParserState>();
     Hive metastore = Hive.get(conf);
+    List<String> partList = null;
 
-    for (String line : explainOutput) {
+    for (int i = 0; i < explainOutput.size(); i++) {
+      String line = explainOutput.get(i);
       String tr = line.trim();
       prevState = state;
       state = nextState(tr, state);
@@ -114,6 +123,39 @@ public class HiveQueryPlan extends DriverQueryPlan {
             numGbys += StringUtils.split(tr, ",").length;
           }
           break;
+        case PARTITION:
+          if (tr.equals("partition values:")) {
+            i++;
+            List<String> partVals = new ArrayList<String>();
+            // Look ahead until we reach partition properties
+            String lineAhead = null;
+            for (; i < explainOutput.size(); i++ ) {
+              if (explainOutput.get(i).trim().equals("properties:")) {
+                break;
+              }
+              lineAhead = explainOutput.get(i).trim();
+              partVals.add(lineAhead);
+            }
+
+            String partConditionStr = StringUtils.join(partVals, ";");
+
+            // Now seek table name
+            for (; i < explainOutput.size(); i++) {
+              if (explainOutput.get(i).trim().startsWith("name:")) {
+                String table = explainOutput.get(i).trim().substring("name:".length()).trim();
+                List<String> tablePartitions = partitions.get(table);
+                if (tablePartitions == null) {
+                  tablePartitions = new ArrayList<String>();
+                  partitions.put(table, tablePartitions);
+                }
+                tablePartitions.add(partConditionStr);
+
+                break;
+              }
+            }
+          }
+
+          break;
       }
     }
 	}
@@ -137,8 +179,11 @@ public class HiveQueryPlan extends DriverQueryPlan {
       return ParserState.GROUPBY_EXPRS;
     } else if (tr.startsWith("keys:") && state == ParserState.GROUPBY_EXPRS) {
       return ParserState.GROUPBY_KEYS;
+    } else if (tr.equals("Path -> Partition:")) {
+      return ParserState.PARTITION_LIST;
+    } else if (tr.equals("Partition") && state == ParserState.PARTITION_LIST) {
+      return ParserState.PARTITION;
     }
-
     return state;
   }
 
@@ -152,4 +197,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
 		return null;
 	}
 
+  @Override
+  public Map<String, List<String>> getPartitions() {
+    return partitions;
+  }
 }
