@@ -44,10 +44,13 @@ public class JDBCResultSet extends InMemoryResultSet {
   private final ResultSet resultSet;
   private final QueryResult queryResult;
   private GrillResultSetMetadata grillResultMeta;
+  private final boolean closeAfterFetch;
   
-  public JDBCResultSet(QueryResult queryResult, ResultSet resultSet) {
+  public JDBCResultSet(QueryResult queryResult, ResultSet resultSet,
+      boolean closeAfterFetch) {
     this.queryResult = queryResult;
     this.resultSet = resultSet;;
+    this.closeAfterFetch = closeAfterFetch;
   }
   
   
@@ -181,7 +184,11 @@ public class JDBCResultSet extends InMemoryResultSet {
   @Override
   public synchronized boolean hasNext() throws GrillException {
     try {
-      return resultSet.next();
+      boolean hasMore = resultSet.next();
+      if (!hasMore && closeAfterFetch) {
+        close();
+      }
+      return hasMore;
     } catch (SQLException e) {
       throw new GrillException(e);
     }
