@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
+import com.inmobi.grill.server.api.driver.GrillDriver;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -120,6 +123,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @AfterMethod
   @Override
   public void afterTest() throws Exception {
+    LOG.info("Test finished, closing driver");
     driver.close();
   }
 
@@ -238,6 +242,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     QueryContext ctx2 = new QueryContext("SELECT ID FROM " + tableName, null, driverConf);
     oldDriver.executeAsync(ctx2);
     Assert.assertEquals(2, oldDriver.getHiveHandleSize());
+    
+    byte[] ctx1bytes = persistContext(ctx1);
+    byte[] ctx2bytes = persistContext(ctx2);
 
     // Write driver to stream
     ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
@@ -254,22 +261,53 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     newDriver.configure(driverConf);
     driverInput.close();
 
-    Assert.assertEquals(2, newDriver.getHiveHandleSize());
-    // Check status from the new driver, should get all statuses back.
-    while (true) {
-      newDriver.updateStatus(ctx1);
-      Assert.assertNotNull(ctx1.getDriverStatus());
-      newDriver.updateStatus(ctx2);
-      Assert.assertNotNull(ctx2.getDriverStatus());
+    ctx1 = readContext(ctx1bytes, newDriver);
+    ctx2 = readContext(ctx2bytes, newDriver);
 
-      if (ctx1.getDriverStatus().isFinished() && ctx1.getDriverStatus().isFinished()) {
-        break;
-      } else {
-        Thread.sleep(1000);
-      }
-    }
+    Assert.assertEquals(2, newDriver.getHiveHandleSize());
+    
+    validateExecuteAsync(ctx1, DriverQueryState.SUCCESSFUL, true,
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false, newDriver);
+    validateExecuteAsync(ctx2, DriverQueryState.SUCCESSFUL, true,
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false, newDriver);
   }
 
+  private byte[] persistContext(QueryContext ctx) throws IOException {
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(baos);
+    try {
+      out.writeObject(ctx);
+      boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
+      out.writeBoolean(isDriverAvailable);
+      if (isDriverAvailable) {
+        out.writeUTF(ctx.getSelectedDriver().getClass().getName());
+      }
+    } finally {
+      out.flush();
+      out.close();
+      baos.close();
+    }
+    
+    return baos.toByteArray();
+  }
+
+  private QueryContext readContext(byte[] bytes, GrillDriver driver) throws IOException, ClassNotFoundException {
+    ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+    ObjectInputStream in = new ObjectInputStream(bais);
+    QueryContext ctx;
+    try {
+      ctx = (QueryContext)in.readObject();
+      boolean driverAvailable = in.readBoolean();
+      if (driverAvailable) {
+        String clsName = in.readUTF();
+        ctx.setSelectedDriver(driver);
+      }
+    } finally {
+      in.close();
+      bais.close();
+    }
+    return ctx;
+  }
 
   private void createPartitionedTable(String tableName, int partitions) throws Exception {
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);

@@ -275,8 +275,8 @@ public class TestHiveDriver {
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
-  private void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState,
-      boolean isPersistent, String outputDir, boolean formatNulls) throws Exception {
+  protected void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState,
+      boolean isPersistent, String outputDir, boolean formatNulls, HiveDriver driver) throws Exception {
     waitForAsyncQuery(ctx, driver);
     driver.updateStatus(ctx);
     assertEquals(ctx.getDriverStatus().getState(), finalState, "Expected query to finish with"
@@ -295,6 +295,11 @@ public class TestHiveDriver {
       System.out.println("Status:" + ctx.getDriverStatus().getStatusMessage());
       assertNotNull(ctx.getDriverStatus().getErrorMessage());
     }
+  }
+
+  protected void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState,
+      boolean isPersistent, String outputDir, boolean formatNulls) throws Exception {
+    validateExecuteAsync(ctx, finalState, isPersistent, outputDir, formatNulls, driver);
   }
 
   @Test
