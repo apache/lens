@@ -92,9 +92,11 @@ public interface GrillDriver extends Externalizable {
   /**
    * Blocking execute of the query
    * 
+   * The driver would be closing the driver handle, once the results are fetched
+   * 
    * @param context 
    * 
-   * @return returns the result set
+   * @return returns the result set, null if there is no result available
    * 
    * @throws GrillException
    */
