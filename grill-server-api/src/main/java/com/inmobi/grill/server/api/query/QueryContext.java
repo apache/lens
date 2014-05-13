@@ -128,9 +128,10 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     }
   }
 
-  public String getResultSetPersistentPath() {
+  public String getResultSetParentDir() {
     if (isPersistent) {
-      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR);
+      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
+          GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
     }
     return null;
   }

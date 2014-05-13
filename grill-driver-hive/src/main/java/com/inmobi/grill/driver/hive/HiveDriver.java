@@ -520,7 +520,7 @@ public class HiveDriver implements GrillDriver {
         context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true)) {
       // store persistent data into user specified location
       // If absent, take default home directory
-      String resultSetParentDir = context.getResultSetPersistentPath();
+      String resultSetParentDir = context.getResultSetParentDir();
       StringBuilder builder;
       Path resultSetPath;
       if (StringUtils.isNotBlank(resultSetParentDir)) {
@@ -654,6 +654,7 @@ public class HiveDriver implements GrillDriver {
         QueryHandle qhandle = (QueryHandle)in.readObject();
         OperationHandle opHandle = new OperationHandle((TOperationHandle) in.readObject());
         hiveHandles.put(qhandle, opHandle);
+        LOG.debug("Hive driver recovered " + qhandle + ":" + opHandle);
       }
       LOG.info("HiveDriver recovered " + hiveHandles.size() + " queries");
       int numSessions = in.readInt();
@@ -675,6 +676,7 @@ public class HiveDriver implements GrillDriver {
       for (Map.Entry<QueryHandle, OperationHandle> entry : hiveHandles.entrySet()) {
         out.writeObject(entry.getKey());
         out.writeObject(entry.getValue().toTOperationHandle());
+        LOG.debug("Hive driver persisted " + entry.getKey() + ":" + entry.getValue());
       }
       LOG.info("HiveDriver persisted " + hiveHandles.size() + " queries");
       out.writeInt(grillToHiveSession.size());
