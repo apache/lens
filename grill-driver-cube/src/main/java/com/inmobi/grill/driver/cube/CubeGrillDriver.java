@@ -124,7 +124,10 @@ public class CubeGrillDriver implements GrillDriver {
 
   public GrillResultSet execute(String query, Configuration conf)
       throws GrillException {
-    return execute(createQueryContext(query, conf));
+    QueryContext ctx =  createQueryContext(query, conf);
+    GrillResultSet result = execute(ctx);
+    queryContexts.remove(ctx.getQueryHandle());
+    return result;
   }
 
   @Override
