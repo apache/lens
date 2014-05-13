@@ -25,6 +25,8 @@ import static org.testng.Assert.*;
 import java.io.*;
 import java.util.*;
 
+import junit.framework.Assert;
+
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -81,6 +83,7 @@ public class TestHiveDriver {
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     System.out.println("Driver created");
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   @AfterTest
@@ -105,6 +108,7 @@ public class TestHiveDriver {
     context = new QueryContext(dataLoad, null, conf);
     resultSet = driver.execute(context);
     assertNull(resultSet);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   // Tests
@@ -128,12 +132,15 @@ public class TestHiveDriver {
     QueryContext context = new QueryContext(query, null, conf);
     GrillResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     // fetch results from temp table
     String select = "SELECT * FROM test_temp_output";
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     validateInMemoryResult(resultSet, "test_temp_output");    
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   @Test
@@ -158,6 +165,7 @@ public class TestHiveDriver {
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
     validatePersistentResult(resultSet, TEST_DATA_FILE, GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   private void validateInMemoryResult(GrillResultSet resultSet) throws GrillException, IOException {
@@ -227,9 +235,11 @@ public class TestHiveDriver {
     conf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     QueryContext context = new QueryContext(expectFail, null, conf);
     driver.executeAsync(context);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.FAILED, true, null, false);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     driver.closeQuery(context.getQueryHandle());
-
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     conf.set("hive.exec.driver.run.hooks", "");
     //  Async select query
@@ -237,15 +247,19 @@ public class TestHiveDriver {
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, false, null, false);
     driver.closeQuery(context.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, true,
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false);
     driver.closeQuery(context.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
@@ -254,10 +268,11 @@ public class TestHiveDriver {
     select = "SELECT ID, null, ID FROM test_execute_sync";
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, true,
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, true);
     driver.closeQuery(context.getQueryHandle());
-
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   private void validateExecuteAsync(QueryContext ctx, DriverQueryState finalState,
@@ -292,6 +307,7 @@ public class TestHiveDriver {
     driver.updateStatus(context);
     assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED, "Expecting query to be cancelled");
     driver.closeQuery(context.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     try {
       driver.cancelQuery(context.getQueryHandle());
@@ -362,11 +378,14 @@ public class TestHiveDriver {
     QueryContext ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
     GrillResultSet resultSet = driver.execute(ctx);
     validatePersistentResult(resultSet, TEST_DATA_FILE, TEST_OUTPUT_DIR, false);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
     driver.executeAsync(ctx);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(ctx, DriverQueryState.SUCCESSFUL, true, TEST_OUTPUT_DIR, false);
     driver.closeQuery(ctx.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     conf.set(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
@@ -374,13 +393,17 @@ public class TestHiveDriver {
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
     ctx = new QueryContext("SELECT ID, null, ID FROM test_persistent_result_set", null, conf);
     resultSet = driver.execute(ctx);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     validatePersistentResult(resultSet, TEST_DATA_FILE, TEST_OUTPUT_DIR, true);
     driver.closeQuery(ctx.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     ctx = new QueryContext("SELECT ID, null, ID FROM test_persistent_result_set", null, conf);
     driver.executeAsync(ctx);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(ctx, DriverQueryState.SUCCESSFUL, true, TEST_OUTPUT_DIR, true);
     driver.closeQuery(ctx.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   private void waitForAsyncQuery(QueryContext ctx, HiveDriver driver) throws Exception {
@@ -405,6 +428,7 @@ public class TestHiveDriver {
     DriverQueryPlan plan = driver.explain("SELECT ID FROM test_explain", conf);
     assertTrue(plan instanceof HiveQueryPlan);
     assertEquals(plan.getTableWeight("test_explain"), 500.0);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     // test execute prepare
     PreparedQueryContext pctx = new PreparedQueryContext(
@@ -412,33 +436,43 @@ public class TestHiveDriver {
     plan = driver.explainAndPrepare(pctx);
     QueryContext qctx = new QueryContext(pctx, null, conf);
     GrillResultSet result = driver.execute(qctx);
-    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
+    validateInMemoryResult(result);
 
     // test execute prepare async
+    qctx = new QueryContext(pctx, null, conf);
     driver.executeAsync(qctx);
     assertNotNull(qctx.getDriverOpHandle());
     validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
 
     driver.closeQuery(qctx.getQueryHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     // for backward compatibility
     qctx = new QueryContext(pctx, null, conf);
     qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     result = driver.execute(qctx);
     assertNotNull(qctx.getDriverOpHandle());
-    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
+    validateInMemoryResult(result);
     // test execute prepare async
+    qctx = new QueryContext(pctx, null, conf);
+    qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     driver.executeAsync(qctx);
+    Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, null, false);
 
     driver.closeQuery(qctx.getQueryHandle());
     driver.closePreparedQuery(pctx.getPrepareHandle());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
     plan = driver.explain("SELECT ID FROM test_explain", conf);
     assertTrue(plan instanceof HiveQueryPlan);
     assertNull(plan.getHandle());
     conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, true);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   @Test
@@ -451,6 +485,7 @@ public class TestHiveDriver {
         " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" +
         " GROUP BY explain_test_1.ID", conf);
 
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     assertTrue(plan instanceof  HiveQueryPlan);
     assertNotNull(plan.getTablesQueried());
     assertEquals(plan.getTablesQueried().size(), 2);
@@ -470,12 +505,14 @@ public class TestHiveDriver {
     PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
     //assertNotNull(plan2.getResultDestination());
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     assertNotNull(plan2.getTablesQueried());
     assertEquals(plan2.getTablesQueried().size(), 1);
     assertTrue(plan2.getTableWeights().containsKey("explain_test_1"));
     assertEquals(plan2.getNumSels(), 1);
     QueryContext ctx = new QueryContext(pctx, null, conf);
     GrillResultSet resultSet = driver.execute(ctx);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();
     assertEquals(ctx.getResultSetPath(), path);

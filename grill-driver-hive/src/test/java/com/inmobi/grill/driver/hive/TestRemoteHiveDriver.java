@@ -114,6 +114,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   @AfterMethod
@@ -132,7 +133,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf);
-    driver.execute(ctx);
+    thrDriver.execute(ctx);
 
     // Launch a select query
     final int QUERIES = 5;
@@ -145,16 +146,16 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       final QueryContext qctx;
       try {
         qctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
-        driver.executeAsync(qctx);
+        thrDriver.executeAsync(qctx);
       } catch (GrillException e) {
         errCount.incrementAndGet();
         LOG.info(q + " executeAsync error: " + e.getCause());
         continue;
       }
-      LOG.info("@@ Launched query: " + q + " " + ctx.getQueryHandle());
+      LOG.info("@@ Launched query: " + q + " " + qctx.getQueryHandle());
       launchedQueries++;
       // Launch many threads to poll for status
-      final QueryHandle handle = ctx.getQueryHandle();
+      final QueryHandle handle = qctx.getQueryHandle();
 
       for (int i = 0; i < THREADS; i++) {
         int thid = q * THREADS + i;
@@ -166,12 +167,14 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
                 thrDriver.updateStatus(qctx);
                 if (qctx.getDriverStatus().isFinished()) {
                   LOG.info("@@ " + handle.getHandleId() + " >> " + qctx.getDriverStatus().getState());
+                  thrDriver.closeQuery(handle);
                   break;
                 }
-
                 Thread.sleep(POLL_DELAY);
               } catch (GrillException e) {
                 LOG.error("Got Exception", e.getCause());
+                e.printStackTrace();
+                errCount.incrementAndGet();
                 break;
               } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -193,38 +196,40 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
         LOG.warn("Not ended yet: " + th.getName());
       }
     }
+    Assert.assertEquals(0, thrDriver.getHiveHandleSize());
     LOG.info("@@ Completed all pollers. Total thrift errors: " + errCount.get());
     assertEquals(launchedQueries, QUERIES);
     assertEquals(thrs.size(), QUERIES * THREADS);
     assertEquals(errCount.get(), 0);
   }
-  
+
   @Test
   public void testHiveDriverPersistence() throws Exception {
     System.out.println("@@@@ start_persistence_test");
     HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
     driverConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
-    
+
     final HiveDriver oldDriver = new HiveDriver();
     oldDriver.configure(driverConf);
-    
+
     driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
     oldDriver.execute(ctx);
-    
+    Assert.assertEquals(0, oldDriver.getHiveHandleSize());
+
     String tableName = "test_hive_driver_persistence";
 
     // Create some ops with a driver
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName +"(ID STRING)";
     ctx = new QueryContext(createTable, null, driverConf);
     oldDriver.execute(ctx);
-    
+
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +"' OVERWRITE INTO TABLE " + tableName;
     ctx = new QueryContext(dataLoad, null, driverConf);
     oldDriver.execute(ctx);
-    
+
     driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
     driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
     // Fire two queries
@@ -232,7 +237,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     oldDriver.executeAsync(ctx1);
     QueryContext ctx2 = new QueryContext("SELECT ID FROM " + tableName, null, driverConf);
     oldDriver.executeAsync(ctx2);
-    
+    Assert.assertEquals(2, oldDriver.getHiveHandleSize());
+
     // Write driver to stream
     ByteArrayOutputStream driverBytes = new ByteArrayOutputStream();
     try {
@@ -240,21 +246,22 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     } finally {
       driverBytes.close();
     }
-    
+
     // Create another driver from the stream
     ByteArrayInputStream driverInput = new ByteArrayInputStream(driverBytes.toByteArray());
     HiveDriver newDriver = new HiveDriver();
     newDriver.readExternal(new ObjectInputStream(driverInput));
     newDriver.configure(driverConf);
     driverInput.close();
-    
+
+    Assert.assertEquals(2, newDriver.getHiveHandleSize());
     // Check status from the new driver, should get all statuses back.
     while (true) {
       newDriver.updateStatus(ctx1);
       Assert.assertNotNull(ctx1.getDriverStatus());
       newDriver.updateStatus(ctx2);
       Assert.assertNotNull(ctx2.getDriverStatus());
-      
+
       if (ctx1.getDriverStatus().isFinished() && ctx1.getDriverStatus().isFinished()) {
         break;
       } else {
@@ -269,10 +276,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
 
     QueryContext ctx =
-      new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS "
-        + tableName + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", null, conf);
+        new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS "
+            + tableName + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", null, conf);
 
     driver.execute(ctx);
+    Assert.assertEquals(0, driver.getHiveHandleSize());
 
     File dataDir = new File("target/partdata");
     dataDir.mkdir();
@@ -291,7 +299,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
       System.out.println("@@ Adding partition " + i);
       QueryContext partCtx = new QueryContext("ALTER TABLE "
-        + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i + "', ET='1') LOCATION '" + partDir.getPath() +  "'", null, conf);
+          + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i + "', ET='1') LOCATION '" + partDir.getPath() +  "'", null, conf);
       driver.execute(partCtx);
     }
   }
@@ -304,12 +312,13 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Query should select 5 partitions of table 1 and 1 partitions of table 2
     String explainQuery = "SELECT table_1.ID  " +
-      "FROM table_1 LEFT OUTER JOIN table_2 ON table_1.ID = table_2.ID AND table_2.DT='p0' " +
-      "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' " +
-      "AND table_1.ET='1'";
+        "FROM table_1 LEFT OUTER JOIN table_2 ON table_1.ID = table_2.ID AND table_2.DT='p0' " +
+        "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' " +
+        "AND table_1.ET='1'";
 
     DriverQueryPlan plan = driver.explain(explainQuery, conf);
 
+    Assert.assertEquals(0, driver.getHiveHandleSize());
     System.out.println("@@ partitions" + plan.getPartitions());
 
     Assert.assertEquals(plan.getPartitions().size(), 2);
@@ -318,7 +327,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     Assert.assertTrue(plan.getPartitions().containsKey(dbName + ".table_1"));
     Assert.assertEquals(plan.getPartitions().get(dbName + ".table_1").size(), 5);
 
-    
+
     Assert.assertTrue(plan.getPartitions().containsKey(dbName + ".table_2"));
     Assert.assertEquals(plan.getPartitions().get(dbName + ".table_2").size(), 1);
 

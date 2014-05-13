@@ -34,24 +34,14 @@ import com.inmobi.grill.server.api.driver.PersistentResultSet;
 
 public class HivePersistentResultSet extends PersistentResultSet {
   private final Path path;
-  private final OperationHandle opHandle;
-	private final CLIServiceClient client;
   private final QueryHandle queryHandle;
-  private TableSchema metadata;
+  private final TableSchema metadata;
 
   public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
-  		CLIServiceClient client, QueryHandle queryHandle) {
+  		CLIServiceClient client, QueryHandle queryHandle) throws HiveSQLException {
   	this.path = resultSetPath;
-  	this.client = client;
-  	this.opHandle = opHandle;
     this.queryHandle = queryHandle;
-  }
-
-  private TableSchema getTableSchema() throws HiveSQLException {
-    if (metadata == null) {
-      metadata = client.getResultSetMetadata(opHandle);
-    }
-    return metadata;
+    this.metadata = client.getResultSetMetadata(opHandle);
   }
 
   public QueryHandle getQueryHandle() {
@@ -75,11 +65,7 @@ public class HivePersistentResultSet extends PersistentResultSet {
       public List<ResultColumn> getColumns() {
         List<ColumnDescriptor> descriptors;
 
-        try {
-          descriptors = getTableSchema().getColumnDescriptors();
-        } catch (HiveSQLException e) {
-          return null;
-        }
+        descriptors = metadata.getColumnDescriptors();
 
         if (descriptors == null) {
           return null;

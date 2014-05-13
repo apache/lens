@@ -47,10 +47,13 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   private int fetchSize = 100;
   private Iterator<Object[]> fetchedRowsItr;
   private boolean noMoreResults;
+  private boolean closeAfterFecth;
 
-  public HiveInMemoryResultSet(OperationHandle hiveHandle, CLIServiceClient client) {
+  public HiveInMemoryResultSet(OperationHandle hiveHandle,
+      CLIServiceClient client, boolean closeAfterFecth) {
     this.client = client;
     this.opHandle = hiveHandle;
+    this.closeAfterFecth = closeAfterFecth;
   }
 
   private TableSchema getTableSchema() throws GrillException {
@@ -103,6 +106,10 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
         rowSet = client.fetchResults(opHandle, FetchOrientation.FETCH_NEXT, fetchSize);
         noMoreResults = rowSet.numRows() == 0;
         if (noMoreResults) {
+          if (closeAfterFecth) {
+            HiveDriver.LOG.info("No more results closing the query");
+            client.closeOperation(opHandle);
+          }
           return false;
         }
         fetchedRowsItr = rowSet.iterator();
