@@ -142,12 +142,12 @@ public class JDBCDriver implements GrillDriver {
       isClosed = true;
     }
 
-    protected synchronized GrillResultSet getGrillResultSet() throws GrillException {
+    protected synchronized GrillResultSet getGrillResultSet(boolean closeAfterFetch) throws GrillException {
       if (error != null) {
         throw new GrillException("Query failed!", error);
       }
       if (grillResultSet == null) {
-        grillResultSet = new JDBCResultSet(this, resultSet);
+        grillResultSet = new JDBCResultSet(this, resultSet, closeAfterFetch);
       }
       return grillResultSet;
     }
@@ -407,7 +407,7 @@ public class JDBCDriver implements GrillDriver {
     queryContext.setRewrittenQuery(rewrittenQuery);
     QueryResult result = new QueryCallable(queryContext).call();
     LOG.info("Execute " + context.getQueryHandle());
-    return result.getGrillResultSet();
+    return result.getGrillResultSet(true);
   }
 
   /**
@@ -503,7 +503,7 @@ public class JDBCDriver implements GrillDriver {
     QueryHandle queryHandle = context.getQueryHandle();
 
     try {
-      return future.get().getGrillResultSet();
+      return future.get().getGrillResultSet(false);
     } catch (InterruptedException e) {
       throw new GrillException("Interrupted while getting resultset for query "
           + queryHandle.getHandleId(), e);
