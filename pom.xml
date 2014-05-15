@@ -196,8 +196,7 @@
           <skip>true</skip>
         </configuration>
       </plugin>
-     </plugins>
-       </plugins>
+      </plugins>
     </pluginManagement>
       <plugins>
       <!--
@@ -224,7 +223,6 @@
         <licenseName>apache_v2</licenseName>
         </configuration>
       </plugin>
-    </plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
