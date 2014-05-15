@@ -188,6 +188,15 @@
            <groupId>org.vafer</groupId>
            <version>0.9</version>
          </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+     </plugins>
        </plugins>
     </pluginManagement>
       <plugins>
@@ -216,6 +225,14 @@
         </configuration>
       </plugin>
     </plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+      </plugin>
+     </plugins>
     
   </build>
 
