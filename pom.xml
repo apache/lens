@@ -60,9 +60,9 @@
     </mailingLists>
 
   <scm>
-    <connection>scm:git:git://github.com/InMobi/grill</connection>
+    <connection>scm:git:https://github.com/InMobi/grill.git</connection>
     <url>https://github.com/InMobi/grill</url>
-    <developerConnection>scm:git:git@github.com:InMobi/grill.git</developerConnection>
+    <developerConnection>scm:git:https://github.com:InMobi/grill.git</developerConnection>
   </scm>
 
   <reporting>
