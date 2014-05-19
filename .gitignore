@@ -4,6 +4,7 @@
 *\.classpath
 *\.idea
 */\.settings/*
+*\.settings/*
 target/*
 */target/*
 */test-output/*
