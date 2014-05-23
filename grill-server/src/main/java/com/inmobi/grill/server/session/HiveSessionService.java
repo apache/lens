@@ -20,29 +20,37 @@ package com.inmobi.grill.server.session;
  * #L%
  */
 
-import javax.ws.rs.WebApplicationException;
-
-import org.apache.commons.lang.StringUtils;
-import org.apache.hive.service.cli.CLIService;
-import org.apache.hive.service.cli.HiveSQLException;
-import org.apache.hive.service.cli.OperationHandle;
-
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hive.service.cli.*;
+import org.apache.hive.service.cli.thrift.THandleIdentifier;
+import org.apache.hive.service.cli.thrift.TSessionHandle;
+
+import javax.ws.rs.WebApplicationException;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.UUID;
 
 public class HiveSessionService extends GrillService {
+  public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
+  public static final String NAME = "session";
 
   public HiveSessionService(CLIService cliService) {
-    super("session", cliService);
+    super(NAME, cliService);
   }
 
   public void addResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
-      getCliService().executeStatement(
-          getHiveSessionHandle(sessionid), command, null);
+      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      getSession(sessionid).addResource(type, path);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
@@ -62,6 +70,7 @@ public class HiveSessionService extends GrillService {
     try {
       acquire(sessionid);
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      getSession(sessionid).removeResource(type, path);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
@@ -103,6 +112,7 @@ public class HiveSessionService extends GrillService {
     try {
       acquire(sessionid);
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      getSession(sessionid).setConfig(key, value);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
@@ -115,4 +125,40 @@ public class HiveSessionService extends GrillService {
       }
     }
   }
+
+  @Override
+  public void writeExternal(ObjectOutput out) throws IOException {
+    // Write out all the sessions
+    out.writeInt(sessionMap.size());
+    for (GrillSessionHandle sessionHandle : sessionMap.values()) {
+      out.writeUTF(sessionHandle.toString());
+      GrillSessionImpl session = null;
+      try {
+        session = getSession(sessionHandle);
+      } catch (GrillException e) {
+        throw new IOException(e);
+      }
+      out.writeUTF(session.getUsername());
+      out.writeUTF(session.getPassword());
+      session.writeExternal(out);
+    }
+  }
+
+  @Override
+  public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+    int numSessions = in.readInt();
+    for (int i = 0; i < numSessions; i++) {
+      GrillSessionHandle sessionHandle = GrillSessionHandle.valueOf(in.readUTF());
+      String userName = in.readUTF();
+      String password = in.readUTF();
+      try {
+        restoreSession(sessionHandle, userName, password);
+        GrillSessionImpl session = getSession(sessionHandle);
+        session.readExternal(in);
+      } catch (GrillException e) {
+        throw new IOException(e);
+      }
+    }
+  }
+
 }

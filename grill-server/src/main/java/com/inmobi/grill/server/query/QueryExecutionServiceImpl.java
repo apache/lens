@@ -658,6 +658,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
+
   private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
       Configuration qconf) throws GrillException {
     ctx.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
@@ -1011,6 +1012,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throws IOException, ClassNotFoundException {
     super.readExternal(in);
     Map<String, GrillDriver> driverMap = new HashMap<String, GrillDriver>();
+
+    // Restore drivers
     synchronized (drivers) {
       drivers.clear();
       int numDrivers = in.readInt();
@@ -1031,8 +1034,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         driverMap.put(driverClsName, driver);
       }
     }
+
+    // Restore queries
     synchronized (allQueries) {
       int numQueries = in.readInt();
+
       for (int i =0; i < numQueries; i++) {
         QueryContext ctx = (QueryContext)in.readObject();
         allQueries.put(ctx.getQueryHandle(), ctx);
@@ -1053,12 +1059,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         switch (ctx.getStatus().getStatus()) {
         case NEW:
         case QUEUED:
-          // queued queries wont recovered.
-          try {
-            setFailedStatus(ctx, "Launching query failed due to server restart", "Server is restarted");
-          } catch (GrillException e) {
-            LOG.error("Failing query " + ctx.getQueryHandle() + " failed", e);
-          }
+          acceptedQueries.add(ctx);
           break;
         case LAUNCHED:
         case RUNNING:

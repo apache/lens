@@ -24,6 +24,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +46,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.session.GrillSessionImpl;
+import org.apache.hive.service.cli.thrift.TSessionHandle;
 
 public abstract class GrillService extends CompositeService implements Externalizable {
 
@@ -52,7 +54,7 @@ public abstract class GrillService extends CompositeService implements Externali
 
   //Static session map which is used by query submission thread to get the
   //grill session before submitting a query to hive server
-  private static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
+  protected static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
       new ConcurrentHashMap<String, GrillSessionHandle>();
 
   protected GrillService(String name, CLIService cliService) {
@@ -99,6 +101,21 @@ public abstract class GrillService extends CompositeService implements Externali
         sessionHandle.getHandleIdentifier().getSecretId());
     sessionMap.put(grillSession.getPublicId().toString(), grillSession);
     return grillSession;
+  }
+
+  /**
+   * Restore session from previous instance of grill server
+   */
+  public void restoreSession(GrillSessionHandle sessionHandle,
+                               String userName,
+                               String password) throws GrillException {
+    HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
+    SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
+    try {
+      cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
+    } catch (HiveSQLException e) {
+      throw new GrillException("Error restoring session " + sessionHandle, e);
+    }
   }
 
   public void closeSession(GrillSessionHandle sessionHandle)
