@@ -31,6 +31,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.NotFoundException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.CompositeService;
@@ -49,7 +51,7 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 
 public abstract class GrillService extends CompositeService implements Externalizable {
-
+  public static final Log LOG = LogFactory.getLog(GrillService.class);
   private final CLIService cliService;
 
   //Static session map which is used by query submission thread to get the
@@ -112,7 +114,12 @@ public abstract class GrillService extends CompositeService implements Externali
     HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
     SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
     try {
-      cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
+      SessionHandle restoredHandle =
+        cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
+      GrillSessionHandle restoredSession = new GrillSessionHandle(
+        restoredHandle.getHandleIdentifier().getPublicId(),
+        restoredHandle.getHandleIdentifier().getSecretId());
+      sessionMap.put(restoredSession.getPublicId().toString(), restoredSession);
     } catch (HiveSQLException e) {
       throw new GrillException("Error restoring session " + sessionHandle, e);
     }

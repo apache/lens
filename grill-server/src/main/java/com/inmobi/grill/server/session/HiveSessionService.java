@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class HiveSessionService extends GrillService {
@@ -46,11 +47,19 @@ public class HiveSessionService extends GrillService {
   }
 
   public void addResource(GrillSessionHandle sessionid, String type, String path) {
+    addResource(sessionid, type, path, true);
+  }
+
+  private void addResource(GrillSessionHandle sessionid, String type, String path, boolean addToSession) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
-      getSession(sessionid).addResource(type, path);
+
+      if (addToSession) {
+        getSession(sessionid).addResource(type, path);
+      }
+
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
@@ -63,7 +72,6 @@ public class HiveSessionService extends GrillService {
       }
     }
   }
-
 
   public void deleteResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "delete " + type.toLowerCase() + " " + path;
@@ -108,11 +116,17 @@ public class HiveSessionService extends GrillService {
   }
 
   public void setSessionParameter(GrillSessionHandle sessionid, String key, String value) {
+    setSessionParameter(sessionid, key, value, true);
+  }
+
+  protected void setSessionParameter(GrillSessionHandle sessionid, String key, String value, boolean addToSession) {
     String command = "set" + " " + key + "= " + value;
     try {
       acquire(sessionid);
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
-      getSession(sessionid).setConfig(key, value);
+      if (addToSession) {
+        getSession(sessionid).setConfig(key, value);
+      }
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {
@@ -123,6 +137,39 @@ public class HiveSessionService extends GrillService {
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }
+    }
+  }
+
+  @Override
+  public synchronized void start() {
+    super.start();
+    for (GrillSessionHandle sessionHandle : sessionMap.values()) {
+      GrillSessionImpl session = null;
+
+      try {
+        session = getSession(sessionHandle);
+      } catch (GrillException e) {
+        LOG.error("Could not get session " + sessionHandle);
+        throw new RuntimeException(e);
+      }
+
+      for (GrillSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
+        try {
+          addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation(), false);
+        } catch (Exception e) {
+          LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
+          throw new RuntimeException(e);
+        }
+      }
+
+      for (Map.Entry<String, String> cfg : session.getConfig().entrySet()) {
+        try {
+          setSessionParameter(sessionHandle, cfg.getKey(), cfg.getValue(), false);
+        } catch (Exception e) {
+          LOG.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue() + " for session: " + session);
+        }
+      }
+
     }
   }
 

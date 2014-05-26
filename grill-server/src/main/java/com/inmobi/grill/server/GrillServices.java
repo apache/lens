@@ -147,7 +147,8 @@ public class GrillServices extends CompositeService {
   }
 
   private void setupPersistedState() throws IOException, ClassNotFoundException {
-    if (isRestartEnabled()) {
+    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RECOVER_ON_RESTART,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART)) {
       FileSystem fs = persistDir.getFileSystem(conf);
 
       for (GrillService service : grillServices) {
@@ -171,7 +172,8 @@ public class GrillServices extends CompositeService {
   }
 
   private void persistGrillServiceState() throws IOException {
-    if (isRestartEnabled()) {
+    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) {
       FileSystem fs = persistDir.getFileSystem(conf);
       LOG.info("Persisting server state in " + persistDir);
 
@@ -198,15 +200,6 @@ public class GrillServices extends CompositeService {
 
   private Path getServicePersistPath(GrillService service) {
     return new Path(persistDir, service.getName() + ".final");
-  }
-
-  public boolean isRestartEnabled() {
-    return conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
-      GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED);
-  }
-
-  public Path getServicePersistDir() {
-    return persistDir;
   }
 
   public synchronized void stop() {

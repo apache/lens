@@ -26,9 +26,12 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
 
+import javax.annotation.Resource;
 import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -40,7 +43,7 @@ import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import com.inmobi.grill.api.GrillException;
 
 public class GrillSessionImpl extends HiveSessionImpl implements Externalizable {
-  
+  public static final Log LOG = LogFactory.getLog(GrillSessionImpl.class);
   private CubeMetastoreClient cubeClient;
   List<ResourceEntry> resources = new ArrayList<ResourceEntry>();
   private Map<String, String> config = new HashMap<String, String>();
@@ -85,6 +88,7 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
 
   @Override
   public void writeExternal(ObjectOutput objectOutput) throws IOException {
+    objectOutput.writeUTF(getCurrentDatabase());
     // Write resources
     objectOutput.writeInt(resources.size());
     for (ResourceEntry res : resources) {
@@ -102,6 +106,7 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
 
   @Override
   public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
+    setCurrentDatabase(objectInput.readUTF());
     int numRes = objectInput.readInt();
     for (int i = 0; i < numRes; i++) {
       String type = objectInput.readUTF();
@@ -135,6 +140,27 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
     resources.add(new ResourceEntry(type, path));
   }
 
+  protected List<ResourceEntry> getResources() {
+    return resources;
+  }
+
+  protected Map<String, String> getConfig() {
+    return config;
+  }
+
+  public void setCurrentDatabase(String currentDatabase) {
+    getSessionState().setCurrentDatabase(currentDatabase);
+  }
+
+  public String getCurrentDatabase() {
+    return getSessionState().getCurrentDatabase();
+  }
+
+  @Override
+  public String toString() {
+    return getSessionHandle().getHandleIdentifier().toString();
+  }
+
   public class ResourceEntry {
     final String type;
     final String location;
@@ -153,6 +179,11 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
 
     public String getType() {
       return type;
+    }
+
+    @Override
+    public String toString() {
+      return "type=" + type + " path=" + location;
     }
   }
 }
