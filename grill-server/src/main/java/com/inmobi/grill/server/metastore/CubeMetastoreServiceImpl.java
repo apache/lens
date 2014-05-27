@@ -72,7 +72,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   @Override
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException {
-    return getSession(sessionid).getSessionState().getCurrentDatabase();
+    return getSession(sessionid).getCurrentDatabase();
   }
 
   /**
@@ -89,7 +89,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     } catch (HiveException e) {
       throw new GrillException(e);
     }
-    getSession(sessionid).getSessionState().setCurrentDatabase(database);
+    getSession(sessionid).setCurrentDatabase(database);
     LOG.info("Set database " + database);
   }
 

@@ -148,7 +148,7 @@ public class GrillServices extends CompositeService {
 
   private void setupPersistedState() throws IOException, ClassNotFoundException {
     if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RECOVER_ON_RESTART,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART)) { 
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART)) {
       FileSystem fs = persistDir.getFileSystem(conf);
 
       for (GrillService service : grillServices) {
@@ -170,9 +170,10 @@ public class GrillServices extends CompositeService {
       }
     }
   }
+
   private void persistGrillServiceState() throws IOException {
     if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) { 
+        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) {
       FileSystem fs = persistDir.getFileSystem(conf);
       LOG.info("Persisting server state in " + persistDir);
 
