@@ -308,8 +308,8 @@ public class TestSessionResource extends GrillJerseyTest {
     // Check resources added again
     HiveSessionService sessionService = GrillServices.get().getService("session");
     GrillSessionImpl session = sessionService.getSession(restartTestSession);
-    Assert.assertEquals(session.resources.size(), 1);
-    GrillSessionImpl.ResourceEntry resourceEntry = session.resources.get(0);
+    Assert.assertEquals(session.getGrillSessionPersistInfo().getResources().size(), 1);
+    GrillSessionImpl.ResourceEntry resourceEntry = session.getGrillSessionPersistInfo().getResources().get(0);
     Assert.assertEquals(resourceEntry.getType(), "file");
     Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/grill-site.xml");
   }

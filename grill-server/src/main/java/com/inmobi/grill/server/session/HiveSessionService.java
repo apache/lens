@@ -34,13 +34,12 @@ import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class HiveSessionService extends GrillService {
   public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
   public static final String NAME = "session";
+  private List<GrillSessionImpl.GrillSessionPersistInfo> restorableSessions;
 
   public HiveSessionService(CLIService cliService) {
     super(NAME, cliService);
@@ -143,33 +142,44 @@ public class HiveSessionService extends GrillService {
   @Override
   public synchronized void start() {
     super.start();
-    for (GrillSessionHandle sessionHandle : sessionMap.values()) {
-      GrillSessionImpl session = null;
 
+    // Restore sessions if any
+    if (restorableSessions == null || restorableSessions.size() <= 0) {
+      LOG.info("No sessions to restore");
+      return;
+    }
+
+    for (GrillSessionImpl.GrillSessionPersistInfo persistInfo : restorableSessions) {
       try {
-        session = getSession(sessionHandle);
+        GrillSessionHandle sessionHandle = persistInfo.getSessionHandle();
+        restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword());
+        GrillSessionImpl session = getSession(sessionHandle);
+        session.getGrillSessionPersistInfo().setConfig(persistInfo.getConfig());
+        session.getGrillSessionPersistInfo().setResources(persistInfo.getResources());
+        session.setCurrentDatabase(persistInfo.getDatabase());
+
+        // Add resources for restored sessions
+        for (GrillSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
+          try {
+            addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation(), false);
+          } catch (Exception e) {
+            LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
+            throw new RuntimeException(e);
+          }
+        }
+
+        // Add config for restored sessions
+        for (Map.Entry<String, String> cfg : session.getConfig().entrySet()) {
+          try {
+            setSessionParameter(sessionHandle, cfg.getKey(), cfg.getValue(), false);
+          } catch (Exception e) {
+            LOG.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue() + " for session: " + session);
+          }
+        }
+        LOG.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
       } catch (GrillException e) {
-        LOG.error("Could not get session " + sessionHandle);
         throw new RuntimeException(e);
       }
-
-      for (GrillSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
-        try {
-          addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation(), false);
-        } catch (Exception e) {
-          LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
-          throw new RuntimeException(e);
-        }
-      }
-
-      for (Map.Entry<String, String> cfg : session.getConfig().entrySet()) {
-        try {
-          setSessionParameter(sessionHandle, cfg.getKey(), cfg.getValue(), false);
-        } catch (Exception e) {
-          LOG.error("Error setting parameter " + cfg.getKey() + "=" + cfg.getValue() + " for session: " + session);
-        }
-      }
-
     }
   }
 
@@ -178,33 +188,24 @@ public class HiveSessionService extends GrillService {
     // Write out all the sessions
     out.writeInt(sessionMap.size());
     for (GrillSessionHandle sessionHandle : sessionMap.values()) {
-      out.writeUTF(sessionHandle.toString());
-      GrillSessionImpl session = null;
       try {
-        session = getSession(sessionHandle);
+        GrillSessionImpl session = getSession(sessionHandle);
+        session.getGrillSessionPersistInfo().writeExternal(out);
       } catch (GrillException e) {
         throw new IOException(e);
       }
-      out.writeUTF(session.getUsername());
-      out.writeUTF(session.getPassword());
-      session.writeExternal(out);
     }
   }
 
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     int numSessions = in.readInt();
+    restorableSessions = new ArrayList<GrillSessionImpl.GrillSessionPersistInfo>();
+
     for (int i = 0; i < numSessions; i++) {
-      GrillSessionHandle sessionHandle = GrillSessionHandle.valueOf(in.readUTF());
-      String userName = in.readUTF();
-      String password = in.readUTF();
-      try {
-        restoreSession(sessionHandle, userName, password);
-        GrillSessionImpl session = getSession(sessionHandle);
-        session.readExternal(in);
-      } catch (GrillException e) {
-        throw new IOException(e);
-      }
+      GrillSessionImpl.GrillSessionPersistInfo persistInfo = new GrillSessionImpl.GrillSessionPersistInfo();
+      persistInfo.readExternal(in);
+      restorableSessions.add(persistInfo);
     }
   }
 

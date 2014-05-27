@@ -42,16 +42,23 @@ import org.apache.hive.service.cli.thrift.TProtocolVersion;
 
 import com.inmobi.grill.api.GrillException;
 
-public class GrillSessionImpl extends HiveSessionImpl implements Externalizable {
+public class GrillSessionImpl extends HiveSessionImpl {
   public static final Log LOG = LogFactory.getLog(GrillSessionImpl.class);
   private CubeMetastoreClient cubeClient;
-  List<ResourceEntry> resources = new ArrayList<ResourceEntry>();
-  private Map<String, String> config = new HashMap<String, String>();
+  private GrillSessionPersistInfo persistInfo = new GrillSessionPersistInfo();
+
+
+  private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
+    persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
+      sessionHandle.getHandleIdentifier().getSecretId()));
+    persistInfo.setUsername(username);
+    persistInfo.setPassword(password);
+  }
 
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
-    config.putAll(sessionConf);
+    initPersistInfo(getSessionHandle(), username, password);
   }
 
   /**
@@ -60,6 +67,7 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
   public GrillSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol, String username, String password,
                           HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
+    initPersistInfo(getSessionHandle(), username, password);
   }
 
 
@@ -86,48 +94,12 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
     super.release();
   }
 
-  @Override
-  public void writeExternal(ObjectOutput objectOutput) throws IOException {
-    objectOutput.writeUTF(getCurrentDatabase());
-    // Write resources
-    objectOutput.writeInt(resources.size());
-    for (ResourceEntry res : resources) {
-      objectOutput.writeUTF(res.getType());
-      objectOutput.writeUTF(res.getLocation());
-    }
-
-    // Write config
-    objectOutput.writeInt(config.size());
-    for (Map.Entry<String, String> entry : config.entrySet()) {
-      objectOutput.writeUTF(entry.getKey());
-      objectOutput.writeUTF(entry.getValue());
-    }
-  }
-
-  @Override
-  public void readExternal(ObjectInput objectInput) throws IOException, ClassNotFoundException {
-    setCurrentDatabase(objectInput.readUTF());
-    int numRes = objectInput.readInt();
-    for (int i = 0; i < numRes; i++) {
-      String type = objectInput.readUTF();
-      String path = objectInput.readUTF();
-      resources.add(new ResourceEntry(type, path));
-    }
-
-    int numConfig = objectInput.readInt();
-    for (int i = 0; i < numConfig; i++) {
-      String key = objectInput.readUTF();
-      String value = objectInput.readUTF();
-      config.put(key, value);
-    }
-  }
-
   public void setConfig(String key, String value) {
-    config.put(key, value);
+    persistInfo.getConfig().put(key, value);
   }
 
   public void removeResource(String type, String path) {
-    Iterator<ResourceEntry> itr = resources.iterator();
+    Iterator<ResourceEntry> itr = persistInfo.getResources().iterator();
     while (itr.hasNext()) {
       ResourceEntry res = itr.next();
       if (res.getType().equals(type) && res.getLocation().equals(path)) {
@@ -137,18 +109,19 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
   }
 
   public void addResource(String type, String path) {
-    resources.add(new ResourceEntry(type, path));
+    persistInfo.getResources().add(new ResourceEntry(type, path));
   }
 
   protected List<ResourceEntry> getResources() {
-    return resources;
+    return persistInfo.getResources();
   }
 
   protected Map<String, String> getConfig() {
-    return config;
+    return persistInfo.getConfig();
   }
 
   public void setCurrentDatabase(String currentDatabase) {
+    persistInfo.setDatabase(currentDatabase);
     getSessionState().setCurrentDatabase(currentDatabase);
   }
 
@@ -161,7 +134,11 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
     return getSessionHandle().getHandleIdentifier().toString();
   }
 
-  public class ResourceEntry {
+  public GrillSessionPersistInfo getGrillSessionPersistInfo() {
+    return persistInfo;
+  }
+
+  public static class ResourceEntry {
     final String type;
     final String location;
 
@@ -184,6 +161,107 @@ public class GrillSessionImpl extends HiveSessionImpl implements Externalizable 
     @Override
     public String toString() {
       return "type=" + type + " path=" + location;
+    }
+  }
+
+  public static class GrillSessionPersistInfo implements Externalizable {
+    private List<ResourceEntry> resources = new ArrayList<ResourceEntry>();
+    private Map<String, String> config = new HashMap<String, String>();
+    private GrillSessionHandle sessionHandle;
+    private String database;
+    private String username;
+    private String password;
+
+    public String getUsername() {
+      return username;
+    }
+
+    public void setUsername(String username) {
+      this.username = username;
+    }
+
+    public List<ResourceEntry> getResources() {
+      return resources;
+    }
+
+    public void setResources(List<ResourceEntry> resources) {
+      this.resources = resources;
+    }
+
+    public Map<String, String> getConfig() {
+      return config;
+    }
+
+    public void setConfig(Map<String, String> config) {
+      this.config = config;
+    }
+
+    public String getDatabase() {
+      return database;
+    }
+
+    public void setDatabase(String database) {
+      this.database = database;
+    }
+
+    public GrillSessionHandle getSessionHandle() {
+      return sessionHandle;
+    }
+
+    public void setSessionHandle(GrillSessionHandle sessionHandle) {
+      this.sessionHandle = sessionHandle;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public void setPassword(String password) {
+      this.password = password;
+    }
+
+    @Override
+    public void writeExternal(ObjectOutput out) throws IOException {
+      out.writeUTF(sessionHandle.toString());
+      out.writeUTF(database == null ? "default" : database);
+      out.writeUTF(username == null ? "" : username);
+      out.writeUTF(password == null ? "" : password);
+
+      out.writeInt(resources.size());
+      for (ResourceEntry resource : resources) {
+        out.writeUTF(resource.getType());
+        out.writeUTF(resource.getLocation());
+      }
+
+      out.writeInt(config.size());
+      for (String key : config.keySet()) {
+        out.writeUTF(key);
+        out.writeUTF(config.get(key));
+      }
+    }
+
+    @Override
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+      sessionHandle = GrillSessionHandle.valueOf(in.readUTF());
+      database = in.readUTF();
+      username = in.readUTF();
+      password = in.readUTF();
+
+      int resSize = in.readInt();
+      resources.clear();
+      for (int i = 0; i < resSize; i++) {
+        String type = in.readUTF();
+        String location = in.readUTF();
+        resources.add(new ResourceEntry(type, location));
+      }
+
+      config.clear();
+      int cfgSize = in.readInt();
+      for (int i = 0; i < cfgSize; i++) {
+        String key = in.readUTF();
+        String val = in.readUTF();
+        config.put(key, val);
+      }
     }
   }
 }
