@@ -50,6 +50,8 @@ public abstract class GrillJerseyTest extends JerseyTest {
   @BeforeSuite
   public void startAll() throws Exception {
     TestRemoteHiveDriver.createHS2Service();
+    HiveConf hiveConf = new HiveConf();
+    hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS, 5);
     GrillServices.get().init(new HiveConf());
     GrillServices.get().start();
   }

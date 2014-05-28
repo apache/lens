@@ -101,7 +101,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       new HashMap<QueryPrepareHandle, PreparedQueryContext>();
   private ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<QueryHandle, QueryContext>();
   private Configuration conf;
-  private final Thread querySubmitter = new Thread(new QuerySubmitter(),
+  protected final Thread querySubmitter = new Thread(new QuerySubmitter(),
       "QuerySubmitter");
   private final Thread statusPoller = new Thread(new StatusPoller(),
       "StatusPoller");
