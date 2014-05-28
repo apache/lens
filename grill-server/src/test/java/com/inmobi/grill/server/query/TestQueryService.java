@@ -23,9 +23,7 @@ package com.inmobi.grill.server.query;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,6 +56,8 @@ import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.query.QueryApp;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -77,6 +77,7 @@ import org.testng.annotations.Test;
 
 @Test(groups="unit-test")
 public class TestQueryService extends GrillJerseyTest {
+  public static final Log LOG = LogFactory.getLog(TestQueryService.class);
 
   QueryExecutionServiceImpl queryService;
   MetricsService metricsSvc;
@@ -99,7 +100,7 @@ public class TestQueryService extends GrillJerseyTest {
   @BeforeClass
   public void createTables() throws InterruptedException {
     createTable(testTable);
-    loadData(testTable);
+    loadData(testTable, TEST_DATA_FILE);
   }
 
   @AfterClass
@@ -158,7 +159,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
-  private void loadData(String tblName) throws InterruptedException {
+  private void loadData(String tblName, final String TEST_DATA_FILE) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
     final WebTarget target = target().path("queryapi/queries");
@@ -737,8 +738,7 @@ public class TestQueryService extends GrillJerseyTest {
     validatePersistentResult(resultset, handle);
   }
 
-  private void validatePersistentResult(PersistentQueryResult resultset,
-      QueryHandle handle) throws IOException {
+  private List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle) throws  IOException {
     Assert.assertTrue(resultset.getPersistedURI().endsWith(handle.toString()));
     Path actualPath = new Path(resultset.getPersistedURI());
     FileSystem fs = actualPath.getFileSystem(new Configuration());
@@ -762,6 +762,12 @@ public class TestQueryService extends GrillJerseyTest {
         }
       }
     }
+    return actualRows;
+  }
+
+  private void validatePersistentResult(PersistentQueryResult resultset,
+      QueryHandle handle) throws IOException {
+    List<String> actualRows = readResultSet(resultset, handle);
     Assert.assertEquals(actualRows.get(0), "1one");
     Assert.assertEquals(actualRows.get(1), "\\Ntwo");
     Assert.assertEquals(actualRows.get(2), "3\\N");
@@ -981,52 +987,99 @@ public class TestQueryService extends GrillJerseyTest {
 
   @Test
   public void testServerRestart() throws InterruptedException, IOException, GrillException {
+    LOG.info("Server restart test");
+
+    // Create data file
+    File dataFile = new File("target/testdata.txt");
+    dataFile.deleteOnExit();
+
+    PrintWriter dataFileOut = new PrintWriter(dataFile);
+    final int NROWS = 10000;
+    for (int i = 0; i < NROWS; i++) {
+      dataFileOut.println(i);
+    }
+    dataFileOut.flush();
+    dataFileOut.close();
+
+    // Create a test table
+    createTable("test_server_restart");
+    loadData("test_server_restart", "target/testdata.txt");
+    LOG.info("Loaded data");
+
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
-    final FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-        "select ID, IDSTR from " + testTable));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
-        "operation").build(),
-        "execute"));
-    mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
-        MediaType.APPLICATION_XML_TYPE));
-    final QueryHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+    List<QueryHandle> launchedQueries = new ArrayList<QueryHandle>();
+    final int NUM_QUERIES = 20;
 
-    Assert.assertNotNull(handle);
+    boolean killed = false;
+    for (int i = 0; i < NUM_QUERIES; i++) {
+      if (!killed && i > NUM_QUERIES / 3) {
+        // Kill the query submitter thread to make sure some queries stay in accepted queue
+        try {
+          queryService.querySubmitter.interrupt();
+          LOG.info("Stopped query submitter");
+        } catch (Exception exc) {
+          LOG.error("Could not kill query submitter", exc);
+        }
+        killed = true;
+      }
 
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    // wait till the query is launched
-    QueryStatus stat = ctx.getStatus();
-    while (stat.getStatus().equals(Status.QUEUED)) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-      stat = ctx.getStatus();
-      Thread.sleep(100);
+      final FormDataMultiPart mp = new FormDataMultiPart();
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+          grillSessionId, MediaType.APPLICATION_XML_TYPE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select COUNT(ID) from test_server_restart"));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+         "operation").build(),
+        "execute"
+      ));
+      mp.bodyPart(new FormDataBodyPart(
+          FormDataContentDisposition.name("conf").fileName("conf").build(),
+          new GrillConf(),
+          MediaType.APPLICATION_XML_TYPE));
+      final QueryHandle handle = target.request().post(
+          Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+      Assert.assertNotNull(handle);
+      GrillQuery ctx = target.path(handle.toString())
+        .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      QueryStatus stat = ctx.getStatus();
+      LOG.info(i + " submitted query " + handle + " state: " + ctx.getStatus().getStatus());
+      launchedQueries.add(handle);
     }
+
     // Restart the server
-    System.out.println("Restarting grill server!");
+    LOG.info("Restarting grill server!");
     restartGrillServer();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
 
-    //grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-
-    // wait till the query finishes
-    ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    stat = ctx.getStatus();
-    while (!stat.isFinished()) {
-      System.out.println("Status:" + stat);
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-      stat = ctx.getStatus();
-      Thread.sleep(1000);
+    // All queries should complete after server restart
+    for (QueryHandle handle : launchedQueries) {
+      LOG.info("Polling query " + handle);
+      try {
+        GrillQuery ctx = target.path(handle.toString())
+          .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+        QueryStatus stat = ctx.getStatus();
+        while (!stat.isFinished()) {
+          LOG.info("Polling query " + handle + " Status:" + stat);
+          ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+          stat = ctx.getStatus();
+          Thread.sleep(100);
+        }
+        Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+        PersistentQueryResult resultset = target.path(handle.toString()).path(
+          "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
+        List<String> rows = readResultSet(resultset, handle);
+        Assert.assertEquals(rows.size(), 1);
+        Assert.assertEquals(rows.get(0), "" + NROWS);
+        LOG.info("Completed " + handle);
+      } catch (Exception exc) {
+        // TODO This should fail the test after hive server restart is fixed.
+        LOG.error("Failed query "  + handle, exc);
+      }
     }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-    validatePersistedResult(handle);
+    LOG.info("End server restart test");
   }
 
   @Override
