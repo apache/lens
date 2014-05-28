@@ -163,10 +163,10 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException {
     try {
       acquire(sessionid);
-      List<Cube> cubes = getClient(sessionid).getAllCubes();
+      List<CubeInterface> cubes = getClient(sessionid).getAllCubes();
       if (cubes != null && !cubes.isEmpty()) {
         List<String> names = new ArrayList<String>(cubes.size());
-        for (Cube cube : cubes) {
+        for (CubeInterface cube : cubes) {
           names.add(cube.getName());
         }
         return names;
@@ -209,7 +209,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public XCube getCube(GrillSessionHandle sessionid, String cubeName) throws GrillException {
     try {
       acquire(sessionid);
-      Cube c = getClient(sessionid).getCube(cubeName);
+      CubeInterface c = getClient(sessionid).getCube(cubeName);
       if (c != null) {
         return JAXBUtils.xCubeFromHiveCube(c);
       }
@@ -463,7 +463,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void createFactTable(GrillSessionHandle sessionid, FactTable fact, XStorageTables storageTables) throws GrillException {
     try {
       acquire(sessionid);
-      getClient(sessionid).createCubeFactTable(Arrays.asList(fact.getCubeName()),
+      getClient(sessionid).createCubeFactTable(fact.getCubeName(),
           fact.getName(), 
           JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()), 
           JAXBUtils.getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods()),

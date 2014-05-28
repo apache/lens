@@ -20,8 +20,6 @@ package com.inmobi.grill.server.metastore;
  * #L%
  */
 
-import antlr.StringUtils;
-
 import com.inmobi.grill.api.metastore.*;
 
 import org.apache.hadoop.hive.metastore.TableType;
@@ -35,9 +33,6 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.WebApplicationException;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -83,10 +78,10 @@ public class JAXBUtils {
    * 
    * @return {@link XCube}
    */
-  public static XCube xCubeFromHiveCube(Cube c) {
+  public static XCube xCubeFromHiveCube(CubeInterface c) {
     XCube xc = XCF.createXCube();
     xc.setName(c.getName());
-    xc.setWeight(c.weight());
+    xc.setWeight(((AbstractCubeTable)c).weight());
 
     XMeasures xms = XCF.createXMeasures();
     List<XMeasure> xmsList = xms.getMeasures();
@@ -103,7 +98,7 @@ public class JAXBUtils {
     }
     xc.setDimensions(xdm);
 
-    xc.setProperties(xPropertiesFromMap(c.getProperties()));
+    xc.setProperties(xPropertiesFromMap(((AbstractCubeTable)c).getProperties()));
     return xc;
   }
 
@@ -528,7 +523,7 @@ public class JAXBUtils {
 
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods());
 
-    return new CubeFactTable(Arrays.asList(fact.getCubeName()),
+    return new CubeFactTable(fact.getCubeName(),
         fact.getName(), 
         columns, 
         storageUpdatePeriods, 
@@ -542,6 +537,7 @@ public class JAXBUtils {
     fact.setProperties(xPropertiesFromMap(cFact.getProperties()));
     fact.setColumns(columnsFromFieldSchemaList(cFact.getColumns()));
     fact.setWeight(cFact.weight());
+    fact.setCubeName(cFact.getCubeName());
 
     if (cFact.getUpdatePeriods() != null && !cFact.getUpdatePeriods().isEmpty()) {
       UpdatePeriods periods = XCF.createUpdatePeriods();
