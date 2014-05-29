@@ -139,6 +139,9 @@ public class RewriteUtil {
   static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
+      if(entry.getKey().equals("cube.query.driver.supported.storages")){
+        continue;
+      }
       conf.set(entry.getKey(), entry.getValue());
     }
     return conf;
@@ -178,20 +181,25 @@ public class RewriteUtil {
           CubeQueryRewriter rewriter = getRewriter(driver, queryconf);
           StringBuilder builder = new StringBuilder();
           int start = 0;
-          for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-            CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
-            if (start != cqi.startPos) {
-              builder.append(replacedQuery.substring(start, cqi.startPos));
+          try {
+            for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+              CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
+              if (start != cqi.startPos) {
+                builder.append(replacedQuery.substring(start, cqi.startPos));
+              }
+              String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
+              CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
+              builder.append(hqlQuery);
+              start = cqi.endPos;
             }
-            String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
-            CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
-            builder.append(hqlQuery);
-            start = cqi.endPos;
+            builder.append(replacedQuery.substring(start));
+            String finalQuery = builder.toString();
+            CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
+            driverQueries.put(driver, finalQuery);
+          } catch (SemanticException e) {
+            CubeGrillDriver.LOG.warn("Driver : " + driver.getClass().getName() +
+                " Skipped for the query rewriting due to " + e.getMessage());
           }
-          builder.append(replacedQuery.substring(start));
-          String finalQuery = builder.toString();
-          CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
-          driverQueries.put(driver, finalQuery);
         }
       }
       return driverQueries;

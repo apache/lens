@@ -110,6 +110,14 @@ public class CubeGrillDriver implements GrillDriver {
           DriverQueryPlan c1;
           DriverQueryPlan c2;
           conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
+          //Handle cases where the queries can be null because the storages are not
+          //supported.
+          if(driverQueries.get(d1) == null) {
+            return 1;
+          }
+          if(driverQueries.get(d2) == null) {
+            return -1;
+          }
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
             c2 = d2.explain(driverQueries.get(d2), conf);
@@ -143,7 +151,7 @@ public class CubeGrillDriver implements GrillDriver {
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries, conf);
-    
+
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }

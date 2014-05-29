@@ -652,20 +652,17 @@
 							<artifactId>c3p0</artifactId>
 							<version>0.9.1.2</version>
 						</dependency>
-
-						<dependency>
-							<groupId>org.hsqldb</groupId>
-							<artifactId>hsqldb</artifactId>
-							<version>2.0.0</version>
-							<scope>test</scope>
-						</dependency>
-
      <dependency>
        <groupId>org.springframework.shell</groupId>
        <artifactId>spring-shell</artifactId>
        <version>1.0.0.RELEASE</version>
      </dependency>
-
+     <!-- HSQLDB Dependency for grill-examples to work -->
+     <dependency>
+       <groupId>org.hsqldb</groupId>
+       <artifactId>hsqldb</artifactId>
+       <version>2.2.9</version>
+     </dependency>
     </dependencies>
 
  </dependencyManagement>

@@ -21,6 +21,21 @@ cube select dim_table.name, dim_table2.name from dim_table full outer join dim_t
 cube select count(id) from dim_table where name != "first"
 cube select count(distinct id) from dim_table where name != "first"
 cube select dim_table.name, dim_table2.name from dim_table where dim_table.name != "first"
+cube select id,name from dim_table3
+cube select id,name from dim_table3 where name != 'first'
+cube select id,name from dim_table3 order by name
+cube select id,name from dim_table3 order by name desc
+cube select id,name from dim_table3 where name != 'first' order by name
+cube select id,name from dim_table3 where name != 'first' order by name desc
+cube select id,name from dim_table3 limit 2
+cube select id,name from dim_table3 order by name limit 2
+cube select id,name from dim_table3 order by name desc limit 2
+cube select id,name from dim_table3 where name != 'first' limit 2
+cube select id,name from dim_table3 where name != 'first' order by name limit 2
+cube select id,name from dim_table3 where name != 'first' order by name desc limit 2
+cube select count(id) from dim_table3
+cube select count(id) from dim_table3 group by name
+cube select count(distinct id) from dim_table3
 select * from (cube select dim_table.name name1, dim_table2.name name2 from dim_table where dim_table.name != "first") a
 drop table temp1
 create table temp1 as cube select id,name from dim_table

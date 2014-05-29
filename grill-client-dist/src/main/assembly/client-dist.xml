@@ -101,6 +101,7 @@
       <outputDirectory>/examples/resources</outputDirectory>
       <includes>
         <include>*.xml</include>
+        <include>*.sql</include>
       </includes>
     </fileSet>
 

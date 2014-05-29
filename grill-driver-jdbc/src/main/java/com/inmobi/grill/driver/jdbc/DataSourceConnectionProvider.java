@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
@@ -71,19 +73,24 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       }
       
       DriverConfig other = (DriverConfig) obj;
-      
-      return driverClass.equals(other.driverClass) &&
-          jdbcURI.equals(other.jdbcURI) &&
-          user.equals(other.user) &&
-          password.equals(other.password);
+      //Handling equals in a proper manner as the fields in the current class
+      //can be null
+      return new EqualsBuilder().append(this.driverClass, other.driverClass)
+          .append(this.jdbcURI, other.jdbcURI)
+          .append(this.user, other.user)
+          .append(this.password, other.password).isEquals();
     }
     
     @Override
     public int hashCode() {
       if (!hasHashCode) {
-        StringBuilder builder = 
-            new StringBuilder(driverClass).append(jdbcURI).append(user).append(password);
-        hashCode = builder.toString().hashCode();
+        //Handling the hashcode in proper manner as the fields in the current
+        //class can be null
+        hashCode = new HashCodeBuilder()
+            .append(this.driverClass)
+            .append(jdbcURI)
+            .append(this.user)
+            .append(this.password).toHashCode();
         hasHashCode = true;
       }
       return hashCode;
