@@ -172,12 +172,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
   
   private void incrCounter(String counter) {
-    LOG.info("Incrementing query counter" + counter);
     getMetrics().incrCounter(QueryExecutionService.class, counter);
   }
   
   private void decrCounter(String counter) {
-    LOG.info("Decrementing query counter" + counter);
     getMetrics().decrCounter(QueryExecutionService.class, counter);
   }
 

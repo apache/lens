@@ -234,14 +234,12 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   @Override
   public void incrCounter(Class<?> cls, String counter) {
-    LOG.info("Incrementing counter" + counter);
     metricRegistry.counter(MetricRegistry.name(cls, counter)).inc();
   }
 
 
   @Override
   public void decrCounter(Class<?> cls, String counter) {
-    LOG.info("Decrementing counter" + counter);
     metricRegistry.counter(MetricRegistry.name(cls, counter)).dec();
   }
 
