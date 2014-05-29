@@ -21,10 +21,8 @@ package com.inmobi.grill.cli.commands;
  */
 
 import com.google.common.base.Joiner;
-import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.*;
 import com.inmobi.grill.client.GrillClient;
-import com.inmobi.grill.client.GrillClientResultSet;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -132,13 +130,13 @@ public class GrillQueryCommands implements CommandMarker {
     return plan.getPlanString();
   }
 
-  @CliCommand(value = "query list", help = "Get all Queries in the session")
+  @CliCommand(value = "query list", help = "Get all queries")
   public String getAllQueries() {
     List<QueryHandle> handles = client.getQueries();
-    if(handles != null) {
+    if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
-      return "No Queries are associated with session";
+      return "No queries";
     }
   }
 
@@ -164,4 +162,87 @@ public class GrillQueryCommands implements CommandMarker {
       return t.getMessage();
     }
   }
+
+  @CliCommand(value = "prepQuery list", help = "Get all prepared queries")
+  public String getAllPreparedQueries() {
+    List<QueryPrepareHandle> handles = client.getPreparedQueries();
+    if (handles != null && !handles.isEmpty()) {
+      return Joiner.on("\n").skipNulls().join(handles);
+    } else {
+      return "No prepared queries";
+    }
+  }
+
+  @CliCommand(value = "prepQuery details", help = "Get prepared query")
+  public String getPreparedStatus(@CliOption(key = {"", "handle"},
+  mandatory = true, help = "Prepare handle") String ph) {
+    GrillPreparedQuery prepared = client.getPreparedQuery(QueryPrepareHandle.fromString(ph));
+    if (prepared != null) {
+      StringBuilder sb = new StringBuilder();
+      sb.append("User query:").append(prepared.getUserQuery()).append("\n");
+      sb.append("Prepare handle:").append(prepared.getPrepareHandle()).append("\n");
+      sb.append("User:" + prepared.getPreparedUser()).append("\n");
+      sb.append("Prepared at:").append(prepared.getPreparedTime()).append("\n");
+      sb.append("Selected driver :").append(prepared.getSelectedDriverClassName()).append("\n");
+      sb.append("Driver query:").append(prepared.getDriverQuery()).append("\n");
+      if (prepared.getConf() != null) {
+        sb.append("Conf:").append(prepared.getConf().getProperties()).append("\n");
+      }
+
+      return sb.toString();
+    } else {
+      return "No such handle";
+    }
+  }
+
+  @CliCommand(value = "prepQuery destroy", help ="Destroy a prepared query")
+  public String destroyPreparedQuery(@CliOption(key = {"", "handle"},
+      mandatory = true, help = "prepare handle to destroy") String ph) {
+    boolean status = client.destroyPrepared(new QueryPrepareHandle(UUID.fromString(ph)));
+    if(status) {
+      return "Successfully destroyed " + ph;
+    } else {
+      return "Failed in destroying "  + ph;
+    }
+  }
+
+  @CliCommand(value = "prepQuery execute", help = "Execute prepared query in async/sync manner")
+  public String executePreparedQuery(
+      @CliOption(key = {"", "handle"}, mandatory = true, help = "Prepare handle to execute") String phandle,
+      @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
+          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
+    if (!asynch) {
+      try {
+        GrillClient.GrillClientResultSetWithStats result = 
+            client.getResultsFromPrepared(QueryPrepareHandle.fromString(phandle));
+        return formatResultSet(result);
+      } catch (Throwable t) {
+        return t.getMessage();
+      }
+    } else {
+      QueryHandle handle = client.executePrepared(QueryPrepareHandle.fromString(phandle));
+      return handle.getHandleId().toString();
+    }
+  }
+
+  @CliCommand(value = "prepQuery prepare", help = "Prepapre query")
+  public String prepare(@CliOption(key = {"", "query"}, mandatory = true,
+      help = "Query to prepare") String sql)
+          throws UnsupportedEncodingException {
+
+    QueryPrepareHandle handle = client.prepare(sql);
+    return handle.toString();
+  }
+
+  @CliCommand(value = "prepQuery explain", help = "Explain and prepare query")
+  public String explainAndPrepare(@CliOption(key = {"", "query"}, mandatory = true,
+      help = "Query to explain and prepare") String sql)
+          throws UnsupportedEncodingException {
+
+    QueryPlan plan = client.explainAndPrepare(sql);
+    StringBuilder planStr = new StringBuilder(plan.getPlanString());
+    planStr.append("\n").append("Prepare handle:").append(plan.getPrepareHandle());
+    return planStr.toString();
+  }
+
 }

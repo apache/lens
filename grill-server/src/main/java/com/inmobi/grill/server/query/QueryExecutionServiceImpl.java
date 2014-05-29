@@ -87,6 +87,7 @@ import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
+  public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
@@ -171,10 +172,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
   
   private void incrCounter(String counter) {
+    LOG.info("Incrementing query counter" + counter);
     getMetrics().incrCounter(QueryExecutionService.class, counter);
   }
   
   private void decrCounter(String counter) {
+    LOG.info("Decrementing query counter" + counter);
     getMetrics().decrCounter(QueryExecutionService.class, counter);
   }
 
@@ -241,9 +244,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               try {
                 //acquire session before any query operation.
                 acquire(ctx.getGrillSessionIdentifier());
-                rewriteAndSelect(ctx);
+                if (ctx.getSelectedDriver() == null) {
+                  rewriteAndSelect(ctx);
+                } else {
+                  LOG.info("Submitting to already selected driver");
+                }
                 ctx.getSelectedDriver().executeAsync(ctx);
-              } catch (GrillException e) {
+              } catch (Exception e) {
                 LOG.error("Error launching query " + ctx.getQueryHandle(), e);
                 String reason = e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
                 setFailedStatus(ctx, "Launching query failed", reason);
@@ -454,9 +461,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (!stopped && !prepareQueryPurger.isInterrupted()) {
         try {
           PreparedQueryContext prepared = preparedQueryQueue.take();
-          prepared.getSelectedDriver().closePreparedQuery(prepared.getPrepareHandle());
-          preparedQueries.remove(prepared.getPrepareHandle());
-          decrCounter("prepared-queries");
+          destroyPreparedQuery(prepared);
           LOG.info("Purged prepared query: " + prepared.getPrepareHandle());
         } catch (GrillException e) {
           LOG.error("Error closing prepared query ", e);
@@ -565,36 +570,39 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf GrillConf)
+  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf grillConf)
       throws GrillException {
     try {
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, GrillConf);
-      accept(query, qconf, SubmitOp.PREPARE);
-      PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
-      rewriteAndSelect(prepared);
-      preparedQueries.put(prepared.getPrepareHandle(), prepared);
-      preparedQueryQueue.add(prepared);
+      PreparedQueryContext prepared =  prepareQuery(sessionHandle, query, grillConf, SubmitOp.PREPARE);
       prepared.getSelectedDriver().prepare(prepared);
-      incrCounter("prepared-queries");
       return prepared.getPrepareHandle();
     } finally {
       release(sessionHandle);
     }
   }
 
+  private PreparedQueryContext prepareQuery(GrillSessionHandle sessionHandle,
+      String query, GrillConf grillConf, SubmitOp op) throws GrillException {
+    Configuration conf = getGrillConf(sessionHandle, grillConf);
+    accept(query, conf, op);
+    PreparedQueryContext prepared = new PreparedQueryContext(query,
+        getSession(sessionHandle).getUserName(), conf, grillConf);
+    rewriteAndSelect(prepared);
+    preparedQueries.put(prepared.getPrepareHandle(), prepared);
+    preparedQueryQueue.add(prepared);
+    incrCounter(PREPARED_QUERIES_COUNTER);
+    return prepared;
+  }
+
   @Override
-  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, GrillConf GrillConf)
-      throws GrillException {
+  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle,
+      String query, GrillConf grillConf) throws GrillException {
     try {
       LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, GrillConf);
-      accept(query, qconf, SubmitOp.EXPLAIN_AND_PREPARE);
-      PreparedQueryContext prepared = new PreparedQueryContext(query, null, qconf);
-      rewriteAndSelect(prepared);
-      preparedQueries.put(prepared.getPrepareHandle(), prepared);
-      preparedQueryQueue.add(prepared);
+      PreparedQueryContext prepared = prepareQuery(sessionHandle, query,
+          grillConf, SubmitOp.EXPLAIN_AND_PREPARE);
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
@@ -937,14 +945,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     try {
       LOG.info("DestroyPrepared: " + sessionHandle.toString() + " query:" + prepared);
       acquire(sessionHandle);
-      PreparedQueryContext ctx = getPreparedQueryContext(sessionHandle, prepared);
-      ctx.getSelectedDriver().closePreparedQuery(prepared);
-      preparedQueries.remove(prepared);
-      preparedQueryQueue.remove(ctx);
+      destroyPreparedQuery(getPreparedQueryContext(sessionHandle, prepared));
       return true;
     } finally {
       release(sessionHandle);
     }
+  }
+
+  private void destroyPreparedQuery(PreparedQueryContext ctx) throws GrillException {
+    ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
+    preparedQueries.remove(ctx.getPrepareHandle());
+    preparedQueryQueue.remove(ctx);
+    decrCounter(PREPARED_QUERIES_COUNTER);
   }
 
   @Override
