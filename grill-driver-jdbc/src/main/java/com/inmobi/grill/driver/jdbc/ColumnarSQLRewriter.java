@@ -10,14 +10,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_UNIQUEJOIN;
 
 import java.awt.LinearGradientPaint;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -320,10 +313,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             .concat(")");
 
         mapAggTabAlias.put(measure, aggColAlias);
-        aggColumn.add(allaggmeasures);
-        Set<String> setAggColumns = new HashSet<String>(aggColumn);
-        aggColumn.clear();
-        aggColumn.addAll(setAggColumns);
+        if (!aggColumn.contains(allaggmeasures)) {
+          aggColumn.add(allaggmeasures);
+        }
       }
     }
 
