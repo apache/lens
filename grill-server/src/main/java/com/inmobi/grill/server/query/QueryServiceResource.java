@@ -380,10 +380,10 @@ public class QueryServiceResource {
    * @return {@link GrillPreparedQuery}
    */
   @GET
-  @Path("preparedqueries/{preparehandle}")
+  @Path("preparedqueries/{prepareHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillPreparedQuery getPreparedQuery(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("preparehandle") String prepareHandle) {
+      @PathParam("prepareHandle") String prepareHandle) {
     checkSessionId(sessionid);
     try {
       return queryServer.getPreparedQuery(sessionid,
@@ -403,10 +403,10 @@ public class QueryServiceResource {
    * APIResult with state {@link Status#FAILED} in case of destroy failure.
    */
   @DELETE
-  @Path("preparedqueries/{preparehandle}")
+  @Path("preparedqueries/{prepareHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPrepared(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("preparehandle") String prepareHandle) {
+      @PathParam("prepareHandle") String prepareHandle) {
     checkSessionId(sessionid);
     boolean ret = destroyPrepared(sessionid, getPrepareHandle(prepareHandle));
     if (ret) {
@@ -427,9 +427,10 @@ public class QueryServiceResource {
    * @return {@link GrillQuery}
    */
   @GET
-  @Path("queries/{queryhandle}")
+  @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public GrillQuery getStatus(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
+  public GrillQuery getStatus(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
     try {
       return queryServer.getQuery(sessionid,
@@ -449,9 +450,10 @@ public class QueryServiceResource {
    * APIResult with state {@value Status#FAILED} in case of cancellation failure.
    */
   @DELETE
-  @Path("queries/{queryhandle}")
+  @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult cancelQuery(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("queryhandle") String queryHandle) {
+  public APIResult cancelQuery(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
     boolean ret = cancelQuery(sessionid, getQueryHandle(queryHandle));
     if (ret) {
@@ -490,11 +492,11 @@ public class QueryServiceResource {
    * APIResult with state {@value Status#FAILED} in case of udpate failure.
    */
   @PUT
-  @Path("queries/{queryhandle}")
+  @Path("queries/{queryHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult updateConf(@FormDataParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("queryhandle") String queryHandle, 
+      @PathParam("queryHandle") String queryHandle, 
       @FormDataParam("conf") GrillConf conf) {
     checkSessionId(sessionid);
     try {
@@ -601,11 +603,11 @@ public class QueryServiceResource {
    * @return {@link QueryResultSetMetadata}
    */
   @GET
-  @Path("queries/{queryhandle}/resultsetmetadata")
+  @Path("queries/{queryHandle}/resultsetmetadata")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QueryResultSetMetadata getResultSetMetadata(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("queryhandle") String queryHandle) {
+      @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
     try {
       return queryServer.getResultSetMetadata(sessionid, getQueryHandle(queryHandle));
@@ -625,11 +627,11 @@ public class QueryServiceResource {
    * @return {@link QueryResult}
    */
   @GET
-  @Path("queries/{queryhandle}/resultset")
+  @Path("queries/{queryHandle}/resultset")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QueryResult getResultSet(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("queryhandle") String queryHandle,
+      @PathParam("queryHandle") String queryHandle,
       @QueryParam("fromindex") long startIndex,
       @QueryParam("fetchsize") int fetchSize) {
     checkSessionId(sessionid);
@@ -650,11 +652,11 @@ public class QueryServiceResource {
    * APIResult with state {@value Status#FAILED} in case of close failure.
    */
   @DELETE
-  @Path("queries/{queryhandle}/resultset")
+  @Path("queries/{queryHandle}/resultset")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeResultSet(
       @QueryParam("sessionid") GrillSessionHandle sessionid,
-      @PathParam("queryhandle") String queryHandle){
+      @PathParam("queryHandle") String queryHandle){
     checkSessionId(sessionid);
     try {
       queryServer.closeResultSet(sessionid, getQueryHandle(queryHandle));
