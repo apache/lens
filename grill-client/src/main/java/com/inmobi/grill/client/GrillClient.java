@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.metastore.*;
 import com.inmobi.grill.api.query.*;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -37,15 +38,16 @@ public class GrillClient {
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
       Maps.newHashMap();
+  private final GrillStatement statement;
 
   public GrillClient() {
-    this.conf = new GrillClientConfig();
-    connectToGrillServer();
+    this(new GrillClientConfig());
   }
 
   public GrillClient(GrillClientConfig conf) {
     this.conf = conf;
     connectToGrillServer();
+    statement = new GrillStatement(conn);
   }
 
   public QueryHandle executeQueryAsynch(String sql) {
@@ -81,6 +83,10 @@ public class GrillClient {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
     statement.execute(sql, true);
+    return getResultsFromStatement(statement);
+  }
+
+  private GrillClientResultSetWithStats getResultsFromStatement(GrillStatement statement) {
     if(statement.getStatus().getStatus()
         == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
@@ -93,7 +99,7 @@ public class GrillClient {
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
 
-  public GrillClientResultSetWithStats getAsyncResults(QueryHandle q) {
+  private GrillClientResultSetWithStats getResultsFromHandle(QueryHandle q) {
     GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
@@ -108,6 +114,10 @@ public class GrillClient {
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
 
+  public GrillClientResultSetWithStats getAsyncResults(QueryHandle q) {
+    return getResultsFromHandle(q);
+  }
+
   private GrillStatement getGrillStatement(QueryHandle query) {
     return this.statementMap.get(query);
   }
@@ -117,8 +127,7 @@ public class GrillClient {
   }
 
   public QueryStatus getQueryStatus(String q) {
-    QueryHandle qh = QueryHandle.fromString(q);
-    return getQueryStatus(q);
+    return getQueryStatus(QueryHandle.fromString(q));
   }
 
   public QueryPlan getQueryPlan(String q) {
@@ -395,6 +404,35 @@ public class GrillClient {
 
   public APIResult addPartitionToDim(String table, String storage, String partSpec) {
     return new GrillMetadataClient(conn).addPartitionToDimension(table, storage, partSpec);
+  }
+
+  public QueryPrepareHandle prepare(String sql) {
+    return statement.prepareQuery(sql);
+  }
+
+  public QueryPlan explainAndPrepare(String sql) {
+    return statement.explainAndPrepare(sql);
+  }
+
+  public boolean destroyPrepared(QueryPrepareHandle queryPrepareHandle) {
+    return statement.destroyPrepared(queryPrepareHandle);
+  }
+
+  public List<QueryPrepareHandle> getPreparedQueries() {
+    return statement.getAllPreparedQueries();
+  }
+
+  public GrillPreparedQuery getPreparedQuery(QueryPrepareHandle phandle) {
+    return statement.getPreparedQuery(phandle);
+  }
+
+  public GrillClientResultSetWithStats getResultsFromPrepared(QueryPrepareHandle phandle) {
+    QueryHandle qh = statement.executeQuery(phandle, true);
+    return getResultsFromHandle(qh);
+  }
+
+  public QueryHandle executePrepared(QueryPrepareHandle phandle) {
+    return statement.executeQuery(phandle, false);
   }
 
 

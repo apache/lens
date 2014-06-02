@@ -41,18 +41,24 @@ public class PreparedQueryContext implements Delayed {
   @Getter private final String userQuery;
   @Getter private final Date preparedTime;
   @Getter private final String preparedUser;
-  @Getter private final Configuration conf;
+  transient @Getter private final Configuration conf;
+  @Getter final GrillConf qconf;
   @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
   public PreparedQueryContext(String query, String user, Configuration conf) {
+    this(query, user, conf, new GrillConf());
+  }
+
+  public PreparedQueryContext(String query, String user, Configuration conf, GrillConf qconf) {
     this.userQuery = query;
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());
     this.conf = conf;
+    this.qconf = qconf;
     this.driverQuery = query;
   }
 
@@ -79,16 +85,13 @@ public class PreparedQueryContext implements Delayed {
    * @param confoverlay the conf to set
    */
   public void updateConf(Map<String,String> confoverlay) {
+    qconf.getProperties().putAll(confoverlay);
     for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }
   }
 
   public GrillPreparedQuery toPreparedQuery() {
-    GrillConf qconf = new GrillConf();
-    for (Map.Entry<String, String> p : conf) {
-      qconf.addProperty(p.getKey(), p.getValue());
-    }
     return new GrillPreparedQuery(prepareHandle, userQuery, preparedTime,
         preparedUser,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,

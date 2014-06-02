@@ -123,6 +123,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
    * @param confoverlay the conf to set
    */
   public void updateConf(Map<String,String> confoverlay) {
+    qconf.getProperties().putAll(confoverlay);
     for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }

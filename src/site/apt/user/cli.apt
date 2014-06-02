@@ -169,7 +169,8 @@ User CLI Commands
 * Query Management
 
   This section provides commands for query life cycle - submit, check status,
-  fetch results, kill or list all the queries.
+  fetch results, kill or list all the queries. Also provides commands for
+  prepare a query, destroy a prepared query and list all prepared queries.
 
   Please note that, character <<<">>> is used as delimiter by the Spring Shell
   framework, which is used to build grill cli. So queries which require <<<">>>,
@@ -186,11 +187,23 @@ User CLI Commands
 *--+--+
 | query explain <sql-text> | Prints query execution plan of  <sql-text>|
 *--+--+
-| query list | Prints list of queries associated to the current session|
+| query list | Prints list of queries|
 *--+--+
 | query kill <query-handle> | Kill the execution of query specified by <query-handle>|
 *--+--+
 | query results <query-handle> | Prints the result of Async query specified by <query-handle>|
+*--+--+
+| prepQuery prepare <sql-text> | Prepares the query and gives a prepare handle|
+*--+--+
+| prepQuery explain <sql-text> | Explains and Prepares the query. Prints the query and a prepare handle|
+*--+--+
+| prepQuery list | Prints list of prepared queries|
+*--+--+
+| prepQuery details <prepare-handle> | Prints details of the prepared query|
+*--+--+
+| prepQuery execute <prepare-handle> [async] | Submits the prepared query for execution. If <async> flag is passed then query handle is printed which can be used for query management. Otherwise, results will be shown on the CLI|
+*--+--+
+| prepQuery destroy <prepare-handle> | Destroys the prepared query|
 *--+--+
   <<Grill Query management Command>>
 

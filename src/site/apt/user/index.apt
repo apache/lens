@@ -52,7 +52,7 @@ Grill User Guide
 
 
   GRILL provides {{{../resource_SessionResource.html} REST api}},
-  {{{apidocs/com/inmobi/grill/client/GrillConnection.html} Java client api}}
+  {{{../apidocs/com/inmobi/grill/client/GrillConnection.html} Java client api}}
   and {{{./cli.html#Session_management} CLI}} for doing all session level operations.
 
 	The important API calls exposed by the session resource are -
@@ -129,6 +129,18 @@ Grill User Guide
 
 	<<FAILED>>, <<SUCCESSFUL>> and <<CANCELLED>> are end states for a query. Once a query reaches these states, it becomes eligible to purging. The query is purged when its purge delay expires, after which it is not possible to retrieve results of the query. This purge delay is configurable. After purging the query enters the <<CLOSED>> state.
 
+** Prepared queries
+
+  A query can be prepared for execution. Once prepared the query can be submitted for execution as many times as required. When prepared query is no longer required, it should be destroyed. REST api, JavaClient api and CLI commands are available for all the operations supported.
+  
+  * {{{../resource_QueryServiceResource.html#path__queryapi_preparedqueries.html}Rest api for prepared queries}}
+
+  * {{{../resource_QueryServiceResource.html#path__queryapi_preparedqueries_-prepareHandle-.html}Rest api for handling a prepared query}}
+  
+  * {{{../apidocs/com/inmobi/grill/client/GrillStatement.html} Java client api}}
+  
+  * {{{./cli.html#Query_Management} CLI query management}}
+  
 * Metastore service
 
 	The Metastore service is used for DDL operations like creating, updating cubes, fact tables and dimensions. It also pprovides endpoints to create storage tables and to add partitions to a storage table. For more detailed information see the {{{../resource_MetastoreResource.html}metastore service resource}} documentation.
