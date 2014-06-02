@@ -168,7 +168,6 @@ public class HiveDriver implements GrillDriver {
 
   private Class<? extends ThriftConnection> connectionClass;
   private boolean isEmbedded;
-
   public HiveDriver() throws GrillException {
     this.sessionLock = new ReentrantLock();
     grillToHiveSession = new HashMap<String, SessionHandle>();
@@ -268,7 +267,6 @@ public class HiveDriver implements GrillDriver {
     } catch (IOException e) {
       throw new GrillException("Error adding persistent path" , e);
     } catch (HiveSQLException hiveErr) {
-      handleHiveServerError(ctx, hiveErr);
       throw new GrillException("Error executing query" , hiveErr);
     }
   }
@@ -288,7 +286,6 @@ public class HiveDriver implements GrillDriver {
     } catch (IOException e) {
       throw new GrillException("Error adding persistent path" , e);
     } catch (HiveSQLException e) {
-      handleHiveServerError(ctx, e);
       throw new GrillException("Error executing async query", e);
     }
   }
@@ -382,7 +379,6 @@ public class HiveDriver implements GrillDriver {
       context.getDriverStatus().setDriverFinishTime(opStatus.getOperationCompleted());
     } catch (Exception e) {
       LOG.error("Error getting query status", e);
-      handleHiveServerError(context, e);
       throw new GrillException("Error getting query status", e);
     } finally {
       if (in != null) {
@@ -424,7 +420,6 @@ public class HiveDriver implements GrillDriver {
       try {
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
-        checkInvalidOperation(handle, e);
         throw new GrillException("Unable to close query", e);
       }
     }
@@ -439,7 +434,6 @@ public class HiveDriver implements GrillDriver {
       getClient().cancelOperation(hiveHandle);
       return true;
     } catch (HiveSQLException e) {
-      checkInvalidOperation(handle, e);
       throw new GrillException();
     }
   }
@@ -454,7 +448,6 @@ public class HiveDriver implements GrillDriver {
         try {
           getClient().closeSession(grillToHiveSession.get(grillSession));
         } catch (Exception e) {
-          checkInvalidSession(e);
           LOG.warn("Error closing session for grill session: " + grillSession + ", hive session: "
               + grillToHiveSession.get(grillSession), e);
         }
@@ -502,8 +495,8 @@ public class HiveDriver implements GrillDriver {
 
   private GrillResultSet createResultSet(QueryContext context, boolean closeAfterFetch)
       throws GrillException {
-    OperationHandle op = getHiveHandle(context.getQueryHandle());
-    LOG.info("Creating result set for hiveHandle:" + op);
+    LOG.info("Creating result set for hiveHandle:" + hiveHandles.get(context.getQueryHandle()));
+    OperationHandle op = hiveHandles.get(context.getQueryHandle());
     try {
         if (op.hasResultSet() || context.isPersistent()) {
           if (context.isPersistent()) {
@@ -563,21 +556,21 @@ public class HiveDriver implements GrillDriver {
       if (SessionState.get() != null) {
         grillSession = SessionState.get().getSessionId();
       }
-      SessionHandle hiveSession;
+      SessionHandle userSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
-          hiveSession = getClient().openSession(SessionState.get().getUserName(), "");
-          grillToHiveSession.put(grillSession, hiveSession);
+          userSession = getClient().openSession(SessionState.get().getUserName(), "");
+          grillToHiveSession.put(grillSession, userSession);
           LOG.info("New hive session for user: " + SessionState.get().getUserName() +
               ", grill session: " + grillSession + " session handle: " +
-              hiveSession.getHandleIdentifier());
+              userSession.getHandleIdentifier());
         } catch (Exception e) {
           throw new GrillException(e);
         }
       } else {
-        hiveSession = grillToHiveSession.get(grillSession);
+        userSession = grillToHiveSession.get(grillSession);
       }
-      return hiveSession;
+      return userSession;
     } finally {
       sessionLock.unlock();
     }
@@ -692,75 +685,6 @@ public class HiveDriver implements GrillDriver {
         out.writeObject(entry.getValue().toTSessionHandle());
       }
       LOG.info("HiveDriver persisted " + grillToHiveSession.size() + " sessions");
-    }
-  }
-
-  protected boolean isSessionInvalid(HiveSQLException exc, SessionHandle sessionHandle) {
-    if (exc.getMessage().contains("Invalid SessionHandle") && exc.getMessage().contains(sessionHandle.toString())) {
-      return true;
-    }
-    
-    // Check if there is underlying cause
-    if (exc.getCause() instanceof HiveSQLException) {
-      isSessionInvalid((HiveSQLException) exc.getCause(), sessionHandle);
-    }
-    return false;
-  }
-  
-  protected void checkInvalidSession(Exception e) {
-    if (!(e instanceof HiveSQLException)) {
-      return;
-    }
-
-    HiveSQLException exc = (HiveSQLException)e;
-
-    String grillSession = null;
-    if (SessionState.get() != null) {
-      grillSession = SessionState.get().getSessionId();
-    }
-
-    SessionHandle session = grillToHiveSession.get(grillSession);
-
-    if (session == null || grillSession == null) {
-      return;
-    }
-
-    if (isSessionInvalid(exc, session)) {
-      // We have to expire previous session
-      LOG.info("Hive server session "+ session + " for grill session " + grillSession + " has become invalid");
-      sessionLock.lock();
-      try {
-        // We should clear the map since most likely all sessions are gone
-        grillToHiveSession.clear();
-        LOG.info("Cleared all sessions");
-      } finally {
-        sessionLock.unlock();
-      }
-    }
-  }
-
-  protected void checkInvalidOperation(QueryHandle queryHandle, HiveSQLException exc) {
-    final OperationHandle operation = hiveHandles.get(queryHandle);
-    if (exc.getMessage().contains("Invalid OperationHandle:")
-      && exc.getMessage().contains(operation.toString())) {
-      LOG.info("Hive operation " + operation + " for query " + queryHandle + " has become invalid");
-      hiveHandles.remove(queryHandle);
-      return;
-    }
-
-    if (exc.getCause() instanceof HiveSQLException) {
-      checkInvalidOperation(queryHandle, (HiveSQLException) exc.getCause());
-    }
-
-    return;
-  }
-
-  protected void handleHiveServerError(QueryContext ctx, Exception exc) {
-    if (exc instanceof  HiveSQLException) {
-      if (ctx != null) {
-        checkInvalidOperation(ctx.getQueryHandle(), (HiveSQLException) exc);
-      }
-      checkInvalidSession((HiveSQLException)exc);
     }
   }
 }
