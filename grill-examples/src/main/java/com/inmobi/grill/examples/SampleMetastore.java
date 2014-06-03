@@ -134,7 +134,7 @@ public class SampleMetastore {
     if (dim != null && storageTables != null) {
       result = metaClient.createDimensionTable(dim, storageTables);
       if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dim table from: dim_table.xml and dim1-storage-tables.xml failed");
+        System.out.println("Creating dim table from: dim_table3.xml and dim3-storage-tables.xml failed");
         retCode = 1;
       }
     }

@@ -27,7 +27,8 @@
     <table_desc
         external="true"
         field_delimiter=","
-        table_location="/tmp/db-storage.db">
+        table_location="/tmp/db-storage.db"
+        storage_handler_name="com.inmobi.grill.storage.db.DBStorageHandler">
       <table_parameters/>
       <serde_parameters/>
       <part_cols>

@@ -6,8 +6,5 @@
   <name>grill.drivers</name>
   <value>com.inmobi.grill.driver.hive.HiveDriver,com.inmobi.grill.driver.jdbc.JDBCDriver</value>
 </property>
-  <property>
-    <name>cube.query.driver.supported.storages</name>
-    <value>local,cluster</value>
-  </property>
+
 </configuration>

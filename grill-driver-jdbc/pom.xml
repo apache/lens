@@ -47,12 +47,6 @@
           		<groupId>org.apache.hive</groupId>
           		<artifactId>hive-exec</artifactId>
            	</dependency>
-    		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>1.4.177</version>
-			<scope>test</scope>
-		</dependency>
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>

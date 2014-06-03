@@ -140,6 +140,8 @@ public class RewriteUtil {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
       if(entry.getKey().equals("cube.query.driver.supported.storages")){
+        CubeGrillDriver.LOG.warn("cube.query.driver.supported.storages value : "
+            + entry.getValue() + " from query conf ignored/");
         continue;
       }
       conf.set(entry.getKey(), entry.getValue());
