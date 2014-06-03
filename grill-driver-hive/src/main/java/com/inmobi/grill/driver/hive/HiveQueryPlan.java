@@ -194,7 +194,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
 
 	@Override
 	public QueryCost getCost() {
-		return null;
+    //Returning default 0 as min cost which is equal to rule in case multiple
+    //storages are present hive storage is always selected.
+		return new QueryCost(0,0);
 	}
 
   @Override

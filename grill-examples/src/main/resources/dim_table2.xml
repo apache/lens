@@ -32,7 +32,6 @@
     <update_period_element storage_name="local">
     <update_periods>hourly</update_periods>
     </update_period_element>
-    <update_period_element storage_name="mydb"/>
   </storage_dump_periods>
   <properties>
     <properties name="dim2.prop" value="d2"/>

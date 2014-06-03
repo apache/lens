@@ -22,6 +22,7 @@ package com.inmobi.grill.driver.jdbc;
 
 
 import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
@@ -235,7 +236,9 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void configure(Configuration conf) throws GrillException {
-    this.conf = conf;
+    this.conf = new Configuration(conf);
+    //Add grill-jdbc-site to resource path
+    this.conf.addResource("grill-jdbc-site.xml");
     init(conf);
     configured = true;
     LOG.info("JDBC Driver configured");
@@ -270,6 +273,9 @@ public class JDBCDriver implements GrillDriver {
 
   protected synchronized Connection getConnection(Configuration conf) throws GrillException {
     try {
+      //Add here to cover the path when the queries are executed it does not
+      //use the driver conf
+      conf.addResource("grill-jdbc-site.xml");
       return connectionProvider.getConnection(conf);
     } catch (SQLException e) {
       throw new GrillException(e);
@@ -312,6 +318,22 @@ public class JDBCDriver implements GrillDriver {
   }
 
   /**
+   * Dummy JDBC query Plan class to get min cost selector working
+   */
+  private static class JDBCQueryPlan extends DriverQueryPlan {
+    @Override
+    public String getPlan() {
+      return "";
+    }
+
+    @Override
+    public QueryCost getCost() {
+      //this means that JDBC driver is only selected for tables with just DB storage.
+      return new QueryCost(1L, 1);
+    }
+  }
+
+  /**
    * Explain the given query
    *
    * @param query The query should be in HiveQL(SQL like)
@@ -322,8 +344,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
-    //TODO
-    return null;
+    return new JDBCQueryPlan();
   }
 
   /**
@@ -374,8 +395,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
-    //TODO
-    return null;
+    return new JDBCQueryPlan();
   }
 
   /**
@@ -401,7 +421,9 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public GrillResultSet execute(QueryContext context) throws GrillException {
     checkConfigured();
-    String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
+    //Always use the driver rewritten query not user query. Since the
+    //conf we are passing here is query context conf, we need to add jdbc xml in resource path
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
@@ -420,7 +442,9 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void executeAsync(QueryContext context) throws GrillException {
     checkConfigured();
-    String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
+    //Always use the driver rewritten query not user query. Since the
+    //conf we are passing here is query context conf, we need to add jdbc xml in resource path
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {
