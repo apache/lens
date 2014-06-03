@@ -57,7 +57,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   public static final Log LOG = LogFactory.getLog(TestRemoteHiveDriver.class);
   static final String HS2_HOST = "localhost";
   static final int  HS2_PORT = 12345;
-  static HiveServer2 server;
+  public static HiveServer2 server;
   private static HiveConf remoteConf = new HiveConf();
 
   @BeforeClass
@@ -80,6 +80,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT, HS2_PORT);
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
+    remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_DELAY_SECONDS, 10);
+    remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, 1);
     remoteConf.setIntVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, 60000);
     remoteConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
     server = new HiveServer2();

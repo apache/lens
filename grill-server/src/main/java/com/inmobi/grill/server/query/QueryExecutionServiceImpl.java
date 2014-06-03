@@ -37,10 +37,7 @@ import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
-import com.inmobi.grill.server.api.driver.DriverSelector;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
+import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
@@ -352,8 +349,17 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) &&
             !ctx.getStatus().isFinished()) {
           LOG.info("Updating status for " + ctx.getQueryHandle());
-          ctx.getSelectedDriver().updateStatus(ctx);
-          ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
+          try {
+            ctx.getSelectedDriver().updateStatus(ctx);
+            ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
+          } catch (GrillException exc) {
+            // Driver gave exception while updating status
+            QueryStatus failedStatus =
+              new QueryStatus(1.0, Status.FAILED, "Status update failed",
+                false, "Status update failed", exc.getMessage());
+            ctx.setStatus(failedStatus);
+            LOG.error("Status update failed for " + handle + " reason: " + exc.getMessage());
+          }
           if (ctx.getStatus().isFinished()) {
             updateFinishedQuery(ctx, before);
           }
