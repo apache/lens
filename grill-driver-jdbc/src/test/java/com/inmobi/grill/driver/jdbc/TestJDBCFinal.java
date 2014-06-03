@@ -52,9 +52,9 @@ public class TestJDBCFinal {
 
   public void testCreateJdbcDriver() throws Exception {
     baseConf = new Configuration();
-    baseConf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS, "org.h2.Driver");
+    baseConf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS, "org.hsqldb.jdbc.JDBCDriver");
     baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI,
-        "jdbc:h2:mem:jdbcTestDB;MODE=MYSQL");
+        "jdbc:hsqldb:mem:jdbcTestDB;MODE=MYSQL");
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "sa");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
     baseConf.set(JDBCDriverConfConstants.JDBC_QUERY_REWRITER_CLASS,
