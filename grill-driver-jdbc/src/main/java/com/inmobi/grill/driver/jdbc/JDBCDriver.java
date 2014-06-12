@@ -329,7 +329,7 @@ public class JDBCDriver implements GrillDriver {
     @Override
     public QueryCost getCost() {
       //this means that JDBC driver is only selected for tables with just DB storage.
-      return new QueryCost(1L, 1);
+      return new QueryCost(0, 0);
     }
   }
 
