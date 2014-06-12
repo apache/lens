@@ -138,6 +138,16 @@ public class SampleMetastore {
         retCode = 1;
       }
     }
+
+    dim = (DimensionTable)readFromXML("dim_table4.xml");
+    storageTables = (XStorageTables)readFromXML("dim4-storage-tables.xml");
+    if (dim != null && storageTables != null) {
+      result = metaClient.createDimensionTable(dim, storageTables);
+      if (result.getStatus().equals(APIResult.Status.FAILED)) {
+        System.out.println("Creating dim table from: dim_table4.xml and dim4-storage-tables.xml failed");
+        retCode = 1;
+      }
+    }
   }
 
   private void createFacts() throws JAXBException, IOException {
