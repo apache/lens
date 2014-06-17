@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.api.driver;
+package com.inmobi.grill.server.api.query;
 
 /*
  * #%L
@@ -20,14 +20,17 @@ package com.inmobi.grill.server.api.driver;
  * #L%
  */
 
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.query.PersistentQueryResult;
-import com.inmobi.grill.api.query.QueryResult;
+import com.inmobi.grill.api.query.QueryHandle;
 
-public abstract class PersistentResultSet extends GrillResultSet {
-  public abstract String getOutputPath() throws GrillException;
+/**
+ * The event raised if query result formatting has failed. The current value contains
+ * the cause the failure.
+ *
+ */
+public class QueryResultFormatFailed extends QueryEvent<String> {
 
-  public QueryResult toQueryResult() throws GrillException {
-    return new PersistentQueryResult(getOutputPath(), size());
+  public QueryResultFormatFailed(long eventTime, String prev, String current,
+      QueryHandle handle) {
+    super(eventTime, prev, current, handle);
   }
 }

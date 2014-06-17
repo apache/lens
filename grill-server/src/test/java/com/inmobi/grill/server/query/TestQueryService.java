@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.GenericType;
@@ -60,6 +61,7 @@ import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hive.service.Service;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -128,7 +130,7 @@ public class TestQueryService extends GrillJerseyTest {
 
   private void createTable(String tblName) throws InterruptedException {
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -166,7 +168,7 @@ public class TestQueryService extends GrillJerseyTest {
 
   private void loadData(String tblName, final String TEST_DATA_FILE) throws InterruptedException {
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -201,7 +203,7 @@ public class TestQueryService extends GrillJerseyTest {
 
   private void dropTable(String tblName) throws InterruptedException {
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -744,30 +746,39 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   private List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle) throws  IOException {
-    Assert.assertTrue(resultset.getPersistedURI().endsWith(handle.toString()));
+    Assert.assertTrue(resultset.getPersistedURI().contains(handle.toString()));
     Path actualPath = new Path(resultset.getPersistedURI());
     FileSystem fs = actualPath.getFileSystem(new Configuration());
     List<String> actualRows = new ArrayList<String>();
-    for (FileStatus fstat : fs.listStatus(actualPath)) {
-      FSDataInputStream in = fs.open(fstat.getPath());
-      BufferedReader br = null;
-      try {
-        br = new BufferedReader(new InputStreamReader(in));
-        String line = "";
-
-        while ((line = br.readLine()) != null) {
-          actualRows.add(line);
-        }
-      } finally {
-        if (br != null) {
-          br.close();
-        }
-        if (in != null) {
-          in.close();
-        }
+    if (fs.getFileStatus(actualPath).isDir()) {
+      for (FileStatus fstat : fs.listStatus(actualPath)) {
+        addRowsFromFile(actualRows, fs, fstat.getPath());
       }
+    } else {
+      addRowsFromFile(actualRows, fs, actualPath);
     }
     return actualRows;
+  }
+
+  private void addRowsFromFile(List<String> actualRows,
+      FileSystem fs, Path path) throws IOException {
+    FSDataInputStream in = fs.open(path);
+    BufferedReader br = null;
+    try {
+      br = new BufferedReader(new InputStreamReader(in));
+      String line = "";
+
+      while ((line = br.readLine()) != null) {
+        actualRows.add(line);
+      }
+    } finally {
+      if (br != null) {
+        br.close();
+      }
+      if (in != null) {
+        in.close();
+      }
+    }
   }
 
   private void validatePersistentResult(PersistentQueryResult resultset,
@@ -789,7 +800,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -830,6 +841,81 @@ public class TestQueryService extends GrillJerseyTest {
     validateInmemoryResult(resultset);
   }
 
+  // test with execute async post with result formatter, get query, get results
+  @Test(groups = "unit" )
+  public void testResultFormatterInMemoryResult() throws InterruptedException, IOException {
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    testResultFormatter(conf);
+  }
+
+  // test with execute async post with result formatter, get query, get results
+  @Test(groups = "unit" )
+  public void testResultFormatterHDFSpersistentResult() throws InterruptedException, IOException {
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    testResultFormatter(conf);
+  }
+
+  // test with execute async post with result formatter, get query, get results
+  private void testResultFormatter(GrillConf conf) throws InterruptedException, IOException {
+    // test post execute op
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "true");
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select ID, IDSTR from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+        "operation").build(),
+        "execute"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        conf,
+        MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+
+    Assert.assertNotNull(handle);
+
+    // Get query
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
+        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
+        ctx.getStatus().getStatus().equals(Status.RUNNING) ||
+        ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
+
+    // wait till the query finishes
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+    // wait till result is formatted
+    //TODO change this to state change ?
+    boolean found = false;
+    while (!found) {
+      try {
+        String presultset = target.path(handle.toString()).path(
+            "resultset").queryParam("sessionid", grillSessionId).request().get(String.class);
+        System.out.println("Result set :" + presultset);
+        found = true;
+      } catch (NotFoundException nfe) {
+        // ignore
+        System.out.println("Waiting for result formatting");
+        Thread.sleep(10);
+      }
+    }
+    // fetch results
+    validatePersistedResult(handle);
+  }
+
   @Test(groups = "unit" )
   public void testExecuteAsyncTempTable() throws InterruptedException, IOException {
     // test post execute op
@@ -837,7 +923,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -969,7 +1055,7 @@ public class TestQueryService extends GrillJerseyTest {
     
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -1023,7 +1109,7 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     List<QueryHandle> launchedQueries = new ArrayList<QueryHandle>();
-    final int NUM_QUERIES = 20;
+    final int NUM_QUERIES = 10;
 
     boolean killed = false;
     for (int i = 0; i < NUM_QUERIES; i++) {
@@ -1100,7 +1186,6 @@ public class TestQueryService extends GrillJerseyTest {
     LOG.info("End server restart test");
   }
 
-
   @Test(groups = "hive-server-restart", dependsOnGroups = "query-server-restart")
   public void testHiveServerRestart() throws Exception {
     // Create data file
@@ -1165,7 +1250,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertTrue(stat.isFinished());
     LOG.info("Previous query status: " + stat.getStatusMessage());
 
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 5; i++) {
       // Submit another query, again no exception expected
       mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
@@ -1196,6 +1281,9 @@ public class TestQueryService extends GrillJerseyTest {
       }
       LOG.info("@@ "+ i + " Final status for " + handle + " " + stat.getStatus());
     }
+
+    Assert.assertEquals(stat.getStatus(), QueryStatus.Status.SUCCESSFUL,
+        "Expected to be successful " + handle);
 
     LOG.info("End hive server restart test");
   }

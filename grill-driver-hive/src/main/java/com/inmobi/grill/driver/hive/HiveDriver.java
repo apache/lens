@@ -198,7 +198,7 @@ public class HiveDriver implements GrillDriver {
       throws GrillException {
     LOG.info("Explain: " + query);
     HiveConf explainConf = new HiveConf(conf, HiveDriver.class);
-    explainConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String explainQuery = "EXPLAIN EXTENDED " + query;
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     // Get result set of explain
@@ -505,9 +505,9 @@ public class HiveDriver implements GrillDriver {
     OperationHandle op = getHiveHandle(context.getQueryHandle());
     LOG.info("Creating result set for hiveHandle:" + op);
     try {
-        if (op.hasResultSet() || context.isPersistent()) {
-          if (context.isPersistent()) {
-            return new HivePersistentResultSet(new Path(context.getResultSetPath()),
+        if (op.hasResultSet() || context.isHDFSPersistent()) {
+          if (context.isHDFSPersistent()) {
+            return new HivePersistentResultSet(new Path(context.getHdfsoutPath()),
                 op, getClient(), context.getQueryHandle());
           } else {
             return new HiveInMemoryResultSet(op, getClient(), closeAfterFetch);
@@ -523,27 +523,19 @@ public class HiveDriver implements GrillDriver {
 
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
-    if (context.isPersistent() &&
-        context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true)) {
+    if (context.isHDFSPersistent() &&
+        context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE,
+            GrillConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
       // store persistent data into user specified location
       // If absent, take default home directory
-      String resultSetParentDir = context.getResultSetParentDir();
-      StringBuilder builder;
-      Path resultSetPath;
-      if (StringUtils.isNotBlank(resultSetParentDir)) {
-        resultSetPath = new Path(resultSetParentDir, context.getQueryHandle().toString());
+      Path resultSetPath = context.getHDFSResultDir();
         // create query
-        builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
-      } else {
-        // Write to /tmp/grillreports
-        resultSetPath = new
-            Path(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, context.getQueryHandle().toString());
-        builder = new StringBuilder("INSERT OVERWRITE LOCAL DIRECTORY ");
-      }
-      context.setResultSetPath(resultSetPath.makeQualified(
+      StringBuilder builder = new StringBuilder("INSERT OVERWRITE DIRECTORY ");
+      context.setHdfsoutPath(resultSetPath.makeQualified(
           resultSetPath.getFileSystem(context.getConf())).toString());
       builder.append('"').append(resultSetPath).append("\" ");
-      String outputDirFormat = context.getConf().get(GrillConfConstants.GRILL_OUTPUT_DIRECTORY_FORMAT);
+      String outputDirFormat = context.getConf().get(
+          GrillConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT);
       if (outputDirFormat != null) {
         builder.append(outputDirFormat);
       }

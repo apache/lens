@@ -41,6 +41,8 @@ import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
+import com.inmobi.grill.server.api.query.InMemoryOutputFormatter;
+import com.inmobi.grill.server.api.query.PersistedOutputFormatter;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryAccepted;
 import com.inmobi.grill.server.api.query.QueryAcceptor;
@@ -50,6 +52,7 @@ import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 import com.inmobi.grill.server.api.query.QueryFailed;
 import com.inmobi.grill.server.api.query.QueryLaunched;
+import com.inmobi.grill.server.api.query.QueryOutputFormatter;
 import com.inmobi.grill.server.api.query.QueryQueued;
 import com.inmobi.grill.server.api.query.QueryRejected;
 import com.inmobi.grill.server.api.query.QueryRunning;
@@ -61,6 +64,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hive.service.cli.CLIService;
 
 import com.inmobi.grill.api.GrillConf;
@@ -87,6 +91,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
+  public static final String NAME = "query";
 
   private PriorityBlockingQueue<QueryContext> acceptedQueries =
       new PriorityBlockingQueue<QueryContext>();
@@ -116,7 +121,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private MetricsService metricsService;
 
   public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
-    super("query", cliService);
+    super(NAME, cliService);
   }
 
   private void initializeQueryAcceptorsAndListeners() {
@@ -124,6 +129,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       getEventService().addListener(new QueryStatusLogger());
       LOG.info("Registered query state logger");
     }
+    // Add result formatter
+    getEventService().addListenerForType(new ResultFormatter(this), QuerySuccess.class);
+    LOG.info("Registered query result formatter");
   }
 
   private void loadDriversAndSelector() throws GrillException {
@@ -148,7 +156,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     driverSelector = new CubeGrillDriver.MinQueryCostSelector();
   }
 
-  private GrillEventService getEventService() {
+  protected GrillEventService getEventService() {
     if (eventService == null) {
       eventService = (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
       if (eventService == null) {
@@ -157,7 +165,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
     return eventService;
   }
-  
+
   private synchronized MetricsService getMetrics() {
     if (metricsService == null) {
       metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
@@ -167,11 +175,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
     return metricsService;
   }
-  
+
   private void incrCounter(String counter) {
     getMetrics().incrCounter(QueryExecutionService.class, counter);
   }
-  
+
   private void decrCounter(String counter) {
     getMetrics().decrCounter(QueryExecutionService.class, counter);
   }
@@ -355,8 +363,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           } catch (GrillException exc) {
             // Driver gave exception while updating status
             QueryStatus failedStatus =
-              new QueryStatus(1.0, Status.FAILED, "Status update failed",
-                false, "Status update failed", exc.getMessage());
+                new QueryStatus(1.0, Status.FAILED, "Status update failed",
+                    false, "Status update failed", exc.getMessage());
             ctx.setStatus(failedStatus);
             LOG.error("Status update failed for " + handle + " reason: " + exc.getMessage());
           }
@@ -441,8 +449,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               finished.getCtx().getQueryHandle());
           allQueries.remove(finished.getCtx().getQueryHandle());
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
-            finished.getCtx().getStatus());
+              new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
+              finished.getCtx().getStatus());
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
         } catch (GrillException e) {
           LOG.error("Error closing  query ", e);
@@ -561,8 +569,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throw new NotFoundException("Query not found: " + queryHandle);
     }
 
+    QueryContext ctx = allQueries.get(queryHandle);
     if (resultSet == null) {
-      if (allQueries.get(queryHandle).getStatus().isResultSetAvailable() || allQueries.get(queryHandle).isPersistent()) {
+      if (ctx.isPersistent()) {
+        if (ctx.isResultFormatted()) {
+        resultSets.put(queryHandle, new GrillPersistentResult(
+            ctx.getQueryOutputFormatter().getMetadata(),
+            ctx.getQueryOutputFormatter().getFinalOutputPath().toString(),
+            ctx.getQueryOutputFormatter().getNumRows()));
+        } else {
+          throw new NotFoundException("Result set not yet formatted for:" + queryHandle);
+        }
+      } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
         resultSet = allQueries.get(queryHandle).getSelectedDriver().
             fetchResultSet(allQueries.get(queryHandle));
         resultSets.put(queryHandle, resultSet);
@@ -571,6 +589,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       }
     }   
     return resultSets.get(queryHandle);
+  }
+
+  GrillResultSet getDriverResultset(QueryHandle queryHandle)
+      throws GrillException {
+    return allQueries.get(queryHandle).getSelectedDriver().
+        fetchResultSet(allQueries.get(queryHandle));
   }
 
   @Override
@@ -628,7 +652,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(pctx,
+      QueryContext ctx = createContext(pctx,
           getSession(sessionHandle).getUserName(), conf, qconf);
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
@@ -646,7 +670,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
-      QueryContext ctx = new QueryContext(pctx,
+      QueryContext ctx = createContext(pctx,
           getSession(sessionHandle).getUserName(), conf, qconf);
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
@@ -662,7 +686,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(query,
+      QueryContext ctx = createContext(query,
           getSession(sessionHandle).getUserName(), conf, qconf);
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
@@ -670,6 +694,47 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
+
+  protected QueryContext createContext(String query, String userName,
+      GrillConf conf, Configuration qconf) throws GrillException {
+    QueryContext ctx = new QueryContext(query,userName, conf, qconf);
+    createAndSetFormatter(ctx);
+    return ctx;
+  }
+
+  protected QueryContext createContext(PreparedQueryContext pctx, String userName,
+      GrillConf conf, Configuration qconf) throws GrillException {
+    QueryContext ctx = new QueryContext(pctx, userName, conf, qconf);
+    createAndSetFormatter(ctx);
+    return ctx;
+  }
+
+  @SuppressWarnings("unchecked")
+  private void createAndSetFormatter(QueryContext ctx) throws GrillException {
+    if (ctx.getQueryOutputFormatter() == null && ctx.isPersistent()) {
+      QueryOutputFormatter formatter;
+      try {
+        if (ctx.isHDFSPersistent()) {
+          formatter = ReflectionUtils.newInstance(
+              ctx.getConf().getClass(
+                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  (Class<? extends PersistedOutputFormatter>)Class.forName(
+                      GrillConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER),
+                      PersistedOutputFormatter.class), ctx.getConf());
+        } else {
+          formatter = ReflectionUtils.newInstance(
+              ctx.getConf().getClass(
+                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  (Class<? extends InMemoryOutputFormatter>)Class.forName(
+                      GrillConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
+                      InMemoryOutputFormatter.class), ctx.getConf()); 
+        }
+      } catch (ClassNotFoundException e) {
+        throw new GrillException(e);
+      }
+      ctx.setQueryOutputFormatter(formatter);
+    }
+  }
 
   private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx,
       Configuration qconf) throws GrillException {
@@ -722,16 +787,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       throws GrillException {
     try {
       acquire(sessionHandle);
-      QueryContext ctx = allQueries.get(queryHandle);
-      if (ctx == null) {
-        throw new NotFoundException("Query not found " + queryHandle);
-      }
-      updateStatus(queryHandle);
-      return ctx;
+      return getQueryContext(queryHandle);
     } finally {
       release(sessionHandle);
     }
   }
+
+  QueryContext getQueryContext(QueryHandle queryHandle) throws GrillException {
+    QueryContext ctx = allQueries.get(queryHandle);
+    if (ctx == null) {
+      throw new NotFoundException("Query not found " + queryHandle);
+    }
+    updateStatus(queryHandle);
+    return ctx;
+  }
+
   @Override
   public GrillQuery getQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
       throws GrillException {
@@ -765,11 +835,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       GrillConf conf) throws GrillException {
     try {
       LOG.info("Blocking execute " + sessionHandle.toString() + " query: " 
-    + query + " timeout: " + timeoutMillis);
+          + query + " timeout: " + timeoutMillis);
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
-      QueryContext ctx = new QueryContext(query,
+      QueryContext ctx = createContext(query,
           getSession(sessionHandle).getUserName(), conf, qconf);
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
@@ -833,6 +903,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       GrillResultSet resultSet = getResultset(queryHandle);
       if (resultSet != null) {
+        LOG.info("GetResultSetMetadata: the resultset;" + resultSet);
+        LOG.info("GetResultSetMetadata: the metadata;" + resultSet.getMetadata());
         return resultSet.getMetadata().toQueryResultSetMetadata();
       } else {
         throw new NotFoundException("Resultset metadata not found for query: ("
@@ -990,7 +1062,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       for (GrillDriver driver : drivers) {
         if (driver instanceof HiveDriver) {
           GrillConf conf = new GrillConf();
-          conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+          conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
@@ -1010,7 +1082,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       for (GrillDriver driver : drivers) {
         if (driver instanceof HiveDriver) {
           GrillConf conf = new GrillConf();
-          conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "false");
+          conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getUserName(),
               getGrillConf(sessionHandle, conf));
@@ -1057,7 +1129,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
       for (int i =0; i < numQueries; i++) {
         QueryContext ctx = (QueryContext)in.readObject();
-        allQueries.put(ctx.getQueryHandle(), ctx);
         boolean driverAvailable = in.readBoolean();
         if (driverAvailable) {
           String clsName = in.readUTF();
@@ -1068,8 +1139,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         } catch (GrillException e) {
           LOG.error("Could not set query conf");
         }
+        try {
+          createAndSetFormatter(ctx);
+        } catch (GrillException e) {
+          LOG.error("Could not set output formatter for" + ctx.getQueryHandle());
+        }
+        allQueries.put(ctx.getQueryHandle(), ctx);
       }
-      
+
       // populate the query queues
       for (QueryContext ctx : allQueries.values()) {
         switch (ctx.getStatus().getStatus()) {

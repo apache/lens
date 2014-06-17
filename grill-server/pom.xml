@@ -58,6 +58,12 @@
 
         <dependency>
         <groupId>com.inmobi.grill</groupId>
+        <artifactId>grill-query-lib</artifactId>
+        <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+        <groupId>com.inmobi.grill</groupId>
         <artifactId>grill-driver-hive</artifactId>
         <version>${project.version}</version>
         <type>test-jar</type>

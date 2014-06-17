@@ -72,7 +72,7 @@
 
 <property>
   <name>grill.persistent.resultset</name>
-  <value>true</value>
+  <value>false</value>
   <description>Whether to enable persistent resultset for queries</description>
 </property>
 

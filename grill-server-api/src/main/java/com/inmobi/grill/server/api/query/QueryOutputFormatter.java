@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.api.driver;
+package com.inmobi.grill.server.api.query;
 
 /*
  * #%L
@@ -20,14 +20,28 @@ package com.inmobi.grill.server.api.driver;
  * #L%
  */
 
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.query.PersistentQueryResult;
-import com.inmobi.grill.api.query.QueryResult;
+import java.io.IOException;
 
-public abstract class PersistentResultSet extends GrillResultSet {
-  public abstract String getOutputPath() throws GrillException;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.fs.Path;
 
-  public QueryResult toQueryResult() throws GrillException {
-    return new PersistentQueryResult(getOutputPath(), size());
-  }
+import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
+
+public interface QueryOutputFormatter extends Configurable {
+
+  public void init(QueryContext ctx, GrillResultSetMetadata metadata);
+
+  public void writeHeader() throws IOException;
+  
+  public void writeFooter() throws IOException;
+  
+  public void commit() throws IOException;
+
+  public void close() throws IOException;
+
+  public Path getFinalOutputPath();
+
+  public int getNumRows();
+
+  public GrillResultSetMetadata getMetadata();
 }

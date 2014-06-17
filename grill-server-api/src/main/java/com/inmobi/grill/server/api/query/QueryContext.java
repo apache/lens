@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
@@ -52,10 +53,12 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter private GrillConf qconf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
+  @Getter final private boolean isHDFSPersistent;
   transient @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;
+  @Getter @Setter private String hdfsoutPath;
   @Getter final private long submissionTime;
   @Getter @Setter private long launchTime;
   @Getter @Setter private long endTime;
@@ -63,6 +66,8 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String grillSessionIdentifier;
   @Getter @Setter private String driverOpHandle;
   @Getter final DriverQueryStatus driverStatus;
+  @Getter @Setter private boolean resultFormatted;
+  transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
 
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new GrillConf(), conf, query, null);
@@ -91,7 +96,10 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
     this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
+        GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
+    this.isHDFSPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
+        GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
     this.userQuery = userQuery;
     this.submittedUser = user;
     this.driverQuery = driverQuery;
@@ -130,11 +138,15 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getResultSetParentDir() {
-    if (isPersistent) {
-      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
-          GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
-    }
-    return null;
+    return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
+  }
+
+  public Path getHDFSResultDir() {
+    return new Path(new Path (getResultSetParentDir(), conf.get(
+        GrillConfConstants.QUERY_HDFS_OUTPUT_PATH,
+        GrillConfConstants.DEFAULT_HDFS_OUTPUT_PATH)),
+        queryHandle.toString());
   }
 
   public GrillQuery toGrillQuery() {
@@ -142,7 +154,12 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
         driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
-        launchTime, driverStatus.getDriverStartTime(), driverStatus.getDriverFinishTime(), endTime, closedTime);
+        launchTime, driverStatus.getDriverStartTime(),
+        driverStatus.getDriverFinishTime(), endTime, closedTime);
+  }
+
+  public boolean isResultAvailableInDriver() {
+    return isHDFSPersistent() || driverStatus.isResultSetAvailable();
   }
 
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
