@@ -61,7 +61,7 @@ public class FilePersistentFormatter extends FileFormatter implements PersistedO
 
   }
   @Override
-  public void addRowsFromDir(Path persistedDir) throws IOException {
+  public void addRowsFromPersistedPath(Path persistedDir) throws IOException {
     FileSystem persistFs =  persistedDir.getFileSystem(getConf());
 
     FileStatus[] partFiles = persistFs.listStatus(persistedDir, new PathFilter() {

@@ -57,8 +57,9 @@ public abstract class FileFormatter extends AbstractOutputFormatter {
       if (rowWriter.getExtn() != null) {
         finalPath = new Path(outputPath + rowWriter.getExtn());
       }
+      finalPath = finalPath.makeQualified(fs);
       fs.rename(rowWriter.getTmpPath(), finalPath);
-      ctx.setResultSetPath(finalPath.makeQualified(fs).toString());
+      ctx.setResultSetPath(finalPath.toString());
     }
   }
 
@@ -66,8 +67,8 @@ public abstract class FileFormatter extends AbstractOutputFormatter {
     return rowWriter;
   }
   
-  public Path getFinalOutputPath() {
-    return finalPath;
+  public String getFinalOutputPath() {
+    return finalPath.toString();
   }
 
   @Override

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.io.Text;
@@ -34,7 +35,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
         Text.class.getCanonicalName());
 
     // validate rows
-    Assert.assertEquals(readFinalOutputFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedTextRows());
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
   @Test
@@ -48,7 +50,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     validateSerde(LazySimpleSerDe.class.getCanonicalName(),
         Text.class.getCanonicalName());
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedTextRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
   private void validateSerde(String serdeClassName, String serializedClassName) {

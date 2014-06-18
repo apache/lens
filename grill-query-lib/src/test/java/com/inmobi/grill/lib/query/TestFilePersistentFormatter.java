@@ -70,7 +70,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
 
   @Override
   protected void writeAllRows(Configuration conf) throws IOException {
-    ((PersistedOutputFormatter)formatter).addRowsFromDir(new Path(conf.get("test.partfile.dir")));
+    ((PersistedOutputFormatter)formatter).addRowsFromPersistedPath(new Path(conf.get("test.partfile.dir")));
   }
 
   protected void setConf(Configuration conf) {
@@ -89,7 +89,8 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt");
     // validate rows
-    Assert.assertEquals(readFinalOutputFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedTextRows());
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
 
   }
 
@@ -104,7 +105,8 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz");
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedTextRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
 }

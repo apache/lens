@@ -70,7 +70,6 @@ public class ResultFormatter extends AsyncEventListener<QuerySuccess> {
       LOG.info("Result formatting required. persistent:" + ctx.isPersistent());
       if (ctx.isResultAvailableInDriver()) {
         LOG.info("Result formatter for " + queryHandle);
-        Path finalOutputPath;
         GrillResultSet resultSet = queryService.getDriverResultset(queryHandle);
         QueryOutputFormatter formatter = ctx.getQueryOutputFormatter();
         formatter.init(ctx, resultSet.getMetadata());
@@ -81,7 +80,7 @@ public class ResultFormatter extends AsyncEventListener<QuerySuccess> {
         if (resultSet instanceof PersistentResultSet) {
           LOG.info("Result formatter for " + queryHandle + " in persistent result");
           //write all files from persistent directory
-          ((PersistedOutputFormatter)formatter).addRowsFromDir(new Path(ctx.getHdfsoutPath()));
+          ((PersistedOutputFormatter)formatter).addRowsFromPersistedPath(new Path(ctx.getHdfsoutPath()));
         } else {
           LOG.info("Result formatter for " + queryHandle + " in inmemory result");
           InMemoryResultSet inmemory = (InMemoryResultSet)resultSet;
@@ -95,10 +94,9 @@ public class ResultFormatter extends AsyncEventListener<QuerySuccess> {
         }
         formatter.commit();
         formatter.close();
-        finalOutputPath = formatter.getFinalOutputPath();
         ctx.setResultFormatted(true);
         queryService.getEventService().notifyEvent(new QueryResultFormatted(
-            System.currentTimeMillis(), null, finalOutputPath.toString(), queryHandle));
+            System.currentTimeMillis(), null, formatter.getFinalOutputPath().toString(), queryHandle));
         LOG.info("Result formatter has completed");
       }
     } catch (Exception e) {

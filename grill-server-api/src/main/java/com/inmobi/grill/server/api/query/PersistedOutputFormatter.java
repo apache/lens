@@ -26,8 +26,19 @@ import org.apache.hadoop.fs.Path;
 
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 
+/**
+ * Query result formatter, if the result is persisted by driver
+ *
+ */
 public interface PersistedOutputFormatter extends QueryOutputFormatter {
 
-  public void addRowsFromDir(Path persistedDir) throws IOException;
+  /**
+   * Add result rows from the persisted path
+   *
+   * @param persistedPath
+   *
+   * @throws IOException
+   */
+  public void addRowsFromPersistedPath(Path persistedPath) throws IOException;
   
 }

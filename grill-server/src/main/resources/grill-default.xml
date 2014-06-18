@@ -73,13 +73,16 @@
 <property>
   <name>grill.persistent.resultset</name>
   <value>false</value>
-  <description>Whether to enable persistent resultset for queries</description>
+  <description>Whether to enable persistent resultset for queries. When enabled,
+ server will fetch results from driver, custom format them if any and store in
+ a configured location. The file name of query output is queryhandle-id, with
+ configured extensions</description>
 </property>
 
 <property>
   <name>grill.result.parent.dir</name>
   <value>/tmp/grillreports</value>
-  <description>The directory for storing persisted results</description>
+  <description>The directory for storing persisted result of query.</description>
 </property>
 
 <property>
@@ -87,13 +90,6 @@
   <value>true</value>
   <description>Prefix query with insert overwrite clause if the query is persistent.
  User can disable if user gave the clause himself. </description>
-</property>
-
-<property>
-  <name>grill.result.output.dir.format</name>
-  <value></value>
-  <description>The format of the output if result is persisted. The format
- should be expressed in HQL</description>
 </property>
 
 <property>
@@ -174,7 +170,101 @@
  METASTORE_READONLY will allow GET on metastore and all other requests in other services.
  METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.
  </description>
+</property>
 
+<property>
+  <name>grill.persistent.resultset.indriver</name>
+  <value>true</value>
+  <description>Whether the result should be persisted by driver. Currently only
+ HiveDriver persists the results in a HDFS location.</description>
+</property>
+
+<property>
+  <name>grill.result.output.dir.format</name>
+  <value></value>
+  <description>The format of the output if result is persisted in hdfs. The format
+ should be expressed in HQL.</description>
+</property>
+
+<property>
+  <name>grill.query.hdfs.output.path</name>
+  <value>hdfsout</value>
+  <description>The directory under the parent result directory, in which HiveDriver
+ will persist the results, if persisting by driver is enabled.</description>
+</property>
+
+<property>
+  <name>grill.query.output.formatter</name>
+  <value></value>
+  <description>The query result output formatter for the query. If no value is
+ specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to
+ format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter
+ will be used to format driver persisted result sets.</description>
+</property>
+
+<property>
+  <name>grill.result.output.serde</name>
+  <value>com.inmobi.grill.lib.query.CSVSerde</value>
+  <description>The default serde class name that should be used by 
+ com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output
+  </description>
+</property>
+
+<property>
+  <name>grill.query.output.file.extn</name>
+  <value>.csv</value>
+  <description>The extension name for the persisted query output file. If
+ file is compressed, the extension from compression codec will be appended to
+ this extension.</description>
+</property>
+
+<property>
+  <name>grill.query.output.charset.encoding</name>
+  <value>UTF-8</value>
+  <description>The charset encoding for formatting query result. It supports
+ all the encodings supported by java.io.OutputStreamWriter.</description>
+</property>
+
+<property>
+  <name>grill.query.output.enable.compression</name>
+  <value>false</value>
+  <description>Whether to compress the query result output</description>
+</property>
+
+<property>
+  <name>grill.query.output.compression.codec</name>
+  <value>org.apache.hadoop.io.compress.GzipCodec</value>
+  <description>The codec used to compress the query output, if compression is
+ enabled</description>
+</property>
+
+<property>
+  <name>grill.query.output.write.header</name>
+  <value>false</value>
+  <description>Whether to write header as part of query result formatting. When
+ enabled the user given header will be added in case of driver persisted results,
+ and column names chosen will be added as header for in-memory results. </description>
+</property>
+
+<property>
+  <name>grill.query.output.header</name>
+  <value></value>
+  <description>The value of custom header that should be written, if any. This
+ header will be added in formatting driver persisted results.</description>
+</property>
+
+<property>
+  <name>grill.query.output.write.footer</name>
+  <value>false</value>
+  <description>Whether to write footer as part of query result. When enabled,
+ total number of rows will be written as part of header.</description>
+</property>
+
+<property>
+  <name>grill.query.output.footer</name>
+  <value></value>
+  <description>The value of custom footer that should be written, if any. This
+ footer will be added in formatting driver persisted results.</description>
 </property>
 
 </configuration>

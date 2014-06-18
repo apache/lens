@@ -23,25 +23,72 @@ package com.inmobi.grill.server.api.query;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configurable;
-import org.apache.hadoop.fs.Path;
 
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 
+/**
+ * The interface for query result formatting
+ *
+ * This is an abstract interface, user should implement
+ * {@link InMemoryOutputFormatter} or {@link PersistedOutputFormatter} for
+ * formatting the result.
+ */
 public interface QueryOutputFormatter extends Configurable {
 
+  /**
+   * Initialize the formatter
+   *
+   * @param ctx The {@link QueryContext} object
+   * @param metadata {@link GrillResultSetMetadata} object
+   */
   public void init(QueryContext ctx, GrillResultSetMetadata metadata);
 
+  /**
+   * Write the header
+   *
+   * @throws IOException
+   */
   public void writeHeader() throws IOException;
-  
+
+  /**
+   * Write the footer
+   *
+   * @throws IOException
+   */
   public void writeFooter() throws IOException;
-  
+
+  /**
+   * Commit the format
+   *
+   * @throws IOException
+   */
   public void commit() throws IOException;
 
+  /**
+   * Close the format
+   *
+   * @throws IOException
+   */
   public void close() throws IOException;
 
-  public Path getFinalOutputPath();
+  /**
+   * Get final location where formatted output is available
+   *
+   * @return
+   */
+  public String getFinalOutputPath();
 
+  /**
+   * Get total number of rows in result.
+   *
+   * @return Total number of rows, return -1, if not known
+   */
   public int getNumRows();
 
+  /**
+   * Get resultset metadata
+   *
+   * @return {@link GrillResultSetMetadata}
+   */
   public GrillResultSetMetadata getMetadata();
 }

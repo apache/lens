@@ -24,8 +24,19 @@ import java.io.IOException;
 
 import com.inmobi.grill.api.query.ResultRow;
 
+/**
+ * Query result formatter, if the result from driver is in in-memory
+ *
+ */
 public interface InMemoryOutputFormatter extends QueryOutputFormatter {
-  
+
+  /**
+   * Write a row of the result
+   *
+   * @param row {@link ResultRow} object
+   *
+   * @throws IOException
+   */
   public void writeRow(ResultRow row) throws IOException;
 
 }

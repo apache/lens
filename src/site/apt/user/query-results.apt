@@ -1,0 +1,94 @@
+~~~
+~~ #%L
+~~ Grill
+~~ %%
+~~ Copyright (C) 2014 Inmobi
+~~ %%
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~ 
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~ 
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+~~ #L%
+~~~
+Query results
+
+  This document contains details on query result - fetching, formatting and etc.
+  
+  Grill query service allows users to fetch results of query by specifying the
+  handle-id. It provides rest api to fetch result-metadata and the results.
+  
+  Here are various options provided for result formatting and fetching:
+  
+* Persisting results by server
+
+  Server can persists the results in configured location, also format the
+  results of the query, with a custom format.
+
+  User can provide a custom output formatter which implements 
+  {{{../apidocs/com/inmobi/grill/server/api/query/InMemoryOutputFormatter.html}InMemoryOutputFormatter}} or 
+  {{{../apidocs/com/inmobi/grill/server/api/query/PersistedOutputFormatter.html}PersistedOutputFormatter}}
+
+  Default implementation of formatting offers writing it into a file, but a new
+  implementation can be provided which persist in a db or whatever.
+  
+  The file based formatting provides following options:
+
+  * Optionally write header
+  
+  * Format the rows of the results like csv, or separate them with ctrl character
+  characters, which can be described through a Hive SerDe.
+
+  * Optionally write the output with a charset encoding.
+
+  * Optionally write footer
+
+  * Provide an extension to the file name
+
+  * Optionally compress the file
+
+* Persisting results by driver
+
+  The driver can persist the query output in a location. When driver persists the
+  results, the rows of the result can be formatted by the driver.
+  
+  HiveDriver allows users to specify the format of the result through a configuration.
+  It will persist the result in queryhandle-id directory inside hdfsout
+  directory in the parent result directory. 
+  
+  Since persisting the results by driver only allows formatting of the rows, if
+  user requires further formatting, the results should be persisted by server again.
+
+* Formatting summary
+
+  Below table depicts all the formatting options provided by query service
+
+*--+--+---+
+|Formatting of the results|<<Not persisted by driver>>|<<Persisted by driver>>|
+*--+--+---+
+|<<Not persisted by server>>|No formatting|Row level formatting|
+*--+--+---+--+
+|<<Persisted by server>>|All query output formatting|All query output formatting on top of row level formatting done by driver|
+*--+--+---+
+  
+  See {{{../admin/config.html} here}} for all the configuration property names
+
+* Fetching the results
+
+  If the results are persisted either by server or driver, the user would get
+  the result set as PersistentQueryResult. If results are not persisted, then
+  user would get the result as InMemoryQueryResult.
+  
+*--+--+---+
+|ResultSet|<<Not persisted by driver>>|<<Persisted by driver>>|
+*--+--+---+
+|<<Not persisted by server>>|InMemoryQueryResult|PersistentQueryResult|
+*--+--+---+--+
+|<<Persisted by server>>|PersistentQueryResult|PersistentQueryResult|
+*--+--+---+

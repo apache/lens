@@ -28,8 +28,8 @@ public abstract class TestAbstractFileFormatter {
   @AfterMethod
   public void cleanup() throws IOException {
     if (formatter != null) {
-      FileSystem fs = formatter.getFinalOutputPath().getFileSystem(new Configuration());
-      fs.delete(formatter.getFinalOutputPath(), true);
+      FileSystem fs = new Path(formatter.getFinalOutputPath()).getFileSystem(new Configuration());
+      fs.delete(new Path(formatter.getFinalOutputPath()), true);
     }
   }
 
@@ -40,7 +40,8 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv");
     // validate rows
-    Assert.assertEquals(readFinalOutputFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedCSVRows());
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
   @Test
@@ -51,7 +52,8 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz");
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedCSVRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
   @Test
@@ -64,7 +66,8 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate");
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedCSVRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
   @Test
@@ -75,7 +78,8 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UnicodeLittleUnmarked",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv");
     // validate rows
-    Assert.assertEquals(readFinalOutputFile(formatter.getFinalOutputPath(), conf, "UTF-16LE"), getExpectedCSVRows());
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
   }
 
   @Test
@@ -87,7 +91,8 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UnicodeLittleUnmarked",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz");
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-16LE"), getExpectedCSVRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
   }
 
   @Test
@@ -98,7 +103,8 @@ public abstract class TestAbstractFileFormatter {
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv");
     // validate rows
-    Assert.assertEquals(readFinalOutputFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedCSVRows());
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
   @Test
@@ -110,7 +116,8 @@ public abstract class TestAbstractFileFormatter {
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv.gz");
     // validate rows
-    Assert.assertEquals(readCompressedFile(formatter.getFinalOutputPath(), conf, "UTF-8"), getExpectedCSVRows());
+    Assert.assertEquals(readCompressedFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
   protected abstract FileFormatter createFormatter();
@@ -148,9 +155,9 @@ public abstract class TestAbstractFileFormatter {
     formatter.commit();
     formatter.close();
     Assert.assertFalse(fs.exists(tmpPath));
-    Path finalPath = formatter.getFinalOutputPath();
+    Path finalPath = new Path(formatter.getFinalOutputPath());
     Path expectedFinalPath = new Path (outputParentDir,
-        ctx.getQueryHandle() + fileExtn);
+        ctx.getQueryHandle() + fileExtn).makeQualified(fs);
     Assert.assertEquals(finalPath, expectedFinalPath);
     Assert.assertTrue(fs.exists(finalPath));
   }
