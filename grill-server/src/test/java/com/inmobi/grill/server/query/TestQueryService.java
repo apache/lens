@@ -129,9 +129,14 @@ public class TestQueryService extends GrillJerseyTest {
   public static final String TEST_DATA_FILE = "../grill-driver-hive/testdata/testdata2.txt";
 
   private void createTable(String tblName) throws InterruptedException {
+    createTable(tblName, target(), grillSessionId);
+  }
+
+  static void createTable(String tblName, WebTarget parent,
+      GrillSessionHandle grillSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    final WebTarget target = target().path("queryapi/queries");
+    final WebTarget target = parent.path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "CREATE TABLE IF NOT EXISTS " + tblName  +"(ID INT, IDSTR STRING)";
@@ -166,10 +171,15 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
-  private void loadData(String tblName, final String TEST_DATA_FILE) throws InterruptedException {
+  private void loadData(String tblName, final String TEST_DATA_FILE)
+      throws InterruptedException {
+    loadData(tblName, TEST_DATA_FILE, target(), grillSessionId);
+  }
+  static void loadData(String tblName, final String TEST_DATA_FILE,
+      WebTarget parent, GrillSessionHandle grillSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    final WebTarget target = target().path("queryapi/queries");
+    final WebTarget target = parent.path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +
@@ -202,9 +212,14 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   private void dropTable(String tblName) throws InterruptedException {
+    dropTable(tblName, target(), grillSessionId);
+  }
+
+  static void dropTable(String tblName, WebTarget parent,
+      GrillSessionHandle grillSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    final WebTarget target = target().path("queryapi/queries");
+    final WebTarget target = parent.path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "DROP TABLE IF EXISTS " + tblName ;
@@ -709,7 +724,7 @@ public class TestQueryService extends GrillJerseyTest {
     assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
     
-    validatePersistedResult(handle);
+    validatePersistedResult(handle, target(), grillSessionId, true);
 
     // test cancel query
     final QueryHandle handle2 = target.request().post(
@@ -731,10 +746,11 @@ public class TestQueryService extends GrillJerseyTest {
     }
   }
 
-  private void validatePersistedResult(QueryHandle handle) throws IOException {
-    final WebTarget target = target().path("queryapi/queries");
+  static void validatePersistedResult(QueryHandle handle, WebTarget parent,
+      GrillSessionHandle grillSessionId, boolean isDir) throws IOException {
+    final WebTarget target = parent.path("queryapi/queries");
     // fetch results
-    validateResultSetMetadata(handle);
+    validateResultSetMetadata(handle, parent, grillSessionId);
 
     String presultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(String.class);
@@ -742,25 +758,27 @@ public class TestQueryService extends GrillJerseyTest {
 
     PersistentQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
-    validatePersistentResult(resultset, handle);
+    validatePersistentResult(resultset, handle, isDir);
   }
 
-  private List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle) throws  IOException {
+  static List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle, boolean isDir) throws  IOException {
     Assert.assertTrue(resultset.getPersistedURI().contains(handle.toString()));
     Path actualPath = new Path(resultset.getPersistedURI());
     FileSystem fs = actualPath.getFileSystem(new Configuration());
     List<String> actualRows = new ArrayList<String>();
     if (fs.getFileStatus(actualPath).isDir()) {
+      Assert.assertTrue(isDir);
       for (FileStatus fstat : fs.listStatus(actualPath)) {
         addRowsFromFile(actualRows, fs, fstat.getPath());
       }
     } else {
+      Assert.assertFalse(isDir);
       addRowsFromFile(actualRows, fs, actualPath);
     }
     return actualRows;
   }
 
-  private void addRowsFromFile(List<String> actualRows,
+  static void addRowsFromFile(List<String> actualRows,
       FileSystem fs, Path path) throws IOException {
     FSDataInputStream in = fs.open(path);
     BufferedReader br = null;
@@ -781,9 +799,9 @@ public class TestQueryService extends GrillJerseyTest {
     }
   }
 
-  private void validatePersistentResult(PersistentQueryResult resultset,
-      QueryHandle handle) throws IOException {
-    List<String> actualRows = readResultSet(resultset, handle);
+  static void validatePersistentResult(PersistentQueryResult resultset,
+      QueryHandle handle, boolean isDir) throws IOException {
+    List<String> actualRows = readResultSet(resultset, handle, isDir);
     Assert.assertEquals(actualRows.get(0), "1one");
     Assert.assertEquals(actualRows.get(1), "\\Ntwo");
     Assert.assertEquals(actualRows.get(2), "3\\N");
@@ -834,86 +852,11 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
     // fetch results
-    validateResultSetMetadata(handle);
+    validateResultSetMetadata(handle, target(), grillSessionId);
 
     InMemoryQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(InMemoryQueryResult.class);
     validateInmemoryResult(resultset);
-  }
-
-  // test with execute async post with result formatter, get query, get results
-  @Test(groups = "unit" )
-  public void testResultFormatterInMemoryResult() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
-    testResultFormatter(conf);
-  }
-
-  // test with execute async post with result formatter, get query, get results
-  @Test(groups = "unit" )
-  public void testResultFormatterHDFSpersistentResult() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
-    testResultFormatter(conf);
-  }
-
-  // test with execute async post with result formatter, get query, get results
-  private void testResultFormatter(GrillConf conf) throws InterruptedException, IOException {
-    // test post execute op
-    final WebTarget target = target().path("queryapi/queries");
-
-    final FormDataMultiPart mp = new FormDataMultiPart();
-    conf.addProperty(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, "true");
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-        "select ID, IDSTR from " + testTable));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
-        "operation").build(),
-        "execute"));
-    mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        conf,
-        MediaType.APPLICATION_XML_TYPE));
-    final QueryHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
-
-    Assert.assertNotNull(handle);
-
-    // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
-        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
-        ctx.getStatus().getStatus().equals(Status.RUNNING) ||
-        ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
-
-    // wait till the query finishes
-    QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
-      stat = ctx.getStatus();
-      Thread.sleep(1000);
-    }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-
-    // wait till result is formatted
-    //TODO change this to state change ?
-    boolean found = false;
-    while (!found) {
-      try {
-        String presultset = target.path(handle.toString()).path(
-            "resultset").queryParam("sessionid", grillSessionId).request().get(String.class);
-        System.out.println("Result set :" + presultset);
-        found = true;
-      } catch (NotFoundException nfe) {
-        // ignore
-        System.out.println("Waiting for result formatting");
-        Thread.sleep(10);
-      }
-    }
-    // fetch results
-    validatePersistedResult(handle);
   }
 
   @Test(groups = "unit" )
@@ -987,19 +930,22 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
     // fetch results
-    validateResultSetMetadata(handle2, "temp_output.");
+    validateResultSetMetadata(handle2, "temp_output.", target(), grillSessionId);
 
     InMemoryQueryResult resultset = target.path(handle2.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(InMemoryQueryResult.class);
     validateInmemoryResult(resultset);
   }
 
-  private void validateResultSetMetadata(QueryHandle handle) {
-    validateResultSetMetadata(handle, "");
+  static void validateResultSetMetadata(QueryHandle handle, WebTarget parent,
+      GrillSessionHandle grillSessionId) {
+    validateResultSetMetadata(handle, "", parent, grillSessionId);
   }
 
-  private void validateResultSetMetadata(QueryHandle handle, String outputTablePfx) {
-    final WebTarget target = target().path("queryapi/queries");
+  static void validateResultSetMetadata(QueryHandle handle,
+      String outputTablePfx, WebTarget parent,
+      GrillSessionHandle grillSessionId) {
+    final WebTarget target = parent.path("queryapi/queries");
 
     QueryResultSetMetadata metadata = target.path(handle.toString()).path(
         "resultsetmetadata").queryParam("sessionid", grillSessionId).request().get(QueryResultSetMetadata.class);
@@ -1051,7 +997,8 @@ public class TestQueryService extends GrillJerseyTest {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandleWithResultSet.class);
     Assert.assertNotNull(result.getQueryHandle());
     Assert.assertNotNull(result.getResult());
-    validatePersistentResult((PersistentQueryResult) result.getResult(), result.getQueryHandle());
+    validatePersistentResult((PersistentQueryResult) result.getResult(),
+        result.getQueryHandle(), true);
     
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
@@ -1174,7 +1121,7 @@ public class TestQueryService extends GrillJerseyTest {
           "Expected to be successful " + handle);
         PersistentQueryResult resultset = target.path(handle.toString()).path(
           "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
-        List<String> rows = readResultSet(resultset, handle);
+        List<String> rows = readResultSet(resultset, handle, true);
         Assert.assertEquals(rows.size(), 1);
         Assert.assertEquals(rows.get(0), "" + NROWS);
         LOG.info("Completed " + handle);

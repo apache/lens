@@ -43,7 +43,7 @@ import com.inmobi.grill.server.api.GrillConfConstants;
 
 public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
 
-  public static final String utf8 = "UTF-8";
+  public static final String UTF8 = "UTF-8";
   public static final String UTF16LE = "UTF-16LE";
   public static final String newline  = "\n";
 
@@ -63,7 +63,7 @@ public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> 
     }
 
     public GrillRowWriter(DataOutputStream out) {
-      this(out, utf8, null, null);
+      this(out, UTF8, null, null);
     }
 
     public synchronized void write(NullWritable key, Text value)
@@ -76,7 +76,9 @@ public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> 
     }
 
     public synchronized void close(Reporter reporter) throws IOException {
-      out.close();
+      if (out != null) {
+        out.close();
+      }
     }
     
     public Path getTmpPath() {
@@ -98,14 +100,14 @@ public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> 
       Progressable progress)
           throws IOException {
     return createRecordWriter(job,
-        FileOutputFormat.getTaskOutputPath(job, name), progress);
+        FileOutputFormat.getTaskOutputPath(job, name), progress,
+        getCompressOutput(job),
+        getOuptutFileExtn(job), getResultEncoding(job));
   }
 
   public static GrillRowWriter createRecordWriter(Configuration conf,
-      Path tmpWorkPath, Progressable progress) throws IOException {
-    boolean isCompressed = getCompressOutput(conf);
-    String encoding = getResultEncoding(conf);
-    String extn = getOuptutFileExtn(conf);
+      Path tmpWorkPath, Progressable progress, boolean isCompressed, String extn,
+      String encoding) throws IOException {
     Path file;
     if (extn != null) {
       file = new Path (tmpWorkPath + extn);
@@ -132,12 +134,12 @@ public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> 
     }
   }
 
-  public static String getResultEncoding(Configuration conf) {
+  public String getResultEncoding(Configuration conf) {
     return conf.get(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
         GrillConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
   }
 
-  public static String getOuptutFileExtn(Configuration conf) {
+  public String getOuptutFileExtn(Configuration conf) {
     return conf.get(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN,
         GrillConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
   }

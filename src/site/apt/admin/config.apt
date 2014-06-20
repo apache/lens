@@ -60,38 +60,44 @@ Grill server configuration
 *--+--+---+--+
 |18|grill.query.output.formatter| |The query result output formatter for the query. If no value is specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
 *--+--+---+--+
-|19|grill.query.output.header| |The value of custom header that should be written, if any. This header will be added in formatting driver persisted results.|
+|19|grill.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
 *--+--+---+--+
 |20|grill.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
 *--+--+---+--+
 |21|grill.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
 *--+--+---+--+
-|22|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|22|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
 *--+--+---+--+
-|23|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|23|grill.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
 *--+--+---+--+
-|24|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|24|grill.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
 *--+--+---+--+
-|25|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
+|25|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|26|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
+|26|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|27|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
+|27|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|28|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|28|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
 *--+--+---+--+
-|29|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
+|29|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
 *--+--+---+--+
-|30|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
+|30|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
 *--+--+---+--+
-|31|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
+|31|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|32|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
+|32|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|33|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
+|33|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
 *--+--+---+--+
-|34|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|34|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
 *--+--+---+--+
-|35|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|35|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
+*--+--+---+--+
+|36|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
+*--+--+---+--+
+|37|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+*--+--+---+--+
+|38|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The configuration parameters and their default values

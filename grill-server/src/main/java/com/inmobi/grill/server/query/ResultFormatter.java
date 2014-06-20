@@ -22,7 +22,9 @@ package com.inmobi.grill.server.query;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.util.ReflectionUtils;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
@@ -34,12 +36,10 @@ import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.query.PersistedOutputFormatter;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.InMemoryOutputFormatter;
+import com.inmobi.grill.server.api.query.QueryExecuted;
 import com.inmobi.grill.server.api.query.QueryOutputFormatter;
-import com.inmobi.grill.server.api.query.QueryResultFormatFailed;
-import com.inmobi.grill.server.api.query.QueryResultFormatted;
-import com.inmobi.grill.server.api.query.QuerySuccess;
 
-public class ResultFormatter extends AsyncEventListener<QuerySuccess> {
+public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
 
   public static final Log LOG = LogFactory.getLog(ResultFormatter.class);
   QueryExecutionServiceImpl queryService;
@@ -48,65 +48,104 @@ public class ResultFormatter extends AsyncEventListener<QuerySuccess> {
   }
 
   @Override
-  public void process(QuerySuccess event) {
+  public void process(QueryExecuted event) {
     formatOutput(event);    
   }
 
-  private void formatOutput(QuerySuccess event) {
+  private void formatOutput(QueryExecuted event) {
     QueryHandle queryHandle = event.getQueryHandle();
-    LOG.info("Result formatter for " + queryHandle);
-
-    QueryContext ctx;
+    QueryContext ctx = queryService.getQueryContext(queryHandle);
     try {
-      ctx = queryService.getQueryContext(queryHandle);
-      if (ctx.isResultFormatted()) {
-        LOG.info("Result already formatted. Skipping " + queryHandle);
-        return;
-      }
       if (!ctx.isPersistent()) {
         LOG.info("No result formatting required for query " + queryHandle);
         return;
       }
-      LOG.info("Result formatting required. persistent:" + ctx.isPersistent());
       if (ctx.isResultAvailableInDriver()) {
         LOG.info("Result formatter for " + queryHandle);
         GrillResultSet resultSet = queryService.getDriverResultset(queryHandle);
-        QueryOutputFormatter formatter = ctx.getQueryOutputFormatter();
-        formatter.init(ctx, resultSet.getMetadata());
-        if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_HEADER,
-            GrillConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
-          formatter.writeHeader();
-        }
         if (resultSet instanceof PersistentResultSet) {
-          LOG.info("Result formatter for " + queryHandle + " in persistent result");
-          //write all files from persistent directory
-          ((PersistedOutputFormatter)formatter).addRowsFromPersistedPath(new Path(ctx.getHdfsoutPath()));
-        } else {
-          LOG.info("Result formatter for " + queryHandle + " in inmemory result");
-          InMemoryResultSet inmemory = (InMemoryResultSet)resultSet;
-          while (inmemory.hasNext()) {
-            ((InMemoryOutputFormatter)formatter).writeRow(inmemory.next());
+          // skip result formatting if persisted size is huge
+          Path persistedDirectory = new Path(ctx.getHdfsoutPath());
+          FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
+          long size = fs.getContentSummary(persistedDirectory).getLength();
+          long threshold = ctx.getConf().getLong(
+              GrillConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
+              GrillConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
+          LOG.info(" size :" + size + " threshold:" + threshold);
+          if (size > threshold) {
+            LOG.warn("Persisted result size more than the threshold, size:" +
+              size + " and threshold:" + threshold + "; Skipping formatter");
+            queryService.setSuccessState(ctx);
+            return;
           }
         }
-        if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
-            GrillConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
-          formatter.writeFooter();
+        // now do the formatting
+        createAndSetFormatter(ctx);
+        QueryOutputFormatter formatter = ctx.getQueryOutputFormatter();
+        try {
+          formatter.init(ctx, resultSet.getMetadata());
+          if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_HEADER,
+              GrillConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
+            formatter.writeHeader();
+          }
+          if (resultSet instanceof PersistentResultSet) {
+            LOG.info("Result formatter for " + queryHandle + " in persistent result");
+            Path persistedDirectory = new Path(ctx.getHdfsoutPath());
+            //write all files from persistent directory
+            ((PersistedOutputFormatter)formatter).addRowsFromPersistedPath(persistedDirectory);
+          } else {
+            LOG.info("Result formatter for " + queryHandle + " in inmemory result");
+            InMemoryResultSet inmemory = (InMemoryResultSet)resultSet;
+            while (inmemory.hasNext()) {
+              ((InMemoryOutputFormatter)formatter).writeRow(inmemory.next());
+            }
+          }
+          if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
+              GrillConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
+            formatter.writeFooter();
+          }
+          formatter.commit();
+        } finally {
+          formatter.close();
         }
-        formatter.commit();
-        formatter.close();
-        ctx.setResultFormatted(true);
-        queryService.getEventService().notifyEvent(new QueryResultFormatted(
-            System.currentTimeMillis(), null, formatter.getFinalOutputPath().toString(), queryHandle));
-        LOG.info("Result formatter has completed");
+        queryService.setSuccessState(ctx);
+        LOG.info("Result formatter has completed. Final path:" + formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
-        queryService.getEventService().notifyEvent(new QueryResultFormatFailed(
-            System.currentTimeMillis(), null, e.getLocalizedMessage(), queryHandle));
+        queryService.setFailedStatus(ctx, "Result formatting failed!", e.getLocalizedMessage());
       } catch (GrillException e1) {
-        LOG.warn("Exception while sending formatting failure notification for " + queryHandle, e1);
+        LOG.error("Exception while setting failure for " + queryHandle, e1);
       }
     }
   }
+
+  @SuppressWarnings("unchecked")
+  void createAndSetFormatter(QueryContext ctx) throws GrillException {
+    if (ctx.getQueryOutputFormatter() == null && ctx.isPersistent()) {
+      QueryOutputFormatter formatter;
+      try {
+        if (ctx.isDriverPersistent()) {
+          formatter = ReflectionUtils.newInstance(
+              ctx.getConf().getClass(
+                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  (Class<? extends PersistedOutputFormatter>)Class.forName(
+                      GrillConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER),
+                      PersistedOutputFormatter.class), ctx.getConf());
+        } else {
+          formatter = ReflectionUtils.newInstance(
+              ctx.getConf().getClass(
+                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  (Class<? extends InMemoryOutputFormatter>)Class.forName(
+                      GrillConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
+                      InMemoryOutputFormatter.class), ctx.getConf()); 
+        }
+      } catch (ClassNotFoundException e) {
+        throw new GrillException(e);
+      }
+      ctx.setQueryOutputFormatter(formatter);
+    }
+  }
+
 }

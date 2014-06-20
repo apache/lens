@@ -21,6 +21,7 @@ package com.inmobi.grill.driver.cube;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,7 +168,7 @@ public class RewriteUtil {
   }
 
   public static Map<GrillDriver, String> rewriteQuery(final String query,
-      List<GrillDriver> drivers, Configuration queryconf) throws GrillException {
+      Collection<GrillDriver> drivers, Configuration queryconf) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();

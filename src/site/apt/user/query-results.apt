@@ -53,6 +53,11 @@ Query results
 
   * Optionally compress the file
 
+  * Skip formatting if result size exceeds a configured threshold
+
+  * Optionally allow result to be split into multiple files, with configured
+   number of rows in ech file.
+
 * Persisting results by driver
 
   The driver can persist the query output in a location. When driver persists the

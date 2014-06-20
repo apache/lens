@@ -21,16 +21,15 @@ package com.inmobi.grill.server.api.query;
  */
 
 import com.inmobi.grill.api.query.QueryHandle;
+import com.inmobi.grill.api.query.QueryStatus;
 
 /**
- * The event raised if query result formatting has failed. The current value contains
- * the cause the failure.
- *
+ * Event fired when query is successfully completed by the driver
  */
-public class QueryResultFormatFailed extends QueryEvent<String> {
-
-  public QueryResultFormatFailed(long eventTime, String prev, String current,
-      QueryHandle handle) {
+public class QueryExecuted extends StatusChange {
+  public QueryExecuted(long eventTime, QueryStatus.Status prev,
+      QueryStatus.Status current, QueryHandle handle) {
     super(eventTime, prev, current, handle);
+    checkCurrentState(QueryStatus.Status.EXECUTED);
   }
 }

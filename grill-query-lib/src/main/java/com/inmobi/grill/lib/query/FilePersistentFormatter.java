@@ -23,40 +23,28 @@ package com.inmobi.grill.lib.query;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.io.Text;
 
-import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.PersistedOutputFormatter;
+import com.inmobi.grill.server.api.query.QueryContext;
 
-public class FilePersistentFormatter extends FileFormatter implements PersistedOutputFormatter {
+public class FilePersistentFormatter extends WrappedFileFormatter
+    implements PersistedOutputFormatter {
 
-  private int numRows = 0;
+  public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
-  @Override
-  public void writeHeader() throws IOException {
-    String header = ctx.getConf().get(GrillConfConstants.QUERY_OUTPUT_HEADER);
-    if (!StringUtils.isBlank(header)) {
-      rowWriter.write(null, new Text(header));
-    }
-  }
-
-  @Override
-  public void writeFooter() throws IOException {
-    String footer = ctx.getConf().get(GrillConfConstants.QUERY_OUTPUT_FOOTER);
-    if (!StringUtils.isBlank(footer)) {
-      rowWriter.write(null, new Text(footer));
-    }
-
+  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException {
+    super.init(ctx, metadata);
   }
 
   // File names are of the form 000000_0
@@ -77,12 +65,12 @@ public class FilePersistentFormatter extends FileFormatter implements PersistedO
       }
       return 0;
     }
-
-
   }
+
   @Override
-  public void addRowsFromPersistedPath(Path persistedDir) throws IOException {
-    FileSystem persistFs =  persistedDir.getFileSystem(getConf());
+  public void addRowsFromPersistedPath(Path persistedDir)
+      throws IOException {
+    FileSystem persistFs =  persistedDir.getFileSystem(ctx.getConf());
 
     FileStatus[] partFiles = persistFs.listStatus(persistedDir, new PathFilter() {
       @Override
@@ -101,23 +89,24 @@ public class FilePersistentFormatter extends FileFormatter implements PersistedO
       }
 
       for (Map.Entry<PartFile, FileStatus> entry : partFileMap.entrySet()) {
-        BufferedReader in = new BufferedReader(new InputStreamReader(
-            persistFs.open(entry.getValue().getPath())));
-        String row = in.readLine();
-        while (row != null) {
-          writeRow(row);
-          numRows++;
-          row = in.readLine();
+        LOG.info("Processing file:" + entry.getValue().getPath());
+        BufferedReader in = null;
+        try {
+          in = new BufferedReader(new InputStreamReader(
+              persistFs.open(entry.getValue().getPath())));
+          String row = in.readLine();
+          while (row != null) {
+            writeRow(row);
+            row = in.readLine();
+          }
+        } finally {
+          if (in != null) {
+            in.close();
+          }
         }
       }
     } catch (ParseException e) {
       throw new IOException(e);
     }
   }
-
-  @Override
-  public int getNumRows() {
-    return numRows;
-  }
-
 }

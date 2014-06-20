@@ -74,6 +74,36 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
+  @Test
+  public void testTextFileWithZipFormatter() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+    // validate rows
+    List<String> actual = readZipOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
+    Assert.assertEquals(actual, getExpectedTextRowsWithMultiple());
+  }
+
+  @Test
+  public void testCSVWithZipFormatter() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+    // validate rows
+    List<String> actual = readZipOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
+    Assert.assertEquals(actual, getExpectedCSVRowsWithMultiple());
+  }
+
   private void validateSerde(String serdeClassName, String serializedClassName) {
     // check serde
     SerDe outputSerde = ((FileSerdeFormatter)formatter).getSerde();
@@ -115,7 +145,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   }
   
   @Override
-  protected FileFormatter createFormatter() {
+  protected WrappedFileFormatter createFormatter() {
     return new FileSerdeFormatter();
   }
 

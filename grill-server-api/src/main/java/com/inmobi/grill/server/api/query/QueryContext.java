@@ -53,7 +53,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter private GrillConf qconf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
-  @Getter final private boolean isHDFSPersistent;
+  @Getter final private boolean isDriverPersistent;
   transient @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
@@ -66,7 +66,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String grillSessionIdentifier;
   @Getter @Setter private String driverOpHandle;
   @Getter final DriverQueryStatus driverStatus;
-  @Getter @Setter private boolean resultFormatted;
   transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
 
   public QueryContext(String query, String user, Configuration conf) {
@@ -98,7 +97,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.conf = conf;
     this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
         GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
-    this.isHDFSPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
+    this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
         GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
     this.userQuery = userQuery;
     this.submittedUser = user;
@@ -159,7 +158,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public boolean isResultAvailableInDriver() {
-    return isHDFSPersistent() || driverStatus.isResultSetAvailable();
+    return isDriverPersistent()|| driverStatus.isResultSetAvailable();
   }
 
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
@@ -167,5 +166,38 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
       throw new GrillException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
     }
     this.status = newStatus;
+  }
+  
+  public String getResultHeader() {
+    return getConf().get(GrillConfConstants.QUERY_OUTPUT_HEADER);
+  }
+
+  public String getResultFooter() {
+    return getConf().get(GrillConfConstants.QUERY_OUTPUT_FOOTER);
+  }
+
+  public String getResultEncoding() {
+    return conf.get(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
+        GrillConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
+  }
+
+  public String getOuptutFileExtn() {
+    return conf.get(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN,
+        GrillConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
+  }
+
+  public boolean getCompressOutput() {
+    return conf.getBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
+        GrillConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+  }
+
+  public long getMaxResultSplitRows() {
+    return conf.getLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
+        GrillConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
+  }
+
+  public boolean splitResultIntoMultipleFiles() {
+    return conf.getBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
+        GrillConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
   }
 }

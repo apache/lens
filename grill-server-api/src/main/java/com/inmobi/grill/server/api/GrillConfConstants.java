@@ -123,4 +123,16 @@ public class GrillConfConstants {
   public static final boolean DEFAULT_OUTPUT_WRITE_FOOTER = false;
 
   public static final String QUERY_OUTPUT_FOOTER = "grill.query.output.footer";
+
+  public static final String RESULT_FORMAT_SIZE_THRESHOLD = "grill.query.result.size.format.threshold";
+
+  public static final long DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD = 10737418240L; //10GB
+
+  public static final String RESULT_SPLIT_INTO_MULTIPLE = "grill.query.result.split.multiple";
+
+  public static final boolean DEFAULT_RESULT_SPLIT_INTO_MULTIPLE = false;
+
+  public static final String RESULT_SPLIT_MULTIPLE_MAX_ROWS = "grill.query.result.split.multiple.maxrows";
+
+  public static final long DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS = 100000;
 }

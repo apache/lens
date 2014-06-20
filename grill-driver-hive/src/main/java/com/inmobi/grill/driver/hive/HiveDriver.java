@@ -505,8 +505,8 @@ public class HiveDriver implements GrillDriver {
     OperationHandle op = getHiveHandle(context.getQueryHandle());
     LOG.info("Creating result set for hiveHandle:" + op);
     try {
-        if (op.hasResultSet() || context.isHDFSPersistent()) {
-          if (context.isHDFSPersistent()) {
+        if (op.hasResultSet() || context.isDriverPersistent()) {
+          if (context.isDriverPersistent()) {
             return new HivePersistentResultSet(new Path(context.getHdfsoutPath()),
                 op, getClient(), context.getQueryHandle());
           } else {
@@ -523,7 +523,7 @@ public class HiveDriver implements GrillDriver {
 
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
-    if (context.isHDFSPersistent() &&
+    if (context.isDriverPersistent() &&
         context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE,
             GrillConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
       // store persistent data into user specified location

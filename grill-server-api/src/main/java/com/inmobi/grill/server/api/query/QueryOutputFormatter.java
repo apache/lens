@@ -33,15 +33,16 @@ import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
  * {@link InMemoryOutputFormatter} or {@link PersistedOutputFormatter} for
  * formatting the result.
  */
-public interface QueryOutputFormatter extends Configurable {
+public interface QueryOutputFormatter {
 
   /**
    * Initialize the formatter
    *
    * @param ctx The {@link QueryContext} object
    * @param metadata {@link GrillResultSetMetadata} object
+   * @throws IOException 
    */
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata);
+  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException;
 
   /**
    * Write the header
@@ -58,14 +59,17 @@ public interface QueryOutputFormatter extends Configurable {
   public void writeFooter() throws IOException;
 
   /**
-   * Commit the format
+   * Commit the formatting. 
+   * 
+   * This will make the result consumable by user, will be called after
+   * all the writes succeed.
    *
    * @throws IOException
    */
   public void commit() throws IOException;
 
   /**
-   * Close the format
+   * Close the formatter. Cleanup any resources.
    *
    * @throws IOException
    */
@@ -74,7 +78,7 @@ public interface QueryOutputFormatter extends Configurable {
   /**
    * Get final location where formatted output is available
    *
-   * @return
+   * @return 
    */
   public String getFinalOutputPath();
 

@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,20 +38,19 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.query.ResultColumn;
-import com.inmobi.grill.lib.query.GrillFileOutputFormat.GrillRowWriter;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 public abstract class TestAbstractFileFormatter {
 
-  protected FileFormatter formatter;
+  protected WrappedFileFormatter formatter;
 
   @AfterMethod
   public void cleanup() throws IOException {
     if (formatter != null) {
       FileSystem fs = new Path(formatter.getFinalOutputPath()).getFileSystem(new Configuration());
-      fs.delete(new Path(formatter.getFinalOutputPath()), true);
+      //fs.delete(new Path(formatter.getFinalOutputPath()), true);
     }
   }
 
@@ -140,7 +141,7 @@ public abstract class TestAbstractFileFormatter {
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
   }
 
-  protected abstract FileFormatter createFormatter();
+  protected abstract WrappedFileFormatter createFormatter();
 
   protected abstract void writeAllRows(Configuration conf) throws IOException;
 
@@ -153,13 +154,11 @@ public abstract class TestAbstractFileFormatter {
     QueryContext ctx = new QueryContext("test writer query", "testuser", null, conf);
     formatter = createFormatter();
 
-    formatter.setConf(conf);
     formatter.init(ctx, getMockedResultSet());
 
     // check output spec
-    GrillRowWriter rowWriter = formatter.getRowWriter();
-    Assert.assertEquals(rowWriter.getEncoding(), charsetEncoding);
-    Path tmpPath = rowWriter.getTmpPath();
+    Assert.assertEquals(formatter.getEncoding(), charsetEncoding);
+    Path tmpPath = formatter.getTmpPath();
     Path expectedTmpPath = new Path (outputParentDir,
         ctx.getQueryHandle() + ".tmp" + fileExtn);
     Assert.assertEquals(tmpPath, expectedTmpPath);
@@ -198,7 +197,7 @@ public abstract class TestAbstractFileFormatter {
         codec.createInputStream(fs.open(finalPath)), encoding));
   }
 
-  private List<String> readFromStream(InputStreamReader ir) throws IOException {
+  protected List<String> readFromStream(InputStreamReader ir) throws IOException {
     List<String> result = new ArrayList<String>();
     BufferedReader reader = new BufferedReader(ir);
     String line = reader.readLine();
@@ -206,6 +205,7 @@ public abstract class TestAbstractFileFormatter {
       result.add(line);
       line = reader.readLine();
     }
+    reader.close();
     return result;
 
   }
@@ -241,6 +241,53 @@ public abstract class TestAbstractFileFormatter {
     txtRows.add("2two");
     txtRows.add("\\Nthree");
     txtRows.add("4\\N");
+    txtRows.add("\\N\\N");
+    txtRows.add("Total rows:5");
+    return txtRows;
+  }
+
+  protected List<String> readZipOutputFile(Path finalPath, Configuration conf,
+      String encoding) throws IOException {
+    FileSystem fs = finalPath.getFileSystem(conf);
+    List<String> result = new ArrayList<String>();
+    ZipEntry ze = null; 
+    ZipInputStream zin = new ZipInputStream(fs.open(finalPath)); 
+    while ((ze = zin.getNextEntry()) != null) { 
+      BufferedReader reader = new BufferedReader(new InputStreamReader(zin, encoding));
+      String line = reader.readLine();
+      while (line != null) {
+        result.add(line);
+        line = reader.readLine();
+      }
+      zin.closeEntry(); 
+    }
+    zin.close();
+    return result;
+  }
+
+  protected List<String> getExpectedCSVRowsWithMultiple() {
+    List<String> csvRows = new ArrayList<String>();
+    csvRows.add("\"firstcol\",\"secondcol\"");
+    csvRows.add("\"1\",\"one\"");
+    csvRows.add("\"2\",\"two\"");
+    csvRows.add("\"firstcol\",\"secondcol\"");
+    csvRows.add("\"NULL\",\"three\"");
+    csvRows.add("\"4\",\"NULL\"");
+    csvRows.add("\"firstcol\",\"secondcol\"");
+    csvRows.add("\"NULL\",\"NULL\"");
+    csvRows.add("Total rows:5");
+    return csvRows;
+  }
+
+  protected List<String> getExpectedTextRowsWithMultiple() {
+    List<String> txtRows = new ArrayList<String>();
+    txtRows.add("firstcolsecondcol");
+    txtRows.add("1one");
+    txtRows.add("2two");
+    txtRows.add("firstcolsecondcol");
+    txtRows.add("\\Nthree");
+    txtRows.add("4\\N");
+    txtRows.add("firstcolsecondcol");
     txtRows.add("\\N\\N");
     txtRows.add("Total rows:5");
     return txtRows;

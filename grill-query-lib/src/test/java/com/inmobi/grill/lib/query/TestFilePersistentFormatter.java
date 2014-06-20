@@ -20,13 +20,20 @@ package com.inmobi.grill.lib.query;
  * #L%
  */
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -84,7 +91,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   }
 
   @Override
-  protected FileFormatter createFormatter() {
+  protected WrappedFileFormatter createFormatter() {
     return new FilePersistentFormatter();
   }
 
@@ -100,6 +107,18 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   }
 
   @Test
+  public void testCSVWithSerdeHeader() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "");
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv");
+    // validate rows
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
+  }
+
+  @Test
   public void testTextFiles() throws IOException {
     Configuration conf = new Configuration();
     setConf(conf);
@@ -111,7 +130,21 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
+  }
 
+  @Test
+  public void testTextFileWithSerdeHeader() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set("test.partfile.dir", partFileTextDir.toString());
+    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt");
+    // validate rows
+    Assert.assertEquals(readFinalOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
   @Test
@@ -129,4 +162,38 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
+  @Test
+  public void testTextFileWithZipFormatter() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set("test.partfile.dir", partFileTextDir.toString());
+    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+    // validate rows
+    List<String> actual = readZipOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
+    System.out.println("Actual rows:" + actual);
+    Assert.assertEquals(actual, getExpectedTextRowsWithMultiple());
+  }
+
+  @Test
+  public void testCSVWithZipFormatter() throws IOException {
+    Configuration conf = new Configuration();
+    setConf(conf);
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "");
+    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    testFormatter(conf, "UTF8",
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+    // validate rows
+    List<String> actual = readZipOutputFile(
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
+    System.out.println("Actual rows:" + actual);
+    Assert.assertEquals(actual, getExpectedCSVRowsWithMultiple());
+  }
 }

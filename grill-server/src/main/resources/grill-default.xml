@@ -249,8 +249,8 @@
 <property>
   <name>grill.query.output.header</name>
   <value></value>
-  <description>The value of custom header that should be written, if any. This
- header will be added in formatting driver persisted results.</description>
+  <description>The value of custom header that should be written, if any. If no
+ value column names will be used as header.</description>
 </property>
 
 <property>
@@ -265,6 +265,28 @@
   <value></value>
   <description>The value of custom footer that should be written, if any. This
  footer will be added in formatting driver persisted results.</description>
+</property>
+
+<property>
+  <name>grill.query.result.size.format.threshold</name>
+  <value>10737418240</value>
+  <description>The maximum allowed size of the query result. If exceeds, no
+ server side formatting would be done.</description>
+</property>
+
+<property>
+  <name>grill.query.result.split.multiple</name>
+  <value>false</value>
+  <description>Whether to split the result into multiple files. If enabled,
+ each file will be restricted to max rows configured. All the files will be
+ available as zip.</description>
+</property>
+
+<property>
+  <name>grill.query.result.split.multiple.maxrows</name>
+  <value>100000</value>
+  <description>The maximum number of rows allowed in each file, when splitting
+ the result into multiple files is enabled.</description>
 </property>
 
 </configuration>

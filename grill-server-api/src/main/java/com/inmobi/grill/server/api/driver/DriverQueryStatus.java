@@ -63,7 +63,7 @@ public class DriverQueryStatus implements Serializable {
       qstate = QueryStatus.Status.RUNNING;
       break;
     case SUCCESSFUL:
-      qstate = QueryStatus.Status.SUCCESSFUL;
+      qstate = QueryStatus.Status.EXECUTED;
       break;      
     case FAILED:
       qstate = QueryStatus.Status.FAILED;
@@ -77,6 +77,13 @@ public class DriverQueryStatus implements Serializable {
     }
     
     return new QueryStatus(progress, qstate, statusMessage, isResultSetAvailable, progressMessage, errorMessage);
+  }
+
+  public static QueryStatus createQueryStatus(QueryStatus.Status state,
+      DriverQueryStatus dstatus) {
+    return new QueryStatus(dstatus.progress, state, dstatus.statusMessage,
+        dstatus.isResultSetAvailable, dstatus.progressMessage,
+        dstatus.errorMessage);
   }
 
   @Override
