@@ -19,17 +19,9 @@
 ~~~
 Welcome to Grill!
 
-  Conventional columnar databases (RDBMS) systems lend themselves well for
-  interactive SQL queries over reasonably small datasets in the order of 10-100s of GB,
-  while hadoop based warehouses operate well over large datasets in the order of TBs and
-  PBs and scales fairly linearly. Though there have been some improvements recently in
-  storage structures in the Hadoop warehouses such as ORC, queries over hadoop still
-  typically adopts a full scan approach. Choosing between these different data stores
-  based on cost of storage, concurrency, scalability and performance is fairly complex
-  and not easy for most users. Grill, the new analytics platform for InMobi, a system
-  we have built at InMobi to precisely solve this problem. 
-
-	Grill aims to provide a unified interface to all analytics users within InMobi. At a high level the project provides these features - 
+  Grill provides an Unified Analytics interface. Grill aims to cut the Data Analytics silos by providing a single view of data across multiple tiered data stores and optimal execution environment for the analytical query. It seamlessly integrates Hadoop with traditional data warehouses to appear like one. 
+  
+  At a high level the project provides these features - 
 
   * Simple metadata layer which provides an abstract view over tiered data stores
 
