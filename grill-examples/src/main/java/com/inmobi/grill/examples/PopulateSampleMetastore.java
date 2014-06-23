@@ -113,6 +113,7 @@ public class PopulateSampleMetastore {
     try {
       DatabaseUtil.initalizeDatabaseStorage();
     } catch (Exception e) {
+      e.printStackTrace();
       System.out.println("Creating database storage failed for dim_table3");
     }
   }

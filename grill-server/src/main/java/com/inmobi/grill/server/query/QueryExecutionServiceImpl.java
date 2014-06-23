@@ -112,7 +112,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       "PrepareQueryPurger");
   private boolean stopped = false;
   private List<QueryAcceptor> queryAcceptors = new ArrayList<QueryAcceptor>();
-  private final List<GrillDriver> drivers = new ArrayList<GrillDriver>();
+  private final Map<String, GrillDriver> drivers = new HashMap<String, GrillDriver>();
   private DriverSelector driverSelector;
   private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
   private GrillEventService eventService;
@@ -142,7 +142,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           Class<?> clazz = Class.forName(driverClass);
           GrillDriver driver = (GrillDriver) clazz.newInstance();
           driver.configure(conf);
-          drivers.add(driver);
+          drivers.put(driverClass, driver);
         } catch (Exception e) {
           LOG.warn("Could not load the driver:" + driverClass, e);
           throw new GrillException("Could not load driver " + driverClass, e);
@@ -541,10 +541,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private void rewriteAndSelect(QueryContext ctx) throws GrillException {
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers, ctx.getConf());
+        ctx.getUserQuery(), drivers.values(), ctx.getConf());
 
     // 2. select driver to run the query
-    GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
+    GrillDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
 
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
@@ -552,10 +552,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private void rewriteAndSelect(PreparedQueryContext ctx) throws GrillException {
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-        ctx.getUserQuery(), drivers, ctx.getConf());
+        ctx.getUserQuery(), drivers.values(), ctx.getConf());
 
     // 2. select driver to run the query
-    GrillDriver driver = driverSelector.select(drivers, driverQueries, conf);
+    GrillDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
 
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
@@ -1029,9 +1029,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Configuration qconf = getGrillConf(sessionHandle, grillConf);
       accept(query, qconf, SubmitOp.EXPLAIN);
       Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-          query, drivers, qconf);
+          query, drivers.values(), qconf);
       // select driver to run the query
-      GrillDriver selectedDriver = driverSelector.select(drivers, driverQueries, conf);
+      GrillDriver selectedDriver = driverSelector.select(drivers.values(), driverQueries, conf);
       return selectedDriver.explain(driverQueries.get(selectedDriver), qconf).toQueryPlan();
     } catch (UnsupportedEncodingException e) {
       throw new GrillException(e);
@@ -1044,7 +1044,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     try {
       acquire(sessionHandle);
       String command = "add " + type.toLowerCase() + " " + path;
-      for (GrillDriver driver : drivers) {
+      for (GrillDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
           GrillConf conf = new GrillConf();
           conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -1064,7 +1064,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     try {
       acquire(sessionHandle);
       String command = "delete " + type.toLowerCase() + " " + path;
-      for (GrillDriver driver : drivers) {
+      for (GrillDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
           GrillConf conf = new GrillConf();
           conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -1084,27 +1084,26 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public void readExternal(ObjectInput in)
       throws IOException, ClassNotFoundException {
     super.readExternal(in);
-    Map<String, GrillDriver> driverMap = new HashMap<String, GrillDriver>();
-
     // Restore drivers
     synchronized (drivers) {
-      drivers.clear();
       int numDrivers = in.readInt();
       for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
-        GrillDriver driver;
-        try {
-          Class<? extends GrillDriver> driverCls = 
-              (Class<? extends GrillDriver>)Class.forName(driverClsName);
-          driver = (GrillDriver) driverCls.newInstance();
-          driver.configure(conf);
-        } catch (Exception e) {
-          LOG.error("Could not instantiate driver:" + driverClsName);
-          throw new IOException(e);
+        GrillDriver driver = drivers.get(driverClsName);
+        if (driver == null) { 
+          // this driver is removed in the current server restart
+          // we will create an instance and read its state still.
+          try {
+            Class<? extends GrillDriver> driverCls = 
+                (Class<? extends GrillDriver>)Class.forName(driverClsName);
+            driver = (GrillDriver) driverCls.newInstance();
+            driver.configure(conf);
+          } catch (Exception e) {
+            LOG.error("Could not instantiate driver:" + driverClsName);
+            throw new IOException(e);
+          }
         }
         driver.readExternal(in);
-        drivers.add(driver);
-        driverMap.put(driverClsName, driver);
       }
     }
 
@@ -1117,7 +1116,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         boolean driverAvailable = in.readBoolean();
         if (driverAvailable) {
           String clsName = in.readUTF();
-          ctx.setSelectedDriver(driverMap.get(clsName));
+          ctx.setSelectedDriver(drivers.get(clsName));
         }
         try {
           ctx.setConf(getGrillConf(null, ctx.getQconf()));
@@ -1157,7 +1156,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     // persist all drivers
     synchronized (drivers) {
       out.writeInt(drivers.size());
-      for (GrillDriver driver : drivers) {
+      for (GrillDriver driver : drivers.values()) {
         out.writeUTF(driver.getClass().getName());
         driver.writeExternal(out);
       }
