@@ -53,4 +53,9 @@
   <value>target/persist-dir</value>
 </property>
 
+<property>
+  <name>grill.result.parent.dir</name>
+  <value>target/grill-results</value>
+</property>
+
 </configuration>

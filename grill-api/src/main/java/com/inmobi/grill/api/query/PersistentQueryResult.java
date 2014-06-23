@@ -34,4 +34,6 @@ import lombok.NoArgsConstructor;
 public class PersistentQueryResult extends QueryResult {
 
   @XmlElement @Getter private String persistedURI;
+
+  @XmlElement @Getter private int numRows;
 }

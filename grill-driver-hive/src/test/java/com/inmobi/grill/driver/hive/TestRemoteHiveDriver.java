@@ -115,10 +115,10 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     driver = new HiveDriver();
     driver.configure(conf);
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
@@ -219,7 +219,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     oldDriver.configure(driverConf);
 
     driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
-    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
@@ -237,7 +237,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     oldDriver.execute(ctx);
 
     driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
-    driverConf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     // Fire two queries
     QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
     oldDriver.executeAsync(ctx1);
@@ -268,10 +268,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     Assert.assertEquals(2, newDriver.getHiveHandleSize());
     
-    validateExecuteAsync(ctx1, DriverQueryState.SUCCESSFUL, true,
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false, newDriver);
-    validateExecuteAsync(ctx2, DriverQueryState.SUCCESSFUL, true,
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, false, newDriver);
+    validateExecuteAsync(ctx1, DriverQueryState.SUCCESSFUL, true, false, newDriver);
+    validateExecuteAsync(ctx2, DriverQueryState.SUCCESSFUL, true, false, newDriver);
   }
 
   private byte[] persistContext(QueryContext ctx) throws IOException {
@@ -299,6 +297,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     QueryContext ctx;
     try {
       ctx = (QueryContext)in.readObject();
+      ctx.setConf(driver.getConf());
       boolean driverAvailable = in.readBoolean();
       if (driverAvailable) {
         String clsName = in.readUTF();
@@ -313,7 +312,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
   private void createPartitionedTable(String tableName, int partitions) throws Exception {
     conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, false);
+    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
 
     QueryContext ctx =
         new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS "

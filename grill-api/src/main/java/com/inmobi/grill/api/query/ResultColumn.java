@@ -37,7 +37,7 @@ public class ResultColumn {
   @XmlElement @Getter private ResultColumnType type;
 
   public ResultColumn(String name, String type) {
-    this(name, ResultColumnType.valueOf(type));
+    this(name, ResultColumnType.valueOf(type.toUpperCase()));
   }
 
   @Override

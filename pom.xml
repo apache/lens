@@ -174,7 +174,7 @@
                <version>2.15</version>
                <configuration>
                     <failIfNoTests>false</failIfNoTests>
-                    <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
                </configuration>
            </plugin>
          <plugin>
@@ -465,6 +465,12 @@
         <version>${hive.version}</version>
         <scope>provided</scope>
       </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-serde</artifactId>
+        <version>${hive.version}</version>
+        <scope>provided</scope>
+      </dependency>
        <dependency>
            <groupId>org.apache.hive</groupId>
            <artifactId>hive-shims</artifactId>
@@ -693,6 +699,7 @@
     <module>grill-driver-hive</module>
     <module>grill-driver-impala</module>
     <module>grill-driver-jdbc</module>
+    <module>grill-query-lib</module>
     <module>grill-server</module>
     <module>grill-client</module>
     <module>grill-cli</module>

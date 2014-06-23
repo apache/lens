@@ -107,7 +107,14 @@ Grill User Guide
 
 ** Getting query results
 	
-	A query can be run once, but its results can be fetched any number of times until its purged from server memory. Results can be obtained by sending a GET to <<</queryapi/queries/{queryhandle}/resultset>>>. This endpoint takes optional <<<fromindex>>> and <<<fetchsize>>> parameters which can be used for pagination of results.
+	A query can be run once, but its results can be fetched any number of times, 
+	if the results are persisted, until its purged from server memory. Results
+	can be obtained by sending a GET to <<</queryapi/queries/{queryhandle}/resultset>>>.
+	This endpoint takes optional <<<fromindex>>> and <<<fetchsize>>> parameters
+	which can be used for pagination of results.
+
+	Various query result formatting and fetching options
+	are described in {{{./query-results.html} query result doc}}.
 
 ** Life of a Query in the Grill Server
 

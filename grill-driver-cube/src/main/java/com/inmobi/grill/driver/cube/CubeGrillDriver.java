@@ -40,6 +40,7 @@ import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus;
 import com.inmobi.grill.server.api.driver.DriverSelector;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
@@ -175,7 +176,12 @@ public class CubeGrillDriver implements GrillDriver {
 
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
     updateStatus(getContext(handle));
-    return getContext(handle).getDriverStatus().toQueryStatus();
+    QueryStatus status = getContext(handle).getDriverStatus().toQueryStatus();
+    if (status.getStatus().equals(QueryStatus.Status.EXECUTED)) {
+      return DriverQueryStatus.createQueryStatus(QueryStatus.Status.SUCCESSFUL,
+          getContext(handle).getDriverStatus());
+    }
+    return status;
   }
 
   public void updateStatus(QueryContext context) throws GrillException {
