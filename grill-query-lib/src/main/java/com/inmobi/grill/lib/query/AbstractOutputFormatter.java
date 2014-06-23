@@ -45,6 +45,13 @@ import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryOutputFormatter;
 
+/**
+ * Provides abstract implementation of the query output formatter.
+ *
+ * In this it initializes column names, types column object inspectors
+ * Also provides methods to construct header from serde
+ * 
+ */
 public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
 
   public static final String HEADER_TYPE = "string";
@@ -115,7 +122,6 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
       }
       headerSerde.initialize(ctx.getConf(), hprops);
 
-      Map<ObjectInspector, Boolean> oiSettableProperties = new HashMap<ObjectInspector, Boolean>();
       ObjectInspector inputHeaderOI = ObjectInspectorFactory.getStandardStructObjectInspector(
           columnNames, columnHeaderOIs);
       Map<ObjectInspector, Boolean> hoiSettableProperties = new HashMap<ObjectInspector, Boolean>();

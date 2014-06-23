@@ -38,6 +38,11 @@ import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.PersistedOutputFormatter;
 import com.inmobi.grill.server.api.query.QueryContext;
 
+/**
+ * File formatter for {@link PersistedOutputFormatter}
+ * 
+ * This is a {@link WrappedFileFormatter} which can wrap any {@link FileFormatter}
+ */
 public class FilePersistentFormatter extends WrappedFileFormatter
     implements PersistedOutputFormatter {
 

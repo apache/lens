@@ -144,6 +144,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       } catch (ClassNotFoundException e) {
         throw new GrillException(e);
       }
+      LOG.info("Created result formatter:" + formatter.getClass().getCanonicalName());
       ctx.setQueryOutputFormatter(formatter);
     }
   }

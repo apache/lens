@@ -29,6 +29,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+/**
+ * Zip file formatter.
+ * 
+ * Creates a zip on hadoop compatible file system, with ability to split output
+ * across multiple part files and provide a final zip output file.
+ * 
+ */
 public class ZipFileFormatter extends AbstractFileFormatter {
   public static String PART_SUFFIX = "_part-";
   private Path tmpPath;

@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -43,6 +44,14 @@ import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.InMemoryOutputFormatter;
 import com.inmobi.grill.server.api.query.QueryContext;
 
+/**
+ * File format which provides implementation for {@link InMemoryOutputFormatter}
+ * 
+ * This is a wrapped formatter, which serializes the rows of the result with
+ * configured serde. It would only accept the Serde's whose serialization
+ * class is {@link Text}
+ *
+ */
 @SuppressWarnings("deprecation")
 public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {  
   private SerDe outputSerde;

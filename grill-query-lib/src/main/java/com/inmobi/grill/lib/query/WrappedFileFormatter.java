@@ -22,7 +22,7 @@ package com.inmobi.grill.lib.query;
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
@@ -30,6 +30,11 @@ import org.apache.hadoop.fs.Path;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.QueryContext;
 
+/**
+ * Wraps the formatter {@link FileFormatter}, which can have implementations
+ * like {@link HadoopFileFormatter} or {@link ZipFileFormatter}
+ *
+ */
 public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
 
   private AbstractFileFormatter formatter;

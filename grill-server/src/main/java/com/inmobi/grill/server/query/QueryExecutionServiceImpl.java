@@ -41,8 +41,6 @@ import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
-import com.inmobi.grill.server.api.query.InMemoryOutputFormatter;
-import com.inmobi.grill.server.api.query.PersistedOutputFormatter;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryAccepted;
 import com.inmobi.grill.server.api.query.QueryAcceptor;
@@ -53,7 +51,6 @@ import com.inmobi.grill.server.api.query.QueryExecuted;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 import com.inmobi.grill.server.api.query.QueryFailed;
 import com.inmobi.grill.server.api.query.QueryLaunched;
-import com.inmobi.grill.server.api.query.QueryOutputFormatter;
 import com.inmobi.grill.server.api.query.QueryQueued;
 import com.inmobi.grill.server.api.query.QueryRejected;
 import com.inmobi.grill.server.api.query.QueryRunning;
@@ -65,7 +62,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hive.service.cli.CLIService;
 
 import com.inmobi.grill.api.GrillConf;
@@ -398,7 +394,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private StatusChange newStatusChangeEvent(QueryContext ctx, QueryStatus.Status prevState,
       QueryStatus.Status currState) {
     QueryHandle query = ctx.getQueryHandle();
-    // TODO Get event time from status
     switch (currState) {
     case CANCELED:
       return new QueryCancelled(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
@@ -895,8 +890,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       GrillResultSet resultSet = getResultset(queryHandle);
       if (resultSet != null) {
-        LOG.info("GetResultSetMetadata: the resultset;" + resultSet);
-        LOG.info("GetResultSetMetadata: the metadata;" + resultSet.getMetadata());
         return resultSet.getMetadata().toQueryResultSetMetadata();
       } else {
         throw new NotFoundException("Resultset metadata not found for query: ("

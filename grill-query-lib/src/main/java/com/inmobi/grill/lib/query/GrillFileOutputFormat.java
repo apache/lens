@@ -41,6 +41,11 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
 
+/**
+ * File output format which would write Text values in the charset enconding 
+ * passed.
+ *
+ */
 public class GrillFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
 
   public static final String UTF8 = "UTF-8";

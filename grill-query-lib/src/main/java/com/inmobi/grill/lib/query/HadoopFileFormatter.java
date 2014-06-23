@@ -30,6 +30,13 @@ import org.apache.hadoop.mapred.Reporter;
 
 import com.inmobi.grill.lib.query.GrillFileOutputFormat.GrillRowWriter;
 
+/**
+ * A hadoop file formatter
+ * 
+ * This has capability to create output on Hadoop compatible files systems, with
+ * hadoop supported compression codecs.
+ * 
+ */
 public class HadoopFileFormatter extends AbstractFileFormatter {
 
   private Path outputPath;

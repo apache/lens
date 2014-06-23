@@ -32,12 +32,6 @@
       <artifactId>hive-serde</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.hive.hcatalog</groupId>
-      <artifactId>hive-hcatalog-core</artifactId>
-      <scope>test</scope>
-      <version>${hive.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.testng</groupId>
       <artifactId>testng</artifactId>
     </dependency>
@@ -45,14 +39,6 @@
       <groupId>net.sf.opencsv</groupId>
       <artifactId>opencsv</artifactId>
       <version>2.3</version>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-testng</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
     </dependency>
   </dependencies>
 </project>    
