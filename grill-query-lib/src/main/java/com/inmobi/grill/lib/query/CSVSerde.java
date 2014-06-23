@@ -21,6 +21,7 @@ package com.inmobi.grill.lib.query;
  */
 
 import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
 
 import java.io.CharArrayReader;
 import java.io.IOException;
@@ -29,7 +30,9 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
@@ -37,11 +40,16 @@ import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector.PrimitiveCategory;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
@@ -60,27 +68,43 @@ public final class CSVSerde extends AbstractSerDe {
   private ObjectInspector inspector;
   private String[] outputFields;
   private int numCols;
-  private List<String> row;
+  private List<Object> row;
+  List<TypeInfo> columnTypes;
   
   private char separatorChar;
   private char quoteChar;
   private char escapeChar;
   private String nullString;
-
+  private List<Converter> converters = new ArrayList<Converter>();
+  private ObjectInspector inputColumnOI;
+  
   @Override
   public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
     final List<String> columnNames = Arrays.asList(tbl.getProperty(LIST_COLUMNS).split(","));    
+    String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
+    columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
+        columnTypeProperty);
     numCols = columnNames.size();
+    // input OI for deserialize
+    inputColumnOI = PrimitiveObjectInspectorFactory.getPrimitiveJavaObjectInspector(PrimitiveCategory.STRING);
     
-    final List<ObjectInspector> columnOIs = new ArrayList<ObjectInspector>(numCols);
-    
-    for (int i=0; i< numCols; i++) {
-      columnOIs.add(PrimitiveObjectInspectorFactory.javaStringObjectInspector);
+    List<ObjectInspector> columnObjectInspectors = 
+        new ArrayList<ObjectInspector>(numCols);
+    ObjectInspector colObjectInspector;
+    for (int col = 0; col < numCols; col++) {
+      colObjectInspector = TypeInfoUtils
+          .getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(col));
+      columnObjectInspectors.add(colObjectInspector);
+      Map<ObjectInspector, Boolean> oiSettableProperties = new HashMap<ObjectInspector, Boolean>();
+      ObjectInspector convertedOI = ObjectInspectorConverters.getConvertedOI(inputColumnOI,
+          colObjectInspector, oiSettableProperties);
+      converters.add(ObjectInspectorConverters.getConverter(inputColumnOI, convertedOI));
     }
-    
-    this.inspector = ObjectInspectorFactory.getStandardStructObjectInspector(columnNames, columnOIs);
+
+    this.inspector = ObjectInspectorFactory.getStandardStructObjectInspector(
+        columnNames, columnObjectInspectors);
     this.outputFields = new String[numCols];
-    row = new ArrayList<String>(numCols);
+    row = new ArrayList<Object>(numCols);
     
     for (int i=0; i< numCols; i++) {
       row.add(null);
@@ -115,16 +139,16 @@ public final class CSVSerde extends AbstractSerDe {
     // Get all data out.
     for (int c = 0; c < numCols; c++) {
       final Object field = outputRowOI.getStructFieldData(obj, outputFieldRefs.get(c));
-      final ObjectInspector fieldOI = outputFieldRefs.get(c).getFieldObjectInspector();
-      
-      // The data must be of type String
-      final StringObjectInspector fieldStringOI = (StringObjectInspector) fieldOI;
-      
-      // Convert the field to Java class String, because objects of String type
-      // can be stored in String, Text, or some other classes.
-      outputFields[c] = fieldStringOI.getPrimitiveJavaObject(field);
+      // Get the field objectInspector and the field object.
+      ObjectInspector fieldOI = outputFieldRefs.get(c).getFieldObjectInspector();
+
       if (field == null) {
         outputFields[c] = nullString;
+      } else if (fieldOI instanceof StringObjectInspector) {
+        final StringObjectInspector fieldStringOI = (StringObjectInspector) fieldOI;
+        outputFields[c] = fieldStringOI.getPrimitiveJavaObject(field);
+      } else {
+        outputFields[c] = field.toString();
       }
     }
     
@@ -150,15 +174,15 @@ public final class CSVSerde extends AbstractSerDe {
       csv = newReader(new CharArrayReader(rowText.toString().toCharArray()),
           separatorChar, quoteChar, escapeChar);
       final String[] read = csv.readNext();
-      
+
       for (int i=0; i< numCols; i++) {
-        if (read != null && i < read.length) {
-          row.set(i, read[i]);
+        if (read != null && i < read.length && !read[i].equals(nullString)) {
+          row.set(i, converters.get(i).convert(read[i]));
         } else {
           row.set(i, null);
         }
       }
-      
+
       return row;
     } catch (final Exception e) {
       throw new SerDeException(e);
@@ -172,7 +196,7 @@ public final class CSVSerde extends AbstractSerDe {
       }
     }
   }
-  
+
   private CSVReader newReader(final Reader reader, char separator, char quote, char escape) {
     // CSVReader will throw an exception if any of separator, quote, or escape is the same, but
     // the CSV format specifies that the escape character and quote char are the same... very weird
