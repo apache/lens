@@ -143,6 +143,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           GrillDriver driver = (GrillDriver) clazz.newInstance();
           driver.configure(conf);
           drivers.put(driverClass, driver);
+          LOG.info("Driver for " + driverClass + " is loaded");
         } catch (Exception e) {
           LOG.warn("Could not load the driver:" + driverClass, e);
           throw new GrillException("Could not load driver " + driverClass, e);
@@ -1102,6 +1103,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             LOG.error("Could not instantiate driver:" + driverClsName);
             throw new IOException(e);
           }
+          LOG.info("Driver state for " + driverClsName + " will be ignored");
         }
         driver.readExternal(in);
       }
