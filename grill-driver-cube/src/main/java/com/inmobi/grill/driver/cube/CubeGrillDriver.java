@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -103,7 +104,7 @@ public class CubeGrillDriver implements GrillDriver {
      * Returns the driver that has the minimum query cost.
      */
     @Override
-    public GrillDriver select(List<GrillDriver> drivers,
+    public GrillDriver select(Collection<GrillDriver> drivers,
         final Map<GrillDriver, String> driverQueries, final Configuration conf) {
       return Collections.min(drivers, new Comparator<GrillDriver>() {
         @Override
