@@ -1,6 +1,7 @@
-package com.inmobi.grill.server;
+package com.inmobi.grill.server.session;
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -37,8 +38,13 @@ public class TestGrillService {
         grillService.openSession("test", "test", new HashMap<String, String>());
       GrillSessionImpl session = grillService.getSession(sessionHandle);
       assertTrue(session.isActive());
-      Thread.sleep(3000);
+      session.setLastAccessTime(session.getLastAccessTime()
+        - 2000 * conf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
+                              GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
+
+      // run the expiry thread
+      grillService.getSessionExpiryRunnable().run();
       try {
         grillService.getSession(sessionHandle);
         // should throw exception since session should be expired by now
