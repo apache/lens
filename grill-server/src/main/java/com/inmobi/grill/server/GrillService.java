@@ -24,10 +24,11 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.NotFoundException;
 
@@ -53,6 +54,7 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
 public abstract class GrillService extends CompositeService implements Externalizable {
   public static final Log LOG = LogFactory.getLog(GrillService.class);
   private final CLIService cliService;
+  private ScheduledExecutorService sessionExpiryThread;
 
   //Static session map which is used by query submission thread to get the
   //grill session before submitting a query to hive server
@@ -228,4 +230,55 @@ public abstract class GrillService extends CompositeService implements Externali
     }*/
   }
 
+  @Override
+  public synchronized void start() {
+    super.start();
+    sessionExpiryThread = Executors.newSingleThreadScheduledExecutor();
+    sessionExpiryThread.scheduleWithFixedDelay(new SessionExpiryRunnable(), 1, 1, TimeUnit.SECONDS);
+  }
+
+  @Override
+  public synchronized void stop() {
+    super.stop();
+    sessionExpiryThread.shutdownNow();
+  }
+
+  public class SessionExpiryRunnable implements Runnable {
+    public void runInternal() {
+      List<GrillSessionHandle> sessionsToRemove = new ArrayList<GrillSessionHandle>(sessionMap.values());
+      Iterator<GrillSessionHandle> itr = sessionsToRemove.iterator();
+      while (itr.hasNext()) {
+        GrillSessionHandle sessionHandle = itr.next();
+        try {
+          GrillSessionImpl session = getSession(sessionHandle);
+          if (session.isActive()) {
+            itr.remove();
+          }
+        } catch (GrillException e) {
+          itr.remove();
+        }
+      }
+
+      // Now close all inactive sessions
+      for (GrillSessionHandle sessionHandle : sessionsToRemove) {
+        try {
+          long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
+          closeSession(sessionHandle);
+          LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
+            + new Date(lastAccessTime));
+        } catch (GrillException e) {
+          LOG.error("Error closing session " + sessionHandle.getPublicId(), e);
+        }
+      }
+    }
+
+    @Override
+    public void run() {
+      try {
+        runInternal();
+      } catch (Exception e) {
+        LOG.warn("Unknown error while checking for inactive sessions", e);
+      }
+    }
+  }
 }

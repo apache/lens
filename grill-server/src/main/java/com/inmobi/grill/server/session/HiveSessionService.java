@@ -154,6 +154,7 @@ public class HiveSessionService extends GrillService {
         GrillSessionHandle sessionHandle = persistInfo.getSessionHandle();
         restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword());
         GrillSessionImpl session = getSession(sessionHandle);
+        session.setLastAccessTime(persistInfo.getLastAccessTime());
         session.getGrillSessionPersistInfo().setConfig(persistInfo.getConfig());
         session.getGrillSessionPersistInfo().setResources(persistInfo.getResources());
         session.setCurrentDatabase(persistInfo.getDatabase());

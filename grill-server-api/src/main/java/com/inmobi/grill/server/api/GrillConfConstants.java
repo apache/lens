@@ -47,6 +47,8 @@ public class GrillConfConstants {
   public static final String DEFAULT_GRILL_SERVER_PERSIST_LOCATION = "file:///tmp/grillserver";
   public static final String GRILL_SERVER_RECOVER_ON_RESTART = "grill.server.recover.onrestart";
   public static final boolean DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART = true;
+  public static final String GRILL_SESSION_TIMEOUT_SECONDS = "grill.server.session.timeout.seconds";
+  public static final long GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT = 1440 * 60; // Default is one day
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;

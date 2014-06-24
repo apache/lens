@@ -26,10 +26,10 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
 
-import javax.annotation.Resource;
 import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,7 +46,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   public static final Log LOG = LogFactory.getLog(GrillSessionImpl.class);
   private CubeMetastoreClient cubeClient;
   private GrillSessionPersistInfo persistInfo = new GrillSessionPersistInfo();
-
+  private long lastAccessTime = System.currentTimeMillis();
 
   private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
     persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
@@ -91,7 +91,15 @@ public class GrillSessionImpl extends HiveSessionImpl {
   }
 
   public synchronized void release() {
+    lastAccessTime = System.currentTimeMillis();
     super.release();
+  }
+
+  public boolean isActive() {
+    long inactiveAge = System.currentTimeMillis() - lastAccessTime;
+    long sessionTimeout = 1000 * getHiveConf().getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
+      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
+    return inactiveAge < sessionTimeout;
   }
 
   public void setConfig(String key, String value) {
@@ -138,6 +146,14 @@ public class GrillSessionImpl extends HiveSessionImpl {
     return persistInfo;
   }
 
+  void setLastAccessTime(long lastAccessTime) {
+    this.lastAccessTime = lastAccessTime;
+  }
+
+  public long getLastAccessTime() {
+    return lastAccessTime;
+  }
+
   public static class ResourceEntry {
     final String type;
     final String location;
@@ -171,6 +187,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
     private String database;
     private String username;
     private String password;
+    private long lastAccessTime;
 
     public String getUsername() {
       return username;
@@ -220,6 +237,14 @@ public class GrillSessionImpl extends HiveSessionImpl {
       this.password = password;
     }
 
+    public void setLastAccessTime(long accessTime) {
+      lastAccessTime = accessTime;
+    }
+
+    public long getLastAccessTime() {
+      return lastAccessTime;
+    }
+
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
       out.writeUTF(sessionHandle.toString());
@@ -238,6 +263,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
         out.writeUTF(key);
         out.writeUTF(config.get(key));
       }
+      out.writeLong(lastAccessTime);
     }
 
     @Override
@@ -262,6 +288,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
         String val = in.readUTF();
         config.put(key, val);
       }
+      lastAccessTime = in.readLong();
     }
   }
 }
