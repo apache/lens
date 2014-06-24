@@ -30,7 +30,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.Session;
 import javax.ws.rs.NotFoundException;
 
 import org.apache.commons.logging.Log;
@@ -48,7 +47,6 @@ import org.apache.hive.service.cli.session.SessionManager;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 
