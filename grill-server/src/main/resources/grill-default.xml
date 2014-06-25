@@ -289,4 +289,13 @@
  the result into multiple files is enabled.</description>
 </property>
 
+<property>
+    <name>grill.server.session.timeout.seconds</name>
+    <value>86400</value>
+    <description>Grill session timeout in seconds.
+        If there is no activity on the session for this period then the session will be closed.
+        Default timeout is one day.
+    </description>
+</property>
+
 </configuration>
