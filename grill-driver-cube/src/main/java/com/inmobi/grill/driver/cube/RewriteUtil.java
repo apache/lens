@@ -172,8 +172,10 @@ public class RewriteUtil {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
-      Throwable cause = null;
       Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
+      StringBuilder rewriteFailure = new StringBuilder();
+      String failureCause = null;
+      boolean useBuilder = false;
       if (lowerCaseQuery.startsWith("add") ||
           lowerCaseQuery.startsWith("set")) {
         for (GrillDriver driver : drivers) {
@@ -203,16 +205,24 @@ public class RewriteUtil {
           } catch (SemanticException e) {
             CubeGrillDriver.LOG.warn("Driver : " + driver.getClass().getName() +
                 " Skipped for the query rewriting due to " + e.getMessage());
-            cause = e;
+            rewriteFailure.append(" Driver :").append(driver.getClass().getName());
+            rewriteFailure.append(" Cause :" + e.getLocalizedMessage());
+            if (failureCause != null && !failureCause.equals(e.getLocalizedMessage())) {
+              useBuilder = true;
+            }
+            if (failureCause == null) {
+              failureCause = e.getLocalizedMessage();
+            }
           }
         }
       }
       if (driverQueries.isEmpty()) {
-        throw new GrillException("No driver accepted the query, because " + cause.getMessage(), cause);
+        throw new GrillException("No driver accepted the query, because " +
+            (useBuilder ? rewriteFailure.toString() : failureCause));
       }
       return driverQueries;
     } catch (Exception e) {
-      throw new GrillException("Rewriting failed", e);
+      throw new GrillException("Rewriting failed, cause :" + e.getMessage(), e);
     }
   }
 
