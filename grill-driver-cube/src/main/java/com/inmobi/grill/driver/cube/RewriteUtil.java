@@ -208,7 +208,7 @@ public class RewriteUtil {
         }
       }
       if (driverQueries.isEmpty()) {
-        throw new GrillException("No driver accepted the query, because" + cause.getMessage(), cause);
+        throw new GrillException("No driver accepted the query, because " + cause.getMessage(), cause);
       }
       return driverQueries;
     } catch (Exception e) {
