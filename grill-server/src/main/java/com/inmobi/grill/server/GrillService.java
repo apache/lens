@@ -20,18 +20,10 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import javax.ws.rs.NotFoundException;
-
+import com.inmobi.grill.api.GrillConf;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -43,12 +35,16 @@ import org.apache.hive.service.cli.HandleIdentifier;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
-
-import com.inmobi.grill.api.GrillConf;
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.server.session.GrillSessionImpl;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
+
+import javax.ws.rs.NotFoundException;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class GrillService extends CompositeService implements Externalizable {
   public static final Log LOG = LogFactory.getLog(GrillService.class);
