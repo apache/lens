@@ -45,8 +45,8 @@ public class DatabaseUtil {
     InputStream file = DatabaseUtil.class.getClassLoader().getResourceAsStream("db-storage-schema.sql");
     BufferedReader reader = new BufferedReader(new InputStreamReader(file));
     String line;
-    while((line = reader.readLine()) != null) {
-      if(line.trim().equals("")){
+    while ((line = reader.readLine()) != null) {
+      if (line.trim().equals("") || line.startsWith("--")) {
         continue;
       }
       statement.executeUpdate(line);

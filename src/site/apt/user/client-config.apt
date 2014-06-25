@@ -32,18 +32,14 @@ Grill client configuration
 *--+--+---+--+
 |4|grill.metastore.resource.path|metastore|resource path to query webservice|
 *--+--+---+--+
-|5|grill.persistent.resultset|false|Whether to enable persistent resultset for queries|
+|5|grill.port|9999|Default Grill server port|
 *--+--+---+--+
-|6|grill.port|9999|Default Grill server port|
+|6|grill.query.resource.path|queryapi|resource path to query webservice|
 *--+--+---+--+
-|7|grill.query.resource.path|queryapi|resource path to query webservice|
+|7|grill.session.resource.path|session|resource path to session webservice|
 *--+--+---+--+
-|8|grill.session.resource.path|session|resource path to session webservice|
+|8|grill.user.name|anonymous|Grill client user name|
 *--+--+---+--+
-|9|grill.user.name|anonymous|Grill client user name|
-*--+--+---+--+
-|10|grill.user.password| |Grill client user password|
-*--+--+---+--+
-|11|hive.cube.disable.auto.join|false|Enable automatic join resolution from grill client|
+|9|grill.user.password| |Grill client user password|
 *--+--+---+--+
 The configuration parameters and their default values

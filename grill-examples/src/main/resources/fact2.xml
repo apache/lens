@@ -24,8 +24,7 @@
   xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
   <columns>
     <columns comment="" name="dim1" type="int"/>
-    <columns comment="" name="dim2" type="int"/>
-    <columns comment="" name="measure1" type="bigint"/>
+    <columns comment="" name="dim3" type="int"/>
     <columns comment="" name="measure2" type="int"/>
     <columns comment="" name="measure3" type="float"/>
     <columns comment="" name="measure4" type="float"/>

@@ -26,7 +26,7 @@
     <measures name="measure2" type="int" default_aggr="SUM"/>
     <measures name="measure3" type="float" default_aggr="MAX" start_time='2013-12-12-00:00'/>
     <measures name="measure4" type="double" default_aggr="MIN"/>
-    <measures name="expr_msr5" type="double" expr="measure1 + measure2" />
+    <measures name="expr_msr5" type="double" expr="measure3 + measure4" />
   </measures>
   <dimensions>
     <dimensions name="dim1" type="int"/>
@@ -38,6 +38,7 @@
     </dimensions>
   </dimensions>
   <properties>
-  <property name="sample_cube.prop" value="sample" />
+  <properties name="sample_cube.prop" value="sample" />
+  <properties name="cube.sample_cube.timed.dimensions.list" value="dt" />
   </properties>
 </x_cube>

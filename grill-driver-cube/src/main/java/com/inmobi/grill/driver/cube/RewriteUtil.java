@@ -172,6 +172,7 @@ public class RewriteUtil {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
+      Throwable cause = null;
       Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
       if (lowerCaseQuery.startsWith("add") ||
           lowerCaseQuery.startsWith("set")) {
@@ -202,8 +203,12 @@ public class RewriteUtil {
           } catch (SemanticException e) {
             CubeGrillDriver.LOG.warn("Driver : " + driver.getClass().getName() +
                 " Skipped for the query rewriting due to " + e.getMessage());
+            cause = e;
           }
         }
+      }
+      if (driverQueries.isEmpty()) {
+        throw new GrillException("No driver accepted the query, because" + cause.getMessage(), cause);
       }
       return driverQueries;
     } catch (Exception e) {

@@ -163,7 +163,7 @@ public class SampleMetastore {
     fact = (FactTable)readFromXML("fact2.xml");
     storageTables = (XStorageTables)readFromXML("fact2-storage-tables.xml");
     if (fact != null && storageTables != null) {
-      result = metaClient.createFactTable(fact, new XStorageTables());
+      result = metaClient.createFactTable(fact, storageTables);
       if (result.getStatus().equals(APIResult.Status.FAILED)) {
         System.out.println("Creating fact table from: fact2.xml and fact2-storage-tables.xml failed");
         retCode = 1;
@@ -172,7 +172,7 @@ public class SampleMetastore {
     fact = (FactTable)readFromXML("rawfact.xml");
     storageTables = (XStorageTables)readFromXML("rawfact-storage-tables.xml");
     if (fact != null && storageTables != null) {
-      result = metaClient.createFactTable(fact, new XStorageTables());
+      result = metaClient.createFactTable(fact, storageTables);
       if (result.getStatus().equals(APIResult.Status.FAILED)) {
         System.out.println("Creating fact table from: rawfact.xml and rawfact-storage-tables.xml failed");
         retCode = 1;

@@ -123,6 +123,110 @@
 
     <fileSet>
       <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/dim4_local</outputDirectory>
+      <includes>
+        <include>dim4-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact1_local1</outputDirectory>
+      <includes>
+        <include>fact1-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact1_local2</outputDirectory>
+      <includes>
+        <include>fact1-local2*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact1_local3</outputDirectory>
+      <includes>
+        <include>fact1-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact2_local1</outputDirectory>
+      <includes>
+        <include>fact2-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact2_local2</outputDirectory>
+      <includes>
+        <include>fact2-local2*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/fact2_local3</outputDirectory>
+      <includes>
+        <include>fact2-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local1</outputDirectory>
+      <includes>
+        <include>raw-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local2</outputDirectory>
+      <includes>
+        <include>raw-local2*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local3</outputDirectory>
+      <includes>
+        <include>raw-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local4</outputDirectory>
+      <includes>
+        <include>raw-local4*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local5</outputDirectory>
+      <includes>
+        <include>raw-local5*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
+      <outputDirectory>/examples/data/raw_local6</outputDirectory>
+      <includes>
+        <include>raw-local6*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../grill-examples/src/main/resources/</directory>
       <outputDirectory>/examples/queries</outputDirectory>
       <includes>
         <include>*.txt</include>

@@ -69,14 +69,4 @@
     <value></value>
     <description>Grill client user password</description>
   </property>
-  <property>
-    <name>grill.persistent.resultset</name>
-    <value>false</value>
-    <description>Whether to enable persistent resultset for queries</description>
-  </property>
-  <property>
-    <name>hive.cube.disable.auto.join</name>
-    <value>false</value>
-    <description>Enable automatic join resolution from grill client</description>
-  </property>
 </configuration>

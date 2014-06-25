@@ -733,7 +733,7 @@ public class HiveDriver implements GrillDriver {
 
   protected void checkInvalidOperation(QueryHandle queryHandle, HiveSQLException exc) {
     final OperationHandle operation = hiveHandles.get(queryHandle);
-    if (exc.getMessage().contains("Invalid OperationHandle:")
+    if (exc.getMessage() != null && exc.getMessage().contains("Invalid OperationHandle:")
       && exc.getMessage().contains(operation.toString())) {
       LOG.info("Hive operation " + operation + " for query " + queryHandle + " has become invalid");
       hiveHandles.remove(queryHandle);
