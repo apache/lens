@@ -96,8 +96,10 @@ Grill server configuration
 *--+--+---+--+
 |36|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|37|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|37|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.        If there is no activity on the session for this period then the session will be closed.        Default timeout is one day.    |
 *--+--+---+--+
-|38|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|38|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+*--+--+---+--+
+|39|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The configuration parameters and their default values

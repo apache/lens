@@ -47,18 +47,22 @@ public class GrillSessionImpl extends HiveSessionImpl {
   private CubeMetastoreClient cubeClient;
   private GrillSessionPersistInfo persistInfo = new GrillSessionPersistInfo();
   private long lastAccessTime = System.currentTimeMillis();
+  private long sessionTimeout;
 
   private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
     persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
       sessionHandle.getHandleIdentifier().getSecretId()));
     persistInfo.setUsername(username);
     persistInfo.setPassword(password);
+    persistInfo.setLastAccessTime(lastAccessTime);
   }
 
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password);
+    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
+      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
   }
 
   /**
@@ -68,6 +72,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
                           HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password);
+    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
+      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
   }
 
 
@@ -97,8 +103,6 @@ public class GrillSessionImpl extends HiveSessionImpl {
 
   public boolean isActive() {
     long inactiveAge = System.currentTimeMillis() - lastAccessTime;
-    long sessionTimeout = 1000 * getHiveConf().getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
-      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
     return inactiveAge < sessionTimeout;
   }
 

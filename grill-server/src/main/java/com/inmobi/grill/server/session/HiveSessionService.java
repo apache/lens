@@ -30,16 +30,22 @@ import org.apache.hive.service.cli.*;
 import org.apache.hive.service.cli.thrift.THandleIdentifier;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 
+import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class HiveSessionService extends GrillService {
   public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
   public static final String NAME = "session";
   private List<GrillSessionImpl.GrillSessionPersistInfo> restorableSessions;
+  private ScheduledExecutorService sessionExpiryThread;
+  private Runnable sessionExpiryRunnable = new SessionExpiryRunnable();
 
   public HiveSessionService(CLIService cliService) {
     super(NAME, cliService);
@@ -143,6 +149,9 @@ public class HiveSessionService extends GrillService {
   public synchronized void start() {
     super.start();
 
+    sessionExpiryThread = Executors.newSingleThreadScheduledExecutor();
+    sessionExpiryThread.scheduleWithFixedDelay(sessionExpiryRunnable, 60, 60, TimeUnit.MINUTES);
+
     // Restore sessions if any
     if (restorableSessions == null || restorableSessions.size() <= 0) {
       LOG.info("No sessions to restore");
@@ -185,6 +194,12 @@ public class HiveSessionService extends GrillService {
   }
 
   @Override
+  public synchronized void stop() {
+    super.stop();
+    sessionExpiryThread.shutdownNow();
+  }
+
+  @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // Write out all the sessions
     out.writeInt(sessionMap.size());
@@ -207,6 +222,53 @@ public class HiveSessionService extends GrillService {
       GrillSessionImpl.GrillSessionPersistInfo persistInfo = new GrillSessionImpl.GrillSessionPersistInfo();
       persistInfo.readExternal(in);
       restorableSessions.add(persistInfo);
+    }
+  }
+
+  Runnable getSessionExpiryRunnable() {
+    return sessionExpiryRunnable;
+  }
+
+  public class SessionExpiryRunnable implements Runnable {
+    public void runInternal() {
+      List<GrillSessionHandle> sessionsToRemove = new ArrayList<GrillSessionHandle>(sessionMap.values());
+      Iterator<GrillSessionHandle> itr = sessionsToRemove.iterator();
+      while (itr.hasNext()) {
+        GrillSessionHandle sessionHandle = itr.next();
+        try {
+          GrillSessionImpl session = getSession(sessionHandle);
+          if (session.isActive()) {
+            itr.remove();
+          }
+        } catch (NotFoundException nfe) {
+          itr.remove();
+        } catch (GrillException e) {
+          itr.remove();
+        }
+      }
+
+      // Now close all inactive sessions
+      for (GrillSessionHandle sessionHandle : sessionsToRemove) {
+        try {
+          long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
+          closeSession(sessionHandle);
+          LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
+            + new Date(lastAccessTime));
+        } catch (NotFoundException nfe) {
+          // Do nothing
+        } catch (GrillException e) {
+          LOG.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage());
+        }
+      }
+    }
+
+    @Override
+    public void run() {
+      try {
+        runInternal();
+      } catch (Exception e) {
+        LOG.warn("Unknown error while checking for inactive sessions - " +  e.getMessage());
+      }
     }
   }
 

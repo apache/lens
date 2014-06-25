@@ -53,8 +53,6 @@ import org.apache.hive.service.cli.thrift.TSessionHandle;
 public abstract class GrillService extends CompositeService implements Externalizable {
   public static final Log LOG = LogFactory.getLog(GrillService.class);
   private final CLIService cliService;
-  private ScheduledExecutorService sessionExpiryThread;
-  private SessionExpiryRunnable sessionExpiryRunnable = new SessionExpiryRunnable();
 
   //Static session map which is used by query submission thread to get the
   //grill session before submitting a query to hive server
@@ -230,63 +228,4 @@ public abstract class GrillService extends CompositeService implements Externali
     }*/
   }
 
-  @Override
-  public synchronized void start() {
-    super.start();
-    sessionExpiryThread = Executors.newSingleThreadScheduledExecutor();
-    sessionExpiryThread.scheduleWithFixedDelay(sessionExpiryRunnable, 60, 60, TimeUnit.MINUTES);
-  }
-
-  @Override
-  public synchronized void stop() {
-    super.stop();
-    sessionExpiryThread.shutdownNow();
-  }
-
-  public Runnable getSessionExpiryRunnable() {
-    return sessionExpiryRunnable;
-  }
-
-  public class SessionExpiryRunnable implements Runnable {
-    public void runInternal() {
-      List<GrillSessionHandle> sessionsToRemove = new ArrayList<GrillSessionHandle>(sessionMap.values());
-      Iterator<GrillSessionHandle> itr = sessionsToRemove.iterator();
-      while (itr.hasNext()) {
-        GrillSessionHandle sessionHandle = itr.next();
-        try {
-          GrillSessionImpl session = getSession(sessionHandle);
-          if (session.isActive()) {
-            itr.remove();
-          }
-        } catch (NotFoundException nfe) {
-          itr.remove();
-        } catch (GrillException e) {
-          itr.remove();
-        }
-      }
-
-      // Now close all inactive sessions
-      for (GrillSessionHandle sessionHandle : sessionsToRemove) {
-        try {
-          long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
-          closeSession(sessionHandle);
-          LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
-            + new Date(lastAccessTime));
-        } catch (NotFoundException nfe) {
-          // Do nothing
-        } catch (GrillException e) {
-          LOG.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage());
-        }
-      }
-    }
-
-    @Override
-    public void run() {
-      try {
-        runInternal();
-      } catch (Exception e) {
-        LOG.warn("Unknown error while checking for inactive sessions - " +  e.getMessage());
-      }
-    }
-  }
 }
