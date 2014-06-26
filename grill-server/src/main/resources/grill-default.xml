@@ -300,7 +300,8 @@
 <property>
   <name>grill.query.result.fs.read.url</name>
   <value></value>
-  <description>Http read URL for FileSystem on which result is present, if available</description>
+  <description>Http read URL for FileSystem on which result is present, if available.
+ For example webhdfs as http read url should http://host:port/webhdfs/v1</description>
 </property>
 
 </configuration>
