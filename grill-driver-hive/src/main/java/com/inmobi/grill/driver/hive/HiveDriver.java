@@ -762,7 +762,7 @@ public class HiveDriver implements GrillDriver {
   public void closeSession(GrillSessionHandle sessionHandle) {
     sessionLock.lock();
     try {
-      SessionHandle hiveSession = grillToHiveSession.remove(sessionHandle);
+      SessionHandle hiveSession = grillToHiveSession.remove(sessionHandle.getPublicId().toString());
       if (hiveSession != null) {
         try {
           getClient().closeSession(hiveSession);
@@ -780,6 +780,6 @@ public class HiveDriver implements GrillDriver {
 
   // For test
   public boolean hasGrillSession(GrillSessionHandle session) {
-    return grillToHiveSession.containsKey(session);
+    return grillToHiveSession.containsKey(session.getPublicId().toString());
   }
 }
