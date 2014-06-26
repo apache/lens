@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.inmobi.grill.api.GrillSessionHandle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -66,6 +67,8 @@ import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
+
+import javax.mail.Session;
 
 public class HiveDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
@@ -754,5 +757,29 @@ public class HiveDriver implements GrillDriver {
       }
       checkInvalidSession((HiveSQLException)exc);
     }
+  }
+
+  public void closeSession(GrillSessionHandle sessionHandle) {
+    sessionLock.lock();
+    try {
+      SessionHandle hiveSession = grillToHiveSession.remove(sessionHandle);
+      if (hiveSession != null) {
+        try {
+          getClient().closeSession(hiveSession);
+          LOG.info("Closed Hive session " + hiveSession.getHandleIdentifier()
+            + " for Grill session " + sessionHandle.getPublicId());
+        } catch (Exception e) {
+          LOG.error("Error closing hive session " + hiveSession.getHandleIdentifier()
+            + " for Grill session " + sessionHandle.getPublicId(), e);
+        }
+      }
+    } finally {
+      sessionLock.unlock();
+    }
+  }
+
+  // For test
+  public boolean hasGrillSession(GrillSessionHandle session) {
+    return grillToHiveSession.containsKey(session);
   }
 }
