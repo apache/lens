@@ -93,7 +93,11 @@ public class TestResultFormatting extends GrillJerseyTest {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
-    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false);
+    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
+
+    conf.addProperty(GrillConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
+
   }
 
   // test with execute async post with result formatter, get query, get results
@@ -101,7 +105,10 @@ public class TestResultFormatting extends GrillJerseyTest {
   public void testResultFormatterHDFSpersistentResult() throws InterruptedException, IOException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
-    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false);
+    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
+
+    conf.addProperty(GrillConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
   }
 
   @Test(groups = "unit" )
@@ -109,7 +116,7 @@ public class TestResultFormatting extends GrillJerseyTest {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     conf.addProperty(GrillConfConstants.RESULT_FORMAT_SIZE_THRESHOLD, "1");
-    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, true);
+    testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, true, null);
   }
 
   @Test(groups = "unit" )
@@ -117,12 +124,12 @@ public class TestResultFormatting extends GrillJerseyTest {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, "NonexistentSerde.class");
-    testResultFormatter(conf, QueryStatus.Status.FAILED, false);
+    testResultFormatter(conf, QueryStatus.Status.FAILED, false, null);
   }
 
   // test with execute async post with result formatter, get query, get results
   private void testResultFormatter(GrillConf conf, Status status,
-      boolean isDir) throws InterruptedException, IOException {
+      boolean isDir, String reDirectUrl) throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
@@ -139,7 +146,7 @@ public class TestResultFormatting extends GrillJerseyTest {
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
         MediaType.APPLICATION_XML_TYPE));
-    final QueryHandle handle = target.request().post(
+    QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     Assert.assertNotNull(handle);
@@ -161,6 +168,10 @@ public class TestResultFormatting extends GrillJerseyTest {
       // fetch results
       TestQueryService.validatePersistedResult(handle, target(),
           grillSessionId, isDir);
+      if (!isDir) {
+        TestQueryService.validateHttpEndPoint(target(), grillSessionId, handle, reDirectUrl);
+      }
+
     }
   }
 

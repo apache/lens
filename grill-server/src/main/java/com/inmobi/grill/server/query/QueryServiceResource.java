@@ -35,6 +35,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
@@ -637,6 +638,28 @@ public class QueryServiceResource {
     checkSessionId(sessionid);
     try {
       return queryServer.fetchResultSet(sessionid, getQueryHandle(queryHandle), startIndex, fetchSize);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    }
+  }
+
+  /**
+   * Get the http endpoint for result set
+   *
+   * @param sessionid The user session handle
+   * @param queryHandle The query handle
+   *
+   * @return Response with result as octet stream
+   */
+  @GET
+  @Path("queries/{queryHandle}/httpresultset")
+  @Produces({MediaType.APPLICATION_OCTET_STREAM})
+  public Response getHttpResultSet(
+      @QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("queryHandle") String queryHandle) {
+    checkSessionId(sessionid);
+    try {
+      return (Response)(queryServer.getHttpResultSet(sessionid, getQueryHandle(queryHandle)));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }

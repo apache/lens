@@ -178,6 +178,16 @@ public interface QueryExecutionService {
       int fetchSize ) throws GrillException;
 
   /**
+   * Get the http end point for the result set
+   *
+   * @param sessionHandle The grill session handle
+   * @param queryHandle The query handle
+   *
+   * @return returns javax.ws.rs.core.Response object
+   */
+  public Object getHttpResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+
+  /**
    * Closes result set by releasing any resources used in serving the resultset.
    * 
    * @param queryHandle

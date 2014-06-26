@@ -25,6 +25,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -62,8 +63,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hive.service.Service;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -806,7 +809,36 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(actualRows.get(1), "\\Ntwo");
     Assert.assertEquals(actualRows.get(2), "3\\N");
     Assert.assertEquals(actualRows.get(3), "\\N\\N");
-    Assert.assertEquals(actualRows.get(4), "5");    
+    Assert.assertEquals(actualRows.get(4), "5");
+  }
+
+  static void validateHttpEndPoint(WebTarget parent,
+      GrillSessionHandle grillSessionId,
+      QueryHandle handle, String redirectUrl) throws IOException {
+    Response response = parent.path(
+        "queryapi/queries/" +handle.toString() + "/httpresultset")
+        .queryParam("sessionid", grillSessionId).request().get();
+
+    Assert.assertTrue(response.getHeaderString("content-disposition").contains(handle.toString()));
+
+    if (redirectUrl == null) {
+      InputStream in = (InputStream)response.getEntity();
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      IOUtils.copyBytes(in, bos, new Configuration());
+      bos.close();
+      in.close();
+
+      String result = new String(bos.toByteArray());
+      List<String> actualRows = Arrays.asList(result.split("\n"));
+      Assert.assertEquals(actualRows.get(0), "1one");
+      Assert.assertEquals(actualRows.get(1), "\\Ntwo");
+      Assert.assertEquals(actualRows.get(2), "3\\N");
+      Assert.assertEquals(actualRows.get(3), "\\N\\N");
+      Assert.assertEquals(actualRows.get(4), "5");
+    } else {
+      Assert.assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+      Assert.assertTrue(response.getHeaderString("Location").contains(redirectUrl));
+    }
   }
 
   // test with execute async post, get query, get results

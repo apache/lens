@@ -292,10 +292,15 @@
 <property>
     <name>grill.server.session.timeout.seconds</name>
     <value>86400</value>
-    <description>Grill session timeout in seconds.
-        If there is no activity on the session for this period then the session will be closed.
-        Default timeout is one day.
-    </description>
+    <description>Grill session timeout in seconds.If there is no activity on
+ the session for this period then the session will be closed.Default timeout is one day.</description>
+</property>
+
+
+<property>
+  <name>grill.query.result.fs.read.url</name>
+  <value></value>
+  <description>Http read URL for FileSystem on which result is present, if available</description>
 </property>
 
 </configuration>
