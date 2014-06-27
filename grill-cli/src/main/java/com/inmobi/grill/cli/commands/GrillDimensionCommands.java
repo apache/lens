@@ -56,7 +56,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "create dimension", help = "Create a new dimension table")
   public String createDimension(@CliOption(key = {"", "dimension"},
-      mandatory = true, help = "<dim-spec> <storage-spec>") String dimPair) {
+      mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
 
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
@@ -92,7 +92,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "drop dimension", help = "drop dimension table")
   public String dropDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String dim,
+      mandatory = true, help = "dimension table name to be dropped") String dim,
                                    @CliOption(key = {"cascade"}, mandatory = false,
                                        unspecifiedDefaultValue = "false") boolean cascade) {
     APIResult result = client.dropDimensionTable(dim, cascade);
@@ -104,7 +104,8 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
   @CliCommand(value = "update dimension", help = "update dimension table")
-  public String updateDimensionTable(@CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> <table-spec>") String specPair) {
+  public String updateDimensionTable(@CliOption(key = {"", "table"},
+      mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -134,7 +135,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "describe dimension", help = "describe a fact table")
   public String describeDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be described") String dim) {
+      mandatory = true, help = "dimension table name to be described") String dim) {
     DimensionTable table = client.getDimensionTable(dim);
     StringBuilder buf = new StringBuilder();
 
@@ -204,7 +205,7 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "dim list storage",
       help = "display list of storage associated to dimension table")
   public String getDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String dim){
+      mandatory = true, help = "<table-name> for listing storages") String dim){
     List<String> storages = client.getDimStorages(dim);
     StringBuilder sb = new StringBuilder();
     for(String storage: storages) {
@@ -222,7 +223,7 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "dim drop-all storages",
       help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String table){
+      mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
     APIResult result = client.dropAllStoragesOfDim(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
@@ -234,7 +235,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "dim add storage", help = "adds a new storage to dimension")
   public String addNewDimStorage(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storage>") String tablepair){
+      mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -264,7 +265,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "dim drop storage", help = "drop storage to dimension table")
   public String dropStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storage-spec>") String tablepair){
+      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -285,7 +286,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "dim get storage", help = "describe storage of dimension table")
   public String getStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> <storage-spec>") String tablepair){
+      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -303,7 +304,8 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "dim list partitions",
       help = "get all partitions associated with dimension table")
   public String getAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storageName> [<part-vals]") String specPair){
+      mandatory = true, help = "<dimension-table-name> <storageName> " +
+      "[optional <partition query filter> to get]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -327,7 +329,8 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "dim drop partitions",
       help = "drop all partitions associated with dimension table")
   public String dropAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storageName> [<list>]") String specPair){
+      mandatory = true, help = "<dimension-table-name> <storageName> " +
+      "[optional <partition query filter> to drop]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -355,7 +358,8 @@ public class GrillDimensionCommands implements CommandMarker {
 
   @CliCommand(value = "dim add partition", help = "add a partition to dim table")
   public String addPartitionToFact(@CliOption(key = {"","table"},
-      mandatory = true, help = "<table> <storage> <partspec>") String specPair) {
+      mandatory = true, help = "<dimension-table-name> <storage-name>" +
+      " <path to partition specification>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()

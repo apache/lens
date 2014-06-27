@@ -70,11 +70,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-    </dependency>
-
-    <dependency>
       <groupId>com.inmobi.grill</groupId>
       <artifactId>grill-driver-hive</artifactId>
       <version>${project.version}</version>

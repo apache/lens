@@ -96,7 +96,7 @@ public class GrillQueryCommands implements CommandMarker {
 
   @CliCommand(value = "query status", help = "Fetch status of executed query")
   public String getStatus(@CliOption(key = {"", "query"},
-      mandatory = true, help = "Query to execute") String qh) {
+      mandatory = true, help = "<query-handle> for which status has to be fetched") String qh) {
     QueryStatus status = client.getQueryStatus(new QueryHandle(UUID.fromString(qh)));
     StringBuilder sb = new StringBuilder();
     if(status == null) {
@@ -123,7 +123,7 @@ public class GrillQueryCommands implements CommandMarker {
   @CliCommand(value = "query explain", help = "Explain query plan")
   public String explainQuery(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to execute") String sql, @CliOption(key = {"save"},
-      mandatory = false, help = "Sync query execution") String location)
+      mandatory = false, help = "query to explain") String location)
           throws UnsupportedEncodingException {
 
     QueryPlan plan = client.getQueryPlan(sql);
@@ -142,7 +142,7 @@ public class GrillQueryCommands implements CommandMarker {
 
   @CliCommand(value = "query kill", help ="Kill a query")
   public String killQuery(@CliOption(key = {"", "query"},
-      mandatory = true, help = "Query to execute") String qh) {
+      mandatory = true, help = "query-handle for killing") String qh) {
     boolean status = client.killQuery(new QueryHandle(UUID.fromString(qh)));
     if(status) {
       return "Successfully killed " + qh;
@@ -153,7 +153,7 @@ public class GrillQueryCommands implements CommandMarker {
 
   @CliCommand(value = "query results", help ="get results of async query")
   public String getQueryResults(@CliOption(key = {"", "query"},
-      mandatory = true, help = "Query to execute") String qh)   {
+      mandatory = true, help = "query-handle for fetching result") String qh)   {
     try {
       GrillClient.GrillClientResultSetWithStats result = client.getAsyncResults(
           new QueryHandle(UUID.fromString(qh)));

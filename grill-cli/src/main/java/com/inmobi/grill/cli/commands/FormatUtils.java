@@ -40,7 +40,7 @@ public class FormatUtils {
     buf.append("Map Key delimiter : ").append(desc.getMapKeyDelimiter()).append("\n");
     buf.append("Input format : ").append(desc.getInputFormat()).append("\n");
     buf.append("Output Format : ").append(desc.getOutputFormat()).append("\n");
-    buf.append("Storage Handler : ").append(desc.getLineDelimiter()).append("\n");
+    buf.append("Storage Handler : ").append(desc.getStorageHandlerName()).append("\n");
 
     buf.append("Columns: ").append("\n").append("\n\n");
     buf.append("\t")

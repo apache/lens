@@ -23,7 +23,7 @@ package com.inmobi.grill.jdbc;
 import com.inmobi.grill.client.GrillClientConfig;
 import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.client.jdbc.JDBCUtils;
-import junit.framework.Assert;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 
@@ -31,7 +31,7 @@ import java.util.Map;
 
 public class JDBCUrlParserTest {
 
-  //@Test(expectedExceptions = IllegalArgumentException.class)
+  @Test(expectedExceptions = IllegalArgumentException.class)
   public void testIllegalJDBCUri() {
     String uri = "jdbc:gril://localhost:1000";
     JDBCUtils.parseUrl(uri);
@@ -39,57 +39,57 @@ public class JDBCUrlParserTest {
   }
 
 
-  //@Test
+  @Test
   public void testDefaultsWithConfigurationVariables() {
     String uri = "jdbc:grill:///;username=johndoe;password=blah?conf1=blah1;conf2=blah2#var1=123;var2=456";
     GrillConnectionParams params = JDBCUtils.parseUrl(uri);
-    Assert.assertEquals("The database should be default database",
-        GrillClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName());
-    Assert.assertEquals("The port should be default port",
-        GrillClientConfig.DEFAULT_SERVER_PORT, params.getPort());
-    Assert.assertEquals("The host should be dedault host",
-        GrillClientConfig.DEFAULT_SERVER_HOST_VALUE, params.getHost());
+    Assert.assertEquals(
+        GrillClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName(),"The database should be default database");
+    Assert.assertEquals(
+        GrillClientConfig.DEFAULT_SERVER_PORT, params.getPort(),"The port should be default port");
+    Assert.assertEquals(
+        GrillClientConfig.DEFAULT_SERVER_HOST_VALUE, params.getHost(),"The host should be dedault host");
 
     Map<String, String> sessionVars = params.getSessionVars();
-    Assert.assertEquals("You should have two session variable", 2,
-        sessionVars.size());
-    Assert.assertEquals("The username should be johndoe", "johndoe",
-        sessionVars.get("username"));
-    Assert.assertEquals("The password should be blah", "blah",
-        sessionVars.get("password"));
+    Assert.assertEquals( 2,
+        sessionVars.size(),"You should have two session variable");
+    Assert.assertEquals("johndoe",
+        sessionVars.get("username"),"The username should be johndoe");
+    Assert.assertEquals("blah",
+        sessionVars.get("password"),"The password should be blah");
 
     Map<String, String> grillConf = params.getGrillConfs();
-    Assert.assertEquals("You should have two configuration variables", 2,
-        grillConf.size());
-    Assert.assertEquals("The value for conf1 should be blah1", "blah1",
-        grillConf.get("conf1"));
-    Assert.assertEquals("The value for conf2 should be blah2", "blah2",
-        grillConf.get("conf2"));
+    Assert.assertEquals(2,
+        grillConf.size(),"You should have two configuration variables");
+    Assert.assertEquals( "blah1",
+        grillConf.get("conf1"),"The value for conf1 should be blah1");
+    Assert.assertEquals( "blah2",
+        grillConf.get("conf2"),"The value for conf2 should be blah2");
 
     Map<String, String> grillVars = params.getGrillVars();
 
-    Assert.assertEquals("You should have two grill variables", 2,
-        grillVars.size());
-    Assert.assertEquals("The value for var1 should be 123", "123",
-        grillVars.get("var1"));
-    Assert.assertEquals("The value for var2 should be 456", "456",
-        grillVars.get("var2"));
+    Assert.assertEquals( 2,
+        grillVars.size(),"You should have two grill variables");
+    Assert.assertEquals( "123",
+        grillVars.get("var1"),"The value for var1 should be 123");
+    Assert.assertEquals("456",
+        grillVars.get("var2"),"The value for var2 should be 456");
   }
 
-  //@Test
+  @Test
   public void testJDBCWithCustomHostAndPortAndDB() {
     String uri = "jdbc:grill://myhost:9000/mydb";
     GrillConnectionParams params = JDBCUtils.parseUrl(uri);
-    Assert.assertEquals("The host name should be myhost", "myhost",
-        params.getHost());
-    Assert.assertEquals("The port should be 9000", 9000, params.getPort());
-    Assert.assertEquals("The database should be mydb", "mydb",
-        params.getDbName());
-    Assert.assertTrue("Session Variable list should be empty",
-        params.getSessionVars().isEmpty());
-    Assert.assertTrue("The conf list should be empty",
-        params.getGrillConfs().isEmpty());
-    Assert.assertTrue("The grill var list should be empty",
-        params.getGrillVars().isEmpty());
+    Assert.assertEquals( "myhost",
+        params.getHost(),"The host name should be myhost");
+    Assert.assertEquals( 9000, params.getPort(),"The port should be 9000");
+    Assert.assertEquals("mydb",
+        params.getDbName(),"The database should be mydb");
+    Assert.assertTrue(
+        params.getSessionVars().isEmpty(),"Session Variable list should be empty");
+    Assert.assertTrue(
+        params.getGrillConfs().isEmpty(),"The conf list should be empty");
+    Assert.assertTrue(
+        params.getGrillVars().isEmpty(),"The grill var list should be empty");
   }
 }

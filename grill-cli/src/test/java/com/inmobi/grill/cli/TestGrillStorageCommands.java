@@ -9,6 +9,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.io.*;
+import java.net.URL;
 
 public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
@@ -43,11 +44,12 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
   public synchronized static void addLocalStorage(String storageName) {
     GrillStorageCommands command = getCommand();
-    File f = TestUtil.getPath("local-storage.xml");
+    URL storageSpec =
+        TestGrillStorageCommands.class.getClassLoader().getResource("local-storage.xml");
     File newFile = new File("/tmp/local-"+storageName+".xml");
     try {
       StringBuilder sb = new StringBuilder();
-      BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
+      BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
       String s;
       while ((s = bufferedReader.readLine()) != null) {
         sb.append(s).append("\n");
@@ -81,9 +83,10 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
     try {
       GrillStorageCommands command = getCommand();
-      File f = TestUtil.getPath("local-storage.xml");
+      URL storageSpec =
+          TestGrillStorageCommands.class.getClassLoader().getResource("local-storage.xml");
       StringBuilder sb = new StringBuilder();
-      BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
+      BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
       String s;
       while ((s = bufferedReader.readLine()) != null) {
         sb.append(s).append("\n");
