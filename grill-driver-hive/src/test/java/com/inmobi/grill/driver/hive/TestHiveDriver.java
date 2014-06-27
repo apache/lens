@@ -52,7 +52,7 @@ import com.inmobi.grill.server.api.query.QueryContext;
 
 public class TestHiveDriver {
   public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
-  public final String TEST_OUTPUT_DIR = this.getClass().getSimpleName() + "/test-output";
+  public final String TEST_OUTPUT_DIR = "target/" + this.getClass().getSimpleName() + "/test-output";
   protected HiveConf conf = new HiveConf();
   protected HiveDriver driver;
   public final String DATA_BASE = this.getClass().getSimpleName();
