@@ -57,6 +57,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
 
   @AfterTest
   public void tearDown() throws Exception {
+    GrillServices.get().setServiceMode(SERVICE_MODE.OPEN);
     super.tearDown();
   }
 
