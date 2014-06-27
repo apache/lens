@@ -48,12 +48,15 @@ public class GrillStorageCommands implements CommandMarker {
   @CliCommand(value = "show storages", help = "list storages")
   public String getStorages() {
     List<String> storages = client.getAllStorages();
+    if(storages == null || storages.isEmpty()) {
+      return "No storages found";
+    }
     return Joiner.on("\n").join(storages);
   }
 
   @CliCommand(value = "create storage", help = "Create a new Storage")
   public String createStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "<storage-spec>") String storageSpec) {
+      mandatory = true, help = "<path to storage-spec>") String storageSpec) {
     File f = new File(storageSpec);
     if (!f.exists()) {
       return "cube spec path"
@@ -64,9 +67,9 @@ public class GrillStorageCommands implements CommandMarker {
     return result.getMessage();
   }
 
-  @CliCommand(value = "drop storage", help = "drop cube")
+  @CliCommand(value = "drop storage", help = "drop storage")
   public String dropStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "cube name to be dropped") String storage) {
+      mandatory = true, help = "storage name to be dropped") String storage) {
     APIResult result = client.dropStorage(storage);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + storage + "!!!";
@@ -76,7 +79,7 @@ public class GrillStorageCommands implements CommandMarker {
   }
 
   @CliCommand(value = "update storage", help = "update storage")
-  public String updateStorage(@CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name> <storage-spec>") String specPair) {
+  public String updateStorage(@CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name> <path to storage-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -105,7 +108,7 @@ public class GrillStorageCommands implements CommandMarker {
 
   @CliCommand(value = "describe storage", help = "describe storage schema")
   public String describeStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "<storage-name>") String storage) {
+      mandatory = true, help = "<storage-name> to be described") String storage) {
     XStorage str = client.getStorage(storage);
     StringBuilder builder = new StringBuilder();
     builder.append("Name : ").append(str.getName()).append("\n");

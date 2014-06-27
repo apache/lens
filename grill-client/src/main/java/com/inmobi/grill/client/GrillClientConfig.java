@@ -36,7 +36,7 @@ public class GrillClientConfig extends Configuration {
   public static final String GRILL_SERVER_HOST_KEY = "grill.host";
   public static final String DEFAULT_SERVER_HOST_VALUE = "localhost";
   public static final String GRILL_SERVER_PORT_KEY = "grill.port";
-  public static final int DEFAULT_SERVER_PORT = 8080;
+  public static final int DEFAULT_SERVER_PORT = 9999;
   public static final String GRILL_DBNAME_KEY = "grill.dbname";
   public static final String DEFAULT_DBNAME_VALUE = "default";
   public static final String GRILL_BASE_PATH = "grill.base.path";
