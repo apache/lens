@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.inmobi.grill.api.GrillSessionHandle;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -754,5 +755,29 @@ public class HiveDriver implements GrillDriver {
       }
       checkInvalidSession((HiveSQLException)exc);
     }
+  }
+
+  public void closeSession(GrillSessionHandle sessionHandle) {
+    sessionLock.lock();
+    try {
+      SessionHandle hiveSession = grillToHiveSession.remove(sessionHandle.getPublicId().toString());
+      if (hiveSession != null) {
+        try {
+          getClient().closeSession(hiveSession);
+          LOG.info("Closed Hive session " + hiveSession.getHandleIdentifier()
+            + " for Grill session " + sessionHandle.getPublicId());
+        } catch (Exception e) {
+          LOG.error("Error closing hive session " + hiveSession.getHandleIdentifier()
+            + " for Grill session " + sessionHandle.getPublicId(), e);
+        }
+      }
+    } finally {
+      sessionLock.unlock();
+    }
+  }
+
+  // For test
+  public boolean hasGrillSession(GrillSessionHandle session) {
+    return grillToHiveSession.containsKey(session.getPublicId().toString());
   }
 }

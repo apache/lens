@@ -21,6 +21,7 @@ package com.inmobi.grill.server.query;
  */
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 import java.io.*;
@@ -50,11 +51,13 @@ import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QueryStatus.Status;
+import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.driver.hive.TestHiveDriver.FailHook;
 import com.inmobi.grill.driver.hive.TestRemoteHiveDriver;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.query.QueryApp;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
@@ -102,6 +105,11 @@ public class TestQueryService extends GrillJerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     queryService.closeSession(grillSessionId);
+    for (GrillDriver driver : queryService.getDrivers()) {
+      if (driver instanceof HiveDriver) {
+        assertFalse(((HiveDriver) driver).hasGrillSession(grillSessionId));
+      }
+    }
     super.tearDown();
   }
 

@@ -23,6 +23,9 @@ package com.inmobi.grill.server.session;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
+import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.query.QueryExecutionService;
+import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -222,6 +225,16 @@ public class HiveSessionService extends GrillService {
       GrillSessionImpl.GrillSessionPersistInfo persistInfo = new GrillSessionImpl.GrillSessionPersistInfo();
       persistInfo.readExternal(in);
       restorableSessions.add(persistInfo);
+    }
+  }
+
+  @Override
+  public void closeSession(GrillSessionHandle sessionHandle) throws GrillException {
+    super.closeSession(sessionHandle);
+    // Inform query service
+    GrillService svc = GrillServices.get().getService(QueryExecutionServiceImpl.NAME);
+    if (svc instanceof QueryExecutionServiceImpl) {
+      ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
     }
   }
 

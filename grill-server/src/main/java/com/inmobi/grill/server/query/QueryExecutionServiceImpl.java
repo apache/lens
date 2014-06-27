@@ -1245,4 +1245,26 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
+  /**
+   * Allow drivers to release resources acquired for a session if any.
+   * @param sessionHandle
+   */
+  public void closeDriverSessions(GrillSessionHandle sessionHandle) {
+    for (GrillDriver driver : drivers.values()) {
+      if (driver instanceof HiveDriver) {
+        ((HiveDriver) driver).closeSession(sessionHandle);
+      }
+    }
+  }
+
+  public void closeSession(GrillSessionHandle sessionHandle) throws GrillException {
+    super.closeSession(sessionHandle);
+    // Call driver session close in case some one closes sessions directly on query service
+    closeDriverSessions(sessionHandle);
+  }
+
+  // Used in test code
+  Collection<GrillDriver> getDrivers(){
+    return drivers.values();
+  }
 }
