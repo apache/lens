@@ -659,7 +659,7 @@ public class QueryServiceResource {
       @PathParam("queryHandle") String queryHandle) {
     checkSessionId(sessionid);
     try {
-      return (Response)(queryServer.getHttpResultSet(sessionid, getQueryHandle(queryHandle)));
+      return queryServer.getHttpResultSet(sessionid, getQueryHandle(queryHandle));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }

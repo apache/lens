@@ -1201,7 +1201,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public Object getHttpResultSet(GrillSessionHandle sessionHandle,
+  public Response getHttpResultSet(GrillSessionHandle sessionHandle,
       QueryHandle queryHandle) throws GrillException {
     final QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
     GrillResultSet result = getResultset(queryHandle);

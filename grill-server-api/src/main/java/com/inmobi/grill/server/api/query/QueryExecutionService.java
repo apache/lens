@@ -34,6 +34,7 @@ import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResult;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.QueryStatus;
+import javax.ws.rs.core.Response;
 
 public interface QueryExecutionService {
 
@@ -185,7 +186,7 @@ public interface QueryExecutionService {
    *
    * @return returns javax.ws.rs.core.Response object
    */
-  public Object getHttpResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+  public Response getHttpResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
    * Closes result set by releasing any resources used in serving the resultset.
