@@ -137,4 +137,7 @@ public class GrillConfConstants {
   public static final String RESULT_SPLIT_MULTIPLE_MAX_ROWS = "grill.query.result.split.multiple.maxrows";
 
   public static final long DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS = 100000;
+
+  public static final String RESULT_FS_READ_URL = "grill.query.result.fs.read.url";
+
 }

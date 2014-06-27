@@ -20,10 +20,17 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
+import java.io.Writer;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -34,6 +41,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
@@ -61,6 +71,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
 
@@ -580,13 +593,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private GrillResultSet getResultset(QueryHandle queryHandle)
       throws GrillException {
-    GrillResultSet resultSet = resultSets.get(queryHandle);
     if (!allQueries.containsKey(queryHandle)) {
       throw new NotFoundException("Query not found: " + queryHandle);
     }
 
-    QueryContext ctx = allQueries.get(queryHandle);
+    GrillResultSet resultSet = resultSets.get(queryHandle);
     if (resultSet == null) {
+      QueryContext ctx = allQueries.get(queryHandle);
       if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
         resultSets.put(queryHandle, new GrillPersistentResult(
             ctx.getQueryOutputFormatter().getMetadata(),
@@ -1178,6 +1191,60 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     LOG.info("Persisted " + allQueries.size() + " queries");
   }
 
+  private void pipe(InputStream is, OutputStream os) throws IOException {
+    int n;
+    byte[] buffer = new byte[4096];
+    while ((n = is.read(buffer)) > -1) {
+      os.write(buffer, 0, n);
+      os.flush();
+    }
+  }
+
+  @Override
+  public Response getHttpResultSet(GrillSessionHandle sessionHandle,
+      QueryHandle queryHandle) throws GrillException {
+    final QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
+    GrillResultSet result = getResultset(queryHandle);
+    if (result instanceof GrillPersistentResult) {
+      final Path resultPath = new Path(((PersistentResultSet)result).getOutputPath());
+      String resultFSReadUrl = ctx.getConf().get(GrillConfConstants.RESULT_FS_READ_URL);
+      if (resultFSReadUrl != null) {
+        try {
+          URI resultReadPath = new URI(resultFSReadUrl + 
+              resultPath.toUri().getPath() +
+              "?op=OPEN&user.name="+getSession(sessionHandle).getUserName());
+          return Response.seeOther(resultReadPath)
+              .header("content-disposition","attachment; filename = "+ resultPath.getName())
+              .type(MediaType.APPLICATION_OCTET_STREAM).build();
+        } catch (URISyntaxException e) {
+          throw new GrillException(e);
+        }
+      } else {
+        StreamingOutput stream = new StreamingOutput() {
+          @Override
+          public void write(OutputStream os) throws IOException {
+            FSDataInputStream fin = null;
+            try {
+              FileSystem fs = resultPath.getFileSystem(ctx.getConf());
+              fin = fs.open(resultPath);
+              pipe(fin, os);
+            } finally {
+              if (fin != null) {
+                fin.close();
+              }
+
+            }
+          }
+        };
+        return Response.ok(stream)
+            .header("content-disposition","attachment; filename = "+ resultPath.getName())
+            .type(MediaType.APPLICATION_OCTET_STREAM).build();
+      }
+    } else {
+      throw new NotFoundException("Http result not available for query:" + queryHandle.toString());
+    }
+  }
+
   /**
    * Allow drivers to release resources acquired for a session if any.
    * @param sessionHandle
@@ -1190,7 +1257,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  @Override
   public void closeSession(GrillSessionHandle sessionHandle) throws GrillException {
     super.closeSession(sessionHandle);
     // Call driver session close in case some one closes sessions directly on query service

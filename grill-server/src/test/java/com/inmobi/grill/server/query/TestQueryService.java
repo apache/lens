@@ -26,6 +26,7 @@ import static org.testng.Assert.assertTrue;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -64,7 +65,7 @@ import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hive.service.Service;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -767,6 +768,10 @@ public class TestQueryService extends GrillJerseyTest {
     PersistentQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
     validatePersistentResult(resultset, handle, isDir);
+
+    if (isDir) {
+      validNotFoundForHttpResult(parent, grillSessionId, handle);
+    }
   }
 
   static List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle, boolean isDir) throws  IOException {
@@ -814,9 +819,53 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(actualRows.get(1), "\\Ntwo");
     Assert.assertEquals(actualRows.get(2), "3\\N");
     Assert.assertEquals(actualRows.get(3), "\\N\\N");
-    Assert.assertEquals(actualRows.get(4), "5");    
+    Assert.assertEquals(actualRows.get(4), "5");
   }
 
+  static void validateHttpEndPoint(WebTarget parent,
+      GrillSessionHandle grillSessionId,
+      QueryHandle handle, String redirectUrl) throws IOException {
+    Response response = parent.path(
+        "queryapi/queries/" +handle.toString() + "/httpresultset")
+        .queryParam("sessionid", grillSessionId).request().get();
+
+    Assert.assertTrue(response.getHeaderString("content-disposition").contains(handle.toString()));
+
+    if (redirectUrl == null) {
+      InputStream in = (InputStream)response.getEntity();
+      ByteArrayOutputStream bos = new ByteArrayOutputStream();
+      IOUtils.copyBytes(in, bos, new Configuration());
+      bos.close();
+      in.close();
+
+      String result = new String(bos.toByteArray());
+      List<String> actualRows = Arrays.asList(result.split("\n"));
+      Assert.assertEquals(actualRows.get(0), "1one");
+      Assert.assertEquals(actualRows.get(1), "\\Ntwo");
+      Assert.assertEquals(actualRows.get(2), "3\\N");
+      Assert.assertEquals(actualRows.get(3), "\\N\\N");
+      Assert.assertEquals(actualRows.get(4), "5");
+    } else {
+      Assert.assertEquals(Response.Status.SEE_OTHER.getStatusCode(), response.getStatus());
+      Assert.assertTrue(response.getHeaderString("Location").contains(redirectUrl));
+    }
+  }
+
+  static void validNotFoundForHttpResult(WebTarget parent, GrillSessionHandle grillSessionId,
+      QueryHandle handle) {
+    try {
+      Response response = parent.path(
+          "queryapi/queries/" +handle.toString() + "/httpresultset")
+          .queryParam("sessionid", grillSessionId).request().get();
+      if (Response.Status.NOT_FOUND.getStatusCode() != response.getStatus()) {
+        Assert.fail("Expected not found excepiton, but got:" + response.getStatus());
+      }
+      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    } catch (NotFoundException e) {
+      // expected
+    }
+
+  }
   // test with execute async post, get query, get results
   // test cancel query
   @Test(groups = "unit" )
@@ -865,6 +914,8 @@ public class TestQueryService extends GrillJerseyTest {
     InMemoryQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(InMemoryQueryResult.class);
     validateInmemoryResult(resultset);
+
+    validNotFoundForHttpResult(target(), grillSessionId, handle);
   }
 
   @Test(groups = "unit" )
