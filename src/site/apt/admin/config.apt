@@ -66,7 +66,7 @@ Grill server configuration
 *--+--+---+--+
 |21|grill.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
 *--+--+---+--+
-|22|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1|
+|22|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
 *--+--+---+--+
 |23|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
 *--+--+---+--+
