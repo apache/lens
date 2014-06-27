@@ -171,7 +171,7 @@ public class GrillMetadataClient {
     APIResult result = target.path("cubes").path(cubeName)
         .queryParam("sessionid", this.connection.getSessionHandle())
         .request(MediaType.APPLICATION_XML)
-        .put(Entity.xml(cubespec), APIResult.class);
+        .put(Entity.xml(getContent(cubespec)), APIResult.class);
     return result;
   }
 

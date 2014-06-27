@@ -179,6 +179,9 @@ public class GrillFactCommands implements CommandMarker {
   public String getFactStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "table name to be dropped") String fact){
     List<String> storages = client.getFactStorages(fact);
+    if(storages == null || storages.isEmpty()) {
+      return "No storages found for " + fact;
+    }
     return Joiner.on("\n").join(storages);
   }
 
@@ -207,14 +210,7 @@ public class GrillFactCommands implements CommandMarker {
           "format. fact add storage <table> <storage spec path>";
     }
 
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
+    File f = new File(pair[1]);
     if (!f.exists()) {
       return "Storage spech path "
           + f.getAbsolutePath() +
@@ -242,20 +238,6 @@ public class GrillFactCommands implements CommandMarker {
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
           "format. fact drop storage <table> <storage>";
-    }
-
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path "
-          + f.getAbsolutePath() +
-          " does not exist. Please check the path";
     }
 
     APIResult result = client.dropStorageFromFact(pair[0], pair[1]);
@@ -299,7 +281,7 @@ public class GrillFactCommands implements CommandMarker {
       return FormatUtils.formatPartitions(partitions);
     }
     if (pair.length == 3) {
-      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1], pair[3]);
+      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1], pair[2]);
       return FormatUtils.formatPartitions(partitions);
     }
     return "Syntax error, please try in following " +

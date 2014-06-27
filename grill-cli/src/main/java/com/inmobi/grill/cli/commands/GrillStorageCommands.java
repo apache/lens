@@ -48,6 +48,9 @@ public class GrillStorageCommands implements CommandMarker {
   @CliCommand(value = "show storages", help = "list storages")
   public String getStorages() {
     List<String> storages = client.getAllStorages();
+    if(storages == null || storages.isEmpty()) {
+      return "No storages found";
+    }
     return Joiner.on("\n").join(storages);
   }
 

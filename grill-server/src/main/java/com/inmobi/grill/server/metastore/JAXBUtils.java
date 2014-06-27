@@ -600,7 +600,8 @@ public class JAXBUtils {
     tblDesc.setMapKeyDelimiter(tbl.getSerdeParam(serdeConstants.MAPKEY_DELIM));
     tblDesc.setEscapeChar(tbl.getSerdeParam(serdeConstants.ESCAPE_CHAR));
     tblDesc.setSerdeClassName(tbl.getSerializationLib());
-    tblDesc.setStorageHandlerName(tbl.getStorageHandler().getClass().getCanonicalName());
+    tblDesc.setStorageHandlerName(tbl.getStorageHandler()!= null?
+        tbl.getStorageHandler().getClass().getCanonicalName():"");
     tblElement.setTableDesc(tblDesc);
     return tblElement;
   }

@@ -204,9 +204,19 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "dim list storage",
       help = "display list of storage associated to dimension table")
   public String getDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String fact){
-    List<String> storages = client.getDimStorages(fact);
-    return Joiner.on("\n").join(storages);
+      mandatory = true, help = "table name to be dropped") String dim){
+    List<String> storages = client.getDimStorages(dim);
+    StringBuilder sb = new StringBuilder();
+    for(String storage: storages) {
+       if(!storage.isEmpty()) {
+         sb.append(storage).append("\n");
+       }
+    }
+
+    if(sb.toString().isEmpty()) {
+      return "No storages found for "+dim;
+    }
+    return sb.toString().substring(0, sb.toString().length()-1);
   }
 
   @CliCommand(value = "dim drop-all storages",
@@ -235,14 +245,7 @@ public class GrillDimensionCommands implements CommandMarker {
           "format. create fact <fact spec path> <storage spec path>";
     }
 
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
+    File f = new File(pair[1]);
     if (!f.exists()) {
       return "Storage spech path "
           + f.getAbsolutePath() +
@@ -271,21 +274,6 @@ public class GrillDimensionCommands implements CommandMarker {
       return "Syntax error, please try in following " +
           "format. create fact <fact spec path> <storage spec path>";
     }
-
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path "
-          + f.getAbsolutePath() +
-          " does not exist. Please check the path";
-    }
-
     APIResult result = client.dropStorageFromDim(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Dim table storage removal successful";

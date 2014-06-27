@@ -121,7 +121,7 @@ public class GrillQueryCommands implements CommandMarker {
   }
 
   @CliCommand(value = "query explain", help = "Explain query plan")
-  public String getQueries(@CliOption(key = {"", "query"}, mandatory = true,
+  public String explainQuery(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to execute") String sql, @CliOption(key = {"save"},
       mandatory = false, help = "Sync query execution") String location)
           throws UnsupportedEncodingException {

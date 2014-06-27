@@ -397,7 +397,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       int i = 0;
       List<String> storageNames = new ArrayList<String>(tab.getStorages());
       for (String s : storageNames) {
-        getClient(sessionid).dropStorageFromDim(factName, s);
+        getClient(sessionid).dropStorageFromFact(factName, s);
         LOG.info("Dropped storage " + s + " from fact table " + factName 
             + " [" + ++i + "/" + total + "]");
       }
