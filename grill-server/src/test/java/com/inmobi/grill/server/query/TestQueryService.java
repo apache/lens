@@ -62,11 +62,9 @@ import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hive.service.Service;
 import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientResponse;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -762,6 +760,10 @@ public class TestQueryService extends GrillJerseyTest {
     PersistentQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
     validatePersistentResult(resultset, handle, isDir);
+
+    if (isDir) {
+      validNotFoundForHttpResult(parent, grillSessionId, handle);
+    }
   }
 
   static List<String> readResultSet(PersistentQueryResult resultset, QueryHandle handle, boolean isDir) throws  IOException {
@@ -841,6 +843,21 @@ public class TestQueryService extends GrillJerseyTest {
     }
   }
 
+  static void validNotFoundForHttpResult(WebTarget parent, GrillSessionHandle grillSessionId,
+      QueryHandle handle) {
+    try {
+      Response response = parent.path(
+          "queryapi/queries/" +handle.toString() + "/httpresultset")
+          .queryParam("sessionid", grillSessionId).request().get();
+      if (Response.Status.NOT_FOUND.getStatusCode() != response.getStatus()) {
+        Assert.fail("Expected not found excepiton, but got:" + response.getStatus());
+      }
+      Assert.assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    } catch (NotFoundException e) {
+      // expected
+    }
+
+  }
   // test with execute async post, get query, get results
   // test cancel query
   @Test(groups = "unit" )
@@ -889,6 +906,8 @@ public class TestQueryService extends GrillJerseyTest {
     InMemoryQueryResult resultset = target.path(handle.toString()).path(
         "resultset").queryParam("sessionid", grillSessionId).request().get(InMemoryQueryResult.class);
     validateInmemoryResult(resultset);
+
+    validNotFoundForHttpResult(target(), grillSessionId, handle);
   }
 
   @Test(groups = "unit" )
