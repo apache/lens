@@ -133,6 +133,13 @@ public interface CubeMetastoreService {
   public List<String> getAllDerivedCubeNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
+   * Get names of all cubes, which can be queried in the current database
+   *
+   * @return list of cube names
+   */
+  public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid) throws GrillException;
+
+  /**
    * Create a cube based on JAXB Cube object
    */
   public void createCube(GrillSessionHandle sessionid, XCube cube) throws GrillException;

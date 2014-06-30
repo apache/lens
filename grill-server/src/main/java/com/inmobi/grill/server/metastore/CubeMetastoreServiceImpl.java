@@ -993,4 +993,27 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
     return null;
   }
+
+  @Override
+  public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      List<CubeInterface> cubes = getClient(sessionid).getAllCubes();
+      if (cubes != null && !cubes.isEmpty()) {
+        List<String> names = new ArrayList<String>(cubes.size());
+        for (CubeInterface cube : cubes) {
+          if (cube.canBeQueried()) {
+            names.add(cube.getName());
+          }
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+    return null;
+  }
 }

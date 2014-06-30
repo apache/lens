@@ -191,7 +191,8 @@ public class MetastoreResource {
    * Get all cubes in the metastores, of the specified type
    * 
    * @param sessionid The sessionid in which user is working
-   * @param cubeTypes The type of cubes. Accepted values are 'all' or 'uber' or 'derived'
+   * @param cubeTypes The type of cubes. Accepted values are
+   * 'all' or 'uber' or 'derived' or 'queryable'
    * 
    * @return StringList consisting of all cubes names
    * 
@@ -207,9 +208,11 @@ public class MetastoreResource {
       return new StringList(getSvc().getAllUberCubeNames(sessionid));
       } else if (cubeTypes.equals("derived")) {
       return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
+      } else if (cubeTypes.equals("queryable")) {
+      return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
       } else {
         throw new BadRequestException("Invalid type " + cubeTypes + " Accepted" +
-          " values are 'all' or 'uber' or 'derived'");
+          " values are 'all' or 'uber' or 'derived' or 'queryable'");
       }
     } catch (GrillException e) {
       LOG.error("Error getting cube names", e);

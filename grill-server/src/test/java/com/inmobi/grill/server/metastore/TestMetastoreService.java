@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeInterface;
 import org.apache.hadoop.hive.ql.cube.metadata.DerivedCube;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
@@ -432,11 +433,24 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertFalse(foundcube);
       assertTrue(foundDcube);
 
+      // Create a non queryable cube
+      final XCube qcube = createTestCube("testNoQueryCube");
+      XProperty xp = new XProperty();
+      xp.setName(MetastoreConstants.CUBE_CAN_BE_QUERIED);
+      xp.setValue("false");
+      qcube.getProperties().getProperties().add(xp);
+
+      result = target.queryParam("sessionid", grillSessionId).request(
+          mediaType).post(Entity.xml(cubeObjectFactory.createXCube(qcube)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
       // get all cubes
       cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
           .queryParam("type", "all").request(mediaType).get(StringList.class);
       foundDcube = false;
       foundcube = false;
+      boolean foundQCube = false;
       for (String c : cubes.getElements()) {
         if (c.equalsIgnoreCase("testCube1")) {
           foundcube = true;
@@ -444,10 +458,36 @@ public class TestMetastoreService extends GrillJerseyTest {
         if (c.equalsIgnoreCase("testderived")) {
           foundDcube = true;
         }
+        if (c.equalsIgnoreCase("testNoQueryCube")) {
+          foundQCube = true;
+        }
       }
 
       assertTrue(foundcube);
       assertTrue(foundDcube);
+      assertTrue(foundQCube);
+
+      // get queryable cubes
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
+          .queryParam("type", "queryable").request(mediaType).get(StringList.class);
+      foundDcube = false;
+      foundcube = false;
+      foundQCube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+        if (c.equalsIgnoreCase("testNoQueryCube")) {
+          foundQCube = true;
+        }
+      }
+
+      assertTrue(foundcube);
+      assertTrue(foundDcube);
+      assertFalse(foundQCube);
     }
     finally {
       dropDatabase(DB);
