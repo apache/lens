@@ -55,20 +55,32 @@ public class JAXBUtils {
    * 
    * @return {@link Cube}
    */
-  public static Cube hiveCubeFromXCube(XCube cube) {
-    Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
-    for (XDimension xd : cube.getDimensions().getDimensions()) {
-      dims.add(hiveDimFromXDim(xd));
-    }
+  public static CubeInterface hiveCubeFromXCube(XCube cube, Cube parent) {
+    if (cube.isDerived()) {
+      Set<String> dims = new LinkedHashSet<String>();
+      dims.addAll(cube.getDimensionNames().getDimensions());
 
-    Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
-    for (XMeasure xm : cube.getMeasures().getMeasures()) {
-      measures.add(hiveMeasureFromXMeasure(xm));
-    }
+      Set<String> measures = new LinkedHashSet<String>();
+      measures.addAll(cube.getMeasureNames().getMeasures());
 
-    Map<String, String> properties = mapFromXProperties(cube.getProperties());
-    double cubeWeight = cube.getWeight() == null ? 0d : cube.getWeight();
-    return new Cube(cube.getName(), measures, dims, properties, cubeWeight);
+      Map<String, String> properties = mapFromXProperties(cube.getProperties());
+      double cubeWeight = cube.getWeight() == null ? 0d : cube.getWeight();
+      return new DerivedCube(cube.getName(), measures, dims, properties, cubeWeight, parent);
+    } else {
+      Set<CubeDimension> dims = new LinkedHashSet<CubeDimension>();
+      for (XDimension xd : cube.getDimensions().getDimensions()) {
+        dims.add(hiveDimFromXDim(xd));
+      }
+
+      Set<CubeMeasure> measures = new LinkedHashSet<CubeMeasure>();
+      for (XMeasure xm : cube.getMeasures().getMeasures()) {
+        measures.add(hiveMeasureFromXMeasure(xm));
+      }
+
+      Map<String, String> properties = mapFromXProperties(cube.getProperties());
+      double cubeWeight = cube.getWeight() == null ? 0d : cube.getWeight();
+      return new Cube(cube.getName(), measures, dims, properties, cubeWeight);
+    }
   }
 
   /**
@@ -79,26 +91,35 @@ public class JAXBUtils {
    * @return {@link XCube}
    */
   public static XCube xCubeFromHiveCube(CubeInterface c) {
+    
     XCube xc = XCF.createXCube();
     xc.setName(c.getName());
     xc.setWeight(((AbstractCubeTable)c).weight());
-
-    XMeasures xms = XCF.createXMeasures();
-    List<XMeasure> xmsList = xms.getMeasures();
-    for (CubeMeasure cm : c.getMeasures()) {
-      xmsList.add(xMeasureFromHiveMeasure(cm));
-    }
-    xc.setMeasures(xms);
-
-
-    XDimensions xdm = XCF.createXDimensions();
-    List<XDimension> xdmList = xdm.getDimensions();
-    for (CubeDimension cd : c.getDimensions()) {
-      xdmList.add(xDimensionFromHiveDimension(cd));
-    }
-    xc.setDimensions(xdm);
-
     xc.setProperties(xPropertiesFromMap(((AbstractCubeTable)c).getProperties()));
+
+    if (c.isDerivedCube()) {
+      xc.setMeasureNames(XCF.createXMeasureNames());
+      xc.getMeasureNames().getMeasures().addAll(c.getMeasureNames());
+      xc.setDimensionNames(XCF.createXDimensionNames());
+      xc.getDimensionNames().getDimensions().addAll(c.getDimensionNames());
+      xc.setParent(((DerivedCube)c).getParent().getName());
+      xc.setDerived(true);
+    } else {
+      XMeasures xms = XCF.createXMeasures();
+      List<XMeasure> xmsList = xms.getMeasures();
+      for (CubeMeasure cm : c.getMeasures()) {
+        xmsList.add(xMeasureFromHiveMeasure(cm));
+      }
+      xc.setMeasures(xms);
+
+
+      XDimensions xdm = XCF.createXDimensions();
+      List<XDimension> xdmList = xdm.getDimensions();
+      for (CubeDimension cd : c.getDimensions()) {
+        xdmList.add(xDimensionFromHiveDimension(cd));
+      }
+      xc.setDimensions(xdm);
+    }
     return xc;
   }
 

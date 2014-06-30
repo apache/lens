@@ -188,18 +188,29 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all cubes in the metastores
+   * Get all cubes in the metastores, of the specified type
    * 
    * @param sessionid The sessionid in which user is working
+   * @param cubeTypes The type of cubes. Accepted values are 'all' or 'uber' or 'derived'
    * 
    * @return StringList consisting of all cubes names
    * 
    */
   @GET @Path("cubes")
-  public StringList getAllCubes(@QueryParam("sessionid") GrillSessionHandle sessionid) {
+  public StringList getAllCubes(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @QueryParam("type") @DefaultValue("all") String cubeTypes) {
     checkSessionId(sessionid);
     try {
+      if (cubeTypes.equals("all")) {
       return new StringList(getSvc().getAllCubeNames(sessionid));
+      } else if (cubeTypes.equals("uber")) {
+      return new StringList(getSvc().getAllUberCubeNames(sessionid));
+      } else if (cubeTypes.equals("derived")) {
+      return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
+      } else {
+        throw new BadRequestException("Invalid type " + cubeTypes + " Accepted" +
+          " values are 'all' or 'uber' or 'derived'");
+      }
     } catch (GrillException e) {
       LOG.error("Error getting cube names", e);
       throw new WebApplicationException(e);
@@ -262,6 +273,10 @@ public class MetastoreResource {
     try {
       getSvc().createCube(sessionid, cube);
     } catch (GrillException e) {
+      if (cube.isDerived()) {
+        // parent should exist
+        checkTableNotFound(e, cube.getParent());
+      }
       LOG.error("Error creating cube " + cube.getName(), e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
@@ -294,6 +309,10 @@ public class MetastoreResource {
     try {
       getSvc().updateCube(sessionid, cube);
     } catch (GrillException e) {
+      if (cube.isDerived()) {
+        // parent should exist
+        checkTableNotFound(e, cube.getParent());
+      }
       checkTableNotFound(e, cube.getName());
       LOG.error("Error updating cube " + cube.getName(), e);
       return new APIResult(Status.FAILED, e.getMessage());
@@ -496,13 +515,14 @@ public class MetastoreResource {
    * Get all facts that belong to a cube in the metastore
    * 
    * @param sessionid The sessionid in which user is working
-   * @param cubeName name of the cube
+   * @param cubeName name of the uber cube or derived cube
    * 
    * @return List of {@link FactTable} objects 
    * 
    */
   @GET @Path("/cubes/{cubeName}/facts")
-  public List<FactTable> getAllFactsOfCube(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubeName") String cubeName)
+  public List<FactTable> getAllFactsOfCube(
+      @QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("cubeName") String cubeName)
       throws GrillException {
     checkSessionId(sessionid);
     try {

@@ -112,11 +112,25 @@ public interface CubeMetastoreService {
   public List<String> getAllStorageNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
-   * Get names of all cubes in the current database
+   * Get names of all cubes in the current database, includes both uber cubes and derived cubes
    * 
    * @return list of cube names
    */
   public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException;
+
+  /**
+   * Get names of all uber cube names in the current database
+   * 
+   * @return list of cube names
+   */
+  public List<String> getAllUberCubeNames(GrillSessionHandle sessionid) throws GrillException;
+
+  /**
+   * Get names of all derived cubes in the current database
+   * 
+   * @return list of cube names
+   */
+  public List<String> getAllDerivedCubeNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
    * Create a cube based on JAXB Cube object
@@ -133,7 +147,7 @@ public interface CubeMetastoreService {
   public XCube getCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
 
   /**
-   * Drop a cube from the metastore in the currently deleted database
+   * Drop a cube from the metastore in the currently deleted database.
    * 
    * @param cubeName
    */
@@ -180,6 +194,16 @@ public interface CubeMetastoreService {
   public List<String> getAllDimNames(GrillSessionHandle sessionid) throws GrillException;
 
 
+  /**
+   * Get all facts of cube. Cube can also be a derived cube
+   * 
+   * @param sessionid The session id
+   * @param cubeName The cube name
+   * 
+   * @return List of FactTable objects
+   * 
+   * @throws GrillException
+   */
 	public List<FactTable> getAllFactsOfCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
 	public FactTable getFactTable(GrillSessionHandle sessionid, String fact) throws GrillException;
 	public void createFactTable(GrillSessionHandle sessionid, FactTable fact, XStorageTables storageTables) throws GrillException;
