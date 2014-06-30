@@ -43,10 +43,14 @@ import com.inmobi.grill.server.metastore.MetastoreApp;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeInterface;
+import org.apache.hadoop.hive.ql.cube.metadata.DerivedCube;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
@@ -317,6 +321,30 @@ public class TestMetastoreService extends GrillJerseyTest {
     return cube;
   }
 
+  private XCube createDerivedCube(String cubeName, String parent) throws Exception {
+    XCube cube = cubeObjectFactory.createXCube();
+    cube.setName(cubeName);
+    cube.setWeight(50.0);
+    XDimensionNames dimNames = cubeObjectFactory.createXDimensionNames();
+    dimNames.getDimensions().add("dim1");
+    cube.setDimensionNames(dimNames);
+
+    XMeasureNames msrNames = cubeObjectFactory.createXMeasureNames();
+    msrNames.getMeasures().add("msr1");
+    cube.setMeasureNames(msrNames);
+
+    XProperties properties = cubeObjectFactory.createXProperties();
+    XProperty xp1 = cubeObjectFactory.createXProperty();
+    xp1.setName("derived.foo");
+    xp1.setValue("derived.bar");
+    properties.getProperties().add(xp1);
+
+    cube.setProperties(properties);
+    cube.setParent(parent);
+    cube.setDerived(true);
+    return cube;
+  }
+
   @Test
   public void testCreateCube() throws Exception {
     final String DB = dbPFX + "test_create_cube";
@@ -349,6 +377,117 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       assertTrue(foundcube);
 
+      // create derived cube
+      final XCube dcube = createDerivedCube("testderived", "testCube1");
+      result = target.queryParam("sessionid", grillSessionId).request(
+          mediaType).post(Entity.xml(cubeObjectFactory.createXCube(dcube)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
+      boolean foundDcube = false;
+      foundcube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+      }
+
+      assertTrue(foundcube);
+      assertTrue(foundDcube);
+
+      // get all uber cubes
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
+          .queryParam("type", "uber").request(mediaType).get(StringList.class);
+      foundDcube = false;
+      foundcube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+      }
+
+      assertTrue(foundcube);
+      assertFalse(foundDcube);
+
+      // get all derived cubes
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
+          .queryParam("type", "derived").request(mediaType).get(StringList.class);
+      foundDcube = false;
+      foundcube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+      }
+
+      assertFalse(foundcube);
+      assertTrue(foundDcube);
+
+      // Create a non queryable cube
+      final XCube qcube = createTestCube("testNoQueryCube");
+      XProperty xp = new XProperty();
+      xp.setName(MetastoreConstants.CUBE_CAN_BE_QUERIED);
+      xp.setValue("false");
+      qcube.getProperties().getProperties().add(xp);
+
+      result = target.queryParam("sessionid", grillSessionId).request(
+          mediaType).post(Entity.xml(cubeObjectFactory.createXCube(qcube)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // get all cubes
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
+          .queryParam("type", "all").request(mediaType).get(StringList.class);
+      foundDcube = false;
+      foundcube = false;
+      boolean foundQCube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+        if (c.equalsIgnoreCase("testNoQueryCube")) {
+          foundQCube = true;
+        }
+      }
+
+      assertTrue(foundcube);
+      assertTrue(foundDcube);
+      assertTrue(foundQCube);
+
+      // get queryable cubes
+      cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
+          .queryParam("type", "queryable").request(mediaType).get(StringList.class);
+      foundDcube = false;
+      foundcube = false;
+      foundQCube = false;
+      for (String c : cubes.getElements()) {
+        if (c.equalsIgnoreCase("testCube1")) {
+          foundcube = true;
+        }
+        if (c.equalsIgnoreCase("testderived")) {
+          foundDcube = true;
+        }
+        if (c.equalsIgnoreCase("testNoQueryCube")) {
+          foundQCube = true;
+        }
+      }
+
+      assertTrue(foundcube);
+      assertTrue(foundDcube);
+      assertFalse(foundQCube);
     }
     finally {
       dropDatabase(DB);
@@ -384,7 +523,30 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(actual.getMeasures().getMeasures().size(), cube.getMeasures().getMeasures().size());
       assertEquals(actual.getDimensions().getDimensions().size(), cube.getDimensions().getDimensions().size());
       assertEquals(actual.getWeight(), 100.0d);
+      assertFalse(actual.isDerived());
+      assertNull(actual.getParent());
 
+      final XCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
+      target = target().path("metastore").path("cubes");
+      // Create this cube first
+      element = cubeObjectFactory.createXCube(dcube);
+      result =
+          target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now get
+      target = target().path("metastore").path("cubes").path("testGetDerivedCube");
+      actualElement =
+          target.queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
+      actual = actualElement.getValue();
+      assertNotNull(actual);
+
+      assertTrue(dcube.getName().equalsIgnoreCase(actual.getName()));
+      assertTrue(actual.isDerived());
+      assertEquals(actual.getParent(), "testGetCube".toLowerCase());
+      assertEquals(actual.getWeight(), 50.0d);
+      assertEquals(actual.getMeasureNames().getMeasures().size(), dcube.getMeasureNames().getMeasures().size());
+      assertEquals(actual.getDimensionNames().getDimensions().size(), dcube.getDimensionNames().getDimensions().size());
     } finally {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
@@ -407,13 +569,33 @@ public class TestMetastoreService extends GrillJerseyTest {
           target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      target = target().path("metastore").path("cubes").path("test_drop_cube").queryParam("cascade", "true");
+      final XCube dcube = createDerivedCube("test_drop_derived_cube", "test_drop_cube");
+      target = target().path("metastore").path("cubes");
+      // Create this cube first
+      element = cubeObjectFactory.createXCube(dcube);
+      result =
+          target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      target = target().path("metastore").path("cubes").path("test_drop_derived_cube");
       result = target.queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Now get should give 404
       try {
-        target = target().path("metastore").path("cubes").path("test_drop_cube");
+        JAXBElement<XCube> got =
+            target.queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
+        fail("Should have thrown 404");
+      } catch (NotFoundException ex) {
+        ex.printStackTrace();
+      }
+
+      target = target().path("metastore").path("cubes").path("test_drop_cube");
+      result = target.queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now get should give 404
+      try {
         JAXBElement<XCube> got =
             target.queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
         fail("Should have thrown 404");
@@ -478,11 +660,52 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(actual.getDimensions().getDimensions().size(), 3);
       assertEquals(actual.getMeasures().getMeasures().size(), 3);
 
-      Cube hcube = JAXBUtils.hiveCubeFromXCube(actual);
+      CubeInterface hcube = JAXBUtils.hiveCubeFromXCube(actual, null);
+      assertTrue(hcube instanceof Cube);
       assertTrue(hcube.getMeasureByName("msr3").getAggregate().equals("sum"));
       assertEquals(hcube.getMeasureByName("msr3").getCost(), 20.0);
       assertNotNull(hcube.getDimensionByName("dim3"));
-      assertEquals(hcube.getProperties().get("foo2"), "bar2");
+      assertEquals(((AbstractCubeTable)hcube).getProperties().get("foo2"), "bar2");
+
+      final XCube dcube = createDerivedCube("test_update_derived", cubeName);
+      // Create this cube first
+      element = cubeObjectFactory.createXCube(dcube);
+      result =
+          target.queryParam("sessionid", grillSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Update something
+      dcube.setWeight(80.0);
+      // Add a measure and dimension
+      dcube.getMeasureNames().getMeasures().add("msr3");
+      dcube.getDimensionNames().getDimensions().add("dim3");
+
+      xp = new XProperty();
+      xp.setName("foo.derived2");
+      xp.setValue("bar.derived2");
+      dcube.getProperties().getProperties().add(xp);
+
+
+      element = cubeObjectFactory.createXCube(dcube);
+      result = target.path("test_update_derived")
+          .queryParam("sessionid", grillSessionId).request(mediaType).put(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      got = target.path("test_update_derived")
+          .queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
+      actual = got.getValue();
+      assertEquals(actual.getWeight(), 80.0);
+      assertEquals(actual.getDimensionNames().getDimensions().size(), 2);
+      assertEquals(actual.getMeasureNames().getMeasures().size(), 2);
+      assertTrue(actual.getMeasureNames().getMeasures().contains("msr3"));
+      assertTrue(actual.getDimensionNames().getDimensions().contains("dim3"));
+
+      CubeInterface hdcube = JAXBUtils.hiveCubeFromXCube(actual, (Cube)hcube);
+      assertTrue(hdcube instanceof DerivedCube);
+      assertTrue(hdcube.getMeasureByName("msr3").getAggregate().equals("sum"));
+      assertEquals(hdcube.getMeasureByName("msr3").getCost(), 20.0);
+      assertNotNull(hdcube.getDimensionByName("dim3"));
+      assertEquals(((AbstractCubeTable)hdcube).getProperties().get("foo.derived2"), "bar.derived2");
 
     } finally {
       dropDatabase(DB);

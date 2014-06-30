@@ -188,7 +188,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void createCube(GrillSessionHandle sessionid, XCube cube) throws GrillException {
     try {
       acquire(sessionid);
-      getClient(sessionid).createCube(JAXBUtils.hiveCubeFromXCube(cube));
+      Cube parent = cube.isDerived() ? (Cube)getClient(sessionid).getCube(cube.getParent()) : null;
+      getClient(sessionid).createCube(JAXBUtils.hiveCubeFromXCube(cube, parent));
       LOG.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
@@ -247,7 +248,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void updateCube(GrillSessionHandle sessionid, XCube cube) throws GrillException {
     try {
       acquire(sessionid);
-      getClient(sessionid).alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube));
+      Cube parent = cube.isDerived() ? (Cube)getClient(sessionid).getCube(cube.getParent()) : null;
+      getClient(sessionid).alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
       LOG.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
@@ -935,6 +937,75 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
         List<String> names = new ArrayList<String>(storages.size());
         for (Storage storage : storages) {
           names.add(storage.getName());
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+    return null;
+  }
+
+  @Override
+  public List<String> getAllUberCubeNames(GrillSessionHandle sessionid)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      List<CubeInterface> cubes = getClient(sessionid).getAllCubes();
+      if (cubes != null && !cubes.isEmpty()) {
+        List<String> names = new ArrayList<String>(cubes.size());
+        for (CubeInterface cube : cubes) {
+          if (!cube.isDerivedCube()) {
+            names.add(cube.getName());
+          }
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+    return null;
+  }
+
+  @Override
+  public List<String> getAllDerivedCubeNames(GrillSessionHandle sessionid)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      List<CubeInterface> cubes = getClient(sessionid).getAllCubes();
+      if (cubes != null && !cubes.isEmpty()) {
+        List<String> names = new ArrayList<String>(cubes.size());
+        for (CubeInterface cube : cubes) {
+          if (cube.isDerivedCube()) {
+            names.add(cube.getName());
+          }
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+    return null;
+  }
+
+  @Override
+  public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      List<CubeInterface> cubes = getClient(sessionid).getAllCubes();
+      if (cubes != null && !cubes.isEmpty()) {
+        List<String> names = new ArrayList<String>(cubes.size());
+        for (CubeInterface cube : cubes) {
+          if (cube.canBeQueried()) {
+            names.add(cube.getName());
+          }
         }
         return names;
       }

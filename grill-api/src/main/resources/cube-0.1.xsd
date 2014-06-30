@@ -16,17 +16,28 @@
     <xs:complexType name="x_cube">
         <xs:annotation>
             <xs:documentation>
+             XCube can be a uber cube for which user would give the full
+             specification of the measures and dimensions. XCube can be
+             a Derived cube, for which user would specify only the measure names,
+             dimension names and parent. Derived cube can have subset of measure
+             names and dimension names defined for its parent. It can have different
+             weight and properties associated with.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
             <xs:element type="x_measures" name="measures"/>
             <xs:element type="x_dimensions" name="dimensions"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
+            <xs:element type="x_measure_names" name="measure_names"/>
+            <xs:element type="x_dimension_names" name="dimension_names"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="description"/>
         <xs:attribute type="xs:double" name="weight"/>
+        <xs:attribute type="xs:string" name="parent"/>
+        <xs:attribute type="xs:boolean" name="derived" default="false"/>
     </xs:complexType>
+
     <xs:complexType name="x_property">
         <xs:annotation>
             <xs:documentation>
@@ -72,6 +83,18 @@
             <xs:element type="x_measure" name="measures" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
+
+    <xs:complexType name="x_measure_names">
+        <xs:annotation>
+            <xs:documentation>
+                Set of measure names.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="xs:string" name="measures" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
     <xs:complexType name="x_dimension">
         <xs:annotation>
             <xs:documentation>
@@ -106,6 +129,17 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element type="x_dimension" name="dimensions" maxOccurs="unbounded" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_dimension_names">
+        <xs:annotation>
+            <xs:documentation>
+                Set of dimension names.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="xs:string" name="dimensions" maxOccurs="unbounded" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 
