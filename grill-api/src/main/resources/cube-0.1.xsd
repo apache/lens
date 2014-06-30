@@ -16,6 +16,12 @@
     <xs:complexType name="x_cube">
         <xs:annotation>
             <xs:documentation>
+             XCube can be a uber cube for which user would give the full
+             specification of the measures and dimensions. XCube can be
+             a Derived cube, for which user would specify only the measure names,
+             dimension names and parent. Derived cube can have subset of measure
+             names and dimension names defined for its parent. It can have different
+             weight and properties associated with.
             </xs:documentation>
         </xs:annotation>
         <xs:sequence>
