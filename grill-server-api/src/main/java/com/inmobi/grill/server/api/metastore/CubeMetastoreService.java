@@ -112,18 +112,18 @@ public interface CubeMetastoreService {
   public List<String> getAllStorageNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
-   * Get names of all cubes in the current database, includes both uber cubes and derived cubes
+   * Get names of all cubes in the current database, includes both base cubes and derived cubes
    * 
    * @return list of cube names
    */
   public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
-   * Get names of all uber cube names in the current database
+   * Get names of all base cube names in the current database
    * 
    * @return list of cube names
    */
-  public List<String> getAllUberCubeNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllBaseCubeNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
    * Get names of all derived cubes in the current database

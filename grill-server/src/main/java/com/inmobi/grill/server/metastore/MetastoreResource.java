@@ -192,7 +192,7 @@ public class MetastoreResource {
    * 
    * @param sessionid The sessionid in which user is working
    * @param cubeTypes The type of cubes. Accepted values are
-   * 'all' or 'uber' or 'derived' or 'queryable'
+   * 'all' or 'base' or 'derived' or 'queryable'
    * 
    * @return StringList consisting of all cubes names
    * 
@@ -204,15 +204,15 @@ public class MetastoreResource {
     try {
       if (cubeTypes.equals("all")) {
       return new StringList(getSvc().getAllCubeNames(sessionid));
-      } else if (cubeTypes.equals("uber")) {
-      return new StringList(getSvc().getAllUberCubeNames(sessionid));
+      } else if (cubeTypes.equals("base")) {
+      return new StringList(getSvc().getAllBaseCubeNames(sessionid));
       } else if (cubeTypes.equals("derived")) {
       return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
       } else if (cubeTypes.equals("queryable")) {
       return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
       } else {
         throw new BadRequestException("Invalid type " + cubeTypes + " Accepted" +
-          " values are 'all' or 'uber' or 'derived' or 'queryable'");
+          " values are 'all' or 'base' or 'derived' or 'queryable'");
       }
     } catch (GrillException e) {
       LOG.error("Error getting cube names", e);
@@ -518,7 +518,7 @@ public class MetastoreResource {
    * Get all facts that belong to a cube in the metastore
    * 
    * @param sessionid The sessionid in which user is working
-   * @param cubeName name of the uber cube or derived cube
+   * @param cubeName name of the base cube or derived cube
    * 
    * @return List of {@link FactTable} objects 
    * 

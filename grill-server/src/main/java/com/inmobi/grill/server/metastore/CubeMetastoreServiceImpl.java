@@ -949,7 +949,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   }
 
   @Override
-  public List<String> getAllUberCubeNames(GrillSessionHandle sessionid)
+  public List<String> getAllBaseCubeNames(GrillSessionHandle sessionid)
       throws GrillException {
     try {
       acquire(sessionid);
