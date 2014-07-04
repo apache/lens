@@ -399,9 +399,9 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertTrue(foundcube);
       assertTrue(foundDcube);
 
-      // get all uber cubes
+      // get all base cubes
       cubes = target().path("metastore/cubes").queryParam("sessionid", grillSessionId)
-          .queryParam("type", "uber").request(mediaType).get(StringList.class);
+          .queryParam("type", "base").request(mediaType).get(StringList.class);
       foundDcube = false;
       foundcube = false;
       for (String c : cubes.getElements()) {
