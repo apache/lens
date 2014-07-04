@@ -35,7 +35,7 @@ import java.io.File;
 import java.util.List;
 
 @Component
-public class GrillDimensionCommands implements CommandMarker {
+public class GrillDimensionTableCommands implements CommandMarker {
   private GrillClient client;
 
 
@@ -43,9 +43,9 @@ public class GrillDimensionCommands implements CommandMarker {
     this.client = client;
   }
 
-  @CliCommand(value = "show dimensions",
+  @CliCommand(value = "show dimtables",
       help = "show list of dimension tables in database")
-  public String showDimensions() {
+  public String showDimensionTables() {
     List<String> dims = client.getAllDimensionTables();
     if (dims!=null) {
       return Joiner.on("\n").join(dims);
@@ -54,7 +54,7 @@ public class GrillDimensionCommands implements CommandMarker {
     }
   }
 
-  @CliCommand(value = "create dimension", help = "Create a new dimension table")
+  @CliCommand(value = "create dimtable", help = "Create a new dimension table")
   public String createDimension(@CliOption(key = {"", "dimension"},
       mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
 
@@ -90,7 +90,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "drop dimension", help = "drop dimension table")
+  @CliCommand(value = "drop dimtable", help = "drop dimension table")
   public String dropDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "dimension table name to be dropped") String dim,
                                    @CliOption(key = {"cascade"}, mandatory = false,
@@ -103,7 +103,7 @@ public class GrillDimensionCommands implements CommandMarker {
     }
   }
 
-  @CliCommand(value = "update dimension", help = "update dimension table")
+  @CliCommand(value = "update dimtable", help = "update dimension table")
   public String updateDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
@@ -133,13 +133,14 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "describe dimension", help = "describe a fact table")
+  @CliCommand(value = "describe dimtable", help = "describe a fact table")
   public String describeDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "dimension table name to be described") String dim) {
     DimensionTable table = client.getDimensionTable(dim);
     StringBuilder buf = new StringBuilder();
 
-    buf.append("Table Name : ").append(table.getName()).append("\n");
+    buf.append("Table Name : ").append(table.getTableName()).append("\n");
+    buf.append("Dim Name : ").append(table.getDimName()).append("\n");
     if(table.getColumns()!= null) {
       buf.append("Columns: ").append("\n");
       buf.append("\t")
@@ -162,19 +163,6 @@ public class GrillDimensionCommands implements CommandMarker {
     if(table.getProperties()!= null) {
      buf.append(FormatUtils.formatProperties(table.getProperties().getProperties()));
     }
-    if(table.getDimensionReferences() != null ) {
-      buf.append("References : ").append("\n");
-      buf.append("\t").append("reference column name")
-          .append("\t")
-          .append("list of table reference <table>.<col>")
-          .append("\n");
-      for (DimensionReference ref : table.getDimensionReferences().getDimReferences()) {
-        buf.append("\t")
-            .append(ref.getDimensionColumn())
-            .append("\t")
-            .append(getXtableString(ref.getTableReferences())).append("\n");
-      }
-    }
     if(table.getStorageDumpPeriods() != null) {
       buf.append("Update Period : ").append("\n");
       buf.append("\t").append("storage name").append("\t")
@@ -190,19 +178,7 @@ public class GrillDimensionCommands implements CommandMarker {
     return buf.toString();
   }
 
-  private String getXtableString(List<XTablereference> tableReferences) {
-    StringBuilder builder = new StringBuilder();
-    for (XTablereference ref : tableReferences) {
-      builder.append(ref.getDestTable())
-          .append(".")
-          .append(ref.getDestColumn())
-          .append(",");
-    }
-    return builder.toString();
-  }
-
-
-  @CliCommand(value = "dim list storage",
+  @CliCommand(value = "dimtable list storage",
       help = "display list of storage associated to dimension table")
   public String getDimStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table-name> for listing storages") String dim){
@@ -220,7 +196,7 @@ public class GrillDimensionCommands implements CommandMarker {
     return sb.toString().substring(0, sb.toString().length()-1);
   }
 
-  @CliCommand(value = "dim drop-all storages",
+  @CliCommand(value = "dimtable drop-all storages",
       help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
@@ -233,7 +209,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "dim add storage", help = "adds a new storage to dimension")
+  @CliCommand(value = "dimtable add storage", help = "adds a new storage to dimension")
   public String addNewDimStorage(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -263,7 +239,7 @@ public class GrillDimensionCommands implements CommandMarker {
 
 
 
-  @CliCommand(value = "dim drop storage", help = "drop storage to dimension table")
+  @CliCommand(value = "dimtable drop storage", help = "drop storage to dimension table")
   public String dropStorageFromDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -284,7 +260,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "dim get storage", help = "describe storage of dimension table")
+  @CliCommand(value = "dimtable get storage", help = "describe storage of dimension table")
   public String getStorageFromDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
@@ -301,7 +277,7 @@ public class GrillDimensionCommands implements CommandMarker {
     return FormatUtils.getStorageString(element);
   }
 
-  @CliCommand(value = "dim list partitions",
+  @CliCommand(value = "dimtable list partitions",
       help = "get all partitions associated with dimension table")
   public String getAllPartitionsOfDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dimension-table-name> <storageName> " +
@@ -326,7 +302,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "dim drop partitions",
+  @CliCommand(value = "dimtable drop partitions",
       help = "drop all partitions associated with dimension table")
   public String dropAllPartitionsOfDim(@CliOption(key = {"", "table"},
       mandatory = true, help = "<dimension-table-name> <storageName> " +
@@ -356,7 +332,7 @@ public class GrillDimensionCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "dim add partition", help = "add a partition to dim table")
+  @CliCommand(value = "dimtable add partition", help = "add a partition to dim table")
   public String addPartitionToFact(@CliOption(key = {"","table"},
       mandatory = true, help = "<dimension-table-name> <storage-name>" +
       " <path to partition specification>") String specPair) {
