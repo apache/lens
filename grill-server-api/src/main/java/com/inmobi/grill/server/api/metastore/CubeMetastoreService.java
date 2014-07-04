@@ -176,30 +176,32 @@ public interface CubeMetastoreService {
    * Drop a dimension table from the cube metastore
    * 
    * @param sessionid
-   * @param dimension
+   * @param dimTblName
    * @param cascade
    * 
    * @throws GrillException
    */
-  public void dropDimensionTable(GrillSessionHandle sessionid, String dimension, boolean cascade) throws GrillException;
+  public void dropDimensionTable(GrillSessionHandle sessionid, String dimTblName, boolean cascade) throws GrillException;
 
   /**
    * Get the dimension table from metastore
    * 
-   * @param dimName
+   * @param dimTblName
    * @return The {@link DimensionTable}
    */
-	public DimensionTable getDimensionTable(GrillSessionHandle sessionid, String dimName) throws GrillException;
+	public DimensionTable getDimensionTable(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
 	public void updateDimensionTable(GrillSessionHandle sessionid, DimensionTable dimensionTable) throws GrillException;
 
-	public List<String> getDimensionStorages(GrillSessionHandle sessionid, String dimension) throws GrillException;
-	public void createDimensionStorage(GrillSessionHandle sessionid, String dimName, XStorageTableElement storageTable)
+	public List<String> getDimTableStorages(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
+	public void createDimTableStorage(GrillSessionHandle sessionid, String dimTblName, XStorageTableElement storageTable)
 	throws GrillException;
-	public void dropAllStoragesOfDim(GrillSessionHandle sessionid, String dimName) throws GrillException;
-  public XStorageTableElement getStorageOfDim(GrillSessionHandle sessionid, String dimName, String storageName) throws GrillException;
-	public void dropStorageOfDim(GrillSessionHandle sessionid, String dimName, String storage) throws GrillException;
-  public List<String> getAllDimNames(GrillSessionHandle sessionid) throws GrillException;
+	public void dropAllStoragesOfDimTable(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
+  public XStorageTableElement getStorageOfDim(GrillSessionHandle sessionid, String dimTblName, String storageName) throws GrillException;
+	public void dropStorageOfDimTable(GrillSessionHandle sessionid, String dimTblName, String storage) throws GrillException;
+  public List<String> getAllDimTableNames(GrillSessionHandle sessionid) throws GrillException;
 
+  public List<XPartition> getAllPartitionsOfDimTableStorage(GrillSessionHandle sessionid, String dimTblName, String storage, String filter) throws GrillException;
+  public void addPartitionToDimStorage(GrillSessionHandle sessionid, String dimTblName, String storageName, XPartition partition) throws GrillException;
 
   /**
    * Get all facts of cube. Cube can also be a derived cube
@@ -227,8 +229,6 @@ public interface CubeMetastoreService {
   public List<XPartition> getAllPartitionsOfFactStorage(GrillSessionHandle sessionid, String fact, String storage, String filter) throws GrillException;
   public void addPartitionToFactStorage(GrillSessionHandle sessionid, String fact, String storageName, XPartition partition) throws GrillException;
 
-  public List<XPartition> getAllPartitionsOfDimStorage(GrillSessionHandle sessionid, String dimension, String storage, String filter) throws GrillException;
-  public void addPartitionToDimStorage(GrillSessionHandle sessionid, String dimName, String storageName, XPartition partition) throws GrillException;
   public void dropPartitionFromStorage(GrillSessionHandle sessionid,
       String cubeTableName, String storageName, XTimePartSpec timePartSpec,
       XPartSpec nonTimePartSpec, String updatePeriod) throws GrillException;

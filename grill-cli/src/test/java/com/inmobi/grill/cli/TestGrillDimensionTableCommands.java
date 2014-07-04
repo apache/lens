@@ -20,7 +20,7 @@ package com.inmobi.grill.cli;
  */
 
 
-import com.inmobi.grill.cli.commands.GrillDimensionCommands;
+import com.inmobi.grill.cli.commands.GrillDimensionTableCommands;
 import com.inmobi.grill.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +30,17 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestGrillDimensionCommands extends GrillCliApplicationTest {
+public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillDimensionCommands.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestGrillDimensionTableCommands.class);
   public static final String DIM_LOCAL = "dim_local";
-  private static GrillDimensionCommands command = null;
+  private static GrillDimensionTableCommands command = null;
 
 
-  private static GrillDimensionCommands getCommand() {
+  private static GrillDimensionTableCommands getCommand() {
     if (command == null) {
       GrillClient client = new GrillClient();
-      command = new GrillDimensionCommands();
+      command = new GrillDimensionTableCommands();
       command.setClient(client);
     }
     return command;
@@ -48,7 +48,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
 
 
   @Test
-  public void testDimCommands() {
+  public void testDimTableCommands() {
     addDim1Table("dim_table2",
         "dim_table2.xml",
         "dim2-storage-spec.xml", DIM_LOCAL);
@@ -60,16 +60,16 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
 
 
   public static void addDim1Table(String tableName,String specName, String storageSpecName, String storageName) {
-    GrillDimensionCommands command = getCommand();
-    String dimList = command.showDimensions();
+    GrillDimensionTableCommands command = getCommand();
+    String dimList = command.showDimensionTables();
     Assert.assertEquals("No Dimensions Found", dimList,
         "Dim tables should not be found");
     //add local storage before adding fact table
     TestGrillStorageCommands.addLocalStorage(storageName);
     URL dimSpec =
-        TestGrillDimensionCommands.class.getClassLoader().getResource(specName);
+        TestGrillDimensionTableCommands.class.getClassLoader().getResource(specName);
     URL factStorageSpec =
-        TestGrillDimensionCommands.class.getClassLoader().getResource(storageSpecName);
+        TestGrillDimensionTableCommands.class.getClassLoader().getResource(storageSpecName);
 
     try {
       command.createDimension(new File(dimSpec.toURI()).getAbsolutePath()
@@ -79,13 +79,13 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
       Assert.fail("Unable to create fact table" + e.getMessage());
     }
 
-    dimList = command.showDimensions();
+    dimList = command.showDimensionTables();
     Assert.assertEquals(tableName, dimList, "dim_table table should be found");
   }
 
   private static void updateDim1Table() {
     try {
-      GrillDimensionCommands command = getCommand();
+      GrillDimensionTableCommands command = getCommand();
       URL dimSpec =
           TestGrillFactCommands.class.getClassLoader().getResource("dim_table2.xml");
       StringBuilder sb = new StringBuilder();
@@ -126,7 +126,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
   }
 
   private static void testDimStorageActions() {
-    GrillDimensionCommands command = getCommand();
+    GrillDimensionTableCommands command = getCommand();
     String result = command.getDimStorages("dim_table2");
     Assert.assertEquals(DIM_LOCAL, result);
     command.dropAllDimStorages("dim_table2");
@@ -140,7 +140,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
   }
 
   private static void addLocalStorageToDim() {
-    GrillDimensionCommands command = getCommand();
+    GrillDimensionTableCommands command = getCommand();
     String result;
     URL resource = TestGrillFactCommands.class.getClassLoader().getResource("dim-local-storage-element.xml");
     try {
@@ -158,7 +158,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
 
 
   private static void testDimPartitionActions() {
-    GrillDimensionCommands command = getCommand();
+    GrillDimensionTableCommands command = getCommand();
     String result;
     result = command.getAllPartitionsOfDim("dim_table2 "+ DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
@@ -172,7 +172,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
   }
 
   public static void addPartitionToStorage(String tableName, String storageName, String localPartSpec) {
-    GrillDimensionCommands command = getCommand();
+    GrillDimensionTableCommands command = getCommand();
     URL resource = TestGrillFactCommands.class.getClassLoader().getResource(localPartSpec);
     try {
       command.addPartitionToFact(tableName+" "+ storageName +" " + new File(resource.toURI()).getAbsolutePath());
@@ -183,11 +183,11 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
   }
 
   public static void dropDim1Table() {
-    GrillDimensionCommands command = getCommand();
-    String dimList = command.showDimensions();
+    GrillDimensionTableCommands command = getCommand();
+    String dimList = command.showDimensionTables();
     Assert.assertEquals("dim_table2", dimList, "dim_table table should be found");
     command.dropDimensionTable("dim_table2", false);
-    dimList = command.showDimensions();
+    dimList = command.showDimensionTables();
     Assert.assertEquals("No Dimensions Found", dimList,
         "Dim tables should not be found");
     TestGrillStorageCommands.dropStorage(DIM_LOCAL);

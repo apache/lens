@@ -78,7 +78,7 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimension("dim_table", "local", partition);
+    result = metaClient.addPartitionToDimensionTable("dim_table", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:dim1-local-part.xml failed");
       retCode = 1;
@@ -90,7 +90,7 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimension("dim_table2", "local", partition);
+    result = metaClient.addPartitionToDimensionTable("dim_table2", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:dim2-local-part.xml failed");
       retCode = 1;
@@ -103,7 +103,7 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimension("dim_table4", "local", partition);
+    result = metaClient.addPartitionToDimensionTable("dim_table4", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:dim4-local-part.xml failed");
       retCode = 1;
@@ -126,7 +126,7 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToFact(fact, storage, partition);
+    result = metaClient.addPartitionToFactTable(fact, storage, partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:" + fileName + " failed");
       retCode = 1;

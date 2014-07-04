@@ -149,7 +149,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     URL cubeSpec =
         TestGrillQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
-    TestGrillDimensionCommands.addDim1Table("dim_table",
+    TestGrillDimensionTableCommands.addDim1Table("dim_table",
         "dim_table.xml", "dim_table_storage.xml", "local");
 
     URL dataFile =
