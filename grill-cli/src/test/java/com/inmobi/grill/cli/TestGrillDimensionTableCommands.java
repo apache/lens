@@ -72,11 +72,11 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
         TestGrillDimensionTableCommands.class.getClassLoader().getResource(storageSpecName);
 
     try {
-      command.createDimension(new File(dimSpec.toURI()).getAbsolutePath()
+      command.createDimensionTable(new File(dimSpec.toURI()).getAbsolutePath()
           + " " + new File(factStorageSpec.toURI()).getAbsolutePath());
     } catch (Exception e) {
       e.printStackTrace();
-      Assert.fail("Unable to create fact table" + e.getMessage());
+      Assert.fail("Unable to create dimtable" + e.getMessage());
     }
 
     dimList = command.showDimensionTables();

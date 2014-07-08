@@ -55,7 +55,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
   }
 
   @CliCommand(value = "create dimtable", help = "Create a new dimension table")
-  public String createDimension(@CliOption(key = {"", "dimension"},
+  public String createDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
 
     Iterable<String> parts = Splitter.on(' ')
@@ -65,12 +65,12 @@ public class GrillDimensionTableCommands implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
+          "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     File f = new File(pair[0]);
     if (!f.exists()) {
-      return "dim spec path"
+      return "dimtable spec path"
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
@@ -81,7 +81,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
-    APIResult result = client.createDimension(pair[0], pair[1]);
+    APIResult result = client.createDimensionTable(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "create dimension table succeeded";
     } else {
@@ -113,7 +113,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
+          "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     File f = new File(pair[1]);
@@ -133,7 +133,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
   }
 
 
-  @CliCommand(value = "describe dimtable", help = "describe a fact table")
+  @CliCommand(value = "describe dimtable", help = "describe a dimension table")
   public String describeDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "dimension table name to be described") String dim) {
     DimensionTable table = client.getDimensionTable(dim);
@@ -219,7 +219,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
+          "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     File f = new File(pair[1]);
@@ -249,7 +249,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
+          "format. create dimtable <dimtable spec path> <storage spec path>";
     }
     APIResult result = client.dropStorageFromDim(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
@@ -270,7 +270,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
+          "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     XStorageTableElement element = client.getStorageFromDim(pair[0], pair[1]);
@@ -320,7 +320,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
       result = client.dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
     } else {
       return "Syntax error, please try in following " +
-          "format. fact drop partitions <table> <storage> [partition values]";
+          "format. dimtable drop partitions <table> <storage> [partition values]";
     }
 
     if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
@@ -344,7 +344,7 @@ public class GrillDimensionTableCommands implements CommandMarker {
     APIResult result;
     if(pair.length != 3) {
       return "Syntax error, please try in following " +
-          "format. fact add partition <table> <storage> <partition spec>";
+          "format. dimtable add partition <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);

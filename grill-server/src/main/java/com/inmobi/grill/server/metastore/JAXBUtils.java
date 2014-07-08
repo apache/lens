@@ -635,4 +635,29 @@ public class JAXBUtils {
     partDesc.setSerializationLib(xpart.getSerdeClassname());
     return partDesc;
   }
+
+  public static Dimension dimensionFromXDimension(XDimension dimension) {
+    Set<CubeDimAttribute> dims = new LinkedHashSet<CubeDimAttribute>();
+    for (XDimAttribute xd : dimension.getAttributes().getDimAttributes()) {
+      dims.add(hiveDimAttrFromXDimAttr(xd));
+    }
+
+    Map<String, String> properties = mapFromXProperties(dimension.getProperties());
+    double dimWeight = dimension.getWeight() == null ? 0d : dimension.getWeight();
+    return new Dimension(dimension.getName(), dims, properties, dimWeight);
+  }
+
+  public static XDimension xdimensionFromDimension(Dimension dimension) {
+    XDimension xd = XCF.createXDimension();
+    xd.setName(dimension.getName());
+    xd.setWeight(((AbstractCubeTable)dimension).weight());
+    xd.setProperties(xPropertiesFromMap(((AbstractCubeTable)dimension).getProperties()));
+    XDimAttributes xdm = XCF.createXDimAttributes();
+    List<XDimAttribute> xdmList = xdm.getDimAttributes();
+    for (CubeDimAttribute cd : dimension.getAttributes()) {
+      xdmList.add(xDimAttrFromHiveDimAttr(cd));
+    }
+    xd.setAttributes(xdm);
+    return xd;
+  }
 }

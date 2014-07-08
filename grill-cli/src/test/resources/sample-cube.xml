@@ -28,15 +28,15 @@
     <measures name="measure4" type="double" default_aggr="MIN"/>
     <measures name="expr_msr5" type="double" expr="measure3 + measure4" />
   </measures>
-  <dimensions>
-    <dimensions name="dim1" type="int"/>
-    <dimensions name="dim2" type="int" start_time='2013-12-01-00:00'/>
-    <dimensions name="dim3" type="int">
+  <dim_attributes>
+    <dim_attributes name="dim1" type="int"/>
+    <dim_attributes name="dim2" type="int" start_time='2013-12-01-00:00'/>
+    <dim_attributes name="dim3" type="int">
       <references>
         <table_references dest_table="dim_table" dest_column="id"/>
       </references>
-    </dimensions>
-  </dimensions>
+    </dim_attributes>
+  </dim_attributes>
   <properties>
     <properties name="sample_cube.prop" value="sample" />
     <properties name="cube.sample_cube.timed.dimensions.list" value="dt" />

@@ -148,7 +148,7 @@ public class GrillMetadataClient {
     return result;
   }
 
-  public APIResult createCube( String cubeSpec) {
+  public APIResult createCube(String cubeSpec) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("cubes")
         .queryParam("sessionid", this.connection.getSessionHandle())
@@ -187,6 +187,75 @@ public class GrillMetadataClient {
   public APIResult dropCube(String cubeName) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("cubes").path(cubeName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+    return result;
+  }
+
+  public List<String> getAllDimensions() {
+    WebTarget target = getMetastoreWebTarget();
+    StringList dimensions = target.path("dimensions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).get(StringList.class);
+    return dimensions.getElements();
+  }
+
+  public APIResult dropAllDimensions() {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).delete(APIResult.class);
+    return result;
+  }
+
+  public APIResult createDimension(XDimension dimension) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(objFact.createXDimension(dimension)), APIResult.class);
+    return result;
+  }
+
+  public APIResult createDimension(String dimSpec) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions")
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .post(Entity.xml(getContent(dimSpec)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updateDimension(String dimName, XDimension dimension) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(objFact.createXDimension(dimension)), APIResult.class);
+    return result;
+  }
+
+  public APIResult updateDimension(String dimName, String dimSpec) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML)
+        .put(Entity.xml(getContent(dimSpec)), APIResult.class);
+    return result;
+  }
+
+  public XDimension getDimension(String dimName) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<XDimension> dim = target.path("dimensions").path(dimName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<XDimension>>() {
+        });
+    return dim.getValue();
+  }
+
+  public APIResult dropDimension(String dimName) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimensions").path(dimName)
         .queryParam("sessionid", this.connection.getSessionHandle())
         .request(MediaType.APPLICATION_XML).delete(APIResult.class);
     return result;
