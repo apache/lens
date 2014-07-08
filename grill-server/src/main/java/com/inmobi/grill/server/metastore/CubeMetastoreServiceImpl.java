@@ -1008,4 +1008,82 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
     return null;
   }
+
+  @Override
+  public void createDimension(GrillSessionHandle sessionid, XDimension dimension)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).createDimension(JAXBUtils.dimensionFromXDimension(dimension));
+      LOG.info("Created dimension " + dimension.getName());
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public XDimension getDimension(GrillSessionHandle sessionid, String dimName)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      return JAXBUtils.xdimensionFromDimension(getClient(sessionid).getDimension(dimName));
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void dropDimension(GrillSessionHandle sessionid, String dimName)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).dropDimension(dimName);
+      LOG.info("Dropped dimension " + dimName);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void updateDimension(GrillSessionHandle sessionid, String dimName, XDimension dimension)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      getClient(sessionid).alterDimension(dimName,
+          JAXBUtils.dimensionFromXDimension(dimension));
+      LOG.info("Altered dimension " + dimName);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public List<String> getAllDimensionNames(GrillSessionHandle sessionid)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      List<Dimension> dimensions = getClient(sessionid).getAllDimensions();
+      if (dimensions != null && !dimensions.isEmpty()) {
+        List<String> names = new ArrayList<String>(dimensions.size());
+        for (Dimension dim : dimensions) {
+          names.add(dim.getName());
+        }
+        return names;
+      }
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+    return null;
+  }
+
 }

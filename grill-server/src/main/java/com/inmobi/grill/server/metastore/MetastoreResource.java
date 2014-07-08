@@ -418,7 +418,7 @@ public class MetastoreResource {
    * APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE @Path("storages")
-  public APIResult deleteAllStoragess(@QueryParam("sessionid") GrillSessionHandle sessionid) {
+  public APIResult deleteAllStorages(@QueryParam("sessionid") GrillSessionHandle sessionid) {
     checkSessionId(sessionid);
     boolean failed = false;
     List<String> storageNames = null;
@@ -435,7 +435,7 @@ public class MetastoreResource {
     }
     if (storageNames != null && numDeleted == storageNames.size()) {
       return new APIResult(Status.SUCCEEDED, "Delete of all "
-          + "cubes is successful");
+          + "storages is successful");
     } else {
       assert (failed);
       if (numDeleted == 0) {
@@ -509,6 +509,155 @@ public class MetastoreResource {
     } catch (GrillException e) {
       checkTableNotFound(e, storageName);
       LOG.error("Error dropping storage" + storageName, e);
+      return new APIResult(Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /**
+   * Get all dimensions in the metastore
+   *
+   * @param sessionid The sessionid in which user is working
+   *
+   * @return StringList consisting of all the dimension names
+   *
+   * @throws GrillException
+   */
+  @GET @Path("dimensions")
+  public StringList getAllDimensionNames(@QueryParam("sessionid") GrillSessionHandle sessionid) {
+    checkSessionId(sessionid);
+    try {
+      return new StringList(getSvc().getAllDimensionNames(sessionid));
+    } catch (GrillException e) {
+      LOG.error("Error getting dimensions", e);
+      throw new WebApplicationException(e);
+    }
+  }
+
+  /**
+   * Create new dimension
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dimension The XDimension representation of dimension
+   *
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   */
+  @POST @Path("dimensions")
+  public APIResult createDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, XDimension dimension) {
+    checkSessionId(sessionid);
+    try {
+      getSvc().createDimension(sessionid, dimension);
+    } catch (GrillException e) {
+      LOG.error("Error creating dimension " + dimension.getName(), e);
+      return new APIResult(Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /**
+   * Delete all dimensions in metastore
+   *
+   * @param sessionid The sessionid in which user is working
+   *
+   * @return
+   * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
+   * APIResult with state {@link Status#FAILED} in case of delete failure.
+   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   */
+  @DELETE @Path("dimensions")
+  public APIResult deleteAllDimensions(@QueryParam("sessionid") GrillSessionHandle sessionid) {
+    checkSessionId(sessionid);
+    boolean failed = false;
+    List<String> dimNames = null;
+    int numDeleted = 0;
+    try {
+      dimNames = getSvc().getAllDimensionNames(sessionid);
+      for (String dimName : dimNames) {
+        getSvc().dropStorage(sessionid, dimName);
+        numDeleted++;
+      }
+    } catch (GrillException e) {
+      LOG.error("Error deleting dimensions:", e);
+      failed = true;
+    }
+    if (dimNames != null && numDeleted == dimNames.size()) {
+      return new APIResult(Status.SUCCEEDED, "Delete of all "
+          + "dimensions is successful");
+    } else {
+      assert (failed);
+      if (numDeleted == 0) {
+        return new APIResult(Status.FAILED, "Delete of all "
+            + "dimensions has failed");
+      } else {
+        return new APIResult(Status.PARTIAL, "Delete of all "
+            + "dimensions is partial"); 
+      }
+    }
+  }
+
+  /**
+   * Update dimension definition
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dimName The dimension name
+   * @param dimension The {@link XDimension} representation of the updated dimension definition
+   *
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if update has failed
+   */
+  @PUT @Path("/dimensions/{dimName}")
+  public APIResult updateDimension(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("dimName") String dimName, XDimension dimension) {
+    checkSessionId(sessionid);
+    try {
+      getSvc().updateDimension(sessionid, dimName, dimension);
+    } catch (GrillException e) {
+      checkTableNotFound(e, dimName);
+      LOG.error("Error updating dimension" + dimName, e);
+      return new APIResult(Status.FAILED, e.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /**
+   * Get the dimension specified by name
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dimName The dimension name
+   *
+   * @return JAXB representation of {@link XDimension}
+   */
+  @GET @Path("/dimensions/{dimName}")
+  public JAXBElement<XDimension> getDimension(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("dimName") String dimName) throws Exception {
+    checkSessionId(sessionid);
+    try {
+      return xCubeObjectFactory.createXDimension(getSvc().getDimension(sessionid, dimName));
+    } catch (GrillException e) {
+      checkTableNotFound(e, dimName);
+      throw e;
+    }
+  }
+
+  /**
+   * Drop the dimension, specified by name
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dimName The dimension name
+   *
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
+   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   */
+  @DELETE @Path("/dimensions/{dimName}")
+  public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("dimName") String dimName) {
+    checkSessionId(sessionid);
+    try {
+      getSvc().dropDimension(sessionid, dimName);
+    } catch (GrillException e) {
+      checkTableNotFound(e, dimName);
+      LOG.error("Error dropping dimName" + dimName, e);
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return SUCCESS;
@@ -983,7 +1132,8 @@ public class MetastoreResource {
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/dimtables/{dimTableName}")
-  public APIResult dropDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimTableName") String dimension,
+  public APIResult dropDimensionTable(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("dimTableName") String dimension,
       @QueryParam("cascade") boolean cascade) {
     checkSessionId(sessionid);
     try {
@@ -1005,7 +1155,8 @@ public class MetastoreResource {
    * @return JAXB representation of {@link DimensionTable} 
    */
   @GET @Path("/dimtables/{dimTableName}")
-  public JAXBElement<DimensionTable> getDimension(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimTableName") String dimTableName)
+  public JAXBElement<DimensionTable> getDimensionTable(
+      @QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("dimTableName") String dimTableName)
       throws GrillException {
     checkSessionId(sessionid);
     try {

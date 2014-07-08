@@ -19,7 +19,7 @@
   #L%
   -->
 
-<dimension_table name="dim_table4" weight="0.0" xmlns="uri:grill:cube:0.1"
+<dimension_table dim_name="sample_dim" table_name="dim_table4" weight="0.0" xmlns="uri:grill:cube:0.1"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
   <columns>
@@ -28,11 +28,6 @@
     <columns comment="more details" name="detail" type="string"/>
     <columns comment="d2 ID" name="d2id" type="int"/>
   </columns>
-  <dimension_references>
-    <dim_references dimension_column="d2id">
-      <table_references dest_column="id" dest_table="dim_table2"/>
-    </dim_references>
-  </dimension_references>
 
   <storage_dump_periods>
     <update_period_element storage_name="local">
@@ -42,6 +37,5 @@
   </storage_dump_periods>
   <properties>
     <properties name="dim4.prop" value="d1"/>
-    <properties name="cube.dimensiontable.timed.dimension" value="dt"/>
   </properties>
 </dimension_table>

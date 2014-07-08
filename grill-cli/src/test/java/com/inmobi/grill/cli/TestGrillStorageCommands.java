@@ -65,9 +65,6 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
-    } catch (Exception e) {
-      Assert.fail("Unable to add storage " + storageName);
-    }
     LOG.debug("Using Storage spec from file : " + newFile.getAbsolutePath());
     String storageList = command.getStorages();
     Assert.assertFalse(storageList.contains(storageName),
@@ -76,7 +73,11 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
     command.createStorage(newFile.getAbsolutePath());
     storageList = command.getStorages();
     Assert.assertTrue(storageList.contains(storageName));
-    newFile.delete();
+    } catch (Exception e) {
+      Assert.fail("Unable to add storage " + storageName);
+    } finally {
+      newFile.delete();
+    }
   }
 
   private void testUpdateStorage(String storageName) {

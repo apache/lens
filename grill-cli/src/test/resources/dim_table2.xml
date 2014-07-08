@@ -19,7 +19,7 @@
   #L%
   -->
 
-<dimension_table name="dim_table2" weight="0.0" xmlns="uri:grill:cube:0.1"
+<dimension_table dim_name="test_dim2" table_name="dim_table2" weight="0.0" xmlns="uri:grill:cube:0.1"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
   <columns>
@@ -27,7 +27,6 @@
     <columns comment="name" name="name" type="string"/>
     <columns comment="more details for dim2" name="detail2" type="string"/>
   </columns>
-  <dimension_references/>
   <storage_dump_periods>
     <update_period_element storage_name="dim_local">
       <update_periods>hourly</update_periods>
@@ -35,6 +34,5 @@
   </storage_dump_periods>
   <properties>
     <properties name="dim2.prop" value="d2"/>
-    <properties name="cube.dimensiontable.timed.dimension" value="dt"/>
   </properties>
 </dimension_table>
