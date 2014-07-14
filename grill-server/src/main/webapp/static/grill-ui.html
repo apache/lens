@@ -39,6 +39,34 @@
             <a class="navbar-brand" href="#">Grill</a>
         </div>
 
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">New<span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#">Query</a></li>
+                        <li><a href="#">Model</a></li>
+                        <li><a href="#">Test</a></li>
+                        <li><a href="#">Schdule</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <ul class="nav navbar-nav">
+                <li><a href="#">Queries</a></li>
+            </ul>
+
+            <ul class="nav navbar-nav">
+                <li><a href="#">Models</a></li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li><a href="#">Tests</a></li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li><a href="#">Schedules</a></li>
+            </ul>
+        </div><!-- /.navbar-collapse -->
+
     </div>
 </nav>
 
@@ -46,13 +74,21 @@
 <div class="container-fluid">
 
     <div class="col-md-2">
-        <ul class="nav nav-pills nav-stacked list-group">
-            <li class="btn btn-primary">New Query</li>
-            <li><a href="#">Query History</a></li>
-            <li><a href="#">Measures & Dimensions ></a></li>
-            <li><a href="#">Browse Tables</a></li>
-            <li><a href="#">My Tables</a></li>
-
+        <form role="form" class="form-inline">
+            <div class="form-group">
+                <div class="input-group">
+                    <input class="form-control" type="email" placeholder="Search for fields">
+                    <div class="input-group-addon"><span class="glyphicon glyphicon-search"></span></div>
+                </div>
+            </div>
+        </form>
+        <ul class="list-group">
+            <li class="list-group-item list-group-item-success"><a href="#">Cube1</a></li>
+            <li class="list-group-item list-group-item-success"><a href="#">Cube2</a></li>
+            <li class="list-group-item list-group-item-info"><a href="#">Dim1</a></li>
+            <li class="list-group-item list-group-item-info"><a href="#">Dim2</a></li>
+            <li class="list-group-item list-group-item-warning"><a href="#">Table1</a></li>
+            <li class="list-group-item list-group-item-warning"><a href="#">Table2</a></li>
         </ul>
     </div>
 
