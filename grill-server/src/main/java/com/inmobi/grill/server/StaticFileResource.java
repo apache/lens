@@ -9,10 +9,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
@@ -36,21 +34,11 @@ public class StaticFileResource {
       }
     });
 
-  // Injected by jersey.
-  @Context
-  UriInfo uriInfo;
-
   @GET
   @Path("/{filePath:.*}")
   public Response getStaticResource(@PathParam("filePath") String filePath) {
-    if (uriInfo == null) {
-      LOG.warn("URI Info not available");
-      return Response.serverError().build();
-    }
-
     try {
-      String content = contentCache.get(filePath);
-      return Response.ok(content, getMediaType(filePath)).build();
+      return Response.ok(contentCache.get(filePath), getMediaType(filePath)).build();
     } catch (ExecutionException e) {
       if (e.getCause() instanceof FileNotFoundException) {
         throw new NotFoundException("Not Found: " + filePath);
