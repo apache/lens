@@ -31,7 +31,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
       "      TOK_TABREF\n" +
       "         TOK_TABNAME\n" +
       "            local_dim_table\n" +
-      "         dim_table\n" +
+      "         test_dim\n" +
       "   TOK_INSERT\n" +
       "      TOK_DESTINATION\n" +
       "         TOK_DIR\n" +
@@ -40,18 +40,18 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
       "         TOK_SELEXPR\n" +
       "            .\n" +
       "               TOK_TABLE_OR_COL\n" +
-      "                  dim_table\n" +
+      "                  test_dim\n" +
       "               id\n" +
       "         TOK_SELEXPR\n" +
       "            .\n" +
       "               TOK_TABLE_OR_COL\n" +
-      "                  dim_table\n" +
+      "                  test_dim\n" +
       "               name\n" +
       "      TOK_WHERE\n" +
       "         =\n" +
       "            .\n" +
       "               TOK_TABLE_OR_COL\n" +
-      "                  dim_table\n" +
+      "                  test_dim\n" +
       "               dt\n" +
       "            'latest'";
 
@@ -69,7 +69,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
-    String sql = "cube select id, name from dim_table";
+    String sql = "cube select id, name from test_dim";
     String result = qCom.getAllPreparedQueries();
 
     Assert.assertEquals("No prepared queries", result);
@@ -78,7 +78,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
-    Assert.assertTrue(result.contains("User query:cube select id, name from dim_table"));
+    Assert.assertTrue(result.contains("User query:cube select id, name from test_dim"));
     Assert.assertTrue(result.contains(qh));
 
     result = qCom.executePreparedQuery(qh, false);
@@ -114,7 +114,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testExplainQuery(GrillQueryCommands qCom) throws Exception {
-    String sql = "cube select id, name from dim_table";
+    String sql = "cube select id, name from test_dim";
     String result = qCom.explainQuery(sql, "");
 
     LOG.debug(result);
@@ -123,7 +123,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testExecuteAsyncQuery(GrillQueryCommands qCom) throws Exception {
-    String sql = "cube select id,name from dim_table";
+    String sql = "cube select id,name from test_dim";
     String qh = qCom.executeQuery(sql, true);
     String result = qCom.getAllQueries();
     //this is because previous query has run two query handle will be there
@@ -149,7 +149,8 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     URL cubeSpec =
         TestGrillQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
-    TestGrillDimensionCommands.addDim1Table("dim_table",
+    TestGrillDimensionCommands.createDimension();
+    TestGrillDimensionTableCommands.addDim1Table("dim_table",
         "dim_table.xml", "dim_table_storage.xml", "local");
 
     URL dataFile =
@@ -167,7 +168,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testExecuteSyncQuery(GrillQueryCommands qCom) {
-    String sql = "cube select id,name from dim_table";
+    String sql = "cube select id,name from test_dim";
     String result = qCom.executeQuery(sql, false);
     Assert.assertTrue(result.contains("1\tfirst"), result);
   }

@@ -49,6 +49,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeInterface;
 import org.apache.hadoop.hive.ql.cube.metadata.DerivedCube;
+import org.apache.hadoop.hive.ql.cube.metadata.Dimension;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
@@ -267,25 +268,25 @@ public class TestMetastoreService extends GrillJerseyTest {
     XCube cube = cubeObjectFactory.createXCube();
     cube.setName(cubeName);
     cube.setWeight(100.0);
-    XDimensions xdims = cubeObjectFactory.createXDimensions();
+    XDimAttributes xdims = cubeObjectFactory.createXDimAttributes();
 
-    XDimension xd1 = cubeObjectFactory.createXDimension();
+    XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("dim1");
     xd1.setType("string");
     xd1.setStartTime(startDate);
     // Don't set endtime on this dim to validate null handling on server side
     xd1.setCost(10.0);
 
-    XDimension xd2 = cubeObjectFactory.createXDimension();
+    XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("dim2");
     xd2.setType("int");
     // Don't set start time on this dim to validate null handling on server side
     xd2.setEndTime(endDate);
     xd2.setCost(5.0);
 
-    xdims.getDimensions().add(xd1);
-    xdims.getDimensions().add(xd2);
-    cube.setDimensions(xdims);
+    xdims.getDimAttributes().add(xd1);
+    xdims.getDimAttributes().add(xd2);
+    cube.setDimAttributes(xdims);
 
 
     XMeasures measures = cubeObjectFactory.createXMeasures();
@@ -325,9 +326,9 @@ public class TestMetastoreService extends GrillJerseyTest {
     XCube cube = cubeObjectFactory.createXCube();
     cube.setName(cubeName);
     cube.setWeight(50.0);
-    XDimensionNames dimNames = cubeObjectFactory.createXDimensionNames();
-    dimNames.getDimensions().add("dim1");
-    cube.setDimensionNames(dimNames);
+    XDimAttrNames dimNames = cubeObjectFactory.createXDimAttrNames();
+    dimNames.getDimAttrNames().add("dim1");
+    cube.setDimAttrNames(dimNames);
 
     XMeasureNames msrNames = cubeObjectFactory.createXMeasureNames();
     msrNames.getMeasures().add("msr1");
@@ -521,7 +522,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertTrue(cube.getName().equalsIgnoreCase(actual.getName()));
       assertNotNull(actual.getMeasures());
       assertEquals(actual.getMeasures().getMeasures().size(), cube.getMeasures().getMeasures().size());
-      assertEquals(actual.getDimensions().getDimensions().size(), cube.getDimensions().getDimensions().size());
+      assertEquals(actual.getDimAttributes().getDimAttributes().size(), cube.getDimAttributes().getDimAttributes().size());
       assertEquals(actual.getWeight(), 100.0d);
       assertFalse(actual.isDerived());
       assertNull(actual.getParent());
@@ -546,7 +547,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(actual.getParent(), "testGetCube".toLowerCase());
       assertEquals(actual.getWeight(), 50.0d);
       assertEquals(actual.getMeasureNames().getMeasures().size(), dcube.getMeasureNames().getMeasures().size());
-      assertEquals(actual.getDimensionNames().getDimensions().size(), dcube.getDimensionNames().getDimensions().size());
+      assertEquals(actual.getDimAttrNames().getDimAttrNames().size(), dcube.getDimAttrNames().getDimAttrNames().size());
     } finally {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
@@ -635,11 +636,11 @@ public class TestMetastoreService extends GrillJerseyTest {
       xm2.setDefaultAggr("sum");
       cube.getMeasures().getMeasures().add(xm2);
 
-      XDimension xd2 = cubeObjectFactory.createXDimension();
+      XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
       xd2.setName("dim3");
       xd2.setType("string");
       xd2.setCost(55.0);
-      cube.getDimensions().getDimensions().add(xd2);
+      cube.getDimAttributes().getDimAttributes().add(xd2);
 
       XProperty xp = new XProperty();
       xp.setName("foo2");
@@ -657,14 +658,14 @@ public class TestMetastoreService extends GrillJerseyTest {
           .queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
       XCube actual = got.getValue();
       assertEquals(actual.getWeight(), 200.0);
-      assertEquals(actual.getDimensions().getDimensions().size(), 3);
+      assertEquals(actual.getDimAttributes().getDimAttributes().size(), 3);
       assertEquals(actual.getMeasures().getMeasures().size(), 3);
 
       CubeInterface hcube = JAXBUtils.hiveCubeFromXCube(actual, null);
       assertTrue(hcube instanceof Cube);
       assertTrue(hcube.getMeasureByName("msr3").getAggregate().equals("sum"));
       assertEquals(hcube.getMeasureByName("msr3").getCost(), 20.0);
-      assertNotNull(hcube.getDimensionByName("dim3"));
+      assertNotNull(hcube.getDimAttributeByName("dim3"));
       assertEquals(((AbstractCubeTable)hcube).getProperties().get("foo2"), "bar2");
 
       final XCube dcube = createDerivedCube("test_update_derived", cubeName);
@@ -678,7 +679,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       dcube.setWeight(80.0);
       // Add a measure and dimension
       dcube.getMeasureNames().getMeasures().add("msr3");
-      dcube.getDimensionNames().getDimensions().add("dim3");
+      dcube.getDimAttrNames().getDimAttrNames().add("dim3");
 
       xp = new XProperty();
       xp.setName("foo.derived2");
@@ -695,16 +696,16 @@ public class TestMetastoreService extends GrillJerseyTest {
           .queryParam("sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
       actual = got.getValue();
       assertEquals(actual.getWeight(), 80.0);
-      assertEquals(actual.getDimensionNames().getDimensions().size(), 2);
+      assertEquals(actual.getDimAttrNames().getDimAttrNames().size(), 2);
       assertEquals(actual.getMeasureNames().getMeasures().size(), 2);
       assertTrue(actual.getMeasureNames().getMeasures().contains("msr3"));
-      assertTrue(actual.getDimensionNames().getDimensions().contains("dim3"));
+      assertTrue(actual.getDimAttrNames().getDimAttrNames().contains("dim3"));
 
       CubeInterface hdcube = JAXBUtils.hiveCubeFromXCube(actual, (Cube)hcube);
       assertTrue(hdcube instanceof DerivedCube);
       assertTrue(hdcube.getMeasureByName("msr3").getAggregate().equals("sum"));
       assertEquals(hdcube.getMeasureByName("msr3").getCost(), 20.0);
-      assertNotNull(hdcube.getDimensionByName("dim3"));
+      assertNotNull(hdcube.getDimAttributeByName("dim3"));
       assertEquals(((AbstractCubeTable)hdcube).getProperties().get("foo.derived2"), "bar.derived2");
 
     } finally {
@@ -770,56 +771,6 @@ public class TestMetastoreService extends GrillJerseyTest {
     }
   }
 
-  private DimensionTable createDimTable(String table) {
-    DimensionTable dt = cubeObjectFactory.createDimensionTable();
-    dt.setName(table);
-    dt.setWeight(15.0);
-
-    Columns cols = cubeObjectFactory.createColumns();
-
-    Column c1 = cubeObjectFactory.createColumn();
-    c1.setName("col1");
-    c1.setType("string");
-    c1.setComment("Fisrt column");
-    cols.getColumns().add(c1);
-    Column c2 = cubeObjectFactory.createColumn();
-    c2.setName("col2");
-    c2.setType("int");
-    c2.setComment("Second column");
-    cols.getColumns().add(c2);
-    dt.setColumns(cols);
-
-    XProperty p1 = cubeObjectFactory.createXProperty();
-    p1.setName("foodim");
-    p1.setValue("bardim");
-    XProperties properties = cubeObjectFactory.createXProperties();
-    properties.getProperties().add(p1);
-    dt.setProperties(properties);
-
-    DimensionReferences refs = cubeObjectFactory.createDimensionReferences();
-    DimensionReference drf = cubeObjectFactory.createDimensionReference();
-    drf.setDimensionColumn("col1");
-    XTablereference tref1 = cubeObjectFactory.createXTablereference();
-    tref1.setDestColumn("dim2id");
-    tref1.setDestTable("dim2");
-    XTablereference tref2 = cubeObjectFactory.createXTablereference();
-    tref2.setDestColumn("dim3id");
-    tref2.setDestTable("dim3");
-    drf.getTableReferences().add(tref1);
-    drf.getTableReferences().add(tref2);
-    refs.getDimReferences().add(drf);
-    dt.setDimensionReferences(refs);
-
-    UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
-
-    UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
-    ue1.setStorageName("test");
-    ue1.getUpdatePeriods().add("HOURLY");
-    periods.getUpdatePeriodElement().add(ue1);
-    dt.setStorageDumpPeriods(periods);
-    return dt;
-  }
-
   private XStorageTableDesc createStorageTableDesc(String name) {
     XStorageTableDesc xs1 = cubeObjectFactory.createXStorageTableDesc();
     xs1.setCollectionDelimiter(",");
@@ -852,10 +803,46 @@ public class TestMetastoreService extends GrillJerseyTest {
     return tbl;
   }
 
-  private DimensionTable createDimension(String dimName) throws Exception {
-    DimensionTable dt = createDimTable(dimName);
+  private DimensionTable createDimTable(String dimName, String table) {
+    DimensionTable dt = cubeObjectFactory.createDimensionTable();
+    dt.setDimName(dimName);
+    dt.setTableName(table);
+    dt.setWeight(15.0);
+
+    Columns cols = cubeObjectFactory.createColumns();
+
+    Column c1 = cubeObjectFactory.createColumn();
+    c1.setName("col1");
+    c1.setType("string");
+    c1.setComment("Fisrt column");
+    cols.getColumns().add(c1);
+    Column c2 = cubeObjectFactory.createColumn();
+    c2.setName("col2");
+    c2.setType("int");
+    c2.setComment("Second column");
+    cols.getColumns().add(c2);
+    dt.setColumns(cols);
+
+    XProperty p1 = cubeObjectFactory.createXProperty();
+    p1.setName("foodim");
+    p1.setValue("bardim");
+    XProperties properties = cubeObjectFactory.createXProperties();
+    properties.getProperties().add(p1);
+    dt.setProperties(properties);
+
+    UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
+    UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
+    ue1.setStorageName("test");
+    ue1.getUpdatePeriods().add("HOURLY");
+    periods.getUpdatePeriodElement().add(ue1);
+    dt.setStorageDumpPeriods(periods);
+    return dt;
+  }
+
+  private DimensionTable createDimTable(String dimTableName) throws Exception {
+    DimensionTable dt = createDimTable("testdim", dimTableName);
     XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-    storageTables.getStorageTables().add(createStorageTblElement("test", dimName, "HOURLY"));
+    storageTables.getStorageTables().add(createStorageTblElement("test", dimTableName, "HOURLY"));
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         grillSessionId, medType));
@@ -867,11 +854,155 @@ public class TestMetastoreService extends GrillJerseyTest {
         cubeObjectFactory.createXStorageTables(storageTables), medType));
     APIResult result = target()
         .path("metastore")
-        .path("dimensions")
+        .path("dimtables")
         .request(mediaType)
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     return dt;
+  }
+
+  private XDimension createDimension(String dimName) throws Exception {
+    GregorianCalendar c = new GregorianCalendar();
+    c.setTime(new Date());
+    final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+    c.add(GregorianCalendar.DAY_OF_MONTH, 7);
+    final XMLGregorianCalendar endDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+
+    XDimension dimension = cubeObjectFactory.createXDimension();
+    dimension.setName(dimName);
+    dimension.setWeight(100.0);
+    XDimAttributes xdims = cubeObjectFactory.createXDimAttributes();
+
+    XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
+    xd1.setName("col1");
+    xd1.setType("string");
+    xd1.setStartTime(startDate);
+    // Don't set endtime on this dim to validate null handling on server side
+    xd1.setCost(10.0);
+
+    XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
+    xd2.setName("col2");
+    xd2.setType("int");
+    // Don't set start time on this dim to validate null handling on server side
+    xd2.setEndTime(endDate);
+    xd2.setCost(5.0);
+
+    xdims.getDimAttributes().add(xd1);
+    xdims.getDimAttributes().add(xd2);
+    dimension.setAttributes(xdims);
+
+    XProperties properties = cubeObjectFactory.createXProperties();
+    XProperty xp1 = cubeObjectFactory.createXProperty();
+    xp1.setName("dimension.foo");
+    xp1.setValue("dim.bar");
+    properties.getProperties().add(xp1);
+
+    dimension.setProperties(properties);
+    return dimension;
+  }
+
+  @Test
+  public void testDimension() throws Exception {
+    final String DB = dbPFX + "test_dimension";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    try {
+      XDimension dimension = createDimension("testdim");
+      final WebTarget target = target().path("metastore").path("dimensions");
+
+      // create
+      APIResult result = target.queryParam("sessionid", grillSessionId).request(
+          mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // getall
+      StringList dimensions = target.queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
+      boolean foundDim = false;
+      for (String c : dimensions.getElements()) {
+        if (c.equalsIgnoreCase("testdim")) {
+          foundDim = true;
+          break;
+        }
+      }
+
+      assertTrue(foundDim);
+
+      // get
+      XDimension testDim = target.path("testdim").queryParam("sessionid", grillSessionId).request(mediaType).get(XDimension.class);
+      assertEquals(testDim.getName(), "testdim");
+      assertTrue(testDim.getProperties().getProperties().size() >= 1);
+      assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dimension.foo"));
+      assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
+      assertEquals(testDim.getWeight(), 100.0);
+      assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
+
+      Dimension dim = JAXBUtils.dimensionFromXDimension(dimension);
+      assertNotNull(dim.getAttributeByName("col1"));
+      assertNotNull(dim.getAttributeByName("col2"));
+
+      // alter dimension
+      XProperty prop = cubeObjectFactory.createXProperty();
+      prop.setName("dim.prop2.name");
+      prop.setValue("dim.prop2.value");
+      dimension.getProperties().getProperties().add(prop);
+
+      dimension.getAttributes().getDimAttributes().remove(1);
+      XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
+      xd1.setName("col3");
+      xd1.setType("string");
+      dimension.getAttributes().getDimAttributes().add(xd1);
+      dimension.setWeight(200.0);
+
+      result = target.path("testdim")
+          .queryParam("sessionid", grillSessionId)
+          .request(mediaType).put(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      testDim = target.path("testdim").queryParam("sessionid", grillSessionId).request(mediaType).get(XDimension.class);
+      assertEquals(testDim.getName(), "testdim");
+      assertTrue(testDim.getProperties().getProperties().size() >= 2);
+      assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dim.prop2.name"));
+      assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dim.prop2.name"), "dim.prop2.value");
+      assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dimension.foo"));
+      assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
+      assertEquals(testDim.getWeight(), 200.0);
+      assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
+
+      dim = JAXBUtils.dimensionFromXDimension(testDim);
+      System.out.println("Attributes:" + dim.getAttributes());
+      assertNotNull(dim.getAttributeByName("col3"));
+      assertNull(dim.getAttributeByName("col2"));
+      assertNotNull(dim.getAttributeByName("col1"));
+
+      // drop the dimension
+      result = target.path("testdim")
+          .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now get should give 404
+      try {
+        JAXBElement<XDimension> got =
+            target.path("testdim").queryParam("sessionid", grillSessionId).request(
+                mediaType).get(new GenericType<JAXBElement<XDimension>>() {});
+        fail("Should have thrown 404, but got" + got.getValue().getName());
+      } catch (NotFoundException ex) {
+        ex.printStackTrace();
+      }
+
+      try {
+        result = target.path("testdim")
+            .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
+        fail("Should have thrown 404, but got" + result.getStatus());
+      } catch (NotFoundException ex) {
+        ex.printStackTrace();
+      }
+    }
+    finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
+    }
   }
 
   @Test
@@ -884,18 +1015,18 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("test");
 
     try {
-      createDimension(table);
+      createDimTable(table);
 
       // Drop the table now
       APIResult result =
-          target().path("metastore/dimensions").path(table)
+          target().path("metastore/dimtables").path(table)
           .queryParam("cascade", "true")
           .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Drop again, should get 404 now
       try {
-        result = target().path("metastore/dimensions").path(table)
+        result = target().path("metastore/dimtables").path(table)
             .queryParam("cascade", "true")
             .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
         fail("Should have got 404");
@@ -919,16 +1050,15 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("test");
 
     try {
-      DimensionTable dt1 = createDimension(table);
+      DimensionTable dt1 = createDimTable(table);
 
-      JAXBElement<DimensionTable> dtElement = target().path("metastore/dimensions").path(table)
+      JAXBElement<DimensionTable> dtElement = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dt2 = dtElement.getValue();
       assertTrue (dt1 != dt2);
-      assertEquals(dt2.getName(), table);
-      assertEquals(dt2.getDimensionReferences().getDimReferences().size(), 
-          dt1.getDimensionReferences().getDimReferences().size());
+      assertEquals(dt2.getDimName(), dt1.getDimName());
+      assertEquals(dt2.getTableName(), table);
       assertEquals(dt2.getWeight(), dt1.getWeight());
       Map<String, String> props = JAXBUtils.mapFromXProperties(dt2.getProperties());
       assertTrue(props.containsKey("foodim"));
@@ -947,14 +1077,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       dt2.getColumns().getColumns().add(c);
 
       // Update the table
-      APIResult result = target().path("metastore/dimensions")
+      APIResult result = target().path("metastore/dimtables")
           .path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .put(Entity.xml(cubeObjectFactory.createDimensionTable(dt2)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Get the updated table
-      JAXBElement<DimensionTable> dtElement2 = target().path("metastore/dimensions").path(table)
+      JAXBElement<DimensionTable> dtElement2 = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dt3 = dtElement2.getValue();
@@ -976,7 +1106,7 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Drop table
       result =
-          target().path("metastore/dimensions").path(table)
+          target().path("metastore/dimtables").path(table)
           .queryParam("cascade", "true")
           .queryParam("sessionid", grillSessionId).request(mediaType).delete(APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
@@ -996,8 +1126,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("test");
 
     try {
-      DimensionTable dt1 = createDimension(table);
-      StringList storages = target().path("metastore").path("dimensions")
+      DimensionTable dt1 = createDimTable(table);
+      StringList storages = target().path("metastore").path("dimtables")
           .path(table).path("storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(StringList.class);
@@ -1020,15 +1150,15 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("test2");
     createStorage("test3");
     try {
-      DimensionTable dt1 = createDimension(table);
+      DimensionTable dt1 = createDimTable(table);
 
       XStorageTableElement sTbl = createStorageTblElement("test2", table, "DAILY");
-      APIResult result = target().path("metastore/dimensions").path(table).path("/storages")
+      APIResult result = target().path("metastore/dimtables").path(table).path("/storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXStorageTableElement(sTbl)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
-      StringList storages = target().path("metastore").path("dimensions")
+      StringList storages = target().path("metastore").path("dimtables")
           .path(table).path("storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(StringList.class);
@@ -1037,7 +1167,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertTrue(storages.getElements().contains("test2"));
 
       // Check get table also contains the storage
-      JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
+      JAXBElement<DimensionTable> dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dimTable = dt.getValue();
@@ -1047,12 +1177,12 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), UpdatePeriod.DAILY);
       assertEquals(cdim.getSnapshotDumpPeriods().get("test"), UpdatePeriod.HOURLY);
 
-      result = target().path("metastore/dimensions/").path(table).path("storages").path("test")
+      result = target().path("metastore/dimtables/").path(table).path("storages").path("test")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .delete(APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
-      storages = target().path("metastore").path("dimensions")
+      storages = target().path("metastore").path("dimtables")
           .path(table).path("storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(StringList.class);
@@ -1061,7 +1191,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertTrue(storages.getElements().contains("test2"));
 
       // Check get table also contains the storage
-      dt = target().path("metastore/dimensions").path(table)
+      dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       dimTable = dt.getValue();
@@ -1072,12 +1202,12 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // add another storage without dump period
       sTbl = createStorageTblElement("test3", table, null);
-      result = target().path("metastore/dimensions").path(table).path("/storages")
+      result = target().path("metastore/dimtables").path(table).path("/storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXStorageTableElement(sTbl)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
-      storages = target().path("metastore").path("dimensions")
+      storages = target().path("metastore").path("dimtables")
           .path(table).path("storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(StringList.class);
@@ -1086,7 +1216,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertTrue(storages.getElements().contains("test3"));
 
       // Check get table also contains the storage
-      dt = target().path("metastore/dimensions").path(table)
+      dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       dimTable = dt.getValue();
@@ -1111,20 +1241,20 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("test2");
 
     try {
-      DimensionTable dt1 = createDimension(table);
+      DimensionTable dt1 = createDimTable(table);
       XStorageTableElement sTbl = createStorageTblElement("test2", table, "DAILY");
-      APIResult result = target().path("metastore/dimensions").path(table).path("/storages")
+      APIResult result = target().path("metastore/dimtables").path(table).path("/storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXStorageTableElement(sTbl)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
-      result = target().path("metastore/dimensions/").path(table).path("storages")
+      result = target().path("metastore/dimtables/").path(table).path("storages")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .delete(APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
 
-      JAXBElement<DimensionTable> dt = target().path("metastore/dimensions").path(table)
+      JAXBElement<DimensionTable> dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<DimensionTable>>() {});
       DimensionTable dimTable = dt.getValue();
@@ -1503,16 +1633,16 @@ public class TestMetastoreService extends GrillJerseyTest {
     createStorage("S2");
 
     try {
-      createDimension(table);
+      createDimTable(table);
       // Add a partition
       final Date partDate = new Date();
       XPartition xp = createPartition(table, partDate);
-      APIResult partAddResult = target().path("metastore/dimensions/").path(table).path("storages/test/partitions")
+      APIResult partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
-      JAXBElement<PartitionList> partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+      JAXBElement<PartitionList> partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<PartitionList>>() {});
 
@@ -1521,14 +1651,14 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(partitions.getXPartition().size(), 1);
 
       // Drop the partitions
-      APIResult dropResult = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+      APIResult dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .delete(APIResult.class);
 
       assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was dropped
-      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+      partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<PartitionList>>() {});
 
@@ -1537,13 +1667,13 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(partitions.getXPartition().size(), 0);
 
       // Add again
-      partAddResult = target().path("metastore/dimensions/").path(table).path("storages/test/partitions")
+      partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was added
-      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+      partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<PartitionList>>() {});
 
@@ -1553,14 +1683,14 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
-      dropResult = target().path("metastore/dimensions").path(table).path("storages/test/partition")
+      dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partition")
           .queryParam("values", StringUtils.join(val, ","))
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .delete(APIResult.class);
       assertEquals(dropResult.getStatus(), Status.SUCCEEDED);
 
       // Verify partition was dropped
-      partitionsElement = target().path("metastore/dimensions").path(table).path("storages/test/partitions")
+      partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", grillSessionId).request(mediaType)
           .get(new GenericType<JAXBElement<PartitionList>>() {});
 

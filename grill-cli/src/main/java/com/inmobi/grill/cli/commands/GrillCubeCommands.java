@@ -138,13 +138,13 @@ public class GrillCubeCommands implements CommandMarker {
             .append("\n");
       }
     }
-    if (cube.getDimensions() != null) {
+    if (cube.getDimAttributes() != null) {
       builder.append("Dimensions  :").append("\n");
       builder.append("\t").append("name").append("\t").append("type").append("\t")
           .append("cost").append("\t").append("Expression").append("\t")
           .append("table references").append("\t").append("starttime(in miliseconds)")
           .append("\t").append("endtime(in miliseconds)").append("\n");
-      for (XDimension dim : cube.getDimensions().getDimensions()) {
+      for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes()) {
         builder.append("\t")
             .append(dim.getName()!=null ? dim.getName() : "").append("\t")
             .append(dim.getType()!=null? dim.getType(): "").append("\t")

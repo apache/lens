@@ -43,69 +43,50 @@ public class GrillDimensionCommands implements CommandMarker {
     this.client = client;
   }
 
-  @CliCommand(value = "show dimensions",
-      help = "show list of dimension tables in database")
+  @CliCommand(value = "show dimensions", help = "show list of dimensions in database")
   public String showDimensions() {
-    List<String> dims = client.getAllDimensionTables();
-    if (dims!=null) {
-      return Joiner.on("\n").join(dims);
+    List<String> dimensions = client.getAllDimensions();
+    if( dimensions != null) {
+      return Joiner.on("\n").join(dimensions);
     } else {
-      return "No Dimensions Found";
+      return "No Dimensions found";
     }
   }
 
-  @CliCommand(value = "create dimension", help = "Create a new dimension table")
-  public String createDimension(@CliOption(key = {"", "dimension"},
-      mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
+  @CliCommand(value = "create dimension", help = "Create a new Dimension")
+  public String createDimension(@CliOption(key = {"", "table"},
+      mandatory = true, help = "<path to dimension-spec file>") String dimensionSpec) {
+    File f = new File(dimensionSpec);
 
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(dimPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[0]);
     if (!f.exists()) {
-      return "dim spec path"
+      return "dimension spec path"
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
+    APIResult result = client.createDimension(dimensionSpec);
 
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "storage spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    APIResult result = client.createDimension(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "create dimension table succeeded";
+      return "create dimension succeeded";
     } else {
-      return "create dimension table failed";
+      return "create dimension failed";
+    }
+  }
+
+  @CliCommand(value = "drop dimension", help = "drop dimension")
+  public String dropDimension(@CliOption(key = {"", "table"},
+      mandatory = true, help = "dimension name to be dropped") String dimension) {
+    APIResult result = client.dropDimension(dimension);
+    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
+      return "Successfully dropped " + dimension + "!!!";
+    } else {
+      return "Dropping dimension failed";
     }
   }
 
 
-  @CliCommand(value = "drop dimension", help = "drop dimension table")
-  public String dropDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "dimension table name to be dropped") String dim,
-                                   @CliOption(key = {"cascade"}, mandatory = false,
-                                       unspecifiedDefaultValue = "false") boolean cascade) {
-    APIResult result = client.dropDimensionTable(dim, cascade);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped " + dim + "!!!";
-    } else {
-      return "Dropping " + dim + " table failed";
-    }
-  }
-
-  @CliCommand(value = "update dimension", help = "update dimension table")
-  public String updateDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
+  @CliCommand(value = "update dimension", help = "update dimension")
+  public String updateDimension(@CliOption(key = {"", "dimension"}, mandatory = true,
+      help = "<dimension-name> <path to dimension-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -124,7 +105,7 @@ public class GrillDimensionCommands implements CommandMarker {
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateDimensionTable(pair[0], pair[1]);
+    APIResult result = client.updateDimension(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -132,62 +113,35 @@ public class GrillDimensionCommands implements CommandMarker {
     }
   }
 
+  @CliCommand(value = "describe dimension", help = "describe dimension")
+  public String describeDimension(@CliOption(key = {"", "dimension"},
+      mandatory = true, help = "<dimension-name>") String dimensionName) {
 
-  @CliCommand(value = "describe dimension", help = "describe a fact table")
-  public String describeDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "dimension table name to be described") String dim) {
-    DimensionTable table = client.getDimensionTable(dim);
-    StringBuilder buf = new StringBuilder();
-
-    buf.append("Table Name : ").append(table.getName()).append("\n");
-    if(table.getColumns()!= null) {
-      buf.append("Columns: ").append("\n");
-      buf.append("\t")
-          .append("NAME")
-          .append("\t")
-          .append("TYPE")
-          .append("\t")
-          .append("COMMENTS")
-          .append("\n");
-      for (Column col : table.getColumns().getColumns()) {
-        buf.append("\t")
-            .append(col.getName() != null ? col.getName() : "")
-            .append("\t")
-            .append(col.getType() != null ? col.getType() : "")
-            .append("\t")
-            .append(col.getComment() != null ? col.getComment() : "")
+    XDimension dimension = client.getDimension(dimensionName);
+    StringBuilder builder = new StringBuilder();
+    builder.append("Dimension Name : ").append(dimension.getName()).append("\n");
+    builder.append("Description : ").append(dimension.getDescription() != null ? dimension.getDescription() : "");
+    if (dimension.getAttributes() != null) {
+      builder.append("Dimensions  :").append("\n");
+      builder.append("\t").append("name").append("\t").append("type").append("\t")
+          .append("cost").append("\t").append("Expression").append("\t")
+          .append("table references").append("\t").append("starttime(in miliseconds)")
+          .append("\t").append("endtime(in miliseconds)").append("\n");
+      for (XDimAttribute dim : dimension.getAttributes().getDimAttributes()) {
+        builder.append("\t")
+            .append(dim.getName()!=null ? dim.getName() : "").append("\t")
+            .append(dim.getType()!=null? dim.getType(): "").append("\t")
+            .append(dim.getCost()!= null ? dim.getCost() : "").append("\t")
+            .append(dim.getExpr()!= null ? dim.getExpr() : "").append("\t")
+            .append(dim.getReferences()!= null? getXtableString(dim.getReferences().getTableReferences()) : "")
+            .append(dim.getStartTime()!=null ? dim.getStartTime().toGregorianCalendar().getTimeInMillis(): "").append("\t")
+            .append(dim.getEndTime()!=null?dim.getEndTime().toGregorianCalendar().getTimeInMillis():"").append("\t")
             .append("\n");
       }
     }
-    if(table.getProperties()!= null) {
-     buf.append(FormatUtils.formatProperties(table.getProperties().getProperties()));
-    }
-    if(table.getDimensionReferences() != null ) {
-      buf.append("References : ").append("\n");
-      buf.append("\t").append("reference column name")
-          .append("\t")
-          .append("list of table reference <table>.<col>")
-          .append("\n");
-      for (DimensionReference ref : table.getDimensionReferences().getDimReferences()) {
-        buf.append("\t")
-            .append(ref.getDimensionColumn())
-            .append("\t")
-            .append(getXtableString(ref.getTableReferences())).append("\n");
-      }
-    }
-    if(table.getStorageDumpPeriods() != null) {
-      buf.append("Update Period : ").append("\n");
-      buf.append("\t").append("storage name").append("\t")
-          .append("list of update period").append("\n");
-      for (UpdatePeriodElement element : table.getStorageDumpPeriods().getUpdatePeriodElement()) {
-        buf.append("\t")
-            .append(element.getStorageName())
-            .append("\t")
-            .append(Joiner.on(",").skipNulls().join(element.getUpdatePeriods()))
-            .append("\n");
-      }
-    }
-    return buf.toString();
+    builder.append(FormatUtils.formatProperties(dimension.getProperties().getProperties()));
+    return builder.toString();
+
   }
 
   private String getXtableString(List<XTablereference> tableReferences) {
@@ -200,188 +154,4 @@ public class GrillDimensionCommands implements CommandMarker {
     }
     return builder.toString();
   }
-
-
-  @CliCommand(value = "dim list storage",
-      help = "display list of storage associated to dimension table")
-  public String getDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> for listing storages") String dim){
-    List<String> storages = client.getDimStorages(dim);
-    StringBuilder sb = new StringBuilder();
-    for(String storage: storages) {
-       if(!storage.isEmpty()) {
-         sb.append(storage).append("\n");
-       }
-    }
-
-    if(sb.toString().isEmpty()) {
-      return "No storages found for "+dim;
-    }
-    return sb.toString().substring(0, sb.toString().length()-1);
-  }
-
-  @CliCommand(value = "dim drop-all storages",
-      help = "drop all storages associated to dimension table")
-  public String dropAllDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
-    APIResult result = client.dropAllStoragesOfDim(table);
-    if(result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "All storages of " + table + " dropped successfully";
-    } else {
-      return "Error dropping storages of " + table ;
-    }
-  }
-
-
-  @CliCommand(value = "dim add storage", help = "adds a new storage to dimension")
-  public String addNewDimStorage(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair){
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path "
-          + f.getAbsolutePath() +
-          " does not exist. Please check the path";
-    }
-
-    APIResult result = client.addStorageToDim(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Dim table storage addition completed";
-    } else {
-      return "Dim table storage addition failed";
-    }
-  }
-
-
-
-  @CliCommand(value = "dim drop storage", help = "drop storage to dimension table")
-  public String dropStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
-    }
-    APIResult result = client.dropStorageFromDim(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Dim table storage removal successful";
-    } else {
-      return "Dim table storage removal failed";
-    }
-  }
-
-
-  @CliCommand(value = "dim get storage", help = "describe storage of dimension table")
-  public String getStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " +
-          "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    XStorageTableElement element = client.getStorageFromDim(pair[0], pair[1]);
-    return FormatUtils.getStorageString(element);
-  }
-
-  @CliCommand(value = "dim list partitions",
-      help = "get all partitions associated with dimension table")
-  public String getAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storageName> " +
-      "[optional <partition query filter> to get]") String specPair){
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length == 2) {
-      List<XPartition> partitions = client.getAllPartitionsOfDim(pair[0],pair[1]);
-      return FormatUtils.formatPartitions(partitions);
-    }
-
-    if(pair.length == 3) {
-      List<XPartition> partitions = client.getAllPartitionsOfDim(pair[0],pair[1], pair[2]);
-      return FormatUtils.formatPartitions(partitions);
-    }
-
-    return "Syntax error, please try in following " +
-        "format. dim list partitions <table> <storage> [partition values]";
-  }
-
-
-  @CliCommand(value = "dim drop partitions",
-      help = "drop all partitions associated with dimension table")
-  public String dropAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storageName> " +
-      "[optional <partition query filter> to drop]") String specPair){
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if(pair.length == 2) {
-      result = client.dropAllPartitionsOfDim(pair[0], pair[1]);
-    }
-    if (pair.length == 3) {
-      result = client.dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
-    } else {
-      return "Syntax error, please try in following " +
-          "format. fact drop partitions <table> <storage> [partition values]";
-    }
-
-    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
-      return "Successfully dropped partition of "  + pair[0];
-    } else {
-      return "failure in  dropping partition of "  + pair[0];
-    }
-
-  }
-
-
-  @CliCommand(value = "dim add partition", help = "add a partition to dim table")
-  public String addPartitionToFact(@CliOption(key = {"","table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>" +
-      " <path to partition specification>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ')
-        .trimResults()
-        .omitEmptyStrings()
-        .split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if(pair.length != 3) {
-      return "Syntax error, please try in following " +
-          "format. fact add partition <table> <storage> <partition spec>";
-    }
-
-    File f = new File(pair[2]);
-    if(!f.exists()) {
-      return "Partition spec does not exist";
-    }
-
-    result = client.addPartitionToDim(pair[0], pair[1], pair[2]);
-    if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
-      return "Successfully added partition to "  + pair[0];
-    } else {
-      return "failure in  addition of partition to "  + pair[0];
-    }
-  }
-
 }
