@@ -82,7 +82,8 @@ public class RewriteUtil {
           cqi.startPos = ast.getCharPositionInLine();
           int ci = ast.getChildIndex();
           if (parent.getToken() == null ||
-              parent.getToken().getType() == HiveParser.TOK_EXPLAIN) {
+              parent.getToken().getType() == HiveParser.TOK_EXPLAIN ||
+              parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
             // Not a sub query
             cqi.endPos = originalQuery.length();
           } else if (parent.getChildCount() > ci + 1) {
@@ -104,6 +105,7 @@ public class RewriteUtil {
             // one for next AST
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
+            CubeGrillDriver.LOG.debug("Child of union all");
             cqi.endPos = getEndPos(originalQuery,
                 parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
