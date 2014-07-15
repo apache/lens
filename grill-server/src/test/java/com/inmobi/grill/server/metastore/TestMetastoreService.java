@@ -312,6 +312,16 @@ public class TestMetastoreService extends GrillJerseyTest {
     measures.getMeasures().add(xm2);
     cube.setMeasures(measures);
 
+    XExpressions expressions = cubeObjectFactory.createXExpressions();
+
+    XExprColumn xe1 = new XExprColumn();
+    xe1.setName("expr1");
+    xe1.setType("double");
+    xe1.setExpr("msr1/1000");
+
+    expressions.getExpressions().add(xe1);
+    cube.setExpressions(expressions);
+
     XProperties properties = cubeObjectFactory.createXProperties();
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("foo");
@@ -523,6 +533,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertNotNull(actual.getMeasures());
       assertEquals(actual.getMeasures().getMeasures().size(), cube.getMeasures().getMeasures().size());
       assertEquals(actual.getDimAttributes().getDimAttributes().size(), cube.getDimAttributes().getDimAttributes().size());
+      assertEquals(actual.getExpressions().getExpressions().size(), cube.getExpressions().getExpressions().size());
       assertEquals(actual.getWeight(), 100.0d);
       assertFalse(actual.isDerived());
       assertNull(actual.getParent());
@@ -891,6 +902,16 @@ public class TestMetastoreService extends GrillJerseyTest {
     xdims.getDimAttributes().add(xd2);
     dimension.setAttributes(xdims);
 
+    XExpressions expressions = cubeObjectFactory.createXExpressions();
+
+    XExprColumn xe1 = new XExprColumn();
+    xe1.setName("dimexpr");
+    xe1.setType("string");
+    xe1.setExpr("substr(col1, 3)");
+
+    expressions.getExpressions().add(xe1);
+    dimension.setExpressions(expressions);
+
     XProperties properties = cubeObjectFactory.createXProperties();
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("dimension.foo");
@@ -937,10 +958,12 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
       assertEquals(testDim.getWeight(), 100.0);
       assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
+      assertEquals(testDim.getExpressions().getExpressions().size(), 1);
 
       Dimension dim = JAXBUtils.dimensionFromXDimension(dimension);
       assertNotNull(dim.getAttributeByName("col1"));
       assertNotNull(dim.getAttributeByName("col2"));
+      assertNotNull(dim.getExpressionByName("dimexpr"));
 
       // alter dimension
       XProperty prop = cubeObjectFactory.createXProperty();

@@ -28,6 +28,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -54,8 +55,9 @@ public class JAXBUtils {
    * @param cube JAXB Cube
    * 
    * @return {@link Cube}
+   * @throws ParseException 
    */
-  public static CubeInterface hiveCubeFromXCube(XCube cube, Cube parent) {
+  public static CubeInterface hiveCubeFromXCube(XCube cube, Cube parent) throws ParseException {
     if (cube.isDerived()) {
       Set<String> dims = new LinkedHashSet<String>();
       dims.addAll(cube.getDimAttrNames().getDimAttrNames());
@@ -77,9 +79,16 @@ public class JAXBUtils {
         measures.add(hiveMeasureFromXMeasure(xm));
       }
 
+      Set<ExprColumn> expressions = new LinkedHashSet<ExprColumn>();
+      if (cube.getExpressions() != null) {
+        for (XExprColumn xe : cube.getExpressions().getExpressions()) {
+          expressions.add(hiveExprColumnFromXExprColumn(xe));
+        }
+      }
+
       Map<String, String> properties = mapFromXProperties(cube.getProperties());
       double cubeWeight = cube.getWeight() == null ? 0d : cube.getWeight();
-      return new Cube(cube.getName(), measures, dims, properties, cubeWeight);
+      return new Cube(cube.getName(), measures, dims, expressions, properties, cubeWeight);
     }
   }
 
@@ -112,6 +121,12 @@ public class JAXBUtils {
       }
       xc.setMeasures(xms);
 
+      XExpressions xexprs = XCF.createXExpressions();
+      List<XExprColumn> xexprList = xexprs.getExpressions();
+      for (ExprColumn ec : c.getExpressions()) {
+        xexprList.add(xExprColumnFromHiveExprColumn(ec));
+      }
+      xc.setExpressions(xexprs);
 
       XDimAttributes xdm = XCF.createXDimAttributes();
       List<XDimAttribute> xdmList = xdm.getDimAttributes();
@@ -197,11 +212,20 @@ public class JAXBUtils {
     xm.setCost(cm.getCost());
     xm.setStartTime(getXMLGregorianCalendar(cm.getStartTime()));
     xm.setEndTime(getXMLGregorianCalendar(cm.getEndTime()));
-
-    if (cm instanceof ExprMeasure) {
-      xm.setExpr(((ExprMeasure) cm).getExpr());
-    }
     return xm;
+  }
+
+  /**
+   * Create XExprColumn from hive ExprColum
+   */
+  public static XExprColumn xExprColumnFromHiveExprColumn(ExprColumn ec) {
+    if (ec == null) return null;
+
+    XExprColumn xe = XCF.createXExprColumn();
+    xe.setName(ec.getName());
+    xe.setType(ec.getType());
+    xe.setExpr(ec.getExpr());
+    return xe;
   }
 
   /**
@@ -248,28 +272,21 @@ public class JAXBUtils {
   public static CubeMeasure hiveMeasureFromXMeasure(XMeasure xm) {
     Date startDate = xm.getStartTime() == null ? null : xm.getStartTime().toGregorianCalendar().getTime();
     Date endDate = xm.getEndTime() == null ? null : xm.getEndTime().toGregorianCalendar().getTime();
-    CubeMeasure cm;
-    if (xm.getExpr() != null && !xm.getExpr().isEmpty()) {
-      cm = new ExprMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
-          xm.getExpr(),
-          xm.getFormatString(),
-          xm.getDefaultAggr(),
-          "unit",
-          startDate,
-          endDate,
-          xm.getCost()
-          );
-    } else {
-      cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
-          xm.getFormatString(),
-          xm.getDefaultAggr(),
-          "unit",
-          startDate,
-          endDate,
-          xm.getCost()
-          );
-    }
+    CubeMeasure cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
+        xm.getFormatString(),
+        xm.getDefaultAggr(),
+        "unit",
+        startDate,
+        endDate,
+        xm.getCost()
+        );
     return cm;
+  }
+
+  public static ExprColumn hiveExprColumnFromXExprColumn(XExprColumn xe) throws ParseException {
+    ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType(), ""),
+        xe.getExpr());
+    return ec;
   }
 
   /**
@@ -636,15 +653,22 @@ public class JAXBUtils {
     return partDesc;
   }
 
-  public static Dimension dimensionFromXDimension(XDimension dimension) {
+  public static Dimension dimensionFromXDimension(XDimension dimension) throws ParseException {
     Set<CubeDimAttribute> dims = new LinkedHashSet<CubeDimAttribute>();
     for (XDimAttribute xd : dimension.getAttributes().getDimAttributes()) {
       dims.add(hiveDimAttrFromXDimAttr(xd));
     }
 
+    Set<ExprColumn> expressions = new LinkedHashSet<ExprColumn>();
+    if (dimension.getExpressions() != null) {
+      for (XExprColumn xe : dimension.getExpressions().getExpressions()) {
+        expressions.add(hiveExprColumnFromXExprColumn(xe));
+      }
+    }
+
     Map<String, String> properties = mapFromXProperties(dimension.getProperties());
     double dimWeight = dimension.getWeight() == null ? 0d : dimension.getWeight();
-    return new Dimension(dimension.getName(), dims, properties, dimWeight);
+    return new Dimension(dimension.getName(), dims, expressions, properties, dimWeight);
   }
 
   public static XDimension xdimensionFromDimension(Dimension dimension) {
@@ -658,6 +682,14 @@ public class JAXBUtils {
       xdmList.add(xDimAttrFromHiveDimAttr(cd));
     }
     xd.setAttributes(xdm);
+
+    XExpressions xexprs = XCF.createXExpressions();
+    List<XExprColumn> xexprList = xexprs.getExpressions();
+    for (ExprColumn ec : dimension.getExpressions()) {
+      xexprList.add(xExprColumnFromHiveExprColumn(ec));
+    }
+    xd.setExpressions(xexprs);
+
     return xd;
   }
 }
