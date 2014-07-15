@@ -4,43 +4,62 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.io.Files;
-import org.apache.commons.lang.StringUtils;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@Path("/static")
+@Path("/")
 public class StaticFileResource {
   public static final Log LOG = LogFactory.getLog(StaticFileResource.class);
-  public static final String STATIC_BASE_DIR =
-    StringUtils.join(new String[]{"webapp", "grill-server", "static"}, File.separator);
 
   // Cache for file content, bound by both size and time
-  private LoadingCache<String, String> contentCache = CacheBuilder.newBuilder()
+  private static final LoadingCache<String, String> contentCache = CacheBuilder.newBuilder()
     .maximumSize(100)
     .expireAfterAccess(10, TimeUnit.MINUTES)
     .build(new CacheLoader<String, String>() {
+      String baseDir = null;
       @Override
       public String load(String filePath) throws Exception {
-        return Files.toString(new File(STATIC_BASE_DIR, filePath), Charset.forName("UTF-8"));
+        if (baseDir == null) {
+          baseDir = GrillServices.get().getHiveConf().get(GrillConfConstants.GRILL_SERVER_UI_STATIC_DIR,
+            GrillConfConstants.DEFAULT_GRILL_SERVER_UI_STATIC_DIR);
+        }
+        return loadFile(baseDir, filePath);
       }
     });
+
+  private static String loadFile(String baseDir, String filePath) throws IOException {
+    return Files.toString(new File(baseDir, filePath), Charset.forName("UTF-8"));
+  }
 
   @GET
   @Path("/{filePath:.*}")
   public Response getStaticResource(@PathParam("filePath") String filePath) {
     try {
-      return Response.ok(contentCache.get(filePath), getMediaType(filePath)).build();
-    } catch (ExecutionException e) {
-      if (e.getCause() instanceof FileNotFoundException) {
+      HiveConf conf = GrillServices.get().getHiveConf();
+      if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_UI_ENABLE_CACHING,
+        GrillConfConstants.DEFAULT_GRILL_SERVER_UI_ENABLE_CACHING)) {
+        return Response.ok(contentCache.get(filePath), getMediaType(filePath)).build();
+      } else {
+        // This is for dev mode
+        String baseDir = conf.get(GrillConfConstants.GRILL_SERVER_UI_STATIC_DIR,
+          GrillConfConstants.DEFAULT_GRILL_SERVER_UI_STATIC_DIR);
+        return Response.ok(loadFile(baseDir, filePath), getMediaType(filePath)).build();
+      }
+    } catch (Exception e) {
+      if (e.getCause() instanceof FileNotFoundException
+        || e instanceof FileNotFoundException
+        ) {
         throw new NotFoundException("Not Found: " + filePath);
       }
       throw new WebApplicationException("Server error: " + e.getCause(), e);

@@ -49,6 +49,12 @@ public class GrillConfConstants {
   public static final boolean DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART = true;
   public static final String GRILL_SESSION_TIMEOUT_SECONDS = "grill.server.session.timeout.seconds";
   public static final long GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT = 1440 * 60; // Default is one day
+  public static final String GRILL_SERVER_UI_URI = "grill.server.ui.base.uri";
+  public static final String DEFAULT_GRILL_SERVER_UI_URI = "http://0.0.0.0:19999/";
+  public static final String GRILL_SERVER_UI_STATIC_DIR = "grill.server.ui.static.dir";
+  public static final String DEFAULT_GRILL_SERVER_UI_STATIC_DIR = "webapp/grill-server/static";
+  public static final String GRILL_SERVER_UI_ENABLE_CACHING = "grill.server.ui.enable.caching";
+  public static final boolean DEFAULT_GRILL_SERVER_UI_ENABLE_CACHING = true;
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
