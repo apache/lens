@@ -70,6 +70,25 @@
   <description>The base url for the grill server</description>
 </property>
 
+
+<property>
+    <name>grill.server.ui.base.uri</name>
+    <value>http://localhost:19999/</value>
+    <description>The base url for the Grill UI Server</description>
+</property>
+
+<property>
+    <name>grill.server.ui.static.dir</name>
+    <value>webapp/grill-server/static</value>
+    <description>The base directory to server UI static files from</description>
+</property>
+
+<property>
+    <name>grill.server.ui.enable.caching</name>
+    <value>true</value>
+    <description>Set this to false to disable static file caching in the UI server</description>
+</property>
+
 <property>
   <name>grill.persistent.resultset</name>
   <value>false</value>
