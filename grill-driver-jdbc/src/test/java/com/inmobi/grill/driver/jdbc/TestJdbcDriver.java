@@ -241,6 +241,37 @@ public class TestJdbcDriver {
     }
     
   }
+
+  @Test
+  public void testConnectionCloseForFailedQueries() throws Exception {
+    createTable("invalid_conn_close");
+    insertData("invalid_conn_close");
+
+    String query = "SELECT * from invalid_conn_close2";
+    QueryContext ctx = new QueryContext(query, "SA", baseConf);
+
+    for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
+      driver.executeAsync(ctx);
+      driver.updateStatus(ctx);
+      System.out.println("@@@@ QUERY " + (i+1));
+    }
+
+    String validQuery = "SELECT * FROM invalid_conn_close";
+    QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
+    System.out.println("@@@ Submitting valid query");
+    driver.executeAsync(validCtx);
+
+    // Wait for query to finish
+    while (true) {
+      driver.updateStatus(validCtx);
+      if (validCtx.getDriverStatus().isFinished()) {
+        break;
+      }
+      Thread.sleep(1000);
+    }
+
+    driver.closeQuery(validCtx.getQueryHandle());
+  }
   
   @Test
   public void testCancelQuery() throws Exception {
@@ -258,7 +289,7 @@ public class TestJdbcDriver {
     assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     driver.closeQuery(handle);
   }
-  
+
   @Test
   public void testInvalidQuery() throws Exception {
     String query = "SELECT * FROM invalid_table";

@@ -195,6 +195,9 @@ public class JDBCDriver implements GrillDriver {
                   "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
                   + " reason: " + sqlEx.getMessage(), sqlEx);
               result.error = sqlEx;
+              // Close connection in case of failed queries. For successful queries, connection is closed
+              // When result set is closed or driver.closeQuery is called
+              result.close();
               queryContext.notifyError(sqlEx);
             }
           }
