@@ -100,8 +100,14 @@ Grill server configuration
 *--+--+---+--+
 |38|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|39|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|39|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
 *--+--+---+--+
-|40|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|40|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
+*--+--+---+--+
+|41|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
+*--+--+---+--+
+|42|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+*--+--+---+--+
+|43|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The configuration parameters and their default values
