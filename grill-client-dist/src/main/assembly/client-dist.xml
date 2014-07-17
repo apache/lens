@@ -85,6 +85,7 @@
         <include>run-examples.sh</include>
         <include>grill-config.sh</include>
         <include>grill-cli.sh</include>
+        <include>grill-cli</include>
       </includes>
     </fileSet>
     

@@ -84,6 +84,15 @@
                     <filemode>755</filemode>
                   </mapper>
                 </data>
+                <data>
+                  <src>target/grill-client-dist-${project.version}-client/bin/grill-cli</src>
+                  <type>file</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/usr/bin/</prefix>
+                    <filemode>755</filemode>
+                  </mapper>
+                </data>
               </dataSet>
             </configuration>
           </execution>
