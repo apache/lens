@@ -27,6 +27,7 @@
         <xs:sequence>
             <xs:element type="x_measures" name="measures"/>
             <xs:element type="x_dim_attributes" name="dim_attributes"/>
+            <xs:element type="x_expressions" name="expressions"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
             <xs:element type="x_measure_names" name="measure_names"/>
             <xs:element type="x_dim_attr_names" name="dim_attr_names"/>
@@ -48,6 +49,7 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element type="x_dim_attributes" name="attributes"/>
+            <xs:element type="x_expressions" name="expressions"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
@@ -87,9 +89,9 @@
         <xs:attribute type="xs:dateTime" name="start_time" />
         <xs:attribute type="xs:dateTime" name="end_time" />
         <xs:attribute type="xs:double" name="cost" />
-        <xs:attribute type="xs:string" name="expr" />
         <xs:attribute type="xs:string" name="unit" />
     </xs:complexType>
+
     <xs:complexType name="x_measures">
         <xs:annotation>
             <xs:documentation>
@@ -109,6 +111,28 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element type="xs:string" name="measures" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="x_expr_column">
+        <xs:annotation>
+            <xs:documentation>
+                An expression column
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="expr" />
+    </xs:complexType>
+
+    <xs:complexType name="x_expressions">
+        <xs:annotation>
+            <xs:documentation>
+                Set of x_exprcolumn.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="x_expr_column" name="expressions" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
 

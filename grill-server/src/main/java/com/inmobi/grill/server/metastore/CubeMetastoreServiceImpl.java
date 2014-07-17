@@ -34,6 +34,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -187,6 +188,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       LOG.info("Created cube " + cube.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
+    } catch (ParseException e) {
+      throw new GrillException(e);
     } finally {
       release(sessionid);
     }
@@ -246,6 +249,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       getClient(sessionid).alterCube(cube.getName(), JAXBUtils.hiveCubeFromXCube(cube, parent));
       LOG.info("Cube updated " + cube.getName());
     } catch (HiveException e) {
+      throw new GrillException(e);
+    } catch (ParseException e) {
       throw new GrillException(e);
     } finally {
       release(sessionid);
@@ -1018,6 +1023,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       LOG.info("Created dimension " + dimension.getName());
     } catch (HiveException e) {
       throw new GrillException(e);
+    } catch (ParseException e) {
+      throw new GrillException(e);
     } finally {
       release(sessionid);
     }
@@ -1059,6 +1066,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
           JAXBUtils.dimensionFromXDimension(dimension));
       LOG.info("Altered dimension " + dimName);
     } catch (HiveException e) {
+      throw new GrillException(e);
+    } catch (ParseException e) {
       throw new GrillException(e);
     } finally {
       release(sessionid);
