@@ -35,6 +35,9 @@ import org.apache.log4j.Logger;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
+
 public class TestDataSourceConnectionProvider {
   public static final Logger LOG = Logger.getLogger(TestDataSourceConnectionProvider.class);
 
@@ -94,5 +97,43 @@ public class TestDataSourceConnectionProvider {
     }
     cp.close();
     Assert.assertEquals(passed.get(), numThreads);
+  }
+
+  @Test
+  public void testGetConnectionTimeout() throws Exception {
+    final Configuration conf = new Configuration();
+    conf.set(JDBCDriverConfConstants.JDBC_DRIVER_CLASS, "org.hsqldb.jdbc.JDBCDriver");
+    conf.set(JDBCDriverConfConstants.JDBC_DB_URI, "jdbc:hsqldb:mem:mymemdb2");
+    conf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
+    conf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
+
+    // Set a low timeout
+    conf.setInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT, 1000);
+    final int MAX_CONNECTIONS = 3;
+
+    conf.setInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, MAX_CONNECTIONS);
+    final DataSourceConnectionProvider cp = new DataSourceConnectionProvider();
+
+    Connection[] connections = new Connection[MAX_CONNECTIONS + 1];
+    for (int i = 0; i < MAX_CONNECTIONS + 1; i++) {
+      // Last call should throw sql exception
+      try {
+        connections[i] = cp.getConnection(conf);
+        if (i == MAX_CONNECTIONS) {
+          fail("Expected last get connection to fail because of timeout");
+        }
+      } catch (SQLException sqlEx) {
+        if (i != MAX_CONNECTIONS) {
+          LOG.error("Unexpected getConnection error", sqlEx);
+        }
+        assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: "
+          + sqlEx.getMessage());
+      }
+    }
+
+    for (Connection c : connections) {
+      if (c != null)
+        c.close();
+    }
   }
 }

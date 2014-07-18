@@ -932,6 +932,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       LOG.info("CloseResultSet:" + sessionHandle.toString() +" query: " + queryHandle);
       acquire(sessionHandle);
       resultSets.remove(queryHandle);
+      // Ask driver to close result set
+      getQueryContext(queryHandle).getSelectedDriver().closeResultSet(queryHandle);
     } finally {
       release(sessionHandle);
     }
