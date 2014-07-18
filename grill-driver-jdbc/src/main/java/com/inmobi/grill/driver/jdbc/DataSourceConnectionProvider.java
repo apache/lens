@@ -127,7 +127,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       // Max idle time before a connection is closed
       cpds.setMaxIdleTime(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
           JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
-      // Max idel time before connection is closed if 
+      // Max idle time before connection is closed if
       // number of connections is > min pool size (default = 3)
       cpds.setMaxIdleTimeExcessConnections(
           conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
@@ -136,6 +136,12 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       cpds.setMaxStatementsPerConnection(
           conf.getInt(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION, 
               JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT));
+
+      // How many milliseconds should a caller wait when trying to get a connection
+      // If the timeout expires, SQLException will be thrown
+      cpds.setCheckoutTimeout(
+        conf.getInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT,
+          JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT_DEFAULT));
       dataSourceMap.put(config, cpds);
       LOG.info("Created new datasource for config: " + config);
     }

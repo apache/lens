@@ -36,5 +36,7 @@ public interface JDBCDriverConfConstants {
   public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = 
       "grill.driver.jdbc.pool.max.statements";
   public static final int JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT = 20;
-  
+
+  public static final String JDBC_GET_CONNECTION_TIMEOUT = "grill.driver.jdbc.get.connection.timeout";
+  public static final int JDBC_GET_CONNECTION_TIMEOUT_DEFAULT = 10000;
 }
