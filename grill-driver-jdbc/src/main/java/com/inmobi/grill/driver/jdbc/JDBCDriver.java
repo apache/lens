@@ -34,6 +34,10 @@ import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -51,6 +55,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.Setter;
 import static com.inmobi.grill.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_CASE;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 /**
  * This driver is responsible for running queries against databases which can be queried using the JDBC API.
  */
@@ -312,6 +318,23 @@ public class JDBCDriver implements GrillDriver {
   }
 
   protected String rewriteQuery(String query, Configuration conf) throws GrillException {
+    // check if it is select query
+    try {
+      ASTNode ast = HQLParser.parseHQL(query);
+      if (ast.getToken().getType() != HiveParser.TOK_QUERY) {
+        throw new GrillException("Not allowed statement:" + query);
+      } else {
+        // check for insert clause
+        ASTNode dest = HQLParser.findNodeByPath(ast, HiveParser.TOK_INSERT);
+        if (dest != null && ((ASTNode)(dest.getChild(0).getChild(0).getChild(0)))
+            .getToken().getType() != TOK_TMP_FILE) {
+          throw new GrillException("Not allowed statement:" + query);
+        }
+      }
+    } catch (ParseException e) {
+      throw new GrillException(e);
+    }
+
     QueryRewriter rewriter = getQueryRewriter(conf);
     String rewrittenQuery = rewriter.rewrite(conf, query);
     if (LOG.isDebugEnabled()) {
@@ -347,6 +370,7 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
+    String rewritten = rewriteQuery(query, conf);
     return new JDBCQueryPlan();
   }
 
@@ -360,7 +384,7 @@ public class JDBCDriver implements GrillDriver {
   public void prepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
     // Only create a prepared statement and then close it
-    String rewrittenQuery = rewriteQuery(pContext.getUserQuery(), pContext.getConf());
+    String rewrittenQuery = rewriteQuery(pContext.getDriverQuery(), pContext.getConf());
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
@@ -398,6 +422,8 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
+    String rewritten = rewriteQuery(pContext.getDriverQuery(), conf);
+    prepare(pContext);
     return new JDBCQueryPlan();
   }
 
