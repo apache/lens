@@ -123,12 +123,14 @@ public class CubeGrillDriver implements GrillDriver {
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
           } catch (GrillException e) {
-            LOG.warn("Explain on Driver:" + d1.getClass().getSimpleName() + " failed", e);
+            LOG.warn("Explain query:" + driverQueries.get(d1) +
+                " on Driver:" + d1.getClass().getSimpleName() + " failed", e);
           }
           try {
             c2 = d2.explain(driverQueries.get(d2), conf);
           } catch (GrillException e) {
-            LOG.warn("Explain on Driver" + d2.getClass().getSimpleName() + " failed", e);
+            LOG.warn("Explain query:" + driverQueries.get(d2) +
+                " on Driver:" + d2.getClass().getSimpleName() + " failed", e);
           }
           if (c1 == null && c2 == null) {
             return 0;
