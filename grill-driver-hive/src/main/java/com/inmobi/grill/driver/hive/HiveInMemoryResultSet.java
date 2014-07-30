@@ -34,7 +34,6 @@ import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.TableSchema;
 
 import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.api.query.ResultRow;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.InMemoryResultSet;
@@ -48,23 +47,15 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   private Iterator<Object[]> fetchedRowsItr;
   private boolean noMoreResults;
   private boolean closeAfterFecth;
+  int numColumns;
 
   public HiveInMemoryResultSet(OperationHandle hiveHandle,
-      CLIServiceClient client, boolean closeAfterFecth) {
+      CLIServiceClient client, boolean closeAfterFecth) throws HiveSQLException {
     this.client = client;
     this.opHandle = hiveHandle;
     this.closeAfterFecth = closeAfterFecth;
-  }
-
-  private TableSchema getTableSchema() throws GrillException {
-    if (metadata == null) {
-      try {
-        metadata = client.getResultSetMetadata(opHandle);
-      } catch (HiveSQLException e) {
-        throw new GrillException(e);
-      }
-    }
-    return metadata;
+    this.metadata = client.getResultSetMetadata(opHandle);
+    this.numColumns = metadata.getColumnDescriptors().size();
   }
 
   @Override
@@ -77,24 +68,8 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     return new GrillResultSetMetadata() {
 
       @Override
-      public List<ResultColumn> getColumns() {
-        try {
-          List<ColumnDescriptor> descriptors = getTableSchema().getColumnDescriptors();
-
-          if (descriptors == null) {
-            return null;
-          }
-
-          List<ResultColumn> columns = new ArrayList<ResultColumn>(descriptors.size());
-
-          for (ColumnDescriptor desc : descriptors) {
-            columns.add(new ResultColumn(desc.getName(), desc.getTypeName()));
-          }
-
-          return columns;
-        } catch (GrillException e) {
-          return null;
-        }
+      public List<ColumnDescriptor> getColumns() {
+        return metadata.getColumnDescriptors();
       }
     };
   }
@@ -122,8 +97,6 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   @Override
   public ResultRow next() throws GrillException {
-    List<ColumnDescriptor> descriptors = getTableSchema().getColumnDescriptors();
-    int numColumns = descriptors.size();
     List<Object> results = new ArrayList<Object>(numColumns);
     Object[] row = fetchedRowsItr.next();
     results.addAll(Arrays.asList(row));

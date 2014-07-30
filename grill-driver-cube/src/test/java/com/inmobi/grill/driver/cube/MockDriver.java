@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hive.service.cli.ColumnDescriptor;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryCost;
@@ -148,9 +149,9 @@ public class MockDriver implements GrillDriver {
       public GrillResultSetMetadata getMetadata() throws GrillException {
         // TODO Auto-generated method stub
         return new GrillResultSetMetadata() {
-          
+
           @Override
-          public List<ResultColumn> getColumns() {
+          public List<ColumnDescriptor> getColumns() {
             // TODO Auto-generated method stub
             return null;
           }
@@ -184,9 +185,9 @@ public class MockDriver implements GrillDriver {
       @Override
       public GrillResultSetMetadata getMetadata() throws GrillException {
         return new GrillResultSetMetadata() {
-          
+
           @Override
-          public List<ResultColumn> getColumns() {
+          public List<ColumnDescriptor> getColumns() {
             // TODO Auto-generated method stub
             return null;
           }

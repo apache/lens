@@ -20,32 +20,23 @@ package com.inmobi.grill.driver.hive;
  * #L%
  */
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.*;
 
 import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.PersistentResultSet;
 
 public class HivePersistentResultSet extends PersistentResultSet {
   private final Path path;
-  private final QueryHandle queryHandle;
   private final TableSchema metadata;
 
   public HivePersistentResultSet(Path resultSetPath, OperationHandle opHandle,
-  		CLIServiceClient client, QueryHandle queryHandle) throws HiveSQLException {
+      CLIServiceClient client) throws HiveSQLException {
   	this.path = resultSetPath;
-    this.queryHandle = queryHandle;
     this.metadata = client.getResultSetMetadata(opHandle);
-  }
-
-  public QueryHandle getQueryHandle() {
-    return queryHandle;
   }
 
   @Override
@@ -62,20 +53,8 @@ public class HivePersistentResultSet extends PersistentResultSet {
   public GrillResultSetMetadata getMetadata() throws GrillException {
     return new GrillResultSetMetadata() {
       @Override
-      public List<ResultColumn> getColumns() {
-        List<ColumnDescriptor> descriptors;
-
-        descriptors = metadata.getColumnDescriptors();
-
-        if (descriptors == null) {
-          return null;
-        }
-
-        List<ResultColumn> columns = new ArrayList<ResultColumn>(descriptors.size());
-        for (ColumnDescriptor colDesc : descriptors) {
-          columns.add(new ResultColumn(colDesc.getName(), colDesc.getTypeName()));
-        }
-        return columns;
+      public List<ColumnDescriptor> getColumns() {
+        return metadata.getColumnDescriptors();
       }
     };
   }

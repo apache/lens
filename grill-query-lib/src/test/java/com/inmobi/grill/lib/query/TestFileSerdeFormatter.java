@@ -22,7 +22,11 @@ package com.inmobi.grill.lib.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -117,28 +121,73 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   private List<ResultRow> getTestRows() {
     List<ResultRow> rows = new ArrayList<ResultRow>();
     List<Object> elements = new ArrayList<Object>();
+    Map<Integer, String> mapElements = new LinkedHashMap<Integer, String>();
+    mapElements.put(1, "one");
     elements.add(1);
     elements.add("one");
+    elements.add("one");
+    elements.add("one");
+    elements.add(Arrays.asList(new Byte((byte)1)));
+    elements.add(Arrays.asList(1, "one"));
+    elements.add(mapElements);
     rows.add(new ResultRow(elements));
 
+    mapElements = new LinkedHashMap<Integer, String>();
+    mapElements.put(1, "one");
+    mapElements.put(2, "two");
     elements = new ArrayList<Object>();
     elements.add(2);
     elements.add("two");
+    elements.add("two");
+    elements.add("two");
+    elements.add(Arrays.asList(new Byte((byte)1),new Byte((byte)2)));
+    elements.add(Arrays.asList(2, "two"));
+    elements.add(mapElements);
     rows.add(new ResultRow(elements));
 
+    mapElements = new LinkedHashMap<Integer, String>();
+    mapElements.put(1, "one");
+    mapElements.put(2, "two");
+    mapElements.put(null, "three");
     elements = new ArrayList<Object>();
     elements.add(null);
     elements.add("three");
+    elements.add("three");
+    elements.add("three");
+    elements.add(Arrays.asList(new Byte((byte)1),new Byte((byte)2),null));
+    elements.add(Arrays.asList(null, "three"));
+    elements.add(mapElements);
     rows.add(new ResultRow(elements));
 
+    mapElements = new LinkedHashMap<Integer, String>();
+    mapElements.put(1, "one");
+    mapElements.put(2, "two");
+    mapElements.put(null, "three");
+    mapElements.put(4, null);
     elements = new ArrayList<Object>();
     elements.add(4);
     elements.add(null);
+    elements.add(null);
+    elements.add(null);
+    elements.add(Arrays.asList(new Byte((byte)1),new Byte((byte)2),null,new Byte((byte)4)));
+    elements.add(Arrays.asList(4, null));
+    elements.add(mapElements);
     rows.add(new ResultRow(elements));
 
+    mapElements = new LinkedHashMap<Integer, String>();
+    mapElements.put(1, "one");
+    mapElements.put(2, "two");
+    mapElements.put(null, "three");
+    mapElements.put(4, null);
+    mapElements.put(5, null);
     elements = new ArrayList<Object>();
     elements.add(null);
     elements.add(null);
+    elements.add(null);
+    elements.add(null);
+    elements.add(Arrays.asList(new Byte((byte)1),new Byte((byte)2),null,new Byte((byte)4),null));
+    elements.add(Arrays.asList(null, null));
+    elements.add(mapElements);
     rows.add(new ResultRow(elements));
 
     return rows;

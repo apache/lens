@@ -42,5 +42,6 @@ public enum ResultColumnType {
   DECIMAL,
   NULL,
   DATE,
-  VARCHAR;
+  VARCHAR,
+  CHAR;
 }

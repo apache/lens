@@ -509,7 +509,7 @@ public class HiveDriver implements GrillDriver {
         if (op.hasResultSet() || context.isDriverPersistent()) {
           if (context.isDriverPersistent()) {
             return new HivePersistentResultSet(new Path(context.getHdfsoutPath()),
-                op, getClient(), context.getQueryHandle());
+                op, getClient());
           } else {
             return new HiveInMemoryResultSet(op, getClient(), closeAfterFetch);
           }
