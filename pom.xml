@@ -651,7 +651,7 @@
         <activeByDefault>false</activeByDefault>
       </activation>
       <properties>
-        <hadoop.version>2.0.0-cdh4.3.0</hadoop.version>
+        <hadoop.version>2.4.0</hadoop.version>
       </properties>
       <dependencyManagement>
       <dependencies>
