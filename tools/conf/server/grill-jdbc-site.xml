@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+  <property>
+    <name>grill.driver.jdbc.driver.class</name>
+    <value>org.hsqldb.jdbcDriver</value>
+  </property>
+  <property>
+    <name>grill.driver.jdbc.db.uri</name>
+    <value>jdbc:hsqldb:/tmp/db-storage.db;MODE=MYSQL</value>
+  </property>
+  <property>
+    <name>grill.driver.jdbc.db.user</name>
+    <value>SA</value>
+  </property>
+  <property>
+    <name>cube.query.driver.supported.storages</name>
+    <value>mydb</value>
+  </property>
+</configuration>

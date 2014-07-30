@@ -42,6 +42,7 @@ public class QueryStatus implements Serializable {
     QUEUED,
     LAUNCHED,
     RUNNING,
+    EXECUTED,
     SUCCESSFUL,
     FAILED,
     CANCELED,
@@ -102,7 +103,7 @@ public class QueryStatus implements Serializable {
       case RUNNING:
       case CANCELED:
       case FAILED:
-      case SUCCESSFUL:
+      case EXECUTED:
         return true;
       }
       break;
@@ -111,7 +112,15 @@ public class QueryStatus implements Serializable {
       case RUNNING:
       case CANCELED:
       case FAILED:
-      case SUCCESSFUL:
+      case EXECUTED:
+        return true;
+      }
+      break;
+    case EXECUTED:
+      switch (newState) {
+        case SUCCESSFUL:
+        case FAILED:
+        case CANCELED:
         return true;
       }
       break;

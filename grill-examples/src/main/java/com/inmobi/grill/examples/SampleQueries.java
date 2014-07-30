@@ -78,16 +78,17 @@ public class SampleQueries {
   }
 
   public void queryAll() throws IOException {
-    dimensionQueries();
-
+    runQueries("dimension-queries.txt");
+    runQueries("cube-queries.txt");
+    System.out.println("Successful queries " + success + " out of " + total + "queries");
   }
+  int total = 0;
+  int success = 0;
 
-  public void dimensionQueries() throws IOException {
-    InputStream file = SampleMetastore.class.getClassLoader().getResourceAsStream("dimension-queries.txt");
+  public void runQueries(String fileName) throws IOException {
+    InputStream file = SampleMetastore.class.getClassLoader().getResourceAsStream(fileName);
     BufferedReader reader = new BufferedReader(new InputStreamReader(file));
     String query;
-    int total = 0;
-    int success = 0;
     while ((query = reader.readLine()) != null) {
       if (StringUtils.isBlank(query)) {
         continue;
@@ -118,7 +119,6 @@ public class SampleQueries {
       System.out.println("--------------------");
     }
 
-    System.out.println("Successful queries " + success + " out of " + total + "queries");
   }
 
 }

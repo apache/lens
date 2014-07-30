@@ -22,6 +22,7 @@ package com.inmobi.grill.client;
 
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.query.*;
+
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -66,6 +67,61 @@ public class GrillStatement {
     return handle;
   }
 
+  public QueryHandle executeQuery(QueryPrepareHandle phandle, boolean waitForQueryToComplete) {
+    QueryHandle handle = executeQuery(phandle);
+
+    if (waitForQueryToComplete) {
+      waitForQueryToComplete(handle);
+    }
+    return handle;
+  }
+
+  public QueryPrepareHandle prepareQuery(String sql) {
+    if (!connection.isOpen()) {
+      throw new IllegalStateException("Grill Connection has to be " +
+          "established before querying");
+    }
+
+    Client client = ClientBuilder.newBuilder().register(
+        MultiPartFeature.class).build();
+    WebTarget target = getPreparedQueriesWebTarget(client);
+
+    QueryPrepareHandle handle = target.request().post(Entity.entity(
+        prepareForm(sql, "PREPARE"), MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryPrepareHandle.class);
+    getPreparedQuery(handle);
+    return handle;
+  }
+
+  public QueryPlan explainAndPrepare(String sql) {
+    if (!connection.isOpen()) {
+      throw new IllegalStateException("Grill Connection has to be " +
+          "established before querying");
+    }
+
+    Client client = ClientBuilder.newBuilder().register(
+        MultiPartFeature.class).build();
+
+    WebTarget target = getPreparedQueriesWebTarget(client);
+
+    QueryPlan plan = target.request().post(
+        Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE"),
+        MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+    return plan;
+  }
+
+  private FormDataMultiPart prepareForm(String sql, String op) {
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionid").build(),
+        connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        sql));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        op));
+    return mp;
+  }
+
   private void waitForQueryToComplete(QueryHandle handle) {
     query = getQuery(handle);
     while (!query.getStatus().isFinished()) {
@@ -84,17 +140,34 @@ public class GrillStatement {
             connection.getGrillConnectionParams().getQueryResourcePath()).path("queries");
   }
 
+  private WebTarget getPreparedQueriesWebTarget(Client client) {
+    return client.target(
+        connection.getGrillConnectionParams().getBaseConnectionUrl()).path(
+            connection.getGrillConnectionParams().getQueryResourcePath()).path("preparedqueries");
+  }
+
   public GrillQuery getQuery(QueryHandle handle) {
     try {
       Client client = ClientBuilder.newClient();
       WebTarget target = getQueryWebTarget(client);
-      return target.path(handle.toString()).queryParam(
+      this.query = target.path(handle.toString()).queryParam(
           "sessionid", connection.getSessionHandle()).request().get(GrillQuery.class);
+      return query;
     } catch (Exception e) {
       throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
     }
   }
 
+  public GrillPreparedQuery getPreparedQuery(QueryPrepareHandle handle) {
+    try {
+      Client client = ClientBuilder.newClient();
+      WebTarget target = getPreparedQueriesWebTarget((client));
+      return target.path(handle.toString()).queryParam(
+          "sessionid", connection.getSessionHandle()).request().get(GrillPreparedQuery.class);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to get query status, cause:" + e.getMessage());
+    }
+  }
 
   private QueryHandle executeQuery(String sql) {
     if (!connection.isOpen()) {
@@ -114,6 +187,27 @@ public class GrillStatement {
         "execute"));
 
     WebTarget target = getQueryWebTarget(client);
+
+    QueryHandle handle = target.request().post(Entity.entity(mp,
+        MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+    return handle;
+  }
+
+  public QueryHandle executeQuery(QueryPrepareHandle phandle) {
+    if (!connection.isOpen()) {
+      throw new IllegalStateException("Grill Connection has to be " +
+          "established before querying");
+    }
+
+    Client client = ClientBuilder.newBuilder().register(
+        MultiPartFeature.class).build();
+    WebTarget target = getPreparedQueriesWebTarget((client)).path(phandle.toString());
+    FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionid").build(),
+        connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "execute"));
 
     QueryHandle handle = target.request().post(Entity.entity(mp,
         MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -153,6 +247,17 @@ public class GrillStatement {
         });
     return handles;
   }
+
+  public List<QueryPrepareHandle> getAllPreparedQueries() {
+    Client client = ClientBuilder.newClient();
+    WebTarget target = getPreparedQueriesWebTarget(client);
+    List<QueryPrepareHandle> handles = target.queryParam("sessionid",
+        connection.getSessionHandle()).request().get(
+        new GenericType<List<QueryPrepareHandle>>() {
+        });
+    return handles;
+  }
+
   public QueryResultSetMetadata getResultSetMetaData() {
     return this.getResultSetMetaData(query);
   }
@@ -231,6 +336,21 @@ public class GrillStatement {
 
     APIResult result = target.path(query.getQueryHandle().toString()).
         path("resultset").queryParam("sessionid", connection.getSessionHandle()).
+        request().delete(APIResult.class);
+
+    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean destroyPrepared(QueryPrepareHandle phandle) {
+    Client client = ClientBuilder.newClient();
+    WebTarget target = getPreparedQueriesWebTarget(client);
+
+    APIResult result = target.path(phandle.toString()).
+        queryParam("sessionid", connection.getSessionHandle()).
         request().delete(APIResult.class);
 
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {

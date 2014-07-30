@@ -20,16 +20,12 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.ws.rs.NotFoundException;
-
+import com.inmobi.grill.api.GrillConf;
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.session.GrillSessionImpl;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hive.service.CompositeService;
@@ -39,20 +35,24 @@ import org.apache.hive.service.cli.HandleIdentifier;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
+import org.apache.hive.service.cli.thrift.TSessionHandle;
 
-import com.inmobi.grill.api.GrillConf;
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.server.api.query.QueryContext;
-import com.inmobi.grill.server.session.GrillSessionImpl;
+import javax.ws.rs.NotFoundException;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class GrillService extends CompositeService implements Externalizable {
-
+  public static final Log LOG = LogFactory.getLog(GrillService.class);
   private final CLIService cliService;
 
   //Static session map which is used by query submission thread to get the
   //grill session before submitting a query to hive server
-  private static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
+  protected static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
       new ConcurrentHashMap<String, GrillSessionHandle>();
 
   protected GrillService(String name, CLIService cliService) {
@@ -99,6 +99,26 @@ public abstract class GrillService extends CompositeService implements Externali
         sessionHandle.getHandleIdentifier().getSecretId());
     sessionMap.put(grillSession.getPublicId().toString(), grillSession);
     return grillSession;
+  }
+
+  /**
+   * Restore session from previous instance of grill server
+   */
+  public void restoreSession(GrillSessionHandle sessionHandle,
+                               String userName,
+                               String password) throws GrillException {
+    HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
+    SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
+    try {
+      SessionHandle restoredHandle =
+        cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
+      GrillSessionHandle restoredSession = new GrillSessionHandle(
+        restoredHandle.getHandleIdentifier().getPublicId(),
+        restoredHandle.getHandleIdentifier().getSecretId());
+      sessionMap.put(restoredSession.getPublicId().toString(), restoredSession);
+    } catch (HiveSQLException e) {
+      throw new GrillException("Error restoring session " + sessionHandle, e);
+    }
   }
 
   public void closeSession(GrillSessionHandle sessionHandle)

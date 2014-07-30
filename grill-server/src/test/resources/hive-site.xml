@@ -59,4 +59,14 @@
   <value>12345</value>
 </property>
 
+<property>
+  <name>hive.server2.thrift.client.retry.limit</name>
+  <value>3</value>
+</property>
+
+<property>
+  <name>hive.server2.thrift.client.connect.retry.limit</name>
+  <value>3</value>
+</property>
+
 </configuration>

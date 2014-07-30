@@ -21,6 +21,7 @@ package com.inmobi.grill.driver.cube;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +82,8 @@ public class RewriteUtil {
           cqi.startPos = ast.getCharPositionInLine();
           int ci = ast.getChildIndex();
           if (parent.getToken() == null ||
-              parent.getToken().getType() == HiveParser.TOK_EXPLAIN) {
+              parent.getToken().getType() == HiveParser.TOK_EXPLAIN ||
+              parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
             // Not a sub query
             cqi.endPos = originalQuery.length();
           } else if (parent.getChildCount() > ci + 1) {
@@ -103,6 +105,7 @@ public class RewriteUtil {
             // one for next AST
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
+            CubeGrillDriver.LOG.debug("Child of union all");
             cqi.endPos = getEndPos(originalQuery,
                 parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
@@ -139,6 +142,11 @@ public class RewriteUtil {
   static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
+      if(entry.getKey().equals("cube.query.driver.supported.storages")){
+        CubeGrillDriver.LOG.warn("cube.query.driver.supported.storages value : "
+            + entry.getValue() + " from query conf ignored/");
+        continue;
+      }
       conf.set(entry.getKey(), entry.getValue());
     }
     return conf;
@@ -162,11 +170,14 @@ public class RewriteUtil {
   }
 
   public static Map<GrillDriver, String> rewriteQuery(final String query,
-      List<GrillDriver> drivers, Configuration queryconf) throws GrillException {
+      Collection<GrillDriver> drivers, Configuration queryconf) throws GrillException {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
       Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
+      StringBuilder rewriteFailure = new StringBuilder();
+      String failureCause = null;
+      boolean useBuilder = false;
       if (lowerCaseQuery.startsWith("add") ||
           lowerCaseQuery.startsWith("set")) {
         for (GrillDriver driver : drivers) {
@@ -178,25 +189,42 @@ public class RewriteUtil {
           CubeQueryRewriter rewriter = getRewriter(driver, queryconf);
           StringBuilder builder = new StringBuilder();
           int start = 0;
-          for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-            CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
-            if (start != cqi.startPos) {
-              builder.append(replacedQuery.substring(start, cqi.startPos));
+          try {
+            for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
+              CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
+              if (start != cqi.startPos) {
+                builder.append(replacedQuery.substring(start, cqi.startPos));
+              }
+              String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
+              CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
+              builder.append(hqlQuery);
+              start = cqi.endPos;
             }
-            String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
-            CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
-            builder.append(hqlQuery);
-            start = cqi.endPos;
+            builder.append(replacedQuery.substring(start));
+            String finalQuery = builder.toString();
+            CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
+            driverQueries.put(driver, finalQuery);
+          } catch (SemanticException e) {
+            CubeGrillDriver.LOG.warn("Driver : " + driver.getClass().getName() +
+                " Skipped for the query rewriting due to " + e.getMessage());
+            rewriteFailure.append(" Driver :").append(driver.getClass().getName());
+            rewriteFailure.append(" Cause :" + e.getLocalizedMessage());
+            if (failureCause != null && !failureCause.equals(e.getLocalizedMessage())) {
+              useBuilder = true;
+            }
+            if (failureCause == null) {
+              failureCause = e.getLocalizedMessage();
+            }
           }
-          builder.append(replacedQuery.substring(start));
-          String finalQuery = builder.toString();
-          CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
-          driverQueries.put(driver, finalQuery);
         }
+      }
+      if (driverQueries.isEmpty()) {
+        throw new GrillException("No driver accepted the query, because " +
+            (useBuilder ? rewriteFailure.toString() : failureCause));
       }
       return driverQueries;
     } catch (Exception e) {
-      throw new GrillException("Rewriting failed", e);
+      throw new GrillException("Rewriting failed, cause :" + e.getMessage(), e);
     }
   }
 

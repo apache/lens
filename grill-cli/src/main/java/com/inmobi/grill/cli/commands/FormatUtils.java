@@ -29,18 +29,18 @@ public class FormatUtils {
   public static String getStorageString(XStorageTableElement element) {
     StringBuilder buf = new StringBuilder();
     buf.append("Name ").append(element.getStorageName()).append("\n");
-    buf.append("Update Period : ").append("\n");
-    buf.append(Joiner.on(",").join(element.getUpdatePeriods()));
+    buf.append("Update Period : ");
+    buf.append(Joiner.on(",").join(element.getUpdatePeriods())).append("\n");
     XStorageTableDesc desc = element.getTableDesc();
     buf.append("Location :  ").append(desc.getTableLocation()).append("\n");
     buf.append("External : ").append(desc.isExternal()).append("\n");
-    buf.append("Escape character").append(desc.getEscapeChar()).append("\n");
-    buf.append("Field delimiter").append(desc.getFieldDelimiter()).append("\n");
-    buf.append("Line delimiter").append(desc.getLineDelimiter()).append("\n");
-    buf.append("Map Key delimiter").append(desc.getMapKeyDelimiter()).append("\n");
-    buf.append("Input format").append(desc.getInputFormat()).append("\n");
-    buf.append("Output Format").append(desc.getOutputFormat()).append("\n");
-    buf.append("Storage Handler").append(desc.getLineDelimiter()).append("\n");
+    buf.append("Escape character : ").append(desc.getEscapeChar()).append("\n");
+    buf.append("Field delimiter : ").append(desc.getFieldDelimiter()).append("\n");
+    buf.append("Line delimiter : ").append(desc.getLineDelimiter()).append("\n");
+    buf.append("Map Key delimiter : ").append(desc.getMapKeyDelimiter()).append("\n");
+    buf.append("Input format : ").append(desc.getInputFormat()).append("\n");
+    buf.append("Output Format : ").append(desc.getOutputFormat()).append("\n");
+    buf.append("Storage Handler : ").append(desc.getStorageHandlerName()).append("\n");
 
     buf.append("Columns: ").append("\n").append("\n\n");
     buf.append("\t")

@@ -22,6 +22,7 @@ package com.inmobi.grill.driver.jdbc;
 
 
 import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
@@ -33,6 +34,10 @@ import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -50,6 +55,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import lombok.Getter;
 import lombok.Setter;
 import static com.inmobi.grill.driver.jdbc.JDBCDriverConfConstants.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_CASE;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 /**
  * This driver is responsible for running queries against databases which can be queried using the JDBC API.
  */
@@ -142,12 +149,12 @@ public class JDBCDriver implements GrillDriver {
       isClosed = true;
     }
 
-    protected synchronized GrillResultSet getGrillResultSet() throws GrillException {
+    protected synchronized GrillResultSet getGrillResultSet(boolean closeAfterFetch) throws GrillException {
       if (error != null) {
         throw new GrillException("Query failed!", error);
       }
       if (grillResultSet == null) {
-        grillResultSet = new JDBCResultSet(this, resultSet);
+        grillResultSet = new JDBCResultSet(this, resultSet, closeAfterFetch);
       }
       return grillResultSet;
     }
@@ -194,6 +201,9 @@ public class JDBCDriver implements GrillDriver {
                   "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
                   + " reason: " + sqlEx.getMessage(), sqlEx);
               result.error = sqlEx;
+              // Close connection in case of failed queries. For successful queries, connection is closed
+              // When result set is closed or driver.closeQuery is called
+              result.close();
               queryContext.notifyError(sqlEx);
             }
           }
@@ -235,7 +245,9 @@ public class JDBCDriver implements GrillDriver {
    */
   @Override
   public void configure(Configuration conf) throws GrillException {
-    this.conf = conf;
+    this.conf = new Configuration(conf);
+    //Add grill-jdbc-site to resource path
+    this.conf.addResource("grill-jdbc-site.xml");
     init(conf);
     configured = true;
     LOG.info("JDBC Driver configured");
@@ -270,6 +282,9 @@ public class JDBCDriver implements GrillDriver {
 
   protected synchronized Connection getConnection(Configuration conf) throws GrillException {
     try {
+      //Add here to cover the path when the queries are executed it does not
+      //use the driver conf
+      conf.addResource("grill-jdbc-site.xml");
       return connectionProvider.getConnection(conf);
     } catch (SQLException e) {
       throw new GrillException(e);
@@ -303,12 +318,45 @@ public class JDBCDriver implements GrillDriver {
   }
 
   protected String rewriteQuery(String query, Configuration conf) throws GrillException {
+    // check if it is select query
+    try {
+      ASTNode ast = HQLParser.parseHQL(query);
+      if (ast.getToken().getType() != HiveParser.TOK_QUERY) {
+        throw new GrillException("Not allowed statement:" + query);
+      } else {
+        // check for insert clause
+        ASTNode dest = HQLParser.findNodeByPath(ast, HiveParser.TOK_INSERT);
+        if (dest != null && ((ASTNode)(dest.getChild(0).getChild(0).getChild(0)))
+            .getToken().getType() != TOK_TMP_FILE) {
+          throw new GrillException("Not allowed statement:" + query);
+        }
+      }
+    } catch (ParseException e) {
+      throw new GrillException(e);
+    }
+
     QueryRewriter rewriter = getQueryRewriter(conf);
     String rewrittenQuery = rewriter.rewrite(conf, query);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Query: " + query + " rewrittenQuery: " + rewrittenQuery);
     }
     return rewrittenQuery;
+  }
+
+  /**
+   * Dummy JDBC query Plan class to get min cost selector working
+   */
+  private static class JDBCQueryPlan extends DriverQueryPlan {
+    @Override
+    public String getPlan() {
+      return "";
+    }
+
+    @Override
+    public QueryCost getCost() {
+      //this means that JDBC driver is only selected for tables with just DB storage.
+      return new QueryCost(0, 0);
+    }
   }
 
   /**
@@ -322,8 +370,8 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
-    //TODO
-    return null;
+    String rewritten = rewriteQuery(query, conf);
+    return new JDBCQueryPlan();
   }
 
   /**
@@ -336,7 +384,7 @@ public class JDBCDriver implements GrillDriver {
   public void prepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
     // Only create a prepared statement and then close it
-    String rewrittenQuery = rewriteQuery(pContext.getUserQuery(), pContext.getConf());
+    String rewrittenQuery = rewriteQuery(pContext.getDriverQuery(), pContext.getConf());
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
@@ -374,8 +422,9 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws GrillException {
     checkConfigured();
-    //TODO
-    return null;
+    String rewritten = rewriteQuery(pContext.getDriverQuery(), conf);
+    prepare(pContext);
+    return new JDBCQueryPlan();
   }
 
   /**
@@ -401,13 +450,15 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public GrillResultSet execute(QueryContext context) throws GrillException {
     checkConfigured();
-    String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
+    //Always use the driver rewritten query not user query. Since the
+    //conf we are passing here is query context conf, we need to add jdbc xml in resource path
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
     QueryResult result = new QueryCallable(queryContext).call();
     LOG.info("Execute " + context.getQueryHandle());
-    return result.getGrillResultSet();
+    return result.getGrillResultSet(true);
   }
 
   /**
@@ -420,7 +471,9 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void executeAsync(QueryContext context) throws GrillException {
     checkConfigured();
-    String rewrittenQuery = rewriteQuery(context.getUserQuery(), context.getConf());
+    //Always use the driver rewritten query not user query. Since the
+    //conf we are passing here is query context conf, we need to add jdbc xml in resource path
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {
@@ -503,7 +556,7 @@ public class JDBCDriver implements GrillDriver {
     QueryHandle queryHandle = context.getQueryHandle();
 
     try {
-      return future.get().getGrillResultSet();
+      return future.get().getGrillResultSet(false);
     } catch (InterruptedException e) {
       throw new GrillException("Interrupted while getting resultset for query "
           + queryHandle.getHandleId(), e);

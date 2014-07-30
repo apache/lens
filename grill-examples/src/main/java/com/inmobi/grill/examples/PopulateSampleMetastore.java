@@ -69,6 +69,7 @@ public class PopulateSampleMetastore {
 
   public void populateAll() throws JAXBException, IOException {
     populateDimTables();
+    populateFactTables();
   }
 
   public void populateDimTables() throws JAXBException, IOException {
@@ -77,7 +78,7 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimension("dim_table", "local", partition);
+    result = metaClient.addPartitionToDimensionTable("dim_table", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:dim1-local-part.xml failed");
       retCode = 1;
@@ -89,12 +90,64 @@ public class PopulateSampleMetastore {
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimension("dim_table2", "local", partition);
+    result = metaClient.addPartitionToDimensionTable("dim_table2", "local", partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Adding partition from:dim2-local-part.xml failed");
       retCode = 1;
     } else {
       System.out.println("Added partition from:dim2-local-part.xml");
     }
+
+    partition = (XPartition)SampleMetastore.readFromXML("dim4-local-part.xml");
+    partLocation = partition.getLocation();
+    if (!partLocation.startsWith("/")) {
+      partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
+    }
+    result = metaClient.addPartitionToDimensionTable("dim_table4", "local", partition);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Adding partition from:dim4-local-part.xml failed");
+      retCode = 1;
+    } else {
+      System.out.println("Added partition from:dim4-local-part.xml");
+    }
+
+    try {
+      DatabaseUtil.initalizeDatabaseStorage();
+      System.out.println("Created DB storages for dim_table3 and dim_table4");
+    } catch (Exception e) {
+      e.printStackTrace();
+      System.out.println("Creating DB storage failed for dim_table3 and dim_table4");
+    }
   }
+
+  private void createFactPartition(String fileName, String fact, String storage) throws JAXBException, IOException {
+    XPartition partition = (XPartition)SampleMetastore.readFromXML(fileName);
+    String partLocation = partition.getLocation();
+    if (!partLocation.startsWith("/")) {
+      partition.setLocation("file://" + System.getProperty("grill.home") + "/" + partLocation);
+    }
+    result = metaClient.addPartitionToFactTable(fact, storage, partition);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Adding partition from:" + fileName + " failed");
+      retCode = 1;
+    } else {
+      System.out.println("Added partition from:" + fileName);
+    }
+  }
+
+  public void populateFactTables() throws JAXBException, IOException {
+    createFactPartition("fact1-local-part1.xml", "fact1", "local");
+    createFactPartition("fact1-local-part2.xml", "fact1", "local");
+    createFactPartition("fact1-local-part3.xml", "fact1", "local");
+    createFactPartition("fact2-local-part1.xml", "fact2", "local");
+    createFactPartition("fact2-local-part2.xml", "fact2", "local");
+    createFactPartition("fact2-local-part3.xml", "fact2", "local");
+    createFactPartition("raw-local-part1.xml", "rawfact", "local");
+    createFactPartition("raw-local-part2.xml", "rawfact", "local");
+    createFactPartition("raw-local-part3.xml", "rawfact", "local");
+    createFactPartition("raw-local-part4.xml", "rawfact", "local");
+    createFactPartition("raw-local-part5.xml", "rawfact", "local");
+    createFactPartition("raw-local-part6.xml", "rawfact", "local");
+  }
+
 }

@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
@@ -71,19 +73,24 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       }
       
       DriverConfig other = (DriverConfig) obj;
-      
-      return driverClass.equals(other.driverClass) &&
-          jdbcURI.equals(other.jdbcURI) &&
-          user.equals(other.user) &&
-          password.equals(other.password);
+      //Handling equals in a proper manner as the fields in the current class
+      //can be null
+      return new EqualsBuilder().append(this.driverClass, other.driverClass)
+          .append(this.jdbcURI, other.jdbcURI)
+          .append(this.user, other.user)
+          .append(this.password, other.password).isEquals();
     }
     
     @Override
     public int hashCode() {
       if (!hasHashCode) {
-        StringBuilder builder = 
-            new StringBuilder(driverClass).append(jdbcURI).append(user).append(password);
-        hashCode = builder.toString().hashCode();
+        //Handling the hashcode in proper manner as the fields in the current
+        //class can be null
+        hashCode = new HashCodeBuilder()
+            .append(this.driverClass)
+            .append(jdbcURI)
+            .append(this.user)
+            .append(this.password).toHashCode();
         hasHashCode = true;
       }
       return hashCode;
@@ -120,7 +127,7 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       // Max idle time before a connection is closed
       cpds.setMaxIdleTime(conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
           JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME_DEFAULT));
-      // Max idel time before connection is closed if 
+      // Max idle time before connection is closed if
       // number of connections is > min pool size (default = 3)
       cpds.setMaxIdleTimeExcessConnections(
           conf.getInt(JDBCDriverConfConstants.JDBC_POOL_IDLE_TIME, 
@@ -129,6 +136,12 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
       cpds.setMaxStatementsPerConnection(
           conf.getInt(JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION, 
               JDBCDriverConfConstants.JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT));
+
+      // How many milliseconds should a caller wait when trying to get a connection
+      // If the timeout expires, SQLException will be thrown
+      cpds.setCheckoutTimeout(
+        conf.getInt(JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT,
+          JDBCDriverConfConstants.JDBC_GET_CONNECTION_TIMEOUT_DEFAULT));
       dataSourceMap.put(config, cpds);
       LOG.info("Created new datasource for config: " + config);
     }

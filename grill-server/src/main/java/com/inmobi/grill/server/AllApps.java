@@ -20,20 +20,17 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
-
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
 import com.inmobi.grill.server.metastore.MetastoreResource;
 import com.inmobi.grill.server.query.QueryServiceResource;
 import com.inmobi.grill.server.quota.QuotaResource;
 import com.inmobi.grill.server.scheduler.ScheduleResource;
 import com.inmobi.grill.server.session.SessionResource;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
+
+import javax.ws.rs.ApplicationPath;
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
 
 @ApplicationPath("/")
 public class AllApps extends Application {

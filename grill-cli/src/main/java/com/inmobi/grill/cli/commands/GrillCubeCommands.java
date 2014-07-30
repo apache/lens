@@ -55,7 +55,7 @@ public class GrillCubeCommands implements CommandMarker {
 
   @CliCommand(value = "create cube", help = "Create a new Cube")
   public String createCube(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<cube-spec>") String cubeSpec) {
+      mandatory = true, help = "<path to cube-spec file>") String cubeSpec) {
     File f = new File(cubeSpec);
 
     if (!f.exists()) {
@@ -85,7 +85,8 @@ public class GrillCubeCommands implements CommandMarker {
 
 
   @CliCommand(value = "update cube", help = "update cube")
-  public String updateCube(@CliOption(key = {"", "cube"}, mandatory = true, help = "<cube-name> <cube-spec>") String specPair) {
+  public String updateCube(@CliOption(key = {"", "cube"}, mandatory = true,
+      help = "<cube-name> <path to cube-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -137,13 +138,13 @@ public class GrillCubeCommands implements CommandMarker {
             .append("\n");
       }
     }
-    if (cube.getDimensions() != null) {
+    if (cube.getDimAttributes() != null) {
       builder.append("Dimensions  :").append("\n");
       builder.append("\t").append("name").append("\t").append("type").append("\t")
           .append("cost").append("\t").append("Expression").append("\t")
           .append("table references").append("\t").append("starttime(in miliseconds)")
           .append("\t").append("endtime(in miliseconds)").append("\n");
-      for (XDimension dim : cube.getDimensions().getDimensions()) {
+      for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes()) {
         builder.append("\t")
             .append(dim.getName()!=null ? dim.getName() : "").append("\t")
             .append(dim.getType()!=null? dim.getType(): "").append("\t")

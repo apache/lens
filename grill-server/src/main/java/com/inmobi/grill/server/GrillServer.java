@@ -20,32 +20,30 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import java.io.IOException;
-import java.util.logging.Logger;
-
-import javax.ws.rs.core.UriBuilder;
-
-import org.slf4j.bridge.SLF4JBridgeHandler;
+import com.codahale.metrics.servlets.AdminServlet;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-
+import org.glassfish.jersey.server.ResourceConfig;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
-import com.codahale.metrics.servlets.AdminServlet;
-import com.inmobi.grill.server.api.GrillConfConstants;
+import javax.ws.rs.core.UriBuilder;
+import java.io.IOException;
+import java.util.logging.Logger;
 
 public class GrillServer {
   public static final Log LOG = LogFactory.getLog(GrillServer.class);
 
   final HttpServer server;
+  final HttpServer uiServer;
   final HiveConf conf;
 
   static {
@@ -73,6 +71,10 @@ public class GrillServer {
     sgMetrics.addMapping("/admin/*");
 
     adminCtx.deploy(this.server);
+    String uiServerURI = conf.get(GrillConfConstants.GRILL_SERVER_UI_URI,
+      GrillConfConstants.DEFAULT_GRILL_SERVER_UI_URI);
+    this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
+      getUIApp(), false);
   }
 
   private ResourceConfig getApp() {
@@ -82,6 +84,14 @@ public class GrillServer {
     return app;
   }
 
+  private ResourceConfig getUIApp() {
+    ResourceConfig uiApp = ResourceConfig.forApplicationClass(UIApp.class);
+    uiApp.register(
+      new LoggingFilter(Logger.getLogger(GrillServer.class.getName() + ".ui_request"), true));
+    uiApp.setApplicationName("GrillUI");
+    return uiApp;
+  }
+
   public void startServices(HiveConf conf) {
     GrillServices.get().init(conf);
     GrillServices.get().start();
@@ -89,10 +99,12 @@ public class GrillServer {
 
   public void start() throws IOException {
     server.start();
+    uiServer.start();
   }
 
   public void stop() {
     server.shutdownNow();
+    uiServer.shutdownNow();
     GrillServices.get().stop();
   }
 
@@ -118,7 +130,18 @@ public class GrillServer {
       }
     });
 
-    thisServer = new GrillServer(new HiveConf());
+    try {
+      thisServer = new GrillServer(new HiveConf());
+    } catch (Exception exc) {
+      LOG.fatal("Error while creating Grill server", exc);
+      try {
+        GrillServices.get().stop();
+      } catch (Exception e) {
+        LOG.error("Error stopping services", e);
+      }
+      System.exit(1);
+    }
+
     thisServer.start();
     synchronized (thisServer) {
       thisServer.wait();

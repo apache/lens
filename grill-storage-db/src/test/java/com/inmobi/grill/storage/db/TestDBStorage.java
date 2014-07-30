@@ -86,7 +86,7 @@ public class TestDBStorage {
   @Test(dependsOnGroups = "first")
   public void testCubeDim() throws Exception {
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
-    String dimName = "ziptableMeta";
+    String dimTblName = "ziptableMeta";
 
     List<FieldSchema>  dimColumns = new ArrayList<FieldSchema>();
     dimColumns.add(new FieldSchema("zipcode", "int", "code"));
@@ -94,17 +94,6 @@ public class TestDBStorage {
     dimColumns.add(new FieldSchema("f2", "string", "field2"));
     dimColumns.add(new FieldSchema("stateid", "int", "state id"));
     dimColumns.add(new FieldSchema("statei2", "int", "state id"));
-
-    Map<String, List<TableReference>> dimensionReferences =
-        new HashMap<String, List<TableReference>>();
-
-
-    dimensionReferences.put("stateid", Arrays.asList(new TableReference("statetable", "id")));
-
-    final TableReference stateRef = new TableReference("statetable", "id");
-    final TableReference cityRef =  new TableReference("citytable", "id");
-    dimensionReferences.put("stateid2",
-        Arrays.asList(stateRef, cityRef));
 
     Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
     StorageTableDesc s1 = new StorageTableDesc();
@@ -116,14 +105,14 @@ public class TestDBStorage {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(db1.getName(), s1);
     storageTables.put(db2.getName(), s1);
-    client.createCubeDimensionTable(dimName, dimColumns, 0L,
-        dimensionReferences, dumpPeriods, null, storageTables);
+    client.createCubeDimensionTable("zipdim", dimTblName, dimColumns, 0L,
+        dumpPeriods, null, storageTables);
 
-    Assert.assertTrue(client.tableExists(dimName));
+    Assert.assertTrue(client.tableExists(dimTblName));
 
     // Assert for storage tables
     for (String storage : storageTables.keySet()) {
-      String storageTableName = MetastoreUtil.getDimStorageTableName(dimName,
+      String storageTableName = MetastoreUtil.getDimStorageTableName(dimTblName,
           storage);
       Assert.assertTrue(client.tableExists(storageTableName));
     }

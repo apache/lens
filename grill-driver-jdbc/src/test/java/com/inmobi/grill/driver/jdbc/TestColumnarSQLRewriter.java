@@ -1,5 +1,26 @@
 package com.inmobi.grill.driver.jdbc;
 
+/*
+ * #%L
+ * Grill Driver for JDBC
+ * %%
+ * Copyright (C) 2014 Inmobi
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
+
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,7 +43,25 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillException;
 
+import static org.testng.Assert.assertEquals;
+
 public class TestColumnarSQLRewriter {
+
+  private Set<String> setOf(String ... args) {
+    Set<String> result = new HashSet<String>();
+    for (String s : args) {
+      result.add(s.replaceAll("\\s+", ""));
+    }
+    return result;
+  }
+
+  private Set<String> setOf(Collection<String> collection) {
+    Set<String> result = new HashSet<String>();
+    for (String s : collection) {
+      result.add(s.replaceAll("\\s+", ""));
+    }
+    return result;
+  }
 
   private void compareQueries(String expected, String actual) {
     if (expected == null && actual == null) {
@@ -45,8 +84,6 @@ public class TestColumnarSQLRewriter {
 
       System.err.println("__FAILED__ " + method + "\n\tExpected: " + expected
           + "\n\t---------\n\tActual: " + actual);
-      // System.err.println("\t__AGGR_EXPRS:" +
-      // rewrittenQuery.getAggregateExprs());
     }
     Assert.assertTrue(expectedTrimmed.equalsIgnoreCase(actualTrimmed));
   }
@@ -121,11 +158,9 @@ public class TestColumnarSQLRewriter {
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
     String rwq = qtest.rewrite(conf, query);
-    String expected = "[, (( location_dim  .  location_name ) =  'test123' ), "
-        + "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31' ]";
-    Set<String> setAllFilters = new HashSet<String>(qtest.rightFilter);
-    String actual = setAllFilters.toString();
-    compareQueries(expected, actual);
+    Set<String> actual = setOf(qtest.rightFilter);
+    Assert.assertEquals(actual, setOf("(( location_dim  .  location_name ) =  'test123' )",
+      "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'", ""));
   }
 
   @Test
@@ -151,12 +186,14 @@ public class TestColumnarSQLRewriter {
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
     String rwq = qtest.rewrite(conf, query);
-    String expected = "[sum(( fact  .  units_sold )) as sum_fact_units_sold, min(( fact  .  dollars_sold )) "
-        + "as min_fact_dollars_sold, avg(( fact  .  dollars_sold )) as avg_fact_dollars_sold, "
-        + "sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold, "
-        + "max(( fact  .  dollars_sold )) as max_fact_dollars_sold]";
-    String actual = qtest.aggColumn.toString();
-    compareQueries(expected, actual);
+    Set<String> aggrActual = setOf(qtest.aggColumn);
+    Set<String> expectedAggr = setOf("sum(( fact  .  units_sold )) as sum_fact_units_sold",
+      "min(( fact  .  dollars_sold )) as min_fact_dollars_sold",
+      "avg(( fact  .  dollars_sold )) as avg_fact_dollars_sold",
+      "sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold",
+      "max(( fact  .  dollars_sold )) as max_fact_dollars_sold"
+      );
+    Assert.assertEquals(aggrActual, expectedAggr);
   }
 
   @Test
@@ -252,9 +289,9 @@ public class TestColumnarSQLRewriter {
         + "else sum(sum_fact_dollars_sold) end dollars_sold , sum(sum_fact_units_sold), avg(avg_fact_dollars_sold), "
         + "min(min_fact_dollars_sold), max(max_fact_dollars_sold) "
         + "from  (select fact.time_key,fact.location_key,fact.item_key,"
-        + "sum(( fact  .  units_sold )) as sum_fact_units_sold, min(( fact  .  dollars_sold )) as min_fact_dollars_sold,"
-        + " avg(( fact  .  dollars_sold )) as avg_fact_dollars_sold, sum(( fact  .  dollars_sold )) "
-        + "as sum_fact_dollars_sold, max(( fact  .  dollars_sold )) as max_fact_dollars_sold "
+        + "sum(( fact . dollars_sold )) as sum_fact_dollars_sold, sum(( fact . units_sold )) as sum_fact_units_sold," +
+      " avg(( fact . dollars_sold )) as avg_fact_dollars_sold, " +
+      "min(( fact . dollars_sold )) as min_fact_dollars_sold, max(( fact . dollars_sold )) as max_fact_dollars_sold"
         + "from sales_fact fact where fact.time_key in  (  select time_dim.time_key from time_dim "
         + "where ( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'  ) and "
         + "fact.location_key in  (  select location_dim.location_key from location_dim "

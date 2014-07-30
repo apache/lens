@@ -107,7 +107,8 @@ public class GrillFactCommands implements CommandMarker {
   }
 
   @CliCommand(value = "update fact", help = "update fact table")
-  public String updateFactTable(@CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> <table-spec>") String specPair) {
+  public String updateFactTable(@CliOption(key = {"", "table"}, mandatory = true,
+      help = "<table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -137,7 +138,7 @@ public class GrillFactCommands implements CommandMarker {
 
   @CliCommand(value = "describe fact", help = "describe a fact table")
   public String describeFactTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String fact) {
+      mandatory = true, help = "tablename to be described") String fact) {
     FactTable table = client.getFactTable(fact);
     StringBuilder buf = new StringBuilder();
 
@@ -177,15 +178,18 @@ public class GrillFactCommands implements CommandMarker {
   @CliCommand(value = "fact list storage",
       help = "display list of storages associated to fact table")
   public String getFactStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String fact){
+      mandatory = true, help = "tablename for getting storages") String fact){
     List<String> storages = client.getFactStorages(fact);
+    if(storages == null || storages.isEmpty()) {
+      return "No storages found for " + fact;
+    }
     return Joiner.on("\n").join(storages);
   }
 
   @CliCommand(value = "fact dropall storages",
       help = "drop all storages associated to fact table")
   public String dropAllFactStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String table){
+      mandatory = true, help = "tablename for dropping all storages") String table){
     APIResult result = client.dropAllStoragesOfFact(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
@@ -196,7 +200,7 @@ public class GrillFactCommands implements CommandMarker {
 
   @CliCommand(value = "fact add storage", help = "adds a new storage to fact")
   public String addNewFactStorage(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storage-spec>") String tablepair){
+      mandatory = true, help = "<table> <path to storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -207,14 +211,7 @@ public class GrillFactCommands implements CommandMarker {
           "format. fact add storage <table> <storage spec path>";
     }
 
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
+    File f = new File(pair[1]);
     if (!f.exists()) {
       return "Storage spech path "
           + f.getAbsolutePath() +
@@ -233,7 +230,7 @@ public class GrillFactCommands implements CommandMarker {
 
   @CliCommand(value = "fact drop storage", help = "drop a storage from fact")
   public String dropStorageFromFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storage>") String tablepair){
+      mandatory = true, help = "<table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -242,20 +239,6 @@ public class GrillFactCommands implements CommandMarker {
     if (pair.length != 2) {
       return "Syntax error, please try in following " +
           "format. fact drop storage <table> <storage>";
-    }
-
-    File f = new File(pair[0]);
-
-    if (!f.exists()) {
-      return "Fact spec path"
-          + f.getAbsolutePath()
-          + " does not exist. Please check the path";
-    }
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path "
-          + f.getAbsolutePath() +
-          " does not exist. Please check the path";
     }
 
     APIResult result = client.dropStorageFromFact(pair[0], pair[1]);
@@ -269,7 +252,7 @@ public class GrillFactCommands implements CommandMarker {
 
   @CliCommand(value = "fact get storage", help = "get storage of fact table")
   public String getStorageFromFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storage>") String tablepair){
+      mandatory = true, help = "<table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -288,7 +271,7 @@ public class GrillFactCommands implements CommandMarker {
   @CliCommand(value = "fact list partitions",
       help = "get all partitions associated with fact")
   public String getAllPartitionsOfFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storageName> [<list>]") String specPair){
+      mandatory = true, help = "<table-name> <storageName> [optional <partition query filter> to get]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -299,7 +282,7 @@ public class GrillFactCommands implements CommandMarker {
       return FormatUtils.formatPartitions(partitions);
     }
     if (pair.length == 3) {
-      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1], pair[3]);
+      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1], pair[2]);
       return FormatUtils.formatPartitions(partitions);
     }
     return "Syntax error, please try in following " +
@@ -309,7 +292,7 @@ public class GrillFactCommands implements CommandMarker {
   @CliCommand(value = "fact drop partitions",
       help = "drop all partitions associated with fact")
   public String dropAllPartitionsOfFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <storageName> [<list>]") String specPair){
+      mandatory = true, help = "<tablename> <storageName> [optional <partition query filter> to drop]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -335,7 +318,7 @@ public class GrillFactCommands implements CommandMarker {
 
   @CliCommand(value = "fact add partition", help = "add a partition to fact table")
   public String addPartitionToFact(@CliOption(key = {"","table"},
-      mandatory = true, help = "<table> <storage> <partspec>") String specPair) {
+      mandatory = true, help = "<table> <storage> <path to partition spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()

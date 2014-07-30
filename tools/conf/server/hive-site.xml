@@ -12,4 +12,9 @@
   <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
 </property>
 
+<!-- Adding in supported storages by hive driver -->
+<property>
+  <name>cube.query.driver.supported.storages</name>
+  <value>local,cluster</value>
+</property>
 </configuration>

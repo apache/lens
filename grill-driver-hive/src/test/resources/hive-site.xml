@@ -39,4 +39,10 @@
   <description>JDBC connect string for a JDBC metastore</description>
 </property>
 
+<property>
+  <name>grill.result.parent.dir</name>
+  <value>target/grill-results</value>
+</property>
+
+
 </configuration>

@@ -1,17 +1,16 @@
-package com.inmobi.grill.jdbc;
-
+package com.inmobi.grill.cli;
 /*
  * #%L
- * Grill client
+ * Grill CLI
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,39 +19,36 @@ package com.inmobi.grill.jdbc;
  * #L%
  */
 
-
-import com.inmobi.grill.client.GrillClientConfig;
-import com.inmobi.grill.client.GrillConnection;
-import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.server.GrillAllApplicationJerseyTest;
+import com.inmobi.grill.server.GrillServices;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 
-public class GrillConnectionTest { //extends GrillAllApplicationJerseyTest {
-/*
+public class GrillCliApplicationTest extends GrillAllApplicationJerseyTest {
+
   @Override
   protected int getTestPort() {
-    return 8080;
+    return 9999;
   }
 
+  @Override
+  protected URI getBaseUri() {
+    return UriBuilder.fromUri(getUri()).path("grillapi").build();
+  }
 
-  //@BeforeTest
+  @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
   }
 
-  //@AfterTest
+  @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
   }
 
-  //@Test
-  public void mysampleTest() {
-    GrillClientConfig conf = new GrillClientConfig();
-    conf.setGrillBasePath("grill-server");
-    GrillConnection grillConnection = new GrillConnection(new GrillConnectionParams(conf));
-    grillConnection.open();
-  } */
+
 }

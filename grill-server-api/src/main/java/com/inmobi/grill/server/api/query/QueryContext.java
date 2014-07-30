@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
@@ -52,10 +53,12 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter private GrillConf qconf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
+  @Getter final private boolean isDriverPersistent;
   transient @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;
+  @Getter @Setter private String hdfsoutPath;
   @Getter final private long submissionTime;
   @Getter @Setter private long launchTime;
   @Getter @Setter private long endTime;
@@ -63,6 +66,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String grillSessionIdentifier;
   @Getter @Setter private String driverOpHandle;
   @Getter final DriverQueryStatus driverStatus;
+  transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
 
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new GrillConf(), conf, query, null);
@@ -91,7 +95,10 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
     this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET, true);
+    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
+        GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
+    this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
+        GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
     this.userQuery = userQuery;
     this.submittedUser = user;
     this.driverQuery = driverQuery;
@@ -123,16 +130,22 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
    * @param confoverlay the conf to set
    */
   public void updateConf(Map<String,String> confoverlay) {
+    qconf.getProperties().putAll(confoverlay);
     for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }
   }
 
-  public String getResultSetPersistentPath() {
-    if (isPersistent) {
-      return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR);
-    }
-    return null;
+  public String getResultSetParentDir() {
+    return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
+  }
+
+  public Path getHDFSResultDir() {
+    return new Path(new Path (getResultSetParentDir(), conf.get(
+        GrillConfConstants.QUERY_HDFS_OUTPUT_PATH,
+        GrillConfConstants.DEFAULT_HDFS_OUTPUT_PATH)),
+        queryHandle.toString());
   }
 
   public GrillQuery toGrillQuery() {
@@ -140,7 +153,12 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
         driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
-        launchTime, driverStatus.getDriverStartTime(), driverStatus.getDriverFinishTime(), endTime, closedTime);
+        launchTime, driverStatus.getDriverStartTime(),
+        driverStatus.getDriverFinishTime(), endTime, closedTime);
+  }
+
+  public boolean isResultAvailableInDriver() {
+    return isDriverPersistent()|| driverStatus.isResultSetAvailable();
   }
 
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
@@ -148,5 +166,38 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
       throw new GrillException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
     }
     this.status = newStatus;
+  }
+  
+  public String getResultHeader() {
+    return getConf().get(GrillConfConstants.QUERY_OUTPUT_HEADER);
+  }
+
+  public String getResultFooter() {
+    return getConf().get(GrillConfConstants.QUERY_OUTPUT_FOOTER);
+  }
+
+  public String getResultEncoding() {
+    return conf.get(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
+        GrillConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
+  }
+
+  public String getOuptutFileExtn() {
+    return conf.get(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN,
+        GrillConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
+  }
+
+  public boolean getCompressOutput() {
+    return conf.getBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
+        GrillConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+  }
+
+  public long getMaxResultSplitRows() {
+    return conf.getLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
+        GrillConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
+  }
+
+  public boolean splitResultIntoMultipleFiles() {
+    return conf.getBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
+        GrillConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
   }
 }

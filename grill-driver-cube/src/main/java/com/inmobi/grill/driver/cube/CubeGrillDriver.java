@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.DriverQueryStatus;
 import com.inmobi.grill.server.api.driver.DriverSelector;
 import com.inmobi.grill.server.api.driver.GrillDriver;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
@@ -102,19 +104,40 @@ public class CubeGrillDriver implements GrillDriver {
      * Returns the driver that has the minimum query cost.
      */
     @Override
-    public GrillDriver select(List<GrillDriver> drivers,
+    public GrillDriver select(Collection<GrillDriver> drivers,
         final Map<GrillDriver, String> driverQueries, final Configuration conf) {
       return Collections.min(drivers, new Comparator<GrillDriver>() {
         @Override
         public int compare(GrillDriver d1, GrillDriver d2) {
-          DriverQueryPlan c1;
-          DriverQueryPlan c2;
+          DriverQueryPlan c1 = null;
+          DriverQueryPlan c2 = null;
           conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
+          //Handle cases where the queries can be null because the storages are not
+          //supported.
+          if(driverQueries.get(d1) == null) {
+            return 1;
+          }
+          if(driverQueries.get(d2) == null) {
+            return -1;
+          }
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
+          } catch (GrillException e) {
+            LOG.warn("Explain query:" + driverQueries.get(d1) +
+                " on Driver:" + d1.getClass().getSimpleName() + " failed", e);
+          }
+          try {
             c2 = d2.explain(driverQueries.get(d2), conf);
           } catch (GrillException e) {
-            throw new RuntimeException("Could not compare drivers", e);
+            LOG.warn("Explain query:" + driverQueries.get(d2) +
+                " on Driver:" + d2.getClass().getSimpleName() + " failed", e);
+          }
+          if (c1 == null && c2 == null) {
+            return 0;
+          } else if (c1 == null && c2 != null) {
+            return 1;
+          } else if (c1 != null && c2 == null) {
+            return -1;
           }
           return c1.getCost().compareTo(c2.getCost());
         }
@@ -124,7 +147,10 @@ public class CubeGrillDriver implements GrillDriver {
 
   public GrillResultSet execute(String query, Configuration conf)
       throws GrillException {
-    return execute(createQueryContext(query, conf));
+    QueryContext ctx =  createQueryContext(query, conf);
+    GrillResultSet result = execute(ctx);
+    queryContexts.remove(ctx.getQueryHandle());
+    return result;
   }
 
   @Override
@@ -140,7 +166,7 @@ public class CubeGrillDriver implements GrillDriver {
 
     // 2. select driver to run the query
     GrillDriver driver = selectDriver(driverQueries, conf);
-    
+
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }
@@ -164,7 +190,12 @@ public class CubeGrillDriver implements GrillDriver {
 
   public QueryStatus getStatus(QueryHandle handle) throws GrillException {
     updateStatus(getContext(handle));
-    return getContext(handle).getDriverStatus().toQueryStatus();
+    QueryStatus status = getContext(handle).getDriverStatus().toQueryStatus();
+    if (status.getStatus().equals(QueryStatus.Status.EXECUTED)) {
+      return DriverQueryStatus.createQueryStatus(QueryStatus.Status.SUCCESSFUL,
+          getContext(handle).getDriverStatus());
+    }
+    return status;
   }
 
   public void updateStatus(QueryContext context) throws GrillException {
@@ -303,29 +334,66 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     drivers.clear();
-    int nDrivers = in.readInt();    
-    for (int i = 0; i < nDrivers; i++) {
-      try {
+    Map<String, GrillDriver> driverMap = new HashMap<String, GrillDriver>();
+    synchronized (drivers) {
+      drivers.clear();
+      int numDrivers = in.readInt();
+      for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
-        Class<? extends GrillDriver> driverCls = 
-            (Class<? extends GrillDriver>)Class.forName(driverClsName);
-        GrillDriver driver = (GrillDriver) driverCls.newInstance();
-        driver.configure(conf);
+        GrillDriver driver;
+        try {
+          Class<? extends GrillDriver> driverCls = 
+              (Class<? extends GrillDriver>)Class.forName(driverClsName);
+          driver = (GrillDriver) driverCls.newInstance();
+          driver.configure(conf);
+        } catch (Exception e) {
+          LOG.error("Could not instantiate driver:" + driverClsName);
+          throw new IOException(e);
+        }
         driver.readExternal(in);
         drivers.add(driver);
-      } catch (Exception exc) {
-        throw new IOException(exc);
-     }
-      
+        driverMap.put(driverClsName, driver);
+      }
+    }
+
+    synchronized (queryContexts) {
+      int numQueries = in.readInt();
+      for (int i =0; i < numQueries; i++) {
+        QueryContext ctx = (QueryContext)in.readObject();
+        queryContexts.put(ctx.getQueryHandle(), ctx);
+        boolean driverAvailable = in.readBoolean();
+        if (driverAvailable) {
+          String clsName = in.readUTF();
+          ctx.setSelectedDriver(driverMap.get(clsName));
+        }
+      }
+      LOG.info("Recovered " + queryContexts.size() + " queries");
     }
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    out.writeInt(drivers.size());
-    for (GrillDriver driver : drivers) {
-      out.writeUTF(driver.getClass().getName());
-      driver.writeExternal(out);
+    // persist all drivers
+    synchronized (drivers) {
+      out.writeInt(drivers.size());
+      for (GrillDriver driver : drivers) {
+        out.writeUTF(driver.getClass().getName());
+        driver.writeExternal(out);
+      }
     }
+    // persist allQueries
+    synchronized (queryContexts) {
+      out.writeInt(queryContexts.size());
+      for (QueryContext ctx : queryContexts.values()) {
+        out.writeObject(ctx);
+        boolean isDriverAvailable = (ctx.getSelectedDriver() != null);
+        out.writeBoolean(isDriverAvailable);
+        if (isDriverAvailable) {
+          out.writeUTF(ctx.getSelectedDriver().getClass().getName());
+        }
+      }
+    }
+    LOG.info("Persisted " + queryContexts.size() + " queries");
+
   }
 }

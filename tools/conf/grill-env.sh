@@ -34,7 +34,7 @@
 #export GRILL_CLIENT_HEAP=
 
 # any additional opts you want to set for grill server.
-#export GRILL_SERVER_OPTS=
+export GRILL_SERVER_OPTS="-XX:PermSize=256m -XX:MaxPermSize=256m"
 
 # java heap size we want to set for the grill server. Default is 1024MB
 #export GRILL_SERVER_HEAP=

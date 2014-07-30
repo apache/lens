@@ -69,11 +69,22 @@ OLAP Data cube concepts
   * A dimension can be a hierarchy of dimensions. // HierachicalDimension
   
   * A dimension can define all the possible values it can take. // InlineDimension
-  
+
+** Derived Cube
+
+  A derived cube will have subset of measures and dimensions of a base cube.
+  User can query derived cube as well, very similar to cube. For a derived cube,
+  user would specify set of measure names and dimension names only,
+  the definition of measure/dimension will be derived from base cube. All the
+  measures and dimensions of derived cube can always be queried together, whereas
+  all measures and dimensions of parent cube may not be allowed to query together.
+
 ** Fact Tables
 
-  A fact table is table having columns. Columns are subset of measures and dimensions. The fact table is
-  associated with cube, specified by name. Fact can be available in multiple storages.
+  A fact table is table having columns. Columns are subset of measures and dimensions.
+  The fact table is associated with cube, specified by name. Fact can be available
+  in multiple storages. The fact will be used to answer the queries on derived
+  cubes as well.
 
 ** Dimension tables
 

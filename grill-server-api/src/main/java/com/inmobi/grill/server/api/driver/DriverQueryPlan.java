@@ -27,7 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPlan;
@@ -471,10 +470,21 @@ public abstract class DriverQueryPlan {
     return numAggrExprs;
   }
 
+  /**
+   * Get list of partitions queried for each table
+   * @return
+   */
+  public Map<String, List<String>> getPartitions() {
+    return null;
+  }
+
+
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
         numHaving, numObys, numAggrExprs, numFilters, tablesQueried, hasSubQuery,
-        execMode.name(), scanMode.name(), tableWeights, joinWeight, gbyWeight, filterWeight,
-        havingWeight, obyWeight, selectWeight, null, URLEncoder.encode(getPlan(), "UTF-8"), getCost());
+        execMode != null ? execMode.name() : null,
+        scanMode != null ? scanMode.name() : null, tableWeights, joinWeight,
+        gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
+        URLEncoder.encode(getPlan(), "UTF-8"), getCost());
   }
 }
