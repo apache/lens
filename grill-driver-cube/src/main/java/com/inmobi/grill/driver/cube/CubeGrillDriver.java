@@ -109,8 +109,8 @@ public class CubeGrillDriver implements GrillDriver {
       return Collections.min(drivers, new Comparator<GrillDriver>() {
         @Override
         public int compare(GrillDriver d1, GrillDriver d2) {
-          DriverQueryPlan c1;
-          DriverQueryPlan c2;
+          DriverQueryPlan c1 = null;
+          DriverQueryPlan c2 = null;
           conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
           //Handle cases where the queries can be null because the storages are not
           //supported.
@@ -122,9 +122,22 @@ public class CubeGrillDriver implements GrillDriver {
           }
           try {
             c1 = d1.explain(driverQueries.get(d1), conf);
+          } catch (GrillException e) {
+            LOG.warn("Explain query:" + driverQueries.get(d1) +
+                " on Driver:" + d1.getClass().getSimpleName() + " failed", e);
+          }
+          try {
             c2 = d2.explain(driverQueries.get(d2), conf);
           } catch (GrillException e) {
-            throw new RuntimeException("Could not compare drivers", e);
+            LOG.warn("Explain query:" + driverQueries.get(d2) +
+                " on Driver:" + d2.getClass().getSimpleName() + " failed", e);
+          }
+          if (c1 == null && c2 == null) {
+            return 0;
+          } else if (c1 == null && c2 != null) {
+            return 1;
+          } else if (c1 != null && c2 == null) {
+            return -1;
           }
           return c1.getCost().compareTo(c2.getCost());
         }

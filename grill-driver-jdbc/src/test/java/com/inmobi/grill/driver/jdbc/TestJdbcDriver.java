@@ -28,6 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -112,7 +113,54 @@ public class TestJdbcDriver {
       }
     }
   }
-  
+
+  @Test
+  public void testDDLQueries() {
+    String query = "DROP TABLE TEMP";
+
+    Throwable th = null;
+    try {
+      driver.rewriteQuery(query, baseConf);
+    } catch (GrillException e) {
+      e.printStackTrace();
+      th = e;
+    }
+    Assert.assertNotNull(th);
+
+    query = "create table temp(name string, msr int)";
+
+    th = null;
+    try {
+      driver.rewriteQuery(query, baseConf);
+    } catch (GrillException e) {
+      e.printStackTrace();
+      th = e;
+    }
+    Assert.assertNotNull(th);
+
+    query = "insert overwrite table temp SELECT * FROM execute_test";
+
+    th = null;
+    try {
+      driver.rewriteQuery(query, baseConf);
+    } catch (GrillException e) {
+      e.printStackTrace();
+      th = e;
+    }
+    Assert.assertNotNull(th);
+
+    query = "create table temp2 as SELECT * FROM execute_test";
+
+    th = null;
+    try {
+      driver.rewriteQuery(query, baseConf);
+    } catch (GrillException e) {
+      e.printStackTrace();
+      th = e;
+    }
+    Assert.assertNotNull(th);
+  }
+
   @Test
   public void testExecute() throws Exception {
     createTable("execute_test");
