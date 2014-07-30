@@ -21,8 +21,6 @@ package com.inmobi.grill.lib.query;
  */
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -31,9 +29,7 @@ import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -55,8 +51,7 @@ import com.inmobi.grill.server.api.query.QueryContext;
 @SuppressWarnings("deprecation")
 public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {  
   private SerDe outputSerde;
-  private Converter converter;
-  private ObjectInspector convertedOI;
+  private ObjectInspector inputOI;
 
   public FileSerdeFormatter() { 
   }
@@ -82,13 +77,8 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
         props.setProperty(serdeConstants.LIST_COLUMN_TYPES, types);
       }
       outputSerde.initialize(ctx.getConf(), props);
-
-      Map<ObjectInspector, Boolean> oiSettableProperties = new HashMap<ObjectInspector, Boolean>();
-      ObjectInspector inputOI = ObjectInspectorFactory.getStandardStructObjectInspector(
+      inputOI = ObjectInspectorFactory.getStandardStructObjectInspector(
           columnNames, columnOIs);
-      convertedOI = ObjectInspectorConverters.getConvertedOI(inputOI,
-          outputSerde.getObjectInspector(), oiSettableProperties);
-      converter = ObjectInspectorConverters.getConverter(inputOI, convertedOI);
     } catch (ClassNotFoundException e) {
       throw new IllegalArgumentException(e);
     } catch (SerDeException e) {
@@ -99,8 +89,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
   @Override
   public void writeRow(ResultRow row) throws IOException {
     try {
-      Writable rowWritable = outputSerde.serialize(converter.convert(
-          row.getValues()), convertedOI);
+      Writable rowWritable = outputSerde.serialize(row.getValues(), inputOI);
       writeRow(rowWritable.toString());
     } catch (SerDeException e) {
       throw new IOException(e);

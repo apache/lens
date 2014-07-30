@@ -86,7 +86,9 @@ public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
 
   @Override
   public void close() throws IOException {
-    formatter.close();    
+    if (formatter != null) {
+      formatter.close();
+    }
   }
 
   @Override

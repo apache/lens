@@ -27,6 +27,13 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
+import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.hive.service.cli.Type;
+import org.apache.hive.service.cli.TypeDescriptor;
+import org.apache.hive.service.cli.TypeQualifiers;
 import org.apache.log4j.Logger;
 
 import com.inmobi.grill.api.GrillException;
@@ -76,76 +83,16 @@ public class JDBCResultSet extends InMemoryResultSet {
     if (grillResultMeta == null) {
         grillResultMeta =  new GrillResultSetMetadata() {
         @Override
-        public List<ResultColumn> getColumns() {
+        public List<ColumnDescriptor> getColumns() {
           try{
             ResultSetMetaData rsmeta = getRsMetadata();
-            List<ResultColumn> columns = new ArrayList<ResultColumn>(rsmeta.getColumnCount());
-            for (int i = 0; i < rsmeta.getColumnCount(); i++) {
-              ResultColumnType colType;
-              switch (rsmeta.getColumnType(i + 1)) {
-              case Types.BIGINT:
-                colType = ResultColumnType.BIGINT; break;
-              case Types.TINYINT:
-              case Types.BIT:
-                colType = ResultColumnType.TINYINT; break;
-              case Types.INTEGER:
-                colType = ResultColumnType.INT; break;
-              case Types.SMALLINT:
-                colType = ResultColumnType.SMALLINT; break;
-    
-              case Types.BOOLEAN:
-                colType = ResultColumnType.BOOLEAN; break;
-              
-              case Types.BLOB:
-              case Types.VARBINARY:
-              case Types.JAVA_OBJECT:
-              case Types.LONGVARBINARY:
-                colType = ResultColumnType.BINARY; break;
-                
-              case Types.DATALINK:
-              case Types.CHAR:
-              case Types.CLOB:
-              case Types.VARCHAR:
-              case Types.NCLOB:
-              case Types.NCHAR:
-              case Types.LONGNVARCHAR:
-              case Types.NVARCHAR:
-              case Types.SQLXML:
-                colType = ResultColumnType.STRING; break;
-                
-              case Types.DATE:
-                colType = ResultColumnType.DATE; break;
-              case Types.TIME:
-              case Types.TIMESTAMP:
-                colType = ResultColumnType.TIMESTAMP; break;
-              
-              case Types.FLOAT:
-                colType = ResultColumnType.FLOAT; break;
-              case Types.DECIMAL:
-                colType = ResultColumnType.DECIMAL; break;
-              
-              case Types.DOUBLE:
-              case Types.REAL:
-              case Types.NUMERIC:
-                colType = ResultColumnType.DOUBLE; break;
-              
-              case Types.DISTINCT:
-              case Types.NULL:
-              case Types.OTHER:
-              case Types.REF:
-              case Types.ROWID:
-                colType = ResultColumnType.USER_DEFINED; break;
-              
-              case Types.STRUCT:
-                colType = ResultColumnType.STRUCT; break;
-    
-              case Types.ARRAY:
-                colType = ResultColumnType.ARRAY; break;
-              default:
-                colType = ResultColumnType.USER_DEFINED;
-              }
-              
-              columns.add(new ResultColumn(rsmeta.getColumnName(i + 1), colType.toString()));
+            List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(rsmeta.getColumnCount());
+            for (int i = 1; i <= rsmeta.getColumnCount(); i++) {
+              FieldSchema col = new FieldSchema(rsmeta.getColumnName(i),
+                TypeInfoUtils.getTypeInfoFromTypeString(
+                  getHiveTypeForSQLType(i, rsmeta)).getTypeName(),
+                rsmeta.getColumnTypeName(i));
+              columns.add(new ColumnDescriptor(col, i));
             }
             return columns;
           } catch (Exception e) {
@@ -157,7 +104,88 @@ public class JDBCResultSet extends InMemoryResultSet {
     }
     return grillResultMeta;
   }
-  
+
+  public static String getHiveTypeForSQLType(int index, ResultSetMetaData rsmeta) throws SQLException {
+    TypeDescriptor hiveType;
+    TypeQualifiers qualifiers;
+    switch (rsmeta.getColumnType(index)) {
+    case Types.BIGINT:
+      hiveType = new TypeDescriptor(Type.BIGINT_TYPE); break;
+    case Types.TINYINT:
+    case Types.BIT:
+      hiveType = new TypeDescriptor(Type.TINYINT_TYPE); break;
+    case Types.INTEGER:
+      hiveType = new TypeDescriptor(Type.INT_TYPE); break;
+    case Types.SMALLINT:
+      hiveType = new TypeDescriptor(Type.SMALLINT_TYPE); break;
+    case Types.BOOLEAN:
+      hiveType = new TypeDescriptor(Type.BOOLEAN_TYPE); break;
+    case Types.BLOB:
+    case Types.VARBINARY:
+    case Types.JAVA_OBJECT:
+    case Types.LONGVARBINARY:
+      hiveType = new TypeDescriptor(Type.BINARY_TYPE); break;
+
+    case Types.CHAR:
+    case Types.NCHAR:
+      hiveType = new TypeDescriptor(Type.CHAR_TYPE);
+      qualifiers = new TypeQualifiers();
+      qualifiers.setCharacterMaximumLength(rsmeta.getColumnDisplaySize(index));
+      hiveType.setTypeQualifiers(qualifiers);
+      break;
+    case Types.VARCHAR:
+    case Types.LONGNVARCHAR:
+    case Types.NVARCHAR:
+      hiveType = new TypeDescriptor(Type.VARCHAR_TYPE);
+      qualifiers = new TypeQualifiers();
+      qualifiers.setCharacterMaximumLength(rsmeta.getColumnDisplaySize(index));
+      hiveType.setTypeQualifiers(qualifiers);
+      break;
+
+    case Types.NCLOB:
+    case Types.CLOB:
+    case Types.DATALINK:
+    case Types.SQLXML:
+      hiveType = new TypeDescriptor(Type.STRING_TYPE); break;
+
+    case Types.DATE:
+      hiveType = new TypeDescriptor(Type.DATE_TYPE); break;
+    case Types.TIME:
+    case Types.TIMESTAMP:
+      hiveType = new TypeDescriptor(Type.TIMESTAMP_TYPE); break;
+
+    case Types.FLOAT:
+      hiveType = new TypeDescriptor(Type.TIMESTAMP_TYPE); break;
+    case Types.DECIMAL:
+      hiveType = new TypeDescriptor(Type.DECIMAL_TYPE);
+      qualifiers = new TypeQualifiers();
+      qualifiers.setPrecision(rsmeta.getPrecision(index));
+      qualifiers.setScale(rsmeta.getScale(index));
+      hiveType.setTypeQualifiers(qualifiers);
+      break;
+
+    case Types.DOUBLE:
+    case Types.REAL:
+    case Types.NUMERIC:
+      hiveType = new TypeDescriptor(Type.DOUBLE_TYPE); break;
+
+    case Types.DISTINCT:
+    case Types.NULL:
+    case Types.OTHER:
+    case Types.REF:
+    case Types.ROWID:
+      hiveType = new TypeDescriptor(Type.USER_DEFINED_TYPE); break;
+
+    case Types.STRUCT:
+      hiveType = new TypeDescriptor(Type.STRUCT_TYPE); break;
+    case Types.ARRAY:
+      hiveType = new TypeDescriptor(Type.ARRAY_TYPE); break;
+    default:
+      hiveType = new TypeDescriptor(Type.USER_DEFINED_TYPE); break;
+    }
+    return GrillResultSetMetadata.getQualifiedTypeName(hiveType);
+  }
+
   @Override
   public void setFetchSize(int size) throws GrillException {
     try {
