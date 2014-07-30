@@ -264,14 +264,26 @@ public final class CSVSerde extends AbstractSerDe {
   }
 
 
-  ObjectInspector stringInspector =  PrimitiveObjectInspectorFactory.javaStringObjectInspector;
+  /**
+   * Gets the Java Object corresponding to the type, represented as string.
+   *
+   * @param colString
+   * @param type
+   *
+   * @return Standard Java Object for primitive types
+   * List of Objects for Array type
+   * Map<Object,Object> for Map type
+   * List of Objects for Struct type
+   * Object itself contained in Union type
+   */
   private Object getColumnObject(String colString, TypeInfo type) {
     if (colString.equals(nullString)) {
       return null;
     }
     switch (type.getCategory()) {
     case PRIMITIVE :
-      return ObjectInspectorConverters.getConverter(stringInspector,
+      return ObjectInspectorConverters.getConverter(
+          PrimitiveObjectInspectorFactory.javaStringObjectInspector,
           TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(type)).convert(colString);
     case LIST :
       TypeInfo elementType = ((ListTypeInfo)type).getListElementTypeInfo();

@@ -87,7 +87,6 @@ public class JDBCResultSet extends InMemoryResultSet {
           try{
             ResultSetMetaData rsmeta = getRsMetadata();
             List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(rsmeta.getColumnCount());
-            System.out.println("Column count:" + rsmeta.getColumnCount());
             for (int i = 1; i <= rsmeta.getColumnCount(); i++) {
               FieldSchema col = new FieldSchema(rsmeta.getColumnName(i),
                 TypeInfoUtils.getTypeInfoFromTypeString(
