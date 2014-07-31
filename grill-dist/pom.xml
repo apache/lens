@@ -79,7 +79,7 @@
             </goals>
             <configuration>
               <installDir>/usr/local/grill</installDir>
-              <deb>${project.build.directory}/grill-server_${version}.deb</deb>
+              <deb>${project.build.directory}/grill-server_${project.version}.deb</deb>
               <dataSet>
                 <data>
                   <src>target/grill-dist-${project.version}-server</src>

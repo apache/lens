@@ -36,36 +36,6 @@
       <artifactId>opencsv</artifactId>
       <version>2.3</version>
     </dependency>
-  </dependencies>
-  <!--  added for hadoop-2 update -->
-  <profiles>
-    <profile>
-      <id>hadoop-1</id>
-      <activation>
-        <property>
-        <name>hadoop.profile</name>
-         <value>1</value>
-        </property>
-      <activeByDefault>true</activeByDefault>
-      </activation>
-    <dependencies>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-core</artifactId>
-      </dependency>
-      </dependencies>
-    </profile>
-
-    <profile>
-      <id>hadoop-2</id>
-      <activation>
-        <property>
-          <name>hadoop.profile</name>
-           <value>2</value>
-        </property>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <dependencies>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-common</artifactId>
@@ -77,8 +47,6 @@
       <dependency>
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-mapreduce-client-core</artifactId>
-      </dependency>      
-      </dependencies>
-    </profile>
-  </profiles>
+      </dependency>
+  </dependencies>
 </project>    

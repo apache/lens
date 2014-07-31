@@ -28,6 +28,11 @@
       <artifactId>grill-examples</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -65,7 +70,7 @@
             <configuration>
               <controlDir>${project.basedir}/src/deb/client</controlDir>
               <installDir>/usr/local/grill-client</installDir>
-              <deb>${project.build.directory}/grill-client_${version}.deb</deb>
+              <deb>${project.build.directory}/grill-client_${project.version}.deb</deb>
               <dataSet>
                 <data>
                   <src>target/grill-client-dist-${project.version}-client</src>
