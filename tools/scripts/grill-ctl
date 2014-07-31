@@ -95,11 +95,16 @@ start() {
     echo "Cannot find hadoop installation: \$HADOOP_HOME or \$HADOOP_PREFIX must be set or hadoop must be in the path";
     exit 4;
   else
-    GRILLCPPATH=${GRILLCPPATH}:`ls $HADOOP_HOME/hadoop-core-*.jar | tr "\n" :`;
-    GRILLCPPATH=${GRILLCPPATH}:`ls $HADOOP_HOME/lib/guava-*.jar | tr "\n" :`;
-    GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar | tr "\n" :`;
-    GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar | tr "\n" :`;
-    GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar | tr "\n" :`;
+    CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$CORE_JARS;
+    LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$LIB_JARS
+    COMMON_JARS=`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$COMMON_JARS
+    HDFS_JARS=`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$HDFS_JARS
+    MAPRED_JARS=`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$MAPRED_JARS
   fi
 
   if [ "$HIVE_HOME" != "" ]; then    
