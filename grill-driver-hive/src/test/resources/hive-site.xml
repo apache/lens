@@ -34,6 +34,16 @@
 </property>
 
 <property>
+  <name>mapreduce.framework.name</name>
+  <value>local</value>
+</property>
+
+<property>
+  <name>mapred.job.tracker</name>
+  <value>local</value>
+</property>
+
+<property>
   <name>javax.jdo.option.ConnectionURL</name>
   <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
   <description>JDBC connect string for a JDBC metastore</description>
