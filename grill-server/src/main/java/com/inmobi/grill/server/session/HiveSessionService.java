@@ -128,6 +128,7 @@ public class HiveSessionService extends GrillService {
   }
 
   protected void setSessionParameter(GrillSessionHandle sessionid, String key, String value, boolean addToSession) {
+    LOG.info("Request to Set param key:" + key + " value:" + value);
     String command = "set" + " " + key + "= " + value;
     try {
       acquire(sessionid);
@@ -135,6 +136,7 @@ public class HiveSessionService extends GrillService {
       if (addToSession) {
         getSession(sessionid).setConfig(key, value);
       }
+      LOG.info("Set param key:" + key + " value:" + value);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } catch (GrillException e) {

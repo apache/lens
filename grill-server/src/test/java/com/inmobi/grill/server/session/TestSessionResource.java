@@ -259,7 +259,7 @@ public class TestSessionResource extends GrillJerseyTest {
     Assert.assertNotNull(restartTestSession);
 
     // Set a param
-    sessionTarget = sessionTarget.path("params");
+    WebTarget paramTarget = sessionTarget.path("params");
     FormDataMultiPart setpart = new FormDataMultiPart();
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
       restartTestSession, MediaType.APPLICATION_XML_TYPE));
@@ -267,7 +267,7 @@ public class TestSessionResource extends GrillJerseyTest {
       FormDataContentDisposition.name("key").build(), "grill.session.testRestartKey"));
     setpart.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("value").build(), "myvalue"));
-    APIResult result = sessionTarget.request().put(
+    APIResult result = paramTarget.request().put(
       Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
       APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
@@ -286,24 +286,22 @@ public class TestSessionResource extends GrillJerseyTest {
       Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
 
+
     // restart server
     restartGrillServer();
 
     // Check session exists in the server
 
     // Try and get params back
-    // get all params verbose
-    StringList sessionParams = sessionTarget.queryParam("sessionid", restartTestSession)
-      .queryParam("verbose", true).request().get(
-        StringList.class);
-    boolean foundParam = false;
-    System.out.println("### Got params: " + sessionParams.getElements().size());
-    for (String param : sessionParams.getElements()) {
-      if (param.contains("grill.session.testRestartKey") &&param.contains("myvalue")) {
-        foundParam = true;
-      }
-    }
-    Assert.assertTrue(foundParam);
+    StringList sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
+        .queryParam("verbose", true).request().get(
+          StringList.class);
+    sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
+        .queryParam("key", "grill.session.testRestartKey").request().get(
+            StringList.class);
+    System.out.println("Session params:" + sessionParams.getElements());
+    Assert.assertEquals(sessionParams.getElements().size(), 1);
+    Assert.assertTrue(sessionParams.getElements().contains("grill.session.testRestartKey=myvalue"));
 
     // Check resources added again
     HiveSessionService sessionService = GrillServices.get().getService("session");
@@ -312,6 +310,10 @@ public class TestSessionResource extends GrillJerseyTest {
     GrillSessionImpl.ResourceEntry resourceEntry = session.getGrillSessionPersistInfo().getResources().get(0);
     Assert.assertEquals(resourceEntry.getType(), "file");
     Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/grill-site.xml");
+
+    // close session
+    result = sessionTarget.queryParam("sessionid", restartTestSession).request().delete(APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
 }

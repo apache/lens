@@ -22,10 +22,9 @@ package com.inmobi.grill.server;
 
 import java.io.IOException;
 
+import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 public class ServerModeFilter implements ContainerRequestFilter {
 
@@ -36,7 +35,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
       // Allows all requests on session and only GET everywhere 
       if (!requestContext.getUriInfo().getPath().startsWith("/session")) {
         if (!requestContext.getMethod().equals("GET")) {
-          requestContext.abortWith(Response.status(Status.METHOD_NOT_ALLOWED).entity("Server is in readonly mode").build());
+          throw new NotAllowedException("Server is in readonly mode", "GET", (String [])null);
         }
       }
       break;
@@ -44,7 +43,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
       // Allows GET on metastore and all other requests
       if (requestContext.getUriInfo().getPath().startsWith("/metastore")) {
         if (!requestContext.getMethod().equals("GET")) {
-          requestContext.abortWith(Response.status(Status.METHOD_NOT_ALLOWED).entity("Metastore is in readonly mode").build());
+          throw new NotAllowedException("Metastore is in readonly mode", "GET", (String [])null);
         }
       }
       break;
@@ -52,7 +51,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
       // Does not allows DROP on metastore, all other request are allowed
       if (requestContext.getUriInfo().getPath().startsWith("/metastore")) {
         if (requestContext.getMethod().equals("DELETE")) {
-          requestContext.abortWith(Response.status(Status.METHOD_NOT_ALLOWED).entity("Metastore is in nodrop mode").build());
+          throw new NotAllowedException("Metastore is in nodrop mode", "GET", new String []{"PUT", "POST"});
         }
       }
       break;

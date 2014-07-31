@@ -84,13 +84,29 @@ start() {
     fi
   fi
 
-  HADOOPDIR=`which hadoop`
-  if [ "$HADOOPDIR" != "" ]; then  
-    echo "Hadoop is installed, using the installed hadoop for execution"
-  elif [ "$HADOOP_HOME" != "" ]; then    
-    echo "Hadoop home is set, using the configured hadoop for execution"
+  # check for hadoop in the path
+  HADOOP_IN_PATH=`which hadoop 2>/dev/null`
+  if [ -f ${HADOOP_IN_PATH} ]; then
+    HADOOP_DIR=`dirname "$HADOOP_IN_PATH"`/..
+  fi
+  # HADOOP_HOME env variable overrides hadoop in the path
+  HADOOP_HOME=${HADOOP_HOME:-${HADOOP_PREFIX:-$HADOOP_DIR}}
+  if [ "$HADOOP_HOME" == "" ]; then
+    echo "Cannot find hadoop installation: \$HADOOP_HOME or \$HADOOP_PREFIX must be set or hadoop must be in the path";
+    exit 4;
   else
-    echo "WARNING : Could not find installed hadoop and HADOOP_HOME is not set. If Hadoop is used execution of queries. Set HADOOP_HOME and proceed"
+    CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$CORE_JARS;
+    LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$LIB_JARS
+    COMMON_JARS=`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$COMMON_JARS
+    HDFS_JARS=`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$HDFS_JARS
+    MAPRED_JARS=`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    GRILLCPPATH=${GRILLCPPATH}:$MAPRED_JARS
   fi
 
   if [ "$HIVE_HOME" != "" ]; then    
@@ -114,7 +130,7 @@ start() {
     JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
   shift
   done
-  
+
   if [ -n "$opt_verbose" ] ; then
     JAVA_PROPERTIES="-Dgrillserver.root.logger=INFO,CONSOLE -Dgrillserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
     ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $*

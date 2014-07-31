@@ -62,6 +62,16 @@
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
+    <dependencySet>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+      <outputDirectory>lib</outputDirectory>
+      <includes>
+        <include>org.apache.hadoop:hadoop-common</include>
+      </includes>
+      <useTransitiveFiltering>false</useTransitiveFiltering>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+    </dependencySet>
   </dependencySets>
 
   <fileSets>

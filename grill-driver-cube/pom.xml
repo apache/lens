@@ -20,11 +20,6 @@
         <version>${project.version}</version>
         </dependency>
 
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-    </dependency>
-        
       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-exec</artifactId>
@@ -45,9 +40,14 @@
         <groupId>org.powermock</groupId>
         <artifactId>powermock-api-mockito</artifactId>
      </dependency>
-
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-core</artifactId>
+      </dependency>
     </dependencies>
 
-    
-    
 </project>    
