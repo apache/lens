@@ -96,6 +96,7 @@ start() {
     exit 4;
   else
     GRILLCPPATH=${GRILLCPPATH}:`ls $HADOOP_HOME/hadoop-core-*.jar | tr "\n" :`;
+    GRILLCPPATH=${GRILLCPPATH}:`ls $HADOOP_HOME/lib/guava-*.jar | tr "\n" :`;
     GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar | tr "\n" :`;
     GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar | tr "\n" :`;
     GRILLCPPATH=${GRILLCPPATH}:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar | tr "\n" :`;
