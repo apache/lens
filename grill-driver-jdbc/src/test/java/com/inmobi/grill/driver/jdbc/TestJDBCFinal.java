@@ -24,44 +24,22 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
-import java.util.Scanner;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import org.hsqldb.persist.ScriptRunner;
-import org.hsqldb.util.*;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.cli.ColumnDescriptor;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.QueryStatus;
-import com.inmobi.grill.api.query.QueryStatus.Status;
-import com.inmobi.grill.api.query.ResultColumn;
-import com.inmobi.grill.api.query.ResultColumnType;
 import com.inmobi.grill.api.query.ResultRow;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.driver.InMemoryResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
-import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 public class TestJDBCFinal {
@@ -178,20 +156,20 @@ public class TestJDBCFinal {
       GrillResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 4);
 
-      ResultColumn col1 = rsMeta.getColumns().get(0);
-      assertEquals(col1.getType(), ResultColumnType.INT);
+      ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+      assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "time_key".toUpperCase());
 
-      ResultColumn col2 = rsMeta.getColumns().get(1);
-      assertEquals(col2.getType(), ResultColumnType.INT);
+      ColumnDescriptor col2 = rsMeta.getColumns().get(1);
+      assertEquals(col2.getTypeName().toLowerCase(), "int");
       assertEquals(col2.getName(), "day_of_week".toUpperCase());
 
-      ResultColumn col3 = rsMeta.getColumns().get(2);
-      assertEquals(col3.getType(), ResultColumnType.DATE);
+      ColumnDescriptor col3 = rsMeta.getColumns().get(2);
+      assertEquals(col3.getTypeName().toLowerCase(), "date");
       assertEquals(col3.getName(), "day".toUpperCase());
 
-      ResultColumn col4 = rsMeta.getColumns().get(3);
-      assertEquals(col4.getType(), ResultColumnType.DOUBLE);
+      ColumnDescriptor col4 = rsMeta.getColumns().get(3);
+      assertEquals(col4.getTypeName().toLowerCase(), "double");
       assertEquals(col4.getName(), "dollars_sold".toUpperCase());
 
       while (rs.hasNext()) {
@@ -232,20 +210,20 @@ public class TestJDBCFinal {
       GrillResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 4);
 
-      ResultColumn col1 = rsMeta.getColumns().get(0);
-      assertEquals(col1.getType(), ResultColumnType.INT);
+      ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+      assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "time_key".toUpperCase());
 
-      ResultColumn col2 = rsMeta.getColumns().get(1);
-      assertEquals(col2.getType(), ResultColumnType.INT);
+      ColumnDescriptor col2 = rsMeta.getColumns().get(1);
+      assertEquals(col2.getTypeName().toLowerCase(), "int");
       assertEquals(col2.getName(), "day_of_week".toUpperCase());
 
-      ResultColumn col3 = rsMeta.getColumns().get(2);
-      assertEquals(col3.getType(), ResultColumnType.DATE);
+      ColumnDescriptor col3 = rsMeta.getColumns().get(2);
+      assertEquals(col3.getTypeName().toLowerCase(), "date");
       assertEquals(col3.getName(), "day".toUpperCase());
 
-      ResultColumn col4 = rsMeta.getColumns().get(3);
-      assertEquals(col4.getType(), ResultColumnType.DOUBLE);
+      ColumnDescriptor col4 = rsMeta.getColumns().get(3);
+      assertEquals(col4.getTypeName().toLowerCase(), "double");
       assertEquals(col4.getName(), "dollars_sold".toUpperCase());
 
       while (rs.hasNext()) {

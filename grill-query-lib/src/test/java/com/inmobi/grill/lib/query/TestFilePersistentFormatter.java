@@ -20,15 +20,10 @@ package com.inmobi.grill.lib.query;
  * #L%
  */
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -53,15 +48,15 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     // create csv files
     FileSystem fs = partFileDir.getFileSystem(new Configuration());
     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "000000_2"))));
-    writer.write("\"1\",\"one\"\n");
+    writer.write("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"\n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "000001_0"))));
-    writer.write("\"2\",\"two\"\n");
-    writer.write("\"NULL\",\"three\"\n");
+    writer.write("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"\n");
+    writer.write("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"\n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "000010_1"))));
-    writer.write("\"4\",\"NULL\"\n");
-    writer.write("\"NULL\",\"NULL\"\n");
+    writer.write("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"\n");
+    writer.write("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"\n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "_SUCCESS"))));
     writer.close();
@@ -69,15 +64,15 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     // create text files
     fs = partFileTextDir.getFileSystem(new Configuration());
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileTextDir, "000000_2"))));
-    writer.write("1one\n");
+    writer.write("1oneoneone            11one1one       \n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileTextDir, "000001_0"))));
-    writer.write("2two\n");
-    writer.write("\\Nthree\n");
+    writer.write("2twotwotwo            122two1one       2two       \n");
+    writer.write("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     \n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileTextDir, "000010_1"))));
-    writer.write("4\\N\n");
-    writer.write("\\N\\N\n");
+    writer.write("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N\n");
+    writer.write("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N\n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileTextDir, "_SUCCESS"))));
     writer.close();
@@ -102,7 +97,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
 
   protected void setConf(Configuration conf) {
     conf.set("test.partfile.dir", partFileDir.toString());
-    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "\"firstcol\",\"secondcol\"");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     conf.set(GrillConfConstants.QUERY_OUTPUT_FOOTER, "Total rows:5");
   }
 
@@ -124,7 +119,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     setConf(conf);
     conf.set("test.partfile.dir", partFileTextDir.toString());
     conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
-    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolsecondcol");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt");
     // validate rows
@@ -154,7 +149,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     conf.set("test.partfile.dir", partFileTextDir.toString());
     conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
-    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolsecondcol");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz");
     // validate rows

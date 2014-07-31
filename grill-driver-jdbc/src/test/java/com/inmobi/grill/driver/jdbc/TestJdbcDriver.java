@@ -28,6 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hive.service.cli.ColumnDescriptor;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -35,8 +36,6 @@ import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.ResultColumn;
-import com.inmobi.grill.api.query.ResultColumnType;
 import com.inmobi.grill.api.query.ResultRow;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
@@ -179,8 +178,8 @@ public class TestJdbcDriver {
       GrillResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
       
-      ResultColumn col1 = rsMeta.getColumns().get(0);
-      assertEquals(col1.getType(), ResultColumnType.INT);
+      ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+      assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "ID");
       
       while (rs.hasNext()) {
@@ -263,8 +262,8 @@ public class TestJdbcDriver {
       GrillResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
       
-      ResultColumn col1 = rsMeta.getColumns().get(0);
-      assertEquals(col1.getType(), ResultColumnType.INT);
+      ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+      assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "ID");
       System.out.println("Matched metadata");
       

@@ -22,9 +22,7 @@ package com.inmobi.grill.lib.query;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
@@ -33,9 +31,8 @@ import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters.Converter;
+import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -52,6 +49,7 @@ import com.inmobi.grill.server.api.query.QueryOutputFormatter;
  * Also provides methods to construct header from serde
  * 
  */
+@SuppressWarnings("deprecation")
 public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
 
   public static final String HEADER_TYPE = "string";
@@ -59,12 +57,12 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   protected QueryContext ctx;
   protected GrillResultSetMetadata metadata;
   protected List<String> columnNames = new ArrayList<String>();
+  protected List<TypeInfo> columnTypes = new ArrayList<TypeInfo>();
   protected List<ObjectInspector> columnOIs = new ArrayList<ObjectInspector>();
   protected List<ObjectInspector> columnHeaderOIs = new ArrayList<ObjectInspector>();
   protected String htypes;
   protected String types;
-  protected Converter hconverter;
-  protected ObjectInspector convertedHOI;
+  protected ObjectInspector headerOI;
   protected SerDe headerSerde;
 
   @Override
@@ -90,11 +88,13 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
           headerTypes.append(",");
         }
         String name = metadata.getColumns().get(pos).getName();
-        String type = metadata.getColumns().get(pos).getType().name().toLowerCase();
+        String type = GrillResultSetMetadata.getQualifiedTypeName(
+            metadata.getColumns().get(pos).getTypeDescriptor());
         typesSb.append(type);
         columnNames.add(name);
-        columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(
-            TypeInfoUtils.getTypeInfoFromTypeString(type)));
+        TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(type);
+        columnTypes.add(typeInfo);
+        columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo));
         columnHeaderOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(
             TypeInfoUtils.getTypeInfoFromTypeString(HEADER_TYPE)));
         headerTypes.append(HEADER_TYPE);
@@ -110,7 +110,8 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
     if (headerSerde == null) {
       headerSerde = ReflectionUtils.newInstance(ctx.getConf().getClass(
           GrillConfConstants.QUERY_OUTPUT_SERDE,
-          (Class<? extends AbstractSerDe>)Class.forName(GrillConfConstants.DEFAULT_OUTPUT_SERDE),
+          (Class<? extends AbstractSerDe>)Class.forName(
+              GrillConfConstants.DEFAULT_OUTPUT_SERDE),
           SerDe.class), ctx.getConf());
 
       Properties hprops = new Properties();
@@ -122,12 +123,8 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
       }
       headerSerde.initialize(ctx.getConf(), hprops);
 
-      ObjectInspector inputHeaderOI = ObjectInspectorFactory.getStandardStructObjectInspector(
+      headerOI = ObjectInspectorFactory.getStandardStructObjectInspector(
           columnNames, columnHeaderOIs);
-      Map<ObjectInspector, Boolean> hoiSettableProperties = new HashMap<ObjectInspector, Boolean>();
-      convertedHOI = ObjectInspectorConverters.getConvertedOI(inputHeaderOI,
-          headerSerde.getObjectInspector(), hoiSettableProperties);
-      hconverter = ObjectInspectorConverters.getConverter(inputHeaderOI, convertedHOI);
     }
   }
 
@@ -135,8 +132,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
     Writable rowWritable;
     try {
       initHeaderSerde();
-      rowWritable = headerSerde.serialize(hconverter.convert(
-          columnNames), convertedHOI);
+      rowWritable = headerSerde.serialize(columnNames, headerOI);
     } catch (SerDeException e) {
       throw new IOException(e);
     } catch (ClassNotFoundException e) {

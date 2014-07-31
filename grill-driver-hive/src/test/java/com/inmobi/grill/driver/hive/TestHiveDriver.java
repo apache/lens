@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.ql.HiveDriverRunHook;
 import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.cli.ColumnDescriptor;
 import org.testng.annotations.*;
 
 import com.inmobi.grill.api.GrillException;
@@ -180,7 +181,7 @@ public class TestHiveDriver {
 
     // check metadata
     GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
-    List<ResultColumn>  columns = rsMeta.getColumns();
+    List<ColumnDescriptor>  columns = rsMeta.getColumns();
     assertNotNull(columns);
     assertEquals(columns.size(), 1);
     String expectedCol = "";
@@ -190,7 +191,7 @@ public class TestHiveDriver {
     expectedCol += "ID";
     assertTrue(columns.get(0).getName().toLowerCase().equals(expectedCol.toLowerCase())
         || columns.get(0).getName().toLowerCase().equals("ID".toLowerCase()));
-    assertEquals(columns.get(0).getType().name().toLowerCase(), "STRING".toLowerCase());
+    assertEquals(columns.get(0).getTypeName().toLowerCase(), "STRING".toLowerCase());
 
     List<String> expectedRows = new ArrayList<String>();
     // Read data from the test file into expectedRows
@@ -325,7 +326,6 @@ public class TestHiveDriver {
     assertTrue(resultSet instanceof HivePersistentResultSet);
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();
-    QueryHandle handle = persistentResultSet.getQueryHandle();
 
     Path actualPath = new Path(path);
     FileSystem fs = actualPath.getFileSystem(conf);
