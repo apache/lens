@@ -84,6 +84,8 @@
         </xs:annotation>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="description" />
+        <xs:attribute type="xs:string" name="display_string" />
         <xs:attribute type="xs:string" name="default_aggr" />
         <xs:attribute type="xs:string" name="format_string" />
         <xs:attribute type="xs:dateTime" name="start_time" />
@@ -122,6 +124,8 @@
         </xs:annotation>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="description" />
+        <xs:attribute type="xs:string" name="display_string" />
         <xs:attribute type="xs:string" name="expr" />
     </xs:complexType>
 
@@ -147,6 +151,8 @@
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="type" use="required"/>
+        <xs:attribute type="xs:string" name="description" />
+        <xs:attribute type="xs:string" name="display_string" />
         <xs:attribute type="xs:dateTime" name="start_time" />
         <xs:attribute type="xs:dateTime" name="end_time" />
         <xs:attribute type="xs:double" name="cost" />
