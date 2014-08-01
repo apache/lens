@@ -273,6 +273,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("dim1");
     xd1.setType("string");
+    xd1.setDescription("first dimension");
+    xd1.setDisplayString("Dimension1");
     xd1.setStartTime(startDate);
     // Don't set endtime on this dim to validate null handling on server side
     xd1.setCost(10.0);
@@ -280,6 +282,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("dim2");
     xd2.setType("int");
+    xd2.setDescription("second dimension");
+    xd2.setDisplayString("Dimension2");
     // Don't set start time on this dim to validate null handling on server side
     xd2.setEndTime(endDate);
     xd2.setCost(5.0);
@@ -294,6 +298,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XMeasure xm1 = new XMeasure();
     xm1.setName("msr1");
     xm1.setType("double");
+    xm1.setDescription("first measure");
+    xm1.setDisplayString("Measure1");
     xm1.setCost(10.0);
     // Don't set start time and end time to validate null handling on server side.
     //xm1.setStarttime(startDate);
@@ -303,6 +309,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XMeasure xm2 = new XMeasure();
     xm2.setName("msr2");
     xm2.setType("int");
+    xm2.setDescription("second measure");
+    xm2.setDisplayString("Measure2");
     xm2.setCost(10.0);
     xm2.setStartTime(startDate);
     xm2.setEndTime(endDate);
@@ -317,6 +325,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("expr1");
     xe1.setType("double");
+    xe1.setDescription("first expression");
+    xe1.setDisplayString("Expression1");
     xe1.setExpr("msr1/1000");
 
     expressions.getExpressions().add(xe1);
@@ -537,6 +547,16 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(actual.getWeight(), 100.0d);
       assertFalse(actual.isDerived());
       assertNull(actual.getParent());
+      Cube hcube = (Cube) JAXBUtils.hiveCubeFromXCube(actual, null);
+      assertNotNull(hcube.getDimAttributeByName("dim1"));
+      assertEquals(hcube.getDimAttributeByName("dim1").getDescription(), "first dimension");
+      assertEquals(hcube.getDimAttributeByName("dim1").getDisplayString(), "Dimension1");
+      assertNotNull(hcube.getMeasureByName("msr1"));
+      assertEquals(hcube.getMeasureByName("msr1").getDescription(), "first measure");
+      assertEquals(hcube.getMeasureByName("msr1").getDisplayString(), "Measure1");
+      assertNotNull(hcube.getExpressionByName("expr1"));
+      assertEquals(hcube.getExpressionByName("expr1").getDescription(), "first expression");
+      assertEquals(hcube.getExpressionByName("expr1").getDisplayString(), "Expression1");
 
       final XCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
       target = target().path("metastore").path("cubes");
@@ -887,6 +907,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("col1");
     xd1.setType("string");
+    xd1.setDescription("first column");
+    xd1.setDisplayString("Column1");
     xd1.setStartTime(startDate);
     // Don't set endtime on this dim to validate null handling on server side
     xd1.setCost(10.0);
@@ -894,6 +916,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("col2");
     xd2.setType("int");
+    xd2.setDescription("second column");
+    xd2.setDisplayString("Column2");
     // Don't set start time on this dim to validate null handling on server side
     xd2.setEndTime(endDate);
     xd2.setCost(5.0);
@@ -907,6 +931,8 @@ public class TestMetastoreService extends GrillJerseyTest {
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("dimexpr");
     xe1.setType("string");
+    xe1.setDescription("dimension expression");
+    xe1.setDisplayString("Dim Expression");
     xe1.setExpr("substr(col1, 3)");
 
     expressions.getExpressions().add(xe1);
@@ -962,8 +988,14 @@ public class TestMetastoreService extends GrillJerseyTest {
 
       Dimension dim = JAXBUtils.dimensionFromXDimension(dimension);
       assertNotNull(dim.getAttributeByName("col1"));
+      assertEquals(dim.getAttributeByName("col1").getDescription(), "first column");
+      assertEquals(dim.getAttributeByName("col1").getDisplayString(), "Column1");
       assertNotNull(dim.getAttributeByName("col2"));
+      assertEquals(dim.getAttributeByName("col2").getDescription(), "second column");
+      assertEquals(dim.getAttributeByName("col2").getDisplayString(), "Column2");
       assertNotNull(dim.getExpressionByName("dimexpr"));
+      assertEquals(dim.getExpressionByName("dimexpr").getDescription(), "dimension expression");
+      assertEquals(dim.getExpressionByName("dimexpr").getDisplayString(), "Dim Expression");
 
       // alter dimension
       XProperty prop = cubeObjectFactory.createXProperty();

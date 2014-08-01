@@ -160,14 +160,16 @@ public class JAXBUtils {
         dimRefs.add(new TableReference(xRef.getDestTable(), xRef.getDestColumn()));
       }
 
-      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType(), ""),
+      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType(), xd.getDescription()),
+          xd.getDisplayString(),
           dimRefs,
           startDate,
           endDate,
           xd.getCost()
           );
     } else {
-      hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType(), ""),
+      hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType(), xd.getDescription()),
+          xd.getDisplayString(),
           startDate,
           endDate,
           xd.getCost()
@@ -205,6 +207,8 @@ public class JAXBUtils {
 
     XMeasure xm = XCF.createXMeasure();
     xm.setName(cm.getName());
+    xm.setDescription(cm.getDescription());
+    xm.setDisplayString(cm.getDisplayString());
     xm.setDefaultAggr(cm.getAggregate());
     xm.setFormatString(cm.getFormatString());
     xm.setType(cm.getType());
@@ -224,6 +228,8 @@ public class JAXBUtils {
     XExprColumn xe = XCF.createXExprColumn();
     xe.setName(ec.getName());
     xe.setType(ec.getType());
+    xe.setDescription(ec.getDescription());
+    xe.setDisplayString(ec.getDisplayString());
     xe.setExpr(ec.getExpr());
     return xe;
   }
@@ -234,6 +240,8 @@ public class JAXBUtils {
   public static XDimAttribute xDimAttrFromHiveDimAttr(CubeDimAttribute cd) {
     XDimAttribute xd = XCF.createXDimAttribute();
     xd.setName(cd.getName());
+    xd.setDescription(cd.getDescription());
+    xd.setDisplayString(cd.getDisplayString());
 
     if (cd instanceof ReferencedDimAtrribute) {
       ReferencedDimAtrribute rd = (ReferencedDimAtrribute) cd;
@@ -272,7 +280,8 @@ public class JAXBUtils {
   public static CubeMeasure hiveMeasureFromXMeasure(XMeasure xm) {
     Date startDate = xm.getStartTime() == null ? null : xm.getStartTime().toGregorianCalendar().getTime();
     Date endDate = xm.getEndTime() == null ? null : xm.getEndTime().toGregorianCalendar().getTime();
-    CubeMeasure cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), ""),
+    CubeMeasure cm = new ColumnMeasure(new FieldSchema(xm.getName(), xm.getType(), xm.getDescription()),
+        xm.getDisplayString(),
         xm.getFormatString(),
         xm.getDefaultAggr(),
         "unit",
@@ -284,7 +293,8 @@ public class JAXBUtils {
   }
 
   public static ExprColumn hiveExprColumnFromXExprColumn(XExprColumn xe) throws ParseException {
-    ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType(), ""),
+    ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType(), xe.getDescription()),
+        xe.getDisplayString(),
         xe.getExpr());
     return ec;
   }
