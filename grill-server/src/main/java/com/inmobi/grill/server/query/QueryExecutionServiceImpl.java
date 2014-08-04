@@ -20,15 +20,12 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.io.Writer;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -95,6 +92,7 @@ import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.session.GrillSessionImpl;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
@@ -115,7 +113,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private ConcurrentMap<QueryHandle, QueryContext> allQueries = 
       new ConcurrentHashMap<QueryHandle, QueryContext>();
   private Configuration conf;
-  protected final Thread querySubmitter = new Thread(new QuerySubmitter(),
+  private final QuerySubmitter querySubmitterRunnable = new QuerySubmitter();
+  protected final Thread querySubmitter = new Thread(querySubmitterRunnable,
       "QuerySubmitter");
   private final Thread statusPoller = new Thread(new StatusPoller(),
       "StatusPoller");
@@ -123,7 +122,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       "QueryPurger");
   private final Thread prepareQueryPurger = new Thread(new PreparedQueryPurger(),
       "PrepareQueryPurger");
-  private boolean stopped = false;
   private List<QueryAcceptor> queryAcceptors = new ArrayList<QueryAcceptor>();
   private final Map<String, GrillDriver> drivers = new HashMap<String, GrillDriver>();
   private DriverSelector driverSelector;
@@ -247,10 +245,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private class QuerySubmitter implements Runnable {
+    private boolean pausedForTest = false;
     @Override
     public void run() {
       LOG.info("Starting QuerySubmitter thread");
-      while (!stopped && !querySubmitter.isInterrupted()) {
+      while (!pausedForTest && !stopped && !querySubmitter.isInterrupted()) {
         try {
           QueryContext ctx = acceptedQueries.take();
           synchronized (ctx) {
@@ -284,7 +283,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.error("Error in query submitter", e);
         }
       }
+      LOG.info("QuerySubmitter exited");
     }
+
+  }
+
+  // used in tests
+  public void pauseQuerySubmitter() {
+    querySubmitterRunnable.pausedForTest = true;
   }
 
   private class StatusPoller implements Runnable {
@@ -297,7 +303,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           List<QueryContext> launched = new ArrayList<QueryContext>();
           launched.addAll(launchedQueries);
           for (QueryContext ctx : launched) {
-            LOG.info("Polled status for " + ctx.getQueryHandle());
+            if (stopped || statusPoller.isInterrupted()) {
+              return;
+            }
+            LOG.info("Polling status for " + ctx.getQueryHandle());
             try {
               // session is not required to update status of the query
               //acquire(ctx.getGrillSessionIdentifier());
@@ -316,6 +325,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.error("Error in status poller", e);
         }
       }
+      LOG.info("StatusPoller exited");
     }
   }
 
@@ -474,8 +484,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         try {
           // session is not required to close the query
           //acquire(finished.getCtx().getGrillSessionIdentifier());
-          finished.getCtx().getSelectedDriver().closeQuery(
-              finished.getCtx().getQueryHandle());
+          if (finished.getCtx().getSelectedDriver() != null) {
+            finished.getCtx().getSelectedDriver().closeQuery(
+                finished.getCtx().getQueryHandle());
+          }
           allQueries.remove(finished.getCtx().getQueryHandle());
           fireStatusChangeEvent(finished.getCtx(),
               new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
@@ -492,6 +504,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           }*/
         }
       }
+      LOG.info("QueryPurger exited");
     }
   }
 
@@ -513,6 +526,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.error("Error in prepared query purger", e);
         }
       }
+      LOG.info("PreparedQueryPurger exited");
     }
   }
 
@@ -528,15 +542,19 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     LOG.info("Query execution service initialized");
   }
 
-  public synchronized void stop() {
-    super.stop();
+  public void prepareStopping() {
+    super.prepareStopping();
     querySubmitter.interrupt();
     statusPoller.interrupt();
     queryPurger.interrupt();
     prepareQueryPurger.interrupt();
+  }
 
+  public synchronized void stop() {
+    super.stop();
     for (Thread th : new Thread[]{querySubmitter, statusPoller, queryPurger, prepareQueryPurger}) {
       try {
+        LOG.debug("Waiting for" + th.getName());
         th.join();
       } catch (InterruptedException e) {
         LOG.error("Error waiting for thread: " + th.getName(), e);
@@ -546,6 +564,22 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   public synchronized void start() {
+    // recover query configurations from session
+    synchronized (allQueries) {
+      for (QueryContext ctx : allQueries.values()) {
+        try {
+          if (sessionMap.containsKey(ctx.getGrillSessionIdentifier())) {
+            // try setting configuration if the query session is still not closed
+            ctx.setConf(getGrillConf(getSessionHandle(
+                ctx.getGrillSessionIdentifier()), ctx.getQconf()));
+          } else {
+            ctx.setConf(getGrillConf(GrillSessionImpl.sessionDefaultConf(),ctx.getQconf()));
+          }
+        } catch (GrillException e) {
+          LOG.error("Could not set query conf");
+        }
+      }
+    }
     super.start();
     querySubmitter.start();
     statusPoller.start();
@@ -1134,11 +1168,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         if (driverAvailable) {
           String clsName = in.readUTF();
           ctx.setSelectedDriver(drivers.get(clsName));
-        }
-        try {
-          ctx.setConf(getGrillConf(null, ctx.getQconf()));
-        } catch (GrillException e) {
-          LOG.error("Could not set query conf");
         }
         allQueries.put(ctx.getQueryHandle(), ctx);
       }

@@ -24,6 +24,7 @@ import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.session.GrillSessionImpl;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -49,6 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class GrillService extends CompositeService implements Externalizable {
   public static final Log LOG = LogFactory.getLog(GrillService.class);
   private final CLIService cliService;
+  protected boolean stopped = false;
 
   //Static session map which is used by query submission thread to get the
   //grill session before submitting a query to hive server
@@ -139,6 +141,7 @@ public abstract class GrillService extends CompositeService implements Externali
     try {
       return ((GrillSessionImpl)getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
+      LOG.warn("Session not found", exc);
       throw new NotFoundException("Session not found " + sessionHandle);
     } catch (Exception e) {
       throw new GrillException (e);
@@ -170,6 +173,10 @@ public abstract class GrillService extends CompositeService implements Externali
     getSession(sessionMap.get(sessionHandle)).release();
   }
 
+  protected GrillSessionHandle getSessionHandle(String sessionid) {
+    return sessionMap.get(sessionid);
+  }
+
   public void addResource(GrillSessionHandle sessionHandle, String type,
       String path) throws GrillException {
   }
@@ -184,12 +191,11 @@ public abstract class GrillService extends CompositeService implements Externali
   }
 
   public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf conf) throws GrillException {
-    Configuration qconf = null;
-    if (sessionHandle != null && getSession(sessionHandle) != null) {
-      qconf = new Configuration(getSession(sessionHandle).getHiveConf());
-    } else {
-      qconf = new Configuration(cliService.getHiveConf());
-    }
+    return getGrillConf(getSession(sessionHandle).getSessionConf(), conf);
+  }
+
+  public Configuration getGrillConf(Configuration sessionConf, GrillConf conf) throws GrillException {
+    Configuration qconf = new Configuration(sessionConf);
     if (conf != null && !conf.getProperties().isEmpty()) {
       for (Map.Entry<String, String> entry : conf.getProperties().entrySet()) {
         qconf.set(entry.getKey(), entry.getValue());
@@ -198,30 +204,17 @@ public abstract class GrillService extends CompositeService implements Externali
     return qconf;
   }
 
+  public void prepareStopping() {
+    this.stopped = true;
+  }
+
   @Override
   public void readExternal(ObjectInput in) throws IOException,
       ClassNotFoundException {
-    /* Can be uncommented when we have session restart-abilities
-     * synchronized (sessionMap) {
-      int n = in.readInt();
-      for (int i = 0; i < n; i++) {
-        GrillSessionHandle sid = new GrillSessionHandle(
-            UUID.fromString(in.readUTF()), UUID.fromString(in.readUTF()));
-        sessionMap.put(sid.getPublicId().toString(), sid);
-      }
-    }*/
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
-    /* Can be uncommented when we have session restart-abilities
-     * synchronized (sessionMap) {
-      out.writeInt(sessionMap.size());
-      for (GrillSessionHandle sid : sessionMap.values()) {
-        out.writeUTF(sid.getSecretId().toString());
-        out.writeUTF(sid.getPublicId().toString());
-      }
-    }*/
   }
 
 }

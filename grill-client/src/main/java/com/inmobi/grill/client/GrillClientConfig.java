@@ -28,9 +28,10 @@ import org.apache.hadoop.conf.Configuration;
  */
 public class GrillClientConfig extends Configuration {
 
-  static {
-    Configuration.addDefaultResource("grill-client-default.xml");
-    Configuration.addDefaultResource("grill-client-site.xml");
+  public GrillClientConfig() {
+    super(false);
+    addResource("grill-client-default.xml");
+    addResource("grill-client-site.xml");
   }
 
   public static final String GRILL_SERVER_HOST_KEY = "grill.host";

@@ -24,90 +24,50 @@ Grill server configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself. |
+|1|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
 *--+--+---+--+
-|2|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
+|2|grill.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+
-|3|grill.enable.console.metrics|false|Enable metrics to be reported on console|
+|3|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
 *--+--+---+--+
-|4|grill.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
+|4|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
-|5|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
+|5|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|6|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|6|grill.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|7|grill.metrics.ganglia.host| |The ganglia host name|
+|7|grill.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|8|grill.metrics.ganglia.port| |The ganglia port|
+|8|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|9|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|9|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|10|grill.persistent.resultset|false|Whether to enable persistent resultset for queries. When enabled, server will fetch results from driver, custom format them if any and store in a configured location. The file name of query output is queryhandle-id, with configured extensions|
+|10|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|11|grill.persistent.resultset.indriver|true|Whether the result should be persisted by driver. Currently only HiveDriver persists the results in a HDFS location.|
+|11|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|12|grill.query.hdfs.output.path|hdfsout|The directory under the parent result directory, in which HiveDriver will persist the results, if persisting by driver is enabled.|
+|12|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|13|grill.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
+|13|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|14|grill.query.output.compression.codec|org.apache.hadoop.io.compress.GzipCodec|The codec used to compress the query output, if compression is enabled|
+|14|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
 *--+--+---+--+
-|15|grill.query.output.enable.compression|false|Whether to compress the query result output|
+|15|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
 *--+--+---+--+
-|16|grill.query.output.file.extn|.csv|The extension name for the persisted query output file. If file is compressed, the extension from compression codec will be appended to this extension.|
+|16|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|17|grill.query.output.footer| |The value of custom footer that should be written, if any. This footer will be added in formatting driver persisted results.|
+|17|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|18|grill.query.output.formatter| |The query result output formatter for the query. If no value is specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
+|18|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|19|grill.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
+|19|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
 *--+--+---+--+
-|20|grill.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
+|20|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+
-|21|grill.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
+|21|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|22|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
+|22|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|23|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
-*--+--+---+--+
-|24|grill.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
-*--+--+---+--+
-|25|grill.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
-*--+--+---+--+
-|26|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
-*--+--+---+--+
-|27|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
-*--+--+---+--+
-|28|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
-*--+--+---+--+
-|29|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
-*--+--+---+--+
-|30|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
-*--+--+---+--+
-|31|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
-*--+--+---+--+
-|32|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
-*--+--+---+--+
-|33|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
-*--+--+---+--+
-|34|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
-*--+--+---+--+
-|35|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
-*--+--+---+--+
-|36|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
-*--+--+---+--+
-|37|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
-*--+--+---+--+
-|38|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
-*--+--+---+--+
-|39|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
-*--+--+---+--+
-|40|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
-*--+--+---+--+
-|41|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
-*--+--+---+--+
-|42|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
-*--+--+---+--+
-|43|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|23|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
 The configuration parameters and their default values

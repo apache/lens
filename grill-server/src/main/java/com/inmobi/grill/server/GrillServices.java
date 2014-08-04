@@ -53,7 +53,7 @@ public class GrillServices extends CompositeService {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);
 
   static {
-    Configuration.addDefaultResource("grill-default.xml");
+    Configuration.addDefaultResource("grillserver-default.xml");
     Configuration.addDefaultResource("grill-site.xml");
   }
 
@@ -206,13 +206,18 @@ public class GrillServices extends CompositeService {
     if (getServiceState() != STATE.STOPPED) {
       LOG.info("Stopping grill server");
       stopping = true;
+      for (GrillService service : grillServices) {
+        service.prepareStopping();
+      }
       try {
         // persist all the services
         persistGrillServiceState();
       } catch (IOException e) {
         LOG.error("Could not persist server state", e);
+        throw new IllegalStateException(e);
+      } finally {
+        super.stop();
       }
-      super.stop();
     }
   }
 

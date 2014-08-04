@@ -30,8 +30,10 @@ import javax.ws.rs.NotFoundException;
 
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.api.GrillConfConstants;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -48,6 +50,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   private GrillSessionPersistInfo persistInfo = new GrillSessionPersistInfo();
   private long lastAccessTime = System.currentTimeMillis();
   private long sessionTimeout;
+  private Configuration conf = new Configuration(sessionDefaultConf());
 
   private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
     persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
@@ -57,12 +60,31 @@ public class GrillSessionImpl extends HiveSessionImpl {
     persistInfo.setLastAccessTime(lastAccessTime);
   }
 
+  private static Configuration defaultConf;
+  public static Configuration sessionDefaultConf() {
+    if (defaultConf == null) {
+      defaultConf = new Configuration(false);
+      defaultConf.addResource("grillsession-default.xml");
+      defaultConf.addResource("grill-site.xml");
+    }
+    return defaultConf;
+  }
+
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password);
     sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
       GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
+    if (sessionConf != null) {
+      for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
+        conf.set(entry.getKey(), entry.getValue());
+      }
+    }
+  }
+
+  public Configuration getSessionConf() {
+    return conf; 
   }
 
   /**

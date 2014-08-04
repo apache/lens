@@ -26,8 +26,6 @@ import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.StringList;
 import com.inmobi.grill.server.GrillJerseyTest;
-import com.inmobi.grill.server.GrillService;
-import com.inmobi.grill.server.GrillServices;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -97,40 +95,25 @@ public class TestSessionResource extends GrillJerseyTest {
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertTrue(sessionParams.getElements().size() > 1);
 
-    // set a system property
-    FormDataMultiPart setpart = new FormDataMultiPart();
-    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        handle, MediaType.APPLICATION_XML_TYPE));
-    setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(), "system:my.property"));
-    setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(), "myvalue"));
-    APIResult result = paramtarget.request().put(
-        Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
-        APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-    Assert.assertEquals(System.getProperty("my.property"), "myvalue");
-
     // set hive variable
-    setpart = new FormDataMultiPart();
+    FormDataMultiPart setpart = new FormDataMultiPart();
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("key").build(), "hivevar:myvar"));
     setpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("value").build(), "10"));
-    result = paramtarget.request().put(
+    APIResult result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     // get myvar session params
     sessionParams = paramtarget.queryParam("sessionid", handle)
-        .queryParam("key", "myvar").request().get(
+        .queryParam("key", "hivevar:myvar").request().get(
             StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("myvar=10"));
+    Assert.assertTrue(sessionParams.getElements().contains("hivevar:myvar=10"));
 
     // set hive conf
     setpart = new FormDataMultiPart();
@@ -237,83 +220,4 @@ public class TestSessionResource extends GrillJerseyTest {
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
-
-  @Test
-  public void testSessionRestart() throws Exception {
-    System.out.println("### Test restart");
-
-    // Create a new session
-    WebTarget sessionTarget = target().path("session");
-    FormDataMultiPart sessionForm = new FormDataMultiPart();
-    sessionForm.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
-      "user1"));
-    sessionForm.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
-      "psword"));
-    sessionForm.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-      new GrillConf(),
-      MediaType.APPLICATION_XML_TYPE));
-
-    final GrillSessionHandle restartTestSession = sessionTarget.request().post(
-      Entity.entity(sessionForm, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
-    Assert.assertNotNull(restartTestSession);
-
-    // Set a param
-    WebTarget paramTarget = sessionTarget.path("params");
-    FormDataMultiPart setpart = new FormDataMultiPart();
-    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-      restartTestSession, MediaType.APPLICATION_XML_TYPE));
-    setpart.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("key").build(), "grill.session.testRestartKey"));
-    setpart.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("value").build(), "myvalue"));
-    APIResult result = paramTarget.request().put(
-      Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
-      APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-    // Add resource
-    // add a resource
-    final WebTarget resourcetarget = target().path("session/resources");
-    final FormDataMultiPart mp1 = new FormDataMultiPart();
-    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-      restartTestSession, MediaType.APPLICATION_XML_TYPE));
-    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
-      "file"));
-    mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-      "target/test-classes/grill-site.xml"));
-    result = resourcetarget.path("add").request().put(
-      Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
-    Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
-
-
-    // restart server
-    restartGrillServer();
-
-    // Check session exists in the server
-
-    // Try and get params back
-    StringList sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
-        .queryParam("verbose", true).request().get(
-          StringList.class);
-    sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
-        .queryParam("key", "grill.session.testRestartKey").request().get(
-            StringList.class);
-    System.out.println("Session params:" + sessionParams.getElements());
-    Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("grill.session.testRestartKey=myvalue"));
-
-    // Check resources added again
-    HiveSessionService sessionService = GrillServices.get().getService("session");
-    GrillSessionImpl session = sessionService.getSession(restartTestSession);
-    Assert.assertEquals(session.getGrillSessionPersistInfo().getResources().size(), 1);
-    GrillSessionImpl.ResourceEntry resourceEntry = session.getGrillSessionPersistInfo().getResources().get(0);
-    Assert.assertEquals(resourceEntry.getType(), "file");
-    Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/grill-site.xml");
-
-    // close session
-    result = sessionTarget.queryParam("sessionid", restartTestSession).request().delete(APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-  }
-
 }

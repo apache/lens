@@ -56,20 +56,20 @@ public class HiveQueryPlan extends DriverQueryPlan {
   };
 
   public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
-      HiveConf conf) throws HiveException {
+      HiveConf metastoreConf) throws HiveException {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
     partitions = new LinkedHashMap<String, List<String>>();
-    extractPlanDetails(explainOutput, conf);
+    extractPlanDetails(explainOutput, metastoreConf);
     this.explainOutput = StringUtils.join(explainOutput, '\n');
   }
 
-  private void extractPlanDetails(List<String> explainOutput, HiveConf conf) throws HiveException {
+  private void extractPlanDetails(List<String> explainOutput, HiveConf metastoreConf) throws HiveException {
     ParserState state = ParserState.BEGIN;
     ParserState prevState = state;
     ArrayList<ParserState> states = new ArrayList<ParserState>();
-    Hive metastore = Hive.get(conf);
+    Hive metastore = Hive.get(metastoreConf);
     List<String> partList = null;
 
     for (int i = 0; i < explainOutput.size(); i++) {

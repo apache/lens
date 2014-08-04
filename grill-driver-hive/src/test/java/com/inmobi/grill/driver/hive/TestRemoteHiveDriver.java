@@ -109,6 +109,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @Override
   public void beforeTest() throws Exception {
     conf = new HiveConf(remoteConf);
+    conf.addResource("hivedriver-site.xml");
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
@@ -212,7 +213,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @Test
   public void testHiveDriverPersistence() throws Exception {
     System.out.println("@@@@ start_persistence_test");
-    HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
+    HiveConf driverConf = new HiveConf(conf, TestRemoteHiveDriver.class);
     driverConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
 
     final HiveDriver oldDriver = new HiveDriver();

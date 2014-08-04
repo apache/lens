@@ -15,6 +15,7 @@ import java.util.Set;
 import static org.testng.Assert.assertEquals;
 
 
+@Test(groups="unit-test")
 public class TestStaticFileResource extends GrillJerseyTest {
 
   @BeforeTest

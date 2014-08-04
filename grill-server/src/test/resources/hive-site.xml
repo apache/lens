@@ -23,6 +23,8 @@
 
 <configuration>
 
+<!-- This configuration is for HiveServer in tests -->
+
 <property>
   <name>hive.metastore.local</name>
   <value>true</value>
@@ -57,26 +59,6 @@
 <property>
   <name>hive.server2.async.exec.threads</name>
   <value>5</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.bind.host</name>
-  <value>localhost</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.port</name>
-  <value>12345</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.client.retry.limit</name>
-  <value>3</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.client.connect.retry.limit</name>
-  <value>3</value>
 </property>
 
 </configuration>
