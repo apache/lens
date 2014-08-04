@@ -109,11 +109,11 @@ public class TestSessionResource extends GrillJerseyTest {
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     // get myvar session params
     sessionParams = paramtarget.queryParam("sessionid", handle)
-        .queryParam("key", "myvar").request().get(
+        .queryParam("key", "hivevar:myvar").request().get(
             StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("myvar=10"));
+    Assert.assertTrue(sessionParams.getElements().contains("hivevar:myvar=10"));
 
     // set hive conf
     setpart = new FormDataMultiPart();

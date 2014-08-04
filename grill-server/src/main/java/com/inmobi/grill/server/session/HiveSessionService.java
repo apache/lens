@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
@@ -168,7 +169,13 @@ public class HiveSessionService extends GrillService {
     try {
       acquire(sessionid);
       // set in session conf
-      getSession(sessionid).getSessionConf().set(key, value);
+      String var;
+      if (key.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
+        var = key.substring(SetProcessor.HIVECONF_PREFIX.length());
+      } else {
+        var = key;
+      }
+      getSession(sessionid).getSessionConf().set(var, value);
       // set in underlying cli session
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
       // add to persist
