@@ -76,7 +76,7 @@ public class HiveDriver implements GrillDriver {
   // Default expiry is 10 minutes
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
 
-  private HiveConf conf;
+  private HiveConf driverConf;
   private Map<QueryHandle, OperationHandle> hiveHandles =
       new HashMap<QueryHandle, OperationHandle>();
   private final Lock sessionLock;
@@ -125,10 +125,9 @@ public class HiveDriver implements GrillDriver {
     private volatile boolean expired;
     private final int connId;
 
-    public ExpirableConnection(ThriftConnection conn, HiveConf conf) {
+    public ExpirableConnection(ThriftConnection conn, long timeout) {
       this.conn = conn;
-      this.timeout = 
-          conf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+      this.timeout = timeout;
       connId = connectionCounter.incrementAndGet();
       accessTime = System.currentTimeMillis();
     }
@@ -169,6 +168,7 @@ public class HiveDriver implements GrillDriver {
 
   private Class<? extends ThriftConnection> connectionClass;
   private boolean isEmbedded;
+  private long connectionExpiryTimeout; 
 
   public HiveDriver() throws GrillException {
     this.sessionLock = new ReentrantLock();
@@ -181,24 +181,28 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public Configuration getConf() {
-    return conf;
+    return driverConf;
   }
 
   @Override
   public void configure(Configuration conf) throws GrillException {
-    this.conf = new HiveConf(conf, HiveDriver.class);
-    connectionClass = conf.getClass(
+    this.driverConf = new HiveConf(conf, HiveDriver.class);;
+    this.driverConf.addResource("hivedriver-default.xml");
+    this.driverConf.addResource("hivedriver-site.xml");
+    connectionClass = this.driverConf.getClass(
         GRILL_HIVE_CONNECTION_CLASS, 
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
+    connectionExpiryTimeout = 
+        this.driverConf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
   }
 
   @Override
   public DriverQueryPlan explain(final String query, final Configuration conf)
       throws GrillException {
     LOG.info("Explain: " + query);
-    HiveConf explainConf = new HiveConf(conf, HiveDriver.class);
+    Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String explainQuery = "EXPLAIN EXTENDED " + query;
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
@@ -212,7 +216,7 @@ public class HiveDriver implements GrillDriver {
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
       return new HiveQueryPlan(explainOutput, null,
-          new HiveConf(conf, HiveDriver.class));
+          this.driverConf);
     } catch (HiveException e) {
       throw new GrillException("Unable to create hive query plan", e);
     }
@@ -476,13 +480,13 @@ public class HiveDriver implements GrillDriver {
         }
         LOG.info("New thrift connection " + connectionClass);
       }
-      return embeddedConnection.getClient(conf);
+      return embeddedConnection.getClient(driverConf);
     } else {
       ExpirableConnection connection = threadConnections.get(Thread.currentThread().getId());
       if (connection == null || connection.isExpired()) {
         try {
           ThriftConnection tconn = connectionClass.newInstance();
-          connection = new ExpirableConnection(tconn, conf);
+          connection = new ExpirableConnection(tconn, connectionExpiryTimeout);
           thriftConnExpiryQueue.offer(connection);
           threadConnections.put(Thread.currentThread().getId(), connection);
           LOG.info("New thrift connection " + connectionClass + " for thread:"
@@ -497,7 +501,7 @@ public class HiveDriver implements GrillDriver {
         }
       }
 
-      return connection.getConnection().getClient(conf);
+      return connection.getConnection().getClient(driverConf);
     }
   }
 

@@ -63,6 +63,7 @@ public class TestHiveDriver {
     // Check if hadoop property set
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
+    conf.addResource("hivedriver-site.xml");
     conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);

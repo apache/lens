@@ -26,7 +26,8 @@ Configuring grill server
   Grill server provides you with various configuration options. Administrator
   can configure the offered services from server, available drivers for query execution,
   query output options, enabling metrics from server and etc. The configuration parameters and
-  their detailed description and default values are available {{{./config.html} here}}
+  their detailed description and default values are available {{{./config.html} here}}.
+  The overridden configuration can be part of grill-site.xml.
 
 * Driver configuration
 
@@ -36,3 +37,11 @@ Configuring grill server
   are com.inmobi.grill.driver.hive.HiveDriver and com.inmobi.grill.driver.jdbc.JDBCDriver.
   The configuration parameters and
   their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}
+  The overridden configuration can be part of hivedriver-site.xml.
+
+* Session configuration
+
+  The configuration that user can override for each session is documented {{{./session-config.html} here}}.
+  These configuration mostly include query parameters, which can be overriden by query as well.
+  Server should be configured with appropriate values for them in the site file.
+  The overridden configuration can be part of grill-site.xml.

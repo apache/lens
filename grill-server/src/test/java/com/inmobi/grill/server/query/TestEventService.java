@@ -102,11 +102,6 @@ public class TestEventService {
     LOG.info("Service started " + service) ;
   }
 
-  @AfterTest
-  public void cleanup() throws Exception {
-    service.stop();
-  }
-
   @Test
   public void testAddListener() {
     int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();

@@ -50,19 +50,23 @@ public abstract class GrillJerseyTest extends JerseyTest {
   @BeforeSuite
   public void startAll() throws Exception {
     TestRemoteHiveDriver.createHS2Service();
+    System.out.println("Remote hive server started!");
     HiveConf hiveConf = new HiveConf();
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS, 5);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     GrillServices.get().init(new HiveConf());
     GrillServices.get().start();
+    System.out.println("Grill services started!");
   }
 
   @AfterSuite
   public void stopAll() throws Exception {
     verifyMetrics();
     GrillServices.get().stop();
+    System.out.println("Grill services stopped!");
     TestRemoteHiveDriver.stopHS2Service();
+    System.out.println("Remote hive server stopped!");
   }
 
   protected void verifyMetrics() {
@@ -108,8 +112,10 @@ public abstract class GrillJerseyTest extends JerseyTest {
 
   public void restartGrillServer(HiveConf conf) {
     GrillServices.get().stop();
+    System.out.println("Grill services stopped!");
     GrillServices.setInstance(new GrillServices(GrillServices.GRILL_SERVICES_NAME));
     GrillServices.get().init(conf);
     GrillServices.get().start();
+    System.out.println("Grill services restarted!");
   }
 }

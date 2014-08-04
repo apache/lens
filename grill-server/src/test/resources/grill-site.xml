@@ -28,18 +28,8 @@
 </property>
 
 <property>
-  <name>grill.hive.connection.class</name>
-  <value>com.inmobi.grill.driver.hive.RemoteThriftConnection</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.bind.host</name>
-  <value>localhost</value>
-</property>
-
-<property>
-  <name>hive.server2.thrift.port</name>
-  <value>12345</value>
+  <name>test.grill.site.key</name>
+  <value>gsvalue</value>
 </property>
 
 <property>

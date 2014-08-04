@@ -24,14 +24,11 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
-import com.inmobi.grill.server.api.query.QueryExecutionService;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hive.service.cli.*;
-import org.apache.hive.service.cli.thrift.THandleIdentifier;
-import org.apache.hive.service.cli.thrift.TSessionHandle;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
@@ -132,7 +129,11 @@ public class HiveSessionService extends GrillService {
     String command = "set" + " " + key + "= " + value;
     try {
       acquire(sessionid);
+      // set in session conf
+      getSession(sessionid).getSessionConf().set(key, value);
+      // set in underlying cli session
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      // add to persist
       if (addToSession) {
         getSession(sessionid).setConfig(key, value);
       }
@@ -196,12 +197,15 @@ public class HiveSessionService extends GrillService {
         throw new RuntimeException(e);
       }
     }
+    LOG.info("Session service restoed " + restorableSessions.size() + " sessions");
   }
 
   @Override
   public synchronized void stop() {
     super.stop();
-    sessionExpiryThread.shutdownNow();
+    if (sessionExpiryThread != null) {
+      sessionExpiryThread.shutdownNow();
+    }
   }
 
   @Override
@@ -216,6 +220,7 @@ public class HiveSessionService extends GrillService {
         throw new IOException(e);
       }
     }
+    LOG.info("Session service pesristed " + sessionMap.size() + " sessions");
   }
 
   @Override
@@ -227,7 +232,9 @@ public class HiveSessionService extends GrillService {
       GrillSessionImpl.GrillSessionPersistInfo persistInfo = new GrillSessionImpl.GrillSessionPersistInfo();
       persistInfo.readExternal(in);
       restorableSessions.add(persistInfo);
+      sessionMap.put(persistInfo.getSessionHandle().getPublicId().toString(), persistInfo.getSessionHandle());
     }
+    LOG.info("Session service recovered " + sessionMap.size() + " sessions");
   }
 
   @Override
