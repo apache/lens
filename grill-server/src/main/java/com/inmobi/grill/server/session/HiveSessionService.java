@@ -25,9 +25,13 @@ import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
-import org.apache.commons.lang.StringUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.processors.SetProcessor;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
 
 import javax.ws.rs.NotFoundException;
@@ -97,27 +101,61 @@ public class HiveSessionService extends GrillService {
     }
   }
 
-  public OperationHandle getAllSessionParameters(GrillSessionHandle sessionid,
-      boolean verbose, String key) throws GrillException, HiveSQLException {
-    String command = "set";
-    if (verbose) {
-      command += " -v ";
-    }
-    if (!StringUtils.isBlank(key)) {
-      command += " " + key;
-    }
-    OperationHandle handle;
-    try {
-      acquire(sessionid);
-      handle = getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
-    } finally {
-      try {
-        release(sessionid);
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
+  private String getSessionParam(Configuration sessionConf, SessionState ss, String varname) {
+    if (varname.indexOf(SetProcessor.HIVEVAR_PREFIX) == 0) {
+      String var = varname.substring(SetProcessor.HIVEVAR_PREFIX.length());
+      if (ss.getHiveVariables().get(var) != null){
+        return SetProcessor.HIVEVAR_PREFIX + var + "=" + ss.getHiveVariables().get(var);
+      } else {
+        throw new NotFoundException(varname + " is undefined as a hive variable");
+      }
+    } else {
+      String var;
+      if (varname.indexOf(SetProcessor.HIVECONF_PREFIX) == 0) {
+        var = varname.substring(SetProcessor.HIVECONF_PREFIX.length());
+      } else {
+        var = varname;
+      }
+      if (sessionConf.get(var) != null){
+        return varname + "=" + sessionConf.get(var);
+      } else {
+        throw new NotFoundException(varname + " is undefined");
       }
     }
-    return handle;
+  }
+
+  public List<String> getAllSessionParameters(GrillSessionHandle sessionid,
+      boolean verbose, String key) throws GrillException {
+    List<String> result = new ArrayList<String>();
+    acquire(sessionid);
+    SessionState ss = getSession(sessionid).getSessionState();
+    if (!StringUtils.isBlank(key)) {
+      result.add(getSessionParam(getSession(sessionid).getSessionConf(), ss, key));
+    } else {
+      try {
+        SortedMap<String, String> sortedMap = new TreeMap<String, String>();
+        sortedMap.put("silent", (ss.getIsSilent() ? "on" : "off"));
+        for (String s : ss.getHiveVariables().keySet()) {
+          sortedMap.put(SetProcessor.HIVEVAR_PREFIX + s, ss.getHiveVariables().get(s));
+        }
+        for (Map.Entry<String, String> entry : getSession(sessionid).getSessionConf()) {
+          sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
+          result.add(entry.toString());
+        }
+      } catch (GrillException e) {
+        throw new WebApplicationException(e);
+      } finally {
+        try {
+          release(sessionid);
+        } catch (GrillException e) {
+          throw new WebApplicationException(e);
+        }
+      }
+    }
+    return result;
   }
 
   public void setSessionParameter(GrillSessionHandle sessionid, String key, String value) {

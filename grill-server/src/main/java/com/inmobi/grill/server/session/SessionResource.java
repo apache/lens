@@ -231,37 +231,21 @@ public class SessionResource {
   public StringList getParams(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("false") @QueryParam("verbose") boolean verbose,
       @DefaultValue("") @QueryParam("key") String key) {
-    RowSet rows = null;
-    List<String> result = new ArrayList<String>();
     try {
-      OperationHandle handle = sessionService.getAllSessionParameters(sessionid, verbose, key);
-      rows = sessionService.getCliService().fetchResults(handle);
-    } catch (HiveSQLException e) {
-      if (e.getMessage().contains(key + " is undefined")) {
-        throw new NotFoundException(e.getMessage());
-      } else {
-        throw new WebApplicationException(e);
-      }
+      List<String> result =  sessionService.getAllSessionParameters(sessionid, verbose, key);
+      return new StringList(result);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
-    Iterator<Object[]> itr = rows.iterator();
-    while (itr.hasNext()) {
-      result.add((String)itr.next()[0]); 
-    }
-    return new StringList(result);
   }
 
   /**
    * Set value for a parameter specified by key
    * 
-   * The parameters can be a system property or a hive variable or a configuration.
-   * To set key as system property, the key should be prefixed with 'system:'.
+   * The parameters can be a hive variable or a configuration.
    * To set key as a hive variable, the key should be prefixed with 'hivevar:'.
-   * To set key as configuration parameter, the key should be prefixed with 'hiveconf:'.
+   * To set key as configuration parameter, the key should be prefixed with 'hiveconf:'
    * If no prefix is attached, the parameter is set as configuration.
-   * 
-   * System properties are not restricted to the session, they would be set globally
    * 
    * @param sessionid session handle object
    * @param key parameter key

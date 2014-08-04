@@ -95,30 +95,15 @@ public class TestSessionResource extends GrillJerseyTest {
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertTrue(sessionParams.getElements().size() > 1);
 
-    // set a system property
-    FormDataMultiPart setpart = new FormDataMultiPart();
-    setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        handle, MediaType.APPLICATION_XML_TYPE));
-    setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(), "system:my.property"));
-    setpart.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(), "myvalue"));
-    APIResult result = paramtarget.request().put(
-        Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
-        APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-    Assert.assertEquals(System.getProperty("my.property"), "myvalue");
-
     // set hive variable
-    setpart = new FormDataMultiPart();
+    FormDataMultiPart setpart = new FormDataMultiPart();
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         handle, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("key").build(), "hivevar:myvar"));
     setpart.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("value").build(), "10"));
-    result = paramtarget.request().put(
+    APIResult result = paramtarget.request().put(
         Entity.entity(setpart, MediaType.MULTIPART_FORM_DATA_TYPE),
         APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
