@@ -20,12 +20,20 @@ package com.inmobi.grill.server.session;
  * #L%
  */
 
+import java.net.URL;
+import java.net.URLClassLoader;
+
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.GrillConf;
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.StringList;
 import com.inmobi.grill.server.GrillJerseyTest;
+import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.GrillConfConstants;
+
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -220,4 +228,45 @@ public class TestSessionResource extends GrillJerseyTest {
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
+
+  @Test
+  public void testAuxJars() throws GrillException {
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    final GrillConf sessionconf = new GrillConf();
+
+    sessionconf.addProperty(GrillConfConstants.AUX_JARS, "test-util/test-aux.jar");
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
+        "user1"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
+        "psword"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        sessionconf,
+        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        new GrillConf(),
+        MediaType.APPLICATION_XML_TYPE));
+
+    final GrillSessionHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    Assert.assertNotNull(handle);
+
+    // verify aux jars are loaded
+    HiveSessionService service = (HiveSessionService)GrillServices.get().getService(HiveSessionService.NAME);
+    ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
+    boolean found = false;
+    for (URL path : ((URLClassLoader)loader).getURLs()) {
+      if (path.toString().contains("test-aux.jar")) {
+        found = true;
+      }
+    }
+    Assert.assertTrue(found);
+
+    // close session
+    APIResult result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+  }
+
 }

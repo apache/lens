@@ -24,6 +24,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
 import org.apache.commons.lang3.StringUtils;
@@ -123,6 +124,20 @@ public class HiveSessionService extends GrillService {
         throw new NotFoundException(varname + " is undefined");
       }
     }
+  }
+
+  public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
+      throws GrillException {
+    GrillSessionHandle sessionid = super.openSession(username, password, configuration);
+    // add auxuiliary jars
+    String auxJars = getSession(sessionid).getSessionConf().get(GrillConfConstants.AUX_JARS);
+    if (StringUtils.isNotBlank(auxJars)) {
+      LOG.info("Adding aux jars:" + auxJars);
+      for (String jar : StringUtils.split(auxJars, ",")) {
+        addResource(sessionid, "jar", jar);
+      }
+    }
+    return sessionid;
   }
 
   public List<String> getAllSessionParameters(GrillSessionHandle sessionid,
