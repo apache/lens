@@ -31,7 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
@@ -130,10 +129,10 @@ public class HiveSessionService extends GrillService {
       throws GrillException {
     GrillSessionHandle sessionid = super.openSession(username, password, configuration);
     // add auxuiliary jars
-    String auxJars = getSession(sessionid).getSessionConf().get(GrillConfConstants.AUX_JARS);
-    if (StringUtils.isNotBlank(auxJars)) {
+    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(GrillConfConstants.AUX_JARS);
+    if (auxJars != null) {
       LOG.info("Adding aux jars:" + auxJars);
-      for (String jar : StringUtils.split(auxJars, ",")) {
+      for (String jar : auxJars) {
         addResource(sessionid, "jar", jar);
       }
     }
