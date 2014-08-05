@@ -1,0 +1,67 @@
+~~~
+~~ #%L
+~~ Grill
+~~ %%
+~~ Copyright (C) 2014 Inmobi
+~~ %%
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~ 
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~ 
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+~~ #L%
+~~~
+Grill session configuration
+
+===
+
+*--+--+---+--+
+|<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
+*--+--+---+--+
+|1|grill.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself. |
+*--+--+---+--+
+|2|grill.persistent.resultset|false|Whether to enable persistent resultset for queries. When enabled, server will fetch results from driver, custom format them if any and store in a configured location. The file name of query output is queryhandle-id, with configured extensions|
+*--+--+---+--+
+|3|grill.persistent.resultset.indriver|true|Whether the result should be persisted by driver. Currently only HiveDriver persists the results in a HDFS location.|
+*--+--+---+--+
+|4|grill.query.hdfs.output.path|hdfsout|The directory under the parent result directory, in which HiveDriver will persist the results, if persisting by driver is enabled.|
+*--+--+---+--+
+|5|grill.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
+*--+--+---+--+
+|6|grill.query.output.compression.codec|org.apache.hadoop.io.compress.GzipCodec|The codec used to compress the query output, if compression is enabled|
+*--+--+---+--+
+|7|grill.query.output.enable.compression|false|Whether to compress the query result output|
+*--+--+---+--+
+|8|grill.query.output.file.extn|.csv|The extension name for the persisted query output file. If file is compressed, the extension from compression codec will be appended to this extension.|
+*--+--+---+--+
+|9|grill.query.output.footer| |The value of custom footer that should be written, if any. This footer will be added in formatting driver persisted results.|
+*--+--+---+--+
+|10|grill.query.output.formatter| |The query result output formatter for the query. If no value is specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
+*--+--+---+--+
+|11|grill.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
+*--+--+---+--+
+|12|grill.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
+*--+--+---+--+
+|13|grill.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
+*--+--+---+--+
+|14|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
+*--+--+---+--+
+|15|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
+*--+--+---+--+
+|16|grill.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
+*--+--+---+--+
+|17|grill.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
+*--+--+---+--+
+|18|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
+*--+--+---+--+
+|19|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
+*--+--+---+--+
+|20|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
+*--+--+---+--+
+The configuration parameters and their default values
