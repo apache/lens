@@ -123,6 +123,23 @@ public class GrillMetadataClient {
     return dropDatabase(database, false);
   }
 
+  public List<String> getAllHiveTables() {
+    WebTarget target = getMetastoreWebTarget();
+    StringList hivetables = target.path("hivetables")
+        .queryParam("sessionid", connection.getSessionHandle())
+        .request().get(StringList.class);
+    return hivetables.getElements();
+  }
+
+  public HiveTable getHiveTable(String tblName) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<HiveTable> htable = target.path("hivetables").path(tblName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<HiveTable>>() {
+        });
+    return htable.getValue();
+  }
+
   public List<String> getAllCubes() {
     WebTarget target = getMetastoreWebTarget();
     StringList cubes = target.path("cubes")

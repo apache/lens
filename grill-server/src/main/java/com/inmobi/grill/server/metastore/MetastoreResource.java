@@ -188,6 +188,52 @@ public class MetastoreResource {
   }
 
   /**
+   * Get all hivetables in the db given.
+   *
+   * If no db is passed, tables in current db will be returned
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dbName The db name
+   *
+   * @return StringList consisting of all table names.
+   * 
+   * @throws GrillException
+   */
+  @GET @Path("hivetables")
+  public StringList getAllHiveTables(@QueryParam("sessionid") GrillSessionHandle sessionid, @QueryParam("dbName") String dbName) {
+    checkSessionId(sessionid);
+    List<String> allNames;
+    try {
+      allNames = getSvc().getAllHiveTableNames(sessionid, dbName);
+    } catch (GrillException e) {
+      throw new WebApplicationException(e);
+    }
+    return new StringList(allNames);
+  }
+
+  /**
+   * Get the hivetable passed in name
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param tableName The hive table name
+   *
+   * @return JAXB representation of {@link HiveTable} 
+   *
+   * @throws GrillException
+   */
+  @GET @Path("hivetables/{tableName}")
+  public JAXBElement<HiveTable> getHiveTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("tableName") String tableName) {
+    checkSessionId(sessionid);
+    try {
+      return xCubeObjectFactory.createHiveTable(getSvc().getHiveTable(sessionid, tableName));
+    } catch (GrillException e) {
+      checkTableNotFound(e, tableName);
+      LOG.error("Error getting hive table", e);
+      throw new WebApplicationException(e);
+    }
+  }
+
+  /**
    * Get all cubes in the metastores, of the specified type
    * 
    * @param sessionid The sessionid in which user is working

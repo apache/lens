@@ -135,9 +135,33 @@ public interface CubeMetastoreService {
   /**
    * Get names of all cubes, which can be queried in the current database
    *
+   * @param sessionid Grill session id
+   *
    * @return list of cube names
    */
   public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid) throws GrillException;
+
+  /**
+   * Get HiveTable for the given name
+   *
+   * @param sessionid Grill session id
+   * @param name The table name
+   *
+   * @return {@link HiveTable} object
+   *
+   * @throws GrillException
+   */
+  public HiveTable getHiveTable(GrillSessionHandle sessionid, String name) throws GrillException;
+
+  /**
+   * Get names of all simple hive tables (not the olap tables) in the db
+   *
+   * @param sessionid Grill session id
+   * @param dbName The db name
+   *
+   * @return list of table names
+   */
+  public List<String> getAllHiveTableNames(GrillSessionHandle sessionid, String dbName) throws GrillException;
 
   /**
    * Create a cube based on JAXB Cube object

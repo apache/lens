@@ -170,6 +170,12 @@ public class GrillClient {
     return mc.getAlldatabases();
   }
 
+  public List<String> getAllHiveTables() {
+    LOG.debug("Getting all hive tables");
+    GrillMetadataClient mc = new GrillMetadataClient(conn);
+    return mc.getAllHiveTables();
+  }
+
   public List<String> getAllFactTables() {
     LOG.debug("Getting all fact table");
     GrillMetadataClient mc = new GrillMetadataClient(conn);
@@ -335,6 +341,10 @@ public class GrillClient {
 
   public DimensionTable getDimensionTable(String dimName) {
     return new GrillMetadataClient(conn).getDimensionTable(dimName);
+  }
+
+  public HiveTable getHiveTable(String tblName) {
+    return new GrillMetadataClient(conn).getHiveTable(tblName);
   }
 
   public XCube getCube(String cubeName) {

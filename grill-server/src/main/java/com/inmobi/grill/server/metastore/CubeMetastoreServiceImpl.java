@@ -29,15 +29,23 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.*;
+import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
+import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.MetaException;
+import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
+import org.apache.hadoop.hive.metastore.api.UnknownDBException;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hive.service.cli.CLIService;
+import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
+import org.apache.thrift.TException;
 
 import java.util.*;
 
@@ -1093,6 +1101,64 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       release(sessionid);
     }
     return null;
+  }
+
+  @Override
+  public HiveTable getHiveTable(GrillSessionHandle sessionid, String name)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      Table tbl = getClient(sessionid).getHiveTable(name);
+      if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) != null) {
+        throw new BadRequestException(name + " is an olap table");
+      }
+      return JAXBUtils.xhiveTableFromMetaTable(tbl);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public List<String> getAllHiveTableNames(GrillSessionHandle sessionid, String dbName)
+      throws GrillException {
+    try {
+      acquire(sessionid);
+      if (StringUtils.isBlank(dbName)) {
+        // use current db if no db is passed
+        dbName = getSession(sessionid).getCurrentDatabase();
+      } else {
+        if (!Hive.get().databaseExists(dbName)) {
+          throw new NotFoundException("Database " + dbName + " does not exist");
+        }
+      }
+      List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
+          dbName);
+      if (tables != null && !tables.isEmpty()) {
+        Iterator<String> it = tables.iterator();
+        while (it.hasNext()) {
+          String tblName = it.next();
+          Table tbl = getClient(sessionid).getHiveTable(tblName);
+          if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) != null) {
+            it.remove();
+          }
+        }
+      }
+      return tables;
+    } catch (HiveSQLException e) {
+      throw new GrillException(e);
+    } catch (MetaException e) {
+      throw new GrillException(e);
+    } catch (UnknownDBException e) {
+      throw new NotFoundException("Database " + dbName + " does not exist");
+    } catch (TException e) {
+      throw new GrillException(e);
+    } catch (HiveException e) {
+      throw new GrillException(e);
+    } finally {
+      release(sessionid);
+    }
   }
 
 }
