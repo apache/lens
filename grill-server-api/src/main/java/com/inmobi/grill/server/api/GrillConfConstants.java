@@ -146,4 +146,6 @@ public class GrillConfConstants {
 
   public static final String RESULT_FS_READ_URL = "grill.query.result.fs.read.url";
 
+  public static final String AUX_JARS = "grill.aux.jars";
+
 }

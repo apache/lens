@@ -24,13 +24,13 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
@@ -123,6 +123,20 @@ public class HiveSessionService extends GrillService {
         throw new NotFoundException(varname + " is undefined");
       }
     }
+  }
+
+  public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
+      throws GrillException {
+    GrillSessionHandle sessionid = super.openSession(username, password, configuration);
+    // add auxuiliary jars
+    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(GrillConfConstants.AUX_JARS);
+    if (auxJars != null) {
+      LOG.info("Adding aux jars:" + auxJars);
+      for (String jar : auxJars) {
+        addResource(sessionid, "jar", jar);
+      }
+    }
+    return sessionid;
   }
 
   public List<String> getAllSessionParameters(GrillSessionHandle sessionid,
