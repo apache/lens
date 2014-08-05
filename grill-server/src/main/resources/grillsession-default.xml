@@ -169,4 +169,10 @@
  we support only webhdfs url as the http url for HDFS file system</description>
 </property>
 
+<property>
+  <name>grill.aux.jars</name>
+  <value></value>
+  <description>List of comma separated jar paths, which will added to the session</description>
+</property>
+
 </configuration>
