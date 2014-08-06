@@ -1104,15 +1104,15 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   }
 
   @Override
-  public HiveTable getHiveTable(GrillSessionHandle sessionid, String name)
+  public NativeTable getNativeTable(GrillSessionHandle sessionid, String name)
       throws GrillException {
     try {
       acquire(sessionid);
       Table tbl = getClient(sessionid).getHiveTable(name);
       if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) != null) {
-        throw new BadRequestException(name + " is an olap table");
+        throw new BadRequestException(name + " is not a native table");
       }
-      return JAXBUtils.xhiveTableFromMetaTable(tbl);
+      return JAXBUtils.nativeTableFromMetaTable(tbl);
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
@@ -1121,7 +1121,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   }
 
   @Override
-  public List<String> getAllHiveTableNames(GrillSessionHandle sessionid, String dbName)
+  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid, String dbName)
       throws GrillException {
     try {
       acquire(sessionid);
@@ -1135,16 +1135,19 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       }
       List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
           dbName);
+      System.out.println("all tables:" + tables);
       if (tables != null && !tables.isEmpty()) {
         Iterator<String> it = tables.iterator();
         while (it.hasNext()) {
           String tblName = it.next();
-          Table tbl = getClient(sessionid).getHiveTable(tblName);
+          org.apache.hadoop.hive.metastore.api.Table tbl =  
+              getSession(sessionid).getMetaStoreClient().getTable(dbName, tblName);
           if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) != null) {
             it.remove();
           }
         }
       }
+      System.out.println("returning:" + tables);
       return tables;
     } catch (HiveSQLException e) {
       throw new GrillException(e);

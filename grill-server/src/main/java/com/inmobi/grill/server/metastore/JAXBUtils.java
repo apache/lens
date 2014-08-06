@@ -25,7 +25,6 @@ import com.inmobi.grill.api.metastore.*;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.Order;
-import org.apache.hadoop.hive.metastore.api.SkewedInfo;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -737,16 +736,16 @@ public class JAXBUtils {
     return xd;
   }
 
-  public static HiveTable xhiveTableFromMetaTable(Table hiveTable) {
-    HiveTable xtable = XCF.createHiveTable();
-    xtable.setName(hiveTable.getTableName());
-    xtable.setDbname(hiveTable.getDbName());
-    xtable.setOwner(hiveTable.getOwner());
-    xtable.setCreatetime(hiveTable.getTTable().getCreateTime());
-    xtable.setLastAccessTime(hiveTable.getTTable().getLastAccessTime());
-    xtable.setColumns(columnsFromFieldSchemaList(hiveTable.getCols()));
-    xtable.setStorageDescriptor(getStorageTableDescFromHiveTable(hiveTable));
-    xtable.setType(hiveTable.getTableType().name());
+  public static NativeTable nativeTableFromMetaTable(Table table) {
+    NativeTable xtable = XCF.createNativeTable();
+    xtable.setName(table.getTableName());
+    xtable.setDbname(table.getDbName());
+    xtable.setOwner(table.getOwner());
+    xtable.setCreatetime(table.getTTable().getCreateTime());
+    xtable.setLastAccessTime(table.getTTable().getLastAccessTime());
+    xtable.setColumns(columnsFromFieldSchemaList(table.getCols()));
+    xtable.setStorageDescriptor(getStorageTableDescFromHiveTable(table));
+    xtable.setType(table.getTableType().name());
     return xtable;
   }
 }

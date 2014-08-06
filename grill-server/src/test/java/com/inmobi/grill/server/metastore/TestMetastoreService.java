@@ -57,6 +57,7 @@ import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -1782,27 +1783,28 @@ public class TestMetastoreService extends GrillJerseyTest {
   }
 
   @Test
-  public void testHiveTables() throws Exception {
-    final String DB = dbPFX + "test_hive_tables";
+  public void testNativeTables() throws Exception {
+    final String DB = dbPFX + "test_native_tables";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
 
     try {
       // create hive table
-      String tableName = "test_simple_hive_table";
+      String tableName = "test_simple_table";
+      SessionState.get().setCurrentDatabase(DB);
       createHiveTable(tableName);
 
-      WebTarget target = target().path("metastore").path("hivetables");
-      // get all hive tables
-      StringList hivetables = target.queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
-      assertEquals(hivetables.getElements().size(), 1);
-      assertEquals(hivetables.getElements().get(0), tableName);
+      WebTarget target = target().path("metastore").path("nativetables");
+      // get all native tables
+      StringList nativetables = target.queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
 
       // Now get the table
-      JAXBElement<HiveTable> actualElement = target.path(tableName).queryParam(
-          "sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<HiveTable>>() {});
-      HiveTable actual = actualElement.getValue();
+      JAXBElement<NativeTable> actualElement = target.path(tableName).queryParam(
+          "sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<NativeTable>>() {});
+      NativeTable actual = actualElement.getValue();
       assertNotNull(actual);
 
       assertTrue(tableName.equalsIgnoreCase(actual.getName()));
@@ -1840,9 +1842,9 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
 
       // get all tables in default db
-      hivetables = target.queryParam("sessionid", grillSessionId)
+      nativetables = target.queryParam("sessionid", grillSessionId)
           .queryParam("dbName", "default").request(mediaType).get(StringList.class);
-      assertNotNull(hivetables);
+      assertNotNull(nativetables);
 
       // get all tables in non existing db
       response = target.queryParam("sessionid", grillSessionId)

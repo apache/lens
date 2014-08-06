@@ -142,16 +142,16 @@ public interface CubeMetastoreService {
   public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid) throws GrillException;
 
   /**
-   * Get HiveTable for the given name
+   * Get native table for the given name
    *
    * @param sessionid Grill session id
    * @param name The table name
    *
-   * @return {@link HiveTable} object
+   * @return {@link NativeTable} object
    *
    * @throws GrillException
    */
-  public HiveTable getHiveTable(GrillSessionHandle sessionid, String name) throws GrillException;
+  public NativeTable getNativeTable(GrillSessionHandle sessionid, String name) throws GrillException;
 
   /**
    * Get names of all simple hive tables (not the olap tables) in the db
@@ -161,7 +161,7 @@ public interface CubeMetastoreService {
    *
    * @return list of table names
    */
-  public List<String> getAllHiveTableNames(GrillSessionHandle sessionid, String dbName) throws GrillException;
+  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid, String dbName) throws GrillException;
 
   /**
    * Create a cube based on JAXB Cube object

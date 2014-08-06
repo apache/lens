@@ -188,7 +188,7 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all hivetables in the db given.
+   * Get all native tables in the db given.
    *
    * If no db is passed, tables in current db will be returned
    *
@@ -199,12 +199,12 @@ public class MetastoreResource {
    * 
    * @throws GrillException
    */
-  @GET @Path("hivetables")
-  public StringList getAllHiveTables(@QueryParam("sessionid") GrillSessionHandle sessionid, @QueryParam("dbName") String dbName) {
+  @GET @Path("nativetables")
+  public StringList getAllNativeTables(@QueryParam("sessionid") GrillSessionHandle sessionid, @QueryParam("dbName") String dbName) {
     checkSessionId(sessionid);
     List<String> allNames;
     try {
-      allNames = getSvc().getAllHiveTableNames(sessionid, dbName);
+      allNames = getSvc().getAllNativeTableNames(sessionid, dbName);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -212,23 +212,24 @@ public class MetastoreResource {
   }
 
   /**
-   * Get the hivetable passed in name
+   * Get the native table passed in name
    *
    * @param sessionid The sessionid in which user is working
-   * @param tableName The hive table name
+   * @param tableName The native table name
    *
-   * @return JAXB representation of {@link HiveTable} 
+   * @return JAXB representation of {@link NativeTable} 
    *
    * @throws GrillException
    */
-  @GET @Path("hivetables/{tableName}")
-  public JAXBElement<HiveTable> getHiveTable(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("tableName") String tableName) {
+  @GET @Path("nativetables/{tableName}")
+  public JAXBElement<NativeTable> getNativeTable(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @PathParam("tableName") String tableName) {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createHiveTable(getSvc().getHiveTable(sessionid, tableName));
+      return xCubeObjectFactory.createNativeTable(getSvc().getNativeTable(sessionid, tableName));
     } catch (GrillException e) {
       checkTableNotFound(e, tableName);
-      LOG.error("Error getting hive table", e);
+      LOG.error("Error getting native table", e);
       throw new WebApplicationException(e);
     }
   }

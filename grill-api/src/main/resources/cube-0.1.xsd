@@ -385,8 +385,8 @@
         <xs:attribute name="weight" type="xs:double" />
     </xs:complexType>
 
-    <xs:element name="hive_table" type="hive_table"/>
-    <xs:complexType name="hive_table">
+    <xs:element name="native_table" type="native_table"/>
+    <xs:complexType name="native_table">
       <xs:sequence>
             <xs:element type="columns" name="columns"/>
             <xs:element type="x_storage_table_desc" name="storage_descriptor"/>
