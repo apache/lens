@@ -29,6 +29,7 @@ import com.inmobi.grill.api.metastore.*;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -188,23 +189,34 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all native tables in the db given.
-   *
-   * If no db is passed, tables in current db will be returned
+   * Get all native tables.
    *
    * @param sessionid The sessionid in which user is working
-   * @param dbName The db name
+   * @param dbOption The options available are 'current' and 'all'.
+   * If option is current, gives all tables from current db.
+   * If option is all, gives all tables from all databases.
+   * If dbname is passed, dbOption is ignored.
+   * If no dbOption or dbname are passed, then default is to get tables from current db.
+   * @param dbName The db name. If not empty, the tables in the db will be returned
    *
    * @return StringList consisting of all table names.
    * 
    * @throws GrillException
    */
   @GET @Path("nativetables")
-  public StringList getAllNativeTables(@QueryParam("sessionid") GrillSessionHandle sessionid, @QueryParam("dbName") String dbName) {
+  public StringList getAllNativeTables(@QueryParam("sessionid") GrillSessionHandle sessionid,
+      @QueryParam("dbOption") String dbOption,
+      @QueryParam("dbName") String dbName) {
     checkSessionId(sessionid);
     List<String> allNames;
     try {
-      allNames = getSvc().getAllNativeTableNames(sessionid, dbName);
+      if (StringUtils.isBlank(dbName) && !StringUtils.isBlank(dbOption)) {
+        if (!dbOption.equalsIgnoreCase("current") && !dbOption.equalsIgnoreCase("all")) {
+          throw new BadRequestException("Invalid dbOption param:" + dbOption
+              + " Allowed values are 'current' and 'all'");
+        }
+      }
+      allNames = getSvc().getAllNativeTableNames(sessionid, dbOption, dbName);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }

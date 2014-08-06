@@ -64,8 +64,8 @@
     <property name="client" ref="client"/>
   </bean>
 
-  <bean id="grillHiveTableCommands"
-        class="com.inmobi.grill.cli.commands.GrillHiveTableCommands">
+  <bean id="grillNativeTableCommands"
+        class="com.inmobi.grill.cli.commands.GrillNativeTableCommands">
     <property name="client" ref="client"/>
   </bean>
 

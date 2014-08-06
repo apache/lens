@@ -157,11 +157,13 @@ public interface CubeMetastoreService {
    * Get names of all simple hive tables (not the olap tables) in the db
    *
    * @param sessionid Grill session id
+   * @param dboption To get from current or all, the option is ignored if dbname is passed
    * @param dbName The db name
    *
    * @return list of table names
    */
-  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid, String dbName) throws GrillException;
+  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid,
+      String dboption, String dbName) throws GrillException;
 
   /**
    * Create a cube based on JAXB Cube object

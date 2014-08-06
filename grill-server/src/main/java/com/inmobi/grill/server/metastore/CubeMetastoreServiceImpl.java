@@ -1120,34 +1120,57 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
+  private List<String> getTablesFromDB(GrillSessionHandle sessionid,
+      String dbName, boolean prependDbName)
+      throws MetaException, UnknownDBException, HiveSQLException, TException, GrillException {
+    List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
+        dbName);
+    List<String> result = new ArrayList<String>();
+    if (tables != null && !tables.isEmpty()) {
+      Iterator<String> it = tables.iterator();
+      while (it.hasNext()) {
+        String tblName = it.next();
+        org.apache.hadoop.hive.metastore.api.Table tbl =
+            getSession(sessionid).getMetaStoreClient().getTable(dbName, tblName);
+        if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) == null) {
+          if (prependDbName) {
+            result.add(dbName + "." + tblName);
+          } else {
+            result.add(tblName);
+          }
+        }
+      }
+    }
+    return result;
+  }
+
   @Override
-  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid, String dbName)
-      throws GrillException {
+  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid,
+      String dbOption, String dbName) throws GrillException {
     try {
       acquire(sessionid);
-      if (StringUtils.isBlank(dbName)) {
-        // use current db if no db is passed
-        dbName = getSession(sessionid).getCurrentDatabase();
-      } else {
+      if (!StringUtils.isBlank(dbName)) {
         if (!Hive.get().databaseExists(dbName)) {
           throw new NotFoundException("Database " + dbName + " does not exist");
         }
       }
-      List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
-          dbName);
-      System.out.println("all tables:" + tables);
-      if (tables != null && !tables.isEmpty()) {
-        Iterator<String> it = tables.iterator();
-        while (it.hasNext()) {
-          String tblName = it.next();
-          org.apache.hadoop.hive.metastore.api.Table tbl =  
-              getSession(sessionid).getMetaStoreClient().getTable(dbName, tblName);
-          if (tbl.getParameters().get(MetastoreConstants.TABLE_TYPE_KEY) != null) {
-            it.remove();
-          }
+      if (StringUtils.isBlank(dbName)
+          && (StringUtils.isBlank(dbOption)
+          || dbOption.equalsIgnoreCase("current"))) {
+        // use current db if no dbname/dboption is passed
+        dbName = getSession(sessionid).getCurrentDatabase();
+      }
+      List<String> tables;
+      if (!StringUtils.isBlank(dbName)) {
+        tables = getTablesFromDB(sessionid, dbName, false);
+      } else {
+        LOG.info("Getting tables from all dbs");
+        List<String> alldbs = getAllDatabases(sessionid);
+        tables = new ArrayList<String>();
+        for (String db : alldbs) {
+          tables.addAll(getTablesFromDB(sessionid, db, true));
         }
       }
-      System.out.println("returning:" + tables);
       return tables;
     } catch (HiveSQLException e) {
       throw new GrillException(e);

@@ -1801,6 +1801,30 @@ public class TestMetastoreService extends GrillJerseyTest {
       assertEquals(nativetables.getElements().size(), 1);
       assertEquals(nativetables.getElements().get(0), tableName);
 
+      // test current option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test all option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbOption", "all").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), DB.toLowerCase() + "." + tableName);
+
+      // test dbname option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbName", DB).request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test dbname option with dboption
+      nativetables = target.queryParam("sessionid", grillSessionId).queryParam("dbName", DB)
+          .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
       // Now get the table
       JAXBElement<NativeTable> actualElement = target.path(tableName).queryParam(
           "sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<NativeTable>>() {});
