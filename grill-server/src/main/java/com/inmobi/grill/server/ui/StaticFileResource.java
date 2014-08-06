@@ -1,4 +1,4 @@
-package com.inmobi.grill.server;
+package com.inmobi.grill.server.ui;
 
 /*
  * #%L

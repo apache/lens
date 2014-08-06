@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.query;
+package com.inmobi.grill.server.ui;
 
 /*
  * #%L
@@ -20,26 +20,20 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 
-import com.google.common.base.Joiner;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.query.*;
 import com.inmobi.grill.server.GrillServices;
-import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
-import com.inmobi.grill.server.session.SessionUIResource;
-import org.apache.commons.io.IOExceptionWithCause;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import java.util.UUID;
 import org.apache.commons.lang.StringUtils;
-import java.io.UnsupportedEncodingException;
+
 import javax.ws.rs.*;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +43,6 @@ import java.util.ArrayList;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.IOException;
-import java.util.Arrays;
 
 @Path("/queryuiapi")
 public class QueryServiceUIResource {

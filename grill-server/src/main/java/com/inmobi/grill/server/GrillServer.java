@@ -22,6 +22,7 @@ package com.inmobi.grill.server;
 
 import com.codahale.metrics.servlets.AdminServlet;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.ui.UIApp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;

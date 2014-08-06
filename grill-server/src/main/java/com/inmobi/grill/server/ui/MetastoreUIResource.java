@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.metastore;
+package com.inmobi.grill.server.ui;
 
 /*
  * #%L
@@ -25,7 +25,6 @@ import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.metastore.*;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
-import com.inmobi.grill.server.session.SessionUIResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
@@ -35,7 +34,6 @@ import org.json.JSONObject;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBElement;
 import java.util.*;
 
 /**

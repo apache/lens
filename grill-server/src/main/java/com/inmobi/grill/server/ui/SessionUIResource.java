@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.session;
+package com.inmobi.grill.server.ui;
 
 /*
  * #%L
@@ -26,6 +26,8 @@ import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.session.HiveSessionService;
+import com.inmobi.grill.server.session.SessionResource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.FormDataParam;

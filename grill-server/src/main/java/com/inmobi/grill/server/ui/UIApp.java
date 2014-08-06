@@ -1,4 +1,4 @@
-package com.inmobi.grill.server;
+package com.inmobi.grill.server.ui;
 
 /*
  * #%L
@@ -20,13 +20,12 @@ package com.inmobi.grill.server;
  * #L%
  */
 
-import com.inmobi.grill.server.query.QueryServiceResource;
+import com.inmobi.grill.server.AuthenticationFilter;
+import com.inmobi.grill.server.GrillApplicationListener;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-import com.inmobi.grill.server.query.QueryServiceUIResource;
-import com.inmobi.grill.server.session.SessionUIResource;
-import com.inmobi.grill.server.metastore.MetastoreUIResource;
+
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import java.util.HashSet;
