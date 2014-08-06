@@ -40,7 +40,7 @@ import java.util.UUID;
 
 /**
  * Session resource api
- *
+ * <p/>
  * This provides api for all things in session.
  */
 @Path("/uisession")
@@ -56,20 +56,16 @@ public class SessionUIResource {
    */
   @GET
   @Produces({MediaType.TEXT_PLAIN})
-  public String getMessage()
-  {
+  public String getMessage() {
     return "session is up!";
   }
 
-  public SessionUIResource() throws GrillException
-  {
-    sessionService = (HiveSessionService)GrillServices.get().getService("session");
+  public SessionUIResource() throws GrillException {
+    sessionService = (HiveSessionService) GrillServices.get().getService("session");
   }
 
-  private void checkSessionHandle(GrillSessionHandle sessionHandle)
-  {
-    if (sessionHandle == null)
-    {
+  private void checkSessionHandle(GrillSessionHandle sessionHandle) {
+    if (sessionHandle == null) {
       throw new BadRequestException("Invalid session handle");
     }
   }
@@ -77,38 +73,29 @@ public class SessionUIResource {
   /**
    * Create a new session with Grill server
    *
-   * @param username User name of the Grill server user
-   * @param password Password of the Grill server user
+   * @param username    User name of the Grill server user
+   * @param password    Password of the Grill server user
    * @param sessionconf Key-value properties which will be used to configure this session
-   *
    * @return A Session handle unique to this session
-   *
    * @throws WebApplicationException if there was an exception thrown while creating the session
    */
   @POST
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public GrillSessionHandle openSession(@FormDataParam("username") String username,
-    @FormDataParam("password") String password,
-    @FormDataParam("sessionconf") GrillConf sessionconf)
-  {
-    try
-    {
+                                        @FormDataParam("password") String password,
+                                        @FormDataParam("sessionconf") GrillConf sessionconf) {
+    try {
       Map<String, String> conf;
-      if (sessionconf != null)
-      {
+      if (sessionconf != null) {
         conf = sessionconf.getProperties();
-      }
-      else
-      {
+      } else {
         conf = new HashMap<String, String>();
       }
       GrillSessionHandle handle = sessionService.openSession(username, password, conf);
       openSessions.put(handle.getPublicId(), handle);
       return handle;
-    }
-    catch (GrillException e)
-    {
+    } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -117,29 +104,22 @@ public class SessionUIResource {
    * Close a Grill server session
    *
    * @param publicId Session's public id of the session to be closed
-   *
    * @return APIResult object indicating if the operation was successful (check result.getStatus())
-   *
    * @throws WebApplicationException if the underlying CLIService threw an exception
-   * while closing the session
-   *
+   *                                 while closing the session
    */
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult closeSession(@QueryParam("publicId") UUID publicId)
-  {
+  public APIResult closeSession(@QueryParam("publicId") UUID publicId) {
     GrillSessionHandle sessionHandle = openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     openSessions.remove(publicId);
-    try
-    {
+    try {
       sessionService.closeSession(sessionHandle);
-    }
-    catch (GrillException e)
-    {
+    } catch (GrillException e) {
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return new APIResult(Status.SUCCEEDED,
-      "Close session with id" + sessionHandle + "succeeded");
+        "Close session with id" + sessionHandle + "succeeded");
   }
 }

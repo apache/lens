@@ -51,6 +51,10 @@ var Query = function(handle) {
 		return submissionTime;
 	}
 
+	this.getDownloadURL = function() {
+		return queryURL + "/httpresultset?sessionid=" + session.getSessionHandle()["publicId"];
+	}
+
 	/*
 	 * Sets the onCompletedListener. onCompletedListener is called when the query has finished
 	 * executing.

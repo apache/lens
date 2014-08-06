@@ -324,11 +324,12 @@ var showQueryResults = function(queryObj) {
 
     var rs = queryObj.getResultSet();
     rs.getNextRows(function(rows) {
-        console.log("Got next rows");
         if (rows === null) {
             //No results
-            $("#query-form").next().after($("<p>", {
-                text: "No results found"
+            $("#query-form").next().after($("<a>", {
+                class: "btn btn-success",
+                text: "Download Results",
+                href: queryObj.getDownloadURL()
             }));
             return;
         }

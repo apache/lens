@@ -22,6 +22,10 @@ var ResultSet = function(queryHandle) {
 			dataType: 'json',
 			success: function(data) {
 				totalRows = data["values"]["values"].length - 1;
+				if(totalRows === 1 && data["values"]["values"][1]["value"] === "PersistentResultSet") {
+					callback(null);
+					return;
+				}
 				console.log("Received response. Total rows: " + totalRows);
 				var rows = [];
 				for (var i = 0; i < data["values"]["values"].length; i++) {
