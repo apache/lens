@@ -1,22 +1,5 @@
 package com.inmobi.grill.server.metastore;
 
-<<<<<<< HEAD
-/**
- * Created by inmobi on 25/07/14.
- */
-//-----
-
-import com.inmobi.grill.api.GrillException;
-import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.api.metastore.XCube;
-import com.inmobi.grill.api.metastore.XDimAttrNames;
-import com.inmobi.grill.api.metastore.XDimension;
-import com.inmobi.grill.api.metastore.XStorage;
-import com.inmobi.grill.server.GrillServices;
-import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
-import org.apache.commons.collections.MultiHashMap;
-import org.glassfish.jersey.media.multipart.FormDataParam;
-=======
 /*
  * #%L
  * Grill Server
@@ -52,15 +35,11 @@ import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
->>>>>>> 58c0e37... Merged files from simpleui
 
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-<<<<<<< HEAD
-=======
 import javax.xml.bind.JAXBElement;
->>>>>>> 58c0e37... Merged files from simpleui
 import java.util.*;
 
 /**
@@ -69,20 +48,6 @@ import java.util.*;
  * This provides api for all things metastore UI.
  */
 
-<<<<<<< HEAD
-@Path("metaquery")
-public class MetastoreUIResource {
-
-    //private GrillClient client;
-
-    /*public void setClient(GrillClient client) {
-        this.client = client;
-    }*/
-
-    public CubeMetastoreService getSvc() { return (CubeMetastoreService)GrillServices.get().getService("metastore");}
-
-    private void checkSessionId(GrillSessionHandle sessionHandle) {
-=======
 @Path("metastoreapi")
 public class MetastoreUIResource {
 
@@ -90,20 +55,11 @@ public class MetastoreUIResource {
     public CubeMetastoreService getSvc() { return (CubeMetastoreService)GrillServices.get().getService("metastore");}
 
     private void checkSessionHandle(GrillSessionHandle sessionHandle) {
->>>>>>> 58c0e37... Merged files from simpleui
         if (sessionHandle == null) {
             throw new BadRequestException("Invalid session handle");
         }
     }
 
-<<<<<<< HEAD
-    private boolean checkAttributeMatching(List<String> attribList, String search)
-    {
-        Iterator<String> it = attribList.iterator();
-        while(it.hasNext())
-        {
-            if(it.next().contains(search)) return true;
-=======
     /**
      * API to know if metastore service is up and running
      *
@@ -124,23 +80,10 @@ public class MetastoreUIResource {
             for (XMeasure measure : cube.getMeasures().getMeasures()) {
                 if (measure.getName().contains(keyword)) return true;
             }
->>>>>>> 58c0e37... Merged files from simpleui
         }
         return false;
     }
 
-<<<<<<< HEAD
-    @GET @Path("tables")
-    @Produces ({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public MultiHashMap showAllTables(@QueryParam("sessionid") GrillSessionHandle sessionid)
-    //public String showAllTables()
-    {
-        checkSessionId(sessionid);
-        MultiHashMap tableList = new MultiHashMap();
-        List<String> cubes;
-        try{
-            cubes = getSvc().getAllCubeNames(sessionid);
-=======
 
     /*
     * Checks if any Dimension Attribute Name in a cube contains a keyword
@@ -175,27 +118,10 @@ public class MetastoreUIResource {
         List<String> cubes;
         try{
             cubes = getSvc().getAllCubeNames(sessionHandle);
->>>>>>> 58c0e37... Merged files from simpleui
         }
         catch(GrillException e){
             throw new WebApplicationException(e);
         }
-<<<<<<< HEAD
-        for(String cube : cubes)
-        {
-<<<<<<< HEAD
-            tableList.put("Cube",cube);
-        }
-        List<String> dimTables;
-        try{
-            dimTables = getSvc().getAllDimTableNames(sessionid);
-=======
-            try {
-                tableList.put(new JSONObject().put("name", cube).put("type", "cube"));
-            }
-            catch(JSONException j){
-                LOG.error(j);
-=======
 
         if(cubes != null)
             for(String cube : cubes)
@@ -206,33 +132,15 @@ public class MetastoreUIResource {
                 catch(JSONException j){
                     LOG.error(j);
                 }
->>>>>>> 26137a9... Removed cookie.js, cleaned up code and added comments
             }
 
         List<String> dimTables;
         try{
             dimTables = getSvc().getAllDimTableNames(sessionHandle);
->>>>>>> 58c0e37... Merged files from simpleui
         }
         catch(GrillException e){
             throw new WebApplicationException(e);
         }
-<<<<<<< HEAD
-        for(String dimTable : dimTables)
-        {
-<<<<<<< HEAD
-            tableList.put("DimensionTable",dimTable);
-        }
-        List<String> storageTables;
-        try{
-            storageTables = getSvc().getAllStorageNames(sessionid);
-=======
-            try {
-                tableList.put(new JSONObject().put("name", dimTable).put("type", "dimtable"));
-            }
-            catch(JSONException j){
-                LOG.error(j);
-=======
 
         if(dimTables != null)
             for(String dimTable : dimTables)
@@ -243,113 +151,16 @@ public class MetastoreUIResource {
                 catch(JSONException j){
                     LOG.error(j);
                 }
->>>>>>> 26137a9... Removed cookie.js, cleaned up code and added comments
             }
         /*List<String> storageTables;
         try{
             storageTables = getSvc().getAllStorageNames(sessionHandle);
->>>>>>> 58c0e37... Merged files from simpleui
         }
         catch(GrillException e){
             throw new WebApplicationException(e);
         }
         for(String storageTable : storageTables)
         {
-<<<<<<< HEAD
-            tableList.put("StorageTable",storageTable);
-        }
-        return tableList;
-        //return "Reached";
-    }
-
-   /* @GET @Path("tables/{searchNameOnly}")
-    public MultiHashMap showFilterResultsNameOnly(MultiHashMap tableList, @QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("searchNameOnly") String search)
-    {
-        checkSessionId(sessionid);
-        MultiHashMap searchResults = new MultiHashMap();
-        Set set = tableList.entrySet();
-        Iterator iterate = set.iterator();
-        Map.Entry<String, List<String>> me;
-        while(iterate.hasNext())
-        {
-            me = (Map.Entry) iterate.next();
-            for(int item =0; item < me.getValue().size(); item++)
-            {
-                if(me.getValue().get(item).contains(search))
-                {
-                    searchResults.put(me.getKey(),me.getValue().get(item));
-                }
-            }
-        }
-        return searchResults;
-    }*/
-
-    @GET @Path("tables/{search}")
-    public MultiHashMap showFilterResults(@QueryParam("sessionid") GrillSessionHandle sessionid, @PathParam("search") String search)
-    {
-        checkSessionId(sessionid);
-        MultiHashMap tableList = showAllTables(sessionid);
-        MultiHashMap searchResults = new MultiHashMap();
-        Set set = tableList.entrySet();
-        Iterator iterate = set.iterator();
-        Map.Entry<String, List<String>> me;
-        while(iterate.hasNext())
-        {
-            me = (Map.Entry) iterate.next();
-            for(int item =0; item < me.getValue().size(); item++)
-            {
-                String itemName = me.getValue().get(item);
-                if(me.getKey().equals("Cube"))
-                {
-                    if(itemName.contains(search))
-                        searchResults.put("Cube", itemName);
-                    else
-                    {
-                        XCube cube;
-                        try {
-                            cube = getSvc().getCube(sessionid, itemName);
-                        } catch (GrillException e) {
-                            throw new WebApplicationException(e);
-                        }
-                        if (checkAttributeMatching(cube.getDimAttrNames().getDimAttrNames(), search))
-                            searchResults.put("Cube", itemName);
-                        else if (checkAttributeMatching(cube.getMeasureNames().getMeasures(), search))
-                            searchResults.put("Cube", itemName);
-                    }
-                }
-                else if(me.getKey().equals("DimensionTable"))
-                {
-                    if(itemName.contains(search))
-                        searchResults.put("DimensionTable", itemName);
-                    /*else {
-                        XDimension dimension;
-                        try {
-                            dimension = getSvc().getDimension(sessionid, itemName);
-                        } catch (GrillException e) {
-                            throw new WebApplicationException(e);
-                        }
-                    }*/
-                }
-                else if(me.getKey().equals("StorageTable"))
-                {
-                    if(itemName.contains(search))
-                        searchResults.put("StorageTable", itemName);
-                    /*else {
-                        XStorage storage;
-                        try {
-                            storage = getSvc().getStorage(sessionid, itemName);
-                        } catch (GrillException e) {
-                            throw new WebApplicationException(e);
-                        }
-                    }*/
-                }
-            }
-        }
-        return searchResults;
-    }
-
-}
-=======
             try {
                 tableList.put(new JSONObject().put("name", storageTable).put("type", "storage"));
             }
@@ -644,4 +455,3 @@ public class MetastoreUIResource {
      }*/
 }
 
->>>>>>> 58c0e37... Merged files from simpleui
