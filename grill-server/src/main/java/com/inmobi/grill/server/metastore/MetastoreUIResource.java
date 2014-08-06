@@ -48,10 +48,15 @@ import java.util.*;
 public class MetastoreUIResource {
 
     public static final Log LOG = LogFactory.getLog(MetastoreUIResource.class);
-    public CubeMetastoreService getSvc() { return (CubeMetastoreService)GrillServices.get().getService("metastore");}
+    public CubeMetastoreService getSvc()
+    {
+        return (CubeMetastoreService)GrillServices.get().getService("metastore");
+    }
 
-    private void checkSessionHandle(GrillSessionHandle sessionHandle) {
-        if (sessionHandle == null) {
+    private void checkSessionHandle(GrillSessionHandle sessionHandle)
+    {
+        if (sessionHandle == null)
+        {
             throw new BadRequestException("Invalid session handle");
         }
     }
@@ -63,36 +68,10 @@ public class MetastoreUIResource {
      */
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String getMessage() {
+    public String getMessage()
+    {
         return "Metastore is up";
     }
-
-    /*
-     * Checks if any Measure Name in a cube contains a keyword
-     *
-    private boolean measureNameMatched(XCube cube, String keyword)
-    {
-        if(cube.getMeasures()!=null) {
-            for (XMeasure measure : cube.getMeasures().getMeasures()) {
-                if (measure.getName().contains(keyword)) return true;
-            }
-        }
-        return false;
-    }
-
-
-    /*
-    * Checks if any Dimension Attribute Name in a cube contains a keyword
-    *
-    private boolean dimAttrNameMatched(XCube cube, String keyword)
-    {
-        if(cube.getDimAttributes()!=null) {
-            for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes()) {
-                if (dim.getName().contains(keyword)) return true;
-            }
-        }
-        return false;
-    }*/
 
     /**
      * Get all Cube names, Dimension Table names and Storage names
@@ -112,58 +91,51 @@ public class MetastoreUIResource {
         JSONArray tableList = new JSONArray();
 
         List<String> cubes;
-        try{
+        try
+        {
             cubes = getSvc().getAllCubeNames(sessionHandle);
         }
-        catch(GrillException e){
+        catch(GrillException e)
+        {
             throw new WebApplicationException(e);
         }
 
         if(cubes != null)
             for(String cube : cubes)
             {
-                try {
+                try
+                {
                     tableList.put(new JSONObject().put("name", cube).put("type", "cube"));
                 }
-                catch(JSONException j){
+                catch(JSONException j)
+                {
                     LOG.error(j);
                 }
             }
 
         List<String> dimTables;
-        try{
+        try
+        {
             dimTables = getSvc().getAllDimTableNames(sessionHandle);
         }
-        catch(GrillException e){
+        catch(GrillException e)
+        {
             throw new WebApplicationException(e);
         }
 
         if(dimTables != null)
             for(String dimTable : dimTables)
             {
-                try {
+                try
+                {
                     tableList.put(new JSONObject().put("name", dimTable).put("type", "dimtable"));
                 }
-                catch(JSONException j){
+                catch(JSONException j)
+                {
                     LOG.error(j);
                 }
             }
-        /*List<String> storageTables;
-        try{
-            storageTables = getSvc().getAllStorageNames(sessionHandle);
-        }
-        catch(GrillException e){
-            throw new WebApplicationException(e);
-        }
-        for(String storageTable : storageTables)
-        {
-            try {
-                tableList.put(new JSONObject().put("name", storageTable).put("type", "storage"));
-            }
-            catch(JSONException j){
-                LOG.error(j);
-            }
-        }*/
+
         return tableList.toString();
     }
 
@@ -181,30 +153,44 @@ public class MetastoreUIResource {
      */
     @GET @Path("tables/{cubeName}/cube")
     @Produces ({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public String getCubeDescription(@QueryParam("publicId") UUID publicId, @PathParam("cubeName") String cubeName) {
+    public String getCubeDescription(@QueryParam("publicId") UUID publicId, @PathParam("cubeName") String cubeName)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         JSONArray cubeAttribList = new JSONArray();
         XCube cube;
-        try {
+        try
+        {
             cube = getSvc().getCube(sessionHandle, cubeName);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
-        if (cube.getMeasures()!= null) {
-            for (XMeasure measure : cube.getMeasures().getMeasures()) {
-                try {
+        if (cube.getMeasures()!= null)
+        {
+            for (XMeasure measure : cube.getMeasures().getMeasures())
+            {
+                try
+                {
                     cubeAttribList.put(new JSONObject().put("name", measure.getName()).put("type", measure.getType()));
-                } catch (JSONException j) {
+                }
+                catch (JSONException j)
+                {
                     LOG.error(j);
                 }
             }
         }
-        if(cube.getDimAttributes()!=null) {
-            for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes()) {
-                try {
+        if(cube.getDimAttributes()!=null)
+        {
+            for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes())
+            {
+                try
+                {
                     cubeAttribList.put(new JSONObject().put("name", dim.getName()).put("type", dim.getType()));
-                } catch (JSONException j) {
+                }
+                catch (JSONException j)
+                {
                     LOG.error(j);
                 }
             }
@@ -225,21 +211,31 @@ public class MetastoreUIResource {
      */
     @GET @Path("tables/{dimtableName}/dimtable")
     @Produces ({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-    public String getDimDescription(@QueryParam("publicId") UUID publicId, @PathParam("dimtableName") String dimtableName) {
+    public String getDimDescription(@QueryParam("publicId") UUID publicId,
+                                    @PathParam("dimtableName") String dimtableName)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         JSONArray dimAttribList = new JSONArray();
         DimensionTable table;
-        try {
+        try
+        {
             table = getSvc().getDimensionTable(sessionHandle, dimtableName);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
-        if (table.getColumns() != null) {
-            for (Column col : table.getColumns().getColumns()) {
-                try {
+        if (table.getColumns() != null)
+        {
+            for (Column col : table.getColumns().getColumns())
+            {
+                try
+                {
                     dimAttribList.put(new JSONObject().put("name", col.getName()).put("type", col.getType()));
-                } catch (JSONException j) {
+                }
+                catch (JSONException j)
+                {
                     LOG.error(j);
                 }
             }
@@ -267,105 +263,149 @@ public class MetastoreUIResource {
         checkSessionHandle(sessionHandle);
         JSONArray tableList= null;
         JSONArray searchResultList = new JSONArray();
-        try {
+        try
+        {
 
             tableList = new JSONArray(getAllTables(publicId));
-        }catch(JSONException j)
+        }
+        catch(JSONException j)
         {
             LOG.error(j);
         }
         for(int item = 0; item < tableList.length(); item++)
         {
             String name =null, type=null;
-            try {
+            try
+            {
                 name = tableList.getJSONObject(item).getString("name");
                 type = tableList.getJSONObject(item).getString("type");
-            }catch(JSONException j)
+            }
+            catch(JSONException j)
             {
                 LOG.error(j);
             }
-            if(type.equals("cube")) {
+            if(type.equals("cube"))
+            {
                 JSONArray cubeAttribList = null;
                 JSONArray cubeSearchResultList = new JSONArray();
-                try {
+                try
+                {
 
                     cubeAttribList = new JSONArray(getCubeDescription(publicId, name));
-                }catch(JSONException j)
+                }
+                catch(JSONException j)
                 {
                     LOG.error(j);
                 }
-                for(int col = 0; col < cubeAttribList.length(); col++) {
+                for(int col = 0; col < cubeAttribList.length(); col++)
+                {
                     String colname =null, coltype =null;
-                    try {
+                    try
+                    {
                         colname = cubeAttribList.getJSONObject(col).getString("name");
                         coltype = cubeAttribList.getJSONObject(col).getString("type");
 
-                    } catch(JSONException j) {
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
-                    if(colname.contains(keyword)) {
-                        try{
+                    if(colname.contains(keyword))
+                    {
+                        try
+                        {
                             cubeSearchResultList.put(new JSONObject().put("name",colname).put("type",coltype));
-                        }catch(JSONException j)
+                        }
+                        catch(JSONException j)
                         {
                             LOG.error(j);
                         }
                     }
                 }
-                if(cubeSearchResultList.length()>0) {
-                    try {
-                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns", cubeSearchResultList));
-                    } catch(JSONException j) {
+                if(cubeSearchResultList.length()>0)
+                {
+                    try
+                    {
+                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
+                                cubeSearchResultList));
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
                 }
-                else if(name.contains(keyword)) {
-                    try {
-                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns", cubeSearchResultList));
-                    } catch(JSONException j) {
+                else if(name.contains(keyword))
+                {
+                    try
+                    {
+                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
+                                cubeSearchResultList));
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
                 }
             }
-            else if(type.equals("dimtable")) {
+            else if(type.equals("dimtable"))
+            {
                 JSONArray dimAttribList = null;
                 JSONArray dimSearchResultList = new JSONArray();
-                try {
+                try
+                {
 
                     dimAttribList = new JSONArray(getDimDescription(publicId, name));
-                }catch(JSONException j)
+                }
+                catch(JSONException j)
                 {
                     LOG.error(j);
                 }
-                for(int col = 0; col < dimAttribList.length(); col++) {
+                for(int col = 0; col < dimAttribList.length(); col++)
+                {
                     String colname =null, coltype =null;
-                    try {
+                    try
+                    {
                         colname = dimAttribList.getJSONObject(col).getString("name");
                         coltype = dimAttribList.getJSONObject(col).getString("type");
 
-                    } catch(JSONException j) {
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
-                    if(colname.contains(keyword)) {
-                        try{
+                    if(colname.contains(keyword))
+                    {
+                        try
+                        {
                             dimSearchResultList.put(new JSONObject().put("name",colname).put("type",coltype));
-                        }catch(JSONException j)
+                        }
+                        catch(JSONException j)
                         {
                             LOG.error(j);
                         }
                     }
                 }
-                if(dimSearchResultList.length()>0) {
-                    try {
-                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns", dimSearchResultList));
-                    } catch(JSONException j) {
+                if(dimSearchResultList.length()>0)
+                {
+                    try
+                    {
+                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
+                                dimSearchResultList));
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
                 }
-                else if(name.contains(keyword)) {
-                    try {
-                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns", dimSearchResultList));
-                    } catch(JSONException j) {
+                else if(name.contains(keyword))
+                {
+                    try
+                    {
+                        searchResultList.put(new JSONObject().put("name", name).put("type", type).put("columns",
+                                dimSearchResultList));
+                    }
+                    catch(JSONException j)
+                    {
                         LOG.error(j);
                     }
                 }
@@ -373,81 +413,5 @@ public class MetastoreUIResource {
         }
         return searchResultList.toString();
     }
-
-
-
-    /**
-     * Get all Table names and types which contain the search word
-     *
-     * @param publicId The publicId for the session in which user is working
-     *
-     * @param keyword keyword to be searched
-     *
-     * @return JSON string consisting of different table names and types
-     *
-     * @throws GrillException, JSONException
-     *
-     @GET @Path("tables/{keyword}")
-     @Produces ({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-     public String showFilterResults(@QueryParam("publicId") UUID publicId, @PathParam("keyword") String keyword)
-     {
-     GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
-     checkSessionHandle(sessionHandle);
-     JSONArray tableList= null;
-     JSONArray searchResults = new JSONArray();
-     try {
-
-     tableList = new JSONArray(showAllTables(publicId));
-     }catch(JSONException j)
-     {
-     LOG.error(j);
-     }
-     for(int item = 0; item < tableList.length(); item++)
-     {
-     String name =null, type=null;
-     try {
-     name = tableList.getJSONObject(item).getString("name");
-     type = tableList.getJSONObject(item).getString("type");
-     }catch(JSONException j)
-     {
-     LOG.error(j);
-     }
-     if(name.contains(keyword)) {
-     try{
-     searchResults.put(new JSONObject().put("name", name).put("type", type));
-     }catch(JSONException j)
-     {
-     LOG.error(j);
-     }
-     }
-     else if (type.equals("Cube")) {
-     XCube cube;
-     try {
-     cube = getSvc().getCube(sessionHandle, name);
-     } catch (GrillException e) {
-     throw new WebApplicationException(e);
-     }
-     if(measureNameMatched(cube, keyword))
-     {
-     try{
-     searchResults.put(new JSONObject().put("name", name).put("type", type));
-     }catch(JSONException j)
-     {
-     LOG.error(j);
-     }
-     }
-     else if(dimAttrNameMatched(cube, keyword))
-     {
-     try{
-     searchResults.put(new JSONObject().put("name", name).put("type", type));
-     }catch(JSONException j)
-     {
-     LOG.error(j);
-     }
-     }
-     }
-     }
-     return searchResults.toString();
-     }*/
 }
 

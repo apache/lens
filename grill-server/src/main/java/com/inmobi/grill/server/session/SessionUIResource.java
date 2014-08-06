@@ -59,16 +59,20 @@ public class SessionUIResource {
      */
     @GET
     @Produces({MediaType.TEXT_PLAIN})
-    public String getMessage() {
+    public String getMessage()
+    {
         return "session is up!";
     }
 
-    public SessionUIResource() throws GrillException {
+    public SessionUIResource() throws GrillException
+    {
         sessionService = (HiveSessionService)GrillServices.get().getService("session");
     }
 
-    private void checkSessionHandle(GrillSessionHandle sessionHandle) {
-        if (sessionHandle == null) {
+    private void checkSessionHandle(GrillSessionHandle sessionHandle)
+    {
+        if (sessionHandle == null)
+        {
             throw new BadRequestException("Invalid session handle");
         }
     }
@@ -88,18 +92,25 @@ public class SessionUIResource {
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public GrillSessionHandle openSession(@FormDataParam("username") String username,
                                           @FormDataParam("password") String password,
-                                          @FormDataParam("sessionconf") GrillConf sessionconf) {
-        try {
+                                          @FormDataParam("sessionconf") GrillConf sessionconf)
+    {
+        try
+        {
             Map<String, String> conf;
-            if (sessionconf != null) {
+            if (sessionconf != null)
+            {
                 conf = sessionconf.getProperties();
-            } else{
+            }
+            else
+            {
                 conf = new HashMap<String, String>();
             }
             GrillSessionHandle handle = sessionService.openSession(username, password, conf);
             openSessions.put(handle.getPublicId(), handle);
             return handle;
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
@@ -117,13 +128,17 @@ public class SessionUIResource {
      */
     @DELETE
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-    public APIResult closeSession(@QueryParam("publicId") UUID publicId) {
+    public APIResult closeSession(@QueryParam("publicId") UUID publicId)
+    {
         GrillSessionHandle sessionHandle = openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         openSessions.remove(publicId);
-        try {
+        try
+        {
             sessionService.closeSession(sessionHandle);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             return new APIResult(Status.FAILED, e.getMessage());
         }
         return new APIResult(Status.SUCCEEDED,
@@ -150,20 +165,28 @@ public class SessionUIResource {
     @Consumes({MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public APIResult addResource(@FormDataParam("publicId") UUID publicId,
-                                 @FormDataParam("type") String type, @FormDataParam("path") String path) {
+                                 @FormDataParam("type") String type, @FormDataParam("path") String path)
+    {
         int numAdded = 0;
         GrillSessionHandle sessionHandle = openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
-        for (GrillService service : GrillServices.get().getGrillServices()) {
-            try {
+        for (GrillService service : GrillServices.get().getGrillServices())
+        {
+            try
+            {
                 service.addResource(sessionHandle, type, path);
                 numAdded++;
-            } catch (GrillException e) {
+            }
+            catch (GrillException e)
+            {
                 LOG.error("Failed to add resource in service:" + service, e);
-                if (numAdded != 0) {
+                if (numAdded != 0)
+                {
                     return new APIResult(Status.PARTIAL,
                             "Add resource is partial, failed for service:" + service.getName());
-                } else {
+                }
+                else
+                {
                     return new APIResult(Status.FAILED,
                             "Add resource has failed ");
                 }
@@ -192,20 +215,28 @@ public class SessionUIResource {
     @Consumes({MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public APIResult deleteResource(@FormDataParam("publicId") UUID publicId,
-                                    @FormDataParam("type") String type, @FormDataParam("path") String path) {
+                                    @FormDataParam("type") String type, @FormDataParam("path") String path)
+    {
         int numDeleted = 0;
         GrillSessionHandle sessionHandle = openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
-        for (GrillService service : GrillServices.get().getGrillServices()) {
-            try {
+        for (GrillService service : GrillServices.get().getGrillServices())
+        {
+            try
+            {
                 service.deleteResource(sessionHandle,  type, path);
                 numDeleted++;
-            } catch (GrillException e) {
+            }
+            catch (GrillException e)
+            {
                 LOG.error("Failed to delete resource in service:" + service, e);
-                if (numDeleted != 0) {
+                if (numDeleted != 0)
+                {
                     return new APIResult(Status.PARTIAL,
                             "Delete resource is partial, failed for service:" + service.getName());
-                } else {
+                }
+                else
+                {
                     return new APIResult(Status.PARTIAL,
                             "Delete resource has failed");
                 }

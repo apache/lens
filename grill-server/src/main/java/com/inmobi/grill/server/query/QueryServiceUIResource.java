@@ -52,35 +52,44 @@ import java.io.IOException;
 import java.util.Arrays;
 
 @Path("/queryuiapi")
-public class QueryServiceUIResource{
+public class QueryServiceUIResource {
 
     public static final Log LOG = LogFactory.getLog(QueryServiceUIResource.class);
 
     private QueryExecutionService queryServer;
 
     //assert: query is not empty
-    private void checkQuery(String query) {
-        if (StringUtils.isBlank(query)) {
+    private void checkQuery(String query)
+    {
+        if (StringUtils.isBlank(query))
+        {
             throw new BadRequestException("Invalid query");
         }
     }
 
     //assert: sessionHandle is not null
-    private void checkSessionHandle(GrillSessionHandle sessionHandle) {
-        if (sessionHandle == null) {
+    private void checkSessionHandle(GrillSessionHandle sessionHandle)
+    {
+        if (sessionHandle == null)
+        {
             throw new BadRequestException("Invalid session handle");
         }
     }
 
-    public QueryServiceUIResource() {
+    public QueryServiceUIResource()
+    {
         LOG.info("Query UI Service");
         queryServer = (QueryExecutionService) GrillServices.get().getService("query");
     }
 
-    private QueryHandle getQueryHandle(String queryHandle) {
-        try {
+    private QueryHandle getQueryHandle(String queryHandle)
+    {
+        try
+        {
             return QueryHandle.fromString(queryHandle);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new BadRequestException("Invalid query handle: "  + queryHandle, e);
         }
     }
@@ -101,12 +110,16 @@ public class QueryServiceUIResource{
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
                                            @DefaultValue("") @QueryParam("state") String state,
-                                           @DefaultValue("") @QueryParam("user") String user) {
+                                           @DefaultValue("") @QueryParam("user") String user)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
-        try {
+        try
+        {
             return queryServer.getAllQueries(sessionHandle, state, user);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
@@ -125,15 +138,19 @@ public class QueryServiceUIResource{
     @Consumes({MediaType.MULTIPART_FORM_DATA})
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public QuerySubmitResult query(@FormDataParam("publicId") UUID publicId,
-                                   @FormDataParam("query") String query) {
+                                   @FormDataParam("query") String query)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         GrillConf conf;
         checkQuery(query);
-        try {
+        try
+        {
             conf = new GrillConf();
             return queryServer.executeAsync(sessionHandle, query, conf);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
@@ -150,13 +167,17 @@ public class QueryServiceUIResource{
     @Path("queries/{queryHandle}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public GrillQuery getStatus(@QueryParam("publicId") UUID publicId,
-                                @PathParam("queryHandle") String queryHandle) {
+                                @PathParam("queryHandle") String queryHandle)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
-        try {
+        try
+        {
             return queryServer.getQuery(sessionHandle,
                     getQueryHandle(queryHandle));
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
@@ -178,22 +199,27 @@ public class QueryServiceUIResource{
             @QueryParam("publicId") UUID publicId,
             @PathParam("queryHandle") String queryHandle,
             @QueryParam("pageNumber") int pageNumber,
-            @QueryParam("fetchsize") int fetchSize) {
+            @QueryParam("fetchsize") int fetchSize)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         List<Object> rows = new ArrayList<Object>();
         LOG.info("FetchResultSet for queryHandle:" + queryHandle);
-        try {
-            QueryResultSetMetadata resultSetMetadata = queryServer.getResultSetMetadata(sessionHandle, getQueryHandle(queryHandle));
+        try
+        {
+            QueryResultSetMetadata resultSetMetadata = queryServer.getResultSetMetadata(sessionHandle,
+                    getQueryHandle(queryHandle));
             List<ResultColumn> metaColumns = resultSetMetadata.getColumns();
             List<Object> metaResultColumns = new ArrayList<Object>();
-            for(ResultColumn column : metaColumns) {
+            for(ResultColumn column : metaColumns)
+            {
                 metaResultColumns.add(column.getName());
             }
             rows.add(new ResultRow(metaResultColumns));
-            QueryResult result = queryServer.fetchResultSet(sessionHandle, getQueryHandle(queryHandle), (pageNumber - 1) * fetchSize,
-                    fetchSize);
-            if(result instanceof InMemoryQueryResult) {
+            QueryResult result = queryServer.fetchResultSet(sessionHandle, getQueryHandle(queryHandle),
+                    (pageNumber - 1) * fetchSize, fetchSize);
+            if(result instanceof InMemoryQueryResult)
+            {
                 InMemoryQueryResult inMemoryQueryResult = (InMemoryQueryResult) result;
                 List<ResultRow> tableRows = inMemoryQueryResult.getRows();
                 rows.addAll(tableRows);
@@ -201,31 +227,43 @@ public class QueryServiceUIResource{
             else if(result instanceof PersistentQueryResult)
             {
                 PersistentQueryResult persistentQueryResult = (PersistentQueryResult) result;
-                try {
+                try
+                {
                     LineNumberReader resultFile = null;
-                    try {
-                        resultFile = new LineNumberReader(new FileReader(persistentQueryResult.getPersistedURI().substring(5) + "/000000_0"));
+                    try
+                    {
+                        resultFile = new LineNumberReader(new FileReader(
+                                persistentQueryResult.getPersistedURI().substring(5) + "/000000_0"));
                         String str;
-                        while ((str = resultFile.readLine()) != null) {
+                        while ((str = resultFile.readLine()) != null)
+                        {
                             List<Object> columns = new ArrayList<Object>();
                             String[] strArray = str.split('\u0001' + "");
                             for(String strColumn:strArray)
                                 columns.add(strColumn);
                             rows.add(new ResultRow(columns));
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         throw new WebApplicationException(e);
-                    } finally {
+                    }
+                    finally
+                    {
                         // closes the stream and releases system resources
                         if (resultFile != null)
                             resultFile.close();
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     throw new WebApplicationException(e);
                 }
             }
             return new ResultRow(rows);
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
@@ -243,19 +281,26 @@ public class QueryServiceUIResource{
     @Path("queries/{queryHandle}")
     @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
     public APIResult cancelQuery(@QueryParam("sessionid") UUID publicId,
-                                 @PathParam("queryHandle") String queryHandle) {
+                                 @PathParam("queryHandle") String queryHandle)
+    {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
-        try {
+        try
+        {
             boolean ret = queryServer.cancelQuery(sessionHandle, getQueryHandle(queryHandle));
-            if (ret) {
+            if (ret)
+            {
                 return new APIResult(APIResult.Status.SUCCEEDED, "Cancel on the query "
                         + queryHandle + " is successful");
-            } else {
+            }
+            else
+            {
                 return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
                         + queryHandle + " failed");
             }
-        } catch (GrillException e) {
+        }
+        catch (GrillException e)
+        {
             throw new WebApplicationException(e);
         }
     }
