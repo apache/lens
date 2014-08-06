@@ -112,11 +112,12 @@ var Session = function() {
      */
     this.getCubeMeta = function(cubeName, callback) {
         $.ajax({
-            url: util.META_URL + "/" + cubeName + "/cube",
+            url: util.META_URL + "/" + cubeName,
             type: 'GET',
             dataType: 'json',
             data: {
-                publicId: session.getSessionHandle()["publicId"]
+                publicId: session.getSessionHandle()["publicId"],
+                type: "cube"
             },
             success: function(tableList) {
                 var cubeArr = [];
@@ -137,11 +138,12 @@ var Session = function() {
      */
     this.getDimtableMeta = function(dimtableName, callback) {
         $.ajax({
-            url: util.META_URL + "/" + dimtableName + "/dimtable",
+            url: util.META_URL + "/" + dimtableName,
             type: 'GET',
             dataType: 'json',
             data: {
-                publicId: session.getSessionHandle()["publicId"]
+                publicId: session.getSessionHandle()["publicId"],
+                type: "dimtable"
             },
             success: function(tableList) {
                 var dimArr = [];
@@ -162,11 +164,12 @@ var Session = function() {
      */
     this.searchMeta = function(keyword, callback) {
         $.ajax({
-            url: util.META_URL + "/" + keyword,
+            url: util.SEARCH_URL,
             type: 'GET',
             dataType: 'json',
             data: {
-                publicId: session.getSessionHandle()["publicId"]
+                publicId: session.getSessionHandle()["publicId"],
+                keyword: keyword
             },
             success: function(tableList) {
                 var metaArr = [];
