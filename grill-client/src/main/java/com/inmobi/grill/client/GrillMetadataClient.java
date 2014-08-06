@@ -125,10 +125,10 @@ public class GrillMetadataClient {
 
   public List<String> getAllNativeTables() {
     WebTarget target = getMetastoreWebTarget();
-    StringList hivetables = target.path("nativetables")
+    StringList nativetables = target.path("nativetables")
         .queryParam("sessionid", connection.getSessionHandle())
         .request().get(StringList.class);
-    return hivetables.getElements();
+    return nativetables.getElements();
   }
 
   public NativeTable getNativeTable(String tblName) {

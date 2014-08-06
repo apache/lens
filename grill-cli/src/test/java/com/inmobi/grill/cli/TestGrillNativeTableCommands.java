@@ -32,7 +32,7 @@ public class TestGrillNativeTableCommands extends GrillCliApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestGrillNativeTableCommands.class);
 
   @Test
-  public void testHiveTableCommands() throws Exception {
+  public void testNativeTableCommands() throws Exception {
     try {
     GrillClient client = new GrillClient();
     GrillNativeTableCommands command = new GrillNativeTableCommands();

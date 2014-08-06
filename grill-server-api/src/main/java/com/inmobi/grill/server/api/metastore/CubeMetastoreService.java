@@ -154,7 +154,7 @@ public interface CubeMetastoreService {
   public NativeTable getNativeTable(GrillSessionHandle sessionid, String name) throws GrillException;
 
   /**
-   * Get names of all simple hive tables (not the olap tables) in the db
+   * Get names of all native tables
    *
    * @param sessionid Grill session id
    * @param dboption To get from current or all, the option is ignored if dbname is passed
