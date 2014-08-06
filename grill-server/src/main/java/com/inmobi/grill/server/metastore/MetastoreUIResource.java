@@ -153,7 +153,7 @@ public class MetastoreUIResource {
    */
   @GET @Path("tables/{name}")
   @Produces ({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
-  public String getCubeDescription(@QueryParam("publicId") UUID publicId, @QueryParam("type") String type,
+  public String getDescription(@QueryParam("publicId") UUID publicId, @QueryParam("type") String type,
     @PathParam("name") String name)
   {
     GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
@@ -275,7 +275,7 @@ public class MetastoreUIResource {
         try
         {
 
-          cubeAttribList = new JSONArray(getCubeDescription(publicId, name));
+          cubeAttribList = new JSONArray(getDescription(publicId, "cube", name));
         }
         catch(JSONException j)
         {
@@ -338,7 +338,7 @@ public class MetastoreUIResource {
         try
         {
 
-          dimAttribList = new JSONArray(getDimDescription(publicId, name));
+          dimAttribList = new JSONArray(getDescription(publicId, "dimtable", name));
         }
         catch(JSONException j)
         {

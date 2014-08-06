@@ -5,7 +5,7 @@ var Util = function() {
 		return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 	};
 
-	this.SESSION_URL = "http://localhost:19999/session/";
+	this.SESSION_URL = "http://localhost:19999/uisession/";
 	this.QUERY_URL = "http://localhost:19999/queryuiapi/queries";
 	this.META_URL = "http://localhost:19999/metastoreapi/tables";
 	this.SEARCH_URL = "http://localhost:19999/metastoreapi/searchablefields";

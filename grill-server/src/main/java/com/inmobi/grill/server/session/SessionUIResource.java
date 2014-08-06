@@ -41,7 +41,7 @@ import java.util.UUID;
  *
  * This provides api for all things in session.
  */
-@Path("/session")
+@Path("/uisession")
 public class SessionUIResource {
   public static final Log LOG = LogFactory.getLog(SessionResource.class);
   public static HashMap<UUID, GrillSessionHandle> openSessions = new HashMap<UUID, GrillSessionHandle>();
