@@ -20,10 +20,6 @@ package com.inmobi.grill.server.metastore;
  * #L%
  */
 
-/**
- * Created by vikash pandey on 25/7/14.
- */
-
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.metastore.*;
