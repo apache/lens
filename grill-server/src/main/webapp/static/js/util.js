@@ -5,7 +5,7 @@ var Util = function() {
 		return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 	};
 
-	this.SESSION_URL =  "http://localhost:19999/session/";
+	this.SESSION_URL = "http://localhost:19999/session/";
 	this.QUERY_URL = "http://localhost:19999/queryuiapi/queries";
 	this.META_URL = "http://localhost:19999/metastoreapi/tables";
 
@@ -16,5 +16,20 @@ var Util = function() {
 		});
 
 		return multiData;
-	}
+	};
+
+	this.getCookies = function() {
+		var cookieObj = {};
+		var cookies = document.cookie;
+		cookieArr = cookies.split(';');
+		if(cookieArr.length > 0) {
+			for (var i = cookieArr.length - 1; i >= 0; i--) {
+				var tempArr = cookieArr[i].trim().split('=');
+				if(tempArr.length === 2 && tempArr[1] !== "")
+					cookieObj[tempArr[0]] = tempArr[1];
+			};
+		};
+
+		return cookieObj;
+	};
 };

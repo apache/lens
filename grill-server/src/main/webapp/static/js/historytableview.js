@@ -1,10 +1,16 @@
+/*
+ * View used for displaying query history
+ */
 var HistoryTableView = function() {
 	var id = "history-table-view-" + HistoryTableView.instanceNo++;
 	var historyRowViews = [];
 
+	/*
+	 * Adds a row to the query history table
+	 */
 	this.addRow = function(historyRowView) {
-		for(var i = 0; i < historyRowViews.length; i++) {
-			if(historyRowViews[i].getModel().getHandle() === historyRowView.getModel().getHandle())
+		for (var i = 0; i < historyRowViews.length; i++) {
+			if (historyRowViews[i].getModel().getHandle() === historyRowView.getModel().getHandle())
 				return;
 		}
 
@@ -17,6 +23,9 @@ var HistoryTableView = function() {
 		});
 	};
 
+	/*
+	 * Generates the view to be rendered
+	 */
 	this.getView = function() {
 		var table = $("<table>", {
 			id: id,

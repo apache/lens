@@ -1,13 +1,18 @@
+/*
+ * Represents the result set of a query.
+ */
 var ResultSet = function(queryHandle) {
 	var totalRows = 0;
 	var startIndex = 1;
 	var fetchSize = 10;
 
-	//Fetch n number of results starting from start index
+	/*
+	 * Fetch n number of results starting from start index
+	 */
 	this.getRows = function(start, n, callback) {
 		$.ajax({
 			url: util.QUERY_URL + "/" + queryHandle + "/resultset",
-			type: 'GET', 
+			type: 'GET',
 			data: {
 				publicId: session.getSessionHandle()["publicId"],
 				queryHandle: queryHandle,
@@ -22,7 +27,7 @@ var ResultSet = function(queryHandle) {
 				for (var i = 0; i < data["values"]["values"].length; i++) {
 					var row = new Row;
 					var dataColumns = data["values"]["values"][i]["values"]["values"];
-					for(var j = 0; j < dataColumns.length; j++) {
+					for (var j = 0; j < dataColumns.length; j++) {
 						console.log("i: " + j + ". dataColumns[i]: " + dataColumns[j]);
 						row.addColumn(dataColumns[j]["value"]);
 					}
@@ -38,7 +43,9 @@ var ResultSet = function(queryHandle) {
 		});
 	};
 
-	//Check if there are more rows available and then return the next rows
+	/*
+	 * Check if there are more rows available and then return the next set of rows
+	 */
 	this.getNextRows = function(callback) {
 		this.getRows(startIndex, fetchSize, callback);
 		startIndex += fetchSize;

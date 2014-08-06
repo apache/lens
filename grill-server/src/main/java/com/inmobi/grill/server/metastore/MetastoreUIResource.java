@@ -171,6 +171,7 @@ public class MetastoreUIResource {
         GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
         checkSessionHandle(sessionHandle);
         JSONArray tableList = new JSONArray();
+
         List<String> cubes;
         try{
             cubes = getSvc().getAllCubeNames(sessionHandle);
@@ -179,6 +180,7 @@ public class MetastoreUIResource {
         catch(GrillException e){
             throw new WebApplicationException(e);
         }
+<<<<<<< HEAD
         for(String cube : cubes)
         {
 <<<<<<< HEAD
@@ -193,8 +195,20 @@ public class MetastoreUIResource {
             }
             catch(JSONException j){
                 LOG.error(j);
+=======
+
+        if(cubes != null)
+            for(String cube : cubes)
+            {
+                try {
+                    tableList.put(new JSONObject().put("name", cube).put("type", "cube"));
+                }
+                catch(JSONException j){
+                    LOG.error(j);
+                }
+>>>>>>> 26137a9... Removed cookie.js, cleaned up code and added comments
             }
-        }
+
         List<String> dimTables;
         try{
             dimTables = getSvc().getAllDimTableNames(sessionHandle);
@@ -203,6 +217,7 @@ public class MetastoreUIResource {
         catch(GrillException e){
             throw new WebApplicationException(e);
         }
+<<<<<<< HEAD
         for(String dimTable : dimTables)
         {
 <<<<<<< HEAD
@@ -217,8 +232,19 @@ public class MetastoreUIResource {
             }
             catch(JSONException j){
                 LOG.error(j);
+=======
+
+        if(dimTables != null)
+            for(String dimTable : dimTables)
+            {
+                try {
+                    tableList.put(new JSONObject().put("name", dimTable).put("type", "dimtable"));
+                }
+                catch(JSONException j){
+                    LOG.error(j);
+                }
+>>>>>>> 26137a9... Removed cookie.js, cleaned up code and added comments
             }
-        }
         /*List<String> storageTables;
         try{
             storageTables = getSvc().getAllStorageNames(sessionHandle);
