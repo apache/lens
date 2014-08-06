@@ -42,6 +42,7 @@ import com.inmobi.grill.server.metastore.JAXBUtils;
 import com.inmobi.grill.server.metastore.MetastoreApp;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
 import org.apache.hadoop.hive.ql.cube.metadata.Cube;
@@ -53,6 +54,10 @@ import org.apache.hadoop.hive.ql.cube.metadata.Dimension;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -1755,6 +1760,123 @@ public class TestMetastoreService extends GrillJerseyTest {
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
+    }
+  }
+
+  public static void createHiveTable(String tableName) throws HiveException {
+    List<FieldSchema> columns = new ArrayList<FieldSchema>();
+    columns.add(new FieldSchema("col1", "string", ""));
+    List<FieldSchema> partCols = new ArrayList<FieldSchema>();
+    partCols.add(new FieldSchema("pcol1", "string", ""));
+    Map<String, String> params = new HashMap<String, String>();
+    params.put("test.hive.table.prop", "tvalue");
+    Table tbl = Hive.get().newTable(tableName);
+    tbl.setTableType(TableType.MANAGED_TABLE);
+    tbl.getTTable().getSd().setCols(columns);
+    tbl.setPartCols(partCols);
+    tbl.getTTable().getParameters().putAll(params);
+    Hive.get().createTable(tbl);
+  }
+
+  public static void dropHiveTable(String tableName) throws HiveException {
+    Hive.get().dropTable(tableName);
+  }
+
+  @Test
+  public void testNativeTables() throws Exception {
+    final String DB = dbPFX + "test_native_tables";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      // create hive table
+      String tableName = "test_simple_table";
+      SessionState.get().setCurrentDatabase(DB);
+      createHiveTable(tableName);
+
+      WebTarget target = target().path("metastore").path("nativetables");
+      // get all native tables
+      StringList nativetables = target.queryParam("sessionid", grillSessionId).request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test current option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test all option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbOption", "all").request(mediaType).get(StringList.class);
+      assertTrue(nativetables.getElements().size()>= 1);
+      assertTrue(nativetables.getElements().contains(DB.toLowerCase() + "." + tableName));
+
+      // test dbname option
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbName", DB).request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // test dbname option with dboption
+      nativetables = target.queryParam("sessionid", grillSessionId).queryParam("dbName", DB)
+          .queryParam("dbOption", "current").request(mediaType).get(StringList.class);
+      assertEquals(nativetables.getElements().size(), 1);
+      assertEquals(nativetables.getElements().get(0), tableName);
+
+      // Now get the table
+      JAXBElement<NativeTable> actualElement = target.path(tableName).queryParam(
+          "sessionid", grillSessionId).request(mediaType).get(new GenericType<JAXBElement<NativeTable>>() {});
+      NativeTable actual = actualElement.getValue();
+      assertNotNull(actual);
+
+      assertTrue(tableName.equalsIgnoreCase(actual.getName()));
+      assertEquals(actual.getColumns().getColumns().size(), 1);
+      assertEquals(actual.getColumns().getColumns().get(0).getName(), "col1");
+      assertEquals(actual.getStorageDescriptor().getPartCols().getColumns().size(), 1);
+      assertEquals(actual.getStorageDescriptor().getPartCols().getColumns().get(0).getName(), "pcol1");
+      assertEquals(actual.getType(), TableType.MANAGED_TABLE.name());
+      assertFalse(actual.getStorageDescriptor().isExternal());
+      boolean foundProp = false;
+      for (XProperty prop : actual.getStorageDescriptor().getTableParameters().getProperties()) {
+        if (prop.getName().equals("test.hive.table.prop")) {
+          assertTrue(prop.getValue().equals("tvalue"));
+          foundProp = true;
+        }
+      }
+      assertTrue(foundProp);
+
+      final XCube cube = createTestCube("testhiveCube");
+      // Create a cube
+      JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
+      APIResult result =
+          target().path("metastore").path("cubes").queryParam("sessionid",
+              grillSessionId).request(mediaType).post(Entity.xml(element), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // get a cube table
+      Response response = target.path("testhiveCube").queryParam(
+          "sessionid", grillSessionId).request(mediaType).get(Response.class);
+      assertEquals(response.getStatus(), Response.Status.BAD_REQUEST.getStatusCode());
+
+      // get a non existing table
+      response = target.path("nonexisting").queryParam(
+          "sessionid", grillSessionId).request(mediaType).get(Response.class);
+      assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+
+      // get all tables in default db
+      nativetables = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbName", "default").request(mediaType).get(StringList.class);
+      assertNotNull(nativetables);
+
+      // get all tables in non existing db
+      response = target.queryParam("sessionid", grillSessionId)
+          .queryParam("dbName", "nonexisting").request(mediaType).get(Response.class);
+      assertEquals(response.getStatus(), Response.Status.NOT_FOUND.getStatusCode());
+    } finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
     }
   }
 

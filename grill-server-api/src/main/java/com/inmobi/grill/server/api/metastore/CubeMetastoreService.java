@@ -135,9 +135,35 @@ public interface CubeMetastoreService {
   /**
    * Get names of all cubes, which can be queried in the current database
    *
+   * @param sessionid Grill session id
+   *
    * @return list of cube names
    */
   public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid) throws GrillException;
+
+  /**
+   * Get native table for the given name
+   *
+   * @param sessionid Grill session id
+   * @param name The table name
+   *
+   * @return {@link NativeTable} object
+   *
+   * @throws GrillException
+   */
+  public NativeTable getNativeTable(GrillSessionHandle sessionid, String name) throws GrillException;
+
+  /**
+   * Get names of all native tables
+   *
+   * @param sessionid Grill session id
+   * @param dboption To get from current or all, the option is ignored if dbname is passed
+   * @param dbName The db name
+   *
+   * @return list of table names
+   */
+  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid,
+      String dboption, String dbName) throws GrillException;
 
   /**
    * Create a cube based on JAXB Cube object

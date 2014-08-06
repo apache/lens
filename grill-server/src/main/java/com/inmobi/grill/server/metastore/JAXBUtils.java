@@ -24,6 +24,7 @@ import com.inmobi.grill.api.metastore.*;
 
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.metastore.api.Order;
 import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -571,15 +572,46 @@ public class JAXBUtils {
 
   public static XStorageTableElement getXStorageTableFromHiveTable(Table tbl) {
     XStorageTableElement tblElement = new XStorageTableElement();
+    tblElement.setTableDesc(getStorageTableDescFromHiveTable(tbl));
+    return tblElement;
+  }
+
+  public static XStorageTableDesc getStorageTableDescFromHiveTable(Table tbl) {
     XStorageTableDesc tblDesc = new XStorageTableDesc();
     tblDesc.setPartCols(columnsFromFieldSchemaList(tbl.getPartCols()));
     String timePartCols = tbl.getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
     if (timePartCols != null) {
       tblDesc.getTimePartCols().addAll(Arrays.asList(org.apache.commons.lang.StringUtils.split(timePartCols, ",")));
     }
+    tblDesc.setNumBuckets(tbl.getNumBuckets());
+    tblDesc.getBucketCols().addAll(tbl.getBucketCols());
+    List<String> sortCols = new ArrayList<String>();
+    List<Integer> sortOrders = new ArrayList<Integer>();
+    for (Order order : tbl.getSortCols()) {
+      sortCols.add(order.getCol());
+      sortOrders.add(order.getOrder());
+    }
+    tblDesc.getSortCols().addAll(sortCols);
+    tblDesc.getSortColOrder().addAll(sortOrders);
+
+    XSkewedInfo xskewinfo = new XSkewedInfo();
+    xskewinfo.getColNames().addAll(tbl.getSkewedColNames());
+    for (List<String> value : tbl.getSkewedColValues()) {
+      XStringList slist = new XStringList();
+      slist.getElements().addAll(value);
+      xskewinfo.getColValues().add(slist);
+      XSkewedValueLocation valueLocation = new XSkewedValueLocation();
+      if (tbl.getSkewedColValueLocationMaps().get(value) != null) {
+        valueLocation.setValue(slist);
+        valueLocation.setLocation(tbl.getSkewedColValueLocationMaps().get(value));
+        xskewinfo.getValueLocationMap().add(valueLocation);
+      }
+    }
+
     tblDesc.setTableParameters(xPropertiesFromMap(tbl.getParameters()));
     tblDesc.setSerdeParameters(xPropertiesFromMap(tbl.getTTable().getSd().getSerdeInfo().getParameters()));
     tblDesc.setExternal(tbl.getTableType().equals(TableType.EXTERNAL_TABLE));
+    tblDesc.setCompressed(tbl.getTTable().getSd().isCompressed());
     tblDesc.setTableLocation(tbl.getDataLocation().toString());
     tblDesc.setInputFormat(tbl.getInputFormatClass().getCanonicalName());
     tblDesc.setOutputFormat(tbl.getOutputFormatClass().getCanonicalName());
@@ -591,9 +623,9 @@ public class JAXBUtils {
     tblDesc.setSerdeClassName(tbl.getSerializationLib());
     tblDesc.setStorageHandlerName(tbl.getStorageHandler()!= null?
         tbl.getStorageHandler().getClass().getCanonicalName():"");
-    tblElement.setTableDesc(tblDesc);
-    return tblElement;
+    return tblDesc;
   }
+
   public static Map<String, StorageTableDesc> storageTableMapFromXStorageTables(XStorageTables storageTables) {
     Map<String, StorageTableDesc> storageTableMap = new HashMap<String, StorageTableDesc>();
     for (XStorageTableElement sTbl : storageTables.getStorageTables()) {
@@ -702,5 +734,18 @@ public class JAXBUtils {
     xd.setExpressions(xexprs);
 
     return xd;
+  }
+
+  public static NativeTable nativeTableFromMetaTable(Table table) {
+    NativeTable xtable = XCF.createNativeTable();
+    xtable.setName(table.getTableName());
+    xtable.setDbname(table.getDbName());
+    xtable.setOwner(table.getOwner());
+    xtable.setCreatetime(table.getTTable().getCreateTime());
+    xtable.setLastAccessTime(table.getTTable().getLastAccessTime());
+    xtable.setColumns(columnsFromFieldSchemaList(table.getCols()));
+    xtable.setStorageDescriptor(getStorageTableDescFromHiveTable(table));
+    xtable.setType(table.getTableType().name());
+    return xtable;
   }
 }

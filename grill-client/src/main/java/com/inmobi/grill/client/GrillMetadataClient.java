@@ -123,6 +123,23 @@ public class GrillMetadataClient {
     return dropDatabase(database, false);
   }
 
+  public List<String> getAllNativeTables() {
+    WebTarget target = getMetastoreWebTarget();
+    StringList nativetables = target.path("nativetables")
+        .queryParam("sessionid", connection.getSessionHandle())
+        .request().get(StringList.class);
+    return nativetables.getElements();
+  }
+
+  public NativeTable getNativeTable(String tblName) {
+    WebTarget target = getMetastoreWebTarget();
+    JAXBElement<NativeTable> htable = target.path("nativetables").path(tblName)
+        .queryParam("sessionid", this.connection.getSessionHandle())
+        .request(MediaType.APPLICATION_XML).get(new GenericType<JAXBElement<NativeTable>>() {
+        });
+    return htable.getValue();
+  }
+
   public List<String> getAllCubes() {
     WebTarget target = getMetastoreWebTarget();
     StringList cubes = target.path("cubes")
