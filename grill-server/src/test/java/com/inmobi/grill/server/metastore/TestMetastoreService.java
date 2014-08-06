@@ -1810,8 +1810,8 @@ public class TestMetastoreService extends GrillJerseyTest {
       // test all option
       nativetables = target.queryParam("sessionid", grillSessionId)
           .queryParam("dbOption", "all").request(mediaType).get(StringList.class);
-      assertEquals(nativetables.getElements().size(), 1);
-      assertEquals(nativetables.getElements().get(0), DB.toLowerCase() + "." + tableName);
+      assertTrue(nativetables.getElements().size()>= 1);
+      assertTrue(nativetables.getElements().contains(DB.toLowerCase() + "." + tableName));
 
       // test dbname option
       nativetables = target.queryParam("sessionid", grillSessionId)
