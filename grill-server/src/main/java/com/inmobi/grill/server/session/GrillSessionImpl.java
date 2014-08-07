@@ -50,7 +50,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   private GrillSessionPersistInfo persistInfo = new GrillSessionPersistInfo();
   private long lastAccessTime = System.currentTimeMillis();
   private long sessionTimeout;
-  private Configuration conf = new Configuration(sessionDefaultConf());
+  private Configuration conf = createDefaultConf();
 
   private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
     persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
@@ -60,14 +60,11 @@ public class GrillSessionImpl extends HiveSessionImpl {
     persistInfo.setLastAccessTime(lastAccessTime);
   }
 
-  private static Configuration defaultConf;
-  public static Configuration sessionDefaultConf() {
-    if (defaultConf == null) {
-      defaultConf = new Configuration(false);
-      defaultConf.addResource("grillsession-default.xml");
-      defaultConf.addResource("grill-site.xml");
-    }
-    return defaultConf;
+  public static Configuration createDefaultConf() {
+    Configuration conf = new Configuration(false);
+    conf.addResource("grillsession-default.xml");
+    conf.addResource("grill-site.xml");
+    return conf;
   }
 
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,

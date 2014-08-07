@@ -573,7 +573,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             ctx.setConf(getGrillConf(getSessionHandle(
                 ctx.getGrillSessionIdentifier()), ctx.getQconf()));
           } else {
-            ctx.setConf(getGrillConf(GrillSessionImpl.sessionDefaultConf(),ctx.getQconf()));
+            ctx.setConf(getGrillConf(ctx.getQconf()));
           }
         } catch (GrillException e) {
           LOG.error("Could not set query conf");

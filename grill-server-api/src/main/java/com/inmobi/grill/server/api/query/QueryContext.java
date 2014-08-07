@@ -109,7 +109,10 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
 
   private static Configuration mergeConf(Configuration prepared,
       Configuration current) {
-    Configuration conf = new Configuration(prepared);
+    Configuration conf = new Configuration(false);
+    for (Map.Entry<String, String> entry : prepared) {
+      conf.set(entry.getKey(), entry.getValue());
+    }
     for (Map.Entry<String, String> entry : current) {
       conf.set(entry.getKey(), entry.getValue());
     }
