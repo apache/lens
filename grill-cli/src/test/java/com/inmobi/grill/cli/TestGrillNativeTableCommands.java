@@ -21,7 +21,7 @@ package com.inmobi.grill.cli;
 
 import com.inmobi.grill.cli.commands.GrillNativeTableCommands;
 import com.inmobi.grill.client.GrillClient;
-import com.inmobi.grill.server.metastore.TestMetastoreService;
+import com.inmobi.grill.server.GrillTestUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +41,7 @@ public class TestGrillNativeTableCommands extends GrillCliApplicationTest {
     String tblList = command.showNativeTables();
     Assert.assertFalse(
         tblList.contains("test_native_table_command"));
-    TestMetastoreService.createHiveTable("test_native_table_command");
+    GrillTestUtil.createHiveTable("test_native_table_command");
     tblList = command.showNativeTables();
     Assert.assertTrue(
         tblList.contains("test_native_table_command"));
@@ -53,7 +53,7 @@ public class TestGrillNativeTableCommands extends GrillCliApplicationTest {
     Assert.assertTrue(desc.contains("MANAGED_TABLE"));
     Assert.assertTrue(desc.contains("test.hive.table.prop"));
     } finally {
-      TestMetastoreService.dropHiveTable("test_native_table_command");
+      GrillTestUtil.dropHiveTable("test_native_table_command");
       
     }
   }

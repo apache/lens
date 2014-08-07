@@ -58,7 +58,7 @@ import com.inmobi.grill.server.query.TestQueryService;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 import com.inmobi.grill.server.session.HiveSessionService;
 
-@Test(groups="restart-test",dependsOnGroups="unit-test")
+@Test(alwaysRun=true, groups="restart-test",dependsOnGroups="unit-test")
 public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
   public static final Log LOG = LogFactory.getLog(TestServerRestart.class);
@@ -108,8 +108,8 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     createRestartTestDataFile();
 
     // Create a test table
-    TestQueryService.createTable("test_server_restart", target(), grillSessionId);
-    TestQueryService.loadData("test_server_restart", "target/testdata.txt", target(), grillSessionId);
+    GrillTestUtil.createTable("test_server_restart", target(), grillSessionId);
+    GrillTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), grillSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -188,7 +188,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       }
     }
     LOG.info("End server restart test");
-    TestQueryService.dropTable("test_server_restart", target(), grillSessionId);
+    GrillTestUtil.dropTable("test_server_restart", target(), grillSessionId);
     queryService.closeSession(grillSessionId);
   }
 
@@ -200,8 +200,8 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     createRestartTestDataFile();
 
     // Create a test table
-    TestQueryService.createTable("test_hive_server_restart", target(), grillSessionId);
-    TestQueryService.loadData("test_hive_server_restart", "target/testdata.txt", target(), grillSessionId);
+    GrillTestUtil.createTable("test_hive_server_restart", target(), grillSessionId);
+    GrillTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), grillSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -295,7 +295,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     //    "Expected to be successful " + handle);
 
     LOG.info("End hive server restart test");
-    TestQueryService.dropTable("test_hive_server_restart", target(), grillSessionId);
+    GrillTestUtil.dropTable("test_hive_server_restart", target(), grillSessionId);
     queryService.closeSession(grillSessionId);
   }
 

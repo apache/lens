@@ -47,8 +47,10 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.GrillTestUtil;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
+@Test(groups="unit-test")
 public class TestResultFormatting extends GrillJerseyTest {
 
   QueryExecutionServiceImpl queryService;
@@ -59,13 +61,13 @@ public class TestResultFormatting extends GrillJerseyTest {
     super.setUp();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
     grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-    TestQueryService.createTable(testTable, target(), grillSessionId);
-    TestQueryService.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), grillSessionId);
+    GrillTestUtil.createTable(testTable, target(), grillSessionId);
+    GrillTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), grillSessionId);
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    TestQueryService.dropTable(testTable, target(), grillSessionId);
+    GrillTestUtil.dropTable(testTable, target(), grillSessionId);
     queryService.closeSession(grillSessionId);
     super.tearDown();
   }
@@ -88,7 +90,7 @@ public class TestResultFormatting extends GrillJerseyTest {
   }
 
   // test with execute async post with result formatter, get query, get results
-  @Test(groups = "unit" )
+  @Test
   public void testResultFormatterInMemoryResult() throws InterruptedException, IOException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -101,7 +103,7 @@ public class TestResultFormatting extends GrillJerseyTest {
   }
 
   // test with execute async post with result formatter, get query, get results
-  @Test(groups = "unit" )
+  @Test
   public void testResultFormatterHDFSpersistentResult() throws InterruptedException, IOException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
@@ -111,7 +113,7 @@ public class TestResultFormatting extends GrillJerseyTest {
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
   }
 
-  @Test(groups = "unit" )
+  @Test
   public void testPersistentResultWithMaxSize() throws InterruptedException, IOException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
@@ -119,7 +121,7 @@ public class TestResultFormatting extends GrillJerseyTest {
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, true, null);
   }
 
-  @Test(groups = "unit" )
+  @Test
   public void testResultFormatterFailure() throws InterruptedException, IOException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
@@ -171,7 +173,6 @@ public class TestResultFormatting extends GrillJerseyTest {
       if (!isDir) {
         TestQueryService.validateHttpEndPoint(target(), grillSessionId, handle, reDirectUrl);
       }
-
     }
   }
 

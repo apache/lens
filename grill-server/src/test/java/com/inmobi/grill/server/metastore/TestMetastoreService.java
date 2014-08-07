@@ -37,6 +37,7 @@ import com.inmobi.grill.api.APIResult.Status;
 import com.inmobi.grill.api.metastore.*;
 import com.inmobi.grill.server.GrillJerseyTest;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.GrillTestUtil;
 import com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl;
 import com.inmobi.grill.server.metastore.JAXBUtils;
 import com.inmobi.grill.server.metastore.MetastoreApp;
@@ -54,9 +55,6 @@ import org.apache.hadoop.hive.ql.cube.metadata.Dimension;
 import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
 import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
@@ -1763,25 +1761,6 @@ public class TestMetastoreService extends GrillJerseyTest {
     }
   }
 
-  public static void createHiveTable(String tableName) throws HiveException {
-    List<FieldSchema> columns = new ArrayList<FieldSchema>();
-    columns.add(new FieldSchema("col1", "string", ""));
-    List<FieldSchema> partCols = new ArrayList<FieldSchema>();
-    partCols.add(new FieldSchema("pcol1", "string", ""));
-    Map<String, String> params = new HashMap<String, String>();
-    params.put("test.hive.table.prop", "tvalue");
-    Table tbl = Hive.get().newTable(tableName);
-    tbl.setTableType(TableType.MANAGED_TABLE);
-    tbl.getTTable().getSd().setCols(columns);
-    tbl.setPartCols(partCols);
-    tbl.getTTable().getParameters().putAll(params);
-    Hive.get().createTable(tbl);
-  }
-
-  public static void dropHiveTable(String tableName) throws HiveException {
-    Hive.get().dropTable(tableName);
-  }
-
   @Test
   public void testNativeTables() throws Exception {
     final String DB = dbPFX + "test_native_tables";
@@ -1793,7 +1772,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       // create hive table
       String tableName = "test_simple_table";
       SessionState.get().setCurrentDatabase(DB);
-      createHiveTable(tableName);
+      GrillTestUtil.createHiveTable(tableName);
 
       WebTarget target = target().path("metastore").path("nativetables");
       // get all native tables

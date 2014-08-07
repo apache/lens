@@ -32,7 +32,6 @@ import com.inmobi.grill.server.api.query.QuerySuccess;
 import com.inmobi.grill.server.api.query.QueuePositionChange;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.log4j.Logger;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
