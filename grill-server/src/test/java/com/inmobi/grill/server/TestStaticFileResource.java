@@ -1,6 +1,7 @@
 package com.inmobi.grill.server;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.ui.UIApp;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
