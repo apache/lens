@@ -54,5 +54,9 @@ Grill server monitoring
   
   * healthcheck : admin/healthcheck is not implemented yet.
   
-  * threads : admin/threads will give a thread dump of the server   
+  * threads : admin/threads will give a thread dump of the server
+
+* Query Statistics:
+
+  Grill Server can be configured to emit query related statistics to a hive table <QueryExecutionStatistics>.The statistics service can be configured by providing values to <grill.statistics.warehouse.dir> set to a HDFS location where your query statistics log file will be persisted, <grill.statistics.db> the database which will contain all statistics related tables and <grill.log.rollover.interval> time interval which service will be monitoring for rollover in log file.The statistics can be disabled by setting, <grill.statistics.store.class> to empty string. The statistics service works by monitoring for rollups of <query-stats.log> file by log4j and adds an appropriate partition based on the rolled over file. The statistics can be queried using Hive queries.
   

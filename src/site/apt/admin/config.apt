@@ -70,4 +70,12 @@ Grill server configuration
 *--+--+---+--+
 |23|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
+|24|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Implementation class for storing grill statistics, if empty, statistics service is disabled|
+*--+--+---+--+
+|25|grill.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
+*--+--+---+--+
+|26|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+*--+--+---+--+
+|27|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
+*--+--+---+--+
 The configuration parameters and their default values
