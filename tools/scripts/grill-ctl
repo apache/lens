@@ -84,17 +84,13 @@ start() {
     fi
   fi
 
-  # check for hadoop in the path
-  HADOOP_IN_PATH=`which hadoop 2>/dev/null`
-  if [ -f ${HADOOP_IN_PATH} ]; then
-    HADOOP_DIR=`dirname "$HADOOP_IN_PATH"`/..
-  fi
   # HADOOP_HOME env variable overrides hadoop in the path
-  HADOOP_HOME=${HADOOP_HOME:-${HADOOP_PREFIX:-$HADOOP_DIR}}
+  HADOOP_HOME=${HADOOP_HOME:-${HADOOP_PREFIX}}
   if [ "$HADOOP_HOME" == "" ]; then
     echo "Cannot find hadoop installation: \$HADOOP_HOME or \$HADOOP_PREFIX must be set or hadoop must be in the path";
     exit 4;
   else
+    echo "Adding hadoop libs in classpath from $HADOOP_HOME"
     CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     GRILLCPPATH=${GRILLCPPATH}:$CORE_JARS;
     LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
