@@ -101,7 +101,7 @@ public class MetastoreUIResource {
 
     List<String> dimTables;
     try {
-      dimTables = getSvc().getAllDimTableNames(sessionHandle);
+      dimTables = getSvc().getAllDimensionNames(sessionHandle);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -114,6 +114,15 @@ public class MetastoreUIResource {
           LOG.error(j);
         }
       }
+
+    try {
+      List<String> nativeTables = getSvc().getAllNativeTableNames(sessionHandle, "all", null);
+      for (String nativeTable : nativeTables) {
+        tableList.put(new JSONObject().put("name", nativeTable).put("type", "native"));
+      }
+    } catch (Exception e) {
+      LOG.error(e);
+    }
 
     return tableList.toString();
   }
@@ -161,16 +170,27 @@ public class MetastoreUIResource {
         }
       }
     } else if (type.equals("dimtable")) {
-      DimensionTable table;
+      XDimension table;
       try {
-        table = getSvc().getDimensionTable(sessionHandle, name);
+        table = getSvc().getDimension(sessionHandle, name);
       } catch (GrillException e) {
         throw new WebApplicationException(e);
       }
-      if (table.getColumns() != null) {
-        for (Column col : table.getColumns().getColumns()) {
+      if (table.getAttributes() != null) {
+        for (XDimAttribute col : table.getAttributes().getDimAttributes()) {
           try {
             attribList.put(new JSONObject().put("name", col.getName()).put("type", col.getType()));
+          } catch (JSONException j) {
+            LOG.error(j);
+          }
+        }
+      }
+
+      if (table.getExpressions() != null) {
+        for (XExprColumn expr : table.getExpressions().getExpressions()) {
+          try {
+            attribList.put(new JSONObject().put("name", expr.getName()).put("type", "expression")
+            .put("expression", expr.getExpr()));
           } catch (JSONException j) {
             LOG.error(j);
           }
