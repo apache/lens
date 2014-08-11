@@ -20,21 +20,17 @@ package com.inmobi.grill.driver.jdbc;
  * #L%
  */
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FULLOUTERJOIN;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_JOIN;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LEFTOUTERJOIN;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LEFTSEMIJOIN;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_RIGHTOUTERJOIN;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_UNIQUEJOIN;
-
 import java.awt.LinearGradientPaint;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import com.inmobi.grill.api.metastore.Column;
+import com.inmobi.grill.server.api.GrillConfConstants;
+import org.antlr.runtime.CommonToken;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -48,12 +44,14 @@ import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import com.inmobi.grill.api.GrillException;
 
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+
 public class ColumnarSQLRewriter implements QueryRewriter {
   private Configuration conf;
   private String clauseName = null;
   private QB qb;
-  private ASTNode ast;
-  private String query;
+  protected ASTNode ast;
+  protected String query;
   private String finalFactQuery;
   private String limit;
   private StringBuilder factFilters = new StringBuilder();
@@ -84,7 +82,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private String groupByTree;
   private String joinTree;
 
-  private ASTNode joinAST;
+  protected ASTNode joinAST;
   private ASTNode havingAST;
   private ASTNode selectAST;
   private ASTNode whereAST;
@@ -155,10 +153,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       this.selectAST = qb.getParseInfo().getSelForClause(clauseName);
     }
 
-    if (qb.getParseInfo().getGroupByForClause(clauseName) != null) {
-      this.joinTree = HQLParser.getString(qb.getParseInfo().getJoinExpr());
-      this.joinAST = qb.getParseInfo().getJoinExpr();
-    }
+    this.joinTree = HQLParser.getString(qb.getParseInfo().getJoinExpr());
+    this.joinAST = qb.getParseInfo().getJoinExpr();
 
     getFactNameAlias();
   }
@@ -529,6 +525,60 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       e.printStackTrace();
     }
     return finalRewrittenQuery;
+  }
+
+  // Replace Grill database names with storage's proper DB name based on table properties.
+  protected  void replaceDbNames(ASTNode tree, CubeMetastoreClient metastoreClient) {
+    if (tree == null) {
+      return;
+    }
+
+    if (TOK_TABNAME == tree.getToken().getType()) {
+      // If it has two children, the first one is the DB name and second one is table identifier
+      // Else, we have to add the DB name as the first child
+      try {
+        if (tree.getChildCount() == 2) {
+          ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
+          ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
+          String grillTable = tableIdentifier.getText();
+          String table = getUnderlyingTableName(metastoreClient, grillTable);
+          String db = getUnderlyingDBName(metastoreClient, grillTable);
+
+          // Replace both table and db names
+          dbIdentifier.getToken().setText(db);
+          tableIdentifier.getToken().setText(table);
+        } else {
+          ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
+          String grillTable = tableIdentifier.getText();
+          String table = getUnderlyingTableName(metastoreClient, grillTable);
+          // Replace table name
+          tableIdentifier.getToken().setText(table);
+
+          // Add db name as a new child
+          String dbName = getUnderlyingDBName(metastoreClient, grillTable);
+          ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier,
+            dbName));
+          dbIdentifier.setParent(tree);
+          tree.insertChild(0, dbIdentifier);
+        }
+      } catch (HiveException exc) {
+        LOG.error("Error replacing db & table names", exc);
+      }
+    } else {
+      for (int i = 0; i < tree.getChildCount(); i++) {
+        replaceDbNames((ASTNode) tree.getChild(i), metastoreClient);
+      }
+    }
+  }
+
+  String getUnderlyingDBName(CubeMetastoreClient client, String table) throws HiveException {
+    Table tbl = client.getHiveTable(table);
+    return tbl.getProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME);
+  }
+
+  String getUnderlyingTableName(CubeMetastoreClient client, String table) throws HiveException {
+    Table tbl = client.getHiveTable(table);
+    return tbl.getProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME);
   }
 
 }

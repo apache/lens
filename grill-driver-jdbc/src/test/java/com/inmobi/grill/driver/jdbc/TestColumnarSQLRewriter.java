@@ -20,11 +20,11 @@ package com.inmobi.grill.driver.jdbc;
  * #L%
  */
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
+import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -386,5 +386,27 @@ public class TestColumnarSQLRewriter {
         + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  dollars_sold asc";
     String actual = qtest.finalRewrittenQuery.toString();
     compareQueries(expected, actual);
+  }
+
+  @Test
+  public void testReplaceDBName() throws Exception {
+    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
+    String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id " +
+      " left outer join mydb.mytable_3 t3 on t2.t3id = t3.id " +
+      "WHERE A = 100";
+
+    HiveConf conf = new HiveConf();
+    ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
+    rewriter.ast = HQLParser.parseHQL(query);
+    rewriter.query = query;
+    rewriter.analyzeInternal();
+
+    Map<String, String> testMap = new HashMap<String, String>();
+    System.out.println("@@@@@@@@@@@ BEFORE @@@@@@@@@@@@@@@");
+    System.out.println(HQLParser.getString(rewriter.joinAST));
+    CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
+    rewriter.replaceDbNames(rewriter.joinAST, client);
+    System.out.println("@@@@@@@@@@@ AFTER @@@@@@@@@@@@@@@");
+    System.out.println(HQLParser.getString(rewriter.joinAST));
   }
 }
