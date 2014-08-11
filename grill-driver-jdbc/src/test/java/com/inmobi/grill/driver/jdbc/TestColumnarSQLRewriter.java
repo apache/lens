@@ -23,7 +23,6 @@ package com.inmobi.grill.driver.jdbc;
 import java.util.*;
 
 import com.inmobi.grill.server.api.GrillConfConstants;
-import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -31,7 +30,6 @@ import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -42,8 +40,6 @@ import org.testng.Assert;
 //import org.junit.Before;
 //import org.junit.BeforeClass;
 //import org.junit.Test;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import com.inmobi.grill.api.GrillException;
@@ -406,7 +402,7 @@ public class TestColumnarSQLRewriter {
     createTable("default", "mytable_3", "testDB", "testTable_3");
 
     String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id " +
-      " left outer join mydb.mytable_3 t3 on t2.t3id = t3.id " +
+      " left outer join mytable_3 t3 on t2.t3id = t3.id " +
       "WHERE A = 100";
 
 
@@ -420,15 +416,15 @@ public class TestColumnarSQLRewriter {
 
     // Rewrite
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
-    rewriter.replaceDbNames(rewriter.joinAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.joinAST, client);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
     System.out.println(joinTreeAfterRewrite);
 
     // Tests
     assertTrue(joinTreeBeforeRewrite.contains("mydb"));
     assertTrue(joinTreeBeforeRewrite.contains("mytable")
-    && joinTreeBeforeRewrite.contains("mytable_2")
-    && joinTreeBeforeRewrite.contains("mytable_3")
+        && joinTreeBeforeRewrite.contains("mytable_2")
+        && joinTreeBeforeRewrite.contains("mytable_3")
     );
 
 
@@ -456,7 +452,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceDbNames(rewriter.joinAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.joinAST, client);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
     System.out.println(joinTreeAfterRewrite);
 

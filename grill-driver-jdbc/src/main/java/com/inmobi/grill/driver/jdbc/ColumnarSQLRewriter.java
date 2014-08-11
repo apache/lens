@@ -20,12 +20,10 @@ package com.inmobi.grill.driver.jdbc;
  * #L%
  */
 
-import java.awt.LinearGradientPaint;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.inmobi.grill.api.metastore.Column;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import org.antlr.runtime.CommonToken;
 import org.apache.commons.lang.StringUtils;
@@ -428,7 +426,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     try {
       CubeMetastoreClient client = CubeMetastoreClient.getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
-      replaceDbNames(joinAST, client);
+      replaceWithUnderlyingStorage(joinAST, client);
     } catch (HiveException exc) {
       LOG.error("Error replacing DB & column names", exc);
     }
@@ -534,8 +532,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     return finalRewrittenQuery;
   }
 
-  // Replace Grill database names with storage's proper DB name based on table properties.
-  protected  void replaceDbNames(ASTNode tree, CubeMetastoreClient metastoreClient) {
+  // Replace Grill database names with storage's proper DB and table name based on table properties.
+  protected  void replaceWithUnderlyingStorage(ASTNode tree, CubeMetastoreClient metastoreClient) {
     if (tree == null) {
       return;
     }
@@ -582,7 +580,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
-        replaceDbNames((ASTNode) tree.getChild(i), metastoreClient);
+        replaceWithUnderlyingStorage((ASTNode) tree.getChild(i), metastoreClient);
       }
     }
   }
