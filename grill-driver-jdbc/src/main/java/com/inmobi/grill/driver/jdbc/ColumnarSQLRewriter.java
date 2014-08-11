@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import com.inmobi.grill.api.metastore.Column;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import org.antlr.runtime.CommonToken;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
@@ -425,6 +426,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     } catch (SemanticException e) {
       e.printStackTrace();
     }
+    try {
+      CubeMetastoreClient client = CubeMetastoreClient.getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
+      replaceDbNames(joinAST, client);
+    } catch (HiveException exc) {
+      LOG.error("Error replacing DB & column names", exc);
+    }
 
     getFilterInJoinCond(joinAST);
     getAggregateColumns(selectAST);
@@ -545,21 +552,30 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           String db = getUnderlyingDBName(metastoreClient, grillTable);
 
           // Replace both table and db names
-          dbIdentifier.getToken().setText(db);
-          tableIdentifier.getToken().setText(table);
+          if (StringUtils.isNotBlank(db)) {
+            dbIdentifier.getToken().setText(db);
+          }
+
+          if (StringUtils.isNotBlank(table)) {
+            tableIdentifier.getToken().setText(table);
+          }
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
           String grillTable = tableIdentifier.getText();
           String table = getUnderlyingTableName(metastoreClient, grillTable);
           // Replace table name
-          tableIdentifier.getToken().setText(table);
+          if (StringUtils.isNotBlank(table)) {
+            tableIdentifier.getToken().setText(table);
+          }
 
           // Add db name as a new child
           String dbName = getUnderlyingDBName(metastoreClient, grillTable);
-          ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier,
-            dbName));
-          dbIdentifier.setParent(tree);
-          tree.insertChild(0, dbIdentifier);
+          if (StringUtils.isNotBlank(dbName)) {
+            ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier,
+              dbName));
+            dbIdentifier.setParent(tree);
+            tree.insertChild(0, dbIdentifier);
+          }
         }
       } catch (HiveException exc) {
         LOG.error("Error replacing db & table names", exc);
@@ -573,12 +589,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   String getUnderlyingDBName(CubeMetastoreClient client, String table) throws HiveException {
     Table tbl = client.getHiveTable(table);
-    return tbl.getProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME);
+    return tbl == null ? null : tbl.getProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME);
   }
 
   String getUnderlyingTableName(CubeMetastoreClient client, String table) throws HiveException {
     Table tbl = client.getHiveTable(table);
-    return tbl.getProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME);
+    return tbl == null ? null : tbl.getProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME);
   }
 
 }

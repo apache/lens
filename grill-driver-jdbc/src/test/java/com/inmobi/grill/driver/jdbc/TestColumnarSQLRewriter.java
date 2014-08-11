@@ -22,10 +22,15 @@ package com.inmobi.grill.driver.jdbc;
 
 import java.util.*;
 
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.metastore.CubeMetastoreService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -44,6 +49,8 @@ import org.testng.annotations.Test;
 import com.inmobi.grill.api.GrillException;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class TestColumnarSQLRewriter {
 
@@ -390,23 +397,94 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testReplaceDBName() throws Exception {
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
+    HiveConf conf = new HiveConf(ColumnarSQLRewriter.class);
+    SessionState.start(conf);
+
+    // Create test table
+    createTable("default", "mytable", "testDB", "testTable_1");
+    createTable("default", "mytable_2", "testDB", "testTable_2");
+    createTable("default", "mytable_3", "testDB", "testTable_3");
+
     String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id " +
       " left outer join mydb.mytable_3 t3 on t2.t3id = t3.id " +
       "WHERE A = 100";
 
-    HiveConf conf = new HiveConf();
+
     ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
     rewriter.ast = HQLParser.parseHQL(query);
     rewriter.query = query;
     rewriter.analyzeInternal();
 
-    Map<String, String> testMap = new HashMap<String, String>();
-    System.out.println("@@@@@@@@@@@ BEFORE @@@@@@@@@@@@@@@");
-    System.out.println(HQLParser.getString(rewriter.joinAST));
+    String joinTreeBeforeRewrite = HQLParser.getString(rewriter.joinAST);
+    System.out.println(joinTreeBeforeRewrite);
+
+    // Rewrite
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
     rewriter.replaceDbNames(rewriter.joinAST, client);
-    System.out.println("@@@@@@@@@@@ AFTER @@@@@@@@@@@@@@@");
-    System.out.println(HQLParser.getString(rewriter.joinAST));
+    String joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
+    System.out.println(joinTreeAfterRewrite);
+
+    // Tests
+    assertTrue(joinTreeBeforeRewrite.contains("mydb"));
+    assertTrue(joinTreeBeforeRewrite.contains("mytable")
+    && joinTreeBeforeRewrite.contains("mytable_2")
+    && joinTreeBeforeRewrite.contains("mytable_3")
+    );
+
+
+    assertFalse(joinTreeAfterRewrite.contains("mydb"));
+    assertFalse(joinTreeAfterRewrite.contains("mytable")
+        && joinTreeAfterRewrite.contains("mytable_2")
+        && joinTreeAfterRewrite.contains("mytable_3")
+    );
+
+    assertTrue(joinTreeAfterRewrite.contains("testdb"));
+    assertTrue(joinTreeAfterRewrite.contains("testtable_1")
+        && joinTreeAfterRewrite.contains("testtable_2")
+        && joinTreeAfterRewrite.contains("testtable_3")
+    );
+
+    // Rewrite one more query where table and db name is not set
+    createTable("default", "mytable_4", null, null);
+    String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
+    rewriter = new ColumnarSQLRewriter();
+    rewriter.ast = HQLParser.parseHQL(query2);
+    rewriter.query = query;
+    rewriter.analyzeInternal();
+
+    joinTreeBeforeRewrite = HQLParser.getString(rewriter.joinAST);
+    System.out.println(joinTreeBeforeRewrite);
+
+    // Rewrite
+    rewriter.replaceDbNames(rewriter.joinAST, client);
+    joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
+    System.out.println(joinTreeAfterRewrite);
+
+    // Rewrite should not replace db and table name since its not set
+    assertEquals(joinTreeAfterRewrite, joinTreeBeforeRewrite);
+
+    Hive.get().dropTable("default", "mytable");
+    Hive.get().dropTable("default", "mytable_2");
+    Hive.get().dropTable("default", "mytable_3");
+    Hive.get().dropTable("default", "mytable_4");
+  }
+
+  void createTable(String db, String table, String udb, String utable) throws Exception {
+    Table tbl1 = new Table(db, table);
+
+    if (StringUtils.isNotBlank(udb)) {
+      tbl1.setProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME, udb);
+    }
+    if (StringUtils.isNotBlank(utable)) {
+      tbl1.setProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME, utable);
+    }
+
+    List<FieldSchema> columns = new ArrayList<FieldSchema>();
+    columns.add(new FieldSchema("id", "int", "col1"));
+    columns.add(new FieldSchema("name", "string", "col2"));
+    tbl1.setFields(columns);
+
+    Hive.get().createTable(tbl1);
+    System.out.println("Created table " + table);
   }
 }
