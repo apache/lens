@@ -26,10 +26,13 @@ import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.cube.metadata.Cube;
 import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
+import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -394,6 +397,7 @@ public class TestColumnarSQLRewriter {
   @Test
   public void testReplaceDBName() throws Exception {
     HiveConf conf = new HiveConf(ColumnarSQLRewriter.class);
+    conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
     SessionState.start(conf);
 
     // Create test table
@@ -411,13 +415,13 @@ public class TestColumnarSQLRewriter {
     rewriter.query = query;
     rewriter.analyzeInternal();
 
-    String joinTreeBeforeRewrite = HQLParser.getString(rewriter.joinAST);
+    String joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
-    rewriter.replaceWithUnderlyingStorage(rewriter.joinAST, client);
-    String joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
     // Tests
@@ -426,7 +430,6 @@ public class TestColumnarSQLRewriter {
         && joinTreeBeforeRewrite.contains("mytable_2")
         && joinTreeBeforeRewrite.contains("mytable_3")
     );
-
 
     assertFalse(joinTreeAfterRewrite.contains("mydb"));
     assertFalse(joinTreeAfterRewrite.contains("mytable")
@@ -445,19 +448,35 @@ public class TestColumnarSQLRewriter {
     String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
     rewriter = new ColumnarSQLRewriter();
     rewriter.ast = HQLParser.parseHQL(query2);
-    rewriter.query = query;
+    rewriter.query = query2;
     rewriter.analyzeInternal();
 
-    joinTreeBeforeRewrite = HQLParser.getString(rewriter.joinAST);
+    joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(rewriter.joinAST, client);
-    joinTreeAfterRewrite = HQLParser.getString(rewriter.joinAST);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
     // Rewrite should not replace db and table name since its not set
     assertEquals(joinTreeAfterRewrite, joinTreeBeforeRewrite);
+
+    //  Test a query with default db
+    Hive.get().dropTable("default", "mytable");
+    createTable("default", "mytable", "default", null);
+
+    String defaultQuery = "SELECT * FROM examples.mytable t1 WHERE A = 100";
+    rewriter = new ColumnarSQLRewriter();
+    rewriter.ast = HQLParser.parseHQL(defaultQuery);
+    rewriter.query = defaultQuery;
+    rewriter.analyzeInternal();
+    joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, CubeMetastoreClient.getInstance(conf));
+    joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
+    assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
+    assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
+    System.out.println("default case: " + joinTreeAfterRewrite);
 
     Hive.get().dropTable("default", "mytable");
     Hive.get().dropTable("default", "mytable_2");

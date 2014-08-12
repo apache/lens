@@ -81,12 +81,13 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private String groupByTree;
   private String joinTree;
 
-  protected ASTNode joinAST;
+  private ASTNode joinAST;
   private ASTNode havingAST;
   private ASTNode selectAST;
   private ASTNode whereAST;
   private ASTNode orderByAST;
   private ASTNode groupByAST;
+  protected ASTNode fromAST;
 
   public ColumnarSQLRewriter(HiveConf conf, String query) {
     // super(conf);
@@ -155,6 +156,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     this.joinTree = HQLParser.getString(qb.getParseInfo().getJoinExpr());
     this.joinAST = qb.getParseInfo().getJoinExpr();
 
+    this.fromAST = HQLParser.findNodeByPath(ast, TOK_FROM);
     getFactNameAlias();
   }
 
@@ -426,7 +428,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     try {
       CubeMetastoreClient client = CubeMetastoreClient.getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
-      replaceWithUnderlyingStorage(joinAST, client);
+      replaceWithUnderlyingStorage(fromAST, client);
     } catch (HiveException exc) {
       LOG.error("Error replacing DB & column names", exc);
     }
@@ -550,9 +552,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           String db = getUnderlyingDBName(metastoreClient, grillTable);
 
           // Replace both table and db names
-          if (StringUtils.isNotBlank(db)) {
+          if ("default".equalsIgnoreCase(db)) {
+            // Remove the db name for this case
+            tree.deleteChild(0);
+          } else if (StringUtils.isNotBlank(db)) {
             dbIdentifier.getToken().setText(db);
-          }
+          } // If db is empty, then leave the tree untouched
 
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
@@ -568,7 +573,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
           // Add db name as a new child
           String dbName = getUnderlyingDBName(metastoreClient, grillTable);
-          if (StringUtils.isNotBlank(dbName)) {
+          if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier,
               dbName));
             dbIdentifier.setParent(tree);
