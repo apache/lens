@@ -773,9 +773,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     ctx.setStatus(new QueryStatus(0.0,
         QueryStatus.Status.QUEUED,
         "Query is queued", false, null, null));
+    fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     acceptedQueries.add(ctx);
     allQueries.put(ctx.getQueryHandle(), ctx);
-    fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
     return ctx.getQueryHandle();
   }
