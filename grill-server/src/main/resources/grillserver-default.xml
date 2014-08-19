@@ -175,7 +175,6 @@
   <description>Grill session timeout in seconds.If there is no activity on
  the session for this period then the session will be closed.Default timeout is one day.</description>
 </property>
-
 <property>
   <name>grill.statistics.store.class</name>
   <value>com.inmobi.grill.server.stats.store.log.LogStatisticsStore</value>
@@ -196,5 +195,10 @@
   <name>grill.statistics.db</name>
   <value>grillstats</value>
   <description>Database to which statistics tables are created and partitions are added.</description>
+</property>
+<property>
+  <name>hive.server2.log.redirection.enabled</name>
+  <value>false</value>
+  <description>Disable the log direction on the grill server end to decrease number of file handles associated to grill server.</description>
 </property>
 </configuration>
