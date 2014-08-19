@@ -44,25 +44,12 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.query.*;
+import com.inmobi.grill.server.stats.StatisticsService;
 import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
-import com.inmobi.grill.server.api.query.PreparedQueryContext;
-import com.inmobi.grill.server.api.query.QueryAccepted;
-import com.inmobi.grill.server.api.query.QueryAcceptor;
-import com.inmobi.grill.server.api.query.QueryCancelled;
-import com.inmobi.grill.server.api.query.QueryClosed;
-import com.inmobi.grill.server.api.query.QueryContext;
-import com.inmobi.grill.server.api.query.QueryExecuted;
-import com.inmobi.grill.server.api.query.QueryExecutionService;
-import com.inmobi.grill.server.api.query.QueryFailed;
-import com.inmobi.grill.server.api.query.QueryLaunched;
-import com.inmobi.grill.server.api.query.QueryQueued;
-import com.inmobi.grill.server.api.query.QueryRejected;
-import com.inmobi.grill.server.api.query.QueryRunning;
-import com.inmobi.grill.server.api.query.QuerySuccess;
-import com.inmobi.grill.server.api.query.StatusChange;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -128,6 +115,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
   private GrillEventService eventService;
   private MetricsService metricsService;
+  private StatisticsService statisticsService;
 
   public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
     super(NAME, cliService);
@@ -140,6 +128,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
     // Add result formatter
     getEventService().addListenerForType(new ResultFormatter(this), QueryExecuted.class);
+    getEventService().addListenerForType(
+        new QueryExecutionStatisticsGenerator(this,getEventService()), QueryEnded.class);
     LOG.info("Registered query result formatter");
   }
 
@@ -184,6 +174,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       }
     }
     return metricsService;
+  }
+
+  private synchronized StatisticsService getStatisticsService() {
+    if (statisticsService == null) {
+      statisticsService = (StatisticsService) GrillServices.get().getService(StatisticsService.STATS_SVC_NAME);
+      if (statisticsService == null) {
+        throw new NullPointerException("Could not get statistics service");
+      }
+    }
+    return statisticsService;
   }
 
   private void incrCounter(String counter) {

@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.inmobi.grill.server.stats.StatisticsService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -97,6 +98,7 @@ public class GrillServices extends CompositeService {
       addService(cliService);
       addService(new EventServiceImpl(GrillEventService.NAME));
       addService(new MetricsServiceImpl(MetricsService.NAME));
+      addService(new StatisticsService(StatisticsService.STATS_SVC_NAME));
       
       // Add configured services, these are instances of GrillService which need a CLIService instance
       // for session management
