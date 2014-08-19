@@ -78,18 +78,18 @@ public class TestGrillCubeCommands extends GrillCliApplicationTest {
       writer.close();
 
       String desc = command.describeCube("sample_cube");
+      GrillClient client = command.getClient();
       LOG.debug(desc);
-      Assert.assertTrue(
-          desc.contains("sample_cube.prop=sample"));
+      String propString = "name : sample_cube.prop  value : sample";
+      String propString1 = "name : sample_cube.prop1  value : sample1";
+
+      Assert.assertTrue(desc.contains(propString));
 
       command.updateCube("sample_cube /tmp/sample_cube1.xml");
       desc = command.describeCube("sample_cube");
       LOG.debug(desc);
-      Assert.assertTrue(
-          desc.contains("sample_cube.prop=sample"));
-
-      Assert.assertTrue(
-          desc.contains("sample_cube.prop1=sample1"));
+      Assert.assertTrue(desc.contains(propString));
+      Assert.assertTrue(desc.contains(propString1));
 
       newFile.delete();
 

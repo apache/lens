@@ -24,25 +24,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.metastore.*;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillFactCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
-
+public class GrillFactCommands extends BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show facts",
       help = "display list of fact tables in database")
@@ -139,40 +131,12 @@ public class GrillFactCommands implements CommandMarker {
   @CliCommand(value = "describe fact", help = "describe a fact table")
   public String describeFactTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "tablename to be described") String fact) {
-    FactTable table = client.getFactTable(fact);
-    StringBuilder buf = new StringBuilder();
-
-    buf.append("Table Name : ").append(table.getName()).append("\n");
-    buf.append("Cube Name: ").append(table.getCubeName()).append("\n");
-    buf.append("Columns: ").append("\n").append("\n\n");
-    buf.append("\t")
-        .append("NAME")
-        .append("\t")
-        .append("TYPE")
-        .append("\t")
-        .append("COMMENTS")
-        .append("\n");
-    for (Column col : table.getColumns().getColumns()) {
-      buf.append("\t")
-          .append(col.getName())
-          .append("\t")
-          .append(col.getType())
-          .append("\t")
-          .append(col.getComment())
-          .append("\n");
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getFactTable(fact)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
     }
-    buf.append(FormatUtils.formatProperties(table.getProperties().getProperties()));
-    buf.append("Update Period : ").append("\n");
-    buf.append("\t").append("storage name").append("\t")
-        .append("list of update period").append("\n").append("\n\n");
-    for (UpdatePeriodElement element : table.getStorageUpdatePeriods().getUpdatePeriodElement()) {
-      buf.append("\t")
-          .append(element.getStorageName())
-          .append("\t")
-          .append(Joiner.on(",").skipNulls().join(element.getUpdatePeriods()))
-          .append("\n");
-    }
-    return buf.toString();
   }
 
   @CliCommand(value = "fact list storage",
@@ -262,9 +226,12 @@ public class GrillFactCommands implements CommandMarker {
       return "Syntax error, please try in following " +
           "format. fact get storage <table> <storage>";
     }
-
-    XStorageTableElement element = client.getStorageFromFact(pair[0], pair[1]);
-    return FormatUtils.getStorageString(element);
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getStorageFromFact(pair[0], pair[1])));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
 
@@ -278,12 +245,20 @@ public class GrillFactCommands implements CommandMarker {
         .split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if(pair.length == 2) {
-      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1]);
-      return FormatUtils.formatPartitions(partitions);
+      try {
+        return formatJson(mapper.writer(pp).writeValueAsString(
+            client.getAllPartitionsOfFact(pair[0], pair[1])));
+      } catch (IOException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
     if (pair.length == 3) {
-      List<XPartition> partitions = client.getAllPartitionsOfFact(pair[0], pair[1], pair[2]);
-      return FormatUtils.formatPartitions(partitions);
+      try {
+        return formatJson(mapper.writer(pp).writeValueAsString(
+            client.getAllPartitionsOfFact(pair[0], pair[1], pair[2])));
+      } catch (IOException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
     return "Syntax error, please try in following " +
         "format. fact list partitions <table> <storage> [partition values]";

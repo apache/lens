@@ -109,12 +109,13 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
       String desc = command.describeStorage(storageName);
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains("storage.url=file:///"));
+      String propString = "name : storage.url  value : file:///";
+      Assert.assertTrue(desc.contains(propString));
 
       command.updateStorage(storageName+" /tmp/local-storage1.xml");
       desc = command.describeStorage(storageName);
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains("storage.url=file:///"));
+      Assert.assertTrue(desc.contains(propString));
       newFile.delete();
 
     } catch (Throwable t) {

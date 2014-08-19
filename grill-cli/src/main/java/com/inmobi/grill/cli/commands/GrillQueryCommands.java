@@ -33,13 +33,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class GrillQueryCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
+public class GrillQueryCommands extends  BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "query execute", help = "Execute query in async/sync manner")
   public String executeQuery(

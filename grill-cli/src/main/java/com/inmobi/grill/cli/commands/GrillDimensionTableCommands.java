@@ -24,24 +24,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.metastore.*;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillDimensionTableCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
+public class GrillDimensionTableCommands extends BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show dimtables",
       help = "show list of dimension tables in database")
@@ -136,46 +129,12 @@ public class GrillDimensionTableCommands implements CommandMarker {
   @CliCommand(value = "describe dimtable", help = "describe a dimension table")
   public String describeDimensionTable(@CliOption(key = {"", "table"},
       mandatory = true, help = "dimension table name to be described") String dim) {
-    DimensionTable table = client.getDimensionTable(dim);
-    StringBuilder buf = new StringBuilder();
-
-    buf.append("Table Name : ").append(table.getTableName()).append("\n");
-    buf.append("Dim Name : ").append(table.getDimName()).append("\n");
-    if(table.getColumns()!= null) {
-      buf.append("Columns: ").append("\n");
-      buf.append("\t")
-          .append("NAME")
-          .append("\t")
-          .append("TYPE")
-          .append("\t")
-          .append("COMMENTS")
-          .append("\n");
-      for (Column col : table.getColumns().getColumns()) {
-        buf.append("\t")
-            .append(col.getName() != null ? col.getName() : "")
-            .append("\t")
-            .append(col.getType() != null ? col.getType() : "")
-            .append("\t")
-            .append(col.getComment() != null ? col.getComment() : "")
-            .append("\n");
-      }
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getDimensionTable(dim)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
     }
-    if(table.getProperties()!= null) {
-     buf.append(FormatUtils.formatProperties(table.getProperties().getProperties()));
-    }
-    if(table.getStorageDumpPeriods() != null) {
-      buf.append("Update Period : ").append("\n");
-      buf.append("\t").append("storage name").append("\t")
-          .append("list of update period").append("\n");
-      for (UpdatePeriodElement element : table.getStorageDumpPeriods().getUpdatePeriodElement()) {
-        buf.append("\t")
-            .append(element.getStorageName())
-            .append("\t")
-            .append(Joiner.on(",").skipNulls().join(element.getUpdatePeriods()))
-            .append("\n");
-      }
-    }
-    return buf.toString();
   }
 
   @CliCommand(value = "dimtable list storage",
@@ -272,9 +231,12 @@ public class GrillDimensionTableCommands implements CommandMarker {
       return "Syntax error, please try in following " +
           "format. create dimtable <dimtable spec path> <storage spec path>";
     }
-
-    XStorageTableElement element = client.getStorageFromDim(pair[0], pair[1]);
-    return FormatUtils.getStorageString(element);
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getStorageFromDim(pair[0], pair[1])));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   @CliCommand(value = "dimtable list partitions",
@@ -288,13 +250,21 @@ public class GrillDimensionTableCommands implements CommandMarker {
         .split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length == 2) {
-      List<XPartition> partitions = client.getAllPartitionsOfDim(pair[0],pair[1]);
-      return FormatUtils.formatPartitions(partitions);
+      try {
+        return formatJson(mapper.writer(pp).writeValueAsString(
+            client.getAllPartitionsOfDim(pair[0], pair[1])));
+      } catch (IOException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
 
     if(pair.length == 3) {
-      List<XPartition> partitions = client.getAllPartitionsOfDim(pair[0],pair[1], pair[2]);
-      return FormatUtils.formatPartitions(partitions);
+      try {
+        return formatJson(mapper.writer(pp).writeValueAsString(
+            client.getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
+      } catch (IOException e) {
+        throw new IllegalArgumentException(e);
+      }
     }
 
     return "Syntax error, please try in following " +

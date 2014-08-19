@@ -21,28 +21,17 @@ package com.inmobi.grill.cli.commands;
  */
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.metastore.*;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.util.List;
 
 @Component
-public class GrillDatabaseCommands implements CommandMarker {
+public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandMarker {
 
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
 
 
   @CliCommand(value = "show databases",

@@ -110,13 +110,16 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
 
       String desc = command.describeDimensionTable("dim_table2");
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains("dim2.prop=d2"));
+      String propString = "name : dim2.prop  value : d2";
+      String propString1 = "name : dim2.prop  value : d1";
+      String propString2 = "name : dim2.prop1  value : d2";
+      Assert.assertTrue(desc.contains(propString));
 
       command.updateDimensionTable("dim_table2 /tmp/local-dim1.xml");
       desc = command.describeDimensionTable("dim_table2");
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains("dim2.prop=d1"));
-      Assert.assertTrue(desc.contains("dim2.prop1=d2"));
+      Assert.assertTrue(desc.contains(propString1));
+      Assert.assertTrue(desc.contains(propString2));
       newFile.delete();
 
     } catch (Throwable t) {
@@ -153,7 +156,8 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
     Assert.assertEquals(DIM_LOCAL, result);
 
     result = command.getStorageFromDim("dim_table2 "+ DIM_LOCAL);
-    Assert.assertTrue(result.contains("Update Period : HOURLY"));
+    String partString = "HOURLY";
+    Assert.assertTrue(result.contains(partString));
   }
 
 
@@ -164,11 +168,11 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
     Assert.assertTrue(result.trim().isEmpty());
     addPartitionToStorage("dim_table2", DIM_LOCAL,"dim1-local-part.xml");
     result = command.getAllPartitionsOfDim("dim_table2 "+ DIM_LOCAL);
-    Assert.assertTrue(result.contains("Update Period: HOURLY"));
+    String partString = "HOURLY";
+    Assert.assertTrue(result.contains(partString));
     command.dropAllPartitionsOfDim("dim_table2 "+ DIM_LOCAL);
     result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
-
   }
 
   public static void addPartitionToStorage(String tableName, String storageName, String localPartSpec) {
