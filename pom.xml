@@ -174,7 +174,7 @@
                <version>2.15</version>
                <configuration>
                     <failIfNoTests>false</failIfNoTests>
-                    <forkedProcessTimeoutInSeconds>1200</forkedProcessTimeoutInSeconds>
+                    <forkedProcessTimeoutInSeconds>2400</forkedProcessTimeoutInSeconds>
                </configuration>
            </plugin>
          <plugin>
