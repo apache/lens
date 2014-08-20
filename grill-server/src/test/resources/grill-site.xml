@@ -48,4 +48,9 @@
   <value>target/grill-results</value>
 </property>
 
+<property>
+  <name>hive.server2.query.log.dir</name>
+  <value>target/query-logs</value>
+</property>
+
 </configuration>
