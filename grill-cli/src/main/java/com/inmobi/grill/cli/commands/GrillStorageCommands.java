@@ -24,26 +24,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.metastore.XProperty;
-import com.inmobi.grill.api.metastore.XStorage;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillStorageCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
-
+public class GrillStorageCommands extends  BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show storages", help = "list storages")
   public String getStorages() {
@@ -109,21 +100,11 @@ public class GrillStorageCommands implements CommandMarker {
   @CliCommand(value = "describe storage", help = "describe storage schema")
   public String describeStorage(@CliOption(key = {"", "storage"},
       mandatory = true, help = "<storage-name> to be described") String storage) {
-    XStorage str = client.getStorage(storage);
-    StringBuilder builder = new StringBuilder();
-    builder.append("Name : ").append(str.getName()).append("\n");
-    builder.append("ClassName : ").append(str.getClassname()).append("\n");
-    builder.append("Properties : ").append("\n");
-    builder.append("\t").append("key=value").append("\n").append("\n\n");
-
-    for (XProperty property : str.getProperties().getProperties()) {
-      builder.append("\t")
-          .append(property.getName())
-          .append("=")
-          .append(property.getValue())
-          .append("\n");
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getStorage(storage)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
     }
-    return builder.toString();
-
   }
 }

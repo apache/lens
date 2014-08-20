@@ -103,16 +103,19 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
       String desc = command.describeFactTable("fact1");
       LOG.debug(desc);
-      Assert.assertTrue(desc.contains("fact1.prop=f1"));
+      String propString = "name : fact1.prop  value : f1";
+      String propString1 = "name : fact1.prop1  value : f2";
+
+      Assert.assertTrue(desc.contains(propString));
 
       command.updateFactTable("fact1 /tmp/local-fact1.xml");
       desc = command.describeFactTable("fact1");
       LOG.debug(desc);
       Assert.assertTrue(
-          desc.contains("fact1.prop=f1"),"The sample property value is not set");
+          desc.contains(propString),"The sample property value is not set");
 
       Assert.assertTrue(
-          desc.contains("fact1.prop1=f2"),"The sample property value is not set");
+          desc.contains(propString1),"The sample property value is not set");
 
       newFile.delete();
 
@@ -152,7 +155,9 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
     Assert.assertEquals(FACT_LOCAL, result);
 
     result = command.getStorageFromFact("fact1 "+ FACT_LOCAL);
-    Assert.assertTrue(result.contains("Update Period : HOURLY,DAILY"));
+    Assert.assertTrue(result.contains("HOURLY"));
+    Assert.assertTrue(result.contains("DAILY"));
+
   }
 
 
@@ -169,8 +174,7 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
       Assert.fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
     result = command.getAllPartitionsOfFact("fact1 "+ FACT_LOCAL);
-    Assert.assertTrue(result.contains("Update Period: HOURLY"));
-    //result = command.getAllPartitionsOfFact("fact1 local dt=latest");
+    Assert.assertTrue(result.contains("HOURLY"));
     command.dropAllPartitionsOfFact("fact1 "+ FACT_LOCAL);
     result = command.getAllPartitionsOfFact("fact1 "+ FACT_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
