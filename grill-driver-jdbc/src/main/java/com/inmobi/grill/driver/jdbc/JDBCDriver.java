@@ -25,6 +25,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
@@ -34,6 +35,7 @@ import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -370,10 +372,16 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
-    String rewritten = rewriteQuery(query, conf);
+    String rewrittenQuery = rewriteQuery(query,conf);
+    String explainQuery = "explain  " + rewrittenQuery;
+    LOG.info("explain  " + rewrittenQuery);
+    Configuration explainConf = new Configuration(conf);
+    explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
+    execute(explainQueryCtx);
     return new JDBCQueryPlan();
-  }
-
+  } 
+  
   /**
    * Prepare the given query
    *
