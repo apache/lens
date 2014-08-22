@@ -984,6 +984,10 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNull(conf.get("hive.metastore.warehouse.dir"));
     // core default should not be loaded
     Assert.assertNull(conf.get("fs.default.name"));
+
+    // Test server config. Hive configs overriden should be set
+    Assert.assertFalse(Boolean.parseBoolean(queryService.getHiveConf().get("hive.server2.log.redirection.enabled")));
+    Assert.assertEquals(queryService.getHiveConf().get("hive.server2.query.log.dir"), "target/query-logs");
   }
 
   @Override

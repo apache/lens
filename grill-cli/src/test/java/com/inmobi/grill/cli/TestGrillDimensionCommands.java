@@ -19,6 +19,7 @@ package com.inmobi.grill.cli;
  * #L%
  */
 
+import com.inmobi.grill.api.metastore.XDimension;
 import com.inmobi.grill.cli.commands.GrillDimensionCommands;
 import com.inmobi.grill.cli.commands.GrillDimensionTableCommands;
 import com.inmobi.grill.client.GrillClient;
@@ -96,17 +97,19 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
 
       String desc = command.describeDimension("test_dim");
       LOG.debug(desc);
+      String propString = "name : test_dim.prop  value : test";
+      String propString1 = "name : test_dim.prop1  value : test1";
       Assert.assertTrue(
-          desc.contains("test_dim.prop=test"));
+          desc.contains(propString));
 
       command.updateDimension("test_dim /tmp/test_dim1.xml");
       desc = command.describeDimension("test_dim");
       LOG.debug(desc);
       Assert.assertTrue(
-          desc.contains("test_dim.prop=test"));
+          desc.contains(propString));
 
       Assert.assertTrue(
-          desc.contains("test_dim.prop1=test1"));
+          desc.contains(propString1));
 
       newFile.delete();
 

@@ -307,9 +307,9 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     WebTarget sessionTarget = target().path("session");
     FormDataMultiPart sessionForm = new FormDataMultiPart();
     sessionForm.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
-      "user1"));
+      "foo"));
     sessionForm.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
-      "psword"));
+      "bar"));
     sessionForm.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
       new GrillConf(),

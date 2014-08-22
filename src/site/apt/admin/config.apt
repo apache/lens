@@ -32,42 +32,52 @@ Grill server configuration
 *--+--+---+--+
 |4|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
-|5|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|5|grill.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|6|grill.metrics.ganglia.host| |The ganglia host name|
+|6|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|7|grill.metrics.ganglia.port| |The ganglia port|
+|7|grill.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|8|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|8|grill.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|9|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|9|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|10|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|10|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|11|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|11|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|12|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|12|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|13|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
+|13|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|14|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
+|14|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|15|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
+|15|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
 *--+--+---+--+
-|16|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
+|16|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
 *--+--+---+--+
-|17|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
+|17|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|18|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
+|18|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|19|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
+|19|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|20|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
+|20|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
 *--+--+---+--+
-|21|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
+|21|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+
-|22|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|22|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|23|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|23|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+*--+--+---+--+
+|24|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+*--+--+---+--+
+|25|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
+*--+--+---+--+
+|26|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
+*--+--+---+--+
+|27|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+*--+--+---+--+
+|28|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
 *--+--+---+--+
 The configuration parameters and their default values

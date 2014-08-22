@@ -26,7 +26,7 @@ public class TestSessionExpiry {
 
     try {
       GrillSessionHandle sessionHandle =
-        grillService.openSession("test", "test", new HashMap<String, String>());
+        grillService.openSession("foo", "bar", new HashMap<String, String>());
       GrillSessionImpl session = grillService.getSession(sessionHandle);
       assertTrue(session.isActive());
       session.setLastAccessTime(session.getLastAccessTime()

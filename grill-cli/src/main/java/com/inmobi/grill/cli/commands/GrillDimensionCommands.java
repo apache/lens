@@ -24,24 +24,17 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.metastore.*;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillDimensionCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
+public class GrillDimensionCommands extends  BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show dimensions", help = "show list of dimensions in database")
   public String showDimensions() {
@@ -116,42 +109,11 @@ public class GrillDimensionCommands implements CommandMarker {
   @CliCommand(value = "describe dimension", help = "describe dimension")
   public String describeDimension(@CliOption(key = {"", "dimension"},
       mandatory = true, help = "<dimension-name>") String dimensionName) {
-
-    XDimension dimension = client.getDimension(dimensionName);
-    StringBuilder builder = new StringBuilder();
-    builder.append("Dimension Name : ").append(dimension.getName()).append("\n");
-    builder.append("Description : ").append(dimension.getDescription() != null ? dimension.getDescription() : "");
-    if (dimension.getAttributes() != null) {
-      builder.append("Dimensions  :").append("\n");
-      builder.append("\t").append("name").append("\t").append("type").append("\t")
-          .append("cost").append("\t").append("Expression").append("\t")
-          .append("table references").append("\t").append("starttime(in miliseconds)")
-          .append("\t").append("endtime(in miliseconds)").append("\n");
-      for (XDimAttribute dim : dimension.getAttributes().getDimAttributes()) {
-        builder.append("\t")
-            .append(dim.getName()!=null ? dim.getName() : "").append("\t")
-            .append(dim.getType()!=null? dim.getType(): "").append("\t")
-            .append(dim.getCost()!= null ? dim.getCost() : "").append("\t")
-            .append(dim.getExpr()!= null ? dim.getExpr() : "").append("\t")
-            .append(dim.getReferences()!= null? getXtableString(dim.getReferences().getTableReferences()) : "")
-            .append(dim.getStartTime()!=null ? dim.getStartTime().toGregorianCalendar().getTimeInMillis(): "").append("\t")
-            .append(dim.getEndTime()!=null?dim.getEndTime().toGregorianCalendar().getTimeInMillis():"").append("\t")
-            .append("\n");
-      }
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(
+          client.getDimension(dimensionName)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
     }
-    builder.append(FormatUtils.formatProperties(dimension.getProperties().getProperties()));
-    return builder.toString();
-
-  }
-
-  private String getXtableString(List<XTablereference> tableReferences) {
-    StringBuilder builder = new StringBuilder();
-    for (XTablereference ref : tableReferences) {
-      builder.append(ref.getDestTable())
-          .append(".")
-          .append(ref.getDestColumn())
-          .append(",");
-    }
-    return builder.toString();
   }
 }

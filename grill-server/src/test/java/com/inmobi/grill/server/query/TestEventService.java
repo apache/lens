@@ -113,9 +113,9 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertEquals(((EventServiceImpl) service).getEventListeners().keySet().size() - listenersBefore, 4);
+    assertEquals(((EventServiceImpl) service).getEventListeners().keySet().size() - listenersBefore, 3);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
-    assertEquals(service.getListeners(QueryEnded.class).size(), 1);
+    assertEquals(service.getListeners(QueryEnded.class).size(), 2);
     assertEquals(service.getListeners(QueuePositionChange.class).size(), 1);
   }
 

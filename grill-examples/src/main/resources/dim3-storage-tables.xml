@@ -29,7 +29,9 @@
         field_delimiter=","
         table_location="/tmp/db-storage.db"
         storage_handler_name="com.inmobi.grill.storage.db.DBStorageHandler">
-      <table_parameters/>
+      <table_parameters>
+          <properties name="grill.native.db.name" value="default" />
+      </table_parameters>
       <serde_parameters/>
       <part_cols>
         <columns comment="Time column" name="dt" type="string"/>

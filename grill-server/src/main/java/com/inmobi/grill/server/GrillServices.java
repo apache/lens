@@ -30,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.inmobi.grill.server.stats.StatisticsService;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -51,11 +52,6 @@ import org.apache.hive.service.cli.CLIService;
 
 public class GrillServices extends CompositeService {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);
-
-  static {
-    Configuration.addDefaultResource("grillserver-default.xml");
-    Configuration.addDefaultResource("grill-site.xml");
-  }
 
   public static final String GRILL_SERVICES_NAME = "grill_services";
   private static GrillServices INSTANCE = new GrillServices(GRILL_SERVICES_NAME);
@@ -88,6 +84,8 @@ public class GrillServices extends CompositeService {
   public synchronized void init(HiveConf hiveConf) {
     if (getServiceState() == STATE.NOTINITED) {
       conf = hiveConf;
+      conf.addResource("grillserver-default.xml");
+      conf.addResource("grill-site.xml");
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(GrillConfConstants.GRILL_SERVER_MODE,
           SERVICE_MODE.valueOf(GrillConfConstants.DEFAULT_GRILL_SERVER_MODE));
@@ -97,6 +95,7 @@ public class GrillServices extends CompositeService {
       addService(cliService);
       addService(new EventServiceImpl(GrillEventService.NAME));
       addService(new MetricsServiceImpl(MetricsService.NAME));
+      addService(new StatisticsService(StatisticsService.STATS_SVC_NAME));
       
       // Add configured services, these are instances of GrillService which need a CLIService instance
       // for session management

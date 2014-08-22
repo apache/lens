@@ -22,7 +22,6 @@ package com.inmobi.grill.cli.commands;
 
 import com.google.common.base.Joiner;
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.client.GrillClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.ExitShellRequest;
 import org.springframework.shell.core.annotation.CliCommand;
@@ -32,13 +31,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class GrillConnectionCommands implements CommandMarker {
-  private GrillClient client;
-
-
-  public void setClient(GrillClient client) {
-    this.client = client;
-  }
+public class GrillConnectionCommands extends BaseGrillCommand implements CommandMarker  {
 
 
   @CliCommand(value = "set", help = "sets a session parameter.")

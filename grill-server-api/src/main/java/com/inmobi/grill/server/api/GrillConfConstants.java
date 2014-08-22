@@ -56,6 +56,10 @@ public class GrillConfConstants {
   public static final String GRILL_SERVER_UI_ENABLE_CACHING = "grill.server.ui.enable.caching";
   public static final boolean DEFAULT_GRILL_SERVER_UI_ENABLE_CACHING = true;
 
+  // These properties should be set in native tables if their underlying DB or table names are different
+  public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
+  public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
+
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }
@@ -147,5 +151,21 @@ public class GrillConfConstants {
   public static final String RESULT_FS_READ_URL = "grill.query.result.fs.read.url";
 
   public static final String AUX_JARS = "grill.aux.jars";
+
+  //Statistics Store configuration keys
+  public static final String STATS_STORE_CLASS = "grill.statistics.store.class";
+
+  public static final String GRILL_STATISTICS_WAREHOUSE_KEY = "grill.statistics.warehouse.dir";
+
+  public static final String DEFAULT_STATISTICS_WAREHOUSE = "file:///tmp/grill/statistics/warehouse";
+
+  public static final String GRILL_STATISTICS_DATABASE_KEY = "grill.statistics.db";
+
+  public static final String DEFAULT_STATISTICS_DATABASE = "grillstats";
+
+  public static final String GRILL_STATS_ROLLUP_SCAN_RATE = "grill.log.rollover.interval";
+
+  public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
+
 
 }
