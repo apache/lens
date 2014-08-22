@@ -79,7 +79,6 @@ import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.server.api.GrillConfConstants;
-import com.inmobi.grill.server.session.GrillSessionImpl;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
@@ -131,7 +130,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getEventService().addListenerForType(
         new QueryExecutionStatisticsGenerator(this,getEventService()), QueryEnded.class);
     getEventService().addListenerForType(
-      new QueryEndNotifier(this, getEventService(), getCliService().getHiveConf()), QueryEnded.class);
+      new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
   }
 

@@ -40,33 +40,41 @@ import java.util.Properties;
 
 public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   private final QueryExecutionServiceImpl queryService;
-  private final GrillEventService eventService;
   public static final Log LOG = LogFactory.getLog(QueryEndNotifier.class);
   private final HiveConf conf;
+  private final String from;
+  private final String host;
+  private final String port;
+  private final int mailSmtpTimeout;
+  private final int mailSmtpConnectionTimeout;
 
   public QueryEndNotifier(QueryExecutionServiceImpl queryService,
-    GrillEventService eventService, HiveConf hiveConf) {
+    HiveConf hiveConf) {
     this.queryService = queryService;
-    this.eventService = eventService;
     this.conf = hiveConf;
+    from = conf.get(GrillConfConstants.GRILL_MAIL_FROM_ADDRESS);
+    host = conf.get(GrillConfConstants.GRILL_MAIL_HOST);
+    port = conf.get(GrillConfConstants.GRILL_MAIL_PORT);
+    mailSmtpTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_TIMEOUT,
+      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_TIMEOUT));
+    mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_CONNECTIONTIMEOUT,
+      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
+
   }
 
   @Override
   public void process(QueryEnded event) {
-    boolean whetherMailNotify = Boolean.parseBoolean(conf.get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
+    QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
+
+    boolean whetherMailNotify = true;
+    whetherMailNotify &= Boolean.parseBoolean(conf.get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
       GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
+    whetherMailNotify &= Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
+      GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
+
     if(!whetherMailNotify){
       return;
     }
-    String from = conf.get(GrillConfConstants.GRILL_MAIL_FROM_ADDRESS);
-    String host = conf.get(GrillConfConstants.GRILL_MAIL_HOST);
-    String port = conf.get(GrillConfConstants.GRILL_MAIL_PORT);
-    int mailSmtpTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_TIMEOUT,
-      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_TIMEOUT));
-    int mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_CONNECTIONTIMEOUT,
-      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
-
-    QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
 
     String mailSubject = "Query " + queryContext.getStatus().getStatus() + ": " + event.getQueryHandle();
 
@@ -92,7 +100,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
         msgBuilder.append(baseURI);
         msgBuilder.append("queryapi/queries/");
         msgBuilder.append(queryContext.getQueryHandle());
-        msgBuilder.append("/resultset");
+        msgBuilder.append("/httpresultset");
         break;
       case FAILED:
         msgBuilder.append(queryContext.getStatus().getErrorMessage());
