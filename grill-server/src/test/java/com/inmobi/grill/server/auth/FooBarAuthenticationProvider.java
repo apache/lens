@@ -25,11 +25,20 @@ import org.apache.hive.service.auth.PasswdAuthenticationProvider;
 import javax.security.sasl.AuthenticationException;
 
 public class FooBarAuthenticationProvider implements PasswdAuthenticationProvider {
-  public static String MSG = "<username,password>!=<foo,bar>";
+  public static String MSG = "<username,password>!=<foo@localhost,bar>";
+  private final String[][] allowedCombinations = new String[][]{
+    {"foo@localhost", "bar"},
+    {"foo", "bar"},
+    {"anonymous", ""}
+  };
+
   @Override
   public void Authenticate(String username, String password) throws AuthenticationException {
-    if(!(username.equals("foo") && password.equals("bar"))){
-      throw new AuthenticationException(MSG);
+    for(String[] usernamePassword: allowedCombinations){
+      if(username.equals(usernamePassword[0]) && password.equals(usernamePassword[1])){
+        return;
+      }
     }
+    throw new AuthenticationException(MSG);
   }
 }

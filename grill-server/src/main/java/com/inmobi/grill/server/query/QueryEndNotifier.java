@@ -126,8 +126,10 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       message.setFrom(new InternetAddress(from));
       message.setRecipient(Message.RecipientType.TO, new InternetAddress(
         to));
-      message.setRecipient(Message.RecipientType.CC, new InternetAddress(
-        cc));
+      if(cc != null && cc.length() > 0){
+        message.setRecipient(Message.RecipientType.CC, new InternetAddress(
+          cc));
+      }
       message.setSubject(subject);
       message.setSentDate(new Date());
 
