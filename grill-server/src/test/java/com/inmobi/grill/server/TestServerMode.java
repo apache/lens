@@ -94,9 +94,9 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
-        "user1"));
+        "foo"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
-        "psword"));
+        "bar"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
         new GrillConf(),
