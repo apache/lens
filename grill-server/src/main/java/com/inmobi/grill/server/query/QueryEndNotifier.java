@@ -61,18 +61,43 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     int mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_CONNECTIONTIMEOUT,
       GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
 
-    String mailSubject = "Query " + event.getCurrentValue().toString() + ": " + event.getQueryHandle();
-
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
-    String mailMessage = queryContext.getStatus().toString();
+
+    String mailSubject = "Query " + queryContext.getStatus().getStatus() + ": " + event.getQueryHandle();
+
+    String mailMessage = createMailMessage(queryContext);
 
     String to = queryContext.getSubmittedUser();
 
     String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
       GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
+
     LOG.info("Sending completion email for query handle: " + event.getQueryHandle());
     sendMail(host, port, from, to, cc, mailSubject, mailMessage,
       mailSmtpTimeout, mailSmtpConnectionTimeout);
+  }
+
+  private String createMailMessage(QueryContext queryContext) {
+    StringBuilder msgBuilder = new StringBuilder();
+    switch(queryContext.getStatus().getStatus()){
+      case SUCCESSFUL:
+        msgBuilder.append("Result available at ");
+        String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
+          GrillConfConstants.DEFAULT_GRILL_SERVER_BASE_URL);
+        msgBuilder.append(baseURI);
+        msgBuilder.append("queryapi/queries/");
+        msgBuilder.append(queryContext.getQueryHandle());
+        msgBuilder.append("/resultset");
+        break;
+      case FAILED:
+        msgBuilder.append(queryContext.getStatus().getErrorMessage());
+        break;
+      case CANCELED:
+      case CLOSED:
+      default:
+        break;
+    }
+    return msgBuilder.toString();
   }
 
   public static void sendMail(String host, String port, String from, String to, String cc, String subject,
