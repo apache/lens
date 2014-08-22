@@ -26,6 +26,7 @@ import com.inmobi.grill.client.GrillConnectionParams;
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 /**
  * JDBC connection class which handles connection level operations to grill server.
@@ -302,6 +303,31 @@ public class GrillJdbcConnection implements Connection {
   @Override
   public Struct createStruct(String s, Object[] objects) throws SQLException {
     throw new SQLException("Operation not supported!!!!");
+  }
+
+  @Override
+  public void setSchema(String schema) throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
+  @Override
+  public String getSchema() throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
+  @Override
+  public void abort(Executor executor) throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
+  @Override
+  public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
+  @Override
+  public int getNetworkTimeout() throws SQLException {
+    throw new SQLException("Operation not supported!!!");
   }
 
   @Override
