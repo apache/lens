@@ -53,4 +53,14 @@
   <value>target/query-logs</value>
 </property>
 
+<property>
+  <name>hive.server2.authentication</name>
+  <value>CUSTOM</value>
+</property>
+
+<property>
+  <name>hive.server2.custom.authentication.class</name>
+  <value>com.inmobi.grill.server.auth.FooBarAuthenticationProvider</value>
+</property>
+
 </configuration>
