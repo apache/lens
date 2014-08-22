@@ -53,6 +53,11 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   @Override
   public void process(QueryEnded event) {
+    boolean whetherMailNotify = Boolean.parseBoolean(conf.get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
+      GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
+    if(!whetherMailNotify){
+      return;
+    }
     String from = conf.get(GrillConfConstants.GRILL_MAIL_FROM_ADDRESS);
     String host = conf.get(GrillConfConstants.GRILL_MAIL_HOST);
     String port = conf.get(GrillConfConstants.GRILL_MAIL_PORT);

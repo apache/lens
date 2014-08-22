@@ -61,12 +61,14 @@ public class GrillConfConstants {
   public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
 
   // Email related configurations
+  public static final String GRILL_WHETHER_MAIL_NOTIFY = "grill.whether.mail.notify";
+  public static final String GRILL_WHETHER_MAIL_NOTIFY_DEFAULT = "false";
   public static final String GRILL_MAIL_FROM_ADDRESS = "grill.mail.from.address";
   public static final String GRILL_MAIL_HOST = "grill.mail.host";
   public static final String GRILL_MAIL_PORT = "grill.mail.port";
   public static final String GRILL_MAIL_SMTP_TIMEOUT = "grill.mail.smtp.timeout";
-  public static final String GRILL_MAIL_SMTP_CONNECTIONTIMEOUT = "grill.mail.smtp.connectiontimeout";
   public static final String GRILL_MAIL_DEFAULT_SMTP_TIMEOUT = "30000";
+  public static final String GRILL_MAIL_SMTP_CONNECTIONTIMEOUT = "grill.mail.smtp.connectiontimeout";
   public static final String GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT = "15000";
 
   // To be provided by user in query's conf
