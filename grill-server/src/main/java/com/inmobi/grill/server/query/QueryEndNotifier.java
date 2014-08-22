@@ -66,7 +66,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
     String mailMessage = queryContext.getStatus().toString();
 
-    String to = event.getUser();
+    String to = queryContext.getSubmittedUser();
 
     String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
       GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
