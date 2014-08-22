@@ -60,6 +60,19 @@ public class GrillConfConstants {
   public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
   public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
 
+  // Email related configurations
+  public static final String GRILL_MAIL_FROM_ADDRESS = "grill.mail.from.address";
+  public static final String GRILL_MAIL_HOST = "grill.mail.host";
+  public static final String GRILL_MAIL_PORT = "grill.mail.port";
+  public static final String GRILL_MAIL_SMTP_TIMEOUT = "grill.mail.smtp.timeout";
+  public static final String GRILL_MAIL_SMTP_CONNECTIONTIMEOUT = "grill.mail.smtp.connectiontimeout";
+  public static final String GRILL_MAIL_DEFAULT_SMTP_TIMEOUT = "30000";
+  public static final String GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT = "15000";
+
+  // To be provided by user in query's conf
+  public static final String GRILL_QUERY_RESULT_EMAIL_CC = "grill.query.result.email.cc";
+  public static final String GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC = "";
+
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }

@@ -130,6 +130,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getEventService().addListenerForType(new ResultFormatter(this), QueryExecuted.class);
     getEventService().addListenerForType(
         new QueryExecutionStatisticsGenerator(this,getEventService()), QueryEnded.class);
+    getEventService().addListenerForType(
+      new QueryEndNotifier(this, getEventService(), getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
   }
 
