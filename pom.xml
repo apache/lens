@@ -12,7 +12,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <powermock.version>1.4.12</powermock.version>
-    <hive.version>0.13.1-inm-SNAPSHOT</hive.version>
+    <hive.version>0.13.1-inm</hive.version>
     <jetty.version>6.1.26</jetty.version>
     <jersey.version>2.3.1</jersey.version>
     <grizzly.version>2.3.6</grizzly.version>
