@@ -70,7 +70,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
     String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
       GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
-
+    LOG.info("Sending completion email for query handle: " + event.getQueryHandle());
     sendMail(host, port, from, to, cc, mailSubject, mailMessage,
       mailSmtpTimeout, mailSmtpConnectionTimeout);
   }
