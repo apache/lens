@@ -5,10 +5,10 @@ var Util = function() {
 		return functionToCheck && getType.toString.call(functionToCheck) === '[object Function]';
 	};
 
-	this.SESSION_URL = "http://localhost:19999/uisession/";
-	this.QUERY_URL = "http://localhost:19999/queryuiapi/queries";
-	this.META_URL = "http://localhost:19999/metastoreapi/tables";
-	this.SEARCH_URL = "http://localhost:19999/metastoreapi/searchablefields";
+	this.SESSION_URL = "/uisession/";
+	this.QUERY_URL = "/queryuiapi/queries";
+	this.META_URL = "/metastoreapi/tables";
+	this.SEARCH_URL = "/metastoreapi/searchablefields";
 
 	this.createMultipart = function(data) {
 		var multiData = new FormData();
