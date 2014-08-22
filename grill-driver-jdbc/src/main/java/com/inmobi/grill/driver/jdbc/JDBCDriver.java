@@ -378,7 +378,13 @@ public class JDBCDriver implements GrillDriver {
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
-    execute(explainQueryCtx);
+    JdbcQueryContext queryContext = new JdbcQueryContext(explainQueryCtx);
+    queryContext.setPrepared(false);
+    queryContext.setRewrittenQuery(rewrittenQuery);
+    QueryResult result = new QueryCallable(queryContext).call();
+    if (result.error != null) {
+      throw new GrillException("Query explain failed!", result.error);
+    }
     return new JDBCQueryPlan();
   } 
   

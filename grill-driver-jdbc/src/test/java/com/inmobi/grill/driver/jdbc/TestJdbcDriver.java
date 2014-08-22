@@ -22,11 +22,14 @@ package com.inmobi.grill.driver.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.derby.tools.sysinfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.testng.Assert;
@@ -37,6 +40,7 @@ import org.testng.annotations.Test;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.ResultRow;
+import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
@@ -159,7 +163,21 @@ public class TestJdbcDriver {
     }
     Assert.assertNotNull(th);
   }
-
+  
+  @Test
+  public void testExplain() throws Exception {
+    createTable("explain_test"); // Create table
+    insertData("explain_test");  // Insert some data into table
+    try {
+    String query1 = "SELECT * FROM explain_test"; // Select query against existing table
+    driver.explain(query1,baseConf);
+    String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
+    driver.explain(query2,baseConf); 
+    } catch(GrillException ex) {
+      System.out.println("Error : " + ex);
+    }
+ }
+  
   @Test
   public void testExecute() throws Exception {
     createTable("execute_test");
