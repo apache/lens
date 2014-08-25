@@ -66,10 +66,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   public void process(QueryEnded event) {
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
 
-    boolean whetherMailNotify = true;
-    whetherMailNotify &= Boolean.parseBoolean(conf.get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
-      GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
-    whetherMailNotify &= Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
+    boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
       GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
 
     if(!whetherMailNotify){
