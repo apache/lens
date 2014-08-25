@@ -23,7 +23,6 @@ package com.inmobi.grill.server;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
-import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 
 import org.apache.commons.logging.Log;
@@ -41,19 +40,13 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
-import org.apache.hive.service.cli.thrift.ThriftHttpCLIService;
 
-import javax.naming.Context;
-import javax.naming.NamingException;
-import javax.naming.directory.InitialDirContext;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotFoundException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -85,6 +78,12 @@ public abstract class GrillService extends CompositeService implements Externali
     SessionHandle sessionHandle;
     try {
       doPasswdAuth(username, password, cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION));
+      Map<String, String> sessionConf = new HashMap<String, String>();
+      sessionConf.putAll(GrillSessionImpl.DEFAULT_HIVE_SESSION_CONF);
+      if (configuration != null) {
+        sessionConf.putAll(configuration);
+      }
+
       if (
           cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
           .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
@@ -100,10 +99,10 @@ public abstract class GrillService extends CompositeService implements Externali
           // The delegation token is not applicable in the given deployment mode
         }
         sessionHandle = cliService.openSessionWithImpersonation(username, password,
-            configuration, delegationTokenStr);
+            sessionConf, delegationTokenStr);
       } else {
         sessionHandle = cliService.openSession(username, password,
-            configuration);
+            sessionConf);
       }
     } catch (Exception e) {
       throw new GrillException (e);

@@ -25,6 +25,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillDriver;
@@ -34,6 +35,7 @@ import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -190,7 +192,10 @@ public class JDBCDriver implements GrillDriver {
           try {
             stmt = getStatement(conn);
             result.stmt = stmt;
-            result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
+            Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
+            if (isResultAvailable) {
+              result.resultSet = stmt.getResultSet();
+            }
             queryContext.notifyComplete();
           } catch (SQLException sqlEx) {
             if (queryContext.isClosed()) {
@@ -370,10 +375,20 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
-    String rewritten = rewriteQuery(query, conf);
+    String rewrittenQuery = rewriteQuery(query,conf);
+    Configuration explainConf = new Configuration(conf);
+    explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
+    LOG.info("Explain Query : " + explainQuery);
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
+    
+    QueryResult result = executeInternal(explainQueryCtx,explainQuery);
+    if (result.error != null) {
+      throw new GrillException("Query explain failed!", result.error);
+    } 
     return new JDBCQueryPlan();
-  }
-
+  } 
+    
   /**
    * Prepare the given query
    *
@@ -453,12 +468,28 @@ public class JDBCDriver implements GrillDriver {
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
+    LOG.info("Execute " + context.getQueryHandle());
+    QueryResult result = executeInternal(context,rewrittenQuery);
+    return result.getGrillResultSet(true);
+    
+  }
+  
+  /**
+   * Internally executing query
+   *
+   * @param context
+   * @param rewrittenQuery
+   * @return returns the result set
+   * @throws com.inmobi.grill.api.GrillException
+   */
+  
+  private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws GrillException {
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
     QueryResult result = new QueryCallable(queryContext).call();
-    LOG.info("Execute " + context.getQueryHandle());
-    return result.getGrillResultSet(true);
+    return result;
+    //LOG.info("Execute " + context.getQueryHandle());
   }
 
   /**

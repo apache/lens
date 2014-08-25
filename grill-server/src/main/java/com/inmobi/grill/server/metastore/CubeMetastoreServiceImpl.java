@@ -59,10 +59,6 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     super("metastore", cliService);
   }
 
-  private HiveConf getUserConf() {
-    return new HiveConf(CubeMetastoreServiceImpl.class);
-  }
-
   synchronized CubeMetastoreClient getClient(GrillSessionHandle sessionid) throws GrillException {
     return ((GrillSessionImpl)getSession(sessionid)).getCubeMetastoreClient();
   }
@@ -75,7 +71,12 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
    */
   @Override
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException {
-    return getSession(sessionid).getCurrentDatabase();
+    try {
+      acquire(sessionid);
+      return getSession(sessionid).getCurrentDatabase();
+    } finally {
+      release(sessionid);
+    }
   }
 
   /**
@@ -86,14 +87,17 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public void setCurrentDatabase(GrillSessionHandle sessionid, String database) throws GrillException {
     try {
-      if (!Hive.get().databaseExists(database)) {
+      acquire(sessionid);
+      if (!Hive.get(getSession(sessionid).getHiveConf()).databaseExists(database)) {
         throw new NotFoundException("Database " + database + " does not exist");
       }
+      LOG.info("Set database " + database);
+      getSession(sessionid).setCurrentDatabase(database);
     } catch (HiveException e) {
       throw new GrillException(e);
+    } finally {
+      release(sessionid);
     }
-    getSession(sessionid).setCurrentDatabase(database);
-    LOG.info("Set database " + database);
   }
 
   /**
@@ -106,7 +110,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public void dropDatabase(GrillSessionHandle sessionid, String database, boolean cascade) throws GrillException {
     try {
       acquire(sessionid);
-      Hive.get(getUserConf()).dropDatabase(database, false, true, cascade);
+      Hive.get(getSession(sessionid).getHiveConf()).dropDatabase(database, false, true, cascade);
       LOG.info("Database dropped " + database + " cascade? " + true);
     } catch (HiveException e) {
       throw new GrillException(e);
@@ -129,7 +133,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       acquire(sessionid);
       Database db = new Database();
       db.setName(database);
-      Hive.get(getHiveConf()).createDatabase(db, ignore);
+      Hive.get(getSession(sessionid).getHiveConf()).createDatabase(db, ignore);
     } catch (AlreadyExistsException e) {
       throw new GrillException(e);
     } catch (HiveException e) {
@@ -147,7 +151,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   public List<String> getAllDatabases(GrillSessionHandle sessionid) throws GrillException{
     try {
       acquire(sessionid);
-      return Hive.get(getHiveConf()).getAllDatabases();
+      return Hive.get(getSession(sessionid).getHiveConf()).getAllDatabases();
     } catch (HiveException e) {
       throw new GrillException(e);
     } finally {
@@ -352,7 +356,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
-  
+
   @Override
   public void createDimTableStorage(GrillSessionHandle sessionid,
       String dimTblName, XStorageTableElement storageTable) throws GrillException {
@@ -1122,7 +1126,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
   private List<String> getTablesFromDB(GrillSessionHandle sessionid,
       String dbName, boolean prependDbName)
-      throws MetaException, UnknownDBException, HiveSQLException, TException, GrillException {
+          throws MetaException, UnknownDBException, HiveSQLException, TException, GrillException {
     List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
         dbName);
     List<String> result = new ArrayList<String>();
@@ -1156,7 +1160,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       }
       if (StringUtils.isBlank(dbName)
           && (StringUtils.isBlank(dbOption)
-          || dbOption.equalsIgnoreCase("current"))) {
+              || dbOption.equalsIgnoreCase("current"))) {
         // use current db if no dbname/dboption is passed
         dbName = getSession(sessionid).getCurrentDatabase();
       }
