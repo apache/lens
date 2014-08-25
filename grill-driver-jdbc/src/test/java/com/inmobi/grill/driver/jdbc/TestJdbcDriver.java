@@ -167,9 +167,9 @@ public class TestJdbcDriver {
     insertData("explain_test");  // Insert some data into table
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
-   
-    try {
     driver.explain(query1,baseConf);
+
+    try {
     driver.explain(query2,baseConf); 
     Assert.fail("Running explain on a non existing table.");
     } catch(GrillException ex) {

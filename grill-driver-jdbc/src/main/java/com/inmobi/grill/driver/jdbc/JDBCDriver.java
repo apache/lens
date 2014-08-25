@@ -192,7 +192,6 @@ public class JDBCDriver implements GrillDriver {
           try {
             stmt = getStatement(conn);
             result.stmt = stmt;
-            //result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
             Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
             if (isResultAvailable) {
               result.resultSet = stmt.getResultSet();
@@ -485,7 +484,6 @@ public class JDBCDriver implements GrillDriver {
    */
   
   private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws GrillException {
-    checkConfigured();
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
