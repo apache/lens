@@ -99,7 +99,6 @@ public class TestQueryService extends GrillJerseyTest {
     wiser = new Wiser();
     wiser.setHostname("localhost");
     wiser.setPort(25000);
-//    wiser.start();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
     metricsSvc = (MetricsService)GrillServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
@@ -650,6 +649,7 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY, "true");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
       grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
