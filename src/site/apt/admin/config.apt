@@ -90,4 +90,6 @@ Grill server configuration
 *--+--+---+--+
 |32|grill.server.db.jdbc.pass||JDBC Password for Finished queries table.|
 *--+--+---+--+
+|33|grill.server.snapshot.interval|18000000|Snapshot interval time in miliseconds for saving grill server state.|
+*--+--+---+--+
 The configuration parameters and their default values

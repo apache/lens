@@ -59,6 +59,8 @@ public class GrillConfConstants {
   // These properties should be set in native tables if their underlying DB or table names are different
   public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
   public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
+  public static final String GRILL_SERVER_SNAPSHOT_INTERVAL = "grill.server.snapshot.interval";
+  public static final long DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL = 5 * 60 * 60 * 1000;
 
 
   public static String getServiceImplConfKey(String sName) {

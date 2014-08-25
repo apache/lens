@@ -25,10 +25,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.inmobi.grill.server.stats.StatisticsService;
 import lombok.Getter;
@@ -61,7 +58,9 @@ public class GrillServices extends CompositeService {
   private final List<GrillService> grillServices = new ArrayList<GrillService>();
   private Path persistDir;
   private boolean stopping = false;
+  private long snapShotInterval;
   @Getter @Setter private SERVICE_MODE serviceMode;
+  private Timer timer;
 
   public enum SERVICE_MODE {
     READ_ONLY, // All requests on sesssion resource and Only GET requests on all other resources
@@ -134,8 +133,10 @@ public class GrillServices extends CompositeService {
         LOG.error("Could not recover from persisted state", e);
         throw new RuntimeException("Could not recover from persisted state", e);
       }
-
+      snapShotInterval = conf.getLong(GrillConfConstants.GRILL_SERVER_SNAPSHOT_INTERVAL,
+          GrillConfConstants.DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized grill services: " + services.keySet().toString());
+      timer = new Timer("grill-server-snapshotter", true);
     }
   }
 
@@ -143,6 +144,16 @@ public class GrillServices extends CompositeService {
     if (getServiceState() != STATE.STARTED) {
       super.start();
     }
+    timer.schedule(new TimerTask() {
+      @Override
+      public void run() {
+        try {
+          persistGrillServiceState();
+        } catch (IOException e) {
+          LOG.warn("Unable to persist grill server state", e);
+        }
+      }
+    }, snapShotInterval, snapShotInterval);
   }
 
   private void setupPersistedState() throws IOException, ClassNotFoundException {
@@ -208,6 +219,7 @@ public class GrillServices extends CompositeService {
       for (GrillService service : grillServices) {
         service.prepareStopping();
       }
+      timer.cancel();
       try {
         // persist all the services
         persistGrillServiceState();
