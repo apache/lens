@@ -68,7 +68,8 @@ public class TestHiveDriver {
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-    SessionState.start(conf);
+    SessionState ss = new SessionState(conf, "testuser");
+    SessionState.start(ss);
     Hive client = Hive.get(conf);
     Database database = new Database();
     database.setName(TestHiveDriver.class.getSimpleName());

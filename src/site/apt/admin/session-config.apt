@@ -32,7 +32,7 @@ Grill session configuration
 *--+--+---+--+
 |4|grill.persistent.resultset.indriver|true|Whether the result should be persisted by driver. Currently only HiveDriver persists the results in a HDFS location.|
 *--+--+---+--+
-|5|grill.query.hdfs.output.path|hdfsout|The directory under the parent result directory, in which HiveDriver will persist the results, if persisting by driver is enabled.|
+|5|grill.query.hdfs.output.path|hdfsout|The directory under the parent result directory, in which HiveDriver will persist the results, if persisting by driver is enabled. This directory should exist and should have world writable permissions sothat all users will be able put query outputs here.|
 *--+--+---+--+
 |6|grill.query.output.charset.encoding|UTF-8|The charset encoding for formatting query result. It supports all the encodings supported by java.io.OutputStreamWriter.|
 *--+--+---+--+
@@ -64,6 +64,6 @@ Grill session configuration
 *--+--+---+--+
 |20|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
 *--+--+---+--+
-|21|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
+|21|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query. This  directory should exist and should have writable permissions by grill server|
 *--+--+---+--+
 The configuration parameters and their default values

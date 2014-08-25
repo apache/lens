@@ -34,7 +34,8 @@
 <property>
   <name>grill.result.parent.dir</name>
   <value>/tmp/grillreports</value>
-  <description>The directory for storing persisted result of query.</description>
+  <description>The directory for storing persisted result of query. This
+  directory should exist and should have writable permissions by grill server</description>
 </property>
 
 <property>
@@ -62,7 +63,9 @@
   <name>grill.query.hdfs.output.path</name>
   <value>hdfsout</value>
   <description>The directory under the parent result directory, in which HiveDriver
- will persist the results, if persisting by driver is enabled.</description>
+ will persist the results, if persisting by driver is enabled. This directory
+ should exist and should have world writable permissions sothat all users will
+ be able put query outputs here.</description>
 </property>
 
 <property>
