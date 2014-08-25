@@ -208,7 +208,7 @@
 
 <property>
   <name>grill.whether.mail.notify</name>
-  <value>false</value>
+  <value>true</value>
   <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 
