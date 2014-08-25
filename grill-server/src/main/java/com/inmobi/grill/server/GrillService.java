@@ -84,8 +84,8 @@ public abstract class GrillService extends CompositeService implements Externali
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     SessionHandle sessionHandle;
+    doPasswdAuth(username, password, cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION));
     try {
-      doPasswdAuth(username, password, cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION));
       if (
           cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
           .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())

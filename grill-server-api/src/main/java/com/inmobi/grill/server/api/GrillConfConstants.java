@@ -62,7 +62,7 @@ public class GrillConfConstants {
 
   // Email related configurations
   public static final String GRILL_WHETHER_MAIL_NOTIFY = "grill.whether.mail.notify";
-  public static final String GRILL_WHETHER_MAIL_NOTIFY_DEFAULT = "true";
+  public static final String GRILL_WHETHER_MAIL_NOTIFY_DEFAULT = "false";
   public static final String GRILL_MAIL_FROM_ADDRESS = "grill.mail.from.address";
   public static final String GRILL_MAIL_HOST = "grill.mail.host";
   public static final String GRILL_MAIL_PORT = "grill.mail.port";
