@@ -26,6 +26,7 @@ import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
 
+import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.test.JerseyTest;
 import org.testng.annotations.AfterSuite;
@@ -107,7 +108,9 @@ public abstract class GrillJerseyTest extends JerseyTest {
   }
 
   public void restartGrillServer() {
-    restartGrillServer(new HiveConf());
+    HiveConf h = new HiveConf();
+    h.set(GrillConfConstants.MAX_NUMBER_OF_FINISHED_QUERY, "0");
+    restartGrillServer(h);
   }
 
   public void restartGrillServer(HiveConf conf) {

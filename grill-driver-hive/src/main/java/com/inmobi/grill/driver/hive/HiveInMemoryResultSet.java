@@ -65,13 +65,11 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   @Override
   public GrillResultSetMetadata getMetadata() throws GrillException {
-    return new GrillResultSetMetadata() {
-
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        return metadata.getColumnDescriptors();
-      }
-    };
+    //Removed Anonymous inner class and changed it to concrete class
+    //for serialization to JSON
+    HiveGrillResultSetMetadata hrsMeta = new HiveGrillResultSetMetadata();
+    hrsMeta.setColumns(metadata.getColumnDescriptors());
+    return hrsMeta;
   }
 
   @Override

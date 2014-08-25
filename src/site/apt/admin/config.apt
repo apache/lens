@@ -80,4 +80,14 @@ Grill server configuration
 *--+--+---+--+
 |28|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
 *--+--+---+--+
+|29|grill.max.finished.queries|100|Maximum number of finished queries which grill server will keep in memory before purging.|
+*--+--+---+--+
+|30|grill.finished.queries.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored.|
+*--+--+---+--+
+|31|grill.finished.queries.jdbc.url|jdbc:hsqldb:/tmp/grillserver/queries.db|JDBC URL where the database for storing finished queries is located.|
+*--+--+---+--+
+|32|grill.finished.queries.jdbc.user|SA|JDBC User for Finished queries table.|
+*--+--+---+--+
+|32|grill.finished.queries.jdbc.pass||JDBC Password for Finished queries table.|
+*--+--+---+--+
 The configuration parameters and their default values

@@ -60,6 +60,7 @@ public class GrillConfConstants {
   public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
   public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
 
+
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }
@@ -167,5 +168,18 @@ public class GrillConfConstants {
 
   public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
 
+  //Query Purge Configuration
 
+  public static final String MAX_NUMBER_OF_FINISHED_QUERY="grill.max.finished.queries";
+
+  public static final int DEFAULT_FINISHED_QUERIES = 100;
+
+  public static final String GRILL_FINISHED_QUERIES_DRIVER_NAME = "grill.finished.queries.driver.name";
+  public static final String DEFAULT_FINISHED_QUERIES_DRIVER_NAME = "org.hsqldb.jdbcDriver";
+  public static final String GRILL_FINISHED_QUERIES_JDBC_URL = "grill.finished.queries.jdbc.url";
+  public static final String DEFAULT_FINISHED_QUERIES_JDBC_URL = "jdbc:hsqldb:/tmp/grillserver/queries.db";
+  public static final String GRILL_FINISHED_QUERIES_JDBC_USER = "grill.finished.queries.jdbc.user";
+  public static final String DEFAULT_FINISHED_QUERY_USER = "SA";
+  public static final String GRILL_FINISHED_QUERIES_JDBC_PASS = "grill.finished.queries.jdbc.pass";
+  public static final String DEFAULT_FINISHED_QUERIES_PASS = "";
 }
