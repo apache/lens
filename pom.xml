@@ -677,7 +677,19 @@
        <artifactId>jackson-mapper-asl</artifactId>
        <version>1.9.13</version>
      </dependency>
-    </dependencies>
+     <!-- Connection pooling for Finished queries -->
+     <dependency>
+       <groupId>commons-dbcp</groupId>
+       <artifactId>commons-dbcp</artifactId>
+       <version>1.4</version>
+     </dependency>
+     <dependency>
+       <groupId>commons-dbutils</groupId>
+       <artifactId>commons-dbutils</artifactId>
+       <version>1.5</version>
+     </dependency>
+
+   </dependencies>
 
  </dependencyManagement>
 

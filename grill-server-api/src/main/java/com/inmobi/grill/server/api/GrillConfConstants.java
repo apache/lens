@@ -59,6 +59,9 @@ public class GrillConfConstants {
   // These properties should be set in native tables if their underlying DB or table names are different
   public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
   public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
+  public static final String GRILL_SERVER_SNAPSHOT_INTERVAL = "grill.server.snapshot.interval";
+  public static final long DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL = 5 * 60 * 1000;
+
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
@@ -167,5 +170,18 @@ public class GrillConfConstants {
 
   public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
 
+  //Query Purge Configuration
 
+  public static final String MAX_NUMBER_OF_FINISHED_QUERY="grill.max.finished.queries";
+
+  public static final int DEFAULT_FINISHED_QUERIES = 100;
+
+  public static final String GRILL_SERVER_DB_DRIVER_NAME = "grill.server.db.driver.name";
+  public static final String DEFAULT_SERVER_DB_DRIVER_NAME = "org.hsqldb.jdbcDriver";
+  public static final String GRILL_SERVER_DB_JDBC_URL = "grill.server.db.jdbc.url";
+  public static final String DEFAULT_SERVER_DB_JDBC_URL = "jdbc:hsqldb:/tmp/grillserver/queries.db";
+  public static final String GRILL_SERVER_DB_JDBC_USER = "grill.server.db.jdbc.user";
+  public static final String DEFAULT_SERVER_DB_USER = "SA";
+  public static final String GRILL_SERVER_DB_JDBC_PASS = "grill.server.db.jdbc.pass";
+  public static final String DEFAULT_SERVER_DB_PASS = "";
 }
