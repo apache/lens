@@ -1220,12 +1220,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public long getQueuedQueriesCount() throws GrillException {
+  public long getQueuedQueriesCount() {
     return acceptedQueries.size();
   }
 
   @Override
-  public long getRunningQueriesCount() throws GrillException {
+  public long getRunningQueriesCount() {
     return launchedQueries.size();
   }
 }

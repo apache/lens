@@ -158,22 +158,14 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-        try {
           return queryExecutionService.getQueuedQueriesCount();
-        } catch (GrillException e) {
-          return (long) 0;
-        }
       }
     });
     
     metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-        try {
           return queryExecutionService.getRunningQueriesCount();
-        } catch (GrillException e) {
-          return (long) 0;
-        }
       }
     });
 
@@ -220,36 +212,30 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     super.stop();
   }
 
-
   @Override
   public void incrCounter(String counter) {
     incrCounter(MetricsService.class, counter);
   }
-
 
   @Override
   public void decrCounter(String counter) {
     decrCounter(MetricsService.class, counter);
   }
 
-
   @Override
   public void incrCounter(Class<?> cls, String counter) {
     metricRegistry.counter(MetricRegistry.name(cls, counter)).inc();
   }
-
 
   @Override
   public void decrCounter(Class<?> cls, String counter) {
     metricRegistry.counter(MetricRegistry.name(cls, counter)).dec();
   }
 
-
   @Override
   public long getCounter(String counter) {
     return metricRegistry.counter(MetricRegistry.name(MetricsService.class, counter)).getCount();
   }
-
 
   @Override
   public long getCounter(Class<?> cls, String counter) {
@@ -258,52 +244,38 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   @Override
   public long getQueuedQueries() {
-    try {
-      return queryExecutionService.getQueuedQueriesCount();
-    } catch (GrillException e) {
-      return 0;
-    }
+    return queryExecutionService.getQueuedQueriesCount();
   }
 
   @Override
   public long getRunningQueries() {
-    try {
-      return queryExecutionService.getRunningQueriesCount();
-    } catch (GrillException e) {
-      return 0;
-    }
+    return queryExecutionService.getRunningQueriesCount();
   }
-
 
   @Override
   public long getFinishedQueries() {
     return finishedQueries.getCount();
   }
 
-
   @Override
   public long getTotalAcceptedQueries() {
     return totalAcceptedQueries.getCount();
   }
-
 
   @Override
   public long getTotalFinishedQueries() {
     return totalFinishedQueries.getCount();
   }
 
-
   @Override
   public long getTotalCancelledQueries() {
     return totalCancelledQueries.getCount();
   }
 
-
   @Override
   public long getTotalFailedQueries() {
     return totalFailedQueries.getCount();
   }
-
 
   @Override
   public void publishReport() {

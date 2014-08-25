@@ -67,11 +67,15 @@ public interface MetricsService {
   /**
    * Query engine counter names
    */
-  public static final String QUEUED_QUERIES = "queued-queries";
-  public static final String RUNNING_QUERIES = "running-queries";
   public static final String FINISHED_QUERIES = "finished-queries";
   public static final String CANCELLED_QUERIES = "cancelled-queries";
   public static final String FAILED_QUERIES = "failed-queries";
+
+  /**
+   * Query engine gauge names
+   */
+  public static final String QUEUED_QUERIES = "queued-queries";
+  public static final String RUNNING_QUERIES = "running-queries";
   
   public long getQueuedQueries();
   public long getRunningQueries();
