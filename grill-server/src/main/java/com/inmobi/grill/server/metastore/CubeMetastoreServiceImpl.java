@@ -72,8 +72,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
   @Override
   public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException {
     try {
-     acquire(sessionid);
-     return getSession(sessionid).getCurrentDatabase();
+      acquire(sessionid);
+      return getSession(sessionid).getCurrentDatabase();
     } finally {
       release(sessionid);
     }
@@ -95,9 +95,9 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       getSession(sessionid).setCurrentDatabase(database);
     } catch (HiveException e) {
       throw new GrillException(e);
-  } finally {
-    release(sessionid);
-  }
+    } finally {
+      release(sessionid);
+    }
   }
 
   /**
@@ -356,7 +356,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
-  
+
   @Override
   public void createDimTableStorage(GrillSessionHandle sessionid,
       String dimTblName, XStorageTableElement storageTable) throws GrillException {
@@ -1126,7 +1126,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
   private List<String> getTablesFromDB(GrillSessionHandle sessionid,
       String dbName, boolean prependDbName)
-      throws MetaException, UnknownDBException, HiveSQLException, TException, GrillException {
+          throws MetaException, UnknownDBException, HiveSQLException, TException, GrillException {
     List<String> tables = getSession(sessionid).getMetaStoreClient().getAllTables(
         dbName);
     List<String> result = new ArrayList<String>();
@@ -1160,7 +1160,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       }
       if (StringUtils.isBlank(dbName)
           && (StringUtils.isBlank(dbOption)
-          || dbOption.equalsIgnoreCase("current"))) {
+              || dbOption.equalsIgnoreCase("current"))) {
         // use current db if no dbname/dboption is passed
         dbName = getSession(sessionid).getCurrentDatabase();
       }
