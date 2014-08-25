@@ -149,6 +149,7 @@ public class GrillServices extends CompositeService {
       public void run() {
         try {
           persistGrillServiceState();
+          LOG.info("SnapShot of Grill Services created");
         } catch (IOException e) {
           LOG.warn("Unable to persist grill server state", e);
         }
@@ -181,7 +182,7 @@ public class GrillServices extends CompositeService {
     }
   }
 
-  private void persistGrillServiceState() throws IOException {
+  private synchronized void persistGrillServiceState() throws IOException {
     if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
         GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) {
       FileSystem fs = persistDir.getFileSystem(conf);

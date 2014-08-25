@@ -229,7 +229,7 @@
 </property>
 <property>
   <name>grill.server.snapshot.interval</name>
-  <value>18000000</value>
+  <value>300000</value>
   <description>Snapshot interval time in miliseconds for saving grill server state.</description>
 </property>
 </configuration>
