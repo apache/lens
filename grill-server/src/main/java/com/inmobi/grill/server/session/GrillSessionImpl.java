@@ -67,6 +67,13 @@ public class GrillSessionImpl extends HiveSessionImpl {
     return conf;
   }
 
+  public static Map<String, String> DEFAULT_HIVE_SESSION_CONF = getHiveSessionConf();
+
+  public static Map<String, String> getHiveSessionConf() {
+    Configuration defaultConf = createDefaultConf();
+    return defaultConf.getValByRegex("hive.*");
+  }
+
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
