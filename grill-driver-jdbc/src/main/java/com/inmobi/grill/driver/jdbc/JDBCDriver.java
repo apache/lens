@@ -192,7 +192,11 @@ public class JDBCDriver implements GrillDriver {
           try {
             stmt = getStatement(conn);
             result.stmt = stmt;
-            result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
+            //result.resultSet = stmt.executeQuery(queryContext.getRewrittenQuery());
+            Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
+            if (isResultAvailable) {
+              result.resultSet = stmt.getResultSet();
+            }
             queryContext.notifyComplete();
           } catch (SQLException sqlEx) {
             if (queryContext.isClosed()) {
@@ -379,11 +383,7 @@ public class JDBCDriver implements GrillDriver {
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     
-    JdbcQueryContext queryContext = new JdbcQueryContext(explainQueryCtx);
-    queryContext.setPrepared(false);
-    queryContext.setRewrittenQuery(rewrittenQuery);
-    //QueryResult result = executeInternal(explainQueryCtx,explainQuery);
-    QueryResult result = new QueryCallable(queryContext).call();
+    QueryResult result = executeInternal(explainQueryCtx,explainQuery);
     if (result.error != null) {
       throw new GrillException("Query explain failed!", result.error);
     } 
@@ -469,8 +469,8 @@ public class JDBCDriver implements GrillDriver {
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
-    QueryResult result = executeInternal(context,rewrittenQuery);
     LOG.info("Execute " + context.getQueryHandle());
+    QueryResult result = executeInternal(context,rewrittenQuery);
     return result.getGrillResultSet(true);
     
   }
