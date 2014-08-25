@@ -47,6 +47,7 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.directory.InitialDirContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import java.io.Externalizable;
 import java.io.IOException;
@@ -135,9 +136,7 @@ public abstract class GrillService extends CompositeService implements Externali
     }
   }
 
-  private void doPasswdAuth(String userName, String password, String authType)
-    throws HttpAuthenticationException {
-
+  private void doPasswdAuth(String userName, String password, String authType){
     // No-op when authType is NOSASL
     if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
@@ -146,7 +145,7 @@ public abstract class GrillService extends CompositeService implements Externali
           AuthenticationProviderFactory.getAuthenticationProvider(authMethod, cliService.getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
-        throw new HttpAuthenticationException(e);
+        throw new NotAuthorizedException(e);
       }
     }
   }
