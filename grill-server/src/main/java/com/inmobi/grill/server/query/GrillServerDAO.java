@@ -19,6 +19,7 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.api.query.FinishedGrillQuery;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -39,14 +40,14 @@ public class GrillServerDAO {
   private DataSource ds;
 
   public void init(Configuration conf) {
-    String className = conf.get(GrillConfConstants.GRILL_FINISHED_QUERIES_DRIVER_NAME,
-        GrillConfConstants.DEFAULT_FINISHED_QUERIES_DRIVER_NAME);
-    String jdbcUrl = conf.get(GrillConfConstants.GRILL_FINISHED_QUERIES_JDBC_URL,
-        GrillConfConstants.DEFAULT_FINISHED_QUERIES_JDBC_URL);
-    String userName = conf.get(GrillConfConstants.GRILL_FINISHED_QUERIES_JDBC_USER,
-        GrillConfConstants.DEFAULT_FINISHED_QUERY_USER);
-    String pass = conf.get(GrillConfConstants.GRILL_FINISHED_QUERIES_JDBC_PASS,
-        GrillConfConstants.DEFAULT_FINISHED_QUERIES_PASS);
+    String className = conf.get(GrillConfConstants.GRILL_SERVER_DB_DRIVER_NAME,
+        GrillConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME);
+    String jdbcUrl = conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_URL,
+        GrillConfConstants.DEFAULT_SERVER_DB_JDBC_URL);
+    String userName = conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_USER,
+        GrillConfConstants.DEFAULT_SERVER_DB_USER);
+    String pass = conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_PASS,
+        GrillConfConstants.DEFAULT_SERVER_DB_PASS);
     BasicDataSource tmp = new BasicDataSource();
     tmp.setDriverClassName(className);
     tmp.setUrl(jdbcUrl);

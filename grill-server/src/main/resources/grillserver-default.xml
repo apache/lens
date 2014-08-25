@@ -208,22 +208,22 @@
   <description>Maximum number of finished queries which grill server will keep in memory before purging.</description>
 </property>
 <property>
-  <name>grill.finished.queries.driver.name</name>
+  <name>grill.server.db.driver.name</name>
   <value>org.hsqldb.jdbcDriver</value>
   <description>Database driver for database where Finished queries have to be stored.</description>
 </property>
 <property>
-  <name>grill.finished.queries.jdbc.url</name>
+  <name>grill.server.db.jdbc.url</name>
   <value>jdbc:hsqldb:/tmp/grillserver/queries.db</value>
   <description>JDBC URL where the database for storing finished queries is located.</description>
 </property>
 <property>
-  <name>grill.finished.queries.jdbc.user</name>
+  <name>grill.server.db.jdbc.user</name>
   <value>SA</value>
   <description>JDBC User for Finished queries table</description>
 </property>
 <property>
- <name>grill.finished.queries.jdbc.pass</name>
+ <name>grill.server.db.jdbc.pass</name>
  <value></value>
  <description>JDBC Password for Finished queries table</description>
 </property>

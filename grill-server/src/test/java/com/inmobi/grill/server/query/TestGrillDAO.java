@@ -1,5 +1,6 @@
 package com.inmobi.grill.server.query;
 
+import com.inmobi.grill.server.api.query.FinishedGrillQuery;
 import org.apache.hadoop.conf.Configuration;
 import org.testng.Assert;
 import org.testng.annotations.Test;

@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.query;
+package com.inmobi.grill.server.api.query;
 /*
  * #%L
  * Grill Hive Driver

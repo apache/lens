@@ -174,12 +174,12 @@ public class GrillConfConstants {
 
   public static final int DEFAULT_FINISHED_QUERIES = 100;
 
-  public static final String GRILL_FINISHED_QUERIES_DRIVER_NAME = "grill.finished.queries.driver.name";
-  public static final String DEFAULT_FINISHED_QUERIES_DRIVER_NAME = "org.hsqldb.jdbcDriver";
-  public static final String GRILL_FINISHED_QUERIES_JDBC_URL = "grill.finished.queries.jdbc.url";
-  public static final String DEFAULT_FINISHED_QUERIES_JDBC_URL = "jdbc:hsqldb:/tmp/grillserver/queries.db";
-  public static final String GRILL_FINISHED_QUERIES_JDBC_USER = "grill.finished.queries.jdbc.user";
-  public static final String DEFAULT_FINISHED_QUERY_USER = "SA";
-  public static final String GRILL_FINISHED_QUERIES_JDBC_PASS = "grill.finished.queries.jdbc.pass";
-  public static final String DEFAULT_FINISHED_QUERIES_PASS = "";
+  public static final String GRILL_SERVER_DB_DRIVER_NAME = "grill.server.db.driver.name";
+  public static final String DEFAULT_SERVER_DB_DRIVER_NAME = "org.hsqldb.jdbcDriver";
+  public static final String GRILL_SERVER_DB_JDBC_URL = "grill.server.db.jdbc.url";
+  public static final String DEFAULT_SERVER_DB_JDBC_URL = "jdbc:hsqldb:/tmp/grillserver/queries.db";
+  public static final String GRILL_SERVER_DB_JDBC_USER = "grill.server.db.jdbc.user";
+  public static final String DEFAULT_SERVER_DB_USER = "SA";
+  public static final String GRILL_SERVER_DB_JDBC_PASS = "grill.server.db.jdbc.pass";
+  public static final String DEFAULT_SERVER_DB_PASS = "";
 }
