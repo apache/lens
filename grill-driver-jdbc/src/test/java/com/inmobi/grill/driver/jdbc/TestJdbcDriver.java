@@ -22,14 +22,11 @@ package com.inmobi.grill.driver.jdbc;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.SQLSyntaxErrorException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.derby.tools.sysinfo;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.testng.Assert;
@@ -40,7 +37,6 @@ import org.testng.annotations.Test;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.ResultRow;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
 import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
@@ -62,6 +58,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI, "jdbc:hsqldb:mem:jdbcTestDB");
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
+    baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD, "explain plan for ");
     
     driver = new JDBCDriver();
     driver.configure(baseConf);
@@ -168,11 +165,13 @@ public class TestJdbcDriver {
   public void testExplain() throws Exception {
     createTable("explain_test"); // Create table
     insertData("explain_test");  // Insert some data into table
-    try {
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
-    driver.explain(query1,baseConf);
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
+   
+    try {
+    driver.explain(query1,baseConf);
     driver.explain(query2,baseConf); 
+    Assert.fail("Running explain on a non existing table.");
     } catch(GrillException ex) {
       System.out.println("Error : " + ex);
     }

@@ -373,21 +373,23 @@ public class JDBCDriver implements GrillDriver {
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
     String rewrittenQuery = rewriteQuery(query,conf);
-    String explainQuery = "explain  " + rewrittenQuery;
-    LOG.info("explain  " + rewrittenQuery);
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
+    LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
+    
     JdbcQueryContext queryContext = new JdbcQueryContext(explainQueryCtx);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
+    //QueryResult result = executeInternal(explainQueryCtx,explainQuery);
     QueryResult result = new QueryCallable(queryContext).call();
     if (result.error != null) {
       throw new GrillException("Query explain failed!", result.error);
-    }
+    } 
     return new JDBCQueryPlan();
   } 
-  
+    
   /**
    * Prepare the given query
    *
@@ -467,12 +469,29 @@ public class JDBCDriver implements GrillDriver {
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
+    QueryResult result = executeInternal(context,rewrittenQuery);
+    LOG.info("Execute " + context.getQueryHandle());
+    return result.getGrillResultSet(true);
+    
+  }
+  
+  /**
+   * Internally executing query
+   *
+   * @param context
+   * @param rewrittenQuery
+   * @return returns the result set
+   * @throws com.inmobi.grill.api.GrillException
+   */
+  
+  private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws GrillException {
+    checkConfigured();
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
     QueryResult result = new QueryCallable(queryContext).call();
-    LOG.info("Execute " + context.getQueryHandle());
-    return result.getGrillResultSet(true);
+    return result;
+    //LOG.info("Execute " + context.getQueryHandle());
   }
 
   /**
