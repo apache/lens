@@ -26,7 +26,6 @@ import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
@@ -46,16 +45,13 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
-import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
-import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 import com.inmobi.grill.server.api.query.StatusChange;
-import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
 public class MetricsServiceImpl extends AbstractService implements MetricsService {
   public static final String METRICS_SVC_NAME = "metrics";
