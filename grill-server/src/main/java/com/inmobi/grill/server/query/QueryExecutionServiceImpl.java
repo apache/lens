@@ -100,7 +100,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       new DelayQueue<PreparedQueryContext>();
   private Map<QueryPrepareHandle, PreparedQueryContext> preparedQueries =
       new HashMap<QueryPrepareHandle, PreparedQueryContext>();
-  private ConcurrentMap<QueryHandle, QueryContext> allQueries = 
+  private ConcurrentMap<QueryHandle, QueryContext> allQueries =
       new ConcurrentHashMap<QueryHandle, QueryContext>();
   private Configuration conf;
   private final QuerySubmitter querySubmitterRunnable = new QuerySubmitter();
@@ -370,7 +370,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         launchedQueries.remove(ctx);
       }
     }
-    finishedQueries.add(new FinishedQuery(ctx));    
+    finishedQueries.add(new FinishedQuery(ctx));
   }
 
   void setSuccessState(QueryContext ctx) throws GrillException {
@@ -727,7 +727,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       } else {
         throw new NotFoundException("Result set not available for query:" + queryHandle);
       }
-    }   
+    }
     return resultSets.get(queryHandle);
   }
 
@@ -935,7 +935,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     return getQueryContext(sessionHandle, queryHandle).toGrillQuery();
   }
 
-  private PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle, 
+  private PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
           throws GrillException {
     try {
@@ -951,7 +951,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public GrillPreparedQuery getPreparedQuery(GrillSessionHandle sessionHandle, 
+  public GrillPreparedQuery getPreparedQuery(GrillSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
           throws GrillException {
     return getPreparedQueryContext(sessionHandle, prepareHandle).toPreparedQuery();
@@ -961,7 +961,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutMillis,
       GrillConf conf) throws GrillException {
     try {
-      LOG.info("Blocking execute " + sessionHandle.toString() + " query: " 
+      LOG.info("Blocking execute " + sessionHandle.toString() + " query: "
           + query + " timeout: " + timeoutMillis);
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
@@ -1237,11 +1237,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
         GrillDriver driver = drivers.get(driverClsName);
-        if (driver == null) { 
+        if (driver == null) {
           // this driver is removed in the current server restart
           // we will create an instance and read its state still.
           try {
-            Class<? extends GrillDriver> driverCls = 
+            Class<? extends GrillDriver> driverCls =
                 (Class<? extends GrillDriver>)Class.forName(driverClsName);
             driver = (GrillDriver) driverCls.newInstance();
             driver.configure(conf);
@@ -1335,10 +1335,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     GrillResultSet result = getResultset(queryHandle);
     if (result instanceof GrillPersistentResult) {
       final Path resultPath = new Path(((PersistentResultSet)result).getOutputPath());
+      try {
+        FileSystem fs = resultPath.getFileSystem(conf);
+        if (fs.isDirectory(resultPath)) {
+          throw new NotFoundException("Http result not available for query:"
+              + queryHandle.toString());
+        }
+      } catch (IOException e) {
+        LOG.warn("Unable to get status for Result Directory", e);
+        throw new NotFoundException("Http result not available for query:"
+            + queryHandle.toString());
+      }
       String resultFSReadUrl = ctx.getConf().get(GrillConfConstants.RESULT_FS_READ_URL);
       if (resultFSReadUrl != null) {
         try {
-          URI resultReadPath = new URI(resultFSReadUrl + 
+          URI resultReadPath = new URI(resultFSReadUrl +
               resultPath.toUri().getPath() +
               "?op=OPEN&user.name="+getSession(sessionHandle).getUserName());
           return Response.seeOther(resultReadPath)
