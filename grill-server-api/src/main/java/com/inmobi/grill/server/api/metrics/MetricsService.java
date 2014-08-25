@@ -77,7 +77,7 @@ public interface MetricsService {
   public long getRunningQueries();
   public long getFinishedQueries();
   
-  public long getTotalQueuedQueries();
+  public long getTotalAcceptedQueries();
   public long getTotalSuccessfulQueries();
   public long getTotalFinishedQueries();
   public long getTotalCancelledQueries();

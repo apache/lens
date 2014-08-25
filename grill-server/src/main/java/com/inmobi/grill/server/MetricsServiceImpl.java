@@ -26,6 +26,7 @@ import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
@@ -36,6 +37,8 @@ import org.apache.log4j.Logger;
 
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.JvmAttributeGaugeSet;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.ganglia.GangliaReporter;
@@ -43,14 +46,16 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
-import com.codahale.metrics.JvmAttributeGaugeSet;
+import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryStatus.Status;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
+import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryExecutionService;
 import com.inmobi.grill.server.api.query.StatusChange;
+import com.inmobi.grill.server.query.QueryExecutionServiceImpl;
 
 public class MetricsServiceImpl extends AbstractService implements MetricsService {
   public static final String METRICS_SVC_NAME = "metrics";
@@ -60,43 +65,25 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private List<ScheduledReporter> reporters;
   @Getter private HealthCheckRegistry healthCheck;
 
-  private Counter queuedQueries;
-  private Counter runningQueries;
   private Counter finishedQueries;
-  private Counter totalQueuedQueries;
+  private Counter totalAcceptedQueries;
   private Counter totalSuccessfulQueries;
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
+  private QueryExecutionService queryExecutionService;
 
 
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
     @Override
     public void process(StatusChange event) {
       processCurrentStatus(event.getCurrentValue());
-      processPrevStatus(event.getPreviousValue());
     }
-
-    protected void processPrevStatus(Status previousValue) {
-      switch (previousValue) {
-      case QUEUED:
-        queuedQueries.dec(); break;
-      case RUNNING:
-        runningQueries.dec(); break;
-      default:
-        break;
-      }
-    }
-
 
     protected void processCurrentStatus(Status currentValue) {
       switch(currentValue) {
       case QUEUED:
-        queuedQueries.inc();
-        totalQueuedQueries.inc();
-        break;
-      case RUNNING:
-        runningQueries.inc(); 
+        totalAcceptedQueries.inc();
         break;
       case CANCELED:
         finishedQueries.inc();
@@ -168,13 +155,27 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
 
   protected void initCounters() {
-    queuedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES));
-    totalQueuedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-" + QUEUED_QUERIES));
-
-    runningQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES));
+    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
+      @Override
+      public Long getValue() {
+        try {
+          return queryExecutionService.getQueuedQueriesCount();
+        } catch (GrillException e) {
+          return (long) 0;
+        }
+      }
+    });
+    
+    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
+      @Override
+      public Long getValue() {
+        try {
+          return queryExecutionService.getRunningQueriesCount();
+        } catch (GrillException e) {
+          return (long) 0;
+        }
+      }
+    });
 
     totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-success-queries"));
@@ -255,15 +256,22 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     return metricRegistry.counter(MetricRegistry.name(cls, counter)).getCount();
   }
 
-
   @Override
   public long getQueuedQueries() {
-    return queuedQueries.getCount();
+    try {
+      return queryExecutionService.getQueuedQueriesCount();
+    } catch (GrillException e) {
+      return 0;
+    }
   }
 
   @Override
   public long getRunningQueries() {
-    return runningQueries.getCount();
+    try {
+      return queryExecutionService.getRunningQueriesCount();
+    } catch (GrillException e) {
+      return 0;
+    }
   }
 
 
@@ -274,8 +282,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
 
   @Override
-  public long getTotalQueuedQueries() {
-    return totalQueuedQueries.getCount();
+  public long getTotalAcceptedQueries() {
+    return totalAcceptedQueries.getCount();
   }
 
 
