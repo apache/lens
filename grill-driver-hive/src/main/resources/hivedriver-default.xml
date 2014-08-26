@@ -45,18 +45,6 @@
 </property>
 
 <property>
-  <name>hive.server2.thrift.client.user</name>
-  <value>anonymous</value>
-  <description>The client user name</description>
-</property>
-
-<property>
-  <name>hive.server2.thrift.client.password</name>
-  <value>anonymous</value>
-  <description>The client user's password</description>
-</property>
-
-<property>
   <name>hive.server2.thrift.client.retry.limit</name>
   <value>1</value>
   <description>Number of times to retry a Thrift service call upon failure </description>

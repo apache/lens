@@ -36,14 +36,10 @@ Hive driver configuration
 *--+--+---+--+
 |6|hive.server2.thrift.client.connect.retry.limit|1|Number of times to retry a connection to a Thrift hive server|
 *--+--+---+--+
-|7|hive.server2.thrift.client.password|anonymous|The client user's password|
+|7|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
 *--+--+---+--+
-|8|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
+|8|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
 *--+--+---+--+
-|9|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
-*--+--+---+--+
-|10|hive.server2.thrift.client.user|anonymous|The client user name|
-*--+--+---+--+
-|11|hive.server2.thrift.port|10000|The port on which hive server is running|
+|9|hive.server2.thrift.port|10000|The port on which hive server is running|
 *--+--+---+--+
 The configuration parameters and their default values
