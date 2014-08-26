@@ -101,7 +101,9 @@ public class GrillConnection {
   public GrillSessionHandle open() {
 
     WebTarget target = getSessionWebTarget();
-
+    System.out.println(params);
+    System.out.println(params.getUser());
+    System.out.println(params.getPassword());
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("username").build(), params.getUser()));
@@ -111,11 +113,10 @@ public class GrillConnection {
         FormDataContentDisposition.name("sessionconf").
             fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
-
+    System.out.println(target.getUri());
     final GrillSessionHandle sessionHandle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
         GrillSessionHandle.class);
-
 
     if (sessionHandle != null) {
       this.sessionHandle = sessionHandle;

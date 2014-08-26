@@ -56,6 +56,11 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     QueryExecutionStatistics event = new QueryExecutionStatistics(
         System.currentTimeMillis());
     QueryContext ctx = queryService.getQueryContext(handle);
+    if (ctx == null) {
+      LOG.warn("Could not find the context for " + handle + " for event:"
+        + ended.getCurrentValue() + ". No stat generated");
+      return;
+    }
     event.setEndTime(ctx.getEndTime());
     event.setStatus(ctx.getStatus());
     event.setCause(ended.getCause() != null ? ended.getCause() : "");

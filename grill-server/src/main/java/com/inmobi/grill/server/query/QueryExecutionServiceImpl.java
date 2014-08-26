@@ -400,11 +400,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
           } catch (GrillException exc) {
             // Driver gave exception while updating status
-            QueryStatus failedStatus =
-                new QueryStatus(1.0, Status.FAILED, "Status update failed",
-                    false, "Status update failed", exc.getMessage());
-            ctx.setStatus(failedStatus);
-            LOG.error("Status update failed for " + handle + " reason: " + exc.getMessage());
+            setFailedStatus(ctx, "Status update failed", exc.getMessage());
+            LOG.error("Status update failed for " + handle, exc);
           }
           //query is successfully executed by driver and
           // if query result need not persisted, move the query to succeeded state
@@ -491,8 +488,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
             if (finished.ctx.getStatus().getStatus()
                 == Status.SUCCESSFUL) {
-              GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
-              if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
+              if (finished.ctx.getStatus().isResultSetAvailable()) {
+                GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
+                if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
                   GrillResultSetMetadata metadata = set.getMetadata();
                   String outputPath = ((PersistentResultSet) set).getOutputPath();
                   int rows = set.size();
@@ -500,6 +498,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                   finishedQuery.setResult(outputPath);
                   finishedQuery.setMetadata(mapper.writeValueAsString(metadata));
                   finishedQuery.setRows(rows);
+                }
               }
             }
 

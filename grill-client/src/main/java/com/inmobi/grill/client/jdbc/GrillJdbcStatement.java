@@ -256,6 +256,14 @@ public class GrillJdbcStatement implements Statement {
     return false;
   }
 
+  public void closeOnCompletion() throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
+  public boolean isCloseOnCompletion() throws SQLException {
+    throw new SQLException("Operation not supported!!!");
+  }
+
 
   @Override
   public int getMaxFieldSize() throws SQLException {
