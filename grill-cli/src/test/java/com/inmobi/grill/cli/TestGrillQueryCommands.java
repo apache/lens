@@ -66,6 +66,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     testExecuteAsyncQuery(qCom);
     testExplainQuery(qCom);
     testPreparedQuery(qCom);
+    testShowPersistentResultSet(qCom);
   }
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
@@ -171,5 +172,21 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     String sql = "cube select id,name from test_dim";
     String result = qCom.executeQuery(sql, false);
     Assert.assertTrue(result.contains("1\tfirst"), result);
+  }
+
+  private void testShowPersistentResultSet(GrillQueryCommands qCom) throws Exception {
+    System.out.println("@@PERSISTENT_RESULT_TEST-------------");
+    client.setConnectionParam("grill.persistent.resultset.indriver", "true");
+    String query = "cube select id,name from test_dim";
+    try {
+      String result = qCom.executeQuery(query, false);
+      System.out.println("@@ RESULT " + result);
+      Assert.assertNotNull(result);
+      Assert.assertFalse(result.contains("Failed to get resultset"));
+    } catch (Exception exc) {
+      exc.printStackTrace();
+      Assert.fail("Exception not expected: " + exc.getMessage());
+    }
+    System.out.println("@@END_PERSISTENT_RESULT_TEST-------------");
   }
 }
