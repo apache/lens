@@ -72,28 +72,28 @@ public class GrillConnection {
 
   private WebTarget getSessionWebTarget(Client client) {
     return client.target(params.getBaseConnectionUrl()).path(
-        params.getSessionResourcePath());
+      params.getSessionResourcePath());
   }
 
   private WebTarget getMetastoreWebTarget(Client client) {
     return client.target(params.getBaseConnectionUrl()).path(
-        params.getMetastoreResourcePath());
+      params.getMetastoreResourcePath());
   }
 
 
   private WebTarget getSessionWebTarget() {
     Client client = ClientBuilder
-        .newBuilder()
-        .register(MultiPartFeature.class)
-        .build();
+      .newBuilder()
+      .register(MultiPartFeature.class)
+      .build();
     return getSessionWebTarget(client);
   }
 
   private WebTarget getMetastoreWebTarget() {
     Client client = ClientBuilder
-        .newBuilder()
-        .register(MultiPartFeature.class)
-        .build();
+      .newBuilder()
+      .register(MultiPartFeature.class)
+      .build();
     return getMetastoreWebTarget(client);
   }
 
@@ -101,35 +101,34 @@ public class GrillConnection {
   public GrillSessionHandle open() {
 
     WebTarget target = getSessionWebTarget();
-    System.out.println(params);
-    System.out.println(params.getUser());
-    System.out.println(params.getPassword());
+
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("username").build(), params.getUser()));
+      FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("password").build(), params.getPassword()));
+      FormDataContentDisposition.name("password").build(), params.getPassword()));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("sessionconf").
-            fileName("sessionconf").build(), params.getSessionConf(),
-        MediaType.APPLICATION_XML_TYPE));
-    System.out.println(target.getUri());
+      FormDataContentDisposition.name("sessionconf").
+        fileName("sessionconf").build(), params.getSessionConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
     final GrillSessionHandle sessionHandle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        GrillSessionHandle.class);
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+      GrillSessionHandle.class);
+
 
     if (sessionHandle != null) {
       this.sessionHandle = sessionHandle;
       LOG.debug("Created a new session " + sessionHandle.getPublicId());
     } else {
       throw new IllegalStateException("Unable to connect to grill " +
-          "server with following paramters" + params);
+        "server with following paramters" + params);
     }
     APIResult result = attachDatabaseToSession();
     LOG.debug("Successfully switched to database " + params.getDbName());
     if (result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new IllegalStateException("Unable to connect to grill database "
-          + params.getDbName());
+        + params.getDbName());
     }
 
     open.set(true);
@@ -140,9 +139,9 @@ public class GrillConnection {
   public APIResult attachDatabaseToSession() {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases").path("current").queryParam(
-        "sessionid", this.sessionHandle).request(
-        MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
-        APIResult.class);
+      "sessionid", this.sessionHandle).request(
+      MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
+      APIResult.class);
     return result;
 
   }
@@ -156,10 +155,10 @@ public class GrillConnection {
     WebTarget target = getSessionWebTarget();
 
     APIResult result =  target.queryParam("sessionid",
-        this.sessionHandle).request().delete(APIResult.class);
+      this.sessionHandle).request().delete(APIResult.class);
     if(result.getStatus() != APIResult.Status.SUCCEEDED) {
       throw new IllegalStateException("Unable to close grill connection " +
-          "with params " + params);
+        "with params " + params);
     }
     return result;
   }
@@ -169,13 +168,13 @@ public class GrillConnection {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp  = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
+      this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
-        type));
+      type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        resourcePath));
+      resourcePath));
     APIResult result = target.path("resources/add").request().put(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
@@ -184,13 +183,13 @@ public class GrillConnection {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
+      this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
-        type));
+      type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        resourcePath));
+      resourcePath));
     APIResult result = target.path("resources/delete").request().put(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
@@ -198,14 +197,14 @@ public class GrillConnection {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
+      this.sessionHandle, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("key").build(), key));
+      FormDataContentDisposition.name("key").build(), key));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("value").build(), value));
+      FormDataContentDisposition.name("value").build(), value));
     LOG.debug("Setting connection params " + key + "=" + value);
     APIResult result = target.path("params").request().put(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
@@ -213,20 +212,20 @@ public class GrillConnection {
   public List<String> getConnectionParams() {
     WebTarget target = getSessionWebTarget();
     StringList list = target.path("params")
-        .queryParam("sessionid", this.sessionHandle)
-        .queryParam("verbose", true)
-        .request()
-        .get(StringList.class);
+      .queryParam("sessionid", this.sessionHandle)
+      .queryParam("verbose", true)
+      .request()
+      .get(StringList.class);
     return list.getElements();
   }
 
   public List<String> getConnectionParams(String key) {
     WebTarget target = getSessionWebTarget();
     StringList value = target.path("params")
-        .queryParam("sessionid",this.sessionHandle)
-        .queryParam("key", key)
-        .request()
-        .get(StringList.class);
+      .queryParam("sessionid",this.sessionHandle)
+      .queryParam("key", key)
+      .request()
+      .get(StringList.class);
     return value.getElements();
   }
 
