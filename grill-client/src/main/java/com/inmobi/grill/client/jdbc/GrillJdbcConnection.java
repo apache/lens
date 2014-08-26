@@ -305,27 +305,22 @@ public class GrillJdbcConnection implements Connection {
     throw new SQLException("Operation not supported!!!!");
   }
 
-  @Override
   public void setSchema(String schema) throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
 
-  @Override
   public String getSchema() throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
 
-  @Override
   public void abort(Executor executor) throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
 
-  @Override
   public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
 
-  @Override
   public int getNetworkTimeout() throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }

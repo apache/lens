@@ -1242,12 +1242,10 @@ public class GrillJdbcResultSet implements ResultSet {
     throw new SQLException("Operation not supported");
   }
 
-  @Override
   public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
 
-  @Override
   public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
     throw new SQLException("Operation not supported!!!");
   }
