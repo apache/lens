@@ -396,11 +396,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
           } catch (GrillException exc) {
             // Driver gave exception while updating status
-            QueryStatus failedStatus =
-                new QueryStatus(1.0, Status.FAILED, "Status update failed",
-                    false, "Status update failed", exc.getMessage());
-            ctx.setStatus(failedStatus);
-            LOG.error("Status update failed for " + handle + " reason: " + exc.getMessage());
+            setFailedStatus(ctx, "Status update failed", exc.getMessage());
+            LOG.error("Status update failed for " + handle, exc);
           }
           //query is successfully executed by driver and
           // if query result need not persisted, move the query to succeeded state
