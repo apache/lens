@@ -22,6 +22,8 @@ package com.inmobi.grill.server.api.query;
 
 import java.util.List;
 
+import javax.ws.rs.core.Response;
+
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
@@ -33,11 +35,10 @@ import com.inmobi.grill.api.query.QueryPlan;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryResult;
 import com.inmobi.grill.api.query.QueryResultSetMetadata;
-import com.inmobi.grill.api.query.QueryStatus;
-import javax.ws.rs.core.Response;
 
 public interface QueryExecutionService {
 
+  public static final String NAME = "query";
   /**
    * Explain the given query
    * 
@@ -260,4 +261,25 @@ public interface QueryExecutionService {
    */
   public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, GrillConf newconf)
       throws GrillException;
+  
+  /**
+   * Get queued queries count
+   * 
+   * @return queued queries count
+   */
+  public long getQueuedQueriesCount();
+  
+  /**
+   * Get running queries count
+   * 
+   * @return running queries count
+   */
+  public long getRunningQueriesCount();
+
+  /**
+   * Get finished queries count
+   * 
+   * @return finished queries count
+   */
+  public long getFinishedQueriesCount();
 }

@@ -1409,4 +1409,19 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   Collection<GrillDriver> getDrivers(){
     return drivers.values();
   }
+
+  @Override
+  public long getQueuedQueriesCount() {
+    return acceptedQueries.size();
+  }
+
+  @Override
+  public long getRunningQueriesCount() {
+    return launchedQueries.size();
+  }
+
+  @Override
+  public long getFinishedQueriesCount() {
+    return finishedQueries.size();
+  }
 }
