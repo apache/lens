@@ -107,7 +107,7 @@ public class GrillClientConfig extends Configuration {
    */
   public String getSessionResourcePath() {
     return this.get(GRILL_SESSION_RESOURCE_PATH,
-      DEFAULT_SESSION_RESOURCE_PATH);
+        DEFAULT_SESSION_RESOURCE_PATH);
   }
 
   /**
@@ -116,7 +116,7 @@ public class GrillClientConfig extends Configuration {
    */
   public String getQueryResourcePath() {
     return this.get(GRILL_QUERY_RESOURCE_PATH,
-      DEFAULT_QUERY_RESOURCE_PATH);
+        DEFAULT_QUERY_RESOURCE_PATH);
   }
 
   /**

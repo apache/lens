@@ -37,7 +37,7 @@ public class GrillClient {
   private final GrillClientConfig conf;
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
-    Maps.newHashMap();
+      Maps.newHashMap();
   private final GrillStatement statement;
 
   public GrillClient() {
@@ -65,7 +65,7 @@ public class GrillClient {
     private final GrillQuery query;
 
     public GrillClientResultSetWithStats(GrillClientResultSet resultSet,
-      GrillQuery query) {
+                                         GrillQuery query) {
       this.resultSet = resultSet;
       this.query = query;
     }
@@ -88,13 +88,13 @@ public class GrillClient {
 
   private GrillClientResultSetWithStats getResultsFromStatement(GrillStatement statement) {
     if(statement.getStatus().getStatus()
-      == QueryStatus.Status.FAILED) {
+        == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new GrillClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData());
+          statement.getResultSetMetaData());
     }
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
@@ -103,13 +103,13 @@ public class GrillClient {
     GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
-      == QueryStatus.Status.FAILED) {
+        == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new GrillClientResultSet(statement.getResultSet(),
-        statement.getResultSetMetaData());
+          statement.getResultSetMetaData());
     }
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
@@ -146,7 +146,7 @@ public class GrillClient {
     if (!status.isResultSetAvailable()) {
       LOG.debug("Current status of the query is " + status);
       throw new IllegalStateException("Resultset for the query "
-        + query + " is not available, its current status is " + status);
+          + query + " is not available, its current status is " + status);
     }
     return getGrillStatement(query).getResultSet();
   }
@@ -264,7 +264,7 @@ public class GrillClient {
   }
 
   public APIResult createFactTable(String factSpec,
-    String storageSpecPath) {
+                                   String storageSpecPath) {
     GrillMetadataClient mc = new GrillMetadataClient(conn);
 
     return mc.createFactTable(factSpec, storageSpecPath);
