@@ -160,4 +160,12 @@ public class GrillClientConfig extends Configuration {
   public String getPassword() {
     return this.get(GRILL_USER_PASS, DEFAULT_USER_PASS);
   }
+
+  public void setUser(String user) {
+    this.set(GRILL_USER_NAME, user);
+  }
+
+  public void setPassword(String password) {
+    this.set(GRILL_USER_PASS, password);
+  }
 }
