@@ -54,8 +54,8 @@ public class GrillClient {
   public void getCredentials(){
     Console console = System.console();
     if (console == null) {
-      System.out.println("Couldn't get Console instance");
-      System.exit(0);
+      System.err.println("Couldn't get Console instance");
+      System.exit(-1);
     }
     console.printf("username:");
     String username = console.readLine();

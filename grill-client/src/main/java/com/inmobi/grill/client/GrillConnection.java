@@ -114,8 +114,8 @@ public class GrillConnection {
     Response response = target.request().post(
       Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
     if(response.getStatus() == 401) {
-      System.out.println("username/password combination incorrect");
-      System.exit(0);
+      System.err.println("username/password combination incorrect");
+      System.exit(-1);
     }
     final GrillSessionHandle handle = response.readEntity(GrillSessionHandle.class);
     if (handle != null) {
