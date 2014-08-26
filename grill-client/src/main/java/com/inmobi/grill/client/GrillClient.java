@@ -28,7 +28,6 @@ import com.inmobi.grill.api.query.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.Console;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,7 +37,7 @@ public class GrillClient {
   private final GrillClientConfig conf;
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
-      Maps.newHashMap();
+    Maps.newHashMap();
   private final GrillStatement statement;
 
   public GrillClient() {
@@ -47,22 +46,8 @@ public class GrillClient {
 
   public GrillClient(GrillClientConfig conf) {
     this.conf = conf;
-    getCredentials();
     connectToGrillServer();
     statement = new GrillStatement(conn);
-  }
-
-  public void getCredentials(){
-    Console console = System.console();
-    if (console == null) {
-      System.out.println("Couldn't get Console instance");
-      System.exit(0);
-    }
-    console.printf("Enter username:");
-    String username = console.readLine();
-    char passwordArray[] = console.readPassword("Enter your secret password: ");
-    conf.setUser(username.trim());
-    conf.setPassword(new String(passwordArray));
   }
 
   public QueryHandle executeQueryAsynch(String sql) {
@@ -80,7 +65,7 @@ public class GrillClient {
     private final GrillQuery query;
 
     public GrillClientResultSetWithStats(GrillClientResultSet resultSet,
-                                         GrillQuery query) {
+      GrillQuery query) {
       this.resultSet = resultSet;
       this.query = query;
     }
@@ -103,13 +88,13 @@ public class GrillClient {
 
   private GrillClientResultSetWithStats getResultsFromStatement(GrillStatement statement) {
     if(statement.getStatus().getStatus()
-        == QueryStatus.Status.FAILED) {
+      == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new GrillClientResultSet(statement.getResultSet(),
-          statement.getResultSetMetaData());
+        statement.getResultSetMetaData());
     }
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
@@ -118,13 +103,13 @@ public class GrillClient {
     GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
-        == QueryStatus.Status.FAILED) {
+      == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new GrillClientResultSet(statement.getResultSet(),
-          statement.getResultSetMetaData());
+        statement.getResultSetMetaData());
     }
     return new GrillClientResultSetWithStats(result, statement.getQuery());
   }
@@ -161,7 +146,7 @@ public class GrillClient {
     if (!status.isResultSetAvailable()) {
       LOG.debug("Current status of the query is " + status);
       throw new IllegalStateException("Resultset for the query "
-          + query + " is not available, its current status is " + status);
+        + query + " is not available, its current status is " + status);
     }
     return getGrillStatement(query).getResultSet();
   }
@@ -172,7 +157,7 @@ public class GrillClient {
 
 
   private void connectToGrillServer() {
-    LOG.info("Connecting to grill server " + new GrillConnectionParams(conf));
+    LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
     conn.open();
     LOG.debug("Successfully connected to server " + conn);
@@ -279,7 +264,7 @@ public class GrillClient {
   }
 
   public APIResult createFactTable(String factSpec,
-                                   String storageSpecPath) {
+    String storageSpecPath) {
     GrillMetadataClient mc = new GrillMetadataClient(conn);
 
     return mc.createFactTable(factSpec, storageSpecPath);
