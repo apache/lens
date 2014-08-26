@@ -66,6 +66,10 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
+  
+  private Gauge<Long> queuedQueries;
+  private Gauge<Long> runningQueries;
+  private Gauge<Long> finishedQueries;
 
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
     @Override
@@ -147,21 +151,21 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
 
   protected void initCounters() {
-    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
+    queuedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
           return getQuerySvc().getQueuedQueriesCount();
       }
     });
     
-    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
+    runningQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
           return getQuerySvc().getRunningQueriesCount();
       }
     });
 
-    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES), new Gauge<Long>() {
+    finishedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
         return getQuerySvc().getFinishedQueriesCount();
@@ -244,17 +248,17 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   @Override
   public long getQueuedQueries() {
-    return getQuerySvc().getQueuedQueriesCount();
+    return queuedQueries.getValue();
   }
 
   @Override
   public long getRunningQueries() {
-    return getQuerySvc().getRunningQueriesCount();
+    return runningQueries.getValue();
   }
 
   @Override
   public long getFinishedQueries() {
-    return getQuerySvc().getFinishedQueriesCount();
+    return finishedQueries.getValue();
   }
 
   @Override
