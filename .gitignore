@@ -1,19 +1,35 @@
 #java specific
 *.class
-*\.project
-*\.classpath
-*\.idea
-*/\.settings/*
-*\.settings/*
-target/*
-*/target/*
-*/test-output/*
-*/query_logs/*
+query_logs/
+
 ## generic files to ignore
 *~
 *.lock
-*.DS_Store
 *.swp
 *.out
-*.iml
 *.log
+
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
+
+#testng
+test-output/
+
+#Other
+bin/
+out/
