@@ -498,13 +498,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                   finishedQuery.setRows(rows);
               }
             }
-            try {
-              grillServerDao.insertFinishedQuery(finishedQuery);
-            } catch (Exception e) {
-              LOG.warn("Exception while purging query ",e);
-              finishedQueries.add(finished);
-              continue;
-            }
 
           // session is not required to close the query
           //acquire(finished.getCtx().getGrillSessionIdentifier());
@@ -515,6 +508,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             }
           } catch (GrillException e) {
             LOG.warn("Exception while closing query with selected driver.", e);
+          }
+          try {
+            grillServerDao.insertFinishedQuery(finishedQuery);
+          } catch (Exception e) {
+            LOG.warn("Exception while purging query ",e);
+            finishedQueries.add(finished);
+            continue;
           }
           allQueries.remove(finished.getCtx().getQueryHandle());
           resultSets.remove(finished.getCtx().getQueryHandle());
