@@ -722,7 +722,7 @@ public class HiveDriver implements GrillDriver {
     }
 
     // Check if there is underlying cause
-    if (exc.getCause() instanceof HiveSQLException) {
+    if (exc.getCause() != null && exc.getCause() instanceof HiveSQLException) {
       isSessionInvalid((HiveSQLException) exc.getCause(), sessionHandle);
     }
     return false;
@@ -771,7 +771,7 @@ public class HiveDriver implements GrillDriver {
       return;
     }
 
-    if (exc.getCause() instanceof HiveSQLException) {
+    if (exc.getCause() != null && exc.getCause() instanceof HiveSQLException) {
       checkInvalidOperation(queryHandle, (HiveSQLException) exc.getCause());
     }
 
