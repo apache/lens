@@ -195,7 +195,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
 	@Override
 	public QueryCost getCost() {
     /*
-    Return query cost as 1 so that if JDBC storage and storage is present,
+    Return query cost as 1 so that if JDBC storage and other storage is present,
     JDBC is given preference.
      */
 		return new QueryCost(1,1);

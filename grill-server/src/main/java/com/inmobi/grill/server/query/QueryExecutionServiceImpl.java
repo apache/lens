@@ -88,7 +88,6 @@ import org.codehaus.jackson.map.module.SimpleModule;
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
   public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
-  public static final String NAME = "query";
   private static final ObjectMapper mapper = new ObjectMapper();
 
   private PriorityBlockingQueue<QueryContext> acceptedQueries =
@@ -1404,5 +1403,20 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   // Used in test code
   Collection<GrillDriver> getDrivers(){
     return drivers.values();
+  }
+
+  @Override
+  public long getQueuedQueriesCount() {
+    return acceptedQueries.size();
+  }
+
+  @Override
+  public long getRunningQueriesCount() {
+    return launchedQueries.size();
+  }
+
+  @Override
+  public long getFinishedQueriesCount() {
+    return finishedQueries.size();
   }
 }
