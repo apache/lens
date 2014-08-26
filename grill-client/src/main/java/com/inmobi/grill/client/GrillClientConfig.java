@@ -56,22 +56,15 @@ public class GrillClientConfig extends Configuration {
   public static final String DEFAULT_USER_PASS = "";
 
 
-  /** 
+  /**
    * Get the username from config
-   * 
+   *
    * @return Returns grill client user name
    */
   public String getUser() {
     return this.get(GRILL_USER_NAME, DEFAULT_USER_NAME);
   }
 
-  public void setUser(String user){
-    this.set(GRILL_USER_NAME, user);
-  }
-
-  public void setPassword(String password){
-    this.set(GRILL_USER_PASS, password);
-  }
   /**
    * Returns the configured grill server hostname
    *
@@ -114,7 +107,7 @@ public class GrillClientConfig extends Configuration {
    */
   public String getSessionResourcePath() {
     return this.get(GRILL_SESSION_RESOURCE_PATH,
-        DEFAULT_SESSION_RESOURCE_PATH);
+      DEFAULT_SESSION_RESOURCE_PATH);
   }
 
   /**
@@ -123,7 +116,7 @@ public class GrillClientConfig extends Configuration {
    */
   public String getQueryResourcePath() {
     return this.get(GRILL_QUERY_RESOURCE_PATH,
-        DEFAULT_QUERY_RESOURCE_PATH);
+      DEFAULT_QUERY_RESOURCE_PATH);
   }
 
   /**
