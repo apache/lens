@@ -109,7 +109,7 @@ public class GrillConnection {
         FormDataContentDisposition.name("password").build(), params.getPassword()));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").
-          fileName("sessionconf").build(), params.getSessionConf(),
+            fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final GrillSessionHandle sessionHandle = target.request().post(
