@@ -58,6 +58,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI, "jdbc:hsqldb:mem:jdbcTestDB");
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
+    baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD, "explain plan for ");
     
     driver = new JDBCDriver();
     driver.configure(baseConf);
@@ -159,7 +160,23 @@ public class TestJdbcDriver {
     }
     Assert.assertNotNull(th);
   }
+  
+  @Test
+  public void testExplain() throws Exception {
+    createTable("explain_test"); // Create table
+    insertData("explain_test");  // Insert some data into table
+    String query1 = "SELECT * FROM explain_test"; // Select query against existing table
+    String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
+    driver.explain(query1,baseConf);
 
+    try {
+    driver.explain(query2,baseConf); 
+    Assert.fail("Running explain on a non existing table.");
+    } catch(GrillException ex) {
+      System.out.println("Error : " + ex);
+    }
+ }
+  
   @Test
   public void testExecute() throws Exception {
     createTable("execute_test");

@@ -34,33 +34,33 @@ Grill server configuration
 *--+--+---+--+
 |5|grill.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|6|grill.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
+|6|grill.max.finished.queries|100|Maximum number of finished queries which grill server will keep in memory before purging.|
 *--+--+---+--+
-|7|grill.mail.host|mail-host.company.com|SMTP Host for sending mail|
+|7|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|8|grill.mail.port|25|SMTP Port|
+|8|grill.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|9|grill.mail.smtp.connectiontimeout|15000|Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.|
+|9|grill.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|10|grill.mail.smtp.timeout|30000|Socket read timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 30 seconds.|
+|10|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|11|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|11|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|12|grill.metrics.ganglia.host| |The ganglia host name|
+|12|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|13|grill.metrics.ganglia.port| |The ganglia port|
+|13|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|14|grill.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|14|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|15|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|15|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
-|16|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|16|grill.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored.|
 *--+--+---+--+
-|17|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|17|grill.server.db.jdbc.pass| |JDBC Password for Finished queries table|
 *--+--+---+--+
-|18|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|18|grill.server.db.jdbc.url|jdbc:hsqldb:/tmp/grillserver/queries.db|JDBC URL where the database for storing finished queries is located.|
 *--+--+---+--+
-|19|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
+|19|grill.server.db.jdbc.user|SA|JDBC User for Finished queries table|
 *--+--+---+--+
 |20|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
 *--+--+---+--+
@@ -72,22 +72,24 @@ Grill server configuration
 *--+--+---+--+
 |24|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|25|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
+|25|grill.server.snapshot.interval|300000|Snapshot interval time in miliseconds for saving grill server state.|
 *--+--+---+--+
-|26|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
+|26|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
 *--+--+---+--+
-|27|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
+|27|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+
-|28|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|28|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|29|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|29|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|30|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
+|30|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|31|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
+|31|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
-|32|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+|32|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
 *--+--+---+--+
-|33|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
+|33|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+*--+--+---+--+
+|34|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
 *--+--+---+--+
 The configuration parameters and their default values

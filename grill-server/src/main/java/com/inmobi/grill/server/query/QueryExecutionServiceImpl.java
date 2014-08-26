@@ -79,6 +79,11 @@ import com.inmobi.grill.driver.cube.CubeGrillDriver;
 import com.inmobi.grill.driver.cube.RewriteUtil;
 import com.inmobi.grill.driver.hive.HiveDriver;
 import com.inmobi.grill.server.api.GrillConfConstants;
+import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.hive.service.cli.TypeDescriptor;
+import org.codehaus.jackson.*;
+import org.codehaus.jackson.map.*;
+import org.codehaus.jackson.map.module.SimpleModule;
 
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
@@ -86,6 +91,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
   public static final String NAME = "query";
+  private static final ObjectMapper mapper = new ObjectMapper();
 
   private PriorityBlockingQueue<QueryContext> acceptedQueries =
       new PriorityBlockingQueue<QueryContext>();
@@ -96,7 +102,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       new DelayQueue<PreparedQueryContext>();
   private Map<QueryPrepareHandle, PreparedQueryContext> preparedQueries =
       new HashMap<QueryPrepareHandle, PreparedQueryContext>();
-  private ConcurrentMap<QueryHandle, QueryContext> allQueries = 
+  private ConcurrentMap<QueryHandle, QueryContext> allQueries =
       new ConcurrentHashMap<QueryHandle, QueryContext>();
   private Configuration conf;
   private final QuerySubmitter querySubmitterRunnable = new QuerySubmitter();
@@ -115,6 +121,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private GrillEventService eventService;
   private MetricsService metricsService;
   private StatisticsService statisticsService;
+  private int maxFinishedQueries;
+  private GrillServerDAO grillServerDao;
 
   public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
     super(NAME, cliService);
@@ -213,18 +221,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
     @Override
     public int compareTo(Delayed o) {
-      return (int)(this.getDelay(TimeUnit.MILLISECONDS)
-          - o.getDelay(TimeUnit.MILLISECONDS));
+      return (int)(this.finishTime.getTime()
+          - ((FinishedQuery)o).finishTime.getTime());
     }
 
     @Override
     public long getDelay(TimeUnit units) {
-      long delayMillis;
-      if (this.finishTime != null) {
-        Date now = new Date();
-        long elapsedMills = now.getTime() - this.finishTime.getTime();
-        delayMillis = millisInWeek - elapsedMills;
-        return units.convert(delayMillis, TimeUnit.MILLISECONDS);
+      int size = finishedQueries.size();
+      if(size > maxFinishedQueries) {
+        return 0;
       } else {
         return Integer.MAX_VALUE;
       }
@@ -369,7 +374,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         launchedQueries.remove(ctx);
       }
     }
-    finishedQueries.add(new FinishedQuery(ctx));    
+    finishedQueries.add(new FinishedQuery(ctx));
   }
 
   void setSuccessState(QueryContext ctx) throws GrillException {
@@ -483,13 +488,40 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           return;
         }
         try {
+            FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
+            if (finished.ctx.getStatus().getStatus()
+                == Status.SUCCESSFUL) {
+              GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
+              if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
+                  GrillResultSetMetadata metadata = set.getMetadata();
+                  String outputPath = ((PersistentResultSet) set).getOutputPath();
+                  int rows = set.size();
+                  finishedQuery.setMetadataClass(metadata.getClass().getName());
+                  finishedQuery.setResult(outputPath);
+                  finishedQuery.setMetadata(mapper.writeValueAsString(metadata));
+                  finishedQuery.setRows(rows);
+              }
+            }
+
           // session is not required to close the query
           //acquire(finished.getCtx().getGrillSessionIdentifier());
-          if (finished.getCtx().getSelectedDriver() != null) {
-            finished.getCtx().getSelectedDriver().closeQuery(
-                finished.getCtx().getQueryHandle());
+          try {
+            if (finished.getCtx().getSelectedDriver() != null) {
+              finished.getCtx().getSelectedDriver().closeQuery(
+                  finished.getCtx().getQueryHandle());
+            }
+          } catch (GrillException e) {
+            LOG.warn("Exception while closing query with selected driver.", e);
+          }
+          try {
+            grillServerDao.insertFinishedQuery(finishedQuery);
+          } catch (Exception e) {
+            LOG.warn("Exception while purging query ",e);
+            finishedQueries.add(finished);
+            continue;
           }
           allQueries.remove(finished.getCtx().getQueryHandle());
+          resultSets.remove(finished.getCtx().getQueryHandle());
           fireStatusChangeEvent(finished.getCtx(),
               new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
               finished.getCtx().getStatus());
@@ -498,11 +530,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.error("Error closing  query ", e);
         }  catch (Exception e) {
           LOG.error("Error in query purger", e);
-        } finally {
-          /*try {
-            release(finished.getCtx().getGrillSessionIdentifier());
-          } catch (GrillException ignore) {
-          }*/
         }
       }
       LOG.info("QueryPurger exited");
@@ -540,7 +567,48 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     } catch (GrillException e) {
       throw new IllegalStateException("Could not load drivers");
     }
+    maxFinishedQueries = conf.getInt(GrillConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
+        GrillConfConstants.DEFAULT_FINISHED_QUERIES);
+    initalizeFinishedQueryStore(conf);
     LOG.info("Query execution service initialized");
+  }
+
+  private void initalizeFinishedQueryStore(Configuration conf) {
+    this.grillServerDao = new GrillServerDAO();
+    this.grillServerDao.init(conf);
+    try {
+      this.grillServerDao.createFinishedQueriesTable();
+    } catch (Exception e) {
+      LOG.warn("Unable to create finished query table, query purger will not purge queries", e);
+    }
+    SimpleModule module = new SimpleModule("HiveColumnModule", new Version(1,0,0,null));
+    module.addSerializer(ColumnDescriptor.class, new JsonSerializer<ColumnDescriptor>() {
+      @Override
+      public void serialize(ColumnDescriptor columnDescriptor, JsonGenerator jsonGenerator,
+                            SerializerProvider serializerProvider) throws IOException,
+          JsonProcessingException {
+        jsonGenerator.writeStartObject();
+        jsonGenerator.writeStringField("name", columnDescriptor.getName());
+        jsonGenerator.writeStringField("comment", columnDescriptor.getComment());
+        jsonGenerator.writeNumberField("position", columnDescriptor.getOrdinalPosition());
+        jsonGenerator.writeStringField("type", columnDescriptor.getType().getName());
+        jsonGenerator.writeEndObject();
+      }
+    });
+    module.addDeserializer(ColumnDescriptor.class, new JsonDeserializer<ColumnDescriptor>() {
+      @Override
+      public ColumnDescriptor deserialize(JsonParser jsonParser,
+                                          DeserializationContext deserializationContext)
+          throws IOException, JsonProcessingException {
+        ObjectCodec oc = jsonParser.getCodec();
+        JsonNode node = oc.readTree(jsonParser);
+        org.apache.hive.service.cli.Type t = org.apache.hive.service.cli.Type.getType(node.get("type").asText());
+        return new ColumnDescriptor(node.get("name").asText(),
+            node.get("comment").asText(),
+            new TypeDescriptor(t), node.get("position").asInt());
+      }
+    });
+    mapper.registerModule(module);
   }
 
   public void prepareStopping() {
@@ -626,12 +694,28 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getEventService().notifyEvent(new QueryAccepted(System.currentTimeMillis(), null, query, null));
   }
 
+
+
   private GrillResultSet getResultset(QueryHandle queryHandle)
       throws GrillException {
     if (!allQueries.containsKey(queryHandle)) {
+      FinishedGrillQuery query = grillServerDao.getQuery(queryHandle.toString());
+      if(query != null) {
+        if(query.getResult() == null) {
+          throw new NotFoundException("InMemory Query result purged " + queryHandle);
+        }
+        try {
+          Class<GrillResultSetMetadata> mdKlass =
+              (Class<GrillResultSetMetadata>) Class.forName(query.getMetadataClass());
+          return new GrillPersistentResult(
+              mapper.readValue(query.getMetadata(), mdKlass),
+              query.getResult(), query.getRows());
+        } catch (Exception e) {
+          throw new GrillException(e);
+        }
+      }
       throw new NotFoundException("Query not found: " + queryHandle);
     }
-
     GrillResultSet resultSet = resultSets.get(queryHandle);
     if (resultSet == null) {
       QueryContext ctx = allQueries.get(queryHandle);
@@ -647,7 +731,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       } else {
         throw new NotFoundException("Result set not available for query:" + queryHandle);
       }
-    }   
+    }
     return resultSets.get(queryHandle);
   }
 
@@ -820,7 +904,23 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       QueryContext ctx = allQueries.get(queryHandle);
       if (ctx == null) {
-        throw new NotFoundException("Query not found " + queryHandle);
+        FinishedGrillQuery query = grillServerDao.getQuery(queryHandle.toString());
+        if(query == null) {
+          throw new NotFoundException("Query not found " + queryHandle);
+        }
+        QueryContext finishedCtx = new QueryContext(
+            query.getUserQuery(), query.getSubmitter(), conf);
+        finishedCtx.setEndTime(query.getEndTime());
+        finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0,
+            QueryStatus.Status.valueOf(query.getStatus()),
+            query.getErrorMessage() == null ? "" : query.getErrorMessage(),
+            query.getResult() == null,
+            null,
+            null));
+        finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());
+        finishedCtx.getDriverStatus().setDriverFinishTime(query.getDriverEndTime());
+        finishedCtx.setResultSetPath(query.getResult());
+        return finishedCtx;
       }
       updateStatus(queryHandle);
       return ctx;
@@ -839,7 +939,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     return getQueryContext(sessionHandle, queryHandle).toGrillQuery();
   }
 
-  private PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle, 
+  private PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
           throws GrillException {
     try {
@@ -855,7 +955,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public GrillPreparedQuery getPreparedQuery(GrillSessionHandle sessionHandle, 
+  public GrillPreparedQuery getPreparedQuery(GrillSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
           throws GrillException {
     return getPreparedQueryContext(sessionHandle, prepareHandle).toPreparedQuery();
@@ -865,7 +965,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutMillis,
       GrillConf conf) throws GrillException {
     try {
-      LOG.info("Blocking execute " + sessionHandle.toString() + " query: " 
+      LOG.info("Blocking execute " + sessionHandle.toString() + " query: "
           + query + " timeout: " + timeoutMillis);
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, conf);
@@ -1141,11 +1241,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
         GrillDriver driver = drivers.get(driverClsName);
-        if (driver == null) { 
+        if (driver == null) {
           // this driver is removed in the current server restart
           // we will create an instance and read its state still.
           try {
-            Class<? extends GrillDriver> driverCls = 
+            Class<? extends GrillDriver> driverCls =
                 (Class<? extends GrillDriver>)Class.forName(driverClsName);
             driver = (GrillDriver) driverCls.newInstance();
             driver.configure(conf);
@@ -1239,10 +1339,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     GrillResultSet result = getResultset(queryHandle);
     if (result instanceof GrillPersistentResult) {
       final Path resultPath = new Path(((PersistentResultSet)result).getOutputPath());
+      try {
+        FileSystem fs = resultPath.getFileSystem(conf);
+        if (fs.isDirectory(resultPath)) {
+          throw new NotFoundException("Http result not available for query:"
+              + queryHandle.toString());
+        }
+      } catch (IOException e) {
+        LOG.warn("Unable to get status for Result Directory", e);
+        throw new NotFoundException("Http result not available for query:"
+            + queryHandle.toString());
+      }
       String resultFSReadUrl = ctx.getConf().get(GrillConfConstants.RESULT_FS_READ_URL);
       if (resultFSReadUrl != null) {
         try {
-          URI resultReadPath = new URI(resultFSReadUrl + 
+          URI resultReadPath = new URI(resultFSReadUrl +
               resultPath.toUri().getPath() +
               "?op=OPEN&user.name="+getSession(sessionHandle).getUserName());
           return Response.seeOther(resultReadPath)

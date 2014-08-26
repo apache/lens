@@ -64,7 +64,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   public static void setupTest() throws Exception {
     createHS2Service();
 
-    SessionState.start(remoteConf);
+    SessionState ss = new SessionState(remoteConf, "testuser");
+    SessionState.start(ss);
     Hive client = Hive.get(remoteConf);
     Database database = new Database();
     database.setName(TestRemoteHiveDriver.class.getSimpleName());
