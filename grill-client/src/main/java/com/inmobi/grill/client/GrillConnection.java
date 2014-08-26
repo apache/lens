@@ -35,6 +35,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -101,7 +102,6 @@ public class GrillConnection {
   public GrillSessionHandle open() {
 
     WebTarget target = getSessionWebTarget();
-
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("username").build(), params.getUser()));
@@ -111,14 +111,15 @@ public class GrillConnection {
         FormDataContentDisposition.name("sessionconf").
             fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
-
-    final GrillSessionHandle sessionHandle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        GrillSessionHandle.class);
-
-
-    if (sessionHandle != null) {
-      this.sessionHandle = sessionHandle;
+    Response response = target.request().post(
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    if(response.getStatus() == 401) {
+      System.out.println("username/password combination incorrect");
+      System.exit(0);
+    }
+    final GrillSessionHandle handle = response.readEntity(GrillSessionHandle.class);
+    if (handle != null) {
+      sessionHandle = handle;
       LOG.debug("Created a new session " + sessionHandle.getPublicId());
     } else {
       throw new IllegalStateException("Unable to connect to grill " +
@@ -140,7 +141,7 @@ public class GrillConnection {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases").path("current").queryParam(
         "sessionid", this.sessionHandle).request(
-        MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
+      MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
         APIResult.class);
     return result;
 
@@ -222,7 +223,7 @@ public class GrillConnection {
   public List<String> getConnectionParams(String key) {
     WebTarget target = getSessionWebTarget();
     StringList value = target.path("params")
-        .queryParam("sessionid",this.sessionHandle)
+        .queryParam("sessionid", this.sessionHandle)
         .queryParam("key", key)
         .request()
         .get(StringList.class);

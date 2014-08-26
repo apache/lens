@@ -28,6 +28,7 @@ import com.inmobi.grill.api.query.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.Console;
 import java.util.HashMap;
 import java.util.List;
 
@@ -48,6 +49,19 @@ public class GrillClient {
     this.conf = conf;
     connectToGrillServer();
     statement = new GrillStatement(conn);
+  }
+
+  public void getCredentials(){
+    Console console = System.console();
+    if (console == null) {
+      System.out.println("Couldn't get Console instance");
+      System.exit(0);
+    }
+    console.printf("username:");
+    String username = console.readLine();
+    char passwordArray[] = console.readPassword("password:");
+    conf.setUser(username.trim());
+    conf.setPassword(new String(passwordArray));
   }
 
   public QueryHandle executeQueryAsynch(String sql) {
@@ -157,6 +171,7 @@ public class GrillClient {
 
 
   private void connectToGrillServer() {
+    getCredentials();
     LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
     conn.open();
