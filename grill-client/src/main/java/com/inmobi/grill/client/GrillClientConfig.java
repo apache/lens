@@ -65,6 +65,13 @@ public class GrillClientConfig extends Configuration {
     return this.get(GRILL_USER_NAME, DEFAULT_USER_NAME);
   }
 
+  public void setUser(String user){
+    this.set(GRILL_USER_NAME, user);
+  }
+
+  public void setPassword(String password){
+    this.set(GRILL_USER_PASS, password);
+  }
   /**
    * Returns the configured grill server hostname
    *

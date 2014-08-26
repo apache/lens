@@ -27,12 +27,10 @@ import java.io.InputStreamReader;
 
 import javax.xml.bind.JAXBException;
 
+import com.inmobi.grill.api.query.*;
 import org.apache.commons.lang.StringUtils;
 
 import com.inmobi.grill.api.APIResult;
-import com.inmobi.grill.api.query.InMemoryQueryResult;
-import com.inmobi.grill.api.query.QueryHandle;
-import com.inmobi.grill.api.query.ResultRow;
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.client.GrillMetadataClient;
@@ -107,9 +105,15 @@ public class SampleQueries {
         success++;
         if (queryClient.getQuery().getStatus().isResultSetAvailable()) {
           System.out.println("Result:");
-          InMemoryQueryResult result = queryClient.getResultSet();
-          for (ResultRow row : result.getRows()) {
-            System.out.println(StringUtils.join(row.getValues(), "\t"));
+          QueryResult queryResult = queryClient.getResultSet();
+          if (queryResult instanceof InMemoryQueryResult) {
+            InMemoryQueryResult result = (InMemoryQueryResult) queryResult;
+            for (ResultRow row : result.getRows()) {
+              System.out.println(StringUtils.join(row.getValues(), "\t"));
+            }
+          } else if (queryResult instanceof PersistentQueryResult) {
+            PersistentQueryResult persistentQueryResult = (PersistentQueryResult) queryResult;
+            System.out.println("Result stored at " + persistentQueryResult.getPersistedURI());
           }
           queryClient.closeResultSet();
         }

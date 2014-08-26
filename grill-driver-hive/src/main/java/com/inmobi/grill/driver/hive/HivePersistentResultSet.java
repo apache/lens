@@ -20,8 +20,6 @@ package com.inmobi.grill.driver.hive;
  * #L%
  */
 
-import java.util.List;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.*;
 
@@ -51,11 +49,10 @@ public class HivePersistentResultSet extends PersistentResultSet {
 
   @Override
   public GrillResultSetMetadata getMetadata() throws GrillException {
-    return new GrillResultSetMetadata() {
-      @Override
-      public List<ColumnDescriptor> getColumns() {
-        return metadata.getColumnDescriptors();
-      }
-    };
+    //Removed Anonymous inner class and changed it to concrete class
+    //for serialization to JSON
+    HiveGrillResultSetMetadata hrsMeta = new HiveGrillResultSetMetadata();
+    hrsMeta.setColumns(metadata.getColumnDescriptors());
+    return hrsMeta;
   }
 }

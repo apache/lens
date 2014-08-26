@@ -164,6 +164,13 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     return isDriverPersistent()|| driverStatus.isResultSetAvailable();
   }
 
+  /*
+  Introduced for Recovering finished query.
+   */
+  public void setStatusSkippingTransitionTest(QueryStatus newStatus) throws GrillException {
+    this.status = newStatus;
+  }
+
   public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
     if (!this.status.isValidateTransition(newStatus.getStatus())) {
       throw new GrillException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");

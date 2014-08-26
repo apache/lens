@@ -33,7 +33,7 @@ import java.util.*;
 public class GrillJdbcResultSet implements ResultSet {
 
 
-  private final InMemoryQueryResult result;
+  private final QueryResult result;
   private final Iterator<ResultRow> iterators;
   private ResultRow currentRow;
   private final QueryResultSetMetadata metadata;
@@ -43,7 +43,7 @@ public class GrillJdbcResultSet implements ResultSet {
   private boolean closed;
   private boolean wasnull;
 
-  public GrillJdbcResultSet(InMemoryQueryResult result, QueryResultSetMetadata metadata,
+  public GrillJdbcResultSet(QueryResult result, QueryResultSetMetadata metadata,
                             GrillJdbcStatement statement) {
     this.result = result;
     this.metadata = metadata;
@@ -54,7 +54,11 @@ public class GrillJdbcResultSet implements ResultSet {
       colNames.add(col.getName());
       colTypes.add(col.getType());
     }
-    iterators = result.getRows().iterator();
+    if (result instanceof InMemoryQueryResult) {
+      iterators = ((InMemoryQueryResult) result).getRows().iterator();
+    } else {
+      iterators = null;
+    }
   }
 
   @Override
@@ -64,7 +68,7 @@ public class GrillJdbcResultSet implements ResultSet {
       throw new SQLException("You cannot iterate after resultset is closed");
     }
 
-    if (iterators.hasNext()) {
+    if (iterators != null && iterators.hasNext()) {
       currentRow = iterators.next();
       return true;
     }
@@ -320,14 +324,14 @@ public class GrillJdbcResultSet implements ResultSet {
     if (closed) {
       throw new SQLException("Cannot read from closed resultset");
     }
+    if (currentRow == null) {
+      throw new SQLException("No row found.");
+    }
     if (currentRow.getValues().isEmpty()) {
       throw new SQLException("Rowset does not contain any columns");
     }
     if (index > currentRow.getValues().size()) {
       throw new SQLException("Invalid column index: " + index);
-    }
-    if (currentRow == null) {
-      throw new SQLException("No row found.");
     }
     Object obj = currentRow.getValues().get(toZeroIndex(index));
     if (obj == null) {
