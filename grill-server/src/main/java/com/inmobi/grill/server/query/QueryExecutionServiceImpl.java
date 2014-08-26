@@ -487,8 +487,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
             if (finished.ctx.getStatus().getStatus()
                 == Status.SUCCESSFUL) {
-              GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
-              if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
+              if (finished.ctx.getStatus().isResultSetAvailable()) {
+                GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
+                if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
                   GrillResultSetMetadata metadata = set.getMetadata();
                   String outputPath = ((PersistentResultSet) set).getOutputPath();
                   int rows = set.size();
@@ -496,6 +497,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                   finishedQuery.setResult(outputPath);
                   finishedQuery.setMetadata(mapper.writeValueAsString(metadata));
                   finishedQuery.setRows(rows);
+                }
               }
             }
             try {

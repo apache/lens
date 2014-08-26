@@ -545,8 +545,9 @@ public class HiveDriver implements GrillDriver {
         // queries that do not have result
         return null;
       }
-    } catch (HiveSQLException e) {
-      throw new GrillException("Error creating result set", e);
+    } catch (HiveSQLException hiveErr) {
+      handleHiveServerError(context, hiveErr);
+      throw new GrillException("Error creating result set", hiveErr);
     }
   }
 
@@ -722,7 +723,7 @@ public class HiveDriver implements GrillDriver {
     }
 
     // Check if there is underlying cause
-    if (exc.getCause() != null && exc.getCause() instanceof HiveSQLException) {
+    if (exc.getCause() instanceof HiveSQLException) {
       isSessionInvalid((HiveSQLException) exc.getCause(), sessionHandle);
     }
     return false;
@@ -764,6 +765,10 @@ public class HiveDriver implements GrillDriver {
 
   protected void checkInvalidOperation(QueryHandle queryHandle, HiveSQLException exc) {
     final OperationHandle operation = hiveHandles.get(queryHandle);
+    if (operation == null) {
+      LOG.info("No hive operation available for " + queryHandle);
+      return;
+    }
     if (exc.getMessage() != null && exc.getMessage().contains("Invalid OperationHandle:")
         && exc.getMessage().contains(operation.toString())) {
       LOG.info("Hive operation " + operation + " for query " + queryHandle + " has become invalid");
@@ -771,7 +776,7 @@ public class HiveDriver implements GrillDriver {
       return;
     }
 
-    if (exc.getCause() != null && exc.getCause() instanceof HiveSQLException) {
+    if (exc.getCause() instanceof HiveSQLException) {
       checkInvalidOperation(queryHandle, (HiveSQLException) exc.getCause());
     }
 
