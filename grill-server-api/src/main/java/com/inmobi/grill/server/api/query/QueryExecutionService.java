@@ -38,6 +38,7 @@ import com.inmobi.grill.api.query.QueryResultSetMetadata;
 
 public interface QueryExecutionService {
 
+  public static final String NAME = "query";
   /**
    * Explain the given query
    * 
@@ -274,4 +275,11 @@ public interface QueryExecutionService {
    * @return running queries count
    */
   public long getRunningQueriesCount();
+
+  /**
+   * Get finished queries count
+   * 
+   * @return finished queries count
+   */
+  public long getFinishedQueriesCount();
 }

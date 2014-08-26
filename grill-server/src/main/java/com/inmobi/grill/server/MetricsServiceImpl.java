@@ -61,14 +61,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private List<ScheduledReporter> reporters;
   @Getter private HealthCheckRegistry healthCheck;
 
-  private Counter finishedQueries;
   private Counter totalAcceptedQueries;
   private Counter totalSuccessfulQueries;
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
-  private QueryExecutionService queryExecutionService;
-
 
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
     @Override
@@ -82,22 +79,17 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         totalAcceptedQueries.inc();
         break;
       case CANCELED:
-        finishedQueries.inc();
         totalCancelledQueries.inc();
         totalFinishedQueries.inc();
         break;
       case FAILED:
-        finishedQueries.inc();
         totalFailedQueries.inc();
         totalFinishedQueries.inc();
         break;
       case SUCCESSFUL:
-        finishedQueries.inc();
         totalSuccessfulQueries.inc();
         totalFinishedQueries.inc();
         break;
-      case CLOSED:
-        finishedQueries.dec();
       default:
         break;
       }
@@ -106,6 +98,10 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   public MetricsServiceImpl(String name) {
     super(METRICS_SVC_NAME);
+  }
+  
+  private QueryExecutionService getQuerySvc() {
+    return (QueryExecutionService) GrillServices.get().getService(QueryExecutionService.NAME);
   }
 
   private static int timeBetweenPolls = 10;
@@ -117,7 +113,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
-    healthCheck = new HealthCheckRegistry(); 
+    healthCheck = new HealthCheckRegistry();
     initCounters();
     timeBetweenPolls = hiveConf.getInt(GrillConfConstants.REPORTING_PERIOD , 10);
 
@@ -154,22 +150,30 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-          return queryExecutionService.getQueuedQueriesCount();
+          return getQuerySvc().getQueuedQueriesCount();
       }
     });
     
     metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-          return queryExecutionService.getRunningQueriesCount();
+          return getQuerySvc().getRunningQueriesCount();
       }
     });
 
+    metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES), new Gauge<Long>() {
+      @Override
+      public Long getValue() {
+        return getQuerySvc().getFinishedQueriesCount();
+      }
+    });
+
+    totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+        "total-" + ACCEPTED_QUERIES));
+    
     totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-success-queries"));
 
-    finishedQueries = 
-        metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES));
     totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
         "total-" + FINISHED_QUERIES));
 
@@ -240,17 +244,17 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   @Override
   public long getQueuedQueries() {
-    return queryExecutionService.getQueuedQueriesCount();
+    return getQuerySvc().getQueuedQueriesCount();
   }
 
   @Override
   public long getRunningQueries() {
-    return queryExecutionService.getRunningQueriesCount();
+    return getQuerySvc().getRunningQueriesCount();
   }
 
   @Override
   public long getFinishedQueries() {
-    return finishedQueries.getCount();
+    return getQuerySvc().getFinishedQueriesCount();
   }
 
   @Override
