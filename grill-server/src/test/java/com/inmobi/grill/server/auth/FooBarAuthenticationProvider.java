@@ -29,7 +29,7 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
   private final String[][] allowedCombinations = new String[][]{
     {"foo@localhost", "bar"},
     {"foo", "bar"},
-    {"anonymous", ""}
+    {"anonymous", ""},
   };
 
   @Override

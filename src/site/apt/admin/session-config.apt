@@ -52,18 +52,22 @@ Grill session configuration
 *--+--+---+--+
 |14|grill.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
 *--+--+---+--+
-|15|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
+|15|grill.query.result.email.cc| |When query ends, the result/failure reason will be sent to  the user via email. The mail would be cc'ed to the addresses provided  in this field.|
 *--+--+---+--+
-|16|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
+|16|grill.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
 *--+--+---+--+
-|17|grill.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
+|17|grill.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
 *--+--+---+--+
-|18|grill.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
+|18|grill.query.result.split.multiple|false|Whether to split the result into multiple files. If enabled, each file will be restricted to max rows configured. All the files will be available as zip.|
 *--+--+---+--+
-|19|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
+|19|grill.query.result.split.multiple.maxrows|100000|The maximum number of rows allowed in each file, when splitting the result into multiple files is enabled.|
 *--+--+---+--+
-|20|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
+|20|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
 *--+--+---+--+
-|21|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query. This  directory should exist and should have writable permissions by grill server|
+|21|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
+*--+--+---+--+
+|22|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query.|
+*--+--+---+--+
+|23|grill.whether.mail.notify|false|When a query ends, whether to notify the submitter by mail or not.|
 *--+--+---+--+
 The configuration parameters and their default values

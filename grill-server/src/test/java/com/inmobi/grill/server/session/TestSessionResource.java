@@ -49,6 +49,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 @Test(groups="unit-test")
 public class TestSessionResource extends GrillJerseyTest {
@@ -269,4 +270,22 @@ public class TestSessionResource extends GrillJerseyTest {
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
+  @Test
+  public void testWrongAuth() {
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
+      "a"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
+      "b"));
+    mp.bodyPart(new FormDataBodyPart(
+      FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+      new GrillConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    final Response handle = target.request().post(
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    Assert.assertEquals(handle.getStatus(), 401);
+  }
 }

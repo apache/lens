@@ -88,6 +88,9 @@ import org.codehaus.jackson.map.module.SimpleModule;
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
   public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
+
+  private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
+  public static final String NAME = "query";
   private static final ObjectMapper mapper = new ObjectMapper();
 
   private PriorityBlockingQueue<QueryContext> acceptedQueries =
@@ -134,6 +137,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getEventService().addListenerForType(new ResultFormatter(this), QueryExecuted.class);
     getEventService().addListenerForType(
         new QueryExecutionStatisticsGenerator(this,getEventService()), QueryEnded.class);
+    getEventService().addListenerForType(
+      new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
   }
 
