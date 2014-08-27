@@ -63,4 +63,29 @@
   <value>com.inmobi.grill.server.auth.FooBarAuthenticationProvider</value>
 </property>
 
+
+<property>
+  <name>grill.whether.mail.notify</name>
+  <value>true</value>
+  <description>When a query ends, whether to notify the submitter by mail or not.</description>
+</property>
+
+<property>
+  <name>grill.mail.from.address</name>
+  <value>blah@company.com</value>
+  <description>The from field in the notifier mail to the submitter.</description>
+</property>
+
+<property>
+  <name>grill.mail.host</name>
+  <value>localhost</value>
+  <description>SMTP Host for sending mail</description>
+</property>
+
+<property>
+  <name>grill.mail.port</name>
+  <value>25000</value>
+  <description>SMTP Port</description>
+</property>
+
 </configuration>

@@ -173,9 +173,23 @@
 </property>
 
 <property>
+  <name>grill.query.result.email.cc</name>
+  <value></value>
+  <description>When query ends, the result/failure reason will be sent to
+  the user via email. The mail would be cc'ed to the addresses provided
+  in this field.</description>
+</property>
+
+<property>
   <name>grill.aux.jars</name>
   <value></value>
   <description>List of comma separated jar paths, which will added to the session</description>
+</property>
+
+<property>
+  <name>grill.whether.mail.notify</name>
+  <value>false</value>
+  <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 
 </configuration>

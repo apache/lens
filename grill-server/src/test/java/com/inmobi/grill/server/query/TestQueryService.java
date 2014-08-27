@@ -76,6 +76,8 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.subethamail.wiser.Wiser;
+import org.subethamail.wiser.WiserMessage;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -89,15 +91,19 @@ public class TestQueryService extends GrillJerseyTest {
   MetricsService metricsSvc;
   GrillSessionHandle grillSessionId;
   final int NROWS = 10000;
+  private Wiser wiser;
 
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
+    wiser = new Wiser();
+    wiser.setHostname("localhost");
+    wiser.setPort(25000);
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
     metricsSvc = (MetricsService)GrillServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
     sessionconf.put("test.session.key", "svalue");
-    grillSessionId = queryService.openSession("foo", "bar", sessionconf);
+    grillSessionId = queryService.openSession("foo@localhost", "bar", sessionconf);
     createTable(testTable);
     loadData(testTable, TEST_DATA_FILE);
   }
@@ -634,6 +640,37 @@ public class TestQueryService extends GrillJerseyTest {
     } else {
       Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED);
     }
+  }
+
+  @Test
+  public void testNotification() throws IOException {
+    wiser.start();
+    final WebTarget target = target().path("queryapi/queries");
+    final FormDataMultiPart mp2 = new FormDataMultiPart();
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY, "true");
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+      grillSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+      "select ID, IDSTR from " + testTable));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
+      "operation").build(),
+      "execute_with_timeout"));
+    mp2.bodyPart(new FormDataBodyPart(
+      FormDataContentDisposition.name("conf").fileName("conf").build(),
+      conf,
+      MediaType.APPLICATION_XML_TYPE));
+
+    QueryHandleWithResultSet result = target.request().post(
+      Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandleWithResultSet.class);
+    Assert.assertNotNull(result.getQueryHandle());
+    Assert.assertNotNull(result.getResult());
+    validateInmemoryResult((InMemoryQueryResult) result.getResult());
+    List<WiserMessage> messages = wiser.getMessages();
+    Assert.assertEquals(messages.size(), 1);
+    Assert.assertTrue(messages.get(0).toString().contains(result.getQueryHandle().toString()));
+    wiser.stop();
   }
 
   static void validatePersistedResult(QueryHandle handle, WebTarget parent,
