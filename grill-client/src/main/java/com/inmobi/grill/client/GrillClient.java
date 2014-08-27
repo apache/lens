@@ -46,22 +46,22 @@ public class GrillClient {
   }
 
   public GrillClient(GrillClientConfig conf) {
+    this(conf, conf.getUser(), conf.getPassword());
+  }
+
+  public GrillClient(String username, String password) {
+    this(new GrillClientConfig(), username, password);
+  }
+
+  public GrillClient(GrillClientConfig conf, String username, String password) {
     this.conf = conf;
+    setCredentials(username, password);
     connectToGrillServer();
     statement = new GrillStatement(conn);
   }
-
-  public void getCredentials(){
-    Console console = System.console();
-    if (console == null) {
-      System.err.println("Couldn't get Console instance");
-      System.exit(-1);
-    }
-    console.printf("username:");
-    String username = console.readLine();
-    char passwordArray[] = console.readPassword("password:");
-    conf.setUser(username.trim());
-    conf.setPassword(new String(passwordArray));
+  public void setCredentials(String username, String password) {
+    conf.setUser(username);
+    conf.setPassword(password);
   }
 
   public QueryHandle executeQueryAsynch(String sql) {
@@ -171,7 +171,6 @@ public class GrillClient {
 
 
   private void connectToGrillServer() {
-    getCredentials();
     LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
     conn.open();

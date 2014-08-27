@@ -19,6 +19,7 @@ package com.inmobi.grill.cli.commands;
  * #L%
  */
 
+import com.inmobi.grill.cli.GrillClientWrapper;
 import com.inmobi.grill.client.GrillClient;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
@@ -53,16 +54,23 @@ public class BaseGrillCommand {
       }
     });
   }
-  protected GrillClient client;
+  protected GrillClientWrapper clientWrapper;
 
   public void setClient(GrillClient client) {
-    this.client = client;
+    this.clientWrapper.setClient(client);
   }
 
   public GrillClient getClient() {
-    return this.client;
+    return this.clientWrapper.getClient();
   }
 
+  public void setClientWrapper(GrillClientWrapper wrapper) {
+    this.clientWrapper = wrapper;
+  }
+
+  public GrillClientWrapper getClientWrapper() {
+    return clientWrapper;
+  }
   /**
    * Pretty printing JSON object into CLI String
    * @param json to be formatted

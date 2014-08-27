@@ -37,7 +37,7 @@ public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandM
   @CliCommand(value = "show databases",
       help = "displays list of all databases")
   public String showAllDatabases() {
-    List<String> databases = client.getAllDatabases();
+    List<String> databases = getClient().getAllDatabases();
     if(databases != null) {
       return Joiner.on("\n").join(databases);
     } else {
@@ -50,7 +50,7 @@ public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandM
   public String switchDatabase(@CliOption(key = {"", "db"},
       mandatory = true,
       help = "Database to change to") String database) {
-    boolean status = client.setDatabase(database);
+    boolean status = getClient().setDatabase(database);
     if (status) {
       return "Successfully switched to " + database;
     } else {
@@ -66,7 +66,7 @@ public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandM
       @CliOption(key = {"ignore"}, mandatory = false,
           unspecifiedDefaultValue = "false")
       boolean ignore) {
-    APIResult result = client.createDatabase(database, ignore);
+    APIResult result = getClient().createDatabase(database, ignore);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return ("Create database " + database + " successful");
     } else {
@@ -78,7 +78,7 @@ public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandM
   public String dropDatabase(
       @CliOption(key = {"", "db"}, mandatory = true, help = "Database to drop")
       String database) {
-    APIResult result = client.dropDatabase(database);
+    APIResult result = getClient().dropDatabase(database);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return ("drop database " + database + " successful");
     } else {

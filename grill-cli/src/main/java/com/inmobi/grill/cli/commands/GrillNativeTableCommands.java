@@ -35,7 +35,7 @@ public class GrillNativeTableCommands extends  BaseGrillCommand implements Comma
 
   @CliCommand(value = "show nativetables", help = "show list of native tables")
   public String showNativeTables() {
-    List<String> nativetables = client.getAllNativeTables();
+    List<String> nativetables = getClient().getAllNativeTables();
     if( nativetables != null) {
       return Joiner.on("\n").join(nativetables);
     } else {
@@ -49,7 +49,7 @@ public class GrillNativeTableCommands extends  BaseGrillCommand implements Comma
 
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getNativeTable(tblName)));
+          getClient().getNativeTable(tblName)));
     } catch (Exception e) {
       throw new IllegalArgumentException(e);
     }

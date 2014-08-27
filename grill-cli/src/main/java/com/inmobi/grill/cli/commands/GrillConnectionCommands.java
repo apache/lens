@@ -28,10 +28,12 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
+import java.io.Console;
 import java.util.List;
 
 @Component
 public class GrillConnectionCommands extends BaseGrillCommand implements CommandMarker  {
+
 
 
   @CliCommand(value = "set", help = "sets a session parameter.")
@@ -42,14 +44,14 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
     if(pair.length != 2) {
       return "Error: Pass parameter as <key>=<value>";
     }
-    APIResult result = client.setConnectionParam(pair[0], pair[1]);
+    APIResult result = getClient().setConnectionParam(pair[0], pair[1]);
     return result.getMessage();
   }
 
 
   @CliCommand(value="show params", help = "list of all session parameter")
   public String showParameters(){
-    List<String> params = client.getConnectionParam();
+    List<String> params = getClient().getConnectionParam();
     return Joiner.on("\n").skipNulls().join(params);
   }
 
@@ -59,7 +61,7 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
           mandatory = true,
           help = "param name")
       String param) {
-    return Joiner.on("\n").skipNulls().join(client.getConnectionParam(param));
+    return Joiner.on("\n").skipNulls().join(getClient().getConnectionParam(param));
   }
 
 
@@ -67,7 +69,7 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
   public String addJar(
       @CliOption(key={"","param"}, mandatory = true, help = "path to jar on serverside")
       String path){
-    APIResult result = client.addJarResource(path);
+    APIResult result = getClient().addJarResource(path);
     return result.getMessage();
   }
 
@@ -75,7 +77,7 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
   public String removeJar(
       @CliOption(key={"","param"}, mandatory = true, help = "path to jar on serverside")
       String path){
-    APIResult result = client.removeJarResource(path);
+    APIResult result = getClient().removeJarResource(path);
     return result.getMessage();
   }
 
@@ -83,7 +85,7 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
   public String addFile(
       @CliOption(key={"","param"}, mandatory = true, help = "path to file on serverside")
       String path){
-    APIResult result = client.addFileResource(path);
+    APIResult result = getClient().addFileResource(path);
     return result.getMessage();
   }
 
@@ -91,13 +93,13 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
   public String removeFile(
       @CliOption(key={"","param"}, mandatory = true, help = "path to file on serverside")
       String path){
-    APIResult result = client.removeFileResource(path);
+    APIResult result = getClient().removeFileResource(path);
     return result.getMessage();
   }
 
   @CliCommand(value ={"close"}, help ="Exits the shell")
   public ExitShellRequest quitShell() {
-    client.closeConnection();
+    getClient().closeConnection();
     return ExitShellRequest.NORMAL_EXIT;
   }
 }
