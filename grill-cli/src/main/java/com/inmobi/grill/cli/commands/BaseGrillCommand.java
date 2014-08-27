@@ -19,9 +19,8 @@ package com.inmobi.grill.cli.commands;
  * #L%
  */
 
-import com.inmobi.grill.cli.GrillClientWrapper;
+import com.inmobi.grill.cli.GrillClientWrapperBean;
 import com.inmobi.grill.client.GrillClient;
-import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.Indenter;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -39,8 +38,7 @@ public class BaseGrillCommand {
     pp.indentObjectsWith(new Indenter() {
       @Override
       public void writeIndentation(JsonGenerator jg, int level)
-          throws IOException,
-          JsonGenerationException {
+          throws IOException {
         if(level > 2) {
           jg.writeRaw("  ");
         } else {
@@ -54,22 +52,17 @@ public class BaseGrillCommand {
       }
     });
   }
-  protected GrillClientWrapper clientWrapper;
 
   public void setClient(GrillClient client) {
-    this.clientWrapper.setClient(client);
+    getClientWrapper().setClient(client);
   }
 
   public GrillClient getClient() {
-    return this.clientWrapper.getClient();
+    return getClientWrapper().getClient();
   }
 
-  public void setClientWrapper(GrillClientWrapper wrapper) {
-    this.clientWrapper = wrapper;
-  }
-
-  public GrillClientWrapper getClientWrapper() {
-    return clientWrapper;
+  public GrillClientWrapperBean.GrillClientWrapper getClientWrapper() {
+    return GrillClientWrapperBean.GrillClientWrapper.INSTANCE;
   }
   /**
    * Pretty printing JSON object into CLI String
