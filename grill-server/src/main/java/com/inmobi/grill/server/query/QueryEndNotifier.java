@@ -64,7 +64,15 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   @Override
   public void process(QueryEnded event) {
+    if (event.getCurrentValue() == QueryStatus.Status.CLOSED) {
+      return;
+    }
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
+    if (queryContext == null) {
+      LOG.warn("Could not find the context for " + event.getQueryHandle() + " for event:"
+        + event.getCurrentValue() + ". No email generated");
+      return;
+    }
 
     boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
       GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
