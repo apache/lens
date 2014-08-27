@@ -183,7 +183,7 @@
 </property>
 
 <property>
-  <name>grill.log.rollover.interval</name>
+  <name>grill.statistics.log.rollover.interval</name>
   <value>3600000</value>
   <description>Default rate which log statistics store scans for rollups in milliseconds.</description>
 </property>

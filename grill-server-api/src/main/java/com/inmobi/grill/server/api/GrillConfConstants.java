@@ -181,7 +181,7 @@ public class GrillConfConstants {
 
   public static final String DEFAULT_STATISTICS_DATABASE = "grillstats";
 
-  public static final String GRILL_STATS_ROLLUP_SCAN_RATE = "grill.log.rollover.interval";
+  public static final String GRILL_STATS_ROLLUP_SCAN_RATE = "grill.statistics.log.rollover.interval";
 
   public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
 
