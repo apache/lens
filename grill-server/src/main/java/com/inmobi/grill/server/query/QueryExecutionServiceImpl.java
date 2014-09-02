@@ -485,32 +485,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           return;
         }
         try {
-            FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
-            if (finished.ctx.getStatus().getStatus()
-                == Status.SUCCESSFUL) {
-              if (finished.ctx.getStatus().isResultSetAvailable()) {
-                GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
-                if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
-                  GrillResultSetMetadata metadata = set.getMetadata();
-                  String outputPath = ((PersistentResultSet) set).getOutputPath();
-                  int rows = set.size();
-                  finishedQuery.setMetadataClass(metadata.getClass().getName());
-                  finishedQuery.setResult(outputPath);
-                  finishedQuery.setMetadata(mapper.writeValueAsString(metadata));
-                  finishedQuery.setRows(rows);
-                }
+          FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
+          if (finished.ctx.getStatus().getStatus()
+              == Status.SUCCESSFUL) {
+            if (finished.ctx.getStatus().isResultSetAvailable()) {
+              GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
+              if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
+                GrillResultSetMetadata metadata = set.getMetadata();
+                String outputPath = ((PersistentResultSet) set).getOutputPath();
+                int rows = set.size();
+                finishedQuery.setMetadataClass(metadata.getClass().getName());
+                finishedQuery.setResult(outputPath);
+                finishedQuery.setMetadata(mapper.writeValueAsString(metadata));
+                finishedQuery.setRows(rows);
               }
             }
-
-          // session is not required to close the query
-          //acquire(finished.getCtx().getGrillSessionIdentifier());
-          try {
-            if (finished.getCtx().getSelectedDriver() != null) {
-              finished.getCtx().getSelectedDriver().closeQuery(
-                  finished.getCtx().getQueryHandle());
-            }
-          } catch (GrillException e) {
-            LOG.warn("Exception while closing query with selected driver.", e);
           }
           try {
             grillServerDao.insertFinishedQuery(finishedQuery);
@@ -519,8 +508,20 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             finishedQueries.add(finished);
             continue;
           }
-          allQueries.remove(finished.getCtx().getQueryHandle());
-          resultSets.remove(finished.getCtx().getQueryHandle());
+
+          synchronized (finished.ctx) {
+            finished.ctx.setFinishedQueryPersisted(true);
+            try {
+              if (finished.getCtx().getSelectedDriver() != null) {
+                finished.getCtx().getSelectedDriver().closeQuery(
+                    finished.getCtx().getQueryHandle());
+              }
+            } catch (Exception e) {
+              LOG.warn("Exception while closing query with selected driver.", e);
+            }
+            allQueries.remove(finished.getCtx().getQueryHandle());
+            resultSets.remove(finished.getCtx().getQueryHandle());
+          }
           fireStatusChangeEvent(finished.getCtx(),
               new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
               finished.getCtx().getStatus());
@@ -693,45 +694,53 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getEventService().notifyEvent(new QueryAccepted(System.currentTimeMillis(), null, query, null));
   }
 
-
+  private GrillResultSet getResultsetFromDAO(QueryHandle queryHandle) throws GrillException {
+    FinishedGrillQuery query = grillServerDao.getQuery(queryHandle.toString());
+    if(query != null) {
+      if(query.getResult() == null) {
+        throw new NotFoundException("InMemory Query result purged " + queryHandle);
+      }
+      try {
+        Class<GrillResultSetMetadata> mdKlass =
+            (Class<GrillResultSetMetadata>) Class.forName(query.getMetadataClass());
+        return new GrillPersistentResult(
+            mapper.readValue(query.getMetadata(), mdKlass),
+            query.getResult(), query.getRows());
+      } catch (Exception e) {
+        throw new GrillException(e);
+      }
+    }
+    throw new NotFoundException("Query not found: " + queryHandle); 
+  }
 
   private GrillResultSet getResultset(QueryHandle queryHandle)
       throws GrillException {
-    if (!allQueries.containsKey(queryHandle)) {
-      FinishedGrillQuery query = grillServerDao.getQuery(queryHandle.toString());
-      if(query != null) {
-        if(query.getResult() == null) {
-          throw new NotFoundException("InMemory Query result purged " + queryHandle);
+    QueryContext ctx = allQueries.get(queryHandle);
+    if (ctx == null) {
+      return getResultsetFromDAO(queryHandle);
+    } else {
+      synchronized (ctx) {
+        if (ctx.isFinishedQueryPersisted()) {
+          return getResultsetFromDAO(queryHandle);
         }
-        try {
-          Class<GrillResultSetMetadata> mdKlass =
-              (Class<GrillResultSetMetadata>) Class.forName(query.getMetadataClass());
-          return new GrillPersistentResult(
-              mapper.readValue(query.getMetadata(), mdKlass),
-              query.getResult(), query.getRows());
-        } catch (Exception e) {
-          throw new GrillException(e);
+        GrillResultSet resultSet = resultSets.get(queryHandle);
+        if (resultSet == null) {
+          if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
+            resultSets.put(queryHandle, new GrillPersistentResult(
+                ctx.getQueryOutputFormatter().getMetadata(),
+                ctx.getQueryOutputFormatter().getFinalOutputPath().toString(),
+                ctx.getQueryOutputFormatter().getNumRows()));
+          } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
+            resultSet = allQueries.get(queryHandle).getSelectedDriver().
+                fetchResultSet(allQueries.get(queryHandle));
+            resultSets.put(queryHandle, resultSet);
+          } else {
+            throw new NotFoundException("Result set not available for query:" + queryHandle);
+          }
         }
       }
-      throw new NotFoundException("Query not found: " + queryHandle);
+      return resultSets.get(queryHandle);
     }
-    GrillResultSet resultSet = resultSets.get(queryHandle);
-    if (resultSet == null) {
-      QueryContext ctx = allQueries.get(queryHandle);
-      if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
-        resultSets.put(queryHandle, new GrillPersistentResult(
-            ctx.getQueryOutputFormatter().getMetadata(),
-            ctx.getQueryOutputFormatter().getFinalOutputPath().toString(),
-            ctx.getQueryOutputFormatter().getNumRows()));
-      } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
-        resultSet = allQueries.get(queryHandle).getSelectedDriver().
-            fetchResultSet(allQueries.get(queryHandle));
-        resultSets.put(queryHandle, resultSet);
-      } else {
-        throw new NotFoundException("Result set not available for query:" + queryHandle);
-      }
-    }
-    return resultSets.get(queryHandle);
   }
 
   GrillResultSet getDriverResultset(QueryHandle queryHandle)
@@ -990,7 +999,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         e.printStackTrace();
       }
     }
-    QueryCompletionListener listener = new QueryCompletionListenerImpl();
+    QueryCompletionListener listener = new QueryCompletionListenerImpl(handle);
     getQueryContext(sessionHandle, handle).getSelectedDriver().
     registerForCompletionNotification(handle, timeoutMillis, listener);
     try {
@@ -1009,13 +1018,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   class QueryCompletionListenerImpl implements QueryCompletionListener {
     boolean succeeded = false;
-    QueryCompletionListenerImpl() {
+    QueryHandle handle;
+    QueryCompletionListenerImpl(QueryHandle handle) {
+      this.handle = handle;
     }
     @Override
     public void onCompletion(QueryHandle handle) {
       synchronized (this) {
         succeeded = true;
-        LOG.info("Query with time out succeeded");
+        LOG.info("Query " + handle + " with time out succeeded");
         this.notify();
       }
     }
@@ -1024,7 +1035,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     public void onError(QueryHandle handle, String error) {
       synchronized (this) {
         succeeded = false;
-        LOG.info("Query with time out failed");
+        LOG.info("Query " + handle + " with time out failed");
         this.notify();
       }
     }

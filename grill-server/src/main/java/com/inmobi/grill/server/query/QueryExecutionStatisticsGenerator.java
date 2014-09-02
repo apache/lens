@@ -62,6 +62,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
       return;
     }
     event.setEndTime(ctx.getEndTime());
+    event.setStartTime(ctx.getLaunchTime());
     event.setStatus(ctx.getStatus());
     event.setCause(ended.getCause() != null ? ended.getCause() : "");
     event.setResult(ctx.getResultSetPath());
