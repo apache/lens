@@ -86,7 +86,8 @@ public class StatisticsLogFileScannerTask extends TimerTask {
     return parent.listFiles(new FilenameFilter() {
       @Override
       public boolean accept(File file, String name) {
-        return !name.equals(fileNamePattern)
+        return !new File(name).isHidden()
+            &&!name.equals(fileNamePattern)
             && name.contains(fileNamePattern);
       }
     });

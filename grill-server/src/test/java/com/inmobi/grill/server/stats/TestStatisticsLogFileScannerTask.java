@@ -19,7 +19,6 @@ package com.inmobi.grill.server.stats;
  * #L%
  */
 
-import com.google.common.eventbus.Subscribe;
 import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.stats.store.log.PartitionEvent;
 import com.inmobi.grill.server.stats.store.log.StatisticsLogFileScannerTask;
@@ -34,7 +33,6 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,15 +40,19 @@ public class TestStatisticsLogFileScannerTask {
 
 
   private File f;
+  private File hidden;
   @BeforeMethod
   public void createTestLogFile() throws Exception {
     f = new File("/tmp/test.log.2014-08-05-11-28");
+    hidden = new File("/tmp/.test.log.2014-08-05-11-28.swp");
+    hidden.createNewFile();
     f.createNewFile();
   }
 
   @AfterMethod
   public void deleteTestFile() throws Exception {
     f.delete();
+    hidden.delete();
   }
 
 
@@ -84,6 +86,7 @@ public class TestStatisticsLogFileScannerTask {
     PartitionEvent event = events.get(0);
     Assert.assertEquals(event.getEventName(),
         TestStatisticsLogFileScannerTask.class.getSimpleName());
+    Assert.assertEquals(event.getPartMap().size(), 1);
     Assert.assertTrue(event.getPartMap().containsKey("2014-08-05-11-28"));
     Assert.assertEquals(event.getPartMap().get("2014-08-05-11-28"),
         f.getAbsolutePath());
