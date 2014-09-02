@@ -19,8 +19,10 @@ package com.inmobi.grill.server.stats.store.log;
  * #L%
  */
 
+import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.stats.event.LoggableGrillStatistics;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,6 +49,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
 
   private static final Logger LOG =
       LoggerFactory.getLogger(StatisticsLogPartitionHandler.class);
+  public static final String LOG_PARTITION_HANDLER_COUNTER = "log-partition-handler-errors";
   private Path warehousePath;
   private Hive client;
   private String database;
@@ -81,6 +84,8 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
           new File(entry.getValue()).delete();
         }
       } catch (Exception e) {
+        MetricsService svc = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+        svc.incrCounter(StatisticsLogPartitionHandler.class, LOG_PARTITION_HANDLER_COUNTER);
         LOG.error("Unable to copy file to the file system", e);
       }
     }

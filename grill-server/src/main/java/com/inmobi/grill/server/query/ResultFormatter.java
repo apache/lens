@@ -20,6 +20,8 @@ package com.inmobi.grill.server.query;
  * #L%
  */
 
+import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -112,6 +114,9 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         LOG.info("Result formatter has completed. Final path:" + formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
+      MetricsService metricsService =
+        (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
         queryService.setFailedStatus(ctx, "Result formatting failed!", e.getLocalizedMessage());
