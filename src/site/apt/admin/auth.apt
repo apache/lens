@@ -19,9 +19,20 @@
 ~~~
 Authentication and Authorization guide
 
-GrillServer uses authentication model from Hive service.
-The same configuration parameters available in hive can be set for grill server.
-Hive auth documentation is available at:
-https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2
-http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/4.3.0/CDH4-Security-Guide/cdh4sg_topic_9_1.html
+  GrillServer uses authentication model from Hive service.
+  The same configuration parameters available in hive can be set for grill server.
+  Hive auth documentation is available at:
+  {{{https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2} Hive Doc}} and 
+  {{{http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/4.3.0/CDH4-Security-Guide/cdh4sg_topic_9_1.html} Cloudera doc}}
+  
+  For enabling LDAP authentication on grill server, admin should set following params in grill-site.xml
+
+*--+--+
+|hive.server2.authentication|LDAP|
+*--+--+---+--+
+|hive.server2.authentication.ldap.url|ldap://host:port/|
+*--+--+---+--+
+|hive.server2.authentication.ldap.security.protocol|ssl|
+*--+--+
+
 
