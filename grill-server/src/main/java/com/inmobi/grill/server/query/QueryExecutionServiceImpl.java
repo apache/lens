@@ -502,7 +502,6 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             }
           }
           try {
-            LOG.warn("XXXXX  " + finishedQuery);
             grillServerDao.insertFinishedQuery(finishedQuery);
           } catch (Exception e) {
             LOG.warn("Exception while purging query ",e);
