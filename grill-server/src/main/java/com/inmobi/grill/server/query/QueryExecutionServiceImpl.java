@@ -918,11 +918,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         }
         QueryContext finishedCtx = new QueryContext(
             query.getUserQuery(), query.getSubmitter(), conf);
+        finishedCtx.setQueryHandle(queryHandle);
         finishedCtx.setEndTime(query.getEndTime());
         finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0,
             QueryStatus.Status.valueOf(query.getStatus()),
             query.getErrorMessage() == null ? "" : query.getErrorMessage(),
-            query.getResult() == null,
+            query.getResult() != null,
             null,
             null));
         finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());

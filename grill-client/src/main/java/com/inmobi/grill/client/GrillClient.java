@@ -87,9 +87,10 @@ public class GrillClient {
   }
 
   private GrillClientResultSetWithStats getResultsFromStatement(GrillStatement statement) {
-    if(statement.getStatus().getStatus()
-        == QueryStatus.Status.FAILED) {
-      throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
+    QueryStatus.Status status = statement.getStatus().getStatus();
+    if(status != QueryStatus.Status.SUCCESSFUL) {
+      throw new IllegalStateException(statement.getStatus().getStatusMessage()
+          + " cause:" + statement.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
