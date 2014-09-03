@@ -9,9 +9,9 @@ package com.inmobi.grill.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -118,21 +118,24 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String explainQuery(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to execute") String sql, @CliOption(key = {"save"},
       mandatory = false, help = "query to explain") String location)
-          throws UnsupportedEncodingException {
+      throws UnsupportedEncodingException {
 
     QueryPlan plan = client.getQueryPlan(sql);
     return plan.getPlanString();
   }
 
   @CliCommand(value = "query list", help = "Get all queries")
-  public String getAllQueries() {
-    List<QueryHandle> handles = client.getQueries();
+  public String getAllQueries(@CliOption(key = {"status"}, mandatory = false,
+      help = "Status of queries to be listed") String status, @CliOption(key = {"user"}, mandatory = false,
+      help = "User of queries to be listed") String user) {
+    List<QueryHandle> handles = client.getQueries(status, user);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
       return "No queries";
     }
   }
+
 
   @CliCommand(value = "query kill", help ="Kill a query")
   public String killQuery(@CliOption(key = {"", "query"},
@@ -146,8 +149,8 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   }
 
   @CliCommand(value = "query results", help ="get results of async query")
-  public String getQueryResults(@CliOption(key = {"", "query"},
-      mandatory = true, help = "query-handle for fetching result") String qh)   {
+  public String getQueryResults(
+      @CliOption(key = {"", "query"}, mandatory = true, help = "query-handle for fetching result") String qh)   {
     try {
       GrillClient.GrillClientResultSetWithStats result = client.getAsyncResults(
           new QueryHandle(UUID.fromString(qh)));
@@ -169,7 +172,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
 
   @CliCommand(value = "prepQuery details", help = "Get prepared query")
   public String getPreparedStatus(@CliOption(key = {"", "handle"},
-  mandatory = true, help = "Prepare handle") String ph) {
+      mandatory = true, help = "Prepare handle") String ph) {
     GrillPreparedQuery prepared = client.getPreparedQuery(QueryPrepareHandle.fromString(ph));
     if (prepared != null) {
       StringBuilder sb = new StringBuilder();
@@ -207,7 +210,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
           specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result = 
+        GrillClient.GrillClientResultSetWithStats result =
             client.getResultsFromPrepared(QueryPrepareHandle.fromString(phandle));
         return formatResultSet(result);
       } catch (Throwable t) {
@@ -222,7 +225,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery prepare", help = "Prepapre query")
   public String prepare(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to prepare") String sql)
-          throws UnsupportedEncodingException {
+      throws UnsupportedEncodingException {
 
     QueryPrepareHandle handle = client.prepare(sql);
     return handle.toString();
@@ -231,7 +234,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery explain", help = "Explain and prepare query")
   public String explainAndPrepare(@CliOption(key = {"", "query"}, mandatory = true,
       help = "Query to explain and prepare") String sql)
-          throws UnsupportedEncodingException {
+      throws UnsupportedEncodingException {
 
     QueryPlan plan = client.explainAndPrepare(sql);
     StringBuilder planStr = new StringBuilder(plan.getPlanString());

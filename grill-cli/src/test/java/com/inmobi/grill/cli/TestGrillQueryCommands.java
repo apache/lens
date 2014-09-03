@@ -6,6 +6,7 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.cli.commands.GrillCubeCommands;
 import com.inmobi.grill.cli.commands.GrillQueryCommands;
 import com.inmobi.grill.client.GrillClient;
+import groovy.ui.SystemOutputInterceptor;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,10 +15,9 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.util.UUID;
 
 public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
@@ -126,7 +126,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   private void testExecuteAsyncQuery(GrillQueryCommands qCom) throws Exception {
     String sql = "cube select id,name from test_dim";
     String qh = qCom.executeQuery(sql, true);
-    String result = qCom.getAllQueries();
+    String result = qCom.getAllQueries("","");
     //this is because previous query has run two query handle will be there
     Assert.assertTrue(result.contains(qh));
 
@@ -139,6 +139,16 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     result = qCom.getQueryResults(qh);
     Assert.assertTrue(result.contains("1\tfirst"));
     //Kill query is not tested as there is no deterministic way of killing a query
+
+    result = qCom.getAllQueries("SUCCESSFUL","");
+    Assert.assertTrue(result.contains(qh));
+
+    String user = client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
+    result = qCom.getAllQueries("",user);
+    Assert.assertTrue(result.contains(qh));
+
+    result = qCom.getAllQueries("SUCCESSFUL",user);
+    Assert.assertTrue(result.contains(qh));
   }
 
 
