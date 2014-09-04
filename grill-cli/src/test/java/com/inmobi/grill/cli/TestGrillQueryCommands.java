@@ -6,13 +6,9 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.cli.commands.GrillCubeCommands;
 import com.inmobi.grill.cli.commands.GrillQueryCommands;
 import com.inmobi.grill.client.GrillClient;
-import groovy.ui.SystemOutputInterceptor;
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import java.io.*;
@@ -143,9 +139,15 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     result = qCom.getAllQueries("SUCCESSFUL","");
     Assert.assertTrue(result.contains(qh));
 
+    result = qCom.getAllQueries("FAILED","");
+    Assert.assertTrue(result.contains("No queries"));
+
     String user = client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
     result = qCom.getAllQueries("",user);
     Assert.assertTrue(result.contains(qh));
+
+    result = qCom.getAllQueries("","dummyuser");
+    Assert.assertTrue(result.contains("No queries"));
 
     result = qCom.getAllQueries("SUCCESSFUL",user);
     Assert.assertTrue(result.contains(qh));

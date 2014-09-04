@@ -239,10 +239,10 @@ public class GrillStatement {
   }
 
 
-  public List<QueryHandle> getAllQueries(String status, String user) {
+  public List<QueryHandle> getAllQueries(String state, String user) {
     WebTarget target = getQueryWebTarget(ClientBuilder
         .newBuilder().register(MultiPartFeature.class).build());
-    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle()).queryParam("state", status).queryParam("user", user).request().get(
+    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle()).queryParam("state", state).queryParam("user", user).request().get(
         new GenericType<List<QueryHandle>>() {
         });
     return handles;

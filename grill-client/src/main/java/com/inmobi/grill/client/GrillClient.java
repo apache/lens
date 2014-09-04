@@ -152,8 +152,8 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String status, String user) {
-    return new GrillStatement(conn).getAllQueries(status, user);
+  public List<QueryHandle> getQueries(String state, String user) {
+    return new GrillStatement(conn).getAllQueries(state, user);
   }
 
 
