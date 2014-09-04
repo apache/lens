@@ -88,6 +88,11 @@ import org.codehaus.jackson.map.module.SimpleModule;
 public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
   public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
+  public static final String QUERY_SUBMITTER_COUNTER = "query-submitter-errors";
+  public static final String STATUS_UPDATE_COUNTER = "status-update-errors";
+  public static final String QUERY_PURGER_COUNTER = "query-purger-errors";
+  public static final String PREPARED_QUERY_PURGER_COUNTER = "prepared-query-purger-errors";
+
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
   public static final String NAME = "query";
@@ -286,6 +291,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.info("Query Submitter has been interrupted, exiting");
           return;
         } catch (Exception e) {
+          incrCounter(QUERY_SUBMITTER_COUNTER);
           LOG.error("Error in query submitter", e);
         }
       }
@@ -328,6 +334,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.info("Status poller has been interrupted, exiting");
           return;
         } catch (Exception e) {
+          incrCounter(STATUS_UPDATE_COUNTER);
           LOG.error("Error in status poller", e);
         }
       }
@@ -527,8 +534,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               finished.getCtx().getStatus());
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
         } catch (GrillException e) {
+          incrCounter(QUERY_PURGER_COUNTER);
           LOG.error("Error closing  query ", e);
         }  catch (Exception e) {
+          incrCounter(QUERY_PURGER_COUNTER);
           LOG.error("Error in query purger", e);
         }
       }
@@ -546,11 +555,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           destroyPreparedQuery(prepared);
           LOG.info("Purged prepared query: " + prepared.getPrepareHandle());
         } catch (GrillException e) {
+          incrCounter(PREPARED_QUERY_PURGER_COUNTER);
           LOG.error("Error closing prepared query ", e);
         } catch (InterruptedException e) {
           LOG.info("PreparedQueryPurger has been interrupted, exiting");
           return;
         } catch (Exception e) {
+          incrCounter(PREPARED_QUERY_PURGER_COUNTER);
           LOG.error("Error in prepared query purger", e);
         }
       }

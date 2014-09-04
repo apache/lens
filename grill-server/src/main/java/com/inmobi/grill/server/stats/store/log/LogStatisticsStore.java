@@ -22,7 +22,9 @@ package com.inmobi.grill.server.stats.store.log;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.events.GrillEventService;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.stats.event.LoggableGrillStatistics;
 import com.inmobi.grill.server.stats.store.StatisticsStore;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics> {
   private static final Logger LOG = LoggerFactory.getLogger(LogStatisticsStore.class);
+  public static final String LOG_STORE_ERRORS = "log-store-errors";
   private final ObjectMapper mapper;
   private StatisticsLogPartitionHandler handler;
   private StatisticsLogRollupHandler rollupHandler;
@@ -54,16 +57,22 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
 
   @Override
   public void process(LoggableGrillStatistics event) {
-    Class eventClass = event.getClass();
-    String representation = null;
     try {
-      representation = mapper.writeValueAsString(event);
-    } catch (JsonProcessingException ignored) {
-    }
-    if (representation != null) {
-      rollupHandler.addToScanTask(eventClass.getName());
-      LoggerFactory.getLogger(eventClass)
+      Class eventClass = event.getClass();
+      String representation = null;
+      try {
+        representation = mapper.writeValueAsString(event);
+      } catch (JsonProcessingException ignored) {
+      }
+      if (representation != null) {
+        rollupHandler.addToScanTask(eventClass.getName());
+        LoggerFactory.getLogger(eventClass)
           .info(representation);
+      }
+    } catch (Exception exc) {
+      MetricsService metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      metricsService.incrCounter(LogStatisticsStore.class, LOG_STORE_ERRORS);
+      LOG.error("Unkown error ", exc);
     }
 
   }
