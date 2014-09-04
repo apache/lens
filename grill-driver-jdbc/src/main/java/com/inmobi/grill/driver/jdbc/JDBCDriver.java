@@ -378,7 +378,7 @@ public class JDBCDriver implements GrillDriver {
     String rewrittenQuery = rewriteQuery(query,conf);
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
+    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM, DEFAULT_JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     
