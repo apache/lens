@@ -119,7 +119,7 @@ public class GrillClient {
     return getResultsFromHandle(q);
   }
 
-  private GrillStatement getGrillStatement(QueryHandle query) {
+  public GrillStatement getGrillStatement(QueryHandle query) {
     return this.statementMap.get(query);
   }
 
@@ -152,8 +152,8 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries() {
-    return new GrillStatement(conn).getAllQueries();
+  public List<QueryHandle> getQueries(String state, String user) {
+    return new GrillStatement(conn).getAllQueries(state, user);
   }
 
 
