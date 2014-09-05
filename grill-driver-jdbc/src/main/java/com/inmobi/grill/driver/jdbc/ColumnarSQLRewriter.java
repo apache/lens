@@ -60,8 +60,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   protected StringBuilder factKeys = new StringBuilder();
   protected StringBuilder rewrittenQuery = new StringBuilder();
   protected StringBuilder mergedQuery = new StringBuilder();
-  protected String finalRewrittenQuery;
- 
+
   protected StringBuilder joinCondition = new StringBuilder();
   protected List<String> allkeys = new ArrayList<String>();
   protected List<String> aggColumn = new ArrayList<String>();
@@ -158,10 +157,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     this.joinTree = HQLParser.getString(qb.getParseInfo().getJoinExpr());
     this.joinAST = qb.getParseInfo().getJoinExpr();
-  
+
     this.fromAST = HQLParser.findNodeByPath(ast, TOK_FROM);
     this.fromTree = HQLParser.getString(fromAST);
-   
+
   }
 
   /*
@@ -432,7 +431,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       String[] keys = fromClause.split(" ");
       factTable = keys[1];
       factAlias = keys[2];
-     }
+    }
   }
 
   /*
@@ -441,14 +440,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
 
   public void reset() {
-    factInLineQuery.delete(0, factInLineQuery.length());
-    factKeys.delete(0, factKeys.length());
+    factInLineQuery.setLength(0);
+    factKeys.setLength(0);
     aggColumn.clear();
     factTable = "";
     factAlias = "";
-    allSubQueries.delete(0, allSubQueries.length());
+    allSubQueries.setLength(0);
     rightFilter.clear();
-    joinCondition.delete(0, joinCondition.length());
+    joinCondition.setLength(0);
     selectTree = fromTree = joinTree = whereTree = groupByTree = havingTree = orderByTree = null;
     selectAST = fromAST = joinAST = whereAST = groupByAST = havingAST = orderByAST = null;
     limit = null;
@@ -501,8 +500,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     // Get the limit clause
     String limit = getLimitClause(ast);
-    
-     // Construct the final fact in-line query with keys,
+
+    // Construct the final fact in-line query with keys,
     // measures and individual sub queries built.
 
     if (whereTree == null || joinTree == null || allSubQueries.length() == 0) {
@@ -514,19 +513,22 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     } else {
       factInLineQuery.append(" (select ").append(factKeys);
       if (!aggColumn.isEmpty())
-        factInLineQuery.append(aggColumn.toString().replace("[", "").replace("]", ""));
-      if (factInLineQuery.toString().substring(factInLineQuery.toString().length() - 1).equals(","))
+        factInLineQuery.append(aggColumn.toString().replace("[", "")
+            .replace("]", ""));
+      if (factInLineQuery.toString()
+          .substring(factInLineQuery.toString().length() - 1).equals(","))
         factInLineQuery.setLength(factInLineQuery.length() - 1);
-        factInLineQuery.append(" from ").append(factTable).append(" ").append(factAlias);
+      factInLineQuery.append(" from ").append(factTable).append(" ")
+          .append(factAlias);
       if (allSubQueries != null) {
         factInLineQuery.append(" where ");
-      factInLineQuery.append(allSubQueries.toString().substring(0,
-          allSubQueries.lastIndexOf("and")));
+        factInLineQuery.append(allSubQueries.toString().substring(0,
+            allSubQueries.lastIndexOf("and")));
       }
-      if (!aggColumn.isEmpty()){
-      factInLineQuery.append(" group by ");
-      factInLineQuery.append(factKeys.toString().substring(0,
-          factKeys.toString().lastIndexOf(",")));
+      if (!aggColumn.isEmpty()) {
+        factInLineQuery.append(" group by ");
+        factInLineQuery.append(factKeys.toString().substring(0,
+            factKeys.toString().lastIndexOf(",")));
       }
       factInLineQuery.append(")");
     }
@@ -548,8 +550,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         orderByTree, limit);
 
   }
+
   /*
-   * Construct final query using all trees 
+   * Construct final query using all trees
    */
   public void constructQuery(String selecttree, String fromtree,
       String wheretree, String groupbytree, String havingtree,
@@ -560,13 +563,13 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     if (joinCondition != null)
       finalJoinClause = factTable.concat(" ").concat(factAlias)
           .concat(joinCondition.toString());
-    else 
+    else
       finalJoinClause = factTable.concat(" ").concat(factAlias);
     rewrittenQuery.append("select ").append(selecttree).append(" from ");
     if (factInLineQuery.length() != 0)
       rewrittenQuery.append(finalJoinClause.replaceFirst(factTable,
           factInLineQuery.toString()));
-    else 
+    else
       rewrittenQuery.append(finalJoinClause);
     if (wheretree != null)
       rewrittenQuery.append(" where ").append(wheretree);
@@ -585,15 +588,17 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       throws GrillException {
     this.query = query;
     this.conf = conf;
-    String finalRewrittenQuery = "";
     StringBuilder mergedQuery = new StringBuilder();
-    String queryReplacedUdf="";
-    
+    rewrittenQuery.setLength(0);
+    String queryReplacedUdf = "";
+    reset();
+
     try {
       if (query.toLowerCase().matches("(.*)union all(.*)")) {
+        String finalRewrittenQuery = "";
         String[] queries = query.toLowerCase().split("union all");
         for (int i = 0; i < queries.length; i++) {
-          LOG.info("Union Query Part "+ i +" : " + queries[i]);
+          LOG.info("Union Query Part " + i + " : " + queries[i]);
           getFactNameAlias(queries[i]);
           ast = HQLParser.parseHQL(queries[i]);
           buildQuery();
@@ -601,22 +606,21 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           finalRewrittenQuery = mergedQuery.toString().substring(0,
               mergedQuery.lastIndexOf("union all"));
           reset();
-        }       
+        }
         queryReplacedUdf = replaceUDFForDB(finalRewrittenQuery);
         LOG.info("Input Query : " + query);
-        LOG.info("Rewritten Query :  " + finalRewrittenQuery);
-       } else {
+        LOG.info("Rewritten Query :  " + queryReplacedUdf);
+      } else {
         ast = HQLParser.parseHQL(query);
         getFactNameAlias(query);
         buildQuery();
-        finalRewrittenQuery = rewrittenQuery.toString();
-        queryReplacedUdf = replaceUDFForDB(finalRewrittenQuery);
+        queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
         LOG.info("Input Query : " + query);
-        LOG.info("Rewritten Query :  " + finalRewrittenQuery);
+        LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
     } catch (ParseException e) {
       e.printStackTrace();
-    } 
+    }
     return queryReplacedUdf;
   }
 
