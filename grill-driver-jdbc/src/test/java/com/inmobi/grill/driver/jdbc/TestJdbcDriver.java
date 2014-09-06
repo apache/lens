@@ -58,7 +58,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_DB_URI, "jdbc:hsqldb:mem:jdbcTestDB");
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
-    baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD, "explain plan for ");
+    baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
     
     driver = new JDBCDriver();
     driver.configure(baseConf);

@@ -26,6 +26,11 @@
       <artifactId>grill-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
+     <dependency>
+      <groupId>com.inmobi.grill</groupId>
+      <artifactId>grill-driver-cube</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 		<dependency>
 			<groupId>c3p0</groupId>
 			<artifactId>c3p0</artifactId>

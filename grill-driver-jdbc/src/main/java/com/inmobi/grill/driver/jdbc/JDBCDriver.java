@@ -33,6 +33,7 @@ import com.inmobi.grill.server.api.driver.GrillResultSet;
 import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
+import com.inmobi.grill.driver.cube.RewriteUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -305,6 +306,7 @@ public class JDBCDriver implements GrillDriver {
     } else {
       try {
         rewriter = queryRewriterClass.newInstance();
+        LOG.info("Initialized :" + queryRewriterClass);
       } catch (Exception e) {
         LOG.error("Unable to create rewriter object", e);
         throw new GrillException(e);
@@ -375,10 +377,11 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
     checkConfigured();
+    conf = RewriteUtil.getFinalQueryConf(this, conf);
     String rewrittenQuery = rewriteQuery(query,conf);
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
+    String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM, DEFAULT_JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     
@@ -467,7 +470,7 @@ public class JDBCDriver implements GrillDriver {
     checkConfigured();
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
-    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), RewriteUtil.getFinalQueryConf(this, conf));
     LOG.info("Execute " + context.getQueryHandle());
     QueryResult result = executeInternal(context,rewrittenQuery);
     return result.getGrillResultSet(true);
@@ -504,7 +507,7 @@ public class JDBCDriver implements GrillDriver {
     checkConfigured();
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
-    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), context.getConf());
+    String rewrittenQuery = rewriteQuery(context.getDriverQuery(), RewriteUtil.getFinalQueryConf(this, conf));
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {

@@ -39,5 +39,6 @@ public interface JDBCDriverConfConstants {
 
   public static final String JDBC_GET_CONNECTION_TIMEOUT = "grill.driver.jdbc.get.connection.timeout";
   public static final int JDBC_GET_CONNECTION_TIMEOUT_DEFAULT = 10000;
-  public static final String JDBC_EXPLAIN_KEYWORD = "explain ";
+  public static final String JDBC_EXPLAIN_KEYWORD_PARAM = "grill.driver.jdbc.explain.keyword";
+  public static final String DEFAULT_JDBC_EXPLAIN_KEYWORD = "explain ";
 }

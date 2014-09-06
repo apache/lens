@@ -166,6 +166,52 @@ public class TestColumnarSQLRewriter {
   }
 
   @Test
+  //Testing multiple queries in one instance
+  public void testNoRewrite() throws ParseException, SemanticException,
+      GrillException {
+    
+    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
+    HiveConf conf = new HiveConf();
+    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    
+    String query = 
+        
+        "select id from location_dim location_dim where location_name = '123' limit 10 " +
+            "union all select item_id item_id from item_dim item_dim inner join time_dim time_dim " +
+            "on item_dim.time_id = time_dim.id  where time_dim.day = date_add('1999-01-01',2) limit 20";
+    String actual = qtest.rewrite(conf, query);
+    
+    String expected = "select  id  from location_dim location_dim where ( location_name  =  '123' ) limit 10 " +
+    		"union all select  item_id  item_id  from  (select item_dim.time_id from item_dim " +
+    		"item_dim where item_dim.time_id in  (  select time_dim.id from time_dim where (( time_dim . day ) = " +
+    		"date_add( '1999-01-01' , interval 2  day)) ) ) item_dim inner join time_dim  time_dim  on " +
+    		"(( item_dim . time_id ) = ( time_dim . id )) where (( time_dim . day ) = " +
+    		"date_add( '1999-01-01' , interval 2  day)) limit 20";
+    
+    compareQueries(expected, actual);
+    
+    String query2 = 
+        "select * from location_dim location_dim union all select count(*) from item_dim item_dim ";
+    String actual2 = qtest.rewrite(conf, query2);
+    
+    String expected2 = "select  *  from location_dim location_dim union all select  count (*)  from item_dim item_dim";
+    
+    compareQueries(expected2, actual2);
+    
+    
+    String query3 = 
+        "select count(distinct id) from location_dim location_dim ";
+      
+    String actual3 = qtest.rewrite(conf, query3);
+    
+    String expected3 = "select count( distinct  id ) from location_dim location_dim";
+    
+    compareQueries(expected3, actual3);
+    
+  }
+
+  
+  @Test
   public void testJoinCond() throws ParseException, SemanticException,
       GrillException {
 
@@ -349,7 +395,8 @@ public class TestColumnarSQLRewriter {
     HiveConf conf = new HiveConf();
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
-    String rwq = qtest.rewrite(conf, query);
+    String actual = qtest.rewrite(conf, query);
+    
     String expected = "select ( fact . time_key ), ( time_dim . day_of_week ), date(( time_dim . day )), "
         + "( item_dim . item_key ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
         + "else sum(sum_fact_dollars_sold) end  dollars_sold , format(sum(sum_fact_units_sold),  4 ), "
@@ -358,8 +405,8 @@ public class TestColumnarSQLRewriter {
         + "sum(( fact . dollars_sold )) as sum_fact_dollars_sold, sum(( fact . units_sold )) as sum_fact_units_sold, "
         + "avg(( fact . dollars_sold )) as avg_fact_dollars_sold, min(( fact . dollars_sold )) as min_fact_dollars_sold, "
         + "max(( fact . dollars_sold )) as max_fact_dollars_sold from sales_fact fact where fact.time_key "
-        + "in  (  select time_dim.time_key from time_dim where ( time_dim . time_key ) between date_add( '2013-01-01' ,  1 ) "
-        + "and date_sub( '2013-01-31' ,  3 ) ) and fact.location_key in  (  select location_dim.location_key from location_dim "
+        + "in  (  select time_dim.time_key from time_dim where ( time_dim . time_key ) between date_add( '2013-01-01' , interval 1  day) "
+        + "and date_sub( '2013-01-31' , interval 3  day) ) and fact.location_key in  (  select location_dim.location_key from location_dim "
         + "where (( location_dim . location_name ) =  'test123' ) ) and fact.item_key in  "
         + "(  select item_dim.item_key from item_dim where (( item_dim . item_name ) =  'item_1' ) )  "
         + "group by fact.time_key,fact.location_key,fact.item_key) fact inner join item_dim  item_dim  "
@@ -370,7 +417,7 @@ public class TestColumnarSQLRewriter {
         + "date_sub( '2013-01-31' , interval 3  day) and (( item_dim . item_name ) =  'item_1' )) "
         + "group by ( fact . time_key ), ( time_dim . day_of_week ), ( time_dim . day ), "
         + "( item_dim . item_key ) order by dollars_sold  asc";
-    String actual = qtest.finalRewrittenQuery;
+   
     compareQueries(expected, actual);
   }
 
@@ -415,7 +462,7 @@ public class TestColumnarSQLRewriter {
     HiveConf conf = new HiveConf();
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
-    String rwq = qtest.rewrite(conf, query);
+    String actual = qtest.rewrite(conf, query);
     String expected = "select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ),  "
         + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end dollars_sold "
         + "from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
@@ -449,7 +496,7 @@ public class TestColumnarSQLRewriter {
         + "inner join time_dim  time_dim  on (( fact  .  time_key ) = ( time_dim  .  time_key )) "
         + "where ( time_dim  .  time_key ) between  '2013-03-01'  and  '2013-03-05'  group by ( fact  .  time_key ), "
         + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  dollars_sold asc";
-    String actual = qtest.finalRewrittenQuery.toString();
+    
     compareQueries(expected, actual);
   }
 
