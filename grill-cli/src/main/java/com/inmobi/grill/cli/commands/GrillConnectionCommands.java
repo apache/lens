@@ -97,7 +97,6 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
 
   @CliCommand(value ={"close"}, help ="Exits the shell")
   public ExitShellRequest quitShell() {
-    client.closeConnection();
     return ExitShellRequest.NORMAL_EXIT;
   }
 }
