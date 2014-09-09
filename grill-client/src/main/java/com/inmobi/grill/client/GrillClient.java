@@ -245,6 +245,7 @@ public class GrillClient {
   }
 
   public APIResult closeConnection() {
+    LOG.debug("Closing grill connection: " + new GrillConnectionParams(conf));
     return this.conn.close();
   }
 
@@ -469,5 +470,8 @@ public class GrillClient {
     return statement.executeQuery(phandle, false);
   }
 
+  public boolean isConnectionOpen() {
+    return this.conn.isOpen();
+  }
 
 }

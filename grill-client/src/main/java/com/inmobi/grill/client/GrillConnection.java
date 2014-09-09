@@ -160,6 +160,7 @@ public class GrillConnection {
       throw new IllegalStateException("Unable to close grill connection " +
           "with params " + params);
     }
+    LOG.debug("Grill connection closed.");
     return result;
   }
 
