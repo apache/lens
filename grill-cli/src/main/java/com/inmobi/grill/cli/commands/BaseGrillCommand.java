@@ -39,16 +39,17 @@ public class BaseGrillCommand {
   static {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       public void run() {
-        try {
-          if (isConnectionActive) {
-            LOG.debug("Request for stopping grill cli received");
-            client.closeConnection();
-          }
-        } catch (Exception e) {
-          LOG.warn("Error in closing grill connection: ", e);
-        }
+        closeClientConnection();
       }
     });
+  }
+
+  protected static void closeClientConnection() {
+    if (isConnectionActive) {
+      LOG.debug("Request for stopping grill cli received");
+      client.closeConnection();
+      isConnectionActive = false;
+    }
   }
 
   public BaseGrillCommand() {
