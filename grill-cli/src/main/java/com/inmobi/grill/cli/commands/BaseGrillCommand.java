@@ -34,12 +34,13 @@ public class BaseGrillCommand {
   protected DefaultPrettyPrinter pp;
 
   public static final Log LOG = LogFactory.getLog(BaseGrillCommand.class);
+  protected static boolean isConnectionActive;
 
   static {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       public void run() {
         try {
-          if (client.isConnectionOpen()) {
+          if (isConnectionActive) {
             LOG.debug("Request for stopping grill cli received");
             client.closeConnection();
           }
@@ -70,7 +71,9 @@ public class BaseGrillCommand {
         return false;
       }
     });
+    isConnectionActive = true;
   }
+
   protected static GrillClient client;
 
   public void setClient(GrillClient client) {
