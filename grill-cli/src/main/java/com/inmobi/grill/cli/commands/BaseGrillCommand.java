@@ -44,7 +44,7 @@ public class BaseGrillCommand {
     });
   }
 
-  protected static void closeClientConnection() {
+  protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
       LOG.debug("Request for stopping grill cli received");
       client.closeConnection();
