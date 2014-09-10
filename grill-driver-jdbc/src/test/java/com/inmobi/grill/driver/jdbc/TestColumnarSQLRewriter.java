@@ -174,40 +174,32 @@ public class TestColumnarSQLRewriter {
     HiveConf conf = new HiveConf();
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
     
-    String query = 
-        
-        "select id from location_dim location_dim where location_name = '123' limit 10 " +
-            "union all select item_id item_id from item_dim item_dim inner join time_dim time_dim " +
-            "on item_dim.time_id = time_dim.id  where time_dim.day = date_add('1999-01-01',2) limit 20";
+    String query =  "select count(distinct id) from location_dim" ;
     String actual = qtest.rewrite(conf, query);
-    
-    String expected = "select  id  from location_dim location_dim where ( location_name  =  '123' ) limit 10 " +
-    		"union all select  item_id  item_id  from  (select item_dim.time_id from item_dim " +
-    		"item_dim where item_dim.time_id in  (  select time_dim.id from time_dim where (( time_dim . day ) = " +
-    		"date_add( '1999-01-01' , interval 2  day)) ) ) item_dim inner join time_dim  time_dim  on " +
-    		"(( item_dim . time_id ) = ( time_dim . id )) where (( time_dim . day ) = " +
-    		"date_add( '1999-01-01' , interval 2  day)) limit 20";
-    
+    String expected = "select count( distinct  id ) from location_dim ";
     compareQueries(expected, actual);
-    
-    String query2 = 
-        "select * from location_dim location_dim union all select count(*) from item_dim item_dim ";
+ 
+    String query2 =  "select count(distinct id) from location_dim  location_dim" ;
     String actual2 = qtest.rewrite(conf, query2);
-    
-    String expected2 = "select  *  from location_dim location_dim union all select  count (*)  from item_dim item_dim";
-    
+    String expected2 = "select count( distinct  id ) from location_dim location_dim";
     compareQueries(expected2, actual2);
-    
-    
+ 
     String query3 = 
-        "select count(distinct id) from location_dim location_dim ";
-      
+        "select count(distinct location_dim.id) from  global_dw.location_dim location_dim";
     String actual3 = qtest.rewrite(conf, query3);
-    
-    String expected3 = "select count( distinct  id ) from location_dim location_dim";
-    
+    String expected3 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim";
     compareQueries(expected3, actual3);
     
+    String query4 = 
+        "select count(distinct location_dim.id) from  global_dw.location_dim location_dim " +
+        "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id " +
+        "right outer join time_dim time_dim on location_dim.id = time_dim.id " ;
+    String actual4 = qtest.rewrite(conf, query4);
+    String expected4 = 
+        "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim  " +
+        "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  " +
+        "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
+    compareQueries(expected4, actual4);
   }
 
   
