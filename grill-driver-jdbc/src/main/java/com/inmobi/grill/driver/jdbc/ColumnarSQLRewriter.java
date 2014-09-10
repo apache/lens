@@ -66,8 +66,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   protected List<String> aggColumn = new ArrayList<String>();
   protected List<String> filterInJoinCond = new ArrayList<String>();
   protected List<String> rightFilter = new ArrayList<String>();
-  protected List<String> fromTables = new ArrayList<String>();
-
+ 
   private String leftFilter;
   private Map<String, String> mapAggTabAlias = new HashMap<String, String>();
   private static final Log LOG = LogFactory.getLog(ColumnarSQLRewriter.class);
@@ -166,7 +165,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * Get the table qualified name eg. database.table_name table_alias
    */
 
-  public String getTable(ASTNode tree) {
+  public String getTableFromTabRefNode(ASTNode tree) {
     String table = "";
     ASTNode tabName = (ASTNode) tree.getChild(0);
     if (tabName.getChildCount() == 2)
@@ -198,7 +197,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ASTNode left = (ASTNode) node.getChild(0);
         ASTNode right = (ASTNode) node.getChild(1);
 
-        rightTable = getTable(right);
+        rightTable = getTableFromTabRefNode(right);
         String joinType = "";
         String joinFilter = "";
         String JoinToken = node.getToken().getText();
@@ -441,8 +440,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   public String getFactNameAlias(ASTNode fromAST) {
     String factTable;
     String factAlias;
-    ArrayList<String> allTables = getFirstChildFromFromString(fromAST);
-
+    ArrayList<String> allTables = new ArrayList<String>();
+    getAllTablesfromFromAST(fromAST,allTables);
+    
     String[] keys = allTables.get(0).trim().split(" +");
     if (keys.length == 2) {
       factTable = keys[0];
@@ -468,7 +468,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     selectTree = fromTree = joinTree = whereTree = groupByTree = havingTree = orderByTree = null;
     selectAST = fromAST = joinAST = whereAST = groupByAST = havingAST = orderByAST = null;
     limit = null;
-    fromTables.clear();
   }
 
   /*
@@ -572,7 +571,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /*
    * Get first child from the from tree
    */
-  private ArrayList<String> getFirstChildFromFromString(ASTNode from) {
+  private void getAllTablesfromFromAST(ASTNode from, ArrayList<String> fromTables) {
     String table = "";
     if (TOK_TABREF == from.getToken().getType()) {
       ASTNode tabName = (ASTNode) from.getChild(0);
@@ -588,9 +587,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     for (int i = 0; i < from.getChildCount(); i++) {
       ASTNode child = (ASTNode) from.getChild(i);
-      getFirstChildFromFromString(child);
+      getAllTablesfromFromAST(child, fromTables);
     }
-    return (ArrayList<String>) fromTables;
   }
 
   /*
@@ -635,7 +633,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     StringBuilder mergedQuery = new StringBuilder();
     rewrittenQuery.setLength(0);
     String queryReplacedUdf = "";
-    fromTables.clear();
     reset();
 
     try {
