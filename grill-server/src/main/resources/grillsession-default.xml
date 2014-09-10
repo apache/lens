@@ -192,4 +192,10 @@
   <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 
+<property>
+    <name>hive.metastore.failure.retries</name>
+    <value>3</value>
+    <description>Number of call retries when Hive Metastore calls fail with Thrift errros</description>
+</property>
+
 </configuration>

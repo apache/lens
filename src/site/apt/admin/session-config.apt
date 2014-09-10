@@ -70,4 +70,6 @@ Grill session configuration
 *--+--+---+--+
 |23|grill.whether.mail.notify|false|When a query ends, whether to notify the submitter by mail or not.|
 *--+--+---+--+
+|24|hive.metastore.failure.retries|3|Number of call retries when Hive Metastore calls fail with Thrift errros|
+*--+--+---+--+
 The configuration parameters and their default values
