@@ -119,6 +119,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       return;
     }
 
+    if ( ! qb.getSubqAliases().isEmpty()) {
+      LOG.warn("Subqueries in from clause is not supported by " + this + " Query : " +  this.query);
+      throw new SemanticException();
+    }
+
     // Get clause name
     TreeSet<String> ks = new TreeSet<String>(qb.getParseInfo().getClauseNames());
     clauseName = ks.first();
