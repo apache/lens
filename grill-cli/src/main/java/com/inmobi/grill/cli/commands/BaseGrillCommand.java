@@ -19,7 +19,7 @@ package com.inmobi.grill.cli.commands;
  * #L%
  */
 
-import com.inmobi.grill.cli.GrillClientWrapperBean;
+import com.inmobi.grill.cli.client.GrillClientWrapper;
 import com.inmobi.grill.client.GrillClient;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.Indenter;
@@ -33,6 +33,8 @@ public class BaseGrillCommand {
   protected DefaultPrettyPrinter pp;
 
   public BaseGrillCommand() {
+    // force the singleton to be initialized
+    getClient();
     mapper = new ObjectMapper();
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
@@ -61,8 +63,8 @@ public class BaseGrillCommand {
     return getClientWrapper().getClient();
   }
 
-  public GrillClientWrapperBean.GrillClientWrapper getClientWrapper() {
-    return GrillClientWrapperBean.GrillClientWrapper.INSTANCE;
+  public GrillClientWrapper getClientWrapper() {
+    return GrillClientWrapper.INSTANCE;
   }
   /**
    * Pretty printing JSON object into CLI String

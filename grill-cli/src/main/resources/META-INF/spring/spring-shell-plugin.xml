@@ -27,7 +27,6 @@
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
   <context:component-scan base-package="com.inmobi.grill.cli"/>
-  <bean id="clientBean" class="com.inmobi.grill.cli.GrillClientWrapperBean"/>
 
   <bean id="grillConnectionCommands"
         class="com.inmobi.grill.cli.commands.GrillConnectionCommands">
