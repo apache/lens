@@ -46,13 +46,13 @@ public enum GrillClientWrapper {
   public void explainFailedAttempt(GrillClientServerConnectionException e) {
     switch(e.getErrorCode()) {
       case 401:
-        System.console().printf("username/password combination incorrect.");
+        System.console().printf("username/password combination incorrect.\n");
         break;
       case 500:
-        System.console().printf("server unresponsive, Returned error code 500");
+        System.console().printf("server unresponsive, Returned error code 500\n");
         break;
       default:
-        System.console().printf("Unknown error in authenticating with the server. Error code = %d", e.getErrorCode());
+        System.console().printf("Unknown error in authenticating with the server. Error code = %d\n", e.getErrorCode());
     }
   }
   public void getCredentials(){
