@@ -101,9 +101,10 @@ public class GrillClient {
   }
 
   private GrillClientResultSetWithStats getResultsFromStatement(GrillStatement statement) {
-    if(statement.getStatus().getStatus()
-        == QueryStatus.Status.FAILED) {
-      throw new IllegalStateException(statement.getStatus().getStatusMessage() + " cause:" + statement.getStatus().getErrorMessage());
+    QueryStatus.Status status = statement.getStatus().getStatus();
+    if(status != QueryStatus.Status.SUCCESSFUL) {
+      throw new IllegalStateException(statement.getStatus().getStatusMessage()
+          + " cause:" + statement.getStatus().getErrorMessage());
     }
     GrillClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
@@ -132,7 +133,7 @@ public class GrillClient {
     return getResultsFromHandle(q);
   }
 
-  private GrillStatement getGrillStatement(QueryHandle query) {
+  public GrillStatement getGrillStatement(QueryHandle query) {
     return this.statementMap.get(query);
   }
 
@@ -165,8 +166,8 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries() {
-    return new GrillStatement(conn).getAllQueries();
+  public List<QueryHandle> getQueries(String state, String user) {
+    return new GrillStatement(conn).getAllQueries(state, user);
   }
 
 
@@ -258,6 +259,7 @@ public class GrillClient {
   }
 
   public APIResult closeConnection() {
+    LOG.debug("Closing grill connection: " + new GrillConnectionParams(conf));
     return this.conn.close();
   }
 
@@ -482,5 +484,8 @@ public class GrillClient {
     return statement.executeQuery(phandle, false);
   }
 
+  public boolean isConnectionOpen() {
+    return this.conn.isOpen();
+  }
 
 }

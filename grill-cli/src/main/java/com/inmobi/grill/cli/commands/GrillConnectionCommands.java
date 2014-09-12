@@ -35,7 +35,6 @@ import java.util.List;
 public class GrillConnectionCommands extends BaseGrillCommand implements CommandMarker  {
 
 
-
   @CliCommand(value = "set", help = "sets a session parameter.")
   public String setParam(
       @CliOption(key={"","param"}, mandatory = true, help = "key=val")
@@ -99,7 +98,7 @@ public class GrillConnectionCommands extends BaseGrillCommand implements Command
 
   @CliCommand(value ={"close"}, help ="Exits the shell")
   public ExitShellRequest quitShell() {
-    getClient().closeConnection();
+    closeClientConnection();
     return ExitShellRequest.NORMAL_EXIT;
   }
 }

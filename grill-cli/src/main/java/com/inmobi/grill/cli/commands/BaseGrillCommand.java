@@ -21,26 +21,48 @@ package com.inmobi.grill.cli.commands;
 
 import com.inmobi.grill.cli.client.GrillClientWrapper;
 import com.inmobi.grill.client.GrillClient;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.Indenter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
-
 import java.io.IOException;
 
 public class BaseGrillCommand {
   protected ObjectMapper mapper;
   protected DefaultPrettyPrinter pp;
 
-  public BaseGrillCommand() {
+  public static final Log LOG = LogFactory.getLog(BaseGrillCommand.class);
+  protected static boolean isConnectionActive;
+
+  {
     // force the singleton to be initialized
     getClient();
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      public void run() {
+        closeClientConnection();
+      }
+    });
+  }
+
+  protected synchronized void closeClientConnection() {
+    if (isConnectionActive) {
+      LOG.debug("Request for stopping grill cli received");
+      getClient().closeConnection();
+      isConnectionActive = false;
+    }
+  }
+
+  public BaseGrillCommand() {
     mapper = new ObjectMapper();
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
       @Override
       public void writeIndentation(JsonGenerator jg, int level)
-          throws IOException {
+          throws IOException,
+          JsonGenerationException {
         if(level > 2) {
           jg.writeRaw("  ");
         } else {
@@ -53,6 +75,7 @@ public class BaseGrillCommand {
         return false;
       }
     });
+    isConnectionActive = true;
   }
 
   public void setClient(GrillClient client) {

@@ -139,7 +139,7 @@ public class RewriteUtil {
     return backTrackIndex;
   }
 
-  static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
+  public static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
       if(entry.getKey().equals("cube.query.driver.supported.storages")){

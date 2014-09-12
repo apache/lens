@@ -67,6 +67,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String driverOpHandle;
   @Getter final DriverQueryStatus driverStatus;
   transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
+  @Getter @Setter private boolean finishedQueryPersisted = false;
 
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new GrillConf(), conf, query, null);

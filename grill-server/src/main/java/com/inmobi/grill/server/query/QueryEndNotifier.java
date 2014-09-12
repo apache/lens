@@ -21,9 +21,11 @@ package com.inmobi.grill.server.query;
  */
 
 import com.inmobi.grill.api.query.QueryStatus;
+import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.events.GrillEventService;
+import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryEnded;
 import org.apache.commons.logging.Log;
@@ -41,6 +43,7 @@ import java.util.Properties;
 public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
   private final QueryExecutionServiceImpl queryService;
   public static final Log LOG = LogFactory.getLog(QueryEndNotifier.class);
+  public static final String EMAIL_ERROR_COUNTER = "email-send-errors";
   private final HiveConf conf;
   private final String from;
   private final String host;
@@ -64,7 +67,15 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
   @Override
   public void process(QueryEnded event) {
+    if (event.getCurrentValue() == QueryStatus.Status.CLOSED) {
+      return;
+    }
     QueryContext queryContext = queryService.getQueryContext(event.getQueryHandle());
+    if (queryContext == null) {
+      LOG.warn("Could not find the context for " + event.getQueryHandle() + " for event:"
+        + event.getCurrentValue() + ". No email generated");
+      return;
+    }
 
     boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
       GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
@@ -138,6 +149,8 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       message.setContent(multipart);
       Transport.send(message);
     } catch (Exception e) {
+      MetricsService metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
       LOG.error("Error sending query end email", e);
     }
   }

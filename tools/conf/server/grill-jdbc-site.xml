@@ -18,4 +18,12 @@
     <name>cube.query.driver.supported.storages</name>
     <value>mydb</value>
   </property>
+  <property>
+    <name>grill.driver.jdbc.query.rewriter</name>
+    <value>com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter</value>
+  </property>
+  <property>
+    <name>grill.driver.jdbc.explain.keyword</name>
+    <value>explain plan for </value>
+  </property>
 </configuration>
