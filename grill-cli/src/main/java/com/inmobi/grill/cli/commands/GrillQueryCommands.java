@@ -42,13 +42,13 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
           specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result = client.getResults(sql);
+        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
       }
     } else {
-      QueryHandle handle = client.executeQueryAsynch(sql);
+      QueryHandle handle = getClient().executeQueryAsynch(sql);
       return handle.getHandleId().toString();
     }
   }
@@ -91,7 +91,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "query status", help = "Fetch status of executed query")
   public String getStatus(@CliOption(key = {"", "query"},
       mandatory = true, help = "<query-handle> for which status has to be fetched") String qh) {
-    QueryStatus status = client.getQueryStatus(new QueryHandle(UUID.fromString(qh)));
+    QueryStatus status = getClient().getQueryStatus(new QueryHandle(UUID.fromString(qh)));
     StringBuilder sb = new StringBuilder();
     if(status == null) {
       return "Unable to find status for " + qh;
@@ -120,7 +120,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
       mandatory = false, help = "query to explain") String location)
       throws UnsupportedEncodingException {
 
-    QueryPlan plan = client.getQueryPlan(sql);
+    QueryPlan plan = getClient().getQueryPlan(sql);
     return plan.getPlanString();
   }
 
@@ -128,7 +128,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String getAllQueries(@CliOption(key = {"state"}, mandatory = false,
       help = "Status of queries to be listed") String state, @CliOption(key = {"user"}, mandatory = false,
       help = "User of queries to be listed") String user) {
-    List<QueryHandle> handles = client.getQueries(state, user);
+    List<QueryHandle> handles = getClient().getQueries(state, user);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
@@ -136,11 +136,10 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
     }
   }
 
-
   @CliCommand(value = "query kill", help ="Kill a query")
   public String killQuery(@CliOption(key = {"", "query"},
       mandatory = true, help = "query-handle for killing") String qh) {
-    boolean status = client.killQuery(new QueryHandle(UUID.fromString(qh)));
+    boolean status = getClient().killQuery(new QueryHandle(UUID.fromString(qh)));
     if(status) {
       return "Successfully killed " + qh;
     } else {
@@ -152,7 +151,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String getQueryResults(
       @CliOption(key = {"", "query"}, mandatory = true, help = "query-handle for fetching result") String qh)   {
     try {
-      GrillClient.GrillClientResultSetWithStats result = client.getAsyncResults(
+      GrillClient.GrillClientResultSetWithStats result = getClient().getAsyncResults(
           new QueryHandle(UUID.fromString(qh)));
       return formatResultSet(result);
     } catch (Throwable t) {
@@ -162,7 +161,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
 
   @CliCommand(value = "prepQuery list", help = "Get all prepared queries")
   public String getAllPreparedQueries() {
-    List<QueryPrepareHandle> handles = client.getPreparedQueries();
+    List<QueryPrepareHandle> handles = getClient().getPreparedQueries();
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
@@ -173,7 +172,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery details", help = "Get prepared query")
   public String getPreparedStatus(@CliOption(key = {"", "handle"},
       mandatory = true, help = "Prepare handle") String ph) {
-    GrillPreparedQuery prepared = client.getPreparedQuery(QueryPrepareHandle.fromString(ph));
+    GrillPreparedQuery prepared = getClient().getPreparedQuery(QueryPrepareHandle.fromString(ph));
     if (prepared != null) {
       StringBuilder sb = new StringBuilder();
       sb.append("User query:").append(prepared.getUserQuery()).append("\n");
@@ -195,7 +194,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery destroy", help ="Destroy a prepared query")
   public String destroyPreparedQuery(@CliOption(key = {"", "handle"},
       mandatory = true, help = "prepare handle to destroy") String ph) {
-    boolean status = client.destroyPrepared(new QueryPrepareHandle(UUID.fromString(ph)));
+    boolean status = getClient().destroyPrepared(new QueryPrepareHandle(UUID.fromString(ph)));
     if(status) {
       return "Successfully destroyed " + ph;
     } else {
@@ -211,13 +210,13 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
     if (!asynch) {
       try {
         GrillClient.GrillClientResultSetWithStats result =
-            client.getResultsFromPrepared(QueryPrepareHandle.fromString(phandle));
+            getClient().getResultsFromPrepared(QueryPrepareHandle.fromString(phandle));
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
       }
     } else {
-      QueryHandle handle = client.executePrepared(QueryPrepareHandle.fromString(phandle));
+      QueryHandle handle = getClient().executePrepared(QueryPrepareHandle.fromString(phandle));
       return handle.getHandleId().toString();
     }
   }
@@ -227,7 +226,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
       help = "Query to prepare") String sql)
       throws UnsupportedEncodingException {
 
-    QueryPrepareHandle handle = client.prepare(sql);
+    QueryPrepareHandle handle = getClient().prepare(sql);
     return handle.toString();
   }
 
@@ -236,7 +235,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
       help = "Query to explain and prepare") String sql)
       throws UnsupportedEncodingException {
 
-    QueryPlan plan = client.explainAndPrepare(sql);
+    QueryPlan plan = getClient().explainAndPrepare(sql);
     StringBuilder planStr = new StringBuilder(plan.getPlanString());
     planStr.append("\n").append("Prepare handle:").append(plan.getPrepareHandle());
     return planStr.toString();

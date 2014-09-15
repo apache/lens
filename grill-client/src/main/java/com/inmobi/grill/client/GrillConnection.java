@@ -23,6 +23,8 @@ package com.inmobi.grill.client;
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.api.StringList;
+import com.inmobi.grill.client.exceptions.GrillClientException;
+import com.inmobi.grill.client.exceptions.GrillClientServerConnectionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -30,11 +32,14 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -101,29 +106,35 @@ public class GrillConnection {
   public GrillSessionHandle open() {
 
     WebTarget target = getSessionWebTarget();
-
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("username").build(), params.getUser()));
+      FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("password").build(), params.getPassword()));
+      FormDataContentDisposition.name("password").build(), params.getPassword()));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").
             fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
-
-    final GrillSessionHandle sessionHandle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        GrillSessionHandle.class);
-
-
-    if (sessionHandle != null) {
-      this.sessionHandle = sessionHandle;
-      LOG.debug("Created a new session " + sessionHandle.getPublicId());
-    } else {
-      throw new IllegalStateException("Unable to connect to grill " +
+    try{
+      Response response = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+      if(response.getStatus() != 200) {
+        throw new GrillClientServerConnectionException(response.getStatus());
+      }
+      final GrillSessionHandle handle = response.readEntity(GrillSessionHandle.class);
+      if (handle != null) {
+        sessionHandle = handle;
+        LOG.debug("Created a new session " + sessionHandle.getPublicId());
+      } else {
+        throw new IllegalStateException("Unable to connect to grill " +
           "server with following paramters" + params);
+      }
+    } catch(ProcessingException e) {
+      if(e.getCause() != null && e.getCause() instanceof ConnectException) {
+        throw new GrillClientServerConnectionException(e.getCause().getMessage(), e);
+      }
     }
+
     APIResult result = attachDatabaseToSession();
     LOG.debug("Successfully switched to database " + params.getDbName());
     if (result.getStatus() != APIResult.Status.SUCCEEDED) {
@@ -140,7 +151,7 @@ public class GrillConnection {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases").path("current").queryParam(
         "sessionid", this.sessionHandle).request(
-        MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
+      MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
         APIResult.class);
     return result;
 
@@ -223,7 +234,7 @@ public class GrillConnection {
   public List<String> getConnectionParams(String key) {
     WebTarget target = getSessionWebTarget();
     StringList value = target.path("params")
-        .queryParam("sessionid",this.sessionHandle)
+        .queryParam("sessionid", this.sessionHandle)
         .queryParam("key", key)
         .request()
         .get(StringList.class);

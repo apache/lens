@@ -27,46 +27,36 @@
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
   <context:component-scan base-package="com.inmobi.grill.cli"/>
-  <bean id="client" class="com.inmobi.grill.client.GrillClient"/>
 
   <bean id="grillConnectionCommands"
         class="com.inmobi.grill.cli.commands.GrillConnectionCommands">
-    <property name="client" ref="client"/>
   </bean>
   <bean id="grillDatabaseCommands"
         class="com.inmobi.grill.cli.commands.GrillDatabaseCommands">
-    <property name="client" ref="client"/>
   </bean>
   <bean id="grillCubeCommands"
         class="com.inmobi.grill.cli.commands.GrillCubeCommands">
-    <property name="client" ref="client"/>
   </bean>
   <bean id="grillDimensionCommands"
         class="com.inmobi.grill.cli.commands.GrillDimensionCommands">
-    <property name="client" ref="client"/>
   </bean>
   <bean id="grillFactCommands"
         class="com.inmobi.grill.cli.commands.GrillFactCommands">
-    <property name="client" ref="client"/>
   </bean>
   <bean id="grillStorageCommands"
         class="com.inmobi.grill.cli.commands.GrillStorageCommands">
-    <property name="client" ref="client"/>
   </bean>
 
   <bean id="grillQueryCommands"
         class="com.inmobi.grill.cli.commands.GrillQueryCommands">
-    <property name="client" ref="client"/>
   </bean>
 
   <bean id="grillDimensionTableCommands"
         class="com.inmobi.grill.cli.commands.GrillDimensionTableCommands">
-    <property name="client" ref="client"/>
   </bean>
 
   <bean id="grillNativeTableCommands"
         class="com.inmobi.grill.cli.commands.GrillNativeTableCommands">
-    <property name="client" ref="client"/>
   </bean>
 
 </beans>

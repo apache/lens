@@ -38,7 +38,7 @@ public class GrillDimensionCommands extends  BaseGrillCommand implements Command
 
   @CliCommand(value = "show dimensions", help = "show list of dimensions in database")
   public String showDimensions() {
-    List<String> dimensions = client.getAllDimensions();
+    List<String> dimensions = getClient().getAllDimensions();
     if( dimensions != null) {
       return Joiner.on("\n").join(dimensions);
     } else {
@@ -56,7 +56,7 @@ public class GrillDimensionCommands extends  BaseGrillCommand implements Command
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
-    APIResult result = client.createDimension(dimensionSpec);
+    APIResult result = getClient().createDimension(dimensionSpec);
 
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "create dimension succeeded";
@@ -68,7 +68,7 @@ public class GrillDimensionCommands extends  BaseGrillCommand implements Command
   @CliCommand(value = "drop dimension", help = "drop dimension")
   public String dropDimension(@CliOption(key = {"", "table"},
       mandatory = true, help = "dimension name to be dropped") String dimension) {
-    APIResult result = client.dropDimension(dimension);
+    APIResult result = getClient().dropDimension(dimension);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dimension + "!!!";
     } else {
@@ -98,7 +98,7 @@ public class GrillDimensionCommands extends  BaseGrillCommand implements Command
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateDimension(pair[0], pair[1]);
+    APIResult result = getClient().updateDimension(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -111,7 +111,7 @@ public class GrillDimensionCommands extends  BaseGrillCommand implements Command
       mandatory = true, help = "<dimension-name>") String dimensionName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getDimension(dimensionName)));
+          getClient().getDimension(dimensionName)));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }

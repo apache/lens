@@ -28,6 +28,7 @@ import com.inmobi.grill.api.query.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.io.Console;
 import java.util.HashMap;
 import java.util.List;
 
@@ -45,9 +46,22 @@ public class GrillClient {
   }
 
   public GrillClient(GrillClientConfig conf) {
+    this(conf, conf.getUser(), conf.getPassword());
+  }
+
+  public GrillClient(String username, String password) {
+    this(new GrillClientConfig(), username, password);
+  }
+
+  public GrillClient(GrillClientConfig conf, String username, String password) {
     this.conf = conf;
+    setCredentials(username, password);
     connectToGrillServer();
     statement = new GrillStatement(conn);
+  }
+  public void setCredentials(String username, String password) {
+    conf.setUser(username);
+    conf.setPassword(password);
   }
 
   public QueryHandle executeQueryAsynch(String sql) {

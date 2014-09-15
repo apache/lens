@@ -38,7 +38,7 @@ public class GrillCubeCommands extends BaseGrillCommand implements CommandMarker
 
   @CliCommand(value = "show cubes", help = "show list of cubes in database")
   public String showCubes() {
-    List<String> cubes = client.getAllCubes();
+    List<String> cubes = getClient().getAllCubes();
     if( cubes != null) {
       return Joiner.on("\n").join(cubes);
     } else {
@@ -56,7 +56,7 @@ public class GrillCubeCommands extends BaseGrillCommand implements CommandMarker
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
-    APIResult result = client.createCube(cubeSpec);
+    APIResult result = getClient().createCube(cubeSpec);
 
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "create cube succeeded";
@@ -68,7 +68,7 @@ public class GrillCubeCommands extends BaseGrillCommand implements CommandMarker
   @CliCommand(value = "drop cube", help = "drop cube")
   public String dropCube(@CliOption(key = {"", "table"},
       mandatory = true, help = "cube name to be dropped") String cube) {
-    APIResult result = client.dropCube(cube);
+    APIResult result = getClient().dropCube(cube);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + cube + "!!!";
     } else {
@@ -98,7 +98,7 @@ public class GrillCubeCommands extends BaseGrillCommand implements CommandMarker
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateCube(pair[0], pair[1]);
+    APIResult result = getClient().updateCube(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -111,7 +111,7 @@ public class GrillCubeCommands extends BaseGrillCommand implements CommandMarker
       mandatory = true, help = "<cube-name>") String cubeName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getCube(cubeName)));
+          getClient().getCube(cubeName)));
 
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
