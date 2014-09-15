@@ -1,0 +1,49 @@
+~~~
+~~ #%L
+~~ Grill
+~~ %%
+~~ Copyright (C) 2014 Inmobi
+~~ %%
+~~ Licensed under the Apache License, Version 2.0 (the "License");
+~~ you may not use this file except in compliance with the License.
+~~ You may obtain a copy of the License at
+~~ 
+~~      http://www.apache.org/licenses/LICENSE-2.0
+~~ 
+~~ Unless required by applicable law or agreed to in writing, software
+~~ distributed under the License is distributed on an "AS IS" BASIS,
+~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+~~ See the License for the specific language governing permissions and
+~~ limitations under the License.
+~~ #L%
+~~~
+Jdbc driver configuration
+
+===
+
+*--+--+---+--+
+|<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
+*--+--+---+--+
+|1|grill.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
+*--+--+---+--+
+|2|grill.driver.jdbc.db.password| |The database user's password|
+*--+--+---+--+
+|3|grill.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
+*--+--+---+--+
+|4|grill.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
+*--+--+---+--+
+|5|grill.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
+*--+--+---+--+
+|6|grill.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+*--+--+---+--+
+|7|grill.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+*--+--+---+--+
+|8|grill.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+*--+--+---+--+
+|9|grill.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+*--+--+---+--+
+|10|grill.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+*--+--+---+--+
+|11|grill.driver.jdbc.query.rewriter|com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+*--+--+---+--+
+The configuration parameters and their default values

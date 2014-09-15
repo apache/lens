@@ -43,11 +43,13 @@ public class TestGenerateConfigDoc {
   public static final String SERVER_CONF_FILE = "../grill-server/src/main/resources/grillserver-default.xml";
   public static final String SESSION_CONF_FILE = "../grill-server/src/main/resources/grillsession-default.xml";
   public static final String HIVE_DRIVER_CONF_FILE = "../grill-driver-hive/src/main/resources/hivedriver-default.xml";
+  public static final String JDBC_DRIVER_CONF_FILE = "../grill-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
   public static final String CLIENT_CONF_FILE = "../grill-client/src/main/resources/grill-client-default.xml";
   public static final String CUBE_QUERY_CONF_FILE = "../grill-driver-cube/src/main/resources/olap-query-conf.xml";
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   public static final String SESSION_APT_FILE = "../src/site/apt/admin/session-config.apt";
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";
+  public static final String JDBC_DRIVER_APT_FILE = "../src/site/apt/admin/jdbcdriver-config.apt";
   public static final String CLIENT_APT_FILE = "../src/site/apt/user/client-config.apt";
   public static final String CUBE_QUERY_CONF_APT_FILE = "../src/site/apt/user/olap-query-conf.apt";
   
@@ -68,7 +70,13 @@ public class TestGenerateConfigDoc {
     ConfigPrinter printer = new ConfigPrinter(HIVE_DRIVER_CONF_FILE, HIVE_DRIVER_APT_FILE);
     printer.generateDoc("Hive driver configuration");
   }
-
+  
+  @Test
+  public void generateJdbcdriverConfigDoc() throws Exception {
+    ConfigPrinter printer = new ConfigPrinter(JDBC_DRIVER_CONF_FILE, JDBC_DRIVER_APT_FILE);
+    printer.generateDoc("Jdbc driver configuration");
+  }
+ 
   @Test
   public void generateClientConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(CLIENT_CONF_FILE, CLIENT_APT_FILE);
