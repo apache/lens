@@ -30,7 +30,6 @@ import javax.xml.bind.JAXBException;
 import com.inmobi.grill.api.query.*;
 import org.apache.commons.lang.StringUtils;
 
-import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.client.GrillMetadataClient;
@@ -44,7 +43,7 @@ public class SampleQueries {
 
   public SampleQueries() throws JAXBException {
     connection = new GrillConnection(new GrillConnectionParams());
-    connection.open();
+    connection.open("", "");
     metaClient = new GrillMetadataClient(connection);
     queryClient = new GrillStatement(connection);
   }

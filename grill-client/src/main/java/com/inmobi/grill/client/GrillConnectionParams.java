@@ -120,17 +120,6 @@ public class GrillConnectionParams {
     return this.conf;
   }
 
-  public String getUser() {
-    return this.conf.getUser();
-    /*
-    return this.sessionVars.get("user.name")!= null ?
-        this.sessionVars.get("user.name") : "";*/
-  }
-
-  public String getPassword() {
-    return this.conf.getPassword();
-  }
-
   public String getSessionResourcePath() {
     return this.conf.getSessionResourcePath();
   }
@@ -173,7 +162,6 @@ public class GrillConnectionParams {
     .append("dbName='").append(this.conf.getGrillDatabase()).append('\'')
     .append(", host='").append(this.conf.getGrillHost()).append('\'')
     .append(", port=").append(this.conf.getGrillPort())
-    .append(", user=").append(this.conf.getUser())
     .append(", grillConfs=").append(grillConfs)
     .append(", grillVars=").append(grillVars)
     .append(", sessionVars=").append(sessionVars)

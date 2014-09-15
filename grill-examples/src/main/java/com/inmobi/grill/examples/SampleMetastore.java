@@ -67,7 +67,7 @@ public class SampleMetastore {
 
   public SampleMetastore() throws JAXBException {
     connection = new GrillConnection(new GrillConnectionParams());
-    connection.open();
+    connection.open("", "");
     metaClient = new GrillMetadataClient(connection);
   }
 
