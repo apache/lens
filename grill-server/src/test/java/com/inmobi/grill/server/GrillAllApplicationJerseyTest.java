@@ -29,7 +29,7 @@ public abstract class GrillAllApplicationJerseyTest extends GrillJerseyTest {
 
   @Override
   protected Application configure() {
-    return new AllApps();
+    return new GrillApplication();
   }
 
   @Override

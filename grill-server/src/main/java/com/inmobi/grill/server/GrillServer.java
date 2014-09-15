@@ -79,7 +79,7 @@ public class GrillServer {
   }
 
   private ResourceConfig getApp() {
-    ResourceConfig app = ResourceConfig.forApplicationClass(AllApps.class);
+    ResourceConfig app = ResourceConfig.forApplicationClass(GrillApplication.class);
     app.register(new LoggingFilter(Logger.getLogger(GrillServer.class.getName() + ".request"), true));
     app.setApplicationName("AllApps");
     return app;

@@ -167,7 +167,7 @@
         <groupId>org.subethamail</groupId>
         <artifactId>subethasmtp</artifactId>
         <version>3.1.7</version>
-        <scope>test</scope>
+        <!--<scope>test</scope> -->
       </dependency>
       <dependency>
         <groupId>commons-dbcp</groupId>

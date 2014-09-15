@@ -340,7 +340,7 @@
 </property>
 
 <property>
-    <name>grill.listenernames</name>
+    <name>grill.ws.listenernames</name>
     <value>appevent</value>
     <description>These listeners would be called in the specified order when grill-server starts up</description>
 </property>
