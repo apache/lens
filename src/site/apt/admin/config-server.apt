@@ -37,7 +37,9 @@ Configuring grill server
   are com.inmobi.grill.driver.hive.HiveDriver and com.inmobi.grill.driver.jdbc.JDBCDriver.
   The configuration parameters and
   their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}
-  The overridden configuration can be part of hivedriver-site.xml.
+  and for JDBCDriver available {{{./jdbcdriver-config.html} here}}. 
+  The overridden configuration for HiveDriver and JDBCDriver can be part of hivedriver-site.xml 
+  and jdbc-driver-site.xml respectively.
 
 * Session configuration
 
