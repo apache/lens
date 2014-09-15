@@ -36,9 +36,9 @@ public class GrillBanner extends DefaultBannerProvider {
     StringBuffer buf = new StringBuffer();
     buf.append("=======================================" +
         OsUtils.LINE_SEPARATOR);
-    buf.append("*                                     *"+ OsUtils.LINE_SEPARATOR);
-    buf.append("*            GrillClient               *" +OsUtils.LINE_SEPARATOR);
-    buf.append("*                                     *"+ OsUtils.LINE_SEPARATOR);
+    buf.append("*                                     *" + OsUtils.LINE_SEPARATOR);
+    buf.append("*            GrillClient              *" + OsUtils.LINE_SEPARATOR);
+    buf.append("*                                     *" + OsUtils.LINE_SEPARATOR);
     buf.append("=======================================" + OsUtils.LINE_SEPARATOR);
     return buf.toString();
 

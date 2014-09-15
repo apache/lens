@@ -19,6 +19,7 @@ package com.inmobi.grill.cli.commands;
  * #L%
  */
 
+import com.inmobi.grill.cli.client.GrillClientWrapper;
 import com.inmobi.grill.client.GrillClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -36,7 +37,9 @@ public class BaseGrillCommand {
   public static final Log LOG = LogFactory.getLog(BaseGrillCommand.class);
   protected static boolean isConnectionActive;
 
-  static {
+  {
+    // force the singleton to be initialized
+    getClient();
     Runtime.getRuntime().addShutdownHook(new Thread() {
       public void run() {
         closeClientConnection();
@@ -44,10 +47,10 @@ public class BaseGrillCommand {
     });
   }
 
-  protected static synchronized void closeClientConnection() {
+  protected synchronized void closeClientConnection() {
     if (isConnectionActive) {
       LOG.debug("Request for stopping grill cli received");
-      client.closeConnection();
+      getClient().closeConnection();
       isConnectionActive = false;
     }
   }
@@ -75,16 +78,17 @@ public class BaseGrillCommand {
     isConnectionActive = true;
   }
 
-  protected static GrillClient client;
-
   public void setClient(GrillClient client) {
-    this.client = client;
+    getClientWrapper().setClient(client);
   }
 
   public GrillClient getClient() {
-    return this.client;
+    return getClientWrapper().getClient();
   }
 
+  public GrillClientWrapper getClientWrapper() {
+    return GrillClientWrapper.INSTANCE;
+  }
   /**
    * Pretty printing JSON object into CLI String
    * @param json to be formatted

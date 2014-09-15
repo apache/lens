@@ -38,7 +38,7 @@ public class GrillStorageCommands extends  BaseGrillCommand implements CommandMa
 
   @CliCommand(value = "show storages", help = "list storages")
   public String getStorages() {
-    List<String> storages = client.getAllStorages();
+    List<String> storages = getClient().getAllStorages();
     if(storages == null || storages.isEmpty()) {
       return "No storages found";
     }
@@ -54,14 +54,14 @@ public class GrillStorageCommands extends  BaseGrillCommand implements CommandMa
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
-    APIResult result = client.createStorage(storageSpec);
+    APIResult result = getClient().createStorage(storageSpec);
     return result.getMessage();
   }
 
   @CliCommand(value = "drop storage", help = "drop storage")
   public String dropStorage(@CliOption(key = {"", "storage"},
       mandatory = true, help = "storage name to be dropped") String storage) {
-    APIResult result = client.dropStorage(storage);
+    APIResult result = getClient().dropStorage(storage);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + storage + "!!!";
     } else {
@@ -89,7 +89,7 @@ public class GrillStorageCommands extends  BaseGrillCommand implements CommandMa
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateStorage(pair[0], pair[1]);
+    APIResult result = getClient().updateStorage(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -102,7 +102,7 @@ public class GrillStorageCommands extends  BaseGrillCommand implements CommandMa
       mandatory = true, help = "<storage-name> to be described") String storage) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getStorage(storage)));
+          getClient().getStorage(storage)));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }

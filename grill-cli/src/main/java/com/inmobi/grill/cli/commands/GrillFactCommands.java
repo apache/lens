@@ -39,7 +39,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
   @CliCommand(value = "show facts",
       help = "display list of fact tables in database")
   public String showFacts() {
-    List<String> facts = client.getAllFactTables();
+    List<String> facts = getClient().getAllFactTables();
     if (facts != null) {
       return Joiner.on("\n").join(facts);
     } else {
@@ -77,7 +77,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
           " does not exist. Please check the path";
     }
 
-    APIResult result = client.createFactTable(pair[0], pair[1]);
+    APIResult result = getClient().createFactTable(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Fact table Successfully completed";
     } else {
@@ -90,7 +90,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
       mandatory = true, help = "table name to be dropped") String fact,
                          @CliOption(key = {"cascade"}, mandatory = false,
                              unspecifiedDefaultValue = "false") boolean cascade) {
-    APIResult result = client.dropFactTable(fact, cascade);
+    APIResult result = getClient().dropFactTable(fact, cascade);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + fact + "!!!";
     } else {
@@ -119,7 +119,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateFactTable(pair[0], pair[1]);
+    APIResult result = getClient().updateFactTable(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -133,7 +133,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
       mandatory = true, help = "tablename to be described") String fact) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getFactTable(fact)));
+          getClient().getFactTable(fact)));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }
@@ -143,7 +143,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
       help = "display list of storages associated to fact table")
   public String getFactStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "tablename for getting storages") String fact){
-    List<String> storages = client.getFactStorages(fact);
+    List<String> storages = getClient().getFactStorages(fact);
     if(storages == null || storages.isEmpty()) {
       return "No storages found for " + fact;
     }
@@ -154,7 +154,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
       help = "drop all storages associated to fact table")
   public String dropAllFactStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "tablename for dropping all storages") String table){
-    APIResult result = client.dropAllStoragesOfFact(table);
+    APIResult result = getClient().dropAllStoragesOfFact(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
     } else {
@@ -182,7 +182,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
           " does not exist. Please check the path";
     }
 
-    APIResult result = client.addStorageToFact(pair[0], pair[1]);
+    APIResult result = getClient().addStorageToFact(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Fact table storage addition completed";
     } else {
@@ -205,7 +205,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
           "format. fact drop storage <table> <storage>";
     }
 
-    APIResult result = client.dropStorageFromFact(pair[0], pair[1]);
+    APIResult result = getClient().dropStorageFromFact(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Fact table storage removal successful";
     } else {
@@ -228,7 +228,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
     }
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getStorageFromFact(pair[0], pair[1])));
+          getClient().getStorageFromFact(pair[0], pair[1])));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }
@@ -247,7 +247,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
     if(pair.length == 2) {
       try {
         return formatJson(mapper.writer(pp).writeValueAsString(
-            client.getAllPartitionsOfFact(pair[0], pair[1])));
+            getClient().getAllPartitionsOfFact(pair[0], pair[1])));
       } catch (IOException e) {
         throw new IllegalArgumentException(e);
       }
@@ -255,7 +255,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
     if (pair.length == 3) {
       try {
         return formatJson(mapper.writer(pp).writeValueAsString(
-            client.getAllPartitionsOfFact(pair[0], pair[1], pair[2])));
+            getClient().getAllPartitionsOfFact(pair[0], pair[1], pair[2])));
       } catch (IOException e) {
         throw new IllegalArgumentException(e);
       }
@@ -275,10 +275,10 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
     if(pair.length == 2) {
-      result = client.dropAllPartitionsOfFact(pair[0], pair[1]);
+      result = getClient().dropAllPartitionsOfFact(pair[0], pair[1]);
     }
     if (pair.length == 3) {
-      result = client.dropAllPartitionsOfFact(pair[0], pair[1], pair[3]);
+      result = getClient().dropAllPartitionsOfFact(pair[0], pair[1], pair[3]);
     } else {
       return "Syntax error, please try in following " +
           "format. fact drop partitions <table> <storage> [partition values]";
@@ -310,7 +310,7 @@ public class GrillFactCommands extends BaseGrillCommand implements CommandMarker
       return "Partition spec does not exist";
     }
 
-    result = client.addPartitionToFact(pair[0], pair[1], pair[2]);
+    result = getClient().addPartitionToFact(pair[0], pair[1], pair[2]);
     if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
       return "Successfully added partition to "  + pair[0];
     } else {

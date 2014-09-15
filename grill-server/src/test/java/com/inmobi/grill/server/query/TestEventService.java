@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -113,10 +114,10 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertEquals(((EventServiceImpl) service).getEventListeners().keySet().size() - listenersBefore, 3);
-    assertEquals(service.getListeners(QueryFailed.class).size(), 1);
-    assertEquals(service.getListeners(QueryEnded.class).size(), 3);
-    assertEquals(service.getListeners(QueuePositionChange.class).size(), 1);
+    assertTrue(service.getListeners(GrillEvent.class).contains(genericEventListener));
+    assertTrue(service.getListeners(QueryFailed.class).contains(failedListener));
+    assertTrue(service.getListeners(QueryEnded.class).contains(endedListener));
+    assertTrue(service.getListeners(QueuePositionChange.class).contains(queuePositionChangeListener));
   }
 
   @Test

@@ -39,7 +39,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
   @CliCommand(value = "show dimtables",
       help = "show list of dimension tables in database")
   public String showDimensionTables() {
-    List<String> dims = client.getAllDimensionTables();
+    List<String> dims = getClient().getAllDimensionTables();
     if (dims!=null) {
       return Joiner.on("\n").join(dims);
     } else {
@@ -74,7 +74,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
           + f.getAbsolutePath()
           + " does not exist. Please check the path";
     }
-    APIResult result = client.createDimensionTable(pair[0], pair[1]);
+    APIResult result = getClient().createDimensionTable(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "create dimension table succeeded";
     } else {
@@ -88,7 +88,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       mandatory = true, help = "dimension table name to be dropped") String dim,
                                    @CliOption(key = {"cascade"}, mandatory = false,
                                        unspecifiedDefaultValue = "false") boolean cascade) {
-    APIResult result = client.dropDimensionTable(dim, cascade);
+    APIResult result = getClient().dropDimensionTable(dim, cascade);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dim + "!!!";
     } else {
@@ -117,7 +117,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
           + " does not exist. Please check the path";
     }
 
-    APIResult result = client.updateDimensionTable(pair[0], pair[1]);
+    APIResult result = getClient().updateDimensionTable(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Update of " + pair[0] + " succeeded";
     } else {
@@ -131,7 +131,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       mandatory = true, help = "dimension table name to be described") String dim) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getDimensionTable(dim)));
+          getClient().getDimensionTable(dim)));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }
@@ -141,7 +141,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       help = "display list of storage associated to dimension table")
   public String getDimStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table-name> for listing storages") String dim){
-    List<String> storages = client.getDimStorages(dim);
+    List<String> storages = getClient().getDimStorages(dim);
     StringBuilder sb = new StringBuilder();
     for(String storage: storages) {
        if(!storage.isEmpty()) {
@@ -159,7 +159,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(@CliOption(key = {"", "table"},
       mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
-    APIResult result = client.dropAllStoragesOfDim(table);
+    APIResult result = getClient().dropAllStoragesOfDim(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
     } else {
@@ -188,7 +188,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
           " does not exist. Please check the path";
     }
 
-    APIResult result = client.addStorageToDim(pair[0], pair[1]);
+    APIResult result = getClient().addStorageToDim(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Dim table storage addition completed";
     } else {
@@ -210,7 +210,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       return "Syntax error, please try in following " +
           "format. create dimtable <dimtable spec path> <storage spec path>";
     }
-    APIResult result = client.dropStorageFromDim(pair[0], pair[1]);
+    APIResult result = getClient().dropStorageFromDim(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Dim table storage removal successful";
     } else {
@@ -233,7 +233,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
     }
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
-          client.getStorageFromDim(pair[0], pair[1])));
+          getClient().getStorageFromDim(pair[0], pair[1])));
     } catch (IOException e) {
       throw new IllegalArgumentException(e);
     }
@@ -252,7 +252,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
     if (pair.length == 2) {
       try {
         return formatJson(mapper.writer(pp).writeValueAsString(
-            client.getAllPartitionsOfDim(pair[0], pair[1])));
+            getClient().getAllPartitionsOfDim(pair[0], pair[1])));
       } catch (IOException e) {
         throw new IllegalArgumentException(e);
       }
@@ -261,7 +261,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
     if(pair.length == 3) {
       try {
         return formatJson(mapper.writer(pp).writeValueAsString(
-            client.getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
+            getClient().getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
       } catch (IOException e) {
         throw new IllegalArgumentException(e);
       }
@@ -284,10 +284,10 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
     if(pair.length == 2) {
-      result = client.dropAllPartitionsOfDim(pair[0], pair[1]);
+      result = getClient().dropAllPartitionsOfDim(pair[0], pair[1]);
     }
     if (pair.length == 3) {
-      result = client.dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
+      result = getClient().dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
     } else {
       return "Syntax error, please try in following " +
           "format. dimtable drop partitions <table> <storage> [partition values]";
@@ -322,7 +322,7 @@ public class GrillDimensionTableCommands extends BaseGrillCommand implements Com
       return "Partition spec does not exist";
     }
 
-    result = client.addPartitionToDim(pair[0], pair[1], pair[2]);
+    result = getClient().addPartitionToDim(pair[0], pair[1], pair[2]);
     if(result.getStatus() == APIResult.Status.SUCCEEDED ) {
       return "Successfully added partition to "  + pair[0];
     } else {
