@@ -128,7 +128,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String getAllQueries(@CliOption(key = {"state"}, mandatory = false,
       help = "Status of queries to be listed") String state, @CliOption(key = {"user"}, mandatory = false,
       help = "User of queries to be listed") String user) {
-    List<QueryHandle> handles = client.getQueries(state, user);
+    List<QueryHandle> handles = getClient().getQueries(state, user);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {

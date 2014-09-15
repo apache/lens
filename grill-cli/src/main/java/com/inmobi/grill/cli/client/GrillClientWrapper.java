@@ -2,6 +2,8 @@ package com.inmobi.grill.cli.client;
 
 import com.inmobi.grill.client.GrillClient;
 import com.inmobi.grill.client.exceptions.GrillClientServerConnectionException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.Console;
 /*
@@ -25,6 +27,7 @@ import java.io.Console;
  */
 public enum GrillClientWrapper {
   INSTANCE;
+  public Log LOG = LogFactory.getLog(GrillClientWrapper.class);
   protected GrillClient client;
   protected String username;
   protected String password;
@@ -32,18 +35,27 @@ public enum GrillClientWrapper {
     try {
       client = new GrillClient();
     } catch(GrillClientServerConnectionException e) {
+      if(e.getErrorCode() != 401) {
+        explainFailedAttempt(e);
+        throw e;
+      }
       // Connecting without password prompt failed.
       for(int i = 0; i < 3; i++) {
         getCredentials();
         try{
           client = new GrillClient(username, password);
+          break;
         } catch(GrillClientServerConnectionException grillClientServerConnectionException) {
           explainFailedAttempt(grillClientServerConnectionException);
+          if(i == 2) {
+            throw grillClientServerConnectionException;
+          }
         }
       }
     }
   }
   public void explainFailedAttempt(GrillClientServerConnectionException e) {
+    LOG.error("failed login attempt", e);
     switch(e.getErrorCode()) {
       case 401:
         System.console().printf("username/password combination incorrect.\n");

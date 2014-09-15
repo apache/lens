@@ -169,14 +169,15 @@ public class GrillConnectionParams {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("GrillConnectionParams{");
-    sb.append("dbName='").append(this.conf.getGrillDatabase()).append('\'');
-    sb.append(", host='").append(this.conf.getGrillHost()).append('\'');
-    sb.append(", port=").append(this.conf.getGrillPort());
-    sb.append(", grillConfs=").append(grillConfs);
-    sb.append(", grillVars=").append(grillVars);
-    sb.append(", sessionVars=").append(sessionVars);
-    sb.append('}');
-    return sb.toString();
+    return new StringBuilder("GrillConnectionParams{")
+    .append("dbName='").append(this.conf.getGrillDatabase()).append('\'')
+    .append(", host='").append(this.conf.getGrillHost()).append('\'')
+    .append(", port=").append(this.conf.getGrillPort())
+    .append(", user=").append(this.conf.getUser())
+    .append(", grillConfs=").append(grillConfs)
+    .append(", grillVars=").append(grillVars)
+    .append(", sessionVars=").append(sessionVars)
+    .append('}')
+    .toString();
   }
 }
