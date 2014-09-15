@@ -27,10 +27,10 @@ import java.io.Console;
  */
 public enum GrillClientWrapper {
   INSTANCE;
-  public Log LOG = LogFactory.getLog(GrillClientWrapper.class);
-  protected GrillClient client;
-  protected String username;
-  protected String password;
+  private Log LOG = LogFactory.getLog(GrillClientWrapper.class);
+  private GrillClient client;
+  private String username;
+  private String password;
   GrillClientWrapper() {
     try {
       client = new GrillClient();
