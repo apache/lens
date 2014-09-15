@@ -134,7 +134,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       hiveType.setTypeQualifiers(qualifiers);
       break;
     case Types.VARCHAR:
-    case Types.LONGNVARCHAR:
+    case Types.LONGNVARCHAR:   
     case Types.NVARCHAR:
       hiveType = new TypeDescriptor(Type.VARCHAR_TYPE);
       qualifiers = new TypeQualifiers();
@@ -144,6 +144,7 @@ public class JDBCResultSet extends InMemoryResultSet {
 
     case Types.NCLOB:
     case Types.CLOB:
+    case Types.LONGVARCHAR: 
     case Types.DATALINK:
     case Types.SQLXML:
       hiveType = new TypeDescriptor(Type.STRING_TYPE); break;
