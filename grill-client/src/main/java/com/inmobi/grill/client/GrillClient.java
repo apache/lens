@@ -63,6 +63,10 @@ public class GrillClient {
     statement = new GrillStatement(conn);
   }
 
+  public GrillClient(Credentials cred) {
+    this(cred.getUsername(), cred.getPassword());
+  }
+
   public QueryHandle executeQueryAsynch(String sql) {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
@@ -71,6 +75,10 @@ public class GrillClient {
     LOG.debug("Adding query to statementMap " + query.getQueryHandle());
     statementMap.put(query.getQueryHandle(), statement);
     return query.getQueryHandle();
+  }
+
+  public GrillConnection getConnection() {
+    return conn;
   }
 
   public static class GrillClientResultSetWithStats {

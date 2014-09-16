@@ -1,6 +1,5 @@
-package com.inmobi.grill.cli.client;
+package com.inmobi.grill.client;
 
-import com.inmobi.grill.client.GrillClient;
 import com.inmobi.grill.client.exceptions.GrillClientServerConnectionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -25,13 +24,12 @@ import java.io.Console;
  * limitations under the License.
  * #L%
  */
-public enum GrillClientWrapper {
+public enum GrillClientSingletonWrapper {
   INSTANCE;
-  private Log LOG = LogFactory.getLog(GrillClientWrapper.class);
+  private Log LOG = LogFactory.getLog(GrillClientSingletonWrapper.class);
   private GrillClient client;
-  private String username;
-  private String password;
-  GrillClientWrapper() {
+  private static final int MAX_RETRIES = 3;
+  GrillClientSingletonWrapper() {
     try {
       client = new GrillClient();
     } catch(GrillClientServerConnectionException e) {
@@ -40,14 +38,13 @@ public enum GrillClientWrapper {
         throw e;
       }
       // Connecting without password prompt failed.
-      for(int i = 0; i < 3; i++) {
-        getCredentials();
+      for(int i = 0; i < MAX_RETRIES; i++) {
         try{
-          client = new GrillClient(username, password);
+          client = new GrillClient(Credentials.prompt());
           break;
         } catch(GrillClientServerConnectionException grillClientServerConnectionException) {
           explainFailedAttempt(grillClientServerConnectionException);
-          if(i == 2) {
+          if(i == MAX_RETRIES - 1) {
             throw grillClientServerConnectionException;
           }
         }
@@ -66,17 +63,6 @@ public enum GrillClientWrapper {
       default:
         System.console().printf("Unknown error in authenticating with the server. Error code = %d\n", e.getErrorCode());
     }
-  }
-  public void getCredentials(){
-    Console console = System.console();
-    if (console == null) {
-      System.err.println("Couldn't get Console instance");
-      System.exit(-1);
-    }
-    console.printf("username:");
-    username = console.readLine().trim();
-    char passwordArray[] = console.readPassword("password for %s:", username);
-    password = new String(passwordArray);
   }
 
   public GrillClient getClient() {

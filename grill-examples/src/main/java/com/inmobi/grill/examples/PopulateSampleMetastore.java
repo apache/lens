@@ -26,25 +26,19 @@ import javax.xml.bind.JAXBException;
 
 import com.inmobi.grill.api.APIResult;
 import com.inmobi.grill.api.metastore.XPartition;
-import com.inmobi.grill.client.GrillConnection;
-import com.inmobi.grill.client.GrillConnectionParams;
-import com.inmobi.grill.client.GrillMetadataClient;
+import com.inmobi.grill.client.*;
 
 public class PopulateSampleMetastore {
-
-  private GrillConnection connection;
   private GrillMetadataClient metaClient;
   private APIResult result;
   private int retCode = 0;
 
   public PopulateSampleMetastore() throws JAXBException {
-    connection = new GrillConnection(new GrillConnectionParams());
-    connection.open("");
-    metaClient = new GrillMetadataClient(connection);
+    metaClient = new GrillMetadataClient(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
   }
 
   public void close() {
-    connection.close();
+    GrillClientSingletonWrapper.INSTANCE.getClient().closeConnection();
   }
 
   public static void main(String[] args) throws Exception {
