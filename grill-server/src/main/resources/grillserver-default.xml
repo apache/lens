@@ -323,7 +323,7 @@
 
 <property>
     <name>grill.ws.filternames</name>
-    <value>authentication,consistentState</value>
+    <value>authentication,consistentState,serverMode</value>
     <description>These JAX-RS filters would be started in the specified order when grill-server starts up</description>
 </property>
 
@@ -340,7 +340,13 @@
 </property>
 
 <property>
-    <name>grill.listenernames</name>
+    <name>grill.serverMode.ws.filter.impl</name>
+    <value>com.inmobi.grill.server.ServerModeFilter</value>
+    <description>Implementation class for ServerMode Filter</description>
+</property>
+
+<property>
+    <name>grill.ws.listenernames</name>
     <value>appevent</value>
     <description>These listeners would be called in the specified order when grill-server starts up</description>
 </property>

@@ -1,5 +1,3 @@
-package com.inmobi.grill.server;
-
 /*
  * #%L
  * Grill Server
@@ -9,9 +7,9 @@ package com.inmobi.grill.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,27 +17,32 @@ package com.inmobi.grill.server;
  * limitations under the License.
  * #L%
  */
-
-import javax.ws.rs.core.Application;
+package com.inmobi.grill.server;
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
-public abstract class GrillAllApplicationJerseyTest extends GrillJerseyTest {
+import java.util.Set;
 
-  @Override
-  protected Application configure() {
+import static org.testng.Assert.assertEquals;
+@Test(alwaysRun=true, groups="unit-test")
+public class TestGrillApplication {
+
+  GrillApplication app;
+
+  @BeforeTest
+  public void setup() throws Exception {
     HiveConf conf = new HiveConf();
     conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grillserver-default.xml"));
     conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grill-site.xml"));
     GrillApplication.init(conf);
-    return new GrillApplication();
+    app = new GrillApplication();
   }
 
-  @Override
-  protected void configureClient(ClientConfig config) {
-    config.register(MultiPartFeature.class);
+  @Test
+  public void testWSResourcesLoaded() throws InterruptedException {
+    final Set<Class<?>> classes = app.getClasses();
+    assertEquals(classes.size(),11);
   }
-
 }
