@@ -74,8 +74,8 @@ public enum GrillClientWrapper {
       System.exit(-1);
     }
     console.printf("username:");
-    username = console.readLine();
-    char passwordArray[] = console.readPassword("password:");
+    username = console.readLine().trim();
+    char passwordArray[] = console.readPassword("password for %s:", username);
     password = new String(passwordArray);
   }
 
