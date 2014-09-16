@@ -37,7 +37,6 @@ public class GrillClient {
   private static final Log LOG = LogFactory.getLog(GrillClient.class);
   private static final String DEFAULT_PASSWORD = "";
   private final GrillClientConfig conf;
-  private String username;
   private String password;
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
