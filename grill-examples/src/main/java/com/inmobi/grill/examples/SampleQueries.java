@@ -43,7 +43,7 @@ public class SampleQueries {
 
   public SampleQueries() throws JAXBException {
     connection = new GrillConnection(new GrillConnectionParams());
-    connection.open("", "");
+    connection.open("");
     metaClient = new GrillMetadataClient(connection);
     queryClient = new GrillStatement(connection);
   }

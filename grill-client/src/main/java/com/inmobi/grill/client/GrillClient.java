@@ -35,7 +35,6 @@ import java.util.List;
 
 public class GrillClient {
   private static final Log LOG = LogFactory.getLog(GrillClient.class);
-  private static final String DEFAULT_USERNAME = "";
   private static final String DEFAULT_PASSWORD = "";
   private final GrillClientConfig conf;
   private String username;
@@ -50,7 +49,7 @@ public class GrillClient {
   }
 
   public GrillClient(GrillClientConfig conf) {
-    this(conf, DEFAULT_USERNAME, DEFAULT_PASSWORD);
+    this(conf, conf.getUser(), DEFAULT_PASSWORD);
   }
 
   public GrillClient(String username, String password) {
@@ -59,7 +58,7 @@ public class GrillClient {
 
   public GrillClient(GrillClientConfig conf, String username, String password) {
     this.conf = conf;
-    this.username = username;
+    conf.setUser(username);
     this.password = password;
     connectToGrillServer();
     statement = new GrillStatement(conn);
@@ -175,7 +174,7 @@ public class GrillClient {
   private void connectToGrillServer() {
     LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
-    conn.open(username, password);
+    conn.open(password);
     LOG.debug("Successfully connected to server " + conn);
   }
 

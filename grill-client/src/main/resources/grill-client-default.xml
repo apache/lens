@@ -59,4 +59,10 @@
     <value>metastore</value>
     <description>resource path to query webservice</description>
   </property>
+  <property>
+    <name>grill.user.name</name>
+    <value>anonymous</value>
+    <description>Grill client user name</description>
+  </property>
+
 </configuration>
