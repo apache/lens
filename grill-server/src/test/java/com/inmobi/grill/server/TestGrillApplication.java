@@ -26,6 +26,7 @@ import org.testng.annotations.Test;
 import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 @Test(alwaysRun=true, groups="unit-test")
 public class TestGrillApplication {
 
@@ -43,6 +44,7 @@ public class TestGrillApplication {
   @Test
   public void testWSResourcesLoaded() throws InterruptedException {
     final Set<Class<?>> classes = app.getClasses();
-    assertEquals(classes.size(),11);
+    assertEquals(classes.size(),12);
+    assertTrue(classes.contains(TestResource.class));
   }
 }

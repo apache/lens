@@ -48,9 +48,6 @@ public class GrillApplication extends Application {
 
   @Override
   public Set<Class<?>> getClasses() {
-//    HiveConf conf = new HiveConf();
-//    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grillserver-default.xml"));
-//    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grill-site.xml"));
     final Set<Class<?>> classes = new HashSet<Class<?>>();
 
     String[] resourceNames = conf.getStrings(GrillConfConstants.GRILL_WS_RESOURCE_NAMES);

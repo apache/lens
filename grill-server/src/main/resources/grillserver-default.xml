@@ -70,7 +70,6 @@
   <description>The base url for the grill server</description>
 </property>
 
-
 <property>
     <name>grill.server.ui.base.uri</name>
     <value>http://localhost:19999/</value>
@@ -269,7 +268,7 @@
 
 <property>
     <name>grill.ws.resourcenames</name>
-    <value>session,metastore,query,quota,scheduler,index</value>
+    <value>session,metastore,query,quota,scheduler,index,test</value>
     <description>These JAX-RS resources would be started in the specified order when grill-server starts up</description>
 </property>
 
@@ -301,6 +300,12 @@
     <name>grill.metastore.ws.resource.impl</name>
     <value>com.inmobi.grill.server.metastore.MetastoreResource</value>
     <description>Implementation class for Metastore Resource</description>
+</property>
+
+<property>
+    <name>grill.test.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.TestResource</value>
+    <description>Implementation class for Test Resource</description>
 </property>
 
 <property>
