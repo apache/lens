@@ -103,14 +103,14 @@ public class GrillConnection {
   }
 
 
-  public GrillSessionHandle open() {
+  public GrillSessionHandle open(String password) {
 
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("password").build(), params.getPassword()));
+      FormDataContentDisposition.name("password").build(), password));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").
             fileName("sessionconf").build(), params.getSessionConf(),

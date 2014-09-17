@@ -39,7 +39,8 @@ public class GrillJdbcConnection implements Connection {
   public GrillJdbcConnection(String uri, Properties info) {
     GrillConnectionParams params = JDBCUtils.parseUrl(uri);
     connection = new GrillConnection(params);
-    connection.open();
+    //TODO: should we prompt here?
+    connection.open("");
   }
 
   @Override

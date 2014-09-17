@@ -36,6 +36,7 @@ import com.inmobi.grill.api.metastore.XCube;
 import com.inmobi.grill.api.metastore.XDimension;
 import com.inmobi.grill.api.metastore.XStorage;
 import com.inmobi.grill.api.metastore.XStorageTables;
+import com.inmobi.grill.client.GrillClientSingletonWrapper;
 import com.inmobi.grill.client.GrillConnection;
 import com.inmobi.grill.client.GrillConnectionParams;
 import com.inmobi.grill.client.GrillMetadataClient;
@@ -66,13 +67,11 @@ public class SampleMetastore {
   }
 
   public SampleMetastore() throws JAXBException {
-    connection = new GrillConnection(new GrillConnectionParams());
-    connection.open();
-    metaClient = new GrillMetadataClient(connection);
+    metaClient = new GrillMetadataClient(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
   }
 
   public void close() {
-    connection.close();
+    GrillClientSingletonWrapper.INSTANCE.getClient().closeConnection();
   }
 
   public void createCube() throws JAXBException, IOException {

@@ -19,7 +19,7 @@ package com.inmobi.grill.cli.commands;
  * #L%
  */
 
-import com.inmobi.grill.cli.client.GrillClientWrapper;
+import com.inmobi.grill.client.GrillClientSingletonWrapper;
 import com.inmobi.grill.client.GrillClient;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -86,8 +86,8 @@ public class BaseGrillCommand {
     return getClientWrapper().getClient();
   }
 
-  public GrillClientWrapper getClientWrapper() {
-    return GrillClientWrapper.INSTANCE;
+  public GrillClientSingletonWrapper getClientWrapper() {
+    return GrillClientSingletonWrapper.INSTANCE;
   }
   /**
    * Pretty printing JSON object into CLI String
