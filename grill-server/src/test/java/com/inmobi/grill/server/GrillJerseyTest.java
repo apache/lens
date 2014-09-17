@@ -56,7 +56,7 @@ public abstract class GrillJerseyTest extends JerseyTest {
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS, 5);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
-    GrillServices.get().init(new HiveConf());
+    GrillServices.get().init(GrillServerConf.get());
     GrillServices.get().start();
     System.out.println("Grill services started!");
   }
@@ -108,7 +108,7 @@ public abstract class GrillJerseyTest extends JerseyTest {
   }
 
   public void restartGrillServer() {
-    HiveConf h = new HiveConf();
+    HiveConf h = GrillServerConf.get();
     h.set(GrillConfConstants.MAX_NUMBER_OF_FINISHED_QUERY, "0");
     restartGrillServer(h);
   }

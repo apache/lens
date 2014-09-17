@@ -34,9 +34,7 @@ public class TestGrillApplication {
 
   @BeforeTest
   public void setup() throws Exception {
-    HiveConf conf = new HiveConf();
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grillserver-default.xml"));
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grill-site.xml"));
+    HiveConf conf = GrillServerConf.get();
     GrillApplication.init(conf);
     app = new GrillApplication();
   }

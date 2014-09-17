@@ -30,10 +30,7 @@ public abstract class GrillAllApplicationJerseyTest extends GrillJerseyTest {
 
   @Override
   protected Application configure() {
-    HiveConf conf = new HiveConf();
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grillserver-default.xml"));
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grill-site.xml"));
-    GrillApplication.init(conf);
+    GrillApplication.init(GrillServerConf.get());
     return new GrillApplication();
   }
 

@@ -133,7 +133,7 @@ public class GrillServer {
     });
 
     try {
-      thisServer = new GrillServer(new HiveConf());
+      thisServer = new GrillServer(GrillServerConf.get());
     } catch (Exception exc) {
       LOG.fatal("Error while creating Grill server", exc);
       try {
