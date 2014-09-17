@@ -24,6 +24,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.EventServiceImpl;
+import com.inmobi.grill.server.GrillServerConf;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.events.*;
 import com.inmobi.grill.server.api.query.QueryEnded;
@@ -95,7 +96,7 @@ public class TestEventService {
 
   @BeforeTest
   public void setup() throws Exception {
-    GrillServices.get().init(new HiveConf());
+    GrillServices.get().init(GrillServerConf.get());
     GrillServices.get().start();
     service = GrillServices.get().getService(GrillEventService.NAME);
     assertNotNull(service);

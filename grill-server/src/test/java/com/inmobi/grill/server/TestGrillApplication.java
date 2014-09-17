@@ -19,32 +19,44 @@
  */
 package com.inmobi.grill.server;
 
+import com.inmobi.grill.api.GrillSessionHandle;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 @Test(alwaysRun=true, groups="unit-test")
-public class TestGrillApplication {
+public class TestGrillApplication extends GrillJerseyTest {
 
-  GrillApplication app;
+  @Override
+  protected Application configure() {
+    return new GrillApplication();
+  }
 
   @BeforeTest
   public void setup() throws Exception {
-    HiveConf conf = new HiveConf();
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grillserver-default.xml"));
-    conf.addResource(Thread.currentThread().getContextClassLoader().getResource("grill-site.xml"));
-    GrillApplication.init(conf);
-    app = new GrillApplication();
+    super.setUp();
   }
 
   @Test
   public void testWSResourcesLoaded() throws InterruptedException {
-    final Set<Class<?>> classes = app.getClasses();
-    assertEquals(classes.size(),12);
-    assertTrue(classes.contains(TestResource.class));
+    final WebTarget target = target().path("test");
+    final Response response = target.request().get();
+    Assert.assertEquals(response.getStatus(), 200);
+    Assert.assertEquals(response.readEntity(String.class), "OK");
+  }
+
+  @Override
+  protected int getTestPort() {
+    return 19998;
   }
 }

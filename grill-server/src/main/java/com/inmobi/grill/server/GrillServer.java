@@ -96,7 +96,6 @@ public class GrillServer {
   public void startServices(HiveConf conf) {
     GrillServices.get().init(conf);
     GrillServices.get().start();
-    GrillApplication.init(conf);
   }
 
   public void start() throws IOException {
@@ -133,7 +132,7 @@ public class GrillServer {
     });
 
     try {
-      thisServer = new GrillServer(new HiveConf());
+      thisServer = new GrillServer(GrillServerConf.get());
     } catch (Exception exc) {
       LOG.fatal("Error while creating Grill server", exc);
       try {

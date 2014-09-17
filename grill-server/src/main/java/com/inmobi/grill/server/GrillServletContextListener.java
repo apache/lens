@@ -62,13 +62,12 @@ public class GrillServletContextListener  implements ServletContextListener {
     }
 
     // start up all grill services
-    HiveConf conf = new HiveConf();
+    HiveConf conf = GrillServerConf.get();
     GrillServices services = GrillServices.get();
     services.init(conf);
     services.start();
 
     //initialize hiveConf for WS resources
-    GrillApplication.init(conf);
     Runtime.getRuntime().addShutdownHook(new Thread(new CompositeService.CompositeServiceShutdownHook(services)));
   }
 

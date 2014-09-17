@@ -40,14 +40,11 @@ import java.util.Set;
 public class GrillApplication extends Application {
 
   public static final Log LOG = LogFactory.getLog(GrillApplication.class);
-  public static HiveConf conf;
-
-  public static void init(HiveConf hiveConf) {
-    conf = hiveConf;
-  }
+  public static HiveConf conf = GrillServerConf.get();
 
   @Override
   public Set<Class<?>> getClasses() {
+
     final Set<Class<?>> classes = new HashSet<Class<?>>();
 
     String[] resourceNames = conf.getStrings(GrillConfConstants.GRILL_WS_RESOURCE_NAMES);
