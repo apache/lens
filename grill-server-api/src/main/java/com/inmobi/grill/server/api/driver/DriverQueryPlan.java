@@ -478,6 +478,8 @@ public abstract class DriverQueryPlan {
     return null;
   }
 
+ 
+  
 
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
@@ -485,6 +487,6 @@ public abstract class DriverQueryPlan {
         execMode != null ? execMode.name() : null,
         scanMode != null ? scanMode.name() : null, tableWeights, joinWeight,
         gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
-        URLEncoder.encode(getPlan(), "UTF-8"), getCost());
+        URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
   }
 }

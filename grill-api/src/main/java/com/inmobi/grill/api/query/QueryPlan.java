@@ -61,8 +61,15 @@ public class QueryPlan extends QuerySubmitResult {
   @Getter @Setter private QueryPrepareHandle prepareHandle;
   @XmlElement private String planString;
   @XmlElement @Getter private QueryCost queryCost;
+  @XmlElement @Getter private boolean hasError = false;
+  @XmlElement @Getter private String errorMsg;
   
   public String getPlanString() throws UnsupportedEncodingException {
     return URLDecoder.decode(planString, "UTF-8");
+  }
+
+  public QueryPlan(boolean hasError, String errorMsg) {
+    this.hasError = hasError;
+    this.errorMsg = errorMsg;
   }
 }

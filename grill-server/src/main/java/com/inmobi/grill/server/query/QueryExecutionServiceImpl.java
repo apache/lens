@@ -1201,11 +1201,20 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       acquire(sessionHandle);
       Configuration qconf = getGrillConf(sessionHandle, grillConf);
       accept(query, qconf, SubmitOp.EXPLAIN);
-      Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
-          query, drivers.values(), qconf);
+      Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(query,
+          drivers.values(), qconf);
       // select driver to run the query
-      GrillDriver selectedDriver = driverSelector.select(drivers.values(), driverQueries, conf);
-      return selectedDriver.explain(driverQueries.get(selectedDriver), qconf).toQueryPlan();
+      GrillDriver selectedDriver = driverSelector.select(drivers.values(),
+          driverQueries, conf);
+      return selectedDriver.explain(driverQueries.get(selectedDriver), qconf)
+          .toQueryPlan();
+    } catch (GrillException e) {
+      QueryPlan plan;
+      if (e.getCause().getMessage() != null)
+        plan = new QueryPlan(true, e.getCause().getMessage());
+      else
+        plan = new QueryPlan(true, e.getMessage());
+      return plan;
     } catch (UnsupportedEncodingException e) {
       throw new GrillException(e);
     } finally {

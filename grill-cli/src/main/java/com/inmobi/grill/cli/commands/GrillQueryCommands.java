@@ -119,8 +119,11 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
       help = "Query to execute") String sql, @CliOption(key = {"save"},
       mandatory = false, help = "query to explain") String location)
       throws UnsupportedEncodingException {
-
+    
     QueryPlan plan = getClient().getQueryPlan(sql);
+    if (plan.isHasError() == true) {
+      return plan.getErrorMsg();
+    }
     return plan.getPlanString();
   }
 
