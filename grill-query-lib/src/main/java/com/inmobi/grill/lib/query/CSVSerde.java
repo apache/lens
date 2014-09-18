@@ -95,7 +95,7 @@ public final class CSVSerde extends AbstractSerDe {
 
   @Override
   public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
-    columnNames = Arrays.asList(tbl.getProperty(LIST_COLUMNS).split(","));
+    columnNames = Arrays.asList(tbl.getProperty(LIST_COLUMNS).split("(?<!\\\\),"));
     String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
     columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
         columnTypeProperty);

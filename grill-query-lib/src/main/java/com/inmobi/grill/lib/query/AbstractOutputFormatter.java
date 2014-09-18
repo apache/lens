@@ -41,6 +41,7 @@ import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryOutputFormatter;
+import org.apache.commons.lang.StringEscapeUtils;
 
 /**
  * Provides abstract implementation of the query output formatter.
@@ -91,7 +92,10 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
         String type = GrillResultSetMetadata.getQualifiedTypeName(
             metadata.getColumns().get(pos).getTypeDescriptor());
         typesSb.append(type);
-        columnNames.add(name);
+        if (name.contains(","))
+          columnNames.add(StringEscapeUtils.escapeJava(name.replaceAll(",", "\\\\, ")));
+        else 
+          columnNames.add(name);
         TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(type);
         columnTypes.add(typeInfo);
         columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo));
