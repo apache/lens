@@ -35,7 +35,9 @@ import java.util.List;
 
 public class GrillClient {
   private static final Log LOG = LogFactory.getLog(GrillClient.class);
+  private static final String DEFAULT_PASSWORD = "";
   private final GrillClientConfig conf;
+  private String password;
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
       Maps.newHashMap();
@@ -46,7 +48,7 @@ public class GrillClient {
   }
 
   public GrillClient(GrillClientConfig conf) {
-    this(conf, conf.getUser(), conf.getPassword());
+    this(conf, conf.getUser(), DEFAULT_PASSWORD);
   }
 
   public GrillClient(String username, String password) {
@@ -55,13 +57,14 @@ public class GrillClient {
 
   public GrillClient(GrillClientConfig conf, String username, String password) {
     this.conf = conf;
-    setCredentials(username, password);
+    conf.setUser(username);
+    this.password = password;
     connectToGrillServer();
     statement = new GrillStatement(conn);
   }
-  public void setCredentials(String username, String password) {
-    conf.setUser(username);
-    conf.setPassword(password);
+
+  public GrillClient(Credentials cred) {
+    this(cred.getUsername(), cred.getPassword());
   }
 
   public QueryHandle executeQueryAsynch(String sql) {
@@ -72,6 +75,10 @@ public class GrillClient {
     LOG.debug("Adding query to statementMap " + query.getQueryHandle());
     statementMap.put(query.getQueryHandle(), statement);
     return query.getQueryHandle();
+  }
+
+  public GrillConnection getConnection() {
+    return conn;
   }
 
   public static class GrillClientResultSetWithStats {
@@ -174,7 +181,7 @@ public class GrillClient {
   private void connectToGrillServer() {
     LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
-    conn.open();
+    conn.open(password);
     LOG.debug("Successfully connected to server " + conn);
   }
 

@@ -9,9 +9,9 @@ package com.inmobi.grill.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,9 +52,6 @@ public class GrillClientConfig extends Configuration {
   private static final String DEFAULT_GRILL_METASTORE_RESOURCE_PATH = "metastore";
   private static final String GRILL_USER_NAME = "grill.user.name";
   public static final String DEFAULT_USER_NAME = "anonymous";
-  private static final String GRILL_USER_PASS = "grill.user.password";
-  public static final String DEFAULT_USER_PASS = "";
-
 
   /**
    * Get the username from config
@@ -63,6 +60,9 @@ public class GrillClientConfig extends Configuration {
    */
   public String getUser() {
     return this.get(GRILL_USER_NAME, DEFAULT_USER_NAME);
+  }
+  public void setUser(String user) {
+    this.set(GRILL_USER_NAME, user);
   }
 
   /**
@@ -155,17 +155,5 @@ public class GrillClientConfig extends Configuration {
 
   public String getMetastoreResourcePath() {
     return this.get(GRILL_METASTORE_RESOURCE_PATH, DEFAULT_GRILL_METASTORE_RESOURCE_PATH);
-  }
-
-  public String getPassword() {
-    return this.get(GRILL_USER_PASS, DEFAULT_USER_PASS);
-  }
-
-  public void setUser(String user) {
-    this.set(GRILL_USER_NAME, user);
-  }
-
-  public void setPassword(String password) {
-    this.set(GRILL_USER_PASS, password);
   }
 }

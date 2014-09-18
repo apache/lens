@@ -29,10 +29,10 @@ Grill Java Client Library Guide
 
   <<Running and Managing queries>>
 
-    For connecting to Grill Server please take a look at {{{../apidocs/com/inmobi/grill/client/GrillConnection.htm}GrillConnection}}
+    For connecting to Grill Server please take a look at {{{../apidocs/com/inmobi/grill/client/GrillConnection.html}GrillConnection}}
 
     For Running queries please take a look at {{{../apidocs/com/inmobi/grill/client/GrillStatement.html}GrillStatement}}
 
     For Metadata operation please take a look at {{{../apidocs/com/inmobi/grill/client/GrillMetadataClient.html}GrillMetadataClient}}
     
-    {{{apidocs/com/inmobi/grill/client/GrillClient.html} GrillClient}} is the common client for all the operations.
+    {{{../apidocs/com/inmobi/grill/client/GrillClient.html} GrillClient}} is the common client for all the operations.

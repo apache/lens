@@ -64,9 +64,5 @@
     <value>anonymous</value>
     <description>Grill client user name</description>
   </property>
-  <property>
-    <name>grill.user.password</name>
-    <value></value>
-    <description>Grill client user password</description>
-  </property>
+
 </configuration>
