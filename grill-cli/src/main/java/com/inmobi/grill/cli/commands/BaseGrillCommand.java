@@ -37,9 +37,7 @@ public class BaseGrillCommand {
   public static final Log LOG = LogFactory.getLog(BaseGrillCommand.class);
   protected static boolean isConnectionActive;
 
-  {
-    // force the singleton to be initialized
-    getClient();
+  static {
     Runtime.getRuntime().addShutdownHook(new Thread() {
       public void run() {
         closeClientConnection();
@@ -47,7 +45,7 @@ public class BaseGrillCommand {
     });
   }
 
-  protected synchronized void closeClientConnection() {
+  protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
       LOG.debug("Request for stopping grill cli received");
       getClient().closeConnection();
@@ -56,6 +54,7 @@ public class BaseGrillCommand {
   }
 
   public BaseGrillCommand() {
+    getClient();
     mapper = new ObjectMapper();
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
@@ -82,11 +81,11 @@ public class BaseGrillCommand {
     getClientWrapper().setClient(client);
   }
 
-  public GrillClient getClient() {
+  public static GrillClient getClient() {
     return getClientWrapper().getClient();
   }
 
-  public GrillClientSingletonWrapper getClientWrapper() {
+  public static GrillClientSingletonWrapper getClientWrapper() {
     return GrillClientSingletonWrapper.INSTANCE;
   }
   /**
