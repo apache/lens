@@ -90,7 +90,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     String result = qCom.getAllPreparedQueries();
 
     Assert.assertEquals("No prepared queries", result);
-    String qh = qCom.prepare(sql);
+    String qh = qCom.prepare(sql, "testPreparedName");
     result = qCom.getAllPreparedQueries();
     Assert.assertEquals(qh, result);
 
@@ -98,12 +98,12 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertTrue(result.contains("User query:cube select id, name from test_dim"));
     Assert.assertTrue(result.contains(qh));
 
-    result = qCom.executePreparedQuery(qh, false);
+    result = qCom.executePreparedQuery(qh, false, "testPrepQuery1");
 
     LOG.warn("XXXXXX Prepared query sync result is  " + result);
     Assert.assertTrue(result.contains("1\tfirst"));
 
-    String handle = qCom.executePreparedQuery(qh, true);
+    String handle = qCom.executePreparedQuery(qh, true, "testPrepQuery2");
     LOG.debug("Perpared query handle is   " + handle);
     while(!client.getQueryStatus(handle).isFinished()) {
       Thread.sleep(5000);
@@ -121,7 +121,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
 
-    result = qCom.explainAndPrepare(sql);
+    result = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(result.contains(explainPlan));
     qh = qCom.getAllPreparedQueries();
     Assert.assertTrue(result.contains("Prepare handle:"+ qh));

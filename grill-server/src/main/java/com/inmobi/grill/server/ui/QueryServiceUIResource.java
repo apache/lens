@@ -79,8 +79,8 @@ public class QueryServiceUIResource {
    * @param publicId The public id of the session in which user is working
    * @param state    If any state is passed, all the queries in that state will be returned,
    *                 otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
-   * @param user     If any user is passed, all the queries submitted by the user will be returned,
-   *                 otherwise all the queries will be returned
+   * @param user     return queries matching the user. If set to "all", return queries of all users. By default, returns
+   *                 queries of the current user.
    * @param queryName human readable query name set by user (optional)
    * @return List of {@link QueryHandle} objects
    */

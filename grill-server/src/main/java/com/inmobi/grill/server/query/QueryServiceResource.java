@@ -113,7 +113,8 @@ public class QueryServiceResource {
    * otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
    * @param queryName If any queryName is passed, all the queries containing the queryName will be returned,
    * otherwise all the queries will be returned
-   * @param user Returns queries submitted by this user. If set to "all", returns queries of all users
+   * @param user Returns queries submitted by this user. If set to "all", returns queries of all users. By default, returns
+   *             queries of the current user.
    * @return List of {@link QueryHandle} objects
    */
   @GET
@@ -252,19 +253,20 @@ public class QueryServiceResource {
    * Get all prepared queries in the query server; can be filtered with user
    * 
    * @param sessionid The sessionid in which user is working
-   * @param user If any user is passed, all the queries prepared by the user will be returned,
-   * otherwise all the queries will be returned
-   * 
+   * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
+   *             of the current user.
+   * @param queryName returns queries matching the query name
    * @return List of QueryPrepareHandle objects
    */
   @GET
   @Path("preparedqueries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @DefaultValue("") @QueryParam("user") String user) {
+      @DefaultValue("") @QueryParam("user") String user,
+      @DefaultValue("") @QueryParam("queryName") String queryName) {
     checkSessionId(sessionid);
     try {
-      return queryServer.getAllPreparedQueries(sessionid, user);
+      return queryServer.getAllPreparedQueries(sessionid, user, queryName);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -321,8 +323,9 @@ public class QueryServiceResource {
    * Destroy all the prepared queries; Can be filtered with user
    * 
    * @param sessionid The session in which cancel is issued
-   * @param user If any user is passed, all the queries prepared by the user will be destroyed,
-   * otherwise all the queries will be destroyed
+   * @param user destroys queries of the user. If set to "all", destroys queries of all users. By default destroys the queries
+   *             of the current user.
+   * @param queryName destroys queries matching the query name
    * 
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful destroy.
    * APIResult with state {@value Status#FAILED} in case of destroy failure.
@@ -332,13 +335,14 @@ public class QueryServiceResource {
   @Path("preparedqueries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
-      @DefaultValue("") @QueryParam("user") String user) {
+      @DefaultValue("") @QueryParam("user") String user,
+      @DefaultValue("") @QueryParam("queryName") String queryName) {
     checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
     List<QueryPrepareHandle> handles = null;
     try {
-      handles = getAllPreparedQueries(sessionid, user);
+      handles = getAllPreparedQueries(sessionid, user, queryName);
       for (QueryPrepareHandle prepared : handles) {
         if (destroyPrepared(sessionid, prepared)) {
           numDestroyed++;

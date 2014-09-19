@@ -229,12 +229,13 @@ public interface QueryExecutionService {
   /**
    * Returns all the prepared queries for the specified user. 
    * If no user is passed, queries of all users will be returned.
-   * 
-   * @param user The user name, if null all user queries will be returned
-   * 
+   *
+   * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
+   *             of the current user.
+   * @param queryName returns queries matching the query name
    * @return List of query prepare handles
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user, String queryName)
       throws GrillException;
 
   /**

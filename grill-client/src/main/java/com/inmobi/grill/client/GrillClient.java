@@ -462,12 +462,12 @@ public class GrillClient {
     return new GrillMetadataClient(conn).addPartitionToDimensionTable(table, storage, partSpec);
   }
 
-  public QueryPrepareHandle prepare(String sql) {
-    return statement.prepareQuery(sql);
+  public QueryPrepareHandle prepare(String sql, String queryName) {
+    return statement.prepareQuery(sql, queryName);
   }
 
-  public QueryPlan explainAndPrepare(String sql) {
-    return statement.explainAndPrepare(sql);
+  public QueryPlan explainAndPrepare(String sql, String queryName) {
+    return statement.explainAndPrepare(sql, queryName);
   }
 
   public boolean destroyPrepared(QueryPrepareHandle queryPrepareHandle) {
@@ -482,13 +482,13 @@ public class GrillClient {
     return statement.getPreparedQuery(phandle);
   }
 
-  public GrillClientResultSetWithStats getResultsFromPrepared(QueryPrepareHandle phandle) {
-    QueryHandle qh = statement.executeQuery(phandle, true);
+  public GrillClientResultSetWithStats getResultsFromPrepared(QueryPrepareHandle phandle, String queryName) {
+    QueryHandle qh = statement.executeQuery(phandle, true, queryName);
     return getResultsFromHandle(qh);
   }
 
-  public QueryHandle executePrepared(QueryPrepareHandle phandle) {
-    return statement.executeQuery(phandle, false);
+  public QueryHandle executePrepared(QueryPrepareHandle phandle, String queryName) {
+    return statement.executeQuery(phandle, false, queryName);
   }
 
   public boolean isConnectionOpen() {

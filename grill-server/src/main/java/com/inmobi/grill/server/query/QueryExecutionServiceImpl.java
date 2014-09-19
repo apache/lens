@@ -822,6 +822,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       if (StringUtils.isNotBlank(queryName)) {
         // Override previously set query name
         ctx.setQueryName(queryName);
+      } else {
+        ctx.setQueryName(pctx.getQueryName());
       }
       return executeAsyncInternal(sessionHandle, ctx, qconf);
     } finally {
@@ -845,6 +847,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       if (StringUtils.isNotBlank(queryName)) {
         // Override previously set query name
         ctx.setQueryName(queryName);
+      } else {
+        ctx.setQueryName(pctx.getQueryName());
       }
       return executeTimeoutInternal(sessionHandle, ctx, timeoutMillis, qconf);
     } finally {
@@ -1164,9 +1168,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (itr.hasNext()) {
         QueryHandle q = itr.next();
         QueryContext context = allQueries.get(q);
-        GrillQuery query = context.toGrillQuery();
         if ((filterByStatus && status != context.getStatus().getStatus())
-            || (filterByQueryName && !query.getQueryName().toLowerCase().contains(queryName))
+            || (filterByQueryName && !context.getQueryName().toLowerCase().contains(queryName))
             || (!"all".equalsIgnoreCase(userName) && !userName.equalsIgnoreCase(context.getSubmittedUser()))
             ) {
           itr.remove();
@@ -1179,7 +1182,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle,
+                                                        String user,
+                                                        String queryName)
       throws GrillException {
     try {
       acquire(sessionHandle);
@@ -1187,7 +1192,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       Iterator<QueryPrepareHandle> itr = allPrepared.iterator();
       while (itr.hasNext()) {
         QueryPrepareHandle q = itr.next();
-        if (StringUtils.isNotBlank(user) && !user.equalsIgnoreCase(preparedQueries.get(q).getPreparedUser())) {
+        PreparedQueryContext preparedQueryContext = preparedQueries.get(q);
+        if (StringUtils.isNotBlank(user) &&
+          (!"all".equalsIgnoreCase(preparedQueryContext.getPreparedUser()) &&
+            !user.equalsIgnoreCase(preparedQueryContext.getPreparedUser()))
+          && (StringUtils.isNotBlank(queryName)
+          && preparedQueryContext.getQueryName().toLowerCase().contains(queryName.toLowerCase()))
+        ) {
           itr.remove();
         }
       }
