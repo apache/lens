@@ -258,11 +258,14 @@ public class GrillStatement {
     return handles;
   }
 
-  public List<QueryPrepareHandle> getAllPreparedQueries() {
+  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName) {
     Client client = ClientBuilder.newClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid",
-        connection.getSessionHandle()).request().get(
+        connection.getSessionHandle())
+      .queryParam("user", userName)
+      .queryParam("queryName", queryName)
+      .request().get(
         new GenericType<List<QueryPrepareHandle>>() {
         });
     return handles;

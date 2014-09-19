@@ -474,8 +474,8 @@ public class GrillClient {
     return statement.destroyPrepared(queryPrepareHandle);
   }
 
-  public List<QueryPrepareHandle> getPreparedQueries() {
-    return statement.getAllPreparedQueries();
+  public List<QueryPrepareHandle> getPreparedQueries(String userName, String queryName) {
+    return statement.getAllPreparedQueries(userName, queryName);
   }
 
   public GrillPreparedQuery getPreparedQuery(QueryPrepareHandle phandle) {

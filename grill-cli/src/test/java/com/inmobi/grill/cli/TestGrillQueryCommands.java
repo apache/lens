@@ -87,11 +87,11 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
     String sql = "cube select id, name from test_dim";
-    String result = qCom.getAllPreparedQueries();
+    String result = qCom.getAllPreparedQueries("all", "testPreparedName");
 
     Assert.assertEquals("No prepared queries", result);
     String qh = qCom.prepare(sql, "testPreparedName");
-    result = qCom.getAllPreparedQueries();
+    result = qCom.getAllPreparedQueries("all", "testPreparedName");
     Assert.assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
@@ -123,7 +123,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
     result = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(result.contains(explainPlan));
-    qh = qCom.getAllPreparedQueries();
+    qh = qCom.getAllPreparedQueries("all", "testPrepQuery3");
     Assert.assertTrue(result.contains("Prepare handle:"+ qh));
     result = qCom.destroyPreparedQuery(qh);
     Assert.assertEquals("Successfully destroyed " + qh, result);

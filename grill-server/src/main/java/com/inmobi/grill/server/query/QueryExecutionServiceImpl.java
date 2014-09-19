@@ -1193,14 +1193,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (itr.hasNext()) {
         QueryPrepareHandle q = itr.next();
         PreparedQueryContext preparedQueryContext = preparedQueries.get(q);
-        if (StringUtils.isNotBlank(user) &&
-          (!"all".equalsIgnoreCase(preparedQueryContext.getPreparedUser()) &&
-            !user.equalsIgnoreCase(preparedQueryContext.getPreparedUser()))
-          && (StringUtils.isNotBlank(queryName)
-          && preparedQueryContext.getQueryName().toLowerCase().contains(queryName.toLowerCase()))
-        ) {
-          itr.remove();
+
+        if (StringUtils.isNotBlank(user)) {
+          if ("all".equalsIgnoreCase(user)) {
+            continue;
+          } else if (user.equalsIgnoreCase(preparedQueryContext.getPreparedUser())) {
+            continue;
+          }
         }
+
+        if (StringUtils.isNotBlank(queryName)) {
+          if (preparedQueryContext.getQueryName().toLowerCase().contains(queryName.toLowerCase())) {
+            continue;
+          }
+        }
+        itr.remove();
       }
       return allPrepared;
     } finally {
