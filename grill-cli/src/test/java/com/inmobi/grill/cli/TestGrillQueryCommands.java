@@ -87,23 +87,23 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
     String sql = "cube select id, name from test_dim";
-    String result = qCom.getAllPreparedQueries();
+    String result = qCom.getAllPreparedQueries("all", "testPreparedName");
 
     Assert.assertEquals("No prepared queries", result);
-    String qh = qCom.prepare(sql);
-    result = qCom.getAllPreparedQueries();
+    String qh = qCom.prepare(sql, "testPreparedName");
+    result = qCom.getAllPreparedQueries("all", "testPreparedName");
     Assert.assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
     Assert.assertTrue(result.contains("User query:cube select id, name from test_dim"));
     Assert.assertTrue(result.contains(qh));
 
-    result = qCom.executePreparedQuery(qh, false);
+    result = qCom.executePreparedQuery(qh, false, "testPrepQuery1");
 
     LOG.warn("XXXXXX Prepared query sync result is  " + result);
     Assert.assertTrue(result.contains("1\tfirst"));
 
-    String handle = qCom.executePreparedQuery(qh, true);
+    String handle = qCom.executePreparedQuery(qh, true, "testPrepQuery2");
     LOG.debug("Perpared query handle is   " + handle);
     while(!client.getQueryStatus(handle).isFinished()) {
       Thread.sleep(5000);
@@ -121,9 +121,9 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
 
-    result = qCom.explainAndPrepare(sql);
+    result = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(result.contains(explainPlan));
-    qh = qCom.getAllPreparedQueries();
+    qh = qCom.getAllPreparedQueries("all", "testPrepQuery3");
     Assert.assertTrue(result.contains("Prepare handle:"+ qh));
     result = qCom.destroyPreparedQuery(qh);
     Assert.assertEquals("Successfully destroyed " + qh, result);
@@ -140,11 +140,19 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testExecuteAsyncQuery(GrillQueryCommands qCom) throws Exception {
+    System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
     String sql = "cube select id,name from test_dim";
-    String qh = qCom.executeQuery(sql, true);
-    String result = qCom.getAllQueries("","");
+    String qh = qCom.executeQuery(sql, true, "testQuery1");
+    String user =
+      qCom.getClient().getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
+    String result = qCom.getAllQueries("", "testQuery1", user);
     //this is because previous query has run two query handle will be there
-    Assert.assertTrue(result.contains(qh));
+    Assert.assertTrue(result.contains(qh), result);
+
+    // Check that query name searching is 'ilike'
+    String result2 = qCom.getAllQueries("", "query", "all");
+    Assert.assertTrue(result2.contains(qh), result2);
+
 
     while(!client.getQueryStatus(qh).isFinished()) {
       Thread.sleep(5000);
@@ -156,21 +164,24 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertTrue(result.contains("1\tfirst"));
     //Kill query is not tested as there is no deterministic way of killing a query
 
-    result = qCom.getAllQueries("SUCCESSFUL","");
+    result = qCom.getAllQueries("SUCCESSFUL","", "all");
+    Assert.assertTrue(result.contains(qh), result);
+
+    result = qCom.getAllQueries("FAILED","", "all");
+    Assert.assertTrue(result.contains("No queries"), result);
+
+    String queryName =
+      client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
+    Assert.assertTrue("testQuery1".equalsIgnoreCase(queryName), queryName);
+    result = qCom.getAllQueries("", "", "");
+    Assert.assertTrue(result.contains(qh), result);
+
+    result = qCom.getAllQueries("","fooBar", "all");
+    Assert.assertTrue(result.contains("No queries"), result);
+
+    result = qCom.getAllQueries("SUCCESSFUL","", "all");
     Assert.assertTrue(result.contains(qh));
-
-    result = qCom.getAllQueries("FAILED","");
-    Assert.assertTrue(result.contains("No queries"));
-
-    String user = client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
-    result = qCom.getAllQueries("",user);
-    Assert.assertTrue(result.contains(qh));
-
-    result = qCom.getAllQueries("","dummyuser");
-    Assert.assertTrue(result.contains("No queries"));
-
-    result = qCom.getAllQueries("SUCCESSFUL",user);
-    Assert.assertTrue(result.contains(qh));
+    System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
   }
 
 
@@ -191,7 +202,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
     QueryHandle qh = client.executeQueryAsynch("LOAD DATA LOCAL INPATH '"
         + new File(dataFile.toURI()).getAbsolutePath()+
-        "' OVERWRITE INTO TABLE local_dim_table partition(dt='latest')");
+        "' OVERWRITE INTO TABLE local_dim_table partition(dt='latest')", null);
 
     while(!client.getQueryStatus(qh).isFinished()) {
       Thread.sleep(5000);
@@ -202,7 +213,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
   private void testExecuteSyncQuery(GrillQueryCommands qCom) {
     String sql = "cube select id,name from test_dim";
-    String result = qCom.executeQuery(sql, false);
+    String result = qCom.executeQuery(sql, false, "testQuery2");
     Assert.assertTrue(result.contains("1\tfirst"), result);
   }
 
@@ -211,7 +222,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     client.setConnectionParam("grill.persistent.resultset.indriver", "true");
     String query = "cube select id,name from test_dim";
     try {
-      String result = qCom.executeQuery(query, false);
+      String result = qCom.executeQuery(query, false, "testQuery3");
       System.out.println("@@ RESULT " + result);
       Assert.assertNotNull(result);
       Assert.assertFalse(result.contains("Failed to get resultset"));

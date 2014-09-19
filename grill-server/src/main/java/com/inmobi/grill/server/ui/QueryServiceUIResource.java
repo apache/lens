@@ -35,9 +35,6 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -82,8 +79,9 @@ public class QueryServiceUIResource {
    * @param publicId The public id of the session in which user is working
    * @param state    If any state is passed, all the queries in that state will be returned,
    *                 otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
-   * @param user     If any user is passed, all the queries submitted by the user will be returned,
-   *                 otherwise all the queries will be returned
+   * @param user     return queries matching the user. If set to "all", return queries of all users. By default, returns
+   *                 queries of the current user.
+   * @param queryName human readable query name set by user (optional)
    * @return List of {@link QueryHandle} objects
    */
   @GET
@@ -91,11 +89,12 @@ public class QueryServiceUIResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
                                          @DefaultValue("") @QueryParam("state") String state,
-                                         @DefaultValue("") @QueryParam("user") String user) {
+                                         @DefaultValue("") @QueryParam("user") String user,
+                                         @DefaultValue("") @QueryParam("queryName") String queryName) {
     GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
-      return queryServer.getAllQueries(sessionHandle, state, user);
+      return queryServer.getAllQueries(sessionHandle, state, queryName, user);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -107,6 +106,7 @@ public class QueryServiceUIResource {
    * @param publicId The public id of the session in which user is submitting the query. Any
    *                 configuration set in the session will be picked up.
    * @param query    The query to run
+   * @param queryName human readable query name set by user (optional)
    * @return {@link QueryHandle}
    */
   @POST
@@ -114,14 +114,15 @@ public class QueryServiceUIResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult query(@FormDataParam("publicId") UUID publicId,
-                                 @FormDataParam("query") String query) {
+                                 @FormDataParam("query") String query,
+                                 @DefaultValue("") @FormDataParam("queryName") String queryName) {
     GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     GrillConf conf;
     checkQuery(query);
     try {
       conf = new GrillConf();
-      return queryServer.executeAsync(sessionHandle, query, conf);
+      return queryServer.executeAsync(sessionHandle, query, conf, queryName);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }

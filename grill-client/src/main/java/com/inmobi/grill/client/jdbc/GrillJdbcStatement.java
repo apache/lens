@@ -40,7 +40,7 @@ public class GrillJdbcStatement implements Statement {
 
   @Override
   public ResultSet executeQuery(String s) throws SQLException {
-    statement.execute(s);
+    statement.execute(s, null);
     return new GrillJdbcResultSet(statement.getResultSet(),
         statement.getResultSetMetaData(), this);
   }
@@ -79,7 +79,7 @@ public class GrillJdbcStatement implements Statement {
       throw new SQLException("Cannot execute statemes on closed statements");
     }
     try {
-      statement.execute(s, true);
+      statement.execute(s, true, null);
     } catch (Throwable t) {
       throw new SQLException(t);
     }

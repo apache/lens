@@ -48,18 +48,18 @@ public class GrillStatement {
     this.connection = connection;
   }
 
-  public void execute(String sql, boolean waitForQueryToComplete) {
-    QueryHandle handle = executeQuery(sql, waitForQueryToComplete);
+  public void execute(String sql, boolean waitForQueryToComplete, String queryName) {
+    QueryHandle handle = executeQuery(sql, waitForQueryToComplete, queryName);
     this.query = getQuery(handle);
   }
 
-  public void execute(String sql) {
-    QueryHandle handle = executeQuery(sql, true);
+  public void execute(String sql, String queryName) {
+    QueryHandle handle = executeQuery(sql, true, queryName);
     this.query = getQuery(handle);
   }
 
-  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
-    QueryHandle handle = executeQuery(sql);
+  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete, String queryName) {
+    QueryHandle handle = executeQuery(sql, queryName);
 
     if (waitForQueryToComplete) {
       waitForQueryToComplete(handle);
@@ -67,8 +67,8 @@ public class GrillStatement {
     return handle;
   }
 
-  public QueryHandle executeQuery(QueryPrepareHandle phandle, boolean waitForQueryToComplete) {
-    QueryHandle handle = executeQuery(phandle);
+  public QueryHandle executeQuery(QueryPrepareHandle phandle, boolean waitForQueryToComplete, String queryName) {
+    QueryHandle handle = executeQuery(phandle, queryName);
 
     if (waitForQueryToComplete) {
       waitForQueryToComplete(handle);
@@ -76,7 +76,7 @@ public class GrillStatement {
     return handle;
   }
 
-  public QueryPrepareHandle prepareQuery(String sql) {
+  public QueryPrepareHandle prepareQuery(String sql, String queryName) {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Grill Connection has to be " +
           "established before querying");
@@ -87,13 +87,13 @@ public class GrillStatement {
     WebTarget target = getPreparedQueriesWebTarget(client);
 
     QueryPrepareHandle handle = target.request().post(Entity.entity(
-        prepareForm(sql, "PREPARE"), MediaType.MULTIPART_FORM_DATA_TYPE),
+        prepareForm(sql, "PREPARE", queryName), MediaType.MULTIPART_FORM_DATA_TYPE),
         QueryPrepareHandle.class);
     getPreparedQuery(handle);
     return handle;
   }
 
-  public QueryPlan explainAndPrepare(String sql) {
+  public QueryPlan explainAndPrepare(String sql, String queryName) {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Grill Connection has to be " +
           "established before querying");
@@ -105,12 +105,12 @@ public class GrillStatement {
     WebTarget target = getPreparedQueriesWebTarget(client);
 
     QueryPlan plan = target.request().post(
-        Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE"),
+        Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE", queryName),
         MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     return plan;
   }
 
-  private FormDataMultiPart prepareForm(String sql, String op) {
+  private FormDataMultiPart prepareForm(String sql, String op, String queryName) {
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionid").build(),
@@ -119,6 +119,8 @@ public class GrillStatement {
         sql));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         op));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
+      queryName));
     return mp;
   }
 
@@ -169,7 +171,7 @@ public class GrillStatement {
     }
   }
 
-  private QueryHandle executeQuery(String sql) {
+  private QueryHandle executeQuery(String sql, String queryName) {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Grill Connection has to be " +
           "established before querying");
@@ -185,6 +187,8 @@ public class GrillStatement {
         sql));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
+       queryName == null ? "" : queryName));
 
     WebTarget target = getQueryWebTarget(client);
 
@@ -193,7 +197,7 @@ public class GrillStatement {
     return handle;
   }
 
-  public QueryHandle executeQuery(QueryPrepareHandle phandle) {
+  public QueryHandle executeQuery(QueryPrepareHandle phandle, String queryName) {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Grill Connection has to be " +
           "established before querying");
@@ -208,6 +212,8 @@ public class GrillStatement {
         connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
+      queryName==null? "" : queryName));
 
     QueryHandle handle = target.request().post(Entity.entity(mp,
         MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -239,20 +245,27 @@ public class GrillStatement {
   }
 
 
-  public List<QueryHandle> getAllQueries(String state, String user) {
+  public List<QueryHandle> getAllQueries(String state, String queryName, String user) {
     WebTarget target = getQueryWebTarget(ClientBuilder
         .newBuilder().register(MultiPartFeature.class).build());
-    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle()).queryParam("state", state).queryParam("user", user).request().get(
+    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
+      .queryParam("state", state)
+      .queryParam("queryName", queryName)
+      .queryParam("user", user)
+      .request().get(
         new GenericType<List<QueryHandle>>() {
-        });
+    });
     return handles;
   }
 
-  public List<QueryPrepareHandle> getAllPreparedQueries() {
+  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName) {
     Client client = ClientBuilder.newClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid",
-        connection.getSessionHandle()).request().get(
+        connection.getSessionHandle())
+      .queryParam("user", userName)
+      .queryParam("queryName", queryName)
+      .request().get(
         new GenericType<List<QueryPrepareHandle>>() {
         });
     return handles;

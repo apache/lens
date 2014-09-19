@@ -55,30 +55,32 @@ public interface QueryExecutionService {
   /**
    * Prepare the query
    * 
-   * @param sessionHandle 
+   * @param sessionHandle
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
-   * 
+   *
+   * @param queryName
    * @return Prepare handle
    * 
    * @throws GrillException
    */
-  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf conf)
+  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
       throws GrillException;
 
   /**
    * Explain the given query and prepare it as well.
    * 
-   * @param sessionHandle 
+   * @param sessionHandle
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
-   * 
+   *
+   * @param queryName
    * @return The query plan; Query plan also consists of prepare handle,
    * if it should be used to executePrepare
    * 
    * @throws GrillException
    */
-  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, GrillConf conf)
+  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
       throws GrillException;
 
   /**
@@ -92,7 +94,7 @@ public interface QueryExecutionService {
    * @throws GrillException
    */
   public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
-      GrillConf conf) throws GrillException;
+      GrillConf conf, String queryName) throws GrillException;
 
   /**
    * Execute already prepared query with timeout. 
@@ -106,19 +108,20 @@ public interface QueryExecutionService {
    * @throws GrillException
    */
   public QueryHandleWithResultSet executePrepare(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
-      long timeoutmillis, GrillConf conf) throws GrillException;
+      long timeoutmillis, GrillConf conf, String queryName) throws GrillException;
 
   /**
    * Asynchronously execute the query
    * 
    * @param query The query should be in HiveQL(SQL like)
    * @param conf The query configuration
-   * 
+   *
+   * @param queryName
    * @return a query handle, which can used to know the status.
    * 
    * @throws GrillException
    */
-  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query, GrillConf conf)
+  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
       throws GrillException;
 
   /**
@@ -139,14 +142,15 @@ public interface QueryExecutionService {
    * @param timeoutmillis The timeout after which it will return handle, if
    *  query did not finish before.
    * @param conf The query configuration
-   * 
+   *
+   * @param queryName
    * @return a query handle, if query did not finish within the timeout specified
    * else result will also be returned.
    * 
    * @throws GrillException
    */
   public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutmillis,
-      GrillConf conf) throws GrillException;
+                                          GrillConf conf, String queryName) throws GrillException;
 
   /**
    * Get the query, specified by the handle
@@ -207,27 +211,31 @@ public interface QueryExecutionService {
   public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
-   * Returns all the queries in the specified state, for user. 
+   * Returns all the queries in the specified state, for queryName. Queries are filtered for the current user.
    * If no state is passed, queries in all the state will be returned. Also, if 
-   * no user is passed, queries of all users will be returned.
+   * no queryName is passed, queries of all users will be returned.
    * 
    * @param state Any of particular state, if null all queries will be returned
-   * @param user The user name, if null all user queries will be returned
-   * 
+   * @param queryName The queryName name, if null all queryName queries will be returned
+   * @param user Get queries submitted by a specific user. If this set to "all", queries of all users are returned
    * @return List of query handles
    */
-  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle, String state, String user)
+  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle,
+                                         String state,
+                                         String user,
+                                         String queryName)
       throws GrillException;
 
   /**
    * Returns all the prepared queries for the specified user. 
    * If no user is passed, queries of all users will be returned.
-   * 
-   * @param user The user name, if null all user queries will be returned
-   * 
+   *
+   * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
+   *             of the current user.
+   * @param queryName returns queries matching the query name
    * @return List of query prepare handles
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user, String queryName)
       throws GrillException;
 
   /**

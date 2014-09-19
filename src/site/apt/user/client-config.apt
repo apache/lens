@@ -40,6 +40,4 @@ Grill client configuration
 *--+--+---+--+
 |8|grill.user.name|anonymous|Grill client user name|
 *--+--+---+--+
-|9|grill.user.password| |Grill client user password|
-*--+--+---+--+
 The configuration parameters and their default values

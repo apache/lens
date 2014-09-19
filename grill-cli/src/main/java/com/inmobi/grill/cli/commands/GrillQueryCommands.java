@@ -39,16 +39,17 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String executeQuery(
       @CliOption(key = {"", "query"}, mandatory = true, help = "Query to execute") String sql,
       @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
-          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
+          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch,
+      @CliOption(key = {"name"}, mandatory = false, help = "Query name") String queryName) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql);
+        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql, queryName);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
       }
     } else {
-      QueryHandle handle = getClient().executeQueryAsynch(sql);
+      QueryHandle handle = getClient().executeQueryAsynch(sql, queryName);
       return handle.getHandleId().toString();
     }
   }
@@ -129,9 +130,11 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
 
   @CliCommand(value = "query list", help = "Get all queries")
   public String getAllQueries(@CliOption(key = {"state"}, mandatory = false,
-      help = "Status of queries to be listed") String state, @CliOption(key = {"user"}, mandatory = false,
-      help = "User of queries to be listed") String user) {
-    List<QueryHandle> handles = getClient().getQueries(state, user);
+      help = "Status of queries to be listed") String state,
+      @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName,
+      @CliOption(key = {"user"}, mandatory = false,
+        help = "user name. Use 'all' to get queries of all users") String user) {
+    List<QueryHandle> handles = getClient().getQueries(state, queryName, user);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
@@ -163,8 +166,11 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   }
 
   @CliCommand(value = "prepQuery list", help = "Get all prepared queries")
-  public String getAllPreparedQueries() {
-    List<QueryPrepareHandle> handles = getClient().getPreparedQueries();
+  public String getAllPreparedQueries(
+    @CliOption(key = {"user"}, mandatory = false, help = "user name") String userName,
+    @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName
+  ) {
+    List<QueryPrepareHandle> handles = getClient().getPreparedQueries(userName, queryName);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
@@ -209,36 +215,39 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String executePreparedQuery(
       @CliOption(key = {"", "handle"}, mandatory = true, help = "Prepare handle to execute") String phandle,
       @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
-          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
+          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch,
+      @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName) {
     if (!asynch) {
       try {
         GrillClient.GrillClientResultSetWithStats result =
-            getClient().getResultsFromPrepared(QueryPrepareHandle.fromString(phandle));
+            getClient().getResultsFromPrepared(QueryPrepareHandle.fromString(phandle), queryName);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
       }
     } else {
-      QueryHandle handle = getClient().executePrepared(QueryPrepareHandle.fromString(phandle));
+      QueryHandle handle = getClient().executePrepared(QueryPrepareHandle.fromString(phandle), queryName);
       return handle.getHandleId().toString();
     }
   }
 
   @CliCommand(value = "prepQuery prepare", help = "Prepapre query")
   public String prepare(@CliOption(key = {"", "query"}, mandatory = true,
-      help = "Query to prepare") String sql)
+      help = "Query to prepare") String sql,
+                        @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName)
       throws UnsupportedEncodingException {
 
-    QueryPrepareHandle handle = getClient().prepare(sql);
+    QueryPrepareHandle handle = getClient().prepare(sql, queryName);
     return handle.toString();
   }
 
   @CliCommand(value = "prepQuery explain", help = "Explain and prepare query")
   public String explainAndPrepare(@CliOption(key = {"", "query"}, mandatory = true,
-      help = "Query to explain and prepare") String sql)
+      help = "Query to explain and prepare") String sql,
+                                  @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName)
       throws UnsupportedEncodingException {
 
-    QueryPlan plan = getClient().explainAndPrepare(sql);
+    QueryPlan plan = getClient().explainAndPrepare(sql, queryName);
     StringBuilder planStr = new StringBuilder(plan.getPlanString());
     planStr.append("\n").append("Prepare handle:").append(plan.getPrepareHandle());
     return planStr.toString();
