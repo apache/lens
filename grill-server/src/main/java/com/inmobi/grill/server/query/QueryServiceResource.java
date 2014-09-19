@@ -104,14 +104,16 @@ public class QueryServiceResource {
   }
 
   /**
-   * Get all the queries in the query server; can be filtered with state and user.
+   * Get all the queries in the query server; can be filtered with state and queryName.
+   * This will by default only return queries submitted by the user that has started the session.
+   * To get queries of all users, set the searchAllUsers parameter to false.
    * 
-   * @param sessionid The sessionid in which user is working
+   * @param sessionid The sessionid in which queryName is working
    * @param state If any state is passed, all the queries in that state will be returned,
    * otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
-   * @param user If any user is passed, all the queries submitted by the user will be returned,
+   * @param queryName If any queryName is passed, all the queries containing the queryName will be returned,
    * otherwise all the queries will be returned
-   * 
+   * @param user Returns queries submitted by this user. If set to "all", returns queries of all users
    * @return List of {@link QueryHandle} objects
    */
   @GET
@@ -119,10 +121,11 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
+      @DefaultValue("") @QueryParam("queryName") String queryName,
       @DefaultValue("") @QueryParam("user") String user) {
     checkSessionId(sessionid);
     try {
-      return queryServer.getAllQueries(sessionid, state, user);
+      return queryServer.getAllQueries(sessionid, state, user, queryName);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -146,7 +149,7 @@ public class QueryServiceResource {
    * @param conf The configuration for the query
    * @param timeoutmillis The timeout for the query, honored only in case of
    *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
-   * 
+   * @param queryName human readable query name set by user (optional parameter)
    * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
    * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation.
    * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
@@ -159,7 +162,9 @@ public class QueryServiceResource {
       @FormDataParam("query") String query,
       @FormDataParam("operation") String operation,
       @FormDataParam("conf") GrillConf conf,
-      @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
+      @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
+      @DefaultValue("") @FormDataParam("user") String user,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) {
     checkQuery(query);
     checkSessionId(sessionid);
     try {
@@ -175,11 +180,11 @@ public class QueryServiceResource {
       }
       switch (sop) {
       case EXECUTE:
-        return queryServer.executeAsync(sessionid, query, conf);
+        return queryServer.executeAsync(sessionid, query, conf, queryName);
       case EXPLAIN:
         return queryServer.explain(sessionid, query, conf);
       case EXECUTE_WITH_TIMEOUT:
-        return queryServer.execute(sessionid, query, timeoutmillis, conf);
+        return queryServer.execute(sessionid, query, timeoutmillis, conf, queryName);
       default:
         throw new BadRequestException("Invalid operation type: " + operation + submitClue);
       }
@@ -198,6 +203,7 @@ public class QueryServiceResource {
     {@value QueryStatus.Status#CLOSED}, {@value QueryStatus.Status#UNKNOWN} cannot be cancelled
    * @param user If any user is passed, all the queries submitted by the user will be cancelled,
    * otherwise all the queries will be cancelled
+   * @param queryName Cancel queries matching the query name
    * 
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation.
    * APIResult with state {@value Status#FAILED} in case of cancellation failure.
@@ -208,13 +214,14 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
-      @DefaultValue("") @QueryParam("user") String user) {
+      @DefaultValue("") @QueryParam("user") String user,
+      @DefaultValue("") @QueryParam("queryName") String queryName) {
     checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
     try {
-      handles = getAllQueries(sessionid, state, user);
+      handles = getAllQueries(sessionid, state, queryName, user);
       for (QueryHandle handle : handles) {
         if (cancelQuery(sessionid, handle)) {
           numCancelled++;
@@ -272,7 +279,7 @@ public class QueryServiceResource {
    * @param operation The operation on the query. Supported operations are
    * {@value SubmitOp#EXPLAIN_AND_PREPARE} or {@value SubmitOp#PREPARE}
    * @param conf The configuration for preparing the query
-   * 
+   * @param queryName human readable query name set by user (optional parameter)
    * @return {@link QueryPrepareHandle} incase of {@value SubmitOp#PREPARE} operation.
    * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE} and the 
    * query plan will contain the prepare handle as well.
@@ -284,7 +291,8 @@ public class QueryServiceResource {
   public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("query") String query,
       @DefaultValue("") @FormDataParam("operation") String operation,
-      @FormDataParam("conf") GrillConf conf) {
+      @FormDataParam("conf") GrillConf conf,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) {
     try {
       checkSessionId(sessionid);
       checkQuery(query);
@@ -298,9 +306,9 @@ public class QueryServiceResource {
       }
       switch (sop) {
       case PREPARE:
-        return queryServer.prepare(sessionid, query, conf);
+        return queryServer.prepare(sessionid, query, conf, queryName);
       case EXPLAIN_AND_PREPARE:
-        return queryServer.explainAndPrepare(sessionid, query, conf);
+        return queryServer.explainAndPrepare(sessionid, query, conf, queryName);
       default:
         throw new BadRequestException("Invalid operation type: " + operation + prepareClue);
       }
@@ -388,7 +396,7 @@ public class QueryServiceResource {
     checkSessionId(sessionid);
     try {
       return queryServer.getPreparedQuery(sessionid,
-          getPrepareHandle(prepareHandle));
+        getPrepareHandle(prepareHandle));
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -558,7 +566,7 @@ public class QueryServiceResource {
    * @param conf The configuration for the execution of query
    * @param timeoutmillis The timeout for the query, honored only in case of
    *  {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
-   * 
+   * @param queryName human readable query name set by user (optional parameter)
    * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
    * {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation.
    */
@@ -570,7 +578,8 @@ public class QueryServiceResource {
       @PathParam("prepareHandle") String prepareHandle,
       @DefaultValue("EXECUTE") @FormDataParam("operation") String operation,
       @FormDataParam("conf") GrillConf conf,
-      @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis) {
+      @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) {
     checkSessionId(sessionid);
     try {
       SubmitOp sop = null;
@@ -584,9 +593,9 @@ public class QueryServiceResource {
       }
       switch (sop) {
       case EXECUTE:
-        return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf);
+        return queryServer.executePrepareAsync(sessionid, getPrepareHandle(prepareHandle), conf, queryName);
       case EXECUTE_WITH_TIMEOUT:
-        return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf);
+        return queryServer.executePrepare(sessionid, getPrepareHandle(prepareHandle), timeoutmillis, conf, queryName);
       default:
         throw new BadRequestException("Invalid operation type: " + operation + submitPreparedClue);
       }

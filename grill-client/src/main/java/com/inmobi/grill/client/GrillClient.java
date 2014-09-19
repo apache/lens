@@ -67,10 +67,10 @@ public class GrillClient {
     this(cred.getUsername(), cred.getPassword());
   }
 
-  public QueryHandle executeQueryAsynch(String sql) {
+  public QueryHandle executeQueryAsynch(String sql, String queryName) {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
-    statement.execute(sql, false);
+    statement.execute(sql, false, queryName);
     GrillQuery query = statement.getQuery();
     LOG.debug("Adding query to statementMap " + query.getQueryHandle());
     statementMap.put(query.getQueryHandle(), statement);
@@ -100,10 +100,10 @@ public class GrillClient {
     }
   }
 
-  public GrillClientResultSetWithStats getResults(String sql) {
+  public GrillClientResultSetWithStats getResults(String sql, String queryName) {
     GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
-    statement.execute(sql, true);
+    statement.execute(sql, true, queryName);
     return getResultsFromStatement(statement);
   }
 
@@ -173,8 +173,8 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String state, String user) {
-    return new GrillStatement(conn).getAllQueries(state, user);
+  public List<QueryHandle> getQueries(String state, String queryName, String user) {
+    return new GrillStatement(conn).getAllQueries(state, queryName, user);
   }
 
 

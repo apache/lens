@@ -68,6 +68,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter final DriverQueryStatus driverStatus;
   transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
   @Getter @Setter private boolean finishedQueryPersisted = false;
+  @Getter @Setter private String queryName;
 
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new GrillConf(), conf, query, null);
@@ -158,7 +159,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
         driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
         launchTime, driverStatus.getDriverStartTime(),
-        driverStatus.getDriverFinishTime(), endTime, closedTime);
+        driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
   }
 
   public boolean isResultAvailableInDriver() {

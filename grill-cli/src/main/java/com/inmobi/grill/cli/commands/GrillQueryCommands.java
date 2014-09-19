@@ -39,16 +39,17 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   public String executeQuery(
       @CliOption(key = {"", "query"}, mandatory = true, help = "Query to execute") String sql,
       @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
-          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch) {
+          specifiedDefaultValue = "true", help = "Sync query execution") boolean asynch,
+      @CliOption(key = {"name"}, mandatory = false, help = "Query name") String queryName) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql);
+        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql, queryName);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
       }
     } else {
-      QueryHandle handle = getClient().executeQueryAsynch(sql);
+      QueryHandle handle = getClient().executeQueryAsynch(sql, queryName);
       return handle.getHandleId().toString();
     }
   }
@@ -129,9 +130,11 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
 
   @CliCommand(value = "query list", help = "Get all queries")
   public String getAllQueries(@CliOption(key = {"state"}, mandatory = false,
-      help = "Status of queries to be listed") String state, @CliOption(key = {"user"}, mandatory = false,
-      help = "User of queries to be listed") String user) {
-    List<QueryHandle> handles = getClient().getQueries(state, user);
+      help = "Status of queries to be listed") String state,
+      @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName,
+      @CliOption(key = {"user"}, mandatory = false,
+        help = "user name. Use 'all' to get queries of all users") String user) {
+    List<QueryHandle> handles = getClient().getQueries(state, queryName, user);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {

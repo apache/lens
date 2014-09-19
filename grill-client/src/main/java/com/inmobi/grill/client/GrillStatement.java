@@ -48,18 +48,18 @@ public class GrillStatement {
     this.connection = connection;
   }
 
-  public void execute(String sql, boolean waitForQueryToComplete) {
-    QueryHandle handle = executeQuery(sql, waitForQueryToComplete);
+  public void execute(String sql, boolean waitForQueryToComplete, String queryName) {
+    QueryHandle handle = executeQuery(sql, waitForQueryToComplete, queryName);
     this.query = getQuery(handle);
   }
 
-  public void execute(String sql) {
-    QueryHandle handle = executeQuery(sql, true);
+  public void execute(String sql, String queryName) {
+    QueryHandle handle = executeQuery(sql, true, queryName);
     this.query = getQuery(handle);
   }
 
-  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete) {
-    QueryHandle handle = executeQuery(sql);
+  public QueryHandle executeQuery(String sql, boolean waitForQueryToComplete, String queryName) {
+    QueryHandle handle = executeQuery(sql, queryName);
 
     if (waitForQueryToComplete) {
       waitForQueryToComplete(handle);
@@ -169,7 +169,7 @@ public class GrillStatement {
     }
   }
 
-  private QueryHandle executeQuery(String sql) {
+  private QueryHandle executeQuery(String sql, String queryName) {
     if (!connection.isOpen()) {
       throw new IllegalStateException("Grill Connection has to be " +
           "established before querying");
@@ -185,6 +185,8 @@ public class GrillStatement {
         sql));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
+       queryName == null ? "" : queryName));
 
     WebTarget target = getQueryWebTarget(client);
 
@@ -239,12 +241,16 @@ public class GrillStatement {
   }
 
 
-  public List<QueryHandle> getAllQueries(String state, String user) {
+  public List<QueryHandle> getAllQueries(String state, String queryName, String user) {
     WebTarget target = getQueryWebTarget(ClientBuilder
         .newBuilder().register(MultiPartFeature.class).build());
-    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle()).queryParam("state", state).queryParam("user", user).request().get(
+    List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
+      .queryParam("state", state)
+      .queryParam("queryName", queryName)
+      .queryParam("user", user)
+      .request().get(
         new GenericType<List<QueryHandle>>() {
-        });
+    });
     return handles;
   }
 

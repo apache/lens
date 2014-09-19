@@ -45,6 +45,7 @@ public class PreparedQueryContext implements Delayed {
   @Getter final GrillConf qconf;
   @Getter @Setter private GrillDriver selectedDriver;
   @Getter @Setter private String driverQuery;
+  @Getter @Setter private String queryName;
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
