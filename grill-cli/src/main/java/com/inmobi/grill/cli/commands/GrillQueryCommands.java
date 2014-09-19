@@ -168,7 +168,7 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery list", help = "Get all prepared queries")
   public String getAllPreparedQueries(
     @CliOption(key = {"user"}, mandatory = false, help = "user name") String userName,
-    @CliOption(key = {"user"}, mandatory = false, help = "query name") String queryName
+    @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName
   ) {
     List<QueryPrepareHandle> handles = getClient().getPreparedQueries(userName, queryName);
     if (handles != null && !handles.isEmpty()) {
