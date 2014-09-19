@@ -88,4 +88,16 @@
   <description>SMTP Port</description>
 </property>
 
+<property>
+  <name>grill.ws.resourcenames</name>
+  <value>session,metastore,query,quota,scheduler,index,test</value>
+  <description>These JAX-RS resources would be started in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+  <name>grill.test.ws.resource.impl</name>
+  <value>com.inmobi.grill.server.TestResource</value>
+  <description>Implementation class for Test Resource</description>
+</property>
+
 </configuration>

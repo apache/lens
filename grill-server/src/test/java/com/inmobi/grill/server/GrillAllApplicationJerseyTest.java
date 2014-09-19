@@ -22,6 +22,7 @@ package com.inmobi.grill.server;
 
 import javax.ws.rs.core.Application;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -29,7 +30,7 @@ public abstract class GrillAllApplicationJerseyTest extends GrillJerseyTest {
 
   @Override
   protected Application configure() {
-    return new AllApps();
+    return new GrillApplication();
   }
 
   @Override

@@ -70,7 +70,6 @@
   <description>The base url for the grill server</description>
 </property>
 
-
 <property>
     <name>grill.server.ui.base.uri</name>
     <value>http://localhost:19999/</value>
@@ -265,6 +264,96 @@
   <name>grill.mail.smtp.connectiontimeout</name>
   <value>15000</value>
   <description>Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.</description>
+</property>
+
+<property>
+    <name>grill.ws.resourcenames</name>
+    <value>session,metastore,query,quota,scheduler,index</value>
+    <description>These JAX-RS resources would be started in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+    <name>grill.session.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.session.SessionResource</value>
+    <description>Implementation class for Session Resource</description>
+</property>
+
+<property>
+    <name>grill.query.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.query.QueryServiceResource</value>
+    <description>Implementation class for Query Resource</description>
+</property>
+
+<property>
+    <name>grill.quota.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.quota.QuotaResource</value>
+    <description>Implementation class for Quota Resource</description>
+</property>
+
+<property>
+    <name>grill.index.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.IndexResource</value>
+    <description>Implementation class for Index Resource</description>
+</property>
+
+<property>
+    <name>grill.metastore.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.metastore.MetastoreResource</value>
+    <description>Implementation class for Metastore Resource</description>
+</property>
+
+<property>
+    <name>grill.scheduler.ws.resource.impl</name>
+    <value>com.inmobi.grill.server.scheduler.ScheduleResource</value>
+    <description>Implementation class for query scheduler resource</description>
+</property>
+
+<property>
+    <name>grill.ws.featurenames</name>
+    <value>multipart</value>
+    <description>These JAX-RS Feature(s) would be started in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+    <name>grill.multipart.ws.feature.impl</name>
+    <value>org.glassfish.jersey.media.multipart.MultiPartFeature</value>
+    <description>Implementation class for query scheduler resource</description>
+</property>
+
+<property>
+    <name>grill.ws.filternames</name>
+    <value>authentication,consistentState,serverMode</value>
+    <description>These JAX-RS filters would be started in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+    <name>grill.authentication.ws.filter.impl</name>
+    <value>com.inmobi.grill.server.AuthenticationFilter</value>
+    <description>Implementation class for Authentication Filter</description>
+</property>
+
+<property>
+    <name>grill.consistentState.ws.filter.impl</name>
+    <value>com.inmobi.grill.server.ConsistentStateFilter</value>
+    <description>Implementation class for ConsistentState Filter</description>
+</property>
+
+<property>
+    <name>grill.serverMode.ws.filter.impl</name>
+    <value>com.inmobi.grill.server.ServerModeFilter</value>
+    <description>Implementation class for ServerMode Filter</description>
+</property>
+
+<property>
+    <name>grill.ws.listenernames</name>
+    <value>appevent</value>
+    <description>These listeners would be called in the specified order when grill-server starts up</description>
+</property>
+
+<property>
+    <name>grill.appevent.ws.listener.impl</name>
+    <value>com.inmobi.grill.server.GrillApplicationListener</value>
+    <description>Implementation class for Grill Application Listener</description>
 </property>
 
 </configuration>
