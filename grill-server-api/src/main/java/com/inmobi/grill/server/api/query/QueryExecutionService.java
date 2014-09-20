@@ -211,12 +211,10 @@ public interface QueryExecutionService {
   public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
 
   /**
-   * Returns all the queries in the specified state, for queryName. Queries are filtered for the current user.
-   * If no state is passed, queries in all the state will be returned. Also, if 
-   * no queryName is passed, queries of all users will be returned.
+   * Returns all the queries in the specified state, for the given user and matching query name.
    * 
-   * @param state Any of particular state, if null all queries will be returned
-   * @param queryName The queryName name, if null all queryName queries will be returned
+   * @param state return queries in this state. if null, all queries will be returned
+   * @param queryName return queries containing the query name. If null, all queries will be returned
    * @param user Get queries submitted by a specific user. If this set to "all", queries of all users are returned
    * @return List of query handles
    */
