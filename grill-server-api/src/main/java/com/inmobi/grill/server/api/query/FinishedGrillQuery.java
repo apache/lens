@@ -85,6 +85,10 @@ public class FinishedGrillQuery {
   @Setter
   private String metadataClass;
 
+  @Getter
+  @Setter
+  private String queryName;
+
   public FinishedGrillQuery() {
 
   }
@@ -100,6 +104,9 @@ public class FinishedGrillQuery {
     this.errorMessage = ctx.getStatus().getErrorMessage();
     this.driverStartTime = ctx.getDriverStatus().getDriverStartTime();
     this.driverEndTime = ctx.getDriverStatus().getDriverFinishTime();
+    if (ctx.getQueryName() != null) {
+      this.queryName = ctx.getQueryName().toLowerCase();
+    }
   }
 
 }
