@@ -1183,7 +1183,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           userName = null;
         }
         List<QueryHandle> persistedQueries =
-          grillServerDao.findFinishedQueries(userName, queryName);
+          grillServerDao.findFinishedQueries(state, userName, queryName);
         if (persistedQueries != null && !persistedQueries.isEmpty()) {
           LOG.info("Adding persisted queries " + persistedQueries.size());
           all.addAll(persistedQueries);

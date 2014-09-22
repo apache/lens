@@ -155,29 +155,31 @@ public class GrillServerDAO {
     return null;
   }
 
-  public List<QueryHandle> findFinishedQueries(String user, String queryName) throws GrillException {
-    boolean addFilter = StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
+  public List<QueryHandle> findFinishedQueries(String state, String user, String queryName) throws GrillException {
+    boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
-    Object[] params = null;
+    List<Object> params = null;
     if (addFilter) {
       builder.append(" WHERE ");
-      boolean addAnd = false;
+      List<String> filters = new ArrayList<String>(3);
+      params = new ArrayList<Object>(3);
+
+      if (StringUtils.isNotBlank(state)) {
+        filters.add("state=?");
+        params.add(state);
+      }
 
       if (StringUtils.isNotBlank(user)) {
-        builder.append("submitter=?");
-        addAnd = true;
-        params = new Object[]{user};
+        filters.add("submitter=?");
+        params.add(user);
       }
 
       if (StringUtils.isNotBlank(queryName)) {
-        if (addAnd) {
-          builder.append(" AND ");
-          params = new Object[]{user, queryName};
-        } else {
-          params = new Object[]{queryName};
-        }
-        builder.append("queryname like '%?%'");
+        filters.add("queryname like '%?%'");
+        params.add(queryName);
       }
+
+      builder.append(StringUtils.join(filters, " AND "));
     }
 
     ResultSetHandler<List<QueryHandle>> resultSetHandler = new ResultSetHandler<List<QueryHandle>>() {
@@ -200,7 +202,7 @@ public class GrillServerDAO {
     String query = builder.toString();
     try {
       if(addFilter) {
-        return runner.query(query, resultSetHandler, params);
+        return runner.query(query, resultSetHandler, params.toArray());
       } else {
         return runner.query(query, resultSetHandler);
       }

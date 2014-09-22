@@ -69,7 +69,7 @@ public class TestGrillDAO {
     GrillSessionHandle session =
     service.openSession("foo@localhost", "bar", new HashMap<String, String>());
 
-    List<QueryHandle> persistedHandles = dao.findFinishedQueries(null, null);
+    List<QueryHandle> persistedHandles = dao.findFinishedQueries(null, null, null);
     if (persistedHandles != null) {
       for (QueryHandle handle : persistedHandles) {
         GrillQuery query = service.getQuery(session, handle);
@@ -79,7 +79,9 @@ public class TestGrillDAO {
       }
     }
 
-    List<QueryHandle> daoTestQueryHandles = dao.findFinishedQueries(null, "daotestquery1");
+    List<QueryHandle> daoTestQueryHandles =
+      dao.findFinishedQueries(queryContext.getStatus().getStatus().name(),
+      queryContext.getSubmittedUser(), "daotestquery1");
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0), finishedHandle);
   }
