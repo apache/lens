@@ -18,19 +18,25 @@ package com.inmobi.grill.server.query;
  * limitations under the License.
  * #L%
  */
+import com.inmobi.grill.api.GrillException;
+import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.query.FinishedGrillQuery;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Top level class which logs and retrieves finished query from Database
@@ -81,10 +87,20 @@ public class GrillServerDAO {
    */
   public void createFinishedQueriesTable() throws Exception {
     String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique," +
-        "userquery varchar(255) not null,submitter varchar(255) not null," +
-        "starttime bigint, endtime bigint,result varchar(255)," +
-        "status varchar(255), metadata varchar(100000), rows int, errormessage varchar(10000), " +
-        "driverstarttime bigint, driverendtime bigint, metadataclass varchar(10000))";
+        "userquery varchar(255) not null," +
+        "submitter varchar(255) not null," +
+        "starttime bigint, " +
+        "endtime bigint," +
+        "result varchar(255)," +
+        "status varchar(255), " +
+        "metadata varchar(100000), " +
+        "rows int, " +
+        "errormessage varchar(10000), " +
+        "driverstarttime bigint, " +
+        "driverendtime bigint, " +
+        "metadataclass varchar(10000)," +
+        "queryname varchar(255)" +
+      ")";
     try {
       createTable(sql);
     } catch (SQLException e) {
@@ -99,7 +115,8 @@ public class GrillServerDAO {
   public void insertFinishedQuery(FinishedGrillQuery query) throws Exception {
     String sql = "insert into finished_queries (handle, userquery,submitter," +
         "starttime,endtime,result,status,metadata,rows," +
-        "errormessage,driverstarttime,driverendtime, metadataclass) values (?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        "errormessage,driverstarttime,driverendtime, metadataclass, queryname)" +
+      " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     QueryRunner runner = new QueryRunner(ds);
     try {
       runner.update(sql, query.getHandle(),
@@ -114,7 +131,8 @@ public class GrillServerDAO {
           query.getErrorMessage(),
           query.getDriverStartTime(),
           query.getDriverEndTime(),
-          query.getMetadataClass());
+          query.getMetadataClass(),
+          query.getQueryName());
     } catch (SQLException e) {
       throw new Exception(e);
     }
@@ -135,6 +153,62 @@ public class GrillServerDAO {
       e.printStackTrace();
     }
     return null;
+  }
+
+  public List<QueryHandle> findFinishedQueries(String state, String user, String queryName) throws GrillException {
+    boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
+    StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
+    List<Object> params = null;
+    if (addFilter) {
+      builder.append(" WHERE ");
+      List<String> filters = new ArrayList<String>(3);
+      params = new ArrayList<Object>(3);
+
+      if (StringUtils.isNotBlank(state)) {
+        filters.add("status=?");
+        params.add(state);
+      }
+
+      if (StringUtils.isNotBlank(user)) {
+        filters.add("submitter=?");
+        params.add(user);
+      }
+
+      if (StringUtils.isNotBlank(queryName)) {
+        filters.add("queryname like ?");
+        params.add("%" + queryName + "%");
+      }
+
+      builder.append(StringUtils.join(filters, " AND "));
+    }
+
+    ResultSetHandler<List<QueryHandle>> resultSetHandler = new ResultSetHandler<List<QueryHandle>>() {
+      @Override
+      public List<QueryHandle> handle(ResultSet resultSet) throws SQLException {
+        List<QueryHandle> queryHandleList = new ArrayList<QueryHandle>();
+        while (resultSet.next()) {
+          String handle = resultSet.getString(1);
+          try {
+            queryHandleList.add(QueryHandle.fromString(handle));
+          } catch (IllegalArgumentException exc) {
+            LOG.warn("Warning invalid query handle found in DB " + handle);
+          }
+        }
+        return queryHandleList;
+      }
+    };
+
+    QueryRunner runner = new QueryRunner(ds);
+    String query = builder.toString();
+    try {
+      if (addFilter) {
+        return runner.query(query, resultSetHandler, params.toArray());
+      } else {
+        return runner.query(query, resultSetHandler);
+      }
+    } catch (SQLException e) {
+      throw new GrillException(e);
+    }
   }
 
 }

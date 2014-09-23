@@ -127,7 +127,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private MetricsService metricsService;
   private StatisticsService statisticsService;
   private int maxFinishedQueries;
-  private GrillServerDAO grillServerDao;
+  GrillServerDAO grillServerDao;
 
   public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
     super(NAME, cliService);
@@ -510,6 +510,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           }
           try {
             grillServerDao.insertFinishedQuery(finishedQuery);
+            LOG.info("Saved query " + finishedQuery.getHandle() + " to DB");
           } catch (Exception e) {
             LOG.warn("Exception while purging query ",e);
             finishedQueries.add(finished);
@@ -1175,6 +1176,20 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           itr.remove();
         }
       }
+
+      // Unless user wants to get queries in 'non finished' state, get finished queries from DB as well
+      if (status == null || status == Status.CANCELED || status == Status.SUCCESSFUL || status == Status.FAILED) {
+        if ("all".equalsIgnoreCase(userName)) {
+          userName = null;
+        }
+        List<QueryHandle> persistedQueries =
+          grillServerDao.findFinishedQueries(state, userName, queryName);
+        if (persistedQueries != null && !persistedQueries.isEmpty()) {
+          LOG.info("Adding persisted queries " + persistedQueries.size());
+          all.addAll(persistedQueries);
+        }
+      }
+
       return all;
     } finally {
       release(sessionHandle);

@@ -281,8 +281,7 @@ public class TestQueryService extends GrillJerseyTest {
     assertTrue(ctx.getDriverFinishTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
-    assertEquals(metricsSvc.getFinishedQueries(), finishedQueries + 1);
-    
+
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
     conf = new GrillConf();

@@ -100,4 +100,10 @@
   <description>Implementation class for Test Resource</description>
 </property>
 
+<property>
+    <!-- Immediately insert all finished queries to DB -->
+    <name>grill.max.finished.queries</name>
+    <value>1</value>
+</property>
+
 </configuration>

@@ -84,7 +84,10 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       return;
     }
 
-    String mailSubject = "Query " + queryContext.getStatus().getStatus() + ": " + event.getQueryHandle();
+    String queryName = queryContext.getQueryName();
+    queryName = queryName == null ? "" : queryName;
+    String mailSubject = "Query " + queryName + " " + queryContext.getStatus().getStatus()
+      + ": " + event.getQueryHandle();
 
     String mailMessage = createMailMessage(queryContext);
 

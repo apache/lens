@@ -26,6 +26,7 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.cli.commands.GrillCubeCommands;
 import com.inmobi.grill.cli.commands.GrillQueryCommands;
 import com.inmobi.grill.client.GrillClient;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -168,7 +169,13 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertTrue(result.contains(qh), result);
 
     result = qCom.getAllQueries("FAILED","", "all");
-    Assert.assertTrue(result.contains("No queries"), result);
+    if (!result.contains("No queries")) {
+      // Make sure valid query handles are returned
+      String[] handles = StringUtils.split(result, "\n");
+      for (String handle : handles) {
+        QueryHandle.fromString(handle.trim());
+      }
+    }
 
     String queryName =
       client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
