@@ -103,6 +103,8 @@ public class GrillServerDAO {
       ")";
     try {
       createTable(sql);
+      ds.getConnection().commit();
+      LOG.info("Created finished queries table");
     } catch (SQLException e) {
       LOG.warn("Unable to create finished queries table", e);
     }
