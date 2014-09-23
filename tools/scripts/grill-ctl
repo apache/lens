@@ -90,19 +90,25 @@ start() {
     echo "Cannot find hadoop installation: \$HADOOP_HOME or \$HADOOP_PREFIX must be set or hadoop must be in the path";
     exit 4;
   else
-    echo "Adding hadoop libs in classpath from $HADOOP_HOME"
-    CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    GRILLCPPATH=${GRILLCPPATH}:$CORE_JARS;
+    VERSION=`hadoop version 2>/dev/null`
     LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    GRILLCPPATH=${GRILLCPPATH}:$LIB_JARS
-    COMMON_JARS=`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    GRILLCPPATH=${GRILLCPPATH}:$COMMON_JARS
-    HDFS_JARS=`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    GRILLCPPATH=${GRILLCPPATH}:$HDFS_JARS
-    MAPRED_JARS=`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    GRILLCPPATH=${GRILLCPPATH}:$MAPRED_JARS
+    if echo "$VERSION" | egrep -q "cdh4|2.4.0.2.1.4.0-632"; then
+
+        echo "Adding hadoop libs in classpath from $HADOOP_HOME"
+
+        CORE_JARS=`ls $HADOOP_HOME/*/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+        COMMON_JARS=`ls ${HADOOP_HOME}/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+        COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+        HDFS_JARS=`ls ${HADOOP_HOME}/../hadoop-hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+        MAPRED_JARS=`ls ${HADOOP_HOME}/../hadoop-mapreduce/hadoop-mapred*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+        HADOOP_CLASSPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS
+    else
+        HADOOP_CLASSPATH=`hadoop classpath`
+    fi
+    GRILLCPPATH=${GRILLCPPATH}:$HADOOP_CLASSPATH
   fi
 
   if [ "$HIVE_HOME" != "" ]; then    
