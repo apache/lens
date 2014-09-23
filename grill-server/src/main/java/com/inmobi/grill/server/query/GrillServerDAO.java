@@ -165,7 +165,7 @@ public class GrillServerDAO {
       params = new ArrayList<Object>(3);
 
       if (StringUtils.isNotBlank(state)) {
-        filters.add("state=?");
+        filters.add("status=?");
         params.add(state);
       }
 
@@ -175,8 +175,8 @@ public class GrillServerDAO {
       }
 
       if (StringUtils.isNotBlank(queryName)) {
-        filters.add("queryname like '%?%'");
-        params.add(queryName);
+        filters.add("queryname like ?");
+        params.add("%" + queryName + "%");
       }
 
       builder.append(StringUtils.join(filters, " AND "));
@@ -201,7 +201,7 @@ public class GrillServerDAO {
     QueryRunner runner = new QueryRunner(ds);
     String query = builder.toString();
     try {
-      if(addFilter) {
+      if (addFilter) {
         return runner.query(query, resultSetHandler, params.toArray());
       } else {
         return runner.query(query, resultSetHandler);
