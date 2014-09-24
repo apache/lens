@@ -26,11 +26,9 @@ import com.inmobi.grill.api.query.QueryCost;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.server.api.GrillConfConstants;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
+import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.driver.cube.RewriteUtil;
@@ -678,6 +676,16 @@ public class JDBCDriver implements GrillDriver {
     } finally {
       queryContextMap.clear();
     }
+  }
+
+  /**
+   * Add a listener for driver events
+   *
+   * @param driverEventListener
+   */
+  @Override
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+
   }
 
   @Override

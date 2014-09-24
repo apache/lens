@@ -26,6 +26,8 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.inmobi.grill.server.api.driver.*;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import org.apache.log4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.thrift.TException;
@@ -42,10 +44,6 @@ import com.cloudera.impala.thrift.ImpalaService;
 import com.cloudera.impala.thrift.ImpalaService.Client;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -158,6 +156,16 @@ public class ImpalaDriver implements GrillDriver {
 		// TODO Auto-generated method stub
 		
 	}
+
+  /**
+   * Add a listener for driver events
+   *
+   * @param driverEventListener
+   */
+  @Override
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+
+  }
 
   @Override
   public void closeQuery(com.inmobi.grill.api.query.QueryHandle arg0)

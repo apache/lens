@@ -187,6 +187,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
   public static class ResourceEntry {
     final String type;
     final String location;
+    // For tests
+    transient int restoreCount;
 
     public ResourceEntry(String type, String location) {
       if (type == null || location == null) {
@@ -202,6 +204,14 @@ public class GrillSessionImpl extends HiveSessionImpl {
 
     public String getType() {
       return type;
+    }
+
+    public void restoredResource() {
+      restoreCount++;
+    }
+
+    public int getRestoreCount() {
+      return restoreCount;
     }
 
     @Override

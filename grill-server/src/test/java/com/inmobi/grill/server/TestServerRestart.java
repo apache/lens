@@ -25,6 +25,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import javax.ws.rs.client.Entity;
@@ -62,6 +63,7 @@ import com.inmobi.grill.server.session.HiveSessionService;
 public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
   public static final Log LOG = LogFactory.getLog(TestServerRestart.class);
+  private File dataFile;
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -86,7 +88,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       return;
     }
 
-    File dataFile = new File("target/testdata.txt");
+    dataFile = new File("target/testdata.txt");
     dataFile.deleteOnExit();
 
     PrintWriter dataFileOut = new PrintWriter(dataFile);
@@ -199,6 +201,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     // Create data file
     createRestartTestDataFile();
 
+    // Add a resource to check if its added after server restart.
+    queryService.addResource(grillSessionId, "FILE", dataFile.toURI().toString());
+    queryService.getSession(grillSessionId).addResource("FILE", dataFile.toURI().toString());
+    LOG.info("@@ Added resource " + dataFile.toURI());
+
     // Create a test table
     GrillTestUtil.createTable("test_hive_server_restart", target(), grillSessionId);
     GrillTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), grillSessionId);
@@ -227,6 +234,13 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
     Assert.assertNotNull(handle);
 
+    List<GrillSessionImpl.ResourceEntry> sessionResources =
+      queryService.getSession(grillSessionId).getGrillSessionPersistInfo().getResources();
+    int[] restoreCounts = new int[sessionResources.size()];
+    for (int i = 0; i < sessionResources.size(); i++) {
+      restoreCounts[i] = sessionResources.get(i).getRestoreCount();
+    }
+    LOG.info("@@ Current counts " + Arrays.toString(restoreCounts));
     // Restart hive server
     TestRemoteHiveDriver.stopHS2Service();
 
@@ -291,6 +305,14 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       LOG.info("@@ "+ i + " Final status for " + handle + " " + stat.getStatus());
     }
 
+    // Now we can expect that session resources have been added back exactly once
+    for (int i = 0; i < sessionResources.size(); i++) {
+      GrillSessionImpl.ResourceEntry resourceEntry = sessionResources.get(i);
+      Assert.assertEquals(resourceEntry.getRestoreCount(), 1 + restoreCounts[i],
+        "Restore test failed for " + resourceEntry
+          + " pre count=" + restoreCounts[i] + " post count=" + resourceEntry.getRestoreCount());
+      LOG.info("@@ Latest count " + resourceEntry + " = " + resourceEntry.getRestoreCount());
+    }
     //Assert.assertEquals(stat.getStatus(), QueryStatus.Status.SUCCESSFUL,
     //    "Expected to be successful " + handle);
 
