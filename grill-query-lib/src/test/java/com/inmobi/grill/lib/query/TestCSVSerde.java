@@ -40,7 +40,7 @@ public class TestCSVSerde {
 
   @BeforeTest
   public void setup() throws Exception {
-    props.put(serdeConstants.LIST_COLUMNS, "a,b,c\\,2,d");
+    props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d");
     props.put(serdeConstants.LIST_COLUMN_TYPES, "string,varchar(20),int,char(10)");
   }
 

@@ -58,6 +58,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   protected QueryContext ctx;
   protected GrillResultSetMetadata metadata;
   protected List<String> columnNames = new ArrayList<String>();
+  protected List<String> escapedColumnNames = new ArrayList<String>();
   protected List<TypeInfo> columnTypes = new ArrayList<TypeInfo>();
   protected List<ObjectInspector> columnOIs = new ArrayList<ObjectInspector>();
   protected List<ObjectInspector> columnHeaderOIs = new ArrayList<ObjectInspector>();
@@ -92,10 +93,8 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
         String type = GrillResultSetMetadata.getQualifiedTypeName(
             metadata.getColumns().get(pos).getTypeDescriptor());
         typesSb.append(type);
-        if (name.contains(","))
-          columnNames.add(StringEscapeUtils.escapeJava(name.replaceAll(",", "\\\\, ")));
-        else 
-          columnNames.add(name);
+        columnNames.add(name);
+        escapedColumnNames.add(StringEscapeUtils.escapeCsv(name));
         TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(type);
         columnTypes.add(typeInfo);
         columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo));
@@ -120,7 +119,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
 
       Properties hprops = new Properties();
       if (columnNames.size() > 0) {
-        hprops.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(columnNames, ","));
+        hprops.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(escapedColumnNames, ","));
       }
       if (htypes.length() > 0) {
         hprops.setProperty(serdeConstants.LIST_COLUMN_TYPES, htypes);
