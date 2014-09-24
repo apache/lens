@@ -106,4 +106,8 @@
     <value>1</value>
 </property>
 
+<property>
+    <name>grill.server.db.jdbc.url</name>
+    <value>jdbc:hsqldb:target/queries.db</value>
+</property>
 </configuration>

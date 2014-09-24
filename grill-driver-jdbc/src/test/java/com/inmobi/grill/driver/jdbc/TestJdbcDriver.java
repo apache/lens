@@ -324,11 +324,11 @@ public class TestJdbcDriver {
     QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
     System.out.println("@@@ Submitting valid query");
     driver.executeAsync(validCtx);
-
+    
     // Wait for query to finish
     while (true) {
       driver.updateStatus(validCtx);
-      if (validCtx.getDriverStatus().isFinished()) {
+      if (validCtx.getDriverStatus().isFinished()) {  
         break;
       }
       Thread.sleep(1000);
@@ -336,6 +336,40 @@ public class TestJdbcDriver {
 
     driver.closeQuery(validCtx.getQueryHandle());
   }
+  
+  @Test
+  public void testConnectionCloseForSuccessfulQueries() throws Exception {
+    createTable("valid_conn_close");
+    insertData("valid_conn_close");
+
+    String query = "SELECT * from valid_conn_close";
+    QueryContext ctx = new QueryContext(query, "SA", baseConf);
+
+    for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
+     GrillResultSet resultSet = driver.execute(ctx);
+     assertNotNull(resultSet);
+     if (resultSet instanceof InMemoryResultSet) {
+       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
+       GrillResultSetMetadata rsMeta = rs.getMetadata();
+       assertEquals(rsMeta.getColumns().size(), 1);
+       
+       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+       assertEquals(col1.getTypeName().toLowerCase(), "int");
+       assertEquals(col1.getName(), "ID");
+      
+       while (rs.hasNext()) {
+         ResultRow row = rs.next();
+         List<Object> rowObjects = row.getValues();
+       }
+     }
+      System.out.println("@@@@ QUERY " + (i+1));
+    } 
+    
+    String validQuery = "SELECT * FROM valid_conn_close";
+    QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
+    System.out.println("@@@ Submitting query after pool quota used");
+    driver.execute(validCtx); 
+ }
   
   @Test
   public void testCancelQuery() throws Exception {

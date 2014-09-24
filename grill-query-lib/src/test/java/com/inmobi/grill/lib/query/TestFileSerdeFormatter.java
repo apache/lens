@@ -54,13 +54,13 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
     conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt",getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(),
         Text.class.getCanonicalName());
 
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
-        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRowsWithoutComma());
   }
 
   @Test
@@ -70,12 +70,12 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz",getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(),
         Text.class.getCanonicalName());
     // validate rows
     Assert.assertEquals(readCompressedFile(
-        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRowsWithoutComma());
   }
 
   @Test
@@ -87,11 +87,11 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
     conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSetWithoutComma());
     // validate rows
     List<String> actual = readZipOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
-    Assert.assertEquals(actual, getExpectedTextRowsWithMultiple());
+    Assert.assertEquals(actual, getExpectedTextRowsWithMultipleWithoutComma());
   }
 
   @Test
@@ -101,7 +101,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
     conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSet());
     // validate rows
     List<String> actual = readZipOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
