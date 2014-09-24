@@ -127,7 +127,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
   }
 
-  //@Test
+  @Test
   public void testTextFileWithSerdeHeader() throws IOException {
     Configuration conf = new Configuration();
     setConf(conf);
@@ -139,7 +139,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt",getMockedResultSetWithoutComma());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
-        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRowsWithoutComma());
   }
 
   @Test

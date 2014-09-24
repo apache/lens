@@ -101,11 +101,11 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
     conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSetWithoutComma());
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSet());
     // validate rows
     List<String> actual = readZipOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
-    Assert.assertEquals(actual, getExpectedCSVRowsWithMultipleWithoutComma());
+    Assert.assertEquals(actual, getExpectedCSVRowsWithMultiple());
   }
 
   private void validateSerde(String serdeClassName, String serializedClassName) {
