@@ -95,8 +95,7 @@ start() {
     #ASSUMPTION: hadoop jars would be present in HADOOP_HOME if installed through deb or would be present
     # in HADOOP_HOME/share/hadoop if installed through tarball. They can not coexist.
 
-    CORE_JARS=`ls $HADOOP_HOME/*/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    CORE_JARS=$CORE_JARS:`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
