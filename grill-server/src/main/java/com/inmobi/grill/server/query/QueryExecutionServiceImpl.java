@@ -44,7 +44,9 @@ import javax.ws.rs.core.StreamingOutput;
 
 import com.inmobi.grill.server.GrillService;
 import com.inmobi.grill.server.GrillServices;
+import com.inmobi.grill.server.api.events.AsyncEventListener;
 import com.inmobi.grill.server.api.query.*;
+import com.inmobi.grill.server.session.GrillSessionImpl;
 import com.inmobi.grill.server.stats.StatisticsService;
 import com.inmobi.grill.server.api.driver.*;
 import com.inmobi.grill.server.api.events.GrillEventListener;
@@ -129,6 +131,17 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private int maxFinishedQueries;
   GrillServerDAO grillServerDao;
 
+  final GrillEventListener<DriverEvent> driverEventListener = new AsyncEventListener<DriverEvent>() {
+    @Override
+    public void process(DriverEvent event) {
+      // Need to restore session only in case of hive driver
+      if (event instanceof DriverSessionStarted) {
+        LOG.info("New driver event by driver " + event.getDriver());
+        handleDriverSessionStart(event);
+      }
+    }
+  };
+
   public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
     super(NAME, cliService);
   }
@@ -157,6 +170,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           Class<?> clazz = Class.forName(driverClass);
           GrillDriver driver = (GrillDriver) clazz.newInstance();
           driver.configure(conf);
+
+          if (driver instanceof HiveDriver) {
+            driver.registerDriverEventListener(driverEventListener);
+          }
+
           drivers.put(driverClass, driver);
           LOG.info("Driver for " + driverClass + " is loaded");
         } catch (Exception e) {
@@ -1512,5 +1530,56 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public long getFinishedQueriesCount() {
     return finishedQueries.size();
+  }
+
+  protected void handleDriverSessionStart(DriverEvent event) {
+    DriverSessionStarted sessionStarted = (DriverSessionStarted) event;
+    if (!(event.getDriver() instanceof HiveDriver)) {
+      return;
+    }
+
+    HiveDriver hiveDriver = (HiveDriver) event.getDriver();
+
+    String grillSession = sessionStarted.getGrillSessionID();
+    GrillSessionHandle sessionHandle = getSessionHandle(grillSession);
+    try {
+      GrillSessionImpl session = getSession(sessionHandle);
+      acquire(sessionHandle);
+      // Add resources for this session
+      List<GrillSessionImpl.ResourceEntry> resources = session.getGrillSessionPersistInfo().getResources();
+      if (resources != null && !resources.isEmpty()) {
+        for (GrillSessionImpl.ResourceEntry resource : resources) {
+          LOG.info("Restoring resource " + resource + " for session " + grillSession);
+          try {
+            String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
+            GrillConf conf = new GrillConf();
+            conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+
+            QueryContext addQuery = new QueryContext(command,
+              getSession(sessionHandle).getUserName(),
+              getGrillConf(sessionHandle, conf));
+            addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
+
+            // Execute add resource query in blocking mode
+            hiveDriver.execute(addQuery);
+            resource.restoredResource();
+            LOG.info("Restored resource " + resource + " for session " + grillSession);
+          } catch (Exception exc) {
+            LOG.error("Unable to add resource " + resource + " for session " + grillSession, exc);
+          }
+        }
+      } else {
+        LOG.info("No resources to restore for session " + grillSession);
+      }
+    } catch (GrillException e) {
+      LOG.warn("Grill session went away! " + grillSession + " driver session: "
+        + ((DriverSessionStarted) event).getDriverSessionID(), e);
+    } finally {
+      try {
+        release(sessionHandle);
+      } catch (GrillException e) {
+        LOG.error("Error releasing session " + sessionHandle, e);
+      }
+    }
   }
 }

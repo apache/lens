@@ -36,11 +36,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.api.driver.*;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -62,11 +62,7 @@ import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.server.api.GrillConfConstants;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -95,6 +91,7 @@ public class HiveDriver implements GrillDriver {
   private ThriftConnection embeddedConnection;
   // Store mapping of Grill session ID to Hive session identifier
   private Map<String, SessionHandle> grillToHiveSession;
+  private List<GrillEventListener<DriverEvent>> driverListeners;
 
   class ConnectionExpiryRunnable implements Runnable {
     @Override
@@ -181,6 +178,7 @@ public class HiveDriver implements GrillDriver {
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
+    driverListeners = new ArrayList<GrillEventListener<DriverEvent>>();
     LOG.info("Hive driver inited");
   }
 
@@ -476,6 +474,16 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
+  /**
+   * Add a listener for driver events
+   *
+   * @param driverEventListener
+   */
+  @Override
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+    driverListeners.add(driverEventListener);
+  }
+
   protected CLIServiceClient getClient() throws GrillException {
     if (isEmbedded) {
       if (embeddedConnection == null) {
@@ -585,6 +593,11 @@ public class HiveDriver implements GrillDriver {
       if (SessionState.get() != null) {
         grillSession = SessionState.get().getSessionId();
       }
+
+      if (grillSession == null) {
+        throw new IllegalStateException("Current session state does not have a Grill session id");
+      }
+
       SessionHandle hiveSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
@@ -593,6 +606,14 @@ public class HiveDriver implements GrillDriver {
           LOG.info("New hive session for user: " + SessionState.get().getUserName() +
               ", grill session: " + grillSession + " session handle: " +
               hiveSession.getHandleIdentifier());
+          for (GrillEventListener<DriverEvent> eventListener : driverListeners) {
+            try {
+              eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this,
+                grillSession, hiveSession.getSessionId().toString()));
+            } catch (Exception exc) {
+              LOG.error("Error sending driver start event to listener " + eventListener, exc);
+            }
+          }
         } catch (Exception e) {
           throw new GrillException(e);
         }

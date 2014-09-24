@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.inmobi.grill.server.api.driver.*;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import org.apache.log4j.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -40,12 +42,6 @@ import com.inmobi.grill.api.query.QueryHandle;
 import com.inmobi.grill.api.query.QueryPrepareHandle;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.api.GrillConfConstants;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
-import com.inmobi.grill.server.api.driver.DriverQueryStatus;
-import com.inmobi.grill.server.api.driver.DriverSelector;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -230,6 +226,16 @@ public class CubeGrillDriver implements GrillDriver {
     }
     drivers.clear();
     queryContexts.clear();
+  }
+
+  /**
+   * Add a listener for driver events
+   *
+   * @param driverEventListener
+   */
+  @Override
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+
   }
 
   @Override

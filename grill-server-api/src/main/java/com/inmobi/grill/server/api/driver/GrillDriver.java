@@ -22,6 +22,7 @@ package com.inmobi.grill.server.api.driver;
 
 import java.io.Externalizable;
 
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import org.apache.hadoop.conf.Configuration;
 
 import com.inmobi.grill.api.GrillException;
@@ -174,4 +175,9 @@ public interface GrillDriver extends Externalizable {
    * @throws GrillException
    */
   public void close() throws GrillException;
+
+  /**
+   * Add a listener for driver events
+   */
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener);
 }

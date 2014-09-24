@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.inmobi.grill.server.api.driver.*;
+import com.inmobi.grill.server.api.events.GrillEventListener;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
 
@@ -39,14 +41,7 @@ import com.inmobi.grill.api.query.QueryResultSetMetadata;
 import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.api.query.ResultColumn;
 import com.inmobi.grill.api.query.ResultRow;
-import com.inmobi.grill.server.api.driver.DriverQueryPlan;
 import com.inmobi.grill.server.api.driver.DriverQueryStatus.DriverQueryState;
-import com.inmobi.grill.server.api.driver.GrillDriver;
-import com.inmobi.grill.server.api.driver.GrillResultSet;
-import com.inmobi.grill.server.api.driver.GrillResultSetMetadata;
-import com.inmobi.grill.server.api.driver.InMemoryResultSet;
-import com.inmobi.grill.server.api.driver.PersistentResultSet;
-import com.inmobi.grill.server.api.driver.QueryCompletionListener;
 import com.inmobi.grill.server.api.query.PreparedQueryContext;
 import com.inmobi.grill.server.api.query.QueryContext;
 
@@ -111,6 +106,16 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void close() throws GrillException {
+  }
+
+  /**
+   * Add a listener for driver events
+   *
+   * @param driverEventListener
+   */
+  @Override
+  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+
   }
 
   @Override
