@@ -1300,21 +1300,26 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public void addResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
     try {
       acquire(sessionHandle);
-      String command = "add " + type.toLowerCase() + " " + path;
       for (GrillDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          GrillConf conf = new GrillConf();
-          conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-          QueryContext addQuery = new QueryContext(command,
-              getSession(sessionHandle).getUserName(),
-              getGrillConf(sessionHandle, conf));
-          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
-          driver.execute(addQuery);
+          driver.execute(createAddResourceQuery(sessionHandle, type, path));
         }
       }
     } finally {
       release(sessionHandle);
     }
+  }
+
+  private QueryContext createAddResourceQuery(GrillSessionHandle sessionHandle, String type, String path)
+    throws GrillException {
+    String command = "add " + type.toLowerCase() + " " + path;
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    QueryContext addQuery = new QueryContext(command,
+      getSession(sessionHandle).getUserName(),
+      getGrillConf(sessionHandle, conf));
+    addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
+    return addQuery;
   }
 
   public void deleteResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
@@ -1551,17 +1556,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         for (GrillSessionImpl.ResourceEntry resource : resources) {
           LOG.info("Restoring resource " + resource + " for session " + grillSession);
           try {
-            String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
-            GrillConf conf = new GrillConf();
-            conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-
-            QueryContext addQuery = new QueryContext(command,
-              getSession(sessionHandle).getUserName(),
-              getGrillConf(sessionHandle, conf));
-            addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
-
             // Execute add resource query in blocking mode
-            hiveDriver.execute(addQuery);
+            hiveDriver.execute(createAddResourceQuery(sessionHandle, resource.getType(), resource.getLocation()));
             resource.restoredResource();
             LOG.info("Restored resource " + resource + " for session " + grillSession);
           } catch (Exception exc) {
