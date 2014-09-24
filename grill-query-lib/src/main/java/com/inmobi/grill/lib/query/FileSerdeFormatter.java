@@ -71,7 +71,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
 
       Properties props = new Properties();
       if (columnNames.size() > 0) {
-        props.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(columnNames, ","));
+        props.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(escapedColumnNames, ","));
       }   
       if (types.length() > 0) {
         props.setProperty(serdeConstants.LIST_COLUMN_TYPES, types);

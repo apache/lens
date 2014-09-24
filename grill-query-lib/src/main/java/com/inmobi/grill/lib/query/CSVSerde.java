@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -91,11 +92,14 @@ public final class CSVSerde extends AbstractSerDe {
   private char unionTagFieldSeperator;
   private char mapKeyValueSeperator;
   private String nullString;
-  private List<String> columnNames;
 
   @Override
   public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
-    columnNames = Arrays.asList(tbl.getProperty(LIST_COLUMNS).split(","));
+    List<String> columnNames = new ArrayList<String>();
+    String[] names = tbl.getProperty(LIST_COLUMNS).split("(?!\"),(?!\")");
+    for (String name : names) {
+      columnNames.add(StringEscapeUtils.unescapeCsv(name));
+    }
     String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
     columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
         columnTypeProperty);

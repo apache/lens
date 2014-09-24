@@ -46,7 +46,7 @@ import com.inmobi.grill.server.api.query.QueryContext;
 public abstract class TestAbstractFileFormatter {
 
   protected WrappedFileFormatter formatter;
-
+  
   @AfterMethod
   public void cleanup() throws IOException {
     if (formatter != null) {
@@ -60,7 +60,7 @@ public abstract class TestAbstractFileFormatter {
     Configuration conf = new Configuration();
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -72,7 +72,7 @@ public abstract class TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -86,7 +86,7 @@ public abstract class TestAbstractFileFormatter {
         org.apache.hadoop.io.compress.DefaultCodec.class.getCanonicalName());
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -98,7 +98,7 @@ public abstract class TestAbstractFileFormatter {
     conf.set(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -111,7 +111,7 @@ public abstract class TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz");
+        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -123,7 +123,7 @@ public abstract class TestAbstractFileFormatter {
     String outputParent = "target/" + getClass().getSimpleName();
     conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, outputParent);
     setConf(conf);
-    testFormatter(conf, "UTF8", outputParent, ".csv");
+    testFormatter(conf, "UTF8", outputParent, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -136,7 +136,7 @@ public abstract class TestAbstractFileFormatter {
     conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, outputParent);
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
-    testFormatter(conf, "UTF8", outputParent, ".csv.gz");
+    testFormatter(conf, "UTF8", outputParent, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -151,11 +151,11 @@ public abstract class TestAbstractFileFormatter {
 
   protected void testFormatter(Configuration conf, String charsetEncoding,
       String outputParentDir,
-      String fileExtn) throws IOException {
+      String fileExtn, GrillResultSetMetadata columnNames ) throws IOException {
     QueryContext ctx = new QueryContext("test writer query", "testuser", null, conf);
     formatter = createFormatter();
 
-    formatter.init(ctx, getMockedResultSet());
+    formatter.init(ctx, columnNames);
 
     // check output spec
     Assert.assertEquals(formatter.getEncoding(), charsetEncoding);
@@ -210,7 +210,25 @@ public abstract class TestAbstractFileFormatter {
     return result;
 
   }
-  private GrillResultSetMetadata getMockedResultSet() {
+  protected GrillResultSetMetadata getMockedResultSet() {
+    return new GrillResultSetMetadata() {
+
+      @Override
+      public List<ColumnDescriptor> getColumns() {
+        List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>();
+        columns.add(new ColumnDescriptor(new FieldSchema("firstcol", "int", ""), 0));
+        columns.add(new ColumnDescriptor(new FieldSchema("format(secondcol,2)", "string", ""), 1));
+        columns.add(new ColumnDescriptor(new FieldSchema("thirdcol", "varchar(20)", ""), 2));
+        columns.add(new ColumnDescriptor(new FieldSchema("fourthcol", "char(15)", ""), 3));
+        columns.add(new ColumnDescriptor(new FieldSchema("fifthcol", "array<tinyint>", ""), 4));
+        columns.add(new ColumnDescriptor(new FieldSchema("sixthcol", "struct<a:int,b:varchar(10)>", ""), 5));
+        columns.add(new ColumnDescriptor(new FieldSchema("seventhcol", "map<int,char(10)>", ""), 6));
+        return columns;
+      }
+    };
+  }
+  
+  protected GrillResultSetMetadata getMockedResultSetWithoutComma() {
     return new GrillResultSetMetadata() {
 
       @Override
@@ -230,7 +248,7 @@ public abstract class TestAbstractFileFormatter {
 
   protected List<String> getExpectedCSVRows() {
     List<String> csvRows = new ArrayList<String>();
-    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
     csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
     csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
@@ -242,7 +260,7 @@ public abstract class TestAbstractFileFormatter {
 
   protected List<String> getExpectedTextRows() {
     List<String> txtRows = new ArrayList<String>();
-    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
     txtRows.add("1oneoneone            11one1one       ");
     txtRows.add("2twotwotwo            122two1one       2two       ");
     txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
@@ -252,6 +270,31 @@ public abstract class TestAbstractFileFormatter {
     return txtRows;
   }
 
+  
+  protected List<String> getExpectedCSVRowsWithoutComma() {
+    List<String> csvRows = new ArrayList<String>();
+    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+    csvRows.add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+    csvRows.add("Total rows:5");
+    return csvRows;
+  }
+
+  protected List<String> getExpectedTextRowsWithoutComma() {
+    List<String> txtRows = new ArrayList<String>();
+    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("1oneoneone            11one1one       ");
+    txtRows.add("2twotwotwo            122two1one       2two       ");
+    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+    txtRows.add("Total rows:5");
+    return txtRows;
+  }
+  
   protected List<String> readZipOutputFile(Path finalPath, Configuration conf,
       String encoding) throws IOException {
     FileSystem fs = finalPath.getFileSystem(conf);
@@ -273,6 +316,35 @@ public abstract class TestAbstractFileFormatter {
 
   protected List<String> getExpectedCSVRowsWithMultiple() {
     List<String> csvRows = new ArrayList<String>();
+    csvRows.add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+    csvRows.add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+    csvRows.add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+    csvRows.add("Total rows:5");
+    return csvRows;
+  }
+
+  protected List<String> getExpectedTextRowsWithMultiple() {
+    List<String> txtRows = new ArrayList<String>();
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("1oneoneone            11one1one       ");
+    txtRows.add("2twotwotwo            122two1one       2two       ");
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+    txtRows.add("Total rows:5");
+    return txtRows;
+  }
+  
+
+  protected List<String> getExpectedCSVRowsWithMultipleWithoutComma() {
+    List<String> csvRows = new ArrayList<String>();
     csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
     csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
@@ -285,7 +357,7 @@ public abstract class TestAbstractFileFormatter {
     return csvRows;
   }
 
-  protected List<String> getExpectedTextRowsWithMultiple() {
+  protected List<String> getExpectedTextRowsWithMultipleWithoutComma() {
     List<String> txtRows = new ArrayList<String>();
     txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
     txtRows.add("1oneoneone            11one1one       ");

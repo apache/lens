@@ -590,7 +590,7 @@ public class JDBCDriver implements GrillDriver {
     QueryHandle queryHandle = context.getQueryHandle();
 
     try {
-      return future.get().getGrillResultSet(false);
+      return future.get().getGrillResultSet(true);
     } catch (InterruptedException e) {
       throw new GrillException("Interrupted while getting resultset for query "
           + queryHandle.getHandleId(), e);
