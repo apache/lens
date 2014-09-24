@@ -99,17 +99,18 @@ start() {
     CORE_JARS=$CORE_JARS:`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
 
     COMMON_JARS=`ls ${HADOOP_HOME}/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     HDFS_JARS=`ls ${HADOOP_HOME}/../hadoop-hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     HDFS_JARS=$HDFS_JARS:`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
-    MAPRED_JARS=`ls ${HADOOP_HOME}/../hadoop-mapreduce/hadoop-mapred*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    MAPRED_JARS=`ls ${HADOOP_HOME}/../hadoop-mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     HADOOP_JARPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS
