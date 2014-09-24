@@ -119,12 +119,12 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     setConf(conf);
     conf.set("test.partfile.dir", partFileTextDir.toString());
     conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
-    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    conf.set(GrillConfConstants.QUERY_OUTPUT_HEADER, "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
     testFormatter(conf, "UTF8",
         GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".txt",getMockedResultSetWithoutComma());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
-        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRows());
+        new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedTextRowsWithoutComma());
   }
 
   @Test
