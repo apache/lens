@@ -131,7 +131,8 @@ public class TestHiveDriver {
   public void testTemptable() throws Exception {
     createTestTable("test_temp");
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    String query = "CREATE TABLE test_temp_output AS SELECT ID FROM test_insert_overwrite";
+    Hive.get(conf).dropTable("test_temp_output");
+    String query = "CREATE TABLE test_temp_output AS SELECT ID FROM test_temp";
     QueryContext context = new QueryContext(query, null, conf);
     GrillResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
@@ -142,7 +143,7 @@ public class TestHiveDriver {
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
     Assert.assertEquals(0, driver.getHiveHandleSize());
-    validateInMemoryResult(resultSet, "test_temp_output");    
+    validateInMemoryResult(resultSet, "test_temp_output");
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
