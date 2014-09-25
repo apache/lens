@@ -130,6 +130,18 @@ Grill server configuration
 *--+--+---+--+
 |53|grill.ws.resourcenames|session,metastore,query,quota,scheduler,index|These JAX-RS resources would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|54|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
+|54|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
+*--+--+---+--+
+|55|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
+*--+--+---+--+
+|56|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
+*--+--+---+--+
+|57|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
+*--+--+---+--+
+|58|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
+*--+--+---+--+
+|59|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
+*--+--+---+--+
+|60|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server sessions. There are no logs required for each session in grill sessions. This will decrease number of file handles associated to grill server.|
 *--+--+---+--+
 The configuration parameters and their default values

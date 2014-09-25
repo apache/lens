@@ -88,4 +88,36 @@
   <description>Explain keyword used to get the query plan of underlying database</description>
 </property>
 
+<!-- query params -->
+
+  <property>
+    <name>cube.query.driver.supported.storages</name>
+    <value></value>
+    <description>List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid</description>
+  </property>
+
+  <property>
+    <name>cube.query.enable.multi.table.select</name>
+    <value>false</value>
+    <description>Tells whether multiple tables are allowed in from clause of final HQL query</description>
+  </property>
+
+  <property>
+    <name>cube.query.replace.timedim</name>
+    <value>false</value>
+    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
+  </property>  
+
+  <property>
+    <name>cube.query.time.range.writer.class</name>
+    <value>org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter</value>
+    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter </description>
+  </property>
+
+  <property>
+    <name>cube.query.partition.where.clause.format</name>
+    <value>yyyy-MM-dd HH:mm:ss</value>
+    <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod for each type of partition </description>
+  </property>
+
 </configuration>
