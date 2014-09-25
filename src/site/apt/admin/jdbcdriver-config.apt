@@ -24,26 +24,36 @@ Jdbc driver configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
+|1|cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|2|grill.driver.jdbc.db.password| |The database user's password|
+|2|cube.query.enable.multi.table.select|false|Tells whether multiple tables are allowed in from clause of final HQL query|
 *--+--+---+--+
-|3|grill.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
+|3|cube.query.partition.where.clause.format|yyyy-MM-dd HH:mm:ss|The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod for each type of partition |
 *--+--+---+--+
-|4|grill.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
+|4|cube.query.replace.timedim|false|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|5|grill.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
+|5|cube.query.time.range.writer.class|org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter |
 *--+--+---+--+
-|6|grill.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+|6|grill.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
 *--+--+---+--+
-|7|grill.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+|7|grill.driver.jdbc.db.password| |The database user's password|
 *--+--+---+--+
-|8|grill.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+|8|grill.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
 *--+--+---+--+
-|9|grill.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+|9|grill.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
 *--+--+---+--+
-|10|grill.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+|10|grill.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
 *--+--+---+--+
-|11|grill.driver.jdbc.query.rewriter|com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+|11|grill.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+*--+--+---+--+
+|12|grill.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+*--+--+---+--+
+|13|grill.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+*--+--+---+--+
+|14|grill.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+*--+--+---+--+
+|15|grill.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+*--+--+---+--+
+|16|grill.driver.jdbc.query.rewriter|com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
 The configuration parameters and their default values

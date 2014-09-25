@@ -36,24 +36,32 @@ OLAP query configuration
 *--+--+---+--+
 |6|cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
 *--+--+---+--+
-|7|cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
+|7|cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod for each type of partition |
 *--+--+---+--+
-|8|cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
+|8|cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
 *--+--+---+--+
-|9|cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
+|9|cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
 *--+--+---+--+
-|10|cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
+|10|cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|11|cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
+|11|cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|12|cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+|12|cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|13|cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
+|13|cube.query.time.range.writer.class|org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter |
 *--+--+---+--+
-|14|hive.cube.disable.aggregate.resolver|true|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
+|14|cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
 *--+--+---+--+
-|15|hive.cube.disable.auto.join|true|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
+|15|cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
 *--+--+---+--+
-|16|hive.cube.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
+|16|cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+*--+--+---+--+
+|17|cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
+*--+--+---+--+
+|18|hive.cube.disable.aggregate.resolver|true|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
+*--+--+---+--+
+|19|hive.cube.disable.auto.join|true|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
+*--+--+---+--+
+|20|hive.cube.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
 *--+--+---+--+
 The configuration parameters and their default values
