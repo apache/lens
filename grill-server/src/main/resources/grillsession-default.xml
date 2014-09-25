@@ -245,12 +245,6 @@
   </property>
 
   <property>
-    <name>hive.cube.join.type</name>
-    <value>INNER</value>
-    <description>Tells what the join type is, in-case of automatic resolution of joins is enabled</description>
-  </property>
-
-  <property>
     <name>hive.cube.disable.aggregate.resolver</name>
     <value>false</value>
     <description>Tells whether to disable automatic resolution of aggregations for measures in a cube.

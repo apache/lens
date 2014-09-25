@@ -36,7 +36,7 @@
 <property>
   <name>grill.hs2.connection.expiry.delay</name>
   <value>600000</value>
-  <description>The idle time (in milliseconds) for expiring a hivedriver connection</description>
+  <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
 </property>
 
 <!-- Hive server client params -->
