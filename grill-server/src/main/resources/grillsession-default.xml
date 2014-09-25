@@ -192,10 +192,76 @@
   <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 
+<!-- properties for metastore client -->
 <property>
-    <name>hive.metastore.failure.retries</name>
-    <value>3</value>
+  <name>hive.metastore.uris</name>
+  <value></value>
+  <description>The hive metastore server URI that the grill server is talking to</description>
+</property>
+
+<property>
+  <name>hive.metastore.connect.retries</name>
+  <value>5</value>
+  <description>Number of retries while opening a connection to metastore</description>
+</property>
+
+<property>
+  <name>hive.metastore.failure.retries</name>
+  <value>3</value>
     <description>Number of call retries when Hive Metastore calls fail with Thrift errros</description>
 </property>
+
+<property>
+  <name>hive.metastore.client.connect.retry.delay</name>
+  <value>1</value>
+  <description>Number of seconds for the client to wait between consecutive connection attempts</description>
+</property>
+
+<property>
+  <name>hive.metastore.client.socket.timeout</name>
+  <value>20</value>
+  <description>MetaStore Client socket timeout in seconds</description>
+</property>
+
+<property>
+  <name>hive.metastore.batch.retrieve.max</name>
+  <value>100</value>
+  <description>Maximum number of objects (tables/partitions) can be retrieved from metastore in one batch. The higher the number, the less the number of round trips is needed to the Hive metastore server, but it may also cause higher memory requirement at the client side.</description>
+</property>
+
+<property>
+  <name>hive.metastore.batch.retrieve.table.partition.max</name>
+  <value>500</value>
+  <description>Maximum number of table partitions that metastore internally retrieves in one batch.</description>
+</property>
+
+<!-- query params -->
+
+  <property>
+    <name>hive.cube.disable.auto.join</name>
+    <value>false</value>
+    <description>Tells whether to disable automatic resolution of join conditions between tables involved.
+ To enable automatic resolution, this value should be false.</description>
+  </property>
+
+  <property>
+    <name>hive.cube.disable.aggregate.resolver</name>
+    <value>false</value>
+    <description>Tells whether to disable automatic resolution of aggregations for measures in a cube.
+ To enable automatic resolution, this value should be false.</description>
+  </property>
+
+  <property>
+    <name>cube.query.promote.select.togroupby</name>
+    <value>true</value>
+    <description>Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses.
+ To enable automatic promotion, this value should be true.</description>
+  </property>
+
+  <property>
+    <name>cube.query.fail.if.data.partial</name>
+    <value>true</value>
+    <description>Whether to fail the query of data is partial</description>
+  </property>
 
 </configuration>

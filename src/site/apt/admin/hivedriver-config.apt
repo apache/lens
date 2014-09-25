@@ -24,22 +24,28 @@ Hive driver configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.hive.connection.class|com.inmobi.grill.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection   and com.inmobi.grill.driver.hive.RemoteThriftConnection. |
+|1|cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|2|grill.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring a hivedriver connection|
+|2|cube.query.enable.multi.table.select|false|Tells whether multiple tables are allowed in from clause of final HQL query|
 *--+--+---+--+
-|3|hive.server.read.socket.timeout|10|Socket timeout for the client connection|
+|3|cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|4|hive.server.tcp.keepalive|true|TCP Keep alive socket option for HiveServer connection|
+|4|grill.hive.connection.class|com.inmobi.grill.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection   and com.inmobi.grill.driver.hive.RemoteThriftConnection. |
 *--+--+---+--+
-|5|hive.server2.thrift.bind.host| |The host on which hive server is running|
+|5|grill.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
 *--+--+---+--+
-|6|hive.server2.thrift.client.connect.retry.limit|1|Number of times to retry a connection to a Thrift hive server|
+|6|hive.server.read.socket.timeout|10|Socket timeout for the client connection|
 *--+--+---+--+
-|7|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
+|7|hive.server.tcp.keepalive|true|TCP Keep alive socket option for HiveServer connection|
 *--+--+---+--+
-|8|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
+|8|hive.server2.thrift.bind.host| |The host on which hive server is running|
 *--+--+---+--+
-|9|hive.server2.thrift.port|10000|The port on which hive server is running|
+|9|hive.server2.thrift.client.connect.retry.limit|1|Number of times to retry a connection to a Thrift hive server|
+*--+--+---+--+
+|10|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
+*--+--+---+--+
+|11|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
+*--+--+---+--+
+|12|hive.server2.thrift.port|10000|The port on which hive server is running|
 *--+--+---+--+
 The configuration parameters and their default values

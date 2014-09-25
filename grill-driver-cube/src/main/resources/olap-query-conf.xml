@@ -120,4 +120,28 @@
     <description>The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.</description>
   </property>
 
+  <property>
+    <name>cube.query.replace.timedim</name>
+    <value>true</value>
+    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
+  </property>
+
+  <property>
+    <name>cube.query.pick.lightest.fact.first</name>
+    <value>false</value>
+    <description>If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates</description>
+  </property>
+
+  <property>
+    <name>cube.query.time.range.writer.class</name>
+    <value>org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter</value>
+    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter </description>
+  </property>
+
+  <property>
+    <name>cube.query.partition.where.clause.format</name>
+    <value></value>
+    <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod for each type of partition </description>
+  </property>
+
 </configuration>

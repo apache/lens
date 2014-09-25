@@ -22,6 +22,7 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <configuration>
+
 <property>
   <name>grill.hive.connection.class</name>
   <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
@@ -31,6 +32,14 @@
   The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection
    and com.inmobi.grill.driver.hive.RemoteThriftConnection. </description>
 </property>
+
+<property>
+  <name>grill.hs2.connection.expiry.delay</name>
+  <value>600000</value>
+  <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
+</property>
+
+<!-- Hive server client params -->
 
 <property>
   <name>hive.server2.thrift.bind.host</name>
@@ -74,9 +83,23 @@
   <description>Socket timeout for the client connection</description>
 </property>
 
-<property>
-  <name>grill.hs2.connection.expiry.delay</name>
-  <value>600000</value>
-  <description>The idle time (in milliseconds) for expiring a hivedriver connection</description>
-</property>
+<!-- query params -->
+
+  <property>
+    <name>cube.query.driver.supported.storages</name>
+    <value></value>
+    <description>List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid</description>
+  </property>
+
+  <property>
+    <name>cube.query.enable.multi.table.select</name>
+    <value>false</value>
+    <description>Tells whether multiple tables are allowed in from clause of final HQL query</description>
+  </property>
+
+  <property>
+    <name>cube.query.replace.timedim</name>
+    <value>true</value>
+    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
+  </property>  
 </configuration>

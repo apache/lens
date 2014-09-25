@@ -199,11 +199,6 @@
   <description>Database to which statistics tables are created and partitions are added.</description>
 </property>
 
-<property>
-  <name>hive.server2.log.redirection.enabled</name>
-  <value>false</value>
-  <description>Disable the log direction on the grill server end to decrease number of file handles associated to grill server.</description>
-</property>
 <!-- Finished Query Purging Configurations -->
 <property>
   <name>grill.max.finished.queries</name>
@@ -354,6 +349,68 @@
     <name>grill.appevent.ws.listener.impl</name>
     <value>com.inmobi.grill.server.GrillApplicationListener</value>
     <description>Implementation class for Grill Application Listener</description>
+</property>
+
+<!-- CLI service properties which can be overriden for GRILL services -->
+
+<property>
+  <name>hive.server2.async.exec.threads</name>
+  <value>5</value>
+  <description>Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.</description>
+</property>
+
+<property>
+  <name>hive.server2.log.redirection.enabled</name>
+  <value>false</value>
+  <description>Disable the log direction on the grill server sessions. There are no logs required for each session in grill sessions. This will decrease number of file handles associated to grill server.</description>
+</property>
+
+<property>
+  <name>hive.server2.authentication</name>
+  <value>NONE</value>
+  <description>
+    Client authentication types.
+       NONE: no authentication check
+       LDAP: LDAP/AD based authentication
+       KERBEROS: Kerberos/GSSAPI authentication
+       CUSTOM: Custom authentication provider
+               (Use with property hive.server2.custom.authentication.class)
+       PAM: Pluggable authentication module.
+  </description>
+</property>
+
+<property>
+  <name>hive.server2.authentication.ldap.url</name>
+  <value></value>
+  <description>
+    LDAP connection URL
+  </description>
+</property>
+
+<property>
+  <name>hive.server2.authentication.ldap.security.protocol</name>
+  <value>ssl</value>
+  <description>
+    Its value is a string determined by the service provider (e.g. "ssl").
+    If this property is unspecified, the behaviour is determined by the service provider.
+    It's value will be directly passed as "java.naming.security.protocol"
+  </description>
+</property>
+
+<property>
+  <name>hive.server2.authentication.ldap.baseDN</name>
+  <value></value>
+  <description>
+    LDAP base DN
+  </description>
+</property>
+
+<property>
+  <name>hive.server2.authentication.ldap.Domain</name>
+  <value></value>
+  <description>
+    The ldap domin
+  </description>
 </property>
 
 </configuration>
