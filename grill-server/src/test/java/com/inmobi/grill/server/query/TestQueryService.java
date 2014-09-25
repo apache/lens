@@ -1,4 +1,4 @@
-package com.inmobi.grill.server.query;
+  package com.inmobi.grill.server.query;
 
 /*
  * #%L
@@ -103,7 +103,7 @@ public class TestQueryService extends GrillJerseyTest {
     metricsSvc = (MetricsService)GrillServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
     sessionconf.put("test.session.key", "svalue");
-    grillSessionId = queryService.openSession("foo@localhost", "bar", sessionconf);
+    grillSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); //@localhost should be removed automatically
     createTable(testTable);
     loadData(testTable, TEST_DATA_FILE);
   }
@@ -450,6 +450,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     GrillQuery ctx2 = target().path("queryapi/queries").path(
         handle2.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    Assert.assertNotNull(ctx2);
     Assert.assertEquals(ctx2.getQueryName().toLowerCase(), "testqueryname2");
     // wait till the query finishes
     stat = ctx2.getStatus();

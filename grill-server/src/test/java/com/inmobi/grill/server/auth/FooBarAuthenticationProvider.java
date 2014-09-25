@@ -27,7 +27,6 @@ import javax.security.sasl.AuthenticationException;
 public class FooBarAuthenticationProvider implements PasswdAuthenticationProvider {
   public static String MSG = "<username,password>!=<foo@localhost,bar>";
   private final String[][] allowedCombinations = new String[][]{
-    {"foo@localhost", "bar"},
     {"foo", "bar"},
     {"anonymous", ""},
   };

@@ -28,7 +28,6 @@ import com.inmobi.grill.api.query.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.Console;
 import java.util.HashMap;
 import java.util.List;
 
@@ -59,6 +58,9 @@ public class GrillClient {
     this.conf = conf;
     conf.setUser(username);
     this.password = password;
+    if(this.conf.get(GrillClientConfig.GRILL_SESSION_CLUSTER_USER) == null) {
+      this.conf.set(GrillClientConfig.GRILL_SESSION_CLUSTER_USER, System.getProperty("user.name"));
+    }
     connectToGrillServer();
     statement = new GrillStatement(conn);
   }

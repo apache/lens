@@ -1,0 +1,4 @@
+user1.grill.session.cluster.user=clusteruser1
+user1.mapred.job.queue.name=queue1
+*.grill.session.cluster.user=clusteruser2
+*.mapred.job.queue.name=queue2

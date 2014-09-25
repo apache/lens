@@ -21,6 +21,7 @@ package com.inmobi.grill.server.session;
  */
 
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.GrillServerConf;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
@@ -35,7 +36,7 @@ import static org.testng.Assert.fail;
 @Test(groups="unit-test")
 public class TestSessionExpiry {
   public void testSessionExpiry() throws Exception {
-    HiveConf conf = new HiveConf();
+    HiveConf conf = GrillServerConf.get();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getName());
     conf.setLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();

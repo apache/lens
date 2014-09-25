@@ -47,7 +47,6 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
   public void initialize(Configuration conf) {
     LOG.info("Creating new Partition handler");
     handler = new StatisticsLogPartitionHandler();
-    LOG.info("Creating new Partition handler");
     handler.initialize(conf);
     LOG.info("Creating new rollup handler");
     rollupHandler = new StatisticsLogRollupHandler();
@@ -72,7 +71,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
     } catch (Exception exc) {
       MetricsService metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(LogStatisticsStore.class, LOG_STORE_ERRORS);
-      LOG.error("Unkown error ", exc);
+      LOG.error("Unknown error ", exc);
     }
 
   }

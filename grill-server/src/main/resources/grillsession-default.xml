@@ -206,8 +206,19 @@
 </property>
 
 <property>
-  <name>hive.metastore.failure.retries</name>
-  <value>3</value>
+  <name>grill.session.cluster.user</name>
+  <value></value>
+  <description>Session level config which will determine which cluster user will access hdfs</description>
+</property>
+<property>
+  <name>grill.session.loggedin.user</name>
+  <value></value>
+  <description>The username used to log in to grill. e.g. LDAP user</description>
+</property>
+
+<property>
+    <name>hive.metastore.failure.retries</name>
+    <value>3</value>
     <description>Number of call retries when Hive Metastore calls fail with Thrift errros</description>
 </property>
 

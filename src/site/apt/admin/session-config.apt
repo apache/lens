@@ -72,24 +72,28 @@ Grill session configuration
 *--+--+---+--+
 |24|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query. This  directory should exist and should have writable permissions by grill server|
 *--+--+---+--+
-|25|grill.whether.mail.notify|false|When a query ends, whether to notify the submitter by mail or not.|
+|25|grill.session.cluster.user| |Session level config which will determine which cluster user will access hdfs|
 *--+--+---+--+
-|26|hive.cube.disable.aggregate.resolver|false|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
+|26|grill.session.loggedin.user| |The username used to log in to grill. e.g. LDAP user|
 *--+--+---+--+
-|27|hive.cube.disable.auto.join|false|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
+|27|grill.whether.mail.notify|false|When a query ends, whether to notify the submitter by mail or not.|
 *--+--+---+--+
-|28|hive.metastore.batch.retrieve.max|100|Maximum number of objects (tables/partitions) can be retrieved from metastore in one batch. The higher the number, the less the number of round trips is needed to the Hive metastore server, but it may also cause higher memory requirement at the client side.|
+|28|hive.cube.disable.aggregate.resolver|false|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|29|hive.metastore.batch.retrieve.table.partition.max|500|Maximum number of table partitions that metastore internally retrieves in one batch.|
+|29|hive.cube.disable.auto.join|false|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|30|hive.metastore.client.connect.retry.delay|1|Number of seconds for the client to wait between consecutive connection attempts|
+|30|hive.metastore.batch.retrieve.max|100|Maximum number of objects (tables/partitions) can be retrieved from metastore in one batch. The higher the number, the less the number of round trips is needed to the Hive metastore server, but it may also cause higher memory requirement at the client side.|
 *--+--+---+--+
-|31|hive.metastore.client.socket.timeout|20|MetaStore Client socket timeout in seconds|
+|31|hive.metastore.batch.retrieve.table.partition.max|500|Maximum number of table partitions that metastore internally retrieves in one batch.|
 *--+--+---+--+
-|32|hive.metastore.connect.retries|5|Number of retries while opening a connection to metastore|
+|32|hive.metastore.client.connect.retry.delay|1|Number of seconds for the client to wait between consecutive connection attempts|
 *--+--+---+--+
-|33|hive.metastore.failure.retries|3|Number of call retries when Hive Metastore calls fail with Thrift errros|
+|33|hive.metastore.client.socket.timeout|20|MetaStore Client socket timeout in seconds|
 *--+--+---+--+
-|34|hive.metastore.uris| |The hive metastore server URI that the grill server is talking to|
+|34|hive.metastore.connect.retries|5|Number of retries while opening a connection to metastore|
+*--+--+---+--+
+|35|hive.metastore.failure.retries|3|Number of call retries when Hive Metastore calls fail with Thrift errros|
+*--+--+---+--+
+|36|hive.metastore.uris| |The hive metastore server URI that the grill server is talking to|
 *--+--+---+--+
 The configuration parameters and their default values
