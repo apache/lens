@@ -974,6 +974,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());
         finishedCtx.getDriverStatus().setDriverFinishTime(query.getDriverEndTime());
         finishedCtx.setResultSetPath(query.getResult());
+        finishedCtx.setQueryName(query.getQueryName());
         return finishedCtx;
       }
       updateStatus(queryHandle);
