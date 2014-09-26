@@ -199,16 +199,17 @@
   <description>Database to which statistics tables are created and partitions are added.</description>
 </property>
 
-<property>
-  <name>hive.server2.log.redirection.enabled</name>
-  <value>false</value>
-  <description>Disable the log direction on the grill server end to decrease number of file handles associated to grill server.</description>
-</property>
 <!-- Finished Query Purging Configurations -->
 <property>
   <name>grill.max.finished.queries</name>
   <value>100</value>
   <description>Maximum number of finished queries which grill server will keep in memory before purging.</description>
+</property>
+<property>
+  <name>grill.server.domain</name>
+  <value>company.com</value>
+  <description>Server domain. This will be used in authentication and Sending emails to users.
+    For the server, the username will be without domain and domain will come through conf.</description>
 </property>
 <property>
   <name>grill.server.db.driver.name</name>

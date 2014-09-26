@@ -364,8 +364,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       String reason) throws GrillException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0f,
-        QueryStatus.Status.FAILED,
-        statusMsg, false, null, reason));
+      QueryStatus.Status.FAILED,
+      statusMsg, false, null, reason));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -550,8 +550,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             resultSets.remove(finished.getCtx().getQueryHandle());
           }
           fireStatusChangeEvent(finished.getCtx(),
-              new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
-              finished.getCtx().getStatus());
+            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
+            finished.getCtx().getStatus());
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
         } catch (GrillException e) {
           incrCounter(QUERY_PURGER_COUNTER);
@@ -616,8 +616,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     module.addSerializer(ColumnDescriptor.class, new JsonSerializer<ColumnDescriptor>() {
       @Override
       public void serialize(ColumnDescriptor columnDescriptor, JsonGenerator jsonGenerator,
-                            SerializerProvider serializerProvider) throws IOException,
-          JsonProcessingException {
+        SerializerProvider serializerProvider) throws IOException,
+        JsonProcessingException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("name", columnDescriptor.getName());
         jsonGenerator.writeStringField("comment", columnDescriptor.getComment());
@@ -629,14 +629,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     module.addDeserializer(ColumnDescriptor.class, new JsonDeserializer<ColumnDescriptor>() {
       @Override
       public ColumnDescriptor deserialize(JsonParser jsonParser,
-                                          DeserializationContext deserializationContext)
-          throws IOException, JsonProcessingException {
+        DeserializationContext deserializationContext)
+        throws IOException, JsonProcessingException {
         ObjectCodec oc = jsonParser.getCodec();
         JsonNode node = oc.readTree(jsonParser);
         org.apache.hive.service.cli.Type t = org.apache.hive.service.cli.Type.getType(node.get("type").asText());
         return new ColumnDescriptor(node.get("name").asText(),
-            node.get("comment").asText(),
-            new TypeDescriptor(t), node.get("position").asInt());
+          node.get("comment").asText(),
+          new TypeDescriptor(t), node.get("position").asInt());
       }
     });
     mapper.registerModule(module);
@@ -814,7 +814,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
       PreparedQueryContext prepared = prepareQuery(sessionHandle, query,
-          grillConf, SubmitOp.EXPLAIN_AND_PREPARE);
+        grillConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
@@ -1221,6 +1221,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
                                                         String user,
                                                         String queryName)
       throws GrillException {
+    user = UtilityMethods.removeDomain(user);
     try {
       acquire(sessionHandle);
       List<QueryPrepareHandle> allPrepared = new ArrayList<QueryPrepareHandle>(preparedQueries.keySet());
@@ -1315,14 +1316,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private QueryContext createAddResourceQuery(GrillSessionHandle sessionHandle, String type, String path)
     throws GrillException {
     String command = "add " + type.toLowerCase() + " " + path;
-          GrillConf conf = new GrillConf();
-          conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-          QueryContext addQuery = new QueryContext(command,
-              getSession(sessionHandle).getLoggedInUser(),
-              getGrillConf(sessionHandle, conf));
-          addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
+    GrillConf conf = new GrillConf();
+    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    QueryContext addQuery = new QueryContext(command, 
+      getSession(sessionHandle).getLoggedInUser(),
+      getGrillConf(sessionHandle, conf));
+    addQuery.setGrillSessionIdentifier(sessionHandle.getPublicId().toString());
     return addQuery;
-        }
+  }
 
   public void deleteResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
     try {

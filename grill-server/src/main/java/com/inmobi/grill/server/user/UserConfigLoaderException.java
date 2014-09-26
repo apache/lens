@@ -25,11 +25,26 @@ import java.sql.SQLException;
  */
 
 public class UserConfigLoaderException extends RuntimeException {
+
+  public UserConfigLoaderException() {
+    super();
+  }
+
   public UserConfigLoaderException(String s) {
     super(s);
   }
 
   public UserConfigLoaderException(Throwable e) {
     super(e);
+  }
+
+  public UserConfigLoaderException(String message, Throwable cause) {
+    super(message, cause);
+  }
+
+  public UserConfigLoaderException(String message, Throwable cause,
+    boolean enableSuppression,
+    boolean writableStackTrace) {
+    super(message, cause, enableSuppression, writableStackTrace);
   }
 }

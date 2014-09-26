@@ -28,7 +28,7 @@ import java.util.Map;
 public abstract class UserConfigLoader {
   protected final HiveConf hiveConf;
 
-  public UserConfigLoader(HiveConf conf) {
+  protected UserConfigLoader(HiveConf conf) {
     this.hiveConf = conf;
   }
   public abstract Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException;

@@ -40,10 +40,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     String className = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME);
     String jdbcUrl = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL);
     String userName = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME);
-    String pass = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD);
-    if(pass == null) {
-      pass = "";
-    }
+    String pass = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, "");
     querySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY);
     keys = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     if(anyNull(className, jdbcUrl, userName, pass, querySql, keys)) {
@@ -77,7 +74,6 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     return false;
   }
 
-  //TODO: either remove this or fill in generic code :/
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException {
     QueryRunner runner = new QueryRunner(ds);

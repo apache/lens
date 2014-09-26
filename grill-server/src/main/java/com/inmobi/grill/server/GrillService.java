@@ -76,6 +76,10 @@ public abstract class GrillService extends CompositeService implements Externali
     return cliService;
   }
 
+  public String getServerDomain() {
+    return cliService.getHiveConf().get(GrillConfConstants.GRILL_SERVER_DOMAIN);
+  }
+
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     SessionHandle sessionHandle;

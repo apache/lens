@@ -90,7 +90,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
     String mailMessage = createMailMessage(queryContext);
 
-    String to = queryContext.getSubmittedUser() + "@" + conf.get(GrillConfConstants.GRILL_SERVER_DOMAIN);
+    String to = queryContext.getSubmittedUser() + "@" + queryService.getServerDomain();
 
     String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
       GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
