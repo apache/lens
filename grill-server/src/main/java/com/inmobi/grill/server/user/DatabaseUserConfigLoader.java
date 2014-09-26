@@ -61,7 +61,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME));
     tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL));
     tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME));
-    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD));
+    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, ""));
     return tmp;
   }
 
