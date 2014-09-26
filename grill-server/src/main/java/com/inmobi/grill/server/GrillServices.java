@@ -28,6 +28,7 @@ import java.lang.reflect.Constructor;
 import java.util.*;
 
 import com.inmobi.grill.server.stats.StatisticsService;
+import com.inmobi.grill.server.user.UserConfigLoaderFactory;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -135,6 +136,7 @@ public class GrillServices extends CompositeService {
       snapShotInterval = conf.getLong(GrillConfConstants.GRILL_SERVER_SNAPSHOT_INTERVAL,
           GrillConfConstants.DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized grill services: " + services.keySet().toString());
+      UserConfigLoaderFactory.init(conf);
       timer = new Timer("grill-server-snapshotter", true);
     }
   }

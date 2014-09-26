@@ -43,6 +43,7 @@ public class GrillClientConfig extends Configuration {
   public static final String GRILL_BASE_PATH = "grill.base.path";
   public static final String DEFAULT_APP_BASE_PATH = "";
   public static final String GRILL_SESSION_RESOURCE_PATH = "grill.session.resource.path";
+  public static final String GRILL_SESSION_CLUSTER_USER = "grill.session.cluster.user";
   public static final String DEFAULT_SESSION_RESOURCE_PATH = "session";
   private static final String GRILL_QUERY_RESOURCE_PATH = "grill.query.resource.path";
   private static final String DEFAULT_QUERY_RESOURCE_PATH = "queryapi";

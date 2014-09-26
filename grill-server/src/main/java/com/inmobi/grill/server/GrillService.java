@@ -23,8 +23,11 @@ package com.inmobi.grill.server;
 import com.inmobi.grill.api.GrillConf;
 import com.inmobi.grill.api.GrillException;
 import com.inmobi.grill.api.GrillSessionHandle;
+import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.session.GrillSessionImpl;
 
+import com.inmobi.grill.server.user.UserConfigLoaderFactory;
+import com.inmobi.grill.server.util.UtilityMethods;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -73,17 +76,30 @@ public abstract class GrillService extends CompositeService implements Externali
     return cliService;
   }
 
+  public String getServerDomain() {
+    return cliService.getHiveConf().get(GrillConfConstants.GRILL_SERVER_DOMAIN);
+  }
+
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     SessionHandle sessionHandle;
-    doPasswdAuth(username, password, cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION));
+    username = UtilityMethods.removeDomain(username);
+    doPasswdAuth(username, password);
     try {
       Map<String, String> sessionConf = new HashMap<String, String>();
       sessionConf.putAll(GrillSessionImpl.DEFAULT_HIVE_SESSION_CONF);
       if (configuration != null) {
         sessionConf.putAll(configuration);
       }
-
+      Map<String, String> userConfig = UserConfigLoaderFactory.getUserConfig(username);
+      UtilityMethods.mergeMaps(sessionConf, userConfig, false);
+      sessionConf.put(GrillConfConstants.GRILL_SESSION_LOGGEDIN_USER, username);
+      if(sessionConf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER) == null) {
+        LOG.info("Didn't get cluster user from user config loader. Setting same as logged in user: " + username);
+        sessionConf.put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, username);
+      }
+      String clusterUser = sessionConf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER);
+      password = "useless";
       if (
           cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
           .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
@@ -98,10 +114,10 @@ public abstract class GrillService extends CompositeService implements Externali
         } catch (UnsupportedOperationException e) {
           // The delegation token is not applicable in the given deployment mode
         }
-        sessionHandle = cliService.openSessionWithImpersonation(username, password,
+        sessionHandle = cliService.openSessionWithImpersonation(clusterUser, password,
             sessionConf, delegationTokenStr);
       } else {
-        sessionHandle = cliService.openSession(username, password,
+        sessionHandle = cliService.openSession(clusterUser, password,
             sessionConf);
       }
     } catch (Exception e) {
@@ -134,15 +150,25 @@ public abstract class GrillService extends CompositeService implements Externali
     }
   }
 
-  private void doPasswdAuth(String userName, String password, String authType){
+  private void doPasswdAuth(String userName, String password){
+    // Grill confs to Hive Confs.
+    for(ConfVars var: new ConfVars[]{ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN}) {
+      if(cliService.getHiveConf().getVar(var) == null) {
+        cliService.getHiveConf().setVar(var,
+          cliService.getHiveConf().get(GrillConfConstants.GRILL_SERVER_DOMAIN));
+      }
+    }
+    String authType = cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
     // No-op when authType is NOSASL
     if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
-        AuthenticationProviderFactory.AuthMethods authMethod = AuthenticationProviderFactory.AuthMethods.getValidAuthMethod(authType);
+        AuthenticationProviderFactory.AuthMethods authMethod =
+          AuthenticationProviderFactory.AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
           AuthenticationProviderFactory.getAuthenticationProvider(authMethod, cliService.getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
+        LOG.error("Auth error: " + e);
         throw new NotAuthorizedException(e);
       }
     }

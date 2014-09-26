@@ -4,7 +4,6 @@ import com.inmobi.grill.client.exceptions.GrillClientServerConnectionException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import java.io.Console;
 /*
  * #%L
  * Grill client

@@ -31,6 +31,7 @@ import javax.ws.rs.NotFoundException;
 import com.inmobi.grill.api.GrillSessionHandle;
 import com.inmobi.grill.server.api.GrillConfConstants;
 
+import com.inmobi.grill.server.util.UtilityMethods;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -52,12 +53,13 @@ public class GrillSessionImpl extends HiveSessionImpl {
   private long sessionTimeout;
   private Configuration conf = createDefaultConf();
 
-  private void initPersistInfo(SessionHandle sessionHandle, String username, String password) {
+  private void initPersistInfo(SessionHandle sessionHandle, String username, String password, Map<String, String> sessionConf) {
     persistInfo.setSessionHandle(new GrillSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
       sessionHandle.getHandleIdentifier().getSecretId()));
     persistInfo.setUsername(username);
     persistInfo.setPassword(password);
     persistInfo.setLastAccessTime(lastAccessTime);
+    persistInfo.setSessionConf(sessionConf);
   }
 
   public static Configuration createDefaultConf() {
@@ -77,7 +79,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   public GrillSessionImpl(TProtocolVersion protocol, String username, String password,
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
-    initPersistInfo(getSessionHandle(), username, password);
+    initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
       GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
     if (sessionConf != null) {
@@ -97,7 +99,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   public GrillSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol, String username, String password,
                           HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
-    initPersistInfo(getSessionHandle(), username, password);
+    initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
       GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
   }
@@ -170,6 +172,14 @@ public class GrillSessionImpl extends HiveSessionImpl {
   @Override
   public String toString() {
     return getSessionHandle().getHandleIdentifier().toString();
+  }
+
+  public String getLoggedInUser() {
+    return getHiveConf().get(GrillConfConstants.GRILL_SESSION_LOGGEDIN_USER);
+  }
+
+  public String getClusterUser() {
+    return getUserName();
   }
 
   public GrillSessionPersistInfo getGrillSessionPersistInfo() {
@@ -283,6 +293,10 @@ public class GrillSessionImpl extends HiveSessionImpl {
 
     public long getLastAccessTime() {
       return lastAccessTime;
+    }
+
+    public void setSessionConf(Map<String,String> sessionConf) {
+      UtilityMethods.mergeMaps(config, sessionConf, true);
     }
 
     @Override

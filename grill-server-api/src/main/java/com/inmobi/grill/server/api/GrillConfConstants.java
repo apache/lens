@@ -87,6 +87,23 @@ public class GrillConfConstants {
   public static final String GRILL_QUERY_RESULT_EMAIL_CC = "grill.query.result.email.cc";
   public static final String GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC = "";
 
+  // User session related config
+  public static final String GRILL_SESSION_CLUSTER_USER = "grill.session.cluster.user";
+  public static final String MAPRED_JOB_QUEUE_NAME = "mapred.job.queue.name";
+  public static final String GRILL_SESSION_LOGGEDIN_USER = "grill.session.loggedin.user";
+
+  // ldap user to cluster/hdfs accessing user resolver related configs
+  public static final String GRILL_SERVER_USER_RESOLVER_TYPE = "grill.server.user.resolver.type";
+  public static final String GRILL_SERVER_USER_RESOLVER_FIXED_VALUE = "grill.server.user.resolver.fixed.value";
+  public static final String GRILL_SERVER_USER_RESOLVER_PROPERTYBASED_FILENAME = "grill.server.user.resolver.propertybased.filename";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME = "grill.server.user.resolver.db.driver.name";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL = "grill.server.user.resolver.db.jdbc.url";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME = "grill.server.user.resolver.db.jdbc.username";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD = "grill.server.user.resolver.db.jdbc.password";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_KEYS = "grill.server.user.resolver.db.keys";
+  public static final String GRILL_SERVER_USER_RESOLVER_DB_QUERY = "grill.server.user.resolver.db.query";
+  public static final String GRILL_SERVER_USER_RESOLVER_CUSTOM_CLASS = "grill.server.user.resolver.custom.class";
+
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;
   }
@@ -115,6 +132,7 @@ public class GrillConfConstants {
 
   public static final String GRILL_SERVER_MODE = "grill.server.mode";
   public final static String DEFAULT_GRILL_SERVER_MODE = "OPEN";
+  public static final String GRILL_SERVER_DOMAIN = "grill.server.domain";
 
   // resultset output options
   public static final String GRILL_PERSISTENT_RESULT_SET = "grill.persistent.resultset";

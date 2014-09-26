@@ -48,7 +48,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
 
   @Getter @Setter private QueryHandle queryHandle;
   @Getter final private String userQuery;
-  @Getter final private String submittedUser;
+  @Getter final private String submittedUser;  // Logged in user.
   transient @Getter @Setter private Configuration conf;
   @Getter private GrillConf qconf;
   @Getter private Priority priority;
@@ -211,5 +211,9 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   public boolean splitResultIntoMultipleFiles() {
     return conf.getBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
         GrillConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
+  }
+
+  public String getClusterUser() {
+    return conf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER);
   }
 }

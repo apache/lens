@@ -24,7 +24,6 @@ import com.inmobi.grill.api.query.QueryStatus;
 import com.inmobi.grill.server.GrillServices;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.api.events.AsyncEventListener;
-import com.inmobi.grill.server.api.events.GrillEventService;
 import com.inmobi.grill.server.api.metrics.MetricsService;
 import com.inmobi.grill.server.api.query.QueryContext;
 import com.inmobi.grill.server.api.query.QueryEnded;
@@ -91,7 +90,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
     String mailMessage = createMailMessage(queryContext);
 
-    String to = queryContext.getSubmittedUser();
+    String to = queryContext.getSubmittedUser() + "@" + queryService.getServerDomain();
 
     String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
       GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
