@@ -88,81 +88,81 @@ Grill server configuration
 *--+--+---+--+
 |32|grill.server.db.jdbc.user|SA|JDBC User for Finished queries table|
 *--+--+---+--+
-|33|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
+|33|grill.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users.    For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+
-|34|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
+|34|grill.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
 *--+--+---+--+
-|35|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
+|35|grill.server.persist.location|file:///tmp/grillserver|The directory in which grill server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
 *--+--+---+--+
-|36|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
+|36|grill.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|37|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
+|37|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|38|grill.server.snapshot.interval|300000|Snapshot interval time in miliseconds for saving grill server state.|
+|38|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|39|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
+|39|grill.server.snapshot.interval|300000|Snapshot interval time in miliseconds for saving grill server state.|
 *--+--+---+--+
-|40|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
+|40|grill.server.ui.base.uri|http://localhost:19999/|The base url for the Grill UI Server|
 *--+--+---+--+
-|41|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
+|41|grill.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+
-|42|grill.server.user.resolver.custom.class|full.package.name.Classname|In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader  |
+|42|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|43|grill.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|For database based user config loader, the database driver class|
+|43|grill.server.user.resolver.custom.class|full.package.name.Classname|In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader  |
 *--+--+---+--+
-|44|grill.server.user.resolver.db.jdbc.password|org.hsqldb.jdbcDriver|For database based user config loader, the jdbc password|
+|44|grill.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|For database based user config loader, the database driver class|
 *--+--+---+--+
-|45|grill.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/grill_user_config_loader.db|For database based user config loader, jdbc url of the database|
+|45|grill.server.user.resolver.db.jdbc.password|org.hsqldb.jdbcDriver|For database based user config loader, the jdbc password|
 *--+--+---+--+
-|46|grill.server.user.resolver.db.jdbc.username|org.hsqldb.jdbcDriver|For database based user config loader, the jdbc username|
+|46|grill.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/grill_user_config_loader.db|For database based user config loader, jdbc url of the database|
 *--+--+---+--+
-|47|grill.server.user.resolver.db.keys|grill.session.cluster.user,mapred.job.queue.name|For database based user config loader, the conf keys that will be loaded from database.|
+|47|grill.server.user.resolver.db.jdbc.username|org.hsqldb.jdbcDriver|For database based user config loader, the jdbc username|
 *--+--+---+--+
-|48|grill.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|For database based user config loader, this query will be run with single argument = logged in user    and the result columns will be assigned to grill.server.user.resolver.db.keys in order.  |
+|48|grill.server.user.resolver.db.keys|grill.session.cluster.user,mapred.job.queue.name|For database based user config loader, the conf keys that will be loaded from database.|
 *--+--+---+--+
-|49|grill.server.user.resolver.fixed.value| |when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
+|49|grill.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|For database based user config loader, this query will be run with single argument = logged in user    and the result columns will be assigned to grill.server.user.resolver.db.keys in order.  |
 *--+--+---+--+
-|50|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
+|50|grill.server.user.resolver.fixed.value| |when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
 *--+--+---+--+
-|51|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, CUSTOM.|
+|51|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
 *--+--+---+--+
-|52|grill.serverMode.ws.filter.impl|com.inmobi.grill.server.ServerModeFilter|Implementation class for ServerMode Filter|
+|52|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, CUSTOM.|
 *--+--+---+--+
-|53|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|53|grill.serverMode.ws.filter.impl|com.inmobi.grill.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
-|54|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|54|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|55|grill.session.ws.resource.impl|com.inmobi.grill.server.session.SessionResource|Implementation class for Session Resource|
+|55|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|56|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
+|56|grill.session.ws.resource.impl|com.inmobi.grill.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
-|57|grill.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
+|57|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
-|58|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
+|58|grill.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|59|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+|59|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
 *--+--+---+--+
-|60|grill.ws.featurenames|multipart|These JAX-RS Feature(s) would be started in the specified order when grill-server starts up|
+|60|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|61|grill.ws.filternames|authentication,consistentState,serverMode|These JAX-RS filters would be started in the specified order when grill-server starts up|
+|61|grill.ws.featurenames|multipart|These JAX-RS Feature(s) would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|62|grill.ws.listenernames|appevent|These listeners would be called in the specified order when grill-server starts up|
+|62|grill.ws.filternames|authentication,consistentState,serverMode|These JAX-RS filters would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|63|grill.ws.resourcenames|session,metastore,query,quota,scheduler,index|These JAX-RS resources would be started in the specified order when grill-server starts up|
+|63|grill.ws.listenernames|appevent|These listeners would be called in the specified order when grill-server starts up|
 *--+--+---+--+
-|64|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
+|64|grill.ws.resourcenames|session,metastore,query,quota,scheduler,index|These JAX-RS resources would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|65|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
+|65|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
 *--+--+---+--+
-|66|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
+|66|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
 *--+--+---+--+
-|67|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
+|67|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
 *--+--+---+--+
-|68|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
+|68|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
 *--+--+---+--+
-|69|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
+|69|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
 *--+--+---+--+
-|70|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server end to decrease number of file handles associated to grill server.|
+|70|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
 *--+--+---+--+
 |71|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server sessions. There are no logs required for each session in grill sessions. This will decrease number of file handles associated to grill server.|
 *--+--+---+--+

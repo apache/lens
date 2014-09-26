@@ -454,12 +454,12 @@
 </property>
 <property>
   <name>grill.server.user.resolver.db.jdbc.username</name>
-  <value>org.hsqldb.jdbcDriver</value>
+  <value>SA</value>
   <description>For database based user config loader, the jdbc username</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.jdbc.password</name>
-  <value>org.hsqldb.jdbcDriver</value>
+  <value></value>
   <description>For database based user config loader, the jdbc password</description>
 </property>
 <property>
