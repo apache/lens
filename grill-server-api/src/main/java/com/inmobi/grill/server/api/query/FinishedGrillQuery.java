@@ -46,6 +46,10 @@ public class FinishedGrillQuery {
 
   @Getter
   @Setter
+  private long submissionTime;
+
+  @Getter
+  @Setter
   private long startTime;
 
   @Getter
@@ -97,6 +101,7 @@ public class FinishedGrillQuery {
     this.handle = ctx.getQueryHandle().toString();
     this.userQuery = ctx.getUserQuery();
     this.submitter = ctx.getSubmittedUser();
+    this.submissionTime = ctx.getSubmissionTime();
     this.startTime = ctx.getLaunchTime();
     this.endTime = ctx.getEndTime();
     this.result = ctx.getResultSetPath();

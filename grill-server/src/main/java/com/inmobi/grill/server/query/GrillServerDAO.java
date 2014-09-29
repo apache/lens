@@ -99,7 +99,8 @@ public class GrillServerDAO {
         "driverstarttime bigint, " +
         "driverendtime bigint, " +
         "metadataclass varchar(10000)," +
-        "queryname varchar(255)" +
+        "queryname varchar(255)," +
+        "submissiontime bigint" +
       ")";
     try {
       createTable(sql);
@@ -117,8 +118,8 @@ public class GrillServerDAO {
   public void insertFinishedQuery(FinishedGrillQuery query) throws Exception {
     String sql = "insert into finished_queries (handle, userquery,submitter," +
         "starttime,endtime,result,status,metadata,rows," +
-        "errormessage,driverstarttime,driverendtime, metadataclass, queryname)" +
-      " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)" +
+      " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     QueryRunner runner = new QueryRunner(ds);
     try {
       runner.update(sql, query.getHandle(),
@@ -134,7 +135,8 @@ public class GrillServerDAO {
           query.getDriverStartTime(),
           query.getDriverEndTime(),
           query.getMetadataClass(),
-          query.getQueryName());
+          query.getQueryName(),
+          query.getSubmissionTime());
     } catch (SQLException e) {
       throw new Exception(e);
     }
