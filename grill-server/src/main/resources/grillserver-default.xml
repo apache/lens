@@ -482,4 +482,11 @@
       a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader
   </description>
 </property>
+
+<property>
+    <name>grill.server.service.provider.factory</name>
+    <value>com.inmobi.grill.server.ServiceProviderFactoryImpl</value>
+    <description>Service provider factory implementation class</description>
+</property>
+
 </configuration>
