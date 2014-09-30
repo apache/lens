@@ -507,6 +507,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       analyzeInternal();
     } catch (SemanticException e) {
       e.printStackTrace();
+      return;
     }
     try {
       CubeMetastoreClient client = CubeMetastoreClient
