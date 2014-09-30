@@ -242,4 +242,6 @@ public class GrillConfConstants {
   public static final String DEFAULT_SERVER_DB_USER = "SA";
   public static final String GRILL_SERVER_DB_JDBC_PASS = "grill.server.db.jdbc.pass";
   public static final String DEFAULT_SERVER_DB_PASS = "";
+
+  public static final String GRILL_SERVICE_PROVIDER_FACTORY = "grill.server.service.provider.factory";
 }
