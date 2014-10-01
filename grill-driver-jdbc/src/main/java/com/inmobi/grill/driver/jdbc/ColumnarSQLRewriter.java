@@ -501,15 +501,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * Construct the rewritten query using trees
    */
 
-  public void buildQuery() {
+  public void buildQuery() throws SemanticException {
 
     try {
       analyzeInternal();
-    } catch (SemanticException e) {
-      e.printStackTrace();
-      return;
-    }
-    try {
       CubeMetastoreClient client = CubeMetastoreClient
           .getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
       replaceWithUnderlyingStorage(fromAST, client);
@@ -669,6 +664,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
     } catch (ParseException e) {
+      e.printStackTrace();
+    } catch (SemanticException e) {
       e.printStackTrace();
     }
     return queryReplacedUdf;
