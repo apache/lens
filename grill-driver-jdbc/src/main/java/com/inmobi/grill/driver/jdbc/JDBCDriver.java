@@ -384,10 +384,18 @@ public class JDBCDriver implements GrillDriver {
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     
-    QueryResult result = executeInternal(explainQueryCtx,explainQuery);
-    if (result.error != null) {
-      throw new GrillException("Query explain failed!", result.error);
-    } 
+    QueryResult result = null;
+    try {
+    	result = executeInternal(explainQueryCtx, explainQuery);
+    	if (result.error != null) {
+        throw new GrillException("Query explain failed!", result.error);
+      }
+    } finally {
+    	if (result != null) {
+    		result.close();
+    	}
+    }
+    
     return new JDBCQueryPlan();
   } 
     
