@@ -486,7 +486,21 @@
 <property>
     <name>grill.server.service.provider.factory</name>
     <value>com.inmobi.grill.server.ServiceProviderFactoryImpl</value>
-    <description>Service provider factory implementation class</description>
+    <final>true</final>
+    <description>Service provider factory implementation class. This parameter is used
+    to lookup the factory implementation class name that would provide an 
+    instance of ServiceProvider. Users should instantiate the class to obtain its instance.
+    
+    Example 
+    -- 
+    Class spfClass 
+				= conf.getClass("grill.server.service.provider.factory",
+      	null, ServiceProviderFactory.class);
+
+    ServiceProviderFactory spf = spfClass.newInstance();
+		ServiceProvider serviceProvider = spf.getServiceProvider();
+		--   
+    This is not supposed to be overridden by users.</description>
 </property>
 
 </configuration>

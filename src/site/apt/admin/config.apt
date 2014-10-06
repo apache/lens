@@ -98,7 +98,7 @@ Grill server configuration
 *--+--+---+--+
 |37|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|38|grill.server.service.provider.factory|com.inmobi.grill.server.ServiceProviderFactoryImpl|Service provider factory implementation class|
+|38|grill.server.service.provider.factory|com.inmobi.grill.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an     instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example     --     Class spfClass 				= conf.getClass("grill.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
 *--+--+---+--+
 |39|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
