@@ -39,6 +39,7 @@ import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -341,7 +342,12 @@ public class JDBCDriver implements GrillDriver {
     }
 
     QueryRewriter rewriter = getQueryRewriter(conf);
-    String rewrittenQuery = rewriter.rewrite(conf, query);
+    String rewrittenQuery = "";
+    try {
+      rewrittenQuery = rewriter.rewrite(conf, query);
+    } catch (SemanticException ex) {
+      LOG.warn(ex.getCause());
+    }
     if (LOG.isDebugEnabled()) {
       LOG.debug("Query: " + query + " rewrittenQuery: " + rewrittenQuery);
     }

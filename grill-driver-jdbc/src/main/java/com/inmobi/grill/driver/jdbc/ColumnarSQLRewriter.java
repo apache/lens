@@ -502,9 +502,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
 
   public void buildQuery() throws SemanticException {
-
+    analyzeInternal();
     try {
-      analyzeInternal();
       CubeMetastoreClient client = CubeMetastoreClient
           .getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
       replaceWithUnderlyingStorage(fromAST, client);
@@ -632,7 +631,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public synchronized String rewrite(Configuration conf, String query)
-      throws GrillException {
+      throws GrillException,SemanticException {
     this.query = query;
     this.conf = conf;
     StringBuilder mergedQuery = new StringBuilder();
@@ -647,7 +646,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         for (int i = 0; i < queries.length; i++) {
           LOG.info("Union Query Part " + i + " : " + queries[i]);
           ast = HQLParser.parseHQL(queries[i]);
-          buildQuery();
+          buildQuery(); 
           mergedQuery = rewrittenQuery.append(" union all ");
           finalRewrittenQuery = mergedQuery.toString().substring(0,
               mergedQuery.lastIndexOf("union all"));
@@ -658,14 +657,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       } else {
         ast = HQLParser.parseHQL(query);
-        buildQuery();
+        buildQuery(); 
         queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
         LOG.info("Input Query : " + query);
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
     } catch (ParseException e) {
-      e.printStackTrace();
-    } catch (SemanticException e) {
       e.printStackTrace();
     }
     return queryReplacedUdf;
