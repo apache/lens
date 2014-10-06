@@ -342,12 +342,7 @@ public class JDBCDriver implements GrillDriver {
     }
 
     QueryRewriter rewriter = getQueryRewriter(conf);
-    String rewrittenQuery = "";
-    try {
-      rewrittenQuery = rewriter.rewrite(conf, query);
-    } catch (SemanticException ex) {
-      LOG.warn(ex.getCause());
-    }
+    String rewrittenQuery = rewriter.rewrite(conf, query);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Query: " + query + " rewrittenQuery: " + rewrittenQuery);
     }

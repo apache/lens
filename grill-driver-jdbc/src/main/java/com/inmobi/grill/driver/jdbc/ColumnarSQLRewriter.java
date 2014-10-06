@@ -194,7 +194,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     if (node == null) {
       return;
     }
-    try {
       int rootType = node.getToken().getType();
       String rightTable = "";
 
@@ -232,12 +231,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         }
 
         joinCondition.append(" ").append(joinType).append(" ")
-            .append(rightTable).append(" on ").append(joinFilter).append(" ");
+        .append(rightTable).append(" on ").append(joinFilter).append(" ");
 
       }
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+
     for (int i = 0; i < node.getChildCount(); i++) {
       ASTNode child = (ASTNode) node.getChild(i);
       getJoinCond(child);
@@ -501,16 +498,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * Construct the rewritten query using trees
    */
 
-  public void buildQuery() throws SemanticException {
+  public void buildQuery() throws SemanticException,HiveException  {
     analyzeInternal();
-    try {
-      CubeMetastoreClient client = CubeMetastoreClient
-          .getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
-      replaceWithUnderlyingStorage(fromAST, client);
-      fromTree = HQLParser.getString(fromAST);
-    } catch (HiveException exc) {
-      LOG.error("Error replacing DB & column names", exc);
-    }
+    CubeMetastoreClient client = CubeMetastoreClient
+        .getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
+    replaceWithUnderlyingStorage(fromAST, client);
+    fromTree = HQLParser.getString(fromAST);
 
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST);
@@ -631,7 +624,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public synchronized String rewrite(Configuration conf, String query)
-      throws GrillException,SemanticException {
+      throws GrillException {
     this.query = query;
     this.conf = conf;
     StringBuilder mergedQuery = new StringBuilder();
@@ -663,7 +656,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
     } catch (ParseException e) {
-      e.printStackTrace();
+      throw new GrillException(e);
+    } catch (SemanticException e) {
+      throw new GrillException(e);
+    } catch (HiveException e) {
+      throw new GrillException(e);
     }
     return queryReplacedUdf;
   }
@@ -671,7 +668,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   // Replace Grill database names with storage's proper DB and table name based
   // on table properties.
   protected void replaceWithUnderlyingStorage(ASTNode tree,
-      CubeMetastoreClient metastoreClient) {
+      CubeMetastoreClient metastoreClient) throws HiveException {
     if (tree == null) {
       return;
     }
@@ -680,7 +677,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       // If it has two children, the first one is the DB name and second one is
       // table identifier
       // Else, we have to add the DB name as the first child
-      try {
+
         if (tree.getChildCount() == 2) {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
@@ -718,9 +715,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             tree.insertChild(0, dbIdentifier);
           }
         }
-      } catch (HiveException exc) {
-        LOG.error("Error replacing db & table names", exc);
-      }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
         replaceWithUnderlyingStorage((ASTNode) tree.getChild(i),

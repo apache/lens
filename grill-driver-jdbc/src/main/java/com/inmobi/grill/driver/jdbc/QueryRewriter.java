@@ -26,5 +26,5 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 public interface QueryRewriter {
-  public String rewrite(Configuration conf, String query) throws GrillException,SemanticException;
+  public String rewrite(Configuration conf, String query) throws GrillException;
 }
