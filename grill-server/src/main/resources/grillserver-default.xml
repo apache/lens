@@ -477,7 +477,7 @@
   <name>grill.server.user.resolver.db.query</name>
   <value>select clusteruser,queue from user_config_table where username=?</value>
   <description>For database based user config loader, this query will be run with single argument = logged in user
-      and the result columns will be assigned to grill.server.user.resolver.db.keys in order.
+    and the result columns will be assigned to grill.server.user.resolver.db.keys in order.
       For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.
   </description>
 </property>
@@ -541,4 +541,25 @@
   <value></value>
   <description>ldap port to connect to.</description>
 </property>
+
+<property>
+    <name>grill.server.service.provider.factory</name>
+    <value>com.inmobi.grill.server.ServiceProviderFactoryImpl</value>
+    <final>true</final>
+    <description>Service provider factory implementation class. This parameter is used
+    to lookup the factory implementation class name that would provide an 
+    instance of ServiceProvider. Users should instantiate the class to obtain its instance.
+    
+    Example 
+    -- 
+    Class spfClass 
+				= conf.getClass("grill.server.service.provider.factory",
+      	null, ServiceProviderFactory.class);
+
+    ServiceProviderFactory spf = spfClass.newInstance();
+		ServiceProvider serviceProvider = spf.getServiceProvider();
+		--   
+    This is not supposed to be overridden by users.</description>
+</property>
+
 </configuration>

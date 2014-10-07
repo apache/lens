@@ -39,6 +39,7 @@ import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -383,10 +384,18 @@ public class JDBCDriver implements GrillDriver {
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     
-    QueryResult result = executeInternal(explainQueryCtx,explainQuery);
-    if (result.error != null) {
-      throw new GrillException("Query explain failed!", result.error);
-    } 
+    QueryResult result = null;
+    try {
+    	result = executeInternal(explainQueryCtx, explainQuery);
+    	if (result.error != null) {
+        throw new GrillException("Query explain failed!", result.error);
+      }
+    } finally {
+    	if (result != null) {
+    		result.close();
+    	}
+    }
+    
     return new JDBCQueryPlan();
   } 
     

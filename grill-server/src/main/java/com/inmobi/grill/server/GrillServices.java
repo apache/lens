@@ -27,6 +27,7 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
+import com.inmobi.grill.server.api.ServiceProvider;
 import com.inmobi.grill.server.stats.StatisticsService;
 import com.inmobi.grill.server.user.UserConfigLoaderFactory;
 import lombok.Getter;
@@ -47,7 +48,7 @@ import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.cli.CLIService;
 
-public class GrillServices extends CompositeService {
+public class GrillServices extends CompositeService implements ServiceProvider {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);
 
   public static final String GRILL_SERVICES_NAME = "grill_services";
@@ -246,6 +247,7 @@ public class GrillServices extends CompositeService {
     return INSTANCE;
   }
 
+  @Override
   @SuppressWarnings("unchecked")
   public <T extends Service> T getService(String sName) {
     return (T) services.get(sName);
