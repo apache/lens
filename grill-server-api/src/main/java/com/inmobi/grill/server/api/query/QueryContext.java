@@ -71,11 +71,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String queryName;
 
   public QueryContext(String query, String user, Configuration conf) {
-    this(query, user, new GrillConf(), conf, query, null);
+    this(query, user, new GrillConf(), conf, query, null, new Date().getTime());
   }
 
   public QueryContext(String query, String user, GrillConf qconf, Configuration conf) {
-    this(query, user, qconf, conf, query, null);
+    this(query, user, qconf, conf, query, null, new Date().getTime());
   }
 
   public QueryContext(PreparedQueryContext prepared, String user, 
@@ -86,31 +86,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   public QueryContext(PreparedQueryContext prepared, String user, GrillConf qconf,
       Configuration conf) {
     this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf),
-        prepared.getDriverQuery(), prepared.getSelectedDriver());
+        prepared.getDriverQuery(), prepared.getSelectedDriver(), new Date().getTime());
   }
 
   public QueryContext(String query, String user, Configuration conf, long submissionTime) {
     this(query, user, new GrillConf(), conf, query, null, submissionTime);
-  }
-
-  private QueryContext(String userQuery, String user, GrillConf qconf,
-      Configuration conf,
-      String driverQuery, GrillDriver selectedDriver) {
-    this.submissionTime = new Date().getTime();
-    this.queryHandle = new QueryHandle(UUID.randomUUID());
-    this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
-    this.priority = Priority.NORMAL;
-    this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
-        GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
-    this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
-        GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
-    this.userQuery = userQuery;
-    this.submittedUser = user;
-    this.driverQuery = driverQuery;
-    this.selectedDriver = selectedDriver;
-    this.qconf = qconf;
-    this.driverStatus = new DriverQueryStatus();
   }
 
   public QueryContext(String userQuery, String user, GrillConf qconf,
