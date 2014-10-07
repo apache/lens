@@ -20,6 +20,12 @@ package com.inmobi.grill.server.util;
  * #L%
  */
 
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+
+import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 
 public class UtilityMethods {
@@ -35,5 +41,35 @@ public class UtilityMethods {
       username = username.substring(0, username.indexOf("@"));
     }
     return username;
+  }
+  public static boolean anyNull(Object... args) {
+    for(Object arg: args) {
+      if(arg == null) {
+        return true;
+      }
+    }
+    return false;
+  }
+  public static String[] queryDatabase(DataSource ds, String querySql, final boolean allowNull, Object... args) throws SQLException {
+    QueryRunner runner = new QueryRunner(ds);
+    return runner.query(querySql, new ResultSetHandler<String[]>() {
+      @Override
+      public String[] handle(ResultSet resultSet) throws SQLException {
+        String[] result = new String[resultSet.getMetaData().getColumnCount()];
+        if(!resultSet.next()) {
+          if(allowNull){
+            return null;
+          }
+          throw new SQLException("no rows retrieved in query");
+        }
+        for(int i=1; i <= resultSet.getMetaData().getColumnCount(); i++) {
+          result[i - 1] = resultSet.getString(i);
+        }
+        if(resultSet.next()) {
+          throw new SQLException("more than one row retrieved in query");
+        }
+        return result;
+      }
+    }, args);
   }
 }

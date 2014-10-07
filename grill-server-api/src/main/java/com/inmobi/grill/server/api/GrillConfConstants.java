@@ -103,6 +103,19 @@ public class GrillConfConstants {
   public static final String GRILL_SERVER_USER_RESOLVER_DB_KEYS = "grill.server.user.resolver.db.keys";
   public static final String GRILL_SERVER_USER_RESOLVER_DB_QUERY = "grill.server.user.resolver.db.query";
   public static final String GRILL_SERVER_USER_RESOLVER_CUSTOM_CLASS = "grill.server.user.resolver.custom.class";
+  public static final String GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY = "grill.server.user.resolver.cache.expiry";
+  public static final String GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE = "grill.server.user.resolver.cache.max_size";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_HOST = "grill.server.user.resolver.ldap.host";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_PORT = "grill.server.user.resolver.ldap.port";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_QUERY = "grill.server.user.resolver.ldap.intermediate.db.query";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_FIELDS = "grill.server.user.resolver.ldap.fields";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL = "grill.server.user.resolver.ldap.intermediate.db.insert.sql";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_DELETE_SQL = "grill.server.user.resolver.ldap.intermediate.db.delete.sql";;
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_BIND_DN = "grill.server.user.resolver.ldap.bind.dn";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_BIND_PASSWORD = "grill.server.user.resolver.ldap.bind.password";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_BASE = "grill.server.user.resolver.ldap.search.base";
+  public static final String GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_FILTER = "grill.server.user.resolver.ldap.search.filter";
+
 
   public static String getServiceImplConfKey(String sName) {
     return GRILL_PFX + sName + GRILL_SERVICE_IMPL_SFX;

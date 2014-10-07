@@ -82,7 +82,7 @@ public class TestUserConfigLoader {
     });
   }
 
-  public void setupHsqlDb(String dbName, String path) throws SQLException, LiquibaseException {
+  public void setupHsqlDb(String dbName, String path, String changeLogPath) throws SQLException, LiquibaseException {
     Server server = new Server();
     server.setLogWriter(new PrintWriter(System.out));
     server.setErrWriter(new PrintWriter(System.out));
@@ -91,7 +91,7 @@ public class TestUserConfigLoader {
     server.setDatabasePath(0, "file:" + path);
     server.start();
     BasicDataSource ds = DatabaseUserConfigLoader.getDataSourceFromConf(conf);
-    Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource("/user/db_changelog.xml").getFile(),
+    Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
       new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
     liquibase.dropAll();
     liquibase.update("");
@@ -103,7 +103,7 @@ public class TestUserConfigLoader {
     String dbName = "main";
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/database.xml"));
     UserConfigLoaderFactory.init(conf);
-    setupHsqlDb(dbName, path);
+    setupHsqlDb(dbName, path, "/user/db_changelog.xml");
     String[][] valuesToVerify = new String[][] {
       {"user1", "clusteruser1", "queue12"},
       {"user2", "clusteruser2", "queue12"},
@@ -119,6 +119,28 @@ public class TestUserConfigLoader {
       });
     }
   }
+
+  @Test
+  public void testLDAPBackedDatabase() throws GrillException, SQLException, LiquibaseException {
+    String path = "target/ldap_backed_userconfig_hsql.db";
+    String dbName = "main";
+    conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/ldap_backed_database.xml"));
+    UserConfigLoaderFactory.init(conf);
+    setupHsqlDb(dbName, path, "/user/ldap_backed_db_changelog.xml");
+    String[][] valuesToVerify = new String[][] {
+      {"rajat.khandelwal", "rajatk", "queue12"},
+      {"rajat.khandelwal", "rajatk", "queue12"},
+    };
+    for(final String[] sa: valuesToVerify) {
+      Assert.assertEquals(UserConfigLoaderFactory.getUserConfig(sa[0]), new HashMap<String, String>() {
+        {
+          put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, sa[1]);
+          put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, sa[2]);
+        }
+      });
+    }
+  }
+
   @Test
   public void testCustom() throws GrillException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/custom.xml"));
