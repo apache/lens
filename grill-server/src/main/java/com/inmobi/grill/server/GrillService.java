@@ -28,6 +28,8 @@ import com.inmobi.grill.server.session.GrillSessionImpl;
 
 import com.inmobi.grill.server.user.UserConfigLoaderFactory;
 import com.inmobi.grill.server.util.UtilityMethods;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -43,6 +45,7 @@ import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
 import java.io.Externalizable;
@@ -82,6 +85,9 @@ public abstract class GrillService extends CompositeService implements Externali
 
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
+    if (StringUtils.isBlank(username)) {
+      throw new BadRequestException("User name cannot be null");
+    }
     SessionHandle sessionHandle;
     username = UtilityMethods.removeDomain(username);
     doPasswdAuth(username, password);
@@ -188,18 +194,17 @@ public abstract class GrillService extends CompositeService implements Externali
     return cliService.getSessionManager();
   }
 
-  public GrillSessionImpl getSession(GrillSessionHandle sessionHandle) throws GrillException {
+  public GrillSessionImpl getSession(GrillSessionHandle sessionHandle) {
     try {
       return ((GrillSessionImpl)getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
       LOG.warn("Session not found", exc);
       throw new NotFoundException("Session not found " + sessionHandle);
-    } catch (Exception e) {
-      throw new GrillException (e);
     }
   }
 
-  public void acquire(GrillSessionHandle sessionHandle) throws GrillException {
+  public void acquire(GrillSessionHandle sessionHandle) {
+    LOG.info("Acquiring grill session:" + sessionHandle.getPublicId());
     getSession(sessionHandle).acquire();
   }
 
@@ -208,12 +213,13 @@ public abstract class GrillService extends CompositeService implements Externali
    * @param sessionHandle public UUID of the session
    * @throws GrillException if session cannot be acquired
    */
-  public void acquire(String sessionHandle) throws GrillException {
-    getSession(sessionMap.get(sessionHandle)).acquire();
+  public void acquire(String sessionHandle) {
+    acquire(sessionMap.get(sessionHandle));
   }
 
-  public void release(GrillSessionHandle sessionHandle) throws GrillException {
+  public void release(GrillSessionHandle sessionHandle) {
     getSession(sessionHandle).release();
+    LOG.info("Released grill session:" + sessionHandle.getPublicId());
   }
 
   /**

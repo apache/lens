@@ -56,30 +56,34 @@ public class HiveSessionService extends GrillService {
     super(NAME, cliService);
   }
 
-  public void addResource(GrillSessionHandle sessionid, String type, String path) {
-    addResource(sessionid, type, path, true);
+  public int addResourceToAllServices(GrillSessionHandle sessionid, String type, String path) {
+    int numAdded = 0;
+    boolean error = false;
+    for (GrillService service : GrillServices.get().getGrillServices()) {
+      try {
+        service.addResource(sessionid,  type, path);
+        numAdded++;
+      } catch (GrillException e) {
+        LOG.error("Failed to add resource in service:" + service, e);
+        error = true;
+        break;
+      }
+    }
+    if (!error) {
+      getSession(sessionid).addResource(type, path);
+    }
+    return numAdded;
   }
 
-  private void addResource(GrillSessionHandle sessionid, String type, String path, boolean addToSession) {
+  public void addResource(GrillSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
       getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
-
-      if (addToSession) {
-        getSession(sessionid).addResource(type, path);
-      }
-
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
-    } catch (GrillException e) {
-      throw new WebApplicationException(e);
     } finally {
-      try {
-        release(sessionid);
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
-      }
+      release(sessionid);
     }
   }
 
@@ -91,14 +95,8 @@ public class HiveSessionService extends GrillService {
       getSession(sessionid).removeResource(type, path);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
-    } catch (GrillException e) {
-      throw new WebApplicationException(e);
     } finally {
-      try {
-        release(sessionid);
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
-      }
+      release(sessionid);
     }
   }
 
@@ -128,12 +126,13 @@ public class HiveSessionService extends GrillService {
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     GrillSessionHandle sessionid = super.openSession(username, password, configuration);
+    LOG.info("Opened session " + sessionid + " for user " + username);
     // add auxuiliary jars
     String[] auxJars = getSession(sessionid).getSessionConf().getStrings(GrillConfConstants.AUX_JARS);
     if (auxJars != null) {
       LOG.info("Adding aux jars:" + auxJars);
       for (String jar : auxJars) {
-        addResource(sessionid, "jar", jar);
+        addResourceToAllServices(sessionid, "jar", jar);
       }
     }
     return sessionid;
@@ -143,11 +142,11 @@ public class HiveSessionService extends GrillService {
       boolean verbose, String key) throws GrillException {
     List<String> result = new ArrayList<String>();
     acquire(sessionid);
-    SessionState ss = getSession(sessionid).getSessionState();
-    if (!StringUtils.isBlank(key)) {
-      result.add(getSessionParam(getSession(sessionid).getSessionConf(), ss, key));
-    } else {
-      try {
+    try {
+      SessionState ss = getSession(sessionid).getSessionState();
+      if (!StringUtils.isBlank(key)) {
+        result.add(getSessionParam(getSession(sessionid).getSessionConf(), ss, key));
+      } else {
         SortedMap<String, String> sortedMap = new TreeMap<String, String>();
         sortedMap.put("silent", (ss.getIsSilent() ? "on" : "off"));
         for (String s : ss.getHiveVariables().keySet()) {
@@ -160,15 +159,9 @@ public class HiveSessionService extends GrillService {
         for (Map.Entry<String, String> entry : sortedMap.entrySet()) {
           result.add(entry.toString());
         }
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
-      } finally {
-        try {
-          release(sessionid);
-        } catch (GrillException e) {
-          throw new WebApplicationException(e);
-        }
       }
+    } finally {
+      release(sessionid);
     }
     return result;
   }
@@ -199,14 +192,8 @@ public class HiveSessionService extends GrillService {
       LOG.info("Set param key:" + key + " value:" + value);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
-    } catch (GrillException e) {
-      throw new WebApplicationException(e);
     } finally {
-      try {
-        release(sessionid);
-      } catch (GrillException e) {
-        throw new WebApplicationException(e);
-      }
+      release(sessionid);
     }
   }
 
@@ -236,7 +223,7 @@ public class HiveSessionService extends GrillService {
         // Add resources for restored sessions
         for (GrillSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
           try {
-            addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation(), false);
+            addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation());
           } catch (Exception e) {
             LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
             throw new RuntimeException(e);
@@ -272,12 +259,8 @@ public class HiveSessionService extends GrillService {
     // Write out all the sessions
     out.writeInt(sessionMap.size());
     for (GrillSessionHandle sessionHandle : sessionMap.values()) {
-      try {
         GrillSessionImpl session = getSession(sessionHandle);
         session.getGrillSessionPersistInfo().writeExternal(out);
-      } catch (GrillException e) {
-        throw new IOException(e);
-      }
     }
     LOG.info("Session service pesristed " + sessionMap.size() + " sessions");
   }
@@ -322,8 +305,6 @@ public class HiveSessionService extends GrillService {
             itr.remove();
           }
         } catch (NotFoundException nfe) {
-          itr.remove();
-        } catch (GrillException e) {
           itr.remove();
         }
       }

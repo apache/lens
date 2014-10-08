@@ -217,6 +217,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getClusterUser() {
-    return conf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER);
+    return conf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, submittedUser);
   }
 }

@@ -154,21 +154,13 @@ public class SessionResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult addResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
-    int numAdded = 0;
-    for (GrillService service : GrillServices.get().getGrillServices()) {
-      try {
-        service.addResource(sessionid,  type, path);
-        numAdded++;
-      } catch (GrillException e) {
-        LOG.error("Failed to add resource in service:" + service, e);
-        if (numAdded != 0) { 
-          return new APIResult(Status.PARTIAL,
-              "Add resource is partial, failed for service:" + service.getName());
-        } else {
-          return new APIResult(Status.FAILED,
-              "Add resource has failed ");          
-        }
-      }
+    int numAdded = sessionService.addResourceToAllServices(sessionid, type, path);
+    if (numAdded == 0) {
+      return new APIResult(Status.FAILED,
+          "Add resource has failed ");
+    } else if (numAdded != GrillServices.get().getGrillServices().size()) {
+      return new APIResult(Status.PARTIAL,
+          "Add resource is partial");
     }
     return new APIResult(Status.SUCCEEDED,
         "Add resource succeeded");
