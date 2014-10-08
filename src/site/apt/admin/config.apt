@@ -98,7 +98,7 @@ Grill server configuration
 *--+--+---+--+
 |37|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|38|grill.server.service.provider.factory|com.inmobi.grill.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an     instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example     --     Class spfClass 				= conf.getClass("grill.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
+|38|grill.server.service.provider.factory|com.inmobi.grill.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an    instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example    --    Class spfClass 				= conf.getClass("grill.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
 *--+--+---+--+
 |39|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
@@ -110,43 +110,43 @@ Grill server configuration
 *--+--+---+--+
 |43|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|44|grill.server.user.resolver.custom.class|full.package.name.Classname|In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader  |
+|44|grill.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver.      In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader  |
 *--+--+---+--+
-|45|grill.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|For database based user config loaders, the database driver class|
+|45|grill.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the database driver class|
 *--+--+---+--+
-|46|grill.server.user.resolver.db.jdbc.password| |For database based user config loaders, the jdbc password|
+|46|grill.server.user.resolver.db.jdbc.password| |Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the jdbc password|
 *--+--+---+--+
-|47|grill.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/grill_user_config_loader.db|For database based user config loaders, jdbc url of the database|
+|47|grill.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/grill_user_config_loader.db|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, jdbc url of the database|
 *--+--+---+--+
-|48|grill.server.user.resolver.db.jdbc.username|SA|For database based user config loaders, the jdbc username|
+|48|grill.server.user.resolver.db.jdbc.username|SA|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the jdbc username|
 *--+--+---+--+
-|49|grill.server.user.resolver.db.keys|grill.session.cluster.user,mapred.job.queue.name|For database based user config loaders, the conf keys that will be loaded from database.|
+|49|grill.server.user.resolver.db.keys|grill.session.cluster.user,mapred.job.queue.name|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the conf keys that will be loaded from database.|
 *--+--+---+--+
-|50|grill.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|For database based user config loader, this query will be run with single argument = logged in user    and the result columns will be assigned to grill.server.user.resolver.db.keys in order.      For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.  |
+|50|grill.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loader, this query will be run with single argument = logged in user      and the result columns will be assigned to grill.server.user.resolver.db.keys in order.      For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.  |
 *--+--+---+--+
-|51|grill.server.user.resolver.fixed.value| |when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
+|51|grill.server.user.resolver.fixed.value| |Required for FIXED user resolver.      when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
 *--+--+---+--+
-|52|grill.server.user.resolver.ldap.bind.dn| |ldap dn for admin binding      example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...  |
+|52|grill.server.user.resolver.ldap.bind.dn| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap dn for admin binding      example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...  |
 *--+--+---+--+
-|53|grill.server.user.resolver.ldap.bind.password| |ldap password for admin binding above|
+|53|grill.server.user.resolver.ldap.bind.password| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap password for admin binding above|
 *--+--+---+--+
-|54|grill.server.user.resolver.ldap.fields|department|list of fields to be obtained from ldap. These will be cached by the intermediate db.|
+|54|grill.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers.      list of fields to be obtained from ldap. These will be cached by the intermediate db.|
 *--+--+---+--+
-|55|grill.server.user.resolver.ldap.host| |ldap host to connect to. only hostname/ip.|
+|55|grill.server.user.resolver.ldap.host| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap host to connect to. only hostname/ip.|
 *--+--+---+--+
-|56|grill.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|query to delete intermediate values from database backing ldap as cache.      one argument: logged in user.  |
+|56|grill.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers.      query to delete intermediate values from database backing ldap as cache.      one argument: logged in user.  |
 *--+--+---+--+
-|57|grill.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|query to insert intermediate values from database backing ldap as cache.      arguments: first logged in user, then all intermediate values, then current time + expiration time  |
+|57|grill.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers.      query to insert intermediate values from database backing ldap as cache.      arguments: first logged in user, then all intermediate values, then current time + expiration time  |
 *--+--+---+--+
-|58|grill.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|query to obtain intermediate values from database backing ldap as cache.      two arguments: logged in user and current time.  |
+|58|grill.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers.      query to obtain intermediate values from database backing ldap as cache.      two arguments: logged in user and current time.  |
 *--+--+---+--+
-|59|grill.server.user.resolver.ldap.port| |ldap port to connect to.|
+|59|grill.server.user.resolver.ldap.port| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap port to connect to.|
 *--+--+---+--+
-|60|grill.server.user.resolver.ldap.search.base| |for searching intermediate values for a user, the search keys.      example: cn=users,dc=dc1,dc=dc2...  |
+|60|grill.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers.      for searching intermediate values for a user, the search keys.      example: cn=users,dc=dc1,dc=dc2...  |
 *--+--+---+--+
-|61|grill.server.user.resolver.ldap.search.filter|sAMAccountName|filter key for ldap search|
+|61|grill.server.user.resolver.ldap.search.filter|sAMAccountName|Required for LDAP_BACKED_DATABASE user resolvers.      filter key for ldap search|
 *--+--+---+--+
-|62|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
+|62|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver.      when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
 *--+--+---+--+
 |63|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
 *--+--+---+--+
