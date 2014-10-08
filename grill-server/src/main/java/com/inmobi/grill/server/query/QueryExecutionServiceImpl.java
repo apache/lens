@@ -963,7 +963,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           throw new NotFoundException("Query not found " + queryHandle);
         }
         QueryContext finishedCtx = new QueryContext(
-            query.getUserQuery(), query.getSubmitter(), conf);
+            query.getUserQuery(), query.getSubmitter(), conf, query.getSubmissionTime());
         finishedCtx.setQueryHandle(queryHandle);
         finishedCtx.setEndTime(query.getEndTime());
         finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0,

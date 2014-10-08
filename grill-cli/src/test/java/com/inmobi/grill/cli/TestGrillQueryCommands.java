@@ -84,6 +84,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     testExplainQuery(qCom);
     testPreparedQuery(qCom);
     testShowPersistentResultSet(qCom);
+    testPurgedFinishedResultSet(qCom);
   }
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
@@ -239,4 +240,30 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     }
     System.out.println("@@END_PERSISTENT_RESULT_TEST-------------");
   }
+
+  private void testPurgedFinishedResultSet(GrillQueryCommands qCom) {
+    System.out.println("@@START_FINISHED_PURGED_RESULT_TEST-------------");
+    client.setConnectionParam("grill.max.finished.queries", "0");
+    client.setConnectionParam("grill.persistent.resultset","true");
+    String query = "cube select id,name from test_dim";
+    try {
+      String qh = qCom.executeQuery(query, true, "testQuery");
+      while(!client.getQueryStatus(qh).isFinished()) {
+        Thread.sleep(5000);
+      }
+      Assert.assertTrue(qCom.getStatus(qh).contains("Status : SUCCESSFUL"));
+
+      String result = qCom.getQueryResults(qh);
+      System.out.println("@@ RESULT " + result);
+      Assert.assertNotNull(result);
+
+      //This is to check for positive processing time
+      Assert.assertFalse(result.contains("(-"));
+    } catch (Exception exc) {
+      exc.printStackTrace();
+      Assert.fail("Exception not expected: " + exc.getMessage());
+    }
+    System.out.println("@@END_FINISHED_PURGED_RESULT_TEST-------------");
+  }
+
 }
