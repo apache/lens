@@ -589,8 +589,8 @@ public class HiveDriver implements GrillDriver {
   private SessionHandle getSession(QueryContext ctx) throws GrillException {
     sessionLock.lock();
     try {
-      String grillSession = null;
-      if (SessionState.get() != null) {
+      String grillSession = ctx.getGrillSessionIdentifier();
+      if (grillSession == null && SessionState.get() != null) {
         grillSession = SessionState.get().getSessionId();
       }
 
@@ -601,9 +601,9 @@ public class HiveDriver implements GrillDriver {
       SessionHandle hiveSession;
       if (!grillToHiveSession.containsKey(grillSession)) {
         try {
-          hiveSession = getClient().openSession(SessionState.get().getUserName(), "");
+          hiveSession = getClient().openSession(ctx.getClusterUser(), "");
           grillToHiveSession.put(grillSession, hiveSession);
-          LOG.info("New hive session for user: " + SessionState.get().getUserName() +
+          LOG.info("New hive session for user: " + ctx.getClusterUser() +
               ", grill session: " + grillSession + " session handle: " +
               hiveSession.getHandleIdentifier());
           for (GrillEventListener<DriverEvent> eventListener : driverListeners) {

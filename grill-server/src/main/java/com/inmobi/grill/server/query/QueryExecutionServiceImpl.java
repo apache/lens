@@ -1544,12 +1544,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     DriverSessionStarted sessionStarted = (DriverSessionStarted) event;
     if (!(event.getDriver() instanceof HiveDriver)) {
       return;
-}
+    }
 
     HiveDriver hiveDriver = (HiveDriver) event.getDriver();
 
     String grillSession = sessionStarted.getGrillSessionID();
     GrillSessionHandle sessionHandle = getSessionHandle(grillSession);
+    if (sessionHandle == null) {
+      LOG.warn("Grill session went away for sessionid:" + grillSession);
+      return;
+    }
     try {
       GrillSessionImpl session = getSession(sessionHandle);
       acquire(sessionHandle);
@@ -1570,15 +1574,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       } else {
         LOG.info("No resources to restore for session " + grillSession);
       }
-    } catch (GrillException e) {
+    } catch (Exception e) {
       LOG.warn("Grill session went away! " + grillSession + " driver session: "
         + ((DriverSessionStarted) event).getDriverSessionID(), e);
     } finally {
-      try {
-        release(sessionHandle);
-      } catch (GrillException e) {
-        LOG.error("Error releasing session " + sessionHandle, e);
-      }
+      release(sessionHandle);
     }
   }
 }
