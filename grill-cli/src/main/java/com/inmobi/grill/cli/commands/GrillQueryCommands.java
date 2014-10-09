@@ -133,8 +133,16 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
       help = "Status of queries to be listed") String state,
       @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName,
       @CliOption(key = {"user"}, mandatory = false,
-        help = "user name. Use 'all' to get queries of all users") String user) {
-    List<QueryHandle> handles = getClient().getQueries(state, queryName, user);
+        help = "user name. Use 'all' to get queries of all users") String user,
+      @CliOption(key = {"fromDate"}, mandatory = false, unspecifiedDefaultValue = "-1",
+        help = "start time to filter queries by submission time") long fromDate,
+      @CliOption(key = {"toDate"}, mandatory = false, unspecifiedDefaultValue = "-1",
+        help = "end time to filter queries by submission time") long toDate) {
+
+    if (toDate == -1L) {
+      toDate = Long.MAX_VALUE;
+    }
+    List<QueryHandle> handles = getClient().getQueries(state, queryName, user, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {
@@ -168,9 +176,16 @@ public class GrillQueryCommands extends  BaseGrillCommand implements CommandMark
   @CliCommand(value = "prepQuery list", help = "Get all prepared queries")
   public String getAllPreparedQueries(
     @CliOption(key = {"user"}, mandatory = false, help = "user name") String userName,
-    @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName
-  ) {
-    List<QueryPrepareHandle> handles = getClient().getPreparedQueries(userName, queryName);
+    @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName,
+    @CliOption(key = {"fromDate"}, mandatory = false, unspecifiedDefaultValue = "-1",
+      help = "start time to filter queries by submission time") long fromDate,
+    @CliOption(key = {"toDate"}, mandatory = false, unspecifiedDefaultValue = "-1",
+      help = "end time to filter queries by submission time") long toDate) {
+
+    if (toDate == -1L) {
+      toDate = Long.MAX_VALUE;
+    }
+    List<QueryPrepareHandle> handles = getClient().getPreparedQueries(userName, queryName, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
       return Joiner.on("\n").skipNulls().join(handles);
     } else {

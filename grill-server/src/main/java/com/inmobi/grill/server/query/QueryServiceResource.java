@@ -115,6 +115,8 @@ public class QueryServiceResource {
    * otherwise all the queries will be returned
    * @param user Returns queries submitted by this user. If set to "all", returns queries of all users. By default, returns
    *             queries of the current user.
+   * @param fromDate from date to search queries in a time range
+   * @param toDate to date to search queries in a time range
    * @return List of {@link QueryHandle} objects
    */
   @GET
@@ -123,10 +125,15 @@ public class QueryServiceResource {
   public List<QueryHandle> getAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
       @DefaultValue("") @QueryParam("queryName") String queryName,
-      @DefaultValue("") @QueryParam("user") String user) {
+      @DefaultValue("") @QueryParam("user") String user,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     try {
-      return queryServer.getAllQueries(sessionid, state, user, queryName);
+      if (toDate == -1L) {
+        toDate = Long.MAX_VALUE;
+      }
+      return queryServer.getAllQueries(sessionid, state, user, queryName, fromDate, toDate);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -216,13 +223,15 @@ public class QueryServiceResource {
   public APIResult cancelAllQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("state") String state,
       @DefaultValue("") @QueryParam("user") String user,
-      @DefaultValue("") @QueryParam("queryName") String queryName) {
+      @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numCancelled = 0;
     List<QueryHandle> handles = null;
     boolean failed = false;
     try {
-      handles = getAllQueries(sessionid, state, queryName, user);
+      handles = getAllQueries(sessionid, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
       for (QueryHandle handle : handles) {
         if (cancelQuery(sessionid, handle)) {
           numCancelled++;
@@ -256,6 +265,8 @@ public class QueryServiceResource {
    * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
    *             of the current user.
    * @param queryName returns queries matching the query name
+   * @param fromDate start time for filtering prepared queries by preparation time
+   * @param toDate end time for filtering prepared queries by preparation time
    * @return List of QueryPrepareHandle objects
    */
   @GET
@@ -263,10 +274,15 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryPrepareHandle> getAllPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user,
-      @DefaultValue("") @QueryParam("queryName") String queryName) {
+      @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     try {
-      return queryServer.getAllPreparedQueries(sessionid, user, queryName);
+      if (toDate == -1L) {
+        toDate = Long.MAX_VALUE;
+      }
+      return queryServer.getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
@@ -336,13 +352,15 @@ public class QueryServiceResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult destroyPreparedQueries(@QueryParam("sessionid") GrillSessionHandle sessionid,
       @DefaultValue("") @QueryParam("user") String user,
-      @DefaultValue("") @QueryParam("queryName") String queryName) {
+      @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     checkSessionId(sessionid);
     int numDestroyed = 0;
     boolean failed = false;
     List<QueryPrepareHandle> handles = null;
     try {
-      handles = getAllPreparedQueries(sessionid, user, queryName);
+      handles = getAllPreparedQueries(sessionid, user, queryName, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
       for (QueryPrepareHandle prepared : handles) {
         if (destroyPrepared(sessionid, prepared)) {
           numDestroyed++;

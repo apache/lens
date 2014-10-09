@@ -159,7 +159,8 @@ public class GrillServerDAO {
     return null;
   }
 
-  public List<QueryHandle> findFinishedQueries(String state, String user, String queryName) throws GrillException {
+  public List<QueryHandle> findFinishedQueries(String state, String user, String queryName, long fromDate, long toDate)
+    throws GrillException {
     boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
     List<Object> params = null;
@@ -183,6 +184,9 @@ public class GrillServerDAO {
         params.add("%" + queryName + "%");
       }
 
+      filters.add("submissiontime BETWEEN ? AND ?");
+      params.add(fromDate);
+      params.add(toDate);
       builder.append(StringUtils.join(filters, " AND "));
     }
 
