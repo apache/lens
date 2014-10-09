@@ -82,7 +82,7 @@ public class TestUserConfigLoader {
     });
   }
 
-  public void setupHsqlDb(String dbName, String path) throws SQLException, LiquibaseException {
+  public void setupHsqlDb(String dbName, String path, String changeLogPath) throws SQLException, LiquibaseException {
     Server server = new Server();
     server.setLogWriter(new PrintWriter(System.out));
     server.setErrWriter(new PrintWriter(System.out));
@@ -91,7 +91,7 @@ public class TestUserConfigLoader {
     server.setDatabasePath(0, "file:" + path);
     server.start();
     BasicDataSource ds = DatabaseUserConfigLoader.getDataSourceFromConf(conf);
-    Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource("/user/db_changelog.xml").getFile(),
+    Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
       new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
     liquibase.dropAll();
     liquibase.update("");
@@ -103,7 +103,7 @@ public class TestUserConfigLoader {
     String dbName = "main";
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/database.xml"));
     UserConfigLoaderFactory.init(conf);
-    setupHsqlDb(dbName, path);
+    setupHsqlDb(dbName, path, "/user/db_changelog.xml");
     String[][] valuesToVerify = new String[][] {
       {"user1", "clusteruser1", "queue12"},
       {"user2", "clusteruser2", "queue12"},
@@ -119,6 +119,7 @@ public class TestUserConfigLoader {
       });
     }
   }
+
   @Test
   public void testCustom() throws GrillException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/custom.xml"));

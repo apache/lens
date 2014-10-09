@@ -679,9 +679,9 @@ public class TestQueryService extends GrillJerseyTest {
 
     GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
-        ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
-        ctx.getStatus().getStatus().equals(Status.RUNNING) ||
-        ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
+      ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
+      ctx.getStatus().getStatus().equals(Status.RUNNING) ||
+      ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
@@ -691,8 +691,14 @@ public class TestQueryService extends GrillJerseyTest {
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-
-    List<WiserMessage> messages = wiser.getMessages();
+    List<WiserMessage> messages = new ArrayList<WiserMessage>();
+    for(int i = 0; i < 20; i++) {
+      messages = wiser.getMessages();
+      if(messages.size() > 0) {
+        break;
+      }
+      Thread.sleep(10000);
+    }
     Assert.assertEquals(messages.size(), 1);
     Assert.assertTrue(messages.get(0).toString().contains(handle.toString()));
     wiser.stop();
@@ -995,9 +1001,9 @@ public class TestQueryService extends GrillJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(),
         "300000"));
     mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
-        MediaType.APPLICATION_XML_TYPE));
+      FormDataContentDisposition.name("conf").fileName("conf").build(),
+      new GrillConf(),
+      MediaType.APPLICATION_XML_TYPE));
 
     QueryHandleWithResultSet result = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandleWithResultSet.class);
@@ -1018,11 +1024,11 @@ public class TestQueryService extends GrillJerseyTest {
         "execute_with_timeout"));
     // set a timeout value enough for tests
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(),
-        "300000"));
+      "300000"));
     mp2.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        conf,
-        MediaType.APPLICATION_XML_TYPE));
+      FormDataContentDisposition.name("conf").fileName("conf").build(),
+      conf,
+      MediaType.APPLICATION_XML_TYPE));
 
     result = target.request().post(
         Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandleWithResultSet.class);

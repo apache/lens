@@ -458,6 +458,28 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
+        <groupId>org.subethamail</groupId>
+        <artifactId>subethasmtp</artifactId>
+        <version>3.1.7</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.mail</groupId>
+        <artifactId>mail</artifactId>
+        <version>1.4</version>
+      </dependency>
+      <dependency>
+        <groupId>org.liquibase</groupId>
+        <artifactId>liquibase-maven-plugin</artifactId>
+        <version>3.0.7</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>2.0</version>
+      </dependency>
+       <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-service</artifactId>
         <version>${hive.version}</version>

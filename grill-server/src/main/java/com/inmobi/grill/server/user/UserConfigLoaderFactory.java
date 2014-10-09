@@ -39,6 +39,7 @@ public class UserConfigLoaderFactory {
     FIXED,
     PROPERTYBASED,
     DATABASE,
+    LDAP_BACKED_DATABASE,
     CUSTOM
   }
   public static UserConfigLoader initializeUserConfigLoader() {
@@ -59,6 +60,8 @@ public class UserConfigLoaderFactory {
         return new PropertyBasedUserConfigLoader(conf);
       case DATABASE:
         return new DatabaseUserConfigLoader(conf);
+      case LDAP_BACKED_DATABASE:
+        return new LDAPBackedDatabaseUserConfigLoader(conf);
       case CUSTOM:
         return new CustomUserConfigLoader(conf);
       case FIXED :
