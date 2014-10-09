@@ -132,60 +132,58 @@ Grill server configuration
 *--+--+---+--+
 |54|grill.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers.      list of fields to be obtained from ldap. These will be cached by the intermediate db.|
 *--+--+---+--+
-|55|grill.server.user.resolver.ldap.host| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap host to connect to. only hostname/ip.|
+|55|grill.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers.      query to delete intermediate values from database backing ldap as cache.      one argument: logged in user.  |
 *--+--+---+--+
-|56|grill.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers.      query to delete intermediate values from database backing ldap as cache.      one argument: logged in user.  |
+|56|grill.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers.      query to insert intermediate values from database backing ldap as cache.      arguments: first logged in user, then all intermediate values, then current time + expiration time  |
 *--+--+---+--+
-|57|grill.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers.      query to insert intermediate values from database backing ldap as cache.      arguments: first logged in user, then all intermediate values, then current time + expiration time  |
+|57|grill.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers.      query to obtain intermediate values from database backing ldap as cache.      two arguments: logged in user and current time.  |
 *--+--+---+--+
-|58|grill.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers.      query to obtain intermediate values from database backing ldap as cache.      two arguments: logged in user and current time.  |
+|58|grill.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers.      for searching intermediate values for a user, the search keys.      example: cn=users,dc=dc1,dc=dc2...  |
 *--+--+---+--+
-|59|grill.server.user.resolver.ldap.port| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap port to connect to.|
+|59|grill.server.user.resolver.ldap.search.filter|(&(objectClass=user)(sAMAccountName=%s))|Required for LDAP_BACKED_DATABASE user resolvers.      filter pattern for ldap search|
 *--+--+---+--+
-|60|grill.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers.      for searching intermediate values for a user, the search keys.      example: cn=users,dc=dc1,dc=dc2...  |
+|60|grill.server.user.resolver.ldap.url| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap url to connect to.|
 *--+--+---+--+
-|61|grill.server.user.resolver.ldap.search.filter|sAMAccountName|Required for LDAP_BACKED_DATABASE user resolvers.      filter key for ldap search|
+|61|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver.      when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
 *--+--+---+--+
-|62|grill.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver.      when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. example schema of the file is:      user1, user2, user3 = clusteruser1      user4, user5 = clusteruser2      * = clusteruser3  |
+|62|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
 *--+--+---+--+
-|63|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
+|63|grill.serverMode.ws.filter.impl|com.inmobi.grill.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
-|64|grill.serverMode.ws.filter.impl|com.inmobi.grill.server.ServerModeFilter|Implementation class for ServerMode Filter|
+|64|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|65|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
+|65|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|66|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|66|grill.session.ws.resource.impl|com.inmobi.grill.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
-|67|grill.session.ws.resource.impl|com.inmobi.grill.server.session.SessionResource|Implementation class for Session Resource|
+|67|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
-|68|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
+|68|grill.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|69|grill.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
+|69|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
 *--+--+---+--+
-|70|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
+|70|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|71|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+|71|grill.ws.featurenames|multipart|These JAX-RS Feature(s) would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|72|grill.ws.featurenames|multipart|These JAX-RS Feature(s) would be started in the specified order when grill-server starts up|
+|72|grill.ws.filternames|authentication,consistentState,serverMode|These JAX-RS filters would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|73|grill.ws.filternames|authentication,consistentState,serverMode|These JAX-RS filters would be started in the specified order when grill-server starts up|
+|73|grill.ws.listenernames|appevent|These listeners would be called in the specified order when grill-server starts up|
 *--+--+---+--+
-|74|grill.ws.listenernames|appevent|These listeners would be called in the specified order when grill-server starts up|
+|74|grill.ws.resourcenames|session,metastore,query,quota,scheduler,index|These JAX-RS resources would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|75|grill.ws.resourcenames|session,metastore,query,quota,scheduler,index|These JAX-RS resources would be started in the specified order when grill-server starts up|
+|75|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
 *--+--+---+--+
-|76|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the grill directly. Grill uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
+|76|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
 *--+--+---+--+
-|77|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
+|77|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
 *--+--+---+--+
-|78|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
+|78|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
 *--+--+---+--+
-|79|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
+|79|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
 *--+--+---+--+
-|80|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
+|80|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
 *--+--+---+--+
-|81|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
-*--+--+---+--+
-|82|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server sessions. There are no logs required for each session in grill sessions. This will decrease number of file handles associated to grill server.|
+|81|hive.server2.log.redirection.enabled|false|Disable the log direction on the grill server sessions. There are no logs required for each session in grill sessions. This will decrease number of file handles associated to grill server.|
 *--+--+---+--+
 The configuration parameters and their default values

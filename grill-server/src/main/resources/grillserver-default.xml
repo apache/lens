@@ -544,21 +544,15 @@
 </property>
 <property>
   <name>grill.server.user.resolver.ldap.search.filter</name>
-  <value>sAMAccountName</value>
+  <value>(&amp;(objectClass=user)(sAMAccountName=%s))</value>
   <description>Required for LDAP_BACKED_DATABASE user resolvers.
-      filter key for ldap search</description>
+      filter pattern for ldap search</description>
 </property>
 <property>
-  <name>grill.server.user.resolver.ldap.host</name>
+  <name>grill.server.user.resolver.ldap.url</name>
   <value></value>
   <description>Required for LDAP_BACKED_DATABASE user resolvers.
-      ldap host to connect to. only hostname/ip.</description>
-</property>
-<property>
-  <name>grill.server.user.resolver.ldap.port</name>
-  <value></value>
-  <description>Required for LDAP_BACKED_DATABASE user resolvers.
-      ldap port to connect to.</description>
+      ldap url to connect to.</description>
 </property>
 
 <property>

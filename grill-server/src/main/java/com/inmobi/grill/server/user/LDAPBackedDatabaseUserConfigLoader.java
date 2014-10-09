@@ -24,15 +24,21 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.inmobi.grill.server.api.GrillConfConstants;
 import com.inmobi.grill.server.util.UtilityMethods;
-import com.novell.ldap.*;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.naming.Context;
+import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
+import javax.naming.directory.SearchControls;
+import javax.naming.directory.SearchResult;
+import javax.naming.ldap.InitialLdapContext;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -47,16 +53,19 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
   private final String intermediateInsertSql;
   private final static DateTimeFormatter outputFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:SS").withZoneUTC();
   private final int expiryHours;
-  private final LDAPAccess access;
+  private final String searchBase;
+  private final String searchFilterPattern;
+  private final InitialLdapContext ctx;
 
-  public LDAPBackedDatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
+  public LDAPBackedDatabaseUserConfigLoader(final HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    access = new LDAPAccess(hiveConf);
     expiryHours = conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY, 2);
     intermediateQuerySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_QUERY);
     intermediateDeleteSql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_DELETE_SQL);
     intermediateInsertSql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL);
     ldapFields = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_FIELDS).split("\\s*,\\s*");
+    searchBase = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_BASE);
+    searchFilterPattern = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_FILTER);
     intermediateCache = CacheBuilder
       .newBuilder()
       .expireAfterWrite(expiryHours, TimeUnit.HOURS)
@@ -65,6 +74,45 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
       .newBuilder()
       .expireAfterWrite(expiryHours, TimeUnit.HOURS)
       .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+
+    Hashtable<String, Object> env = new Hashtable<String, Object>(){
+      {
+        put(Context.SECURITY_AUTHENTICATION, "simple");
+        put(Context.SECURITY_PRINCIPAL, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_DN));
+        put(Context.SECURITY_CREDENTIALS, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_PASSWORD));
+        put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
+        put(Context.PROVIDER_URL, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_URL));
+        put("java.naming.ldap.attributes.binary", "objectSID");
+      }
+    };
+    try {
+      ctx = new InitialLdapContext(env, null);
+    } catch (NamingException e) {
+      throw new UserConfigLoaderException(e);
+    }
+  }
+
+  protected SearchResult findAccountByAccountName(String accountName) throws NamingException {
+    String searchFilter = String.format(searchFilterPattern, accountName);
+    SearchControls searchControls = new SearchControls();
+    searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
+    NamingEnumeration<SearchResult> results = ctx.search(searchBase, searchFilter, searchControls);
+    if(!results.hasMoreElements()) {
+      throw new UserConfigLoaderException("LDAP Search returned no accounts");
+    }
+    SearchResult searchResult = results.nextElement();
+    if(results.hasMoreElements()) {
+      throw new UserConfigLoaderException("More than one account found in ldap search");
+    }
+    return searchResult;
+  }
+  public String[] getAttributes(String user) throws NamingException {
+    String[] attributes = new String[ldapFields.length];
+    SearchResult sr = findAccountByAccountName(user);
+    for(int i = 0; i < attributes.length; i++) {
+      attributes[i] = sr.getAttributes().get(ldapFields[i]).get().toString();
+    }
+    return attributes;
   }
 
   @Override
@@ -76,7 +124,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
           String[] config = UtilityMethods.queryDatabase(ds, intermediateQuerySql, true,
             loggedInUser, Timestamp.valueOf(DateTime.now().toString(outputFormatter)));
           if(config == null) {
-            config = access.getAttributes(loggedInUser, ldapFields);
+            config = getAttributes(loggedInUser);
             Object[] updateArray = new Object[config.length + 2];
             for(int i = 0; i < config.length; i++) {
               updateArray[i + 1] = config[i];
@@ -109,52 +157,6 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
       });
     } catch (ExecutionException e) {
       throw new UserConfigLoaderException(e);
-    }
-  }
-  static class LDAPAccess {
-    private final LDAPConnection conn;
-    private final String searchBase;
-    private final String searchFilter;
-
-    public LDAPAccess(HiveConf conf) {
-      searchBase = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_BASE);
-      searchFilter = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_FILTER);
-      conn = new LDAPConnection(new LDAPJSSESecureSocketFactory());
-      try {
-        conn.connect(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_HOST),
-          conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_PORT, -1));
-        conn.bind(LDAPConnection.LDAP_V3,
-          conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_DN),
-          conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_PASSWORD).getBytes()
-        );
-      } catch (LDAPException e) {
-        throw new UserConfigLoaderException(e);
-      }
-    }
-
-    public boolean userExists(String username) throws LDAPException{
-      LDAPSearchResults searchResults = conn.search(searchBase, LDAPConnection.SCOPE_ONE, searchFilter + "=" + username, null, false);
-      return (searchResults != null && searchResults.hasMore());
-    }
-
-    public String[] getAttributes(String username, String... keys) throws LDAPException {
-      LDAPSearchResults searchResults = conn.search(searchBase, LDAPConnection.SCOPE_ONE, searchFilter + "=" + username, null, false);
-      if (searchResults != null && searchResults.hasMore()) {
-        String[] values = new String[keys.length];
-        LDAPEntry entry = searchResults.next();
-        for(int i = 0; i < keys.length; i++) {
-          values[i] = entry.getAttribute(keys[i]) == null ? null : entry.getAttribute(keys[i]).getStringValue();
-        }
-        return values;
-      } else {
-        return null;
-      }
-    }
-
-    public void close() throws LDAPException {
-      if (conn != null) {
-        conn.disconnect();
-      }
     }
   }
 }
