@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.BadRequestException;
 import java.io.*;
 import java.net.URL;
 import java.util.UUID;
@@ -88,12 +89,13 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   }
 
   private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
+    long submitTime = System.currentTimeMillis();
     String sql = "cube select id, name from test_dim";
-    String result = qCom.getAllPreparedQueries("all", "testPreparedName");
+    String result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
 
     Assert.assertEquals("No prepared queries", result);
-    String qh = qCom.prepare(sql, "testPreparedName");
-    result = qCom.getAllPreparedQueries("all", "testPreparedName");
+    final String qh = qCom.prepare(sql, "testPreparedName");
+    result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, System.currentTimeMillis());
     Assert.assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
@@ -123,13 +125,13 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
 
-    result = qCom.explainAndPrepare(sql, "testPrepQuery3");
-    Assert.assertTrue(result.contains(explainPlan));
-    qh = qCom.getAllPreparedQueries("all", "testPrepQuery3");
-    Assert.assertTrue(result.contains("Prepare handle:"+ qh));
-    result = qCom.destroyPreparedQuery(qh);
-    Assert.assertEquals("Successfully destroyed " + qh, result);
+    final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
+    Assert.assertTrue(qh2.contains(explainPlan));
+    String handles = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, Long.MAX_VALUE);
+    Assert.assertFalse(handles.contains("No prepared queries"), handles);
 
+    String handles2 = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, submitTime - 1);
+    Assert.assertFalse(handles2.contains(qh), handles2);
   }
 
   private void testExplainQuery(GrillQueryCommands qCom) throws Exception {
@@ -144,15 +146,16 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
   private void testExecuteAsyncQuery(GrillQueryCommands qCom) throws Exception {
     System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
     String sql = "cube select id,name from test_dim";
+    long submitTime = System.currentTimeMillis();
     String qh = qCom.executeQuery(sql, true, "testQuery1");
     String user =
       qCom.getClient().getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
-    String result = qCom.getAllQueries("", "testQuery1", user);
+    String result = qCom.getAllQueries("", "testQuery1", user, -1, Long.MAX_VALUE);
     //this is because previous query has run two query handle will be there
     Assert.assertTrue(result.contains(qh), result);
 
     // Check that query name searching is 'ilike'
-    String result2 = qCom.getAllQueries("", "query", "all");
+    String result2 = qCom.getAllQueries("", "query", "all", -1, Long.MAX_VALUE);
     Assert.assertTrue(result2.contains(qh), result2);
 
 
@@ -166,10 +169,10 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertTrue(result.contains("1\tfirst"));
     //Kill query is not tested as there is no deterministic way of killing a query
 
-    result = qCom.getAllQueries("SUCCESSFUL","", "all");
+    result = qCom.getAllQueries("SUCCESSFUL","", "all", -1, Long.MAX_VALUE);
     Assert.assertTrue(result.contains(qh), result);
 
-    result = qCom.getAllQueries("FAILED","", "all");
+    result = qCom.getAllQueries("FAILED","", "all", -1, Long.MAX_VALUE);
     if (!result.contains("No queries")) {
       // Make sure valid query handles are returned
       String[] handles = StringUtils.split(result, "\n");
@@ -181,14 +184,27 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     String queryName =
       client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
     Assert.assertTrue("testQuery1".equalsIgnoreCase(queryName), queryName);
-    result = qCom.getAllQueries("", "", "");
+    result = qCom.getAllQueries("", "", "", submitTime, System.currentTimeMillis());
     Assert.assertTrue(result.contains(qh), result);
 
-    result = qCom.getAllQueries("","fooBar", "all");
+    result = qCom.getAllQueries("","fooBar", "all", submitTime, System.currentTimeMillis());
     Assert.assertTrue(result.contains("No queries"), result);
 
-    result = qCom.getAllQueries("SUCCESSFUL","", "all");
+    result = qCom.getAllQueries("SUCCESSFUL","", "all", submitTime, System.currentTimeMillis());
     Assert.assertTrue(result.contains(qh));
+
+    result = qCom.getAllQueries("SUCCESSFUL","", "all", submitTime - 5000, submitTime - 1);
+    // should not give query since its not in the range
+    Assert.assertFalse(result.contains(qh));
+
+    try {
+      // Should fail with bad request since fromDate > toDate
+      result = qCom.getAllQueries("SUCCESSFUL", "", "all", submitTime + 5000, submitTime);
+      Assert.fail("Call should have failed with BadRequestException, instead got " + result);
+    } catch (BadRequestException exc) {
+      // pass
+    }
+
     System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
   }
 

@@ -1164,8 +1164,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle,
                                          String state,
                                          String userName,
-                                         String queryName)
+                                         String queryName,
+                                         long fromDate,
+                                         long toDate)
       throws GrillException {
+    validateTimeRange(fromDate, toDate);
     userName = UtilityMethods.removeDomain(userName);
     try {
       acquire(sessionHandle);
@@ -1189,9 +1192,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       while (itr.hasNext()) {
         QueryHandle q = itr.next();
         QueryContext context = allQueries.get(q);
+        long querySubmitTime = context.getSubmissionTime();
         if ((filterByStatus && status != context.getStatus().getStatus())
             || (filterByQueryName && !context.getQueryName().toLowerCase().contains(queryName))
             || (!"all".equalsIgnoreCase(userName) && !userName.equalsIgnoreCase(context.getSubmittedUser()))
+            || (!(fromDate <= querySubmitTime && querySubmitTime <= toDate))
             ) {
           itr.remove();
         }
@@ -1203,7 +1208,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           userName = null;
         }
         List<QueryHandle> persistedQueries =
-          grillServerDao.findFinishedQueries(state, userName, queryName);
+          grillServerDao.findFinishedQueries(state, userName, queryName, fromDate, toDate);
         if (persistedQueries != null && !persistedQueries.isEmpty()) {
           LOG.info("Adding persisted queries " + persistedQueries.size());
           all.addAll(persistedQueries);
@@ -1219,8 +1224,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   @Override
   public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle,
                                                         String user,
-                                                        String queryName)
+                                                        String queryName,
+                                                        long fromDate,
+                                                        long toDate)
       throws GrillException {
+    validateTimeRange(fromDate, toDate);
     user = UtilityMethods.removeDomain(user);
     try {
       acquire(sessionHandle);
@@ -1243,11 +1251,22 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             continue;
           }
         }
+        long queryPrepTime = preparedQueryContext.getPreparedTime().getTime();
+        if (fromDate <= queryPrepTime && queryPrepTime <= toDate) {
+          continue;
+        }
+
         itr.remove();
       }
       return allPrepared;
     } finally {
       release(sessionHandle);
+    }
+  }
+
+  private void validateTimeRange(long fromDate, long toDate) {
+    if (fromDate >= toDate) {
+      throw new BadRequestException("Invalid time range: [" + fromDate + ", " + toDate + "]");
     }
   }
 
