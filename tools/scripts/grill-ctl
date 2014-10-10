@@ -99,9 +99,7 @@ start() {
 
     LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/protobuf-java-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
     LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
-    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/share/hadoop/hdfs/lib/protobuf-java-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
 
     COMMON_JARS=`ls ${HADOOP_HOME}/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`

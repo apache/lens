@@ -460,7 +460,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       // Create a non queryable cube
       final XCube qcube = createTestCube("testNoQueryCube");
       XProperty xp = new XProperty();
-      xp.setName(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE);
+      xp.setName(MetastoreConstants.CUBE_CAN_BE_QUERIED);
       xp.setValue("false");
       qcube.getProperties().getProperties().add(xp);
 
