@@ -422,65 +422,137 @@
 <property>
   <name>grill.server.user.resolver.type</name>
   <value>FIXED</value>
-  <description>Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, CUSTOM.</description>
+  <description>Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.</description>
 </property>
 
 <property>
   <name>grill.server.user.resolver.fixed.value</name>
   <value></value>
-  <description>when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.</description>
+  <description>Required for FIXED user resolver.
+      when grill.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.</description>
 </property>
 
 <property>
   <name>grill.server.user.resolver.propertybased.filename</name>
   <value>/path/to/propertyfile</value>
-  <description>when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to
+  <description>Required for PROPERTYBASED user resolver.
+      when grill.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to
       determine cluster user. example schema of the file is:
       user1, user2, user3 = clusteruser1
       user4, user5 = clusteruser2
       * = clusteruser3
   </description>
 </property>
-
+<property>
+  <name>grill.server.user.resolver.custom.class</name>
+  <value>full.package.name.Classname</value>
+  <description>Required for CUSTOM user resolver.
+      In case the provided implementations are not sufficient for user config resolver,
+      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader
+  </description>
+</property>
 <property>
   <name>grill.server.user.resolver.db.driver.name</name>
   <value>org.hsqldb.jdbcDriver</value>
-  <description>For database based user config loader, the database driver class</description>
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loaders, the database driver class</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.jdbc.url</name>
   <value>jdbc:hsqldb:/tmp/grill_user_config_loader.db</value>
-  <description>For database based user config loader, jdbc url of the database</description>
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loaders, jdbc url of the database</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.jdbc.username</name>
   <value>SA</value>
-  <description>For database based user config loader, the jdbc username</description>
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loaders, the jdbc username</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.jdbc.password</name>
   <value></value>
-  <description>For database based user config loader, the jdbc password</description>
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loaders, the jdbc password</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.keys</name>
   <value>grill.session.cluster.user,mapred.job.queue.name</value>
-  <description>For database based user config loader, the conf keys that will be loaded from database.</description>
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loaders, the conf keys that will be loaded from database.</description>
 </property>
 <property>
   <name>grill.server.user.resolver.db.query</name>
   <value>select clusteruser,queue from user_config_table where username=?</value>
-  <description>For database based user config loader, this query will be run with single argument = logged in user
-    and the result columns will be assigned to grill.server.user.resolver.db.keys in order.
+  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
+      For database based user config loader, this query will be run with single argument = logged in user
+      and the result columns will be assigned to grill.server.user.resolver.db.keys in order.
+      For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.
   </description>
 </property>
-
 <property>
-  <name>grill.server.user.resolver.custom.class</name>
-  <value>full.package.name.Classname</value>
-  <description>In case the provided implementations are not sufficient for user config resolver,
-      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader
+  <name>grill.server.user.resolver.ldap.intermediate.db.query</name>
+  <value>select department from user_department where username=? and expiry>?</value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      query to obtain intermediate values from database backing ldap as cache.
+      two arguments: logged in user and current time.
   </description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.intermediate.db.delete.sql</name>
+  <value>delete from user_department where username=?</value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      query to delete intermediate values from database backing ldap as cache.
+      one argument: logged in user.
+  </description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.intermediate.db.insert.sql</name>
+  <value>insert into user_department (username, department, expiry) values (?, ?, ?)</value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      query to insert intermediate values from database backing ldap as cache.
+      arguments: first logged in user, then all intermediate values, then current time + expiration time
+  </description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.fields</name>
+  <value>department</value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      list of fields to be obtained from ldap. These will be cached by the intermediate db.</description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.bind.dn</name>
+  <value></value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      ldap dn for admin binding
+      example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...
+  </description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.bind.password</name>
+  <value></value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      ldap password for admin binding above</description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.search.base</name>
+  <value></value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      for searching intermediate values for a user, the search keys.
+      example: cn=users,dc=dc1,dc=dc2...
+  </description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.search.filter</name>
+  <value>(&amp;(objectClass=user)(sAMAccountName=%s))</value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      filter pattern for ldap search</description>
+</property>
+<property>
+  <name>grill.server.user.resolver.ldap.url</name>
+  <value></value>
+  <description>Required for LDAP_BACKED_DATABASE user resolvers.
+      ldap url to connect to.</description>
 </property>
 
 <property>
@@ -488,11 +560,11 @@
     <value>com.inmobi.grill.server.ServiceProviderFactoryImpl</value>
     <final>true</final>
     <description>Service provider factory implementation class. This parameter is used
-    to lookup the factory implementation class name that would provide an 
+    to lookup the factory implementation class name that would provide an
     instance of ServiceProvider. Users should instantiate the class to obtain its instance.
     
-    Example 
-    -- 
+    Example
+    --
     Class spfClass 
 				= conf.getClass("grill.server.service.provider.factory",
       	null, ServiceProviderFactory.class);

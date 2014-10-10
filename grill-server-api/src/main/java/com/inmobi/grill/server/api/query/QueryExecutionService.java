@@ -20,6 +20,7 @@ package com.inmobi.grill.server.api.query;
  * #L%
  */
 
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.Response;
@@ -216,12 +217,16 @@ public interface QueryExecutionService {
    * @param state return queries in this state. if null, all queries will be returned
    * @param queryName return queries containing the query name. If null, all queries will be returned
    * @param user Get queries submitted by a specific user. If this set to "all", queries of all users are returned
+   * @param fromDate start date of time range interval
+   * @param toDate end date of the time range interval
    * @return List of query handles
    */
   public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle,
                                          String state,
                                          String user,
-                                         String queryName)
+                                         String queryName,
+                                         long fromDate,
+                                         long toDate)
       throws GrillException;
 
   /**
@@ -231,9 +236,12 @@ public interface QueryExecutionService {
    * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
    *             of the current user.
    * @param queryName returns queries matching the query name
+   * @param fromDate start time for filtering prepared queries by preparation time
+   * @param toDate end time for filtering prepared queries by preparation time
    * @return List of query prepare handles
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user, String queryName)
+  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user, String queryName,
+                                                        long fromDate, long toDate)
       throws GrillException;
 
   /**

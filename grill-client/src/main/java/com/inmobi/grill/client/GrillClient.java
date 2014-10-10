@@ -175,8 +175,8 @@ public class GrillClient {
     return getGrillStatement(query).getResultSet();
   }
 
-  public List<QueryHandle> getQueries(String state, String queryName, String user) {
-    return new GrillStatement(conn).getAllQueries(state, queryName, user);
+  public List<QueryHandle> getQueries(String state, String queryName, String user, long fromDate, long toDate) {
+    return new GrillStatement(conn).getAllQueries(state, queryName, user, fromDate, toDate);
   }
 
 
@@ -476,8 +476,8 @@ public class GrillClient {
     return statement.destroyPrepared(queryPrepareHandle);
   }
 
-  public List<QueryPrepareHandle> getPreparedQueries(String userName, String queryName) {
-    return statement.getAllPreparedQueries(userName, queryName);
+  public List<QueryPrepareHandle> getPreparedQueries(String userName, String queryName, long fromDate, long toDate) {
+    return statement.getAllPreparedQueries(userName, queryName, fromDate, toDate);
   }
 
   public GrillPreparedQuery getPreparedQuery(QueryPrepareHandle phandle) {

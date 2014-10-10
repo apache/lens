@@ -20,21 +20,29 @@ package com.inmobi.grill.server.user;
  */
 
 import com.inmobi.grill.server.api.GrillConfConstants;
+import com.inmobi.grill.server.util.UtilityMethods;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.hadoop.hive.conf.HiveConf;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 public class DatabaseUserConfigLoader extends UserConfigLoader {
-  private final String querySql;
-  private final String[] keys;
-  private DataSource ds;
+  protected final String querySql;
+  protected final String[] keys;
+  protected final Cache<String, Map<String, String>> cache;
+  protected DataSource ds;
+
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
     String className = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME);
@@ -43,7 +51,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     String pass = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, "");
     querySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY);
     keys = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
-    if(anyNull(className, jdbcUrl, userName, pass, querySql, keys)) {
+    if(UtilityMethods.anyNull(className, jdbcUrl, userName, pass, querySql, keys)) {
       throw new UserConfigLoaderException("You need to specify all of the following in conf: ["
         + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME + ", "
         + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL + ", "
@@ -54,6 +62,10 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
       + "]");
     }
     ds = getDataSourceFromConf(conf);
+    cache = CacheBuilder
+      .newBuilder()
+      .expireAfterWrite(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+      .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   public static BasicDataSource getDataSourceFromConf(HiveConf conf) {
@@ -65,46 +77,33 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     return tmp;
   }
 
-  private boolean anyNull(Object... args) {
-    for(Object arg: args) {
-      if(arg == null) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   @Override
-  public Map<String, String> getUserConfig(String loggedInUser) throws UserConfigLoaderException {
-    QueryRunner runner = new QueryRunner(ds);
+  public Map<String, String> getUserConfig(final String loggedInUser) throws UserConfigLoaderException {
     try {
-      String[] config = runner.query(querySql, new ResultSetHandler<String[]>() {
+      return cache.get(loggedInUser, new Callable<Map<String, String>>() {
         @Override
-        public String[] handle(ResultSet resultSet) throws SQLException {
-          String[] result = new String[resultSet.getMetaData().getColumnCount()];
-          if(!resultSet.next()) {
-            throw new SQLException("no rows retrieved in query");
+        public Map<String, String> call() throws Exception {
+
+          try {
+            final String[] config = UtilityMethods.queryDatabase(ds, querySql, false, loggedInUser);
+            if(config.length != keys.length) {
+              throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") " +
+                "is not equal to the number of keys required(" + keys.length + ").");
+            }
+            return new HashMap<String, String>(){
+              {
+                for(int i = 0; i < keys.length; i++) {
+                  put(keys[i], config[i]);
+                }
+              }
+            };
+          } catch (SQLException e) {
+            throw new UserConfigLoaderException(e);
           }
-          for(int i=1; i <= resultSet.getMetaData().getColumnCount(); i++) {
-            result[i - 1] = resultSet.getString(i);
-          }
-          if(resultSet.next()) {
-            throw new SQLException("more than one row retrieved in query");
-          }
-          return result;
         }
-      }, loggedInUser);
-      if(config.length != keys.length) {
-        throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") " +
-          "is not equal to the number of keys required(" + keys.length + ").");
-      }
-      HashMap<String, String> userConfig = new HashMap<String, String>();
-      for(int i = 0; i < keys.length; i++) {
-        userConfig.put(keys[i], config[i]);
-      }
-      return userConfig;
-    } catch (SQLException e) {
-      throw new UserConfigLoaderException(e);
+      });
+    } catch (ExecutionException e) {
+        throw new UserConfigLoaderException(e);
     }
   }
 }

@@ -64,7 +64,7 @@ public class HiveSessionService extends GrillService {
         service.addResource(sessionid,  type, path);
         numAdded++;
       } catch (GrillException e) {
-        LOG.error("Failed to add resource in service:" + service, e);
+        LOG.error("Failed to add resource type:" + type + " path:" + path + " in service:" + service, e);
         error = true;
         break;
       }

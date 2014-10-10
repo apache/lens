@@ -245,26 +245,30 @@ public class GrillStatement {
   }
 
 
-  public List<QueryHandle> getAllQueries(String state, String queryName, String user) {
+  public List<QueryHandle> getAllQueries(String state, String queryName, String user, long fromDate, long toDate) {
     WebTarget target = getQueryWebTarget(ClientBuilder
         .newBuilder().register(MultiPartFeature.class).build());
     List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
       .queryParam("state", state)
       .queryParam("queryName", queryName)
       .queryParam("user", user)
+      .queryParam("fromDate", fromDate)
+      .queryParam("toDate", toDate)
       .request().get(
         new GenericType<List<QueryHandle>>() {
     });
     return handles;
   }
 
-  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName) {
+  public List<QueryPrepareHandle> getAllPreparedQueries(String userName, String queryName, long fromDate, long toDate) {
     Client client = ClientBuilder.newClient();
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid",
         connection.getSessionHandle())
       .queryParam("user", userName)
       .queryParam("queryName", queryName)
+      .queryParam("fromDate", fromDate)
+      .queryParam("toDate", toDate)
       .request().get(
         new GenericType<List<QueryPrepareHandle>>() {
         });

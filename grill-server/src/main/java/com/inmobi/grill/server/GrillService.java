@@ -86,7 +86,7 @@ public abstract class GrillService extends CompositeService implements Externali
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws GrillException {
     if (StringUtils.isBlank(username)) {
-      throw new BadRequestException("User name cannot be null");
+      throw new BadRequestException("User name cannot be null or empty");
     }
     SessionHandle sessionHandle;
     username = UtilityMethods.removeDomain(username);
@@ -198,13 +198,13 @@ public abstract class GrillService extends CompositeService implements Externali
     try {
       return ((GrillSessionImpl)getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
-      LOG.warn("Session not found", exc);
-      throw new NotFoundException("Session not found " + sessionHandle);
+      LOG.warn("Session " + sessionHandle.getPublicId() + " not found", exc);
+      throw new NotFoundException("Session " + sessionHandle.getPublicId() + " not found " + sessionHandle);
     }
   }
 
   public void acquire(GrillSessionHandle sessionHandle) {
-    LOG.info("Acquiring grill session:" + sessionHandle.getPublicId());
+    LOG.debug("Acquiring grill session:" + sessionHandle.getPublicId());
     getSession(sessionHandle).acquire();
   }
 
@@ -219,7 +219,7 @@ public abstract class GrillService extends CompositeService implements Externali
 
   public void release(GrillSessionHandle sessionHandle) {
     getSession(sessionHandle).release();
-    LOG.info("Released grill session:" + sessionHandle.getPublicId());
+    LOG.debug("Released grill session:" + sessionHandle.getPublicId());
   }
 
   /**

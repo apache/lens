@@ -90,11 +90,13 @@ public class QueryServiceUIResource {
   public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
                                          @DefaultValue("") @QueryParam("state") String state,
                                          @DefaultValue("") @QueryParam("user") String user,
-                                         @DefaultValue("") @QueryParam("queryName") String queryName) {
+                                         @DefaultValue("") @QueryParam("queryName") String queryName,
+                                         @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+                                         @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
-      return queryServer.getAllQueries(sessionHandle, state, queryName, user);
+      return queryServer.getAllQueries(sessionHandle, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
     } catch (GrillException e) {
       throw new WebApplicationException(e);
     }
