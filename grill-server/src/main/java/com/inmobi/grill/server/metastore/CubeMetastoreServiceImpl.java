@@ -1012,7 +1012,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       if (cubes != null && !cubes.isEmpty()) {
         List<String> names = new ArrayList<String>(cubes.size());
         for (CubeInterface cube : cubes) {
-          if (cube.canBeQueried()) {
+          if (cube.allFieldsQueriable()) {
             names.add(cube.getName());
           }
         }
