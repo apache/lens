@@ -142,12 +142,12 @@ start() {
 
   if [ -n "$opt_verbose" ] ; then
     JAVA_PROPERTIES="-Dgrillserver.root.logger=INFO,CONSOLE -Dgrillserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
-    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $*
+    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $*
   else 
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
-    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
     echo $! > $GRILL_PID_FILE
     popd > /dev/null
 

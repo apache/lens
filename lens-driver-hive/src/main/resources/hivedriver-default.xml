@@ -25,12 +25,12 @@
 
 <property>
   <name>grill.hive.connection.class</name>
-  <value>com.inmobi.grill.driver.hive.EmbeddedThriftConnection</value>
+  <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>
   <description>The connection class from HiveDriver to HiveServer. The default is
    an embedded connection which does not require a remote hive server.
    For connecting to a hiveserver end point, remote connection should be used. 
-  The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection
-   and com.inmobi.grill.driver.hive.RemoteThriftConnection. </description>
+  The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection
+   and org.apache.lens.driver.hive.RemoteThriftConnection. </description>
 </property>
 
 <property>

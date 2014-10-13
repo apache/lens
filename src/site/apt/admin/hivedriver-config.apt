@@ -30,7 +30,7 @@ Hive driver configuration
 *--+--+---+--+
 |3|cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|4|grill.hive.connection.class|com.inmobi.grill.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are com.inmobi.grill.driver.hive.EmbeddedThriftConnection   and com.inmobi.grill.driver.hive.RemoteThriftConnection. |
+|4|grill.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
 *--+--+---+--+
 |5|grill.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
 *--+--+---+--+

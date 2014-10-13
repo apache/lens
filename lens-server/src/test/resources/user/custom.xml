@@ -5,6 +5,6 @@
   </property>
   <property>
     <name>grill.server.user.resolver.custom.class</name>
-    <value>com.inmobi.grill.server.user.FooBarConfigLoader</value>
+    <value>org.apache.lens.server.user.FooBarConfigLoader</value>
   </property>
 </configuration>

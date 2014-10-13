@@ -48,7 +48,7 @@ Lens session configuration
 *--+--+---+--+
 |12|grill.query.output.footer| |The value of custom footer that should be written, if any. This footer will be added in formatting driver persisted results.|
 *--+--+---+--+
-|13|grill.query.output.formatter| |The query result output formatter for the query. If no value is specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
+|13|grill.query.output.formatter| |The query result output formatter for the query. If no value is specified, then org.apache.lens.lib.query.FileSerdeFormatter will be used to format in-memory result sets, org.apache.lens.lib.query.FilePersistentFormatter will be used to format driver persisted result sets.|
 *--+--+---+--+
 |14|grill.query.output.header| |The value of custom header that should be written, if any. If no value column names will be used as header.|
 *--+--+---+--+
@@ -68,7 +68,7 @@ Lens session configuration
 *--+--+---+--+
 |22|grill.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
 *--+--+---+--+
-|23|grill.result.output.serde|com.inmobi.grill.lib.query.CSVSerde|The default serde class name that should be used by  com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output  |
+|23|grill.result.output.serde|org.apache.lens.lib.query.CSVSerde|The default serde class name that should be used by  org.apache.lens.lib.query.FileSerdeFormatter for formatting the output  |
 *--+--+---+--+
 |24|grill.result.parent.dir|/tmp/grillreports|The directory for storing persisted result of query. This  directory should exist and should have writable permissions by grill server|
 *--+--+---+--+

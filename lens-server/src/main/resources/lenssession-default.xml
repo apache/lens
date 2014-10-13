@@ -72,16 +72,16 @@
   <name>grill.query.output.formatter</name>
   <value></value>
   <description>The query result output formatter for the query. If no value is
- specified, then com.inmobi.grill.lib.query.FileSerdeFormatter will be used to
- format in-memory result sets, com.inmobi.grill.lib.query.FilePersistentFormatter
+ specified, then org.apache.lens.lib.query.FileSerdeFormatter will be used to
+ format in-memory result sets, org.apache.lens.lib.query.FilePersistentFormatter
  will be used to format driver persisted result sets.</description>
 </property>
 
 <property>
   <name>grill.result.output.serde</name>
-  <value>com.inmobi.grill.lib.query.CSVSerde</value>
+  <value>org.apache.lens.lib.query.CSVSerde</value>
   <description>The default serde class name that should be used by 
- com.inmobi.grill.lib.query.FileSerdeFormatter for formatting the output
+ org.apache.lens.lib.query.FileSerdeFormatter for formatting the output
   </description>
 </property>
 
