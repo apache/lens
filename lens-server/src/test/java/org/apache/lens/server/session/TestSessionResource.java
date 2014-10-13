@@ -211,7 +211,7 @@ public class TestSessionResource extends GrillJerseyTest {
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
         "file"));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        "target/test-classes/grill-site.xml"));
+        "target/test-classes/lens-site.xml"));
     APIResult result = resourcetarget.path("add").request().put(
         Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
