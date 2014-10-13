@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,19 +17,19 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Installing and running grill
+Installing and running lens
 
 %{toc|section=1|fromDepth=0}
 
-* Building Grill from source
+* Building Lens from source
 
   Here are the commands to build from source.
 
 +---+
 
-   git clone https://github.com/InMobi/grill
+   git clone https://github.com/InMobi/lens
 
-   cd grill
+   cd lens
 
    git checkout develop
 
@@ -37,11 +37,11 @@ Installing and running grill
    
 +---+
 
-  Once above package command completes successfully, <grill-dist/target> will have <grill-dist-${project.version}-server> and <grill-client-dist/target> will have <grill-client-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <grill-client-dist/target> and <grill-dist/target>, respectively.
+  Once above package command completes successfully, <lens-dist/target> will have <lens-dist-${project.version}-server> and <lens-client-dist/target> will have <lens-client-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <lens-client-dist/target> and <lens-dist/target>, respectively.
 
-* Installing and running grill-server
+* Installing and running lens-server
 
-  Use can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/grill> and </usr/local/grill-client> respectively.
+  Use can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/lens> and </usr/local/lens-client> respectively.
 
   Let us go over how the install looks, in the subsections below.
 
@@ -52,11 +52,11 @@ Installing and running grill
 +---+
 
   ├── bin
-  │   ├── grill-config.sh
-  │   └── grill-ctl
+  │   ├── lens-config.sh
+  │   └── lens-ctl
   ├── conf
-  │   ├── grill-env.sh
-  │   ├── grill-site.xml
+  │   ├── lens-env.sh
+  │   ├── lens-site.xml
   │   ├── hive-site.xml
   │   └── log4j.properties
   ├── lib
@@ -68,14 +68,14 @@ Installing and running grill
   …….
   │   └── zookeeper-3.4.5.jar
   └── webapp
-      └── grill-server.war
+      └── lens-server.war
 +---+
 
-  The <bin> folder provides <grill-ctl> which provides commands for starting and stopping the grill server. Other .sh files in <bin> are the scripts used by grill-ctl.
+  The <bin> folder provides <lens-ctl> which provides commands for starting and stopping the lens server. Other .sh files in <bin> are the scripts used by lens-ctl.
 
   The server war is available in webapp/ folder, which would be expanded in the same directory, if not overridden. And the lib folder contains all the dependent libraries.
 
-  Server configuration can be overridden in grill-site.xml. See {{{../admin/config.html}server configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in grill-env.sh.
+  Server configuration can be overridden in lens-site.xml. See {{{../admin/config.html}server configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
   The server logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
 
@@ -92,11 +92,11 @@ Installing and running grill
 
 +---+
 
-  bin/grill-ctl start
+  bin/lens-ctl start
 
 +---+
 
-  Once the server is up, you can go to the browser and open the server <baseurl>. You would see a message saying ‘Grill server is up’.
+  Once the server is up, you can go to the browser and open the server <baseurl>. You would see a message saying ‘Lens server is up’.
 
   To check all other services are up and running, try <baseurl>/session, <baseurl>/queryapi, <baseurl>/metastore and all of them will respond with respective service is up.
 
@@ -106,7 +106,7 @@ Installing and running grill
 
 +---+
 
-  bin/grill-ctl stop
+  bin/lens-ctl stop
 
 +---+
 
@@ -116,12 +116,12 @@ Installing and running grill
 
 +---+
   ├── bin
-  │   ├── grill-cli.sh
-  │   ├── grill-config.sh
+  │   ├── lens-cli.sh
+  │   ├── lens-config.sh
   │   └── run-examples.sh
   ├── conf
-  │   ├── grill-client-site.xml
-  │   ├── grill-env.sh
+  │   ├── lens-client-site.xml
+  │   ├── lens-env.sh
   │   └── log4j.properties
   ├── examples
   │   ├── data
@@ -158,11 +158,11 @@ Installing and running grill
 
     * <<run-examples.sh>> provides commands to run examples - create a sample metastore, populate metastore with sample data and run some example queries. This would validate your server is all up and running fine.
 
-    * <<grill-cli.sh>> provides CLI shell for running various commands. Its usage is more described in CLI user guide.
+    * <<lens-cli.sh>> provides CLI shell for running various commands. Its usage is more described in CLI user guide.
     
-    * <<grill-config.sh>> is used internally by other scripts
+    * <<lens-config.sh>> is used internally by other scripts
     
-  Client configuration can be overridden in grill-client-site.xml. See {{{../user/client-config.html}client configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in grill-env.sh.
+  Client configuration can be overridden in lens-client-site.xml. See {{{../user/client-config.html}client configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
   The client logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
   
