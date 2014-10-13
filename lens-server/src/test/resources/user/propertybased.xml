@@ -1,0 +1,10 @@
+<configuration>
+  <property>
+    <name>grill.server.user.resolver.type</name>
+    <value>PROPERTYBASED</value>
+  </property>
+  <property>
+    <name>grill.server.user.resolver.propertybased.filename</name>
+    <value>fullpath needed. So provided in code</value>
+  </property>
+</configuration>

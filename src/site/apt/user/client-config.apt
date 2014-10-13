@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,7 +17,7 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill client configuration
+Lens client configuration
 
 ===
 

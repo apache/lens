@@ -20,7 +20,7 @@
   </property>
   <property>
     <name>grill.driver.jdbc.query.rewriter</name>
-    <value>com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter</value>
+    <value>org.apache.lens.driver.jdbc.ColumnarSQLRewriter</value>
   </property>
   <property>
     <name>grill.driver.jdbc.explain.keyword</name>

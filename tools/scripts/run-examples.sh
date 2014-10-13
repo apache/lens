@@ -42,9 +42,9 @@ JAVA_PROPERTIES="$GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -D
 # constants
 ################################
 
-CLIENT_METASTORE_CLASS="com.inmobi.grill.examples.SampleMetastore"
-CLIENT_POPULATE_CLASS="com.inmobi.grill.examples.PopulateSampleMetastore"
-CLIENT_QUERY_CLASS="com.inmobi.grill.examples.SampleQueries"
+CLIENT_METASTORE_CLASS="org.apache.lens.examples.SampleMetastore"
+CLIENT_POPULATE_CLASS="org.apache.lens.examples.PopulateSampleMetastore"
+CLIENT_QUERY_CLASS="org.apache.lens.examples.SampleQueries"
 
 ################################
 # functions

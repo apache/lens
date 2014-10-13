@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.0.xsd">
+    <changeSet author="SA" id="create_user_clusteruser_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_clusteruser"/>
+            </not>
+        </preConditions>
+        <createTable tableName="user_clusteruser" schemaName="public">
+            <column name="username" type="varchar(50)"/>
+            <column name="clusteruser" type="varchar(50)"/>
+        </createTable>
+        <addPrimaryKey tableName="user_clusteruser" columnNames="username"/>
+    </changeSet>
+    <changeSet author="SA" id="create_user_department_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="user_department"/>
+            </not>
+        </preConditions>
+        <createTable tableName="user_department" schemaName="public">
+            <column name="username" type="varchar(50)"/>
+            <column name="department" type="varchar(50)"/>
+        </createTable>
+        <addPrimaryKey tableName="user_department" columnNames="username"/>
+    </changeSet>
+    <changeSet author="SA" id="create_department_queue_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="department_queue"/>
+            </not>
+        </preConditions>
+        <createTable tableName="department_queue" schemaName="public">
+            <column name="department" type="varchar(50)"/>
+            <column name="queue" type="varchar(50)"/>
+        </createTable>
+        <addPrimaryKey tableName="department_queue" columnNames="department"/>
+    </changeSet>
+    <changeSet author="SA" id="inserts">
+        <insert tableName="user_clusteruser">
+            <column name="username">user1</column>
+            <column name="clusteruser">clusteruser1</column>
+        </insert>
+        <insert tableName="user_clusteruser">
+            <column name="username">user2</column>
+            <column name="clusteruser">clusteruser2</column>
+        </insert>
+        <insert tableName="user_clusteruser">
+            <column name="username">user3</column>
+            <column name="clusteruser">clusteruser3</column>
+        </insert>
+        <insert tableName="user_clusteruser">
+            <column name="username">user4</column>
+            <column name="clusteruser">clusteruser4</column>
+        </insert>
+        <insert tableName="user_department">
+            <column name="username">user1</column>
+            <column name="department">department12</column>
+        </insert>
+        <insert tableName="user_department">
+            <column name="username">user2</column>
+            <column name="department">department12</column>
+        </insert>
+        <insert tableName="user_department">
+            <column name="username">user3</column>
+            <column name="department">department34</column>
+        </insert>
+        <insert tableName="user_department">
+            <column name="username">user4</column>
+            <column name="department">department34</column>
+        </insert>
+        <insert tableName="department_queue">
+            <column name="department">department12</column>
+            <column name="queue">queue12</column>
+        </insert>
+        <insert tableName="department_queue">
+            <column name="department">department34</column>
+            <column name="queue">queue34</column>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
