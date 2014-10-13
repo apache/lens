@@ -28,7 +28,7 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
-. ${BASEDIR}/bin/grill-config.sh 'server'
+. ${BASEDIR}/bin/lens-config.sh 'server'
 
 
 ################################
@@ -79,7 +79,7 @@ start() {
   # make sure the process is not running
   if [ -f $GRILL_PID_FILE ]; then
     if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      echo grill-server running as process `cat $GRILL_PID_FILE`.  Stop it first.
+      echo lens-server running as process `cat $GRILL_PID_FILE`.  Stop it first.
       exit 1
     fi
   fi
@@ -119,7 +119,7 @@ start() {
   fi
 
   if [ "$HIVE_HOME" != "" ]; then    
-    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into grill classpath"
+    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
     GRILLCPPATH="${GRILLCPPATH}:${HIVE_HOME}/lib/*"
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
@@ -147,11 +147,11 @@ start() {
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
-    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $* > "${GRILL_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
     echo $! > $GRILL_PID_FILE
     popd > /dev/null
 
-    echo Started grill server!
+    echo Started lens server!
     exit 0
   fi
 }
@@ -164,7 +164,7 @@ restart() {
 stop() {
   if [ -f $GRILL_PID_FILE ]; then
     if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      echo Stopping grill server running as `cat $GRILL_PID_FILE`
+      echo Stopping lens server running as `cat $GRILL_PID_FILE`
       if [ -n "$opt_force" ] ; then
         kill -9 `cat $GRILL_PID_FILE`
       else
@@ -180,7 +180,7 @@ stop() {
           fi  
         done
       rm -rf  $GRILL_PID_FILE
-      echo Stopped grill server!
+      echo Stopped lens server!
     fi
   else
     echo "pid file $GRILL_PID_FILE not present"
@@ -190,7 +190,7 @@ stop() {
 status() {
   if [ -f $GRILL_PID_FILE ]; then
     if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      echo "Grill server is running"
+      echo "lens server is running"
       echo "The pid: `cat $GRILL_PID_FILE`"
       exit 0
     else
@@ -237,7 +237,7 @@ memory_dump() {
   if [ -f $GRILL_PID_FILE ]; then
     if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
       TIME=`date +%Y%m%d%H%M%s`
-      jmap -dump:file=$GRILL_LOG_DIR/grillserver-dump-$TIME.hprof `cat $GRILL_PID_FILE`
+      jmap -dump:file=$GRILL_LOG_DIR/lensserver-dump-$TIME.hprof `cat $GRILL_PID_FILE`
       exit 0
     else
       exit -2
