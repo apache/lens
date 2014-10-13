@@ -24,7 +24,7 @@
 <configuration>
 <property>
   <name>grill.drivers</name>
-  <value>com.inmobi.grill.driver.hive.HiveDriver</value>
+  <value>org.apache.lens.driver.hive.HiveDriver</value>
   <description>Drivers enabled for this grill server instance</description>
 </property>
 
@@ -36,31 +36,31 @@
 
 <property>
   <name>grill.session.service.impl</name>
-  <value>com.inmobi.grill.server.session.HiveSessionService</value>
+  <value>org.apache.lens.server.session.HiveSessionService</value>
   <description>Implementation class for session service</description>
 </property>
 
 <property>
   <name>grill.query.service.impl</name>
-  <value>com.inmobi.grill.server.query.QueryExecutionServiceImpl</value>
+  <value>org.apache.lens.server.query.QueryExecutionServiceImpl</value>
   <description>Implementation class for query execution service</description>
 </property>
 
 <property>
   <name>grill.quota.service.impl</name>
-  <value>com.inmobi.grill.server.quota.QuotaServiceImpl</value>
+  <value>org.apache.lens.server.quota.QuotaServiceImpl</value>
   <description>Implementation class for quota service</description>
 </property>
 
 <property>
   <name>grill.metastore.service.impl</name>
-  <value>com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl</value>
+  <value>org.apache.lens.server.metastore.CubeMetastoreServiceImpl</value>
   <description>Implementation class for metastore service</description>
 </property>
 
 <property>
   <name>grill.scheduler.service.impl</name>
-  <value>com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl</value>
+  <value>org.apache.lens.server.scheduler.QuerySchedulerServiceImpl</value>
   <description>Implementation class for query scheduler service</description>
 </property>
 
@@ -93,7 +93,7 @@
   <value>true</value>
   <description>Disable or enable the query state logger with this config.
  The location for the logger can be specified in log4j properties for the class
- com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
+ org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger </description>
 </property>
 
 <property>
@@ -177,7 +177,7 @@
 
 <property>
   <name>grill.statistics.store.class</name>
-  <value>com.inmobi.grill.server.stats.store.log.LogStatisticsStore</value>
+  <value>org.apache.lens.server.stats.store.log.LogStatisticsStore</value>
   <description>Default implementation of class used to persist Grill Statistics.</description>
 </property>
 
@@ -275,37 +275,37 @@
 
 <property>
     <name>grill.session.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.session.SessionResource</value>
+    <value>org.apache.lens.server.session.SessionResource</value>
     <description>Implementation class for Session Resource</description>
 </property>
 
 <property>
     <name>grill.query.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.query.QueryServiceResource</value>
+    <value>org.apache.lens.server.query.QueryServiceResource</value>
     <description>Implementation class for Query Resource</description>
 </property>
 
 <property>
     <name>grill.quota.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.quota.QuotaResource</value>
+    <value>org.apache.lens.server.quota.QuotaResource</value>
     <description>Implementation class for Quota Resource</description>
 </property>
 
 <property>
     <name>grill.index.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.IndexResource</value>
+    <value>org.apache.lens.server.IndexResource</value>
     <description>Implementation class for Index Resource</description>
 </property>
 
 <property>
     <name>grill.metastore.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.metastore.MetastoreResource</value>
+    <value>org.apache.lens.server.metastore.MetastoreResource</value>
     <description>Implementation class for Metastore Resource</description>
 </property>
 
 <property>
     <name>grill.scheduler.ws.resource.impl</name>
-    <value>com.inmobi.grill.server.scheduler.ScheduleResource</value>
+    <value>org.apache.lens.server.scheduler.ScheduleResource</value>
     <description>Implementation class for query scheduler resource</description>
 </property>
 
@@ -329,19 +329,19 @@
 
 <property>
     <name>grill.authentication.ws.filter.impl</name>
-    <value>com.inmobi.grill.server.AuthenticationFilter</value>
+    <value>org.apache.lens.server.AuthenticationFilter</value>
     <description>Implementation class for Authentication Filter</description>
 </property>
 
 <property>
     <name>grill.consistentState.ws.filter.impl</name>
-    <value>com.inmobi.grill.server.ConsistentStateFilter</value>
+    <value>org.apache.lens.server.ConsistentStateFilter</value>
     <description>Implementation class for ConsistentState Filter</description>
 </property>
 
 <property>
     <name>grill.serverMode.ws.filter.impl</name>
-    <value>com.inmobi.grill.server.ServerModeFilter</value>
+    <value>org.apache.lens.server.ServerModeFilter</value>
     <description>Implementation class for ServerMode Filter</description>
 </property>
 
@@ -353,7 +353,7 @@
 
 <property>
     <name>grill.appevent.ws.listener.impl</name>
-    <value>com.inmobi.grill.server.GrillApplicationListener</value>
+    <value>org.apache.lens.server.GrillApplicationListener</value>
     <description>Implementation class for Grill Application Listener</description>
 </property>
 
@@ -448,7 +448,7 @@
   <value>full.package.name.Classname</value>
   <description>Required for CUSTOM user resolver.
       In case the provided implementations are not sufficient for user config resolver,
-      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader
+      a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader
   </description>
 </property>
 <property>
@@ -557,7 +557,7 @@
 
 <property>
     <name>grill.server.service.provider.factory</name>
-    <value>com.inmobi.grill.server.ServiceProviderFactoryImpl</value>
+    <value>org.apache.lens.server.ServiceProviderFactoryImpl</value>
     <final>true</final>
     <description>Service provider factory implementation class. This parameter is used
     to lookup the factory implementation class name that would provide an

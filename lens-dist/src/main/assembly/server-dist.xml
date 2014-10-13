@@ -45,7 +45,7 @@
     <format>dir</format>
   </formats>
 
-  <baseDirectory>grill-server-${project.version}</baseDirectory>
+  <baseDirectory>lens-server-${project.version}</baseDirectory>
   <includeBaseDirectory>false</includeBaseDirectory>
 
   <dependencySets>
@@ -54,8 +54,8 @@
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
       <includes>
-        <include>com.inmobi.grill:grill-driver-jdbc</include>
-        <include>com.inmobi.grill:grill-storage-db</include>
+        <include>org.apache.lens:lens-driver-jdbc</include>
+        <include>org.apache.lens:lens-storage-db</include>
       </includes>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <useTransitiveDependencies>true</useTransitiveDependencies>
@@ -65,7 +65,7 @@
   <moduleSets>
     <moduleSet>
       <includes>
-        <include>com.inmobi.grill:grill-server</include>
+        <include>org.apache.lens:lens-server</include>
       </includes>
       <binaries>
         <unpack>false</unpack>
@@ -91,8 +91,8 @@
       <directory>../tools/scripts</directory>
       <outputDirectory>/bin/</outputDirectory>
       <includes>
-        <include>grill-config.sh</include>
-        <include>grill-ctl</include>
+        <include>lens-config.sh</include>
+        <include>lens-ctl</include>
       </includes>
     </fileSet>
 
@@ -100,7 +100,7 @@
       <directory>../tools/conf/</directory>
       <outputDirectory>/conf/</outputDirectory>
       <includes>
-        <include>grill-env.sh</include>
+        <include>lens-env.sh</include>
       </includes>
     </fileSet>
 
@@ -115,9 +115,9 @@
     
     <files>
       <file>
-       <source>../grill-server/target/grill-server-${project.version}.war</source>
+       <source>../lens-server/target/lens-server-${project.version}.war</source>
        <outputDirectory>/webapp/</outputDirectory>
-       <destName>grill-server.war</destName>
+       <destName>lens-server.war</destName>
     </file>
     </files>
 </assembly>

@@ -32,12 +32,12 @@ public class GrillPromptProvider extends DefaultPromptProvider {
 
   @Override
   public String getPrompt() {
-    return "grill-shell>";
+    return "lens-shell>";
   }
 
 
   @Override
   public String name() {
-    return "grill prompt provider";
+    return "lens prompt provider";
   }
 }

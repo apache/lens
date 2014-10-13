@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-	<name>Grill CLI</name>
+	<name>Lens CLI</name>
 
   <parent>
-    <artifactId>grill-parent</artifactId>
-    <groupId>com.inmobi.grill</groupId>
+    <artifactId>lens-parent</artifactId>
+    <groupId>org.apache.lens</groupId>
     <version>1.1.1-SNAPSHOT</version>
   </parent>
 
@@ -14,27 +14,27 @@
   </properties>
 
 
-  <artifactId>grill-cli</artifactId>
+  <artifactId>lens-cli</artifactId>
   <packaging>jar</packaging>
-  <description> The CLI for grill client </description>
+  <description> The CLI for lens client </description>
 
   <dependencies>
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-client</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-server</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-server</artifactId>
       <version>${project.version}</version>
       <classifier>classes</classifier>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-server</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-server</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
@@ -57,16 +57,16 @@
     </dependency>
 
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-hive</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-driver-hive</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
 
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-driver-hive</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-driver-hive</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
@@ -168,7 +168,7 @@
         <version>2.15</version>
         <configuration>
           <systemPropertyVariables>
-            <hadoop.bin.path>${pom.basedir}/../grill-driver-hive/testutils/hadoop</hadoop.bin.path>
+            <hadoop.bin.path>${pom.basedir}/../lens-driver-hive/testutils/hadoop</hadoop.bin.path>
           </systemPropertyVariables>
           <environmentVariables>
             <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>

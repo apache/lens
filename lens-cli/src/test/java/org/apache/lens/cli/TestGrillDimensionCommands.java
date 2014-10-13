@@ -19,7 +19,7 @@ package org.apache.lens.cli;
  * #L%
  */
 
-import com.inmobi.grill.api.metastore.XDimension;
+import org.apache.lens.api.metastore.XDimension;
 
 import org.apache.lens.cli.commands.GrillDimensionCommands;
 import org.apache.lens.cli.commands.GrillDimensionTableCommands;

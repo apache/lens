@@ -25,7 +25,7 @@
 
 <property>
   <name>grill.drivers</name>
-  <value>com.inmobi.grill.driver.cube.MockDriver</value>
+  <value>org.apache.lens.driver.cube.MockDriver</value>
 </property>
 
 </configuration>

@@ -22,12 +22,12 @@
     <hadoop.version>2.4.0</hadoop.version>
   </properties>
 
-  <groupId>com.inmobi.grill</groupId>
-  <artifactId>grill-parent</artifactId>
+  <groupId>org.apache.lens</groupId>
+  <artifactId>lens-parent</artifactId>
   <version>1.1.1-SNAPSHOT</version>
-  <name>Grill</name>
+  <name>Lens</name>
   <packaging>pom</packaging>
-	<description>Unified Analytics Platform For InMobi</description>
+	<description>Unified Analytics Platform</description>
   <url>https://github.com/InMobi/grill</url>
   <inceptionYear>2014</inceptionYear>
   <licenses>
@@ -111,11 +111,11 @@
               <groups>
                 <group>
                 <title> Clien api </title>
-                <packages>com.inmobi.grill.api*:com.inmobi.grill.client*</packages>
+                <packages>org.apache.lens.api*:org.apache.lens.client*</packages>
                 </group>
                 <group>
                 <title> Developer api </title>
-                <packages>com.inmobi.grill.server.api*</packages>
+                <packages>org.apache.lens.server.api*</packages>
                 </group>
               </groups>
             </configuration>
@@ -727,27 +727,27 @@
       <url>https://github.com/InMobi/mvn-repo/raw/master/snapshots</url>
     </snapshotRepository>
     <site>
-      <id>grill-site</id>
+      <id>lens-site</id>
       <url>https://inmobi.github.io/grill/</url>
     </site>
   </distributionManagement>
 
 
   <modules>
-    <module>grill-api</module>
-    <module>grill-server-api</module>
-    <module>grill-storage-db</module>
-    <module>grill-driver-cube</module>
-    <module>grill-driver-hive</module>
-    <module>grill-driver-impala</module>
-    <module>grill-driver-jdbc</module>
-    <module>grill-query-lib</module>
-    <module>grill-server</module>
-    <module>grill-client</module>
-    <module>grill-cli</module>
-    <module>grill-examples</module>
-    <module>grill-dist</module>
-    <module>grill-client-dist</module>
+    <module>lens-api</module>
+    <module>lens-server-api</module>
+    <module>lens-storage-db</module>
+    <module>lens-cube</module>
+    <module>lens-driver-hive</module>
+    <module>lens-driver-impala</module>
+    <module>lens-driver-jdbc</module>
+    <module>lens-query-lib</module>
+    <module>lens-server</module>
+    <module>lens-client</module>
+    <module>lens-cli</module>
+    <module>lens-examples</module>
+    <module>lens-dist</module>
+    <module>lens-client-dist</module>
   </modules>
 
   <profiles>

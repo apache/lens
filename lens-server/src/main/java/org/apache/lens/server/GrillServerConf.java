@@ -11,8 +11,8 @@ public class GrillServerConf {
       synchronized (GrillServerConf.class) {
         if (conf == null) {
           conf = new HiveConf();
-          conf.addResource("grillserver-default.xml");
-          conf.addResource("grill-site.xml");
+          conf.addResource("lensserver-default.xml");
+          conf.addResource("lens-site.xml");
         }
       }
     }

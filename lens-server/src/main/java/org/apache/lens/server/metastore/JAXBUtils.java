@@ -20,7 +20,7 @@ package org.apache.lens.server.metastore;
  * #L%
  */
 
-import com.inmobi.grill.api.metastore.*;
+import org.apache.lens.api.metastore.*;
 
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;

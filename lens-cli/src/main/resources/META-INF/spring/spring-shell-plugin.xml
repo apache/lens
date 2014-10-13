@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   #%L
-  Grill CLI
+  Lens CLI
   %%
   Copyright (C) 2014 Inmobi
   %%
@@ -26,37 +26,37 @@
   http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
   http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-  <context:component-scan base-package="com.inmobi.grill.cli"/>
+  <context:component-scan base-package="org.apache.lens.cli"/>
 
-  <bean id="grillConnectionCommands"
-        class="com.inmobi.grill.cli.commands.GrillConnectionCommands">
+  <bean id="lensConnectionCommands"
+        class="org.apache.lens.cli.commands.LensConnectionCommands">
   </bean>
-  <bean id="grillDatabaseCommands"
-        class="com.inmobi.grill.cli.commands.GrillDatabaseCommands">
+  <bean id="lensDatabaseCommands"
+        class="org.apache.lens.cli.commands.LensDatabaseCommands">
   </bean>
-  <bean id="grillCubeCommands"
-        class="com.inmobi.grill.cli.commands.GrillCubeCommands">
+  <bean id="lensCubeCommands"
+        class="org.apache.lens.cli.commands.LensCubeCommands">
   </bean>
-  <bean id="grillDimensionCommands"
-        class="com.inmobi.grill.cli.commands.GrillDimensionCommands">
+  <bean id="lensDimensionCommands"
+        class="org.apache.lens.cli.commands.LensDimensionCommands">
   </bean>
-  <bean id="grillFactCommands"
-        class="com.inmobi.grill.cli.commands.GrillFactCommands">
+  <bean id="lensFactCommands"
+        class="org.apache.lens.cli.commands.LensFactCommands">
   </bean>
-  <bean id="grillStorageCommands"
-        class="com.inmobi.grill.cli.commands.GrillStorageCommands">
-  </bean>
-
-  <bean id="grillQueryCommands"
-        class="com.inmobi.grill.cli.commands.GrillQueryCommands">
+  <bean id="lensStorageCommands"
+        class="org.apache.lens.cli.commands.LensStorageCommands">
   </bean>
 
-  <bean id="grillDimensionTableCommands"
-        class="com.inmobi.grill.cli.commands.GrillDimensionTableCommands">
+  <bean id="lensQueryCommands"
+        class="org.apache.lens.cli.commands.LensQueryCommands">
   </bean>
 
-  <bean id="grillNativeTableCommands"
-        class="com.inmobi.grill.cli.commands.GrillNativeTableCommands">
+  <bean id="lensDimensionTableCommands"
+        class="org.apache.lens.cli.commands.LensDimensionTableCommands">
+  </bean>
+
+  <bean id="lensNativeTableCommands"
+        class="org.apache.lens.cli.commands.LensNativeTableCommands">
   </bean>
 
 </beans>

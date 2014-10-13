@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:fact_table cube_name="" name="" weight="0.0" xmlns:p="uri:grill:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:grill:cube:0.1 ../grill-api/src/main/resources/cube-0.1.xsd ">
+  <p:columns>
+    <p:columns comment="" name="" type=""/>
+  </p:columns>
+  <p:storage_update_periods>
+    <p:update_period_element storage_name=""/>
+  </p:storage_update_periods>
+  <p:properties>
+    <p:properties name="" value=""/>
+  </p:properties>
+</p:fact_table>

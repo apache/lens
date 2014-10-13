@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-	<name>Grill Examples</name>
+	<name>Lens Examples</name>
   <parent>
-    <artifactId>grill-parent</artifactId>
-    <groupId>com.inmobi.grill</groupId>
+    <artifactId>lens-parent</artifactId>
+    <groupId>org.apache.lens</groupId>
     <version>1.1.1-SNAPSHOT</version>
   </parent>
     
-  <artifactId>grill-examples</artifactId>
+  <artifactId>lens-examples</artifactId>
   <packaging>jar</packaging>
-  <description> Grill Examples </description>
+  <description> Lens Examples </description>
 
   <dependencies>    
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-api</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-api</artifactId>
       <version>${project.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-client</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-client</artifactId>
       <version>${project.version}</version>
     </dependency>
 

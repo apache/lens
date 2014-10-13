@@ -30,7 +30,7 @@
 
 <property>
   <name>grill.driver.jdbc.query.rewriter</name>
-  <value>com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter</value>
+  <value>org.apache.lens.driver.jdbc.ColumnarSQLRewriter</value>
   <description>Rewriting the HQL to optimized sql queries</description>
 </property>
 

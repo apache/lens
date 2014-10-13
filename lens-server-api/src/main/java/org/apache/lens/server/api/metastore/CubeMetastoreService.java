@@ -20,7 +20,7 @@ package org.apache.lens.server.api.metastore;
  * #L%
  */
 
-import com.inmobi.grill.api.metastore.*;
+import org.apache.lens.api.metastore.*;
 
 import java.util.List;
 

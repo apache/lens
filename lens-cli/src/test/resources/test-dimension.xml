@@ -20,8 +20,8 @@
   -->
 
 <x_dimension name="test_dim" 
-    xmlns="uri:grill:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+    xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
     <dim_attributes name="id" type="int"/>
     <dim_attributes name="name" type="string" />

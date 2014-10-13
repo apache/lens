@@ -64,8 +64,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
 
   public static Configuration createDefaultConf() {
     Configuration conf = new Configuration(false);
-    conf.addResource("grillsession-default.xml");
-    conf.addResource("grill-site.xml");
+    conf.addResource("lenssession-default.xml");
+    conf.addResource("lens-site.xml");
     return conf;
   }
 

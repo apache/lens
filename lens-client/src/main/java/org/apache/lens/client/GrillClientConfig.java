@@ -30,8 +30,8 @@ public class GrillClientConfig extends Configuration {
 
   public GrillClientConfig() {
     super(false);
-    addResource("grill-client-default.xml");
-    addResource("grill-client-site.xml");
+    addResource("lens-client-default.xml");
+    addResource("lens-client-site.xml");
   }
 
   public static final String GRILL_SERVER_HOST_KEY = "grill.host";

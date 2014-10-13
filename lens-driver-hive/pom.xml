@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-	<name>Grill Hive Driver</name>
+	<name>Lens Hive Driver</name>
 
   <parent>
-    <artifactId>grill-parent</artifactId>
-    <groupId>com.inmobi.grill</groupId>
+    <artifactId>lens-parent</artifactId>
+    <groupId>org.apache.lens</groupId>
     <version>1.1.1-SNAPSHOT</version>
   </parent>
 
@@ -13,7 +13,7 @@
    <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
   </properties>
 
-  <artifactId>grill-driver-hive</artifactId>
+  <artifactId>lens-driver-hive</artifactId>
   <packaging>jar</packaging>
   <description> Hive execution driver </description>
 
@@ -54,8 +54,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.inmobi.grill</groupId>
-      <artifactId>grill-server-api</artifactId>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-server-api</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

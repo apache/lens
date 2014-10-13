@@ -19,9 +19,9 @@
   #L%
   -->
 
-<x_storage_table_element xmlns="uri:grill:cube:0.1"
+<x_storage_table_element xmlns="uri:lens:cube:0.1"
                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                  xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+                  xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <storage_name>fact_local</storage_name>
 
   <table_desc

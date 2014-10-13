@@ -27,7 +27,7 @@ import javax.xml.bind.JAXBException;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.client.*;
 
-import com.inmobi.grill.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XPartition;
 
 public class PopulateSampleMetastore {
   private GrillMetadataClient metaClient;

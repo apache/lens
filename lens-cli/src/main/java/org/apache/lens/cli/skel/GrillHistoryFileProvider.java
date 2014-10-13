@@ -31,11 +31,11 @@ import org.springframework.stereotype.Component;
 public class GrillHistoryFileProvider extends DefaultHistoryFileNameProvider {
 
   public String getHistoryFileName() {
-    return "grill-cli-hist.log";
+    return "lens-cli-hist.log";
   }
 
   @Override
   public String name() {
-    return "grill client history provider";
+    return "lens client history provider";
   }
 }

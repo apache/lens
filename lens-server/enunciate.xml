@@ -11,14 +11,14 @@
 		</rest>
     </services>
     <api-classes>
-        <include pattern="com.inmobi.grill.server.query.*"/>
-        <include pattern="com.inmobi.grill.server.metastore.*"/>
-        <include pattern="com.inmobi.grill.server.quota.*"/>
-        <include pattern="com.inmobi.grill.server.scheduler.*"/>
-        <include pattern="com.inmobi.grill.server.session.*"/>
+        <include pattern="org.apache.lens.server.query.*"/>
+        <include pattern="org.apache.lens.server.metastore.*"/>
+        <include pattern="org.apache.lens.server.quota.*"/>
+        <include pattern="org.apache.lens.server.scheduler.*"/>
+        <include pattern="org.apache.lens.server.session.*"/>
     </api-classes>
     <modules>
-        <docs docsDir="grill-server" title="Grill Server REST API"/>
+        <docs docsDir="grill-server" title="Lens Server REST API"/>
         <csharp disabled="true"/>
         <c disabled="true"/>
         <obj-c disabled="true"></obj-c>

@@ -2,7 +2,7 @@ package org.apache.lens.doc;
 
 /*
  * #%L
- * Grill API
+ * Lens API
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -40,12 +40,12 @@ import org.xml.sax.helpers.DefaultHandler;
 
 
 public class TestGenerateConfigDoc {
-  public static final String SERVER_CONF_FILE = "../grill-server/src/main/resources/grillserver-default.xml";
-  public static final String SESSION_CONF_FILE = "../grill-server/src/main/resources/grillsession-default.xml";
-  public static final String HIVE_DRIVER_CONF_FILE = "../grill-driver-hive/src/main/resources/hivedriver-default.xml";
-  public static final String JDBC_DRIVER_CONF_FILE = "../grill-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
-  public static final String CLIENT_CONF_FILE = "../grill-client/src/main/resources/grill-client-default.xml";
-  public static final String CUBE_QUERY_CONF_FILE = "../grill-driver-cube/src/main/resources/olap-query-conf.xml";
+  public static final String SERVER_CONF_FILE = "../lens-server/src/main/resources/lensserver-default.xml";
+  public static final String SESSION_CONF_FILE = "../lens-server/src/main/resources/lenssession-default.xml";
+  public static final String HIVE_DRIVER_CONF_FILE = "../lens-driver-hive/src/main/resources/hivedriver-default.xml";
+  public static final String JDBC_DRIVER_CONF_FILE = "../lens-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
+  public static final String CLIENT_CONF_FILE = "../lens-client/src/main/resources/lens-client-default.xml";
+  public static final String CUBE_QUERY_CONF_FILE = "../lens-driver-cube/src/main/resources/olap-query-conf.xml";
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   public static final String SESSION_APT_FILE = "../src/site/apt/admin/session-config.apt";
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";
@@ -56,13 +56,13 @@ public class TestGenerateConfigDoc {
   @Test
   public void generateServerConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(SERVER_CONF_FILE, APT_FILE);
-    printer.generateDoc("Grill server configuration");
+    printer.generateDoc("Lens server configuration");
   }
 
   @Test
   public void generateSessionConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(SESSION_CONF_FILE, SESSION_APT_FILE);
-    printer.generateDoc("Grill session configuration");
+    printer.generateDoc("Lens session configuration");
   }
 
   @Test
@@ -80,7 +80,7 @@ public class TestGenerateConfigDoc {
   @Test
   public void generateClientConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(CLIENT_CONF_FILE, CLIENT_APT_FILE);
-    printer.generateDoc("Grill client configuration");
+    printer.generateDoc("Lens client configuration");
   }
 
   @Test
@@ -178,7 +178,7 @@ public class TestGenerateConfigDoc {
         // Add license
         apt.println("~~~");
         apt.println("~~ #%L");
-        apt.println("~~ Grill");
+        apt.println("~~ Lens");
         apt.println("~~ %%");
         apt.println("~~ Copyright (C) 2014 Inmobi");
         apt.println("~~ %%");

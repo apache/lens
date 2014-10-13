@@ -24,7 +24,7 @@
 <configuration>
 <property>
   <name>grill.drivers</name>
-  <value>com.inmobi.grill.driver.hive.HiveDriver</value>
+  <value>org.apache.lens.driver.hive.HiveDriver</value>
 </property>
 
 <property>
@@ -60,7 +60,7 @@
 
 <property>
   <name>hive.server2.custom.authentication.class</name>
-  <value>com.inmobi.grill.server.auth.FooBarAuthenticationProvider</value>
+  <value>org.apache.lens.server.auth.FooBarAuthenticationProvider</value>
 </property>
 
 
@@ -96,7 +96,7 @@
 
 <property>
   <name>grill.test.ws.resource.impl</name>
-  <value>com.inmobi.grill.server.TestResource</value>
+  <value>org.apache.lens.server.TestResource</value>
   <description>Implementation class for Test Resource</description>
 </property>
 

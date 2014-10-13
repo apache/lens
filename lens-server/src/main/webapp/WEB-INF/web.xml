@@ -22,32 +22,32 @@
   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
   http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-    <display-name>Grill Server</display-name>
+    <display-name>Lens Server</display-name>
     <description>Unified Analytics</description>
 
     <servlet>
-        <servlet-name>GrillAPI</servlet-name>
+        <servlet-name>LensAPI</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>com.inmobi.grill.server.GrillApplication</param-value>
+            <param-value>org.apache.lens.server.GrillApplication</param-value>
         </init-param>        
         <load-on-startup>1</load-on-startup>
     </servlet>
     <servlet-mapping>
-        <servlet-name>GrillAPI</servlet-name>
+        <servlet-name>LensAPI</servlet-name>
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
 
     <!-- Servlet Configuration -->
     <context-param>
-        <param-name>grill.server.log4j.properties</param-name>
+        <param-name>lens.server.log4j.properties</param-name>
         <param-value>WEB-INF/log4j.properties</param-value>
     </context-param>
 
     <!-- Servlet context listener to initialize the webapp -->
     <listener>
-        <listener-class>com.inmobi.grill.server.GrillServletContextListener</listener-class>
+        <listener-class>org.apache.lens.server.GrillServletContextListener</listener-class>
     </listener>
 
 </web-app>

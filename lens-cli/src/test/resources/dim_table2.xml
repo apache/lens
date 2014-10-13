@@ -19,9 +19,9 @@
   #L%
   -->
 
-<dimension_table dim_name="test_dim2" table_name="dim_table2" weight="0.0" xmlns="uri:grill:cube:0.1"
+<dimension_table dim_name="test_dim2" table_name="dim_table2" weight="0.0" xmlns="uri:lens:cube:0.1"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="uri:grill:cube:0.1 cube-0.1.xsd ">
+                 xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
     <columns comment="ID" name="id" type="int"/>
     <columns comment="name" name="name" type="string"/>

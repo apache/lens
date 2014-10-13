@@ -21,7 +21,7 @@ package org.apache.lens.client;
  */
 
 import com.google.common.collect.Maps;
-import com.inmobi.grill.api.metastore.*;
+import org.apache.lens.api.metastore.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -181,7 +181,7 @@ public class GrillClient {
 
 
   private void connectToGrillServer() {
-    LOG.debug("Connecting to grill server " + new GrillConnectionParams(conf));
+    LOG.debug("Connecting to lens server " + new GrillConnectionParams(conf));
     conn = new GrillConnection(new GrillConnectionParams(conf));
     conn.open(password);
     LOG.debug("Successfully connected to server " + conn);
@@ -268,7 +268,7 @@ public class GrillClient {
   }
 
   public APIResult closeConnection() {
-    LOG.debug("Closing grill connection: " + new GrillConnectionParams(conf));
+    LOG.debug("Closing lens connection: " + new GrillConnectionParams(conf));
     return this.conn.close();
   }
 

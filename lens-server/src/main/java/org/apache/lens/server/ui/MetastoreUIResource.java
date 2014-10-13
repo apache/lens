@@ -20,7 +20,7 @@ package org.apache.lens.server.ui;
  * #L%
  */
 
-import com.inmobi.grill.api.metastore.*;
+import org.apache.lens.api.metastore.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lens.api.GrillException;

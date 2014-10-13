@@ -29,18 +29,11 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.*;
 import org.apache.lens.client.GrillClientSingletonWrapper;
 import org.apache.lens.client.GrillConnection;
 import org.apache.lens.client.GrillConnectionParams;
 import org.apache.lens.client.GrillMetadataClient;
-
-import com.inmobi.grill.api.metastore.DimensionTable;
-import com.inmobi.grill.api.metastore.FactTable;
-import com.inmobi.grill.api.metastore.ObjectFactory;
-import com.inmobi.grill.api.metastore.XCube;
-import com.inmobi.grill.api.metastore.XDimension;
-import com.inmobi.grill.api.metastore.XStorage;
-import com.inmobi.grill.api.metastore.XStorageTables;
 
 public class SampleMetastore {
   private GrillConnection connection;

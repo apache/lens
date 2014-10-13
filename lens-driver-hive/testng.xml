@@ -1,10 +1,10 @@
 <!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
 
-<suite name="grill-driver-hive" verbose="1" >
+<suite name="lens-driver-hive" verbose="1" >
 
     <test name="TestRemoteHiveDriver">
         <classes>
-            <class name="com.inmobi.grill.driver.hive.TestRemoteHiveDriver"/>
+            <class name="org.apache.lens.driver.hive.TestRemoteHiveDriver"/>
         </classes>
     </test>
 

@@ -47,7 +47,7 @@ public class BaseGrillCommand {
 
   protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
-      LOG.debug("Request for stopping grill cli received");
+      LOG.debug("Request for stopping lens cli received");
       getClient().closeConnection();
       isConnectionActive = false;
     }

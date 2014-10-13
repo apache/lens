@@ -1,4 +1,4 @@
-package com.inmobi.grill.driver.cube;
+package org.apache.lens.driver.cube;
 
 /*
  * #%L
