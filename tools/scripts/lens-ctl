@@ -77,9 +77,9 @@ EOF
 
 start() {
   # make sure the process is not running
-  if [ -f $GRILL_PID_FILE ]; then
-    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      echo lens-server running as process `cat $GRILL_PID_FILE`.  Stop it first.
+  if [ -f $LENS_PID_FILE ]; then
+    if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
+      echo lens-server running as process `cat $LENS_PID_FILE`.  Stop it first.
       exit 1
     fi
   fi
@@ -115,12 +115,12 @@ start() {
     MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
     HADOOP_JARPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS
-    GRILLCPPATH=${GRILLCPPATH}:$HADOOP_JARPATH
+    LENSCPPATH=${LENSCPPATH}:$HADOOP_JARPATH
   fi
 
   if [ "$HIVE_HOME" != "" ]; then    
     echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
-    GRILLCPPATH="${GRILLCPPATH}:${HIVE_HOME}/lib/*"
+    LENSCPPATH="${LENSCPPATH}:${HIVE_HOME}/lib/*"
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
     exit 1
@@ -130,9 +130,9 @@ start() {
   HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
   export HADOOP_CLASSPATH
   
-  mkdir -p $GRILL_LOG_DIR
+  mkdir -p $LENS_LOG_DIR
 
-  JAVA_PROPERTIES="${JAVA_PROPERTIES} $GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
+  JAVA_PROPERTIES="${JAVA_PROPERTIES} $LENS_OPTS $LENS_PROPERTIES -Dlens.log.dir=$LENS_LOG_DIR -Dlens.home=${LENS_HOME_DIR} -Dconfig.location=$LENS_CONF"
   shift
 
   while [[ ${1} =~ ^\-D ]]; do
@@ -141,14 +141,14 @@ start() {
   done
 
   if [ -n "$opt_verbose" ] ; then
-    JAVA_PROPERTIES="-Dgrillserver.root.logger=INFO,CONSOLE -Dgrillserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
-    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $*
+    JAVA_PROPERTIES="-Dlensserver.root.logger=INFO,CONSOLE -Dlensserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
+    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.GrillServer $*
   else 
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
-    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} org.apache.lens.server.GrillServer $* > "${GRILL_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
-    echo $! > $GRILL_PID_FILE
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.GrillServer $* > "${LENS_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
+    echo $! > $LENS_PID_FILE
     popd > /dev/null
 
     echo Started lens server!
@@ -162,53 +162,53 @@ restart() {
 }
 
 stop() {
-  if [ -f $GRILL_PID_FILE ]; then
-    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      echo Stopping lens server running as `cat $GRILL_PID_FILE`
+  if [ -f $LENS_PID_FILE ]; then
+    if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
+      echo Stopping lens server running as `cat $LENS_PID_FILE`
       if [ -n "$opt_force" ] ; then
-        kill -9 `cat $GRILL_PID_FILE`
+        kill -9 `cat $LENS_PID_FILE`
       else
-        kill -15 `cat $GRILL_PID_FILE`
+        kill -15 `cat $LENS_PID_FILE`
       fi
       while :
         do 
-          if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+          if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
              echo -n "."
              sleep 1
           else
              break
           fi  
         done
-      rm -rf  $GRILL_PID_FILE
+      rm -rf  $LENS_PID_FILE
       echo Stopped lens server!
     fi
   else
-    echo "pid file $GRILL_PID_FILE not present"
+    echo "pid file $LENS_PID_FILE not present"
   fi
 }
 
 status() {
-  if [ -f $GRILL_PID_FILE ]; then
-    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+  if [ -f $LENS_PID_FILE ]; then
+    if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
       echo "lens server is running"
-      echo "The pid: `cat $GRILL_PID_FILE`"
+      echo "The pid: `cat $LENS_PID_FILE`"
       exit 0
     else
       exit -2
     fi  
   else
-    echo "pid file $GRILL_PID_FILE not present"
+    echo "pid file $LENS_PID_FILE not present"
     exit -1
   fi
 }
 
 stack() {
-  if [ -f $GRILL_PID_FILE ]; then
-    kill -3 `cat $GRILL_PID_FILE`
+  if [ -f $LENS_PID_FILE ]; then
+    kill -3 `cat $LENS_PID_FILE`
     echo stack dumped in server stdout
     exit 0
   else
-    echo "pid file $GRILL_PID_FILE not present"
+    echo "pid file $LENS_PID_FILE not present"
     exit -1
   fi
 }
@@ -220,30 +220,30 @@ exit 0
 }
 
 memory_histo() {
-  if [ -f $GRILL_PID_FILE ]; then
-    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
-      jmap -histo `cat $GRILL_PID_FILE`
+  if [ -f $LENS_PID_FILE ]; then
+    if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
+      jmap -histo `cat $LENS_PID_FILE`
       exit 0
     else
       exit -2
     fi  
   else
-    echo "pid file $GRILL_PID_FILE not present"
+    echo "pid file $LENS_PID_FILE not present"
     exit -1
   fi
 }
 
 memory_dump() {
-  if [ -f $GRILL_PID_FILE ]; then
-    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+  if [ -f $LENS_PID_FILE ]; then
+    if kill -0 `cat $LENS_PID_FILE` > /dev/null 2>&1; then
       TIME=`date +%Y%m%d%H%M%s`
-      jmap -dump:file=$GRILL_LOG_DIR/lensserver-dump-$TIME.hprof `cat $GRILL_PID_FILE`
+      jmap -dump:file=$LENS_LOG_DIR/lensserver-dump-$TIME.hprof `cat $LENS_PID_FILE`
       exit 0
     else
       exit -2
     fi  
   else
-    echo "pid file $GRILL_PID_FILE not present"
+    echo "pid file $LENS_PID_FILE not present"
     exit -1
   fi
 }
@@ -316,7 +316,7 @@ while [ -n "$*" ] ; do
       ;;
     --classpath|-C)
       [ -n "$1" ] || error "Option --classpath requires an argument" 1
-      GRILLCPPATH="$GRILLCPPATH:$1"
+      LENSCPPATH="$LENSCPPATH:$1"
       shift
       ;;
     -D*)
@@ -332,7 +332,7 @@ done
 
 # prepend conf dir to classpath
 if [ -n "$opt_conf" ]; then
-  GRILLCPPATH="$opt_conf:$GRILLCPPATH"
+  LENSCPPATH="$opt_conf:$LENSCPPATH"
 fi
 
 # finally, invoke the appropriate command
