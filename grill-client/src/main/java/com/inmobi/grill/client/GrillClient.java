@@ -36,6 +36,7 @@ public class GrillClient {
   private static final Log LOG = LogFactory.getLog(GrillClient.class);
   private static final String DEFAULT_PASSWORD = "";
   private final GrillClientConfig conf;
+  private final GrillMetadataClient mc;
   private String password;
   private GrillConnection conn;
   private final HashMap<QueryHandle, GrillStatement> statementMap =
@@ -62,6 +63,7 @@ public class GrillClient {
       this.conf.set(GrillClientConfig.GRILL_SESSION_CLUSTER_USER, System.getProperty("user.name"));
     }
     connectToGrillServer();
+    mc = new GrillMetadataClient(conn);
     statement = new GrillStatement(conn);
   }
 
@@ -190,58 +192,49 @@ public class GrillClient {
 
   public List<String> getAllDatabases() {
     LOG.debug("Getting all database");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAlldatabases();
   }
 
   public List<String> getAllNativeTables() {
     LOG.debug("Getting all native tables");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllNativeTables();
   }
 
   public List<String> getAllFactTables() {
     LOG.debug("Getting all fact table");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllFactTables();
   }
 
 
   public List<String> getAllDimensionTables() {
     LOG.debug("Getting all dimension table");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllDimensionTables();
   }
 
   public List<String> getAllCubes() {
     LOG.debug("Getting all cubes in database");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllCubes();
   }
 
   public List<String> getAllDimensions() {
     LOG.debug("Getting all dimensions in database");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllDimensions();
   }
 
   public String getCurrentDatabae() {
     LOG.debug("Getting current database");
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getCurrentDatabase();
   }
 
 
   public boolean setDatabase(String database) {
     LOG.debug("Set the database to " + database);
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     APIResult result = mc.setDatabase(database);
     return result.getStatus() == APIResult.Status.SUCCEEDED;
   }
 
   public APIResult dropDatabase(String database) {
     LOG.debug("Dropping database " + database);
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     APIResult result = mc.dropDatabase(database);
     LOG.debug("Return status of dropping " + database + " result " + result);
     return result;
@@ -249,7 +242,6 @@ public class GrillClient {
 
   public APIResult createDatabase(String database, boolean ignoreIfExists) {
     LOG.debug("Creating database " + database + " ignore " + ignoreIfExists);
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     APIResult result = mc.createDatabase(database, ignoreIfExists);
     LOG.debug("Create database result " + result);
     return result;
@@ -290,178 +282,171 @@ public class GrillClient {
 
   public APIResult createFactTable(String factSpec,
                                    String storageSpecPath) {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
-
     return mc.createFactTable(factSpec, storageSpecPath);
   }
 
   public APIResult createCube(String cubeSpec) {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.createCube(cubeSpec);
   }
 
   public APIResult createStorage(String storageSpec) {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.createNewStorage(storageSpec);
   }
 
   public APIResult createDimension(String dimSpec) {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.createDimension(dimSpec);
   }
 
   public APIResult createDimensionTable(String dimSpec, String storageSpec) {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.createDimensionTable(dimSpec, storageSpec);
   }
 
   public List<String> getAllStorages() {
-    GrillMetadataClient mc = new GrillMetadataClient(conn);
     return mc.getAllStorages();
   }
 
   public APIResult dropDimensionTable(String dim, boolean cascade) {
-    return new GrillMetadataClient(conn).dropDimensionTable(dim, cascade);
+    return mc.dropDimensionTable(dim, cascade);
   }
 
   public APIResult dropFactTable(String fact, boolean cascade) {
-    return new GrillMetadataClient(conn).dropFactTable(fact, cascade);
+    return mc.dropFactTable(fact, cascade);
   }
 
   public APIResult dropCube(String cube) {
-    return new GrillMetadataClient(conn).dropCube(cube);
+    return mc.dropCube(cube);
   }
 
   public APIResult dropStorage(String storage) {
-    return new GrillMetadataClient(conn).dropStorage(storage);
+    return mc.dropStorage(storage);
   }
 
   public APIResult dropDimension(String dimName) {
-    return new GrillMetadataClient(conn).dropDimension(dimName);
+    return mc.dropDimension(dimName);
   }
 
   public APIResult updateFactTable(String factName, String factSpec) {
-    return new GrillMetadataClient(conn).updateFactTable(factName, factSpec);
+    return mc.updateFactTable(factName, factSpec);
   }
 
   public APIResult updateDimensionTable(String dimName, String dimSpec) {
-    return new GrillMetadataClient(conn).updateDimensionTable(dimName, dimSpec);
+    return mc.updateDimensionTable(dimName, dimSpec);
   }
 
   public APIResult updateCube(String cubeName, String cubeSpec) {
-    return new GrillMetadataClient(conn).updateCube(cubeName, cubeSpec);
+    return mc.updateCube(cubeName, cubeSpec);
   }
 
   public APIResult updateStorage(String storageName, String storageSpec) {
-    return new GrillMetadataClient(conn).updateStorage(storageName, storageSpec);
+    return mc.updateStorage(storageName, storageSpec);
   }
 
   public APIResult updateDimension(String dimName, String dimSpec) {
-    return new GrillMetadataClient(conn).updateDimension(dimName, dimSpec);
+    return mc.updateDimension(dimName, dimSpec);
   }
 
   public FactTable getFactTable(String factName) {
-    return new GrillMetadataClient(conn).getFactTable(factName);
+    return mc.getFactTable(factName);
   }
 
   public DimensionTable getDimensionTable(String dimName) {
-    return new GrillMetadataClient(conn).getDimensionTable(dimName);
+    return mc.getDimensionTable(dimName);
   }
 
   public NativeTable getNativeTable(String tblName) {
-    return new GrillMetadataClient(conn).getNativeTable(tblName);
+    return mc.getNativeTable(tblName);
   }
 
   public XCube getCube(String cubeName) {
-    return new GrillMetadataClient(conn).getCube(cubeName);
+    return mc.getCube(cubeName);
   }
 
   public XDimension getDimension(String dimName) {
-    return new GrillMetadataClient(conn).getDimension(dimName);
+    return mc.getDimension(dimName);
   }
 
   public XStorage getStorage(String storageName) {
-    return new GrillMetadataClient(conn).getStorage(storageName);
+    return mc.getStorage(storageName);
   }
 
   public List<String> getFactStorages(String fact) {
-    return new GrillMetadataClient(conn).getAllStoragesOfFactTable(fact);
+    return mc.getAllStoragesOfFactTable(fact);
   }
 
   public List<String> getDimStorages(String dim) {
-    return new GrillMetadataClient(conn).getAllStoragesOfDimTable(dim);
+    return mc.getAllStoragesOfDimTable(dim);
   }
 
   public APIResult dropAllStoragesOfDim(String table) {
-    return new GrillMetadataClient(conn).dropAllStoragesOfDimension(table);
+    return mc.dropAllStoragesOfDimension(table);
   }
 
   public APIResult dropAllStoragesOfFact(String table) {
-    return new GrillMetadataClient(conn).dropAllStoragesOfFactTable(table);
+    return mc.dropAllStoragesOfFactTable(table);
   }
 
   public APIResult addStorageToFact(String factName, String spec) {
-    return new GrillMetadataClient(conn).addStorageToFactTable(factName, spec);
+    return mc.addStorageToFactTable(factName, spec);
   }
 
   public APIResult dropStorageFromFact(String factName, String storage) {
-    return new GrillMetadataClient(conn).dropStorageFromFactTable(factName, storage);
+    return mc.dropStorageFromFactTable(factName, storage);
   }
 
   public XStorageTableElement getStorageFromFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).getStorageOfFactTable(fact, storage);
+    return mc.getStorageOfFactTable(fact, storage);
   }
 
   public APIResult addStorageToDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).addStorageToDimTable(dim, storage);
+    return mc.addStorageToDimTable(dim, storage);
   }
 
   public APIResult dropStorageFromDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).dropStoragesOfDimensionTable(dim, storage);
+    return mc.dropStoragesOfDimensionTable(dim, storage);
   }
 
   public XStorageTableElement getStorageFromDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).getStorageOfDimensionTable(dim, storage);
+    return mc.getStorageOfDimensionTable(dim, storage);
   }
 
   public List<XPartition> getAllPartitionsOfFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact, storage);
+    return mc.getPartitionsOfFactTable(fact, storage);
   }
 
   public List<XPartition> getAllPartitionsOfFact(String fact, String storage, String list) {
-    return new GrillMetadataClient(conn).getPartitionsOfFactTable(fact, storage, list);
+    return mc.getPartitionsOfFactTable(fact, storage, list);
   }
 
   public List<XPartition> getAllPartitionsOfDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).getAllPartitionsOfDimensionTable(dim, storage);
+    return mc.getAllPartitionsOfDimensionTable(dim, storage);
   }
 
   public List<XPartition> getAllPartitionsOfDim(String dim, String storage, String list) {
-    return new GrillMetadataClient(conn).getAllPartitionsOfDimensionTable(dim, storage);
+    return mc.getAllPartitionsOfDimensionTable(dim, storage);
   }
 
   public APIResult dropAllPartitionsOfFact(String fact, String storage) {
-    return new GrillMetadataClient(conn).dropPartitionsOfFactTable(fact, storage);
+    return mc.dropPartitionsOfFactTable(fact, storage);
   }
 
   public APIResult dropAllPartitionsOfFact(String fact, String storage, String list) {
-    return new GrillMetadataClient(conn).dropPartitionsOfFactTable(fact, storage, list);
+    return mc.dropPartitionsOfFactTable(fact, storage, list);
   }
 
   public APIResult dropAllPartitionsOfDim(String dim, String storage) {
-    return new GrillMetadataClient(conn).dropAllPartitionsOfDimensionTable(dim, storage);
+    return mc.dropAllPartitionsOfDimensionTable(dim, storage);
   }
 
   public APIResult dropAllPartitionsOfDim(String dim, String storage, String list) {
-    return new GrillMetadataClient(conn).dropAllPartitionsOfDimensionTable(dim, storage, list);
+    return mc.dropAllPartitionsOfDimensionTable(dim, storage, list);
   }
 
   public APIResult addPartitionToFact(String table, String storage, String partSpec) {
-    return new GrillMetadataClient(conn).addPartitionToFactTable(table, storage, partSpec);
+    return mc.addPartitionToFactTable(table, storage, partSpec);
   }
 
   public APIResult addPartitionToDim(String table, String storage, String partSpec) {
-    return new GrillMetadataClient(conn).addPartitionToDimensionTable(table, storage, partSpec);
+    return mc.addPartitionToDimensionTable(table, storage, partSpec);
   }
 
   public QueryPrepareHandle prepare(String sql, String queryName) {
