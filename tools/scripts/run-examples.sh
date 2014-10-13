@@ -34,9 +34,9 @@ done
 
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
-. ${BASEDIR}/bin/grill-config.sh 'client'
+. ${BASEDIR}/bin/lens-config.sh 'client'
 
-JAVA_PROPERTIES="$GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
+JAVA_PROPERTIES="$LENS_OPTS $LENS_PROPERTIES -Dlens.log.dir=$LENS_LOG_DIR -Dlens.home=${LENS_HOME_DIR} -Dconfig.location=$LENS_CONF"
 
 ################################
 # constants
@@ -93,7 +93,7 @@ run_client() {
   fi
 
   set -x
-  exec ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} \
+  exec ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} \
       "$CLIENT_APPLICATION_CLASS" $*
 }
 
@@ -140,7 +140,7 @@ while [ -n "$*" ] ; do
       ;;
     --classpath|-C)
       [ -n "$1" ] || error "Option --classpath requires an argument" 1
-      GRILLCPPATH=$1
+      LENSCPPATH=$1
       shift
       ;;
     -D*)
@@ -156,11 +156,11 @@ done
 
 # prepend conf dir to classpath
 if [ -n "$opt_conf" ]; then
-  GRILLCPPATH="$opt_conf:$GRILLCPPATH"
+  LENSCPPATH="$opt_conf:$LENSCPPATH"
 fi
 
 # prepend resources dir to classpath
-GRILLCPPATH="${GRILL_HOME_DIR}/examples/resources:${GRILL_HOME_DIR}/examples/queries:$GRILLCPPATH"
+LENSCPPATH="${LENS_HOME_DIR}/examples/resources:${LENS_HOME_DIR}/examples/queries:$LENSCPPATH"
 
 # finally, invoke the appropriate command
 if [ -n "$opt_meta" ] ; then
