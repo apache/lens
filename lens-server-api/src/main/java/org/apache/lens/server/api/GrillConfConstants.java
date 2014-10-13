@@ -173,13 +173,13 @@ public class GrillConfConstants {
 
   public static final String QUERY_OUTPUT_FORMATTER = "grill.query.output.formatter";
 
-  public static final String DEFAULT_INMEMORY_OUTPUT_FORMATTER = "com.inmobi.grill.lib.query.FileSerdeFormatter";
+  public static final String DEFAULT_INMEMORY_OUTPUT_FORMATTER = "org.apache.lens.lib.query.FileSerdeFormatter";
 
-  public static final String DEFAULT_PERSISTENT_OUTPUT_FORMATTER = "com.inmobi.grill.lib.query.FilePersistentFormatter";
+  public static final String DEFAULT_PERSISTENT_OUTPUT_FORMATTER = "org.apache.lens.lib.query.FilePersistentFormatter";
 
   public static final String QUERY_OUTPUT_SERDE = "grill.result.output.serde";
 
-  public static final String DEFAULT_OUTPUT_SERDE = "com.inmobi.grill.lib.query.CSVSerde";
+  public static final String DEFAULT_OUTPUT_SERDE = "org.apache.lens.lib.query.CSVSerde";
 
   public static final String QUERY_OUTPUT_FILE_EXTN = "grill.query.output.file.extn";
 

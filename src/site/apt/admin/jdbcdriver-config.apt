@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -54,6 +54,6 @@ Jdbc driver configuration
 *--+--+---+--+
 |15|grill.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
 *--+--+---+--+
-|16|grill.driver.jdbc.query.rewriter|com.inmobi.grill.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+|16|grill.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
 The configuration parameters and their default values

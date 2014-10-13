@@ -25,7 +25,7 @@
 
 <property>
   <name>grill.hive.connection.class</name>
-  <value>com.inmobi.grill.driver.hive.RemoteThriftConnection</value>
+  <value>org.apache.lens.driver.hive.RemoteThriftConnection</value>
   <description>The connection class from HiveDriver to HiveServer. </description>
 </property>
 

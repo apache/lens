@@ -131,7 +131,7 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   private static String testTable = "TEST_TABLE";
-  public static final String TEST_DATA_FILE = "../grill-driver-hive/testdata/testdata2.txt";
+  public static final String TEST_DATA_FILE = "../lens-driver-hive/testdata/testdata2.txt";
 
   private void createTable(String tblName) throws InterruptedException {
     GrillTestUtil.createTable(tblName, target(), grillSessionId);

@@ -45,7 +45,7 @@ public class TestGenerateConfigDoc {
   public static final String HIVE_DRIVER_CONF_FILE = "../lens-driver-hive/src/main/resources/hivedriver-default.xml";
   public static final String JDBC_DRIVER_CONF_FILE = "../lens-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
   public static final String CLIENT_CONF_FILE = "../lens-client/src/main/resources/lens-client-default.xml";
-  public static final String CUBE_QUERY_CONF_FILE = "../lens-driver-cube/src/main/resources/olap-query-conf.xml";
+  public static final String CUBE_QUERY_CONF_FILE = "../lens-cube/src/main/resources/olap-query-conf.xml";
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
   public static final String SESSION_APT_FILE = "../src/site/apt/admin/session-config.apt";
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";

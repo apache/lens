@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,20 +17,20 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill server configuration
+Lens server configuration
 
 ===
 
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.appevent.ws.listener.impl|com.inmobi.grill.server.GrillApplicationListener|Implementation class for Grill Application Listener|
+|1|grill.appevent.ws.listener.impl|org.apache.lens.server.GrillApplicationListener|Implementation class for Grill Application Listener|
 *--+--+---+--+
-|2|grill.authentication.ws.filter.impl|com.inmobi.grill.server.AuthenticationFilter|Implementation class for Authentication Filter|
+|2|grill.authentication.ws.filter.impl|org.apache.lens.server.AuthenticationFilter|Implementation class for Authentication Filter|
 *--+--+---+--+
-|3|grill.consistentState.ws.filter.impl|com.inmobi.grill.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
+|3|grill.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
-|4|grill.drivers|com.inmobi.grill.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
+|4|grill.drivers|org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this grill server instance|
 *--+--+---+--+
 |5|grill.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+
@@ -38,7 +38,7 @@ Grill server configuration
 *--+--+---+--+
 |7|grill.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
-|8|grill.index.ws.resource.impl|com.inmobi.grill.server.IndexResource|Implementation class for Index Resource|
+|8|grill.index.ws.resource.impl|org.apache.lens.server.IndexResource|Implementation class for Index Resource|
 *--+--+---+--+
 |9|grill.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
 *--+--+---+--+
@@ -52,9 +52,9 @@ Grill server configuration
 *--+--+---+--+
 |14|grill.max.finished.queries|100|Maximum number of finished queries which grill server will keep in memory before purging.|
 *--+--+---+--+
-|15|grill.metastore.service.impl|com.inmobi.grill.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|15|grill.metastore.service.impl|org.apache.lens.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|16|grill.metastore.ws.resource.impl|com.inmobi.grill.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
+|16|grill.metastore.ws.resource.impl|org.apache.lens.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
 *--+--+---+--+
 |17|grill.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
@@ -64,19 +64,19 @@ Grill server configuration
 *--+--+---+--+
 |20|grill.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
 *--+--+---+--+
-|21|grill.query.service.impl|com.inmobi.grill.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|21|grill.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|22|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class com.inmobi.grill.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|22|grill.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
 *--+--+---+--+
-|23|grill.query.ws.resource.impl|com.inmobi.grill.server.query.QueryServiceResource|Implementation class for Query Resource|
+|23|grill.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
 *--+--+---+--+
-|24|grill.quota.service.impl|com.inmobi.grill.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|24|grill.quota.service.impl|org.apache.lens.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|25|grill.quota.ws.resource.impl|com.inmobi.grill.server.quota.QuotaResource|Implementation class for Quota Resource|
+|25|grill.quota.ws.resource.impl|org.apache.lens.server.quota.QuotaResource|Implementation class for Quota Resource|
 *--+--+---+--+
-|26|grill.scheduler.service.impl|com.inmobi.grill.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|26|grill.scheduler.service.impl|org.apache.lens.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|27|grill.scheduler.ws.resource.impl|com.inmobi.grill.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
+|27|grill.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
 *--+--+---+--+
 |28|grill.server.base.url|http://localhost:9999/grillapi/|The base url for the grill server|
 *--+--+---+--+
@@ -98,7 +98,7 @@ Grill server configuration
 *--+--+---+--+
 |37|grill.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
 *--+--+---+--+
-|38|grill.server.service.provider.factory|com.inmobi.grill.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an    instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example    --    Class spfClass 				= conf.getClass("grill.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
+|38|grill.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an    instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example    --    Class spfClass 				= conf.getClass("grill.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
 *--+--+---+--+
 |39|grill.server.session.timeout.seconds|86400|Grill session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
@@ -110,7 +110,7 @@ Grill server configuration
 *--+--+---+--+
 |43|grill.server.ui.static.dir|webapp/grill-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|44|grill.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver.      In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend com.inmobi.grill.server.user.UserConfigLoader  |
+|44|grill.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver.      In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader  |
 *--+--+---+--+
 |45|grill.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the database driver class|
 *--+--+---+--+
@@ -148,19 +148,19 @@ Grill server configuration
 *--+--+---+--+
 |62|grill.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
 *--+--+---+--+
-|63|grill.serverMode.ws.filter.impl|com.inmobi.grill.server.ServerModeFilter|Implementation class for ServerMode Filter|
+|63|grill.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
 |64|grill.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when grill-server starts up|
 *--+--+---+--+
-|65|grill.session.service.impl|com.inmobi.grill.server.session.HiveSessionService|Implementation class for session service|
+|65|grill.session.service.impl|org.apache.lens.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|66|grill.session.ws.resource.impl|com.inmobi.grill.server.session.SessionResource|Implementation class for Session Resource|
+|66|grill.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
 |67|grill.statistics.db|grillstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
 |68|grill.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|69|grill.statistics.store.class|com.inmobi.grill.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
+|69|grill.statistics.store.class|org.apache.lens.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Grill Statistics.|
 *--+--+---+--+
 |70|grill.statistics.warehouse.dir|file:///tmp/grill/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+

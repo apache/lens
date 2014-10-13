@@ -1,0 +1,345 @@
+#!/bin/bash
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License. See accompanying LICENSE file.
+#
+
+# resolve links - $0 may be a softlink
+PRG="${0}"
+
+while [ -h "${PRG}" ]; do
+  ls=`ls -ld "${PRG}"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "${PRG}"`/"$link"
+  fi
+done
+
+BASEDIR=`dirname ${PRG}`
+BASEDIR=`cd ${BASEDIR}/..;pwd`
+. ${BASEDIR}/bin/grill-config.sh 'server'
+
+
+################################
+# functions
+################################
+
+info() {
+  local msg=$1
+
+  echo "Info: $msg" >&2
+}
+
+warn() {
+  local msg=$1
+
+  echo "Warning: $msg" >&2
+}
+
+error() {
+  local msg=$1
+  local exit_code=$2
+
+  echo "Error: $msg" >&2
+
+  if [ -n "$exit_code" ] ; then
+    exit $exit_code
+  fi
+}
+
+
+display_help() {
+  cat <<EOF
+Usage: $0 start // Start the server
+       $0 stop // Stop the server
+       $0 restart // Restart the server, stop followed by stop
+       $0 force [stop|restart] // Forcefully stop the server 
+       $0 status // Server status
+       $0 stack // Dump the thread stacks
+       $0 memory-histogram // Server's memory histogram
+       $0 memory-dump // Server's memory dump dumped to file in log directory
+       
+  Optional parameters for the commands --conf/-c, --classpath/-C, -D, --verbose/-v
+  
+EOF
+}
+
+start() {
+  # make sure the process is not running
+  if [ -f $GRILL_PID_FILE ]; then
+    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+      echo grill-server running as process `cat $GRILL_PID_FILE`.  Stop it first.
+      exit 1
+    fi
+  fi
+
+  # HADOOP_HOME env variable overrides hadoop in the path
+  HADOOP_HOME=${HADOOP_HOME:-${HADOOP_PREFIX}}
+  if [ "$HADOOP_HOME" == "" ]; then
+    echo "Cannot find hadoop installation: \$HADOOP_HOME or \$HADOOP_PREFIX must be set or hadoop must be in the path";
+    exit 4;
+  else
+    echo "Adding hadoop libs in classpath from $HADOOP_HOME"
+
+    #ASSUMPTION: hadoop jars would be present in HADOOP_HOME if installed through deb or would be present
+    # in HADOOP_HOME/share/hadoop if installed through tarball. They can not coexist.
+
+    CORE_JARS=`ls $HADOOP_HOME/hadoop-core-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+    LIB_JARS=`ls $HADOOP_HOME/lib/guava-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/lib/protobuf-java-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/commons-configuration-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LIB_JARS=$LIB_JARS:`ls ${HADOOP_HOME}/share/hadoop/hdfs/lib/protobuf-java-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+
+    COMMON_JARS=`ls ${HADOOP_HOME}/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/hadoop-common-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    COMMON_JARS=$COMMON_JARS:`ls ${HADOOP_HOME}/share/hadoop/common/lib/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+    HDFS_JARS=`ls ${HADOOP_HOME}/../hadoop-hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    HDFS_JARS=$HDFS_JARS:`ls ${HADOOP_HOME}/share/hadoop/hdfs/hadoop-hdfs-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+    MAPRED_JARS=`ls ${HADOOP_HOME}/../hadoop-mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    MAPRED_JARS=$MAPRED_JARS:`ls ${HADOOP_HOME}/share/hadoop/mapreduce/hadoop-*.jar 2>/dev/null | tr "\n" ':' 2>/dev/null`
+
+    HADOOP_JARPATH=$CORE_JARS:$LIB_JARS:$COMMON_JARS:$HDFS_JARS:$MAPRED_JARS
+    GRILLCPPATH=${GRILLCPPATH}:$HADOOP_JARPATH
+  fi
+
+  if [ "$HIVE_HOME" != "" ]; then    
+    echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into grill classpath"
+    GRILLCPPATH="${GRILLCPPATH}:${HIVE_HOME}/lib/*"
+  else
+    echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
+    exit 1
+  fi
+  
+  # Add HIVE_HOME to HADOOP_CLASS_PATH
+  HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${HIVE_HOME}/lib/*"
+  export HADOOP_CLASSPATH
+  
+  mkdir -p $GRILL_LOG_DIR
+
+  JAVA_PROPERTIES="${JAVA_PROPERTIES} $GRILL_OPTS $GRILL_PROPERTIES -Dgrill.log.dir=$GRILL_LOG_DIR -Dgrill.home=${GRILL_HOME_DIR} -Dconfig.location=$GRILL_CONF"
+  shift
+
+  while [[ ${1} =~ ^\-D ]]; do
+    JAVA_PROPERTIES="${JAVA_PROPERTIES} ${1}"
+  shift
+  done
+
+  if [ -n "$opt_verbose" ] ; then
+    JAVA_PROPERTIES="-Dgrillserver.root.logger=INFO,CONSOLE -Dgrillserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
+    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $*
+  else 
+  pushd ${BASEDIR} > /dev/null
+    TIME=`date +%Y%m%d%H%M%s`
+
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${GRILLCPPATH} com.inmobi.grill.server.GrillServer $* > "${GRILL_LOG_DIR}/grillserver.out.$TIME" 2>&1 < /dev/null &
+    echo $! > $GRILL_PID_FILE
+    popd > /dev/null
+
+    echo Started grill server!
+    exit 0
+  fi
+}
+
+restart() {
+  stop
+  start
+}
+
+stop() {
+  if [ -f $GRILL_PID_FILE ]; then
+    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+      echo Stopping grill server running as `cat $GRILL_PID_FILE`
+      if [ -n "$opt_force" ] ; then
+        kill -9 `cat $GRILL_PID_FILE`
+      else
+        kill -15 `cat $GRILL_PID_FILE`
+      fi
+      while :
+        do 
+          if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+             echo -n "."
+             sleep 1
+          else
+             break
+          fi  
+        done
+      rm -rf  $GRILL_PID_FILE
+      echo Stopped grill server!
+    fi
+  else
+    echo "pid file $GRILL_PID_FILE not present"
+  fi
+}
+
+status() {
+  if [ -f $GRILL_PID_FILE ]; then
+    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+      echo "Grill server is running"
+      echo "The pid: `cat $GRILL_PID_FILE`"
+      exit 0
+    else
+      exit -2
+    fi  
+  else
+    echo "pid file $GRILL_PID_FILE not present"
+    exit -1
+  fi
+}
+
+stack() {
+  if [ -f $GRILL_PID_FILE ]; then
+    kill -3 `cat $GRILL_PID_FILE`
+    echo stack dumped in server stdout
+    exit 0
+  else
+    echo "pid file $GRILL_PID_FILE not present"
+    exit -1
+  fi
+}
+
+counters() {
+
+echo "Not implemented"
+exit 0
+}
+
+memory_histo() {
+  if [ -f $GRILL_PID_FILE ]; then
+    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+      jmap -histo `cat $GRILL_PID_FILE`
+      exit 0
+    else
+      exit -2
+    fi  
+  else
+    echo "pid file $GRILL_PID_FILE not present"
+    exit -1
+  fi
+}
+
+memory_dump() {
+  if [ -f $GRILL_PID_FILE ]; then
+    if kill -0 `cat $GRILL_PID_FILE` > /dev/null 2>&1; then
+      TIME=`date +%Y%m%d%H%M%s`
+      jmap -dump:file=$GRILL_LOG_DIR/grillserver-dump-$TIME.hprof `cat $GRILL_PID_FILE`
+      exit 0
+    else
+      exit -2
+    fi  
+  else
+    echo "pid file $GRILL_PID_FILE not present"
+    exit -1
+  fi
+}
+
+run() {
+mode=$1
+shift
+
+case "$mode" in
+  help)
+    display_help
+    exit 0
+    ;;
+  start)
+    start
+    ;;
+  stop)
+    stop
+    exit 0
+    ;;
+  status)
+    status
+    ;;
+  restart)
+    restart
+    ;;
+  force)
+    opt_force=1
+    ;;
+  stack)
+    stack
+    ;;
+  counters)
+    counters
+    exit 0
+    ;;
+  memory-histogram)
+    memory_histo
+    ;;
+  memory-dump)
+    memory_dump
+    ;;
+  *)
+    error "Unknown or unspecified command '$mode'"
+    echo
+    display_help
+    exit 1
+    ;;
+esac
+}
+################################
+# main
+################################
+
+opt_conf=""
+
+while [ -n "$*" ] ; do
+  arg=$1
+  shift
+
+  case "$arg" in
+    --conf|-c)
+      [ -n "$1" ] || error "Option --conf requires an argument" 1
+      opt_conf=$1
+      shift
+      ;;
+    --verbose|-v)
+      opt_verbose=1
+      shift
+      ;;
+    --classpath|-C)
+      [ -n "$1" ] || error "Option --classpath requires an argument" 1
+      GRILLCPPATH="$GRILLCPPATH:$1"
+      shift
+      ;;
+    -D*)
+      JAVA_PROPERTIES="${JAVA_PROPERTIES} $arg"
+      ;;
+    *)
+      args="$args $arg"
+      ;;
+  esac
+done
+
+
+
+# prepend conf dir to classpath
+if [ -n "$opt_conf" ]; then
+  GRILLCPPATH="$opt_conf:$GRILLCPPATH"
+fi
+
+# finally, invoke the appropriate command
+if [ -n "$opt_force" ] ; then
+  run $args
+else
+  run $args
+fi
+exit 0
+

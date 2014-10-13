@@ -9,7 +9,7 @@
        <version>1.1.1-SNAPSHOT</version>
     </parent>
     
-    <artifactId>lens-driver-cube</artifactId>
+    <artifactId>lens-cube</artifactId>
     <packaging>jar</packaging>
     <description> The driver implementation accepting cube queries</description>
 
