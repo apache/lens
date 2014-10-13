@@ -224,7 +224,7 @@ public class TestSessionResource extends GrillJerseyTest {
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
         "file"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-        "target/test-classes/grill-site.xml"));
+        "target/test-classes/lens-site.xml"));
     result = resourcetarget.path("delete").request().put(
         Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);

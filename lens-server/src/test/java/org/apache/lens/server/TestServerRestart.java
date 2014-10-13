@@ -365,7 +365,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(),
       "file"));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-      "target/test-classes/grill-site.xml"));
+      "target/test-classes/lens-site.xml"));
     result = resourcetarget.path("add").request().put(
       Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
@@ -393,7 +393,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     Assert.assertEquals(session.getGrillSessionPersistInfo().getResources().size(), 1);
     GrillSessionImpl.ResourceEntry resourceEntry = session.getGrillSessionPersistInfo().getResources().get(0);
     Assert.assertEquals(resourceEntry.getType(), "file");
-    Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/grill-site.xml");
+    Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/lens-site.xml");
 
     // close session
     result = sessionTarget.queryParam("sessionid", restartTestSession).request().delete(APIResult.class);
