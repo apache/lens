@@ -91,8 +91,6 @@ run_client() {
   else
     error "Must specify client application class" 1
   fi
-
-  set -x
   exec ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} \
       "$CLIENT_APPLICATION_CLASS" $*
 }
