@@ -1,0 +1,10 @@
+<configuration>
+  <property>
+    <name>grill.server.user.resolver.type</name>
+    <value>FIXED</value>
+  </property>
+  <property>
+    <name>grill.server.user.resolver.fixed.value</name>
+    <value>grilluser</value>
+  </property>
+</configuration>

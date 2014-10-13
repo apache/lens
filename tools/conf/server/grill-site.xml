@@ -4,6 +4,6 @@
 <configuration>
 <property>
   <name>grill.drivers</name>
-  <value>com.inmobi.grill.driver.hive.HiveDriver,com.inmobi.grill.driver.jdbc.JDBCDriver</value>
+  <value>org.apache.lens.driver.hive.HiveDriver,org.apache.lens.driver.jdbc.JDBCDriver</value>
 </property>
 </configuration>

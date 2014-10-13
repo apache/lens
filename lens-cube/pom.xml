@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+     <modelVersion>4.0.0</modelVersion>
+		 <name>Lens Cube</name>
+   
+     <parent>
+       <artifactId>lens-parent</artifactId>
+       <groupId>org.apache.lens</groupId>
+       <version>1.1.1-SNAPSHOT</version>
+    </parent>
+    
+    <artifactId>lens-cube</artifactId>
+    <packaging>jar</packaging>
+    <description>OLAP cube queries</description>
+
+    <dependencies>
+        <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-server-api</artifactId>
+        <version>${project.version}</version>
+        </dependency>
+
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-exec</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hive</groupId>
+        <artifactId>hive-service</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+    </dependency>
+     <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-testng</artifactId>
+     </dependency>
+     <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito</artifactId>
+     </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-mapreduce-client-core</artifactId>
+      </dependency>
+    </dependencies>
+
+</project>    
