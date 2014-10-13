@@ -72,7 +72,6 @@ public class GrillClient {
   }
 
   public QueryHandle executeQueryAsynch(String sql, String queryName) {
-    GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
     statement.execute(sql, false, queryName);
     GrillQuery query = statement.getQuery();
@@ -105,7 +104,6 @@ public class GrillClient {
   }
 
   public GrillClientResultSetWithStats getResults(String sql, String queryName) {
-    GrillStatement statement = new GrillStatement(conn);
     LOG.debug("Executing query " + sql);
     statement.execute(sql, true, queryName);
     return getResultsFromStatement(statement);
@@ -126,7 +124,6 @@ public class GrillClient {
   }
 
   private GrillClientResultSetWithStats getResultsFromHandle(QueryHandle q) {
-    GrillStatement statement = new GrillStatement(conn);
     GrillQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
         == QueryStatus.Status.FAILED) {
@@ -161,8 +158,6 @@ public class GrillClient {
   }
 
   public boolean killQuery(QueryHandle q) {
-    GrillStatement statement = new GrillStatement(conn);
-
     return statement.kill(statement.getQuery(q));
   }
 
