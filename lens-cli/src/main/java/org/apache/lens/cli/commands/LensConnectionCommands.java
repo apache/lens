@@ -33,7 +33,7 @@ import java.io.Console;
 import java.util.List;
 
 @Component
-public class GrillConnectionCommands extends BaseGrillCommand implements CommandMarker  {
+public class LensConnectionCommands extends BaseGrillCommand implements CommandMarker  {
 
 
   @CliCommand(value = "set", help = "sets a session parameter.")

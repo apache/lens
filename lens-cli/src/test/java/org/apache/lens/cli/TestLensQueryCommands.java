@@ -24,8 +24,8 @@ package org.apache.lens.cli;
 import org.apache.commons.lang.StringUtils;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.cli.commands.GrillCubeCommands;
-import org.apache.lens.cli.commands.GrillQueryCommands;
+import org.apache.lens.cli.commands.LensCubeCommands;
+import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +37,10 @@ import java.io.*;
 import java.net.URL;
 import java.util.UUID;
 
-public class TestGrillQueryCommands extends GrillCliApplicationTest {
+public class TestLensQueryCommands extends GrillCliApplicationTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(
-      TestGrillQueryCommands.class);
+      TestLensQueryCommands.class);
 
   private GrillClient client;
 
@@ -78,7 +78,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     client = new GrillClient();
     client.setConnectionParam("grill.persistent.resultset.indriver", "false");
     setup(client);
-    GrillQueryCommands qCom = new GrillQueryCommands();
+    LensQueryCommands qCom = new LensQueryCommands();
     qCom.setClient(client);
     testExecuteSyncQuery(qCom);
     testExecuteAsyncQuery(qCom);
@@ -88,7 +88,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     testPurgedFinishedResultSet(qCom);
   }
 
-  private void testPreparedQuery(GrillQueryCommands qCom) throws Exception {
+  private void testPreparedQuery(LensQueryCommands qCom) throws Exception {
     long submitTime = System.currentTimeMillis();
     String sql = "cube select id, name from test_dim";
     String result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
@@ -134,7 +134,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertFalse(handles2.contains(qh), handles2);
   }
 
-  private void testExplainQuery(GrillQueryCommands qCom) throws Exception {
+  private void testExplainQuery(LensQueryCommands qCom) throws Exception {
     String sql = "cube select id, name from test_dim";
     String result = qCom.explainQuery(sql, "");
 
@@ -143,7 +143,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
   }
 
-  private void testExecuteAsyncQuery(GrillQueryCommands qCom) throws Exception {
+  private void testExecuteAsyncQuery(LensQueryCommands qCom) throws Exception {
     System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
     String sql = "cube select id,name from test_dim";
     long submitTime = System.currentTimeMillis();
@@ -210,19 +210,19 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
 
 
   public void setup(GrillClient client) throws Exception {
-    GrillCubeCommands command = new GrillCubeCommands();
+    LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
 
     LOG.debug("Starting to test cube commands");
     URL cubeSpec =
-        TestGrillQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
+        TestLensQueryCommands.class.getClassLoader().getResource("sample-cube.xml");
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
-    TestGrillDimensionCommands.createDimension();
-    TestGrillDimensionTableCommands.addDim1Table("dim_table",
-        "dim_table.xml", "dim_table_storage.xml", "local");
+    TestLensDimensionCommands.createDimension();
+    TestLensDimensionTableCommands.addDim1Table("dim_table",
+      "dim_table.xml", "dim_table_storage.xml", "local");
 
     URL dataFile =
-        TestGrillQueryCommands.class.getClassLoader().getResource("data.txt");
+        TestLensQueryCommands.class.getClassLoader().getResource("data.txt");
 
     QueryHandle qh = client.executeQueryAsynch("LOAD DATA LOCAL INPATH '"
         + new File(dataFile.toURI()).getAbsolutePath()+
@@ -235,13 +235,13 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     Assert.assertEquals(client.getQueryStatus(qh).getStatus(),QueryStatus.Status.SUCCESSFUL);
   }
 
-  private void testExecuteSyncQuery(GrillQueryCommands qCom) {
+  private void testExecuteSyncQuery(LensQueryCommands qCom) {
     String sql = "cube select id,name from test_dim";
     String result = qCom.executeQuery(sql, false, "testQuery2");
     Assert.assertTrue(result.contains("1\tfirst"), result);
   }
 
-  private void testShowPersistentResultSet(GrillQueryCommands qCom) throws Exception {
+  private void testShowPersistentResultSet(LensQueryCommands qCom) throws Exception {
     System.out.println("@@PERSISTENT_RESULT_TEST-------------");
     client.setConnectionParam("grill.persistent.resultset.indriver", "true");
     String query = "cube select id,name from test_dim";
@@ -257,7 +257,7 @@ public class TestGrillQueryCommands extends GrillCliApplicationTest {
     System.out.println("@@END_PERSISTENT_RESULT_TEST-------------");
   }
 
-  private void testPurgedFinishedResultSet(GrillQueryCommands qCom) {
+  private void testPurgedFinishedResultSet(LensQueryCommands qCom) {
     System.out.println("@@START_FINISHED_PURGED_RESULT_TEST-------------");
     client.setConnectionParam("grill.max.finished.queries", "0");
     client.setConnectionParam("grill.persistent.resultset","true");

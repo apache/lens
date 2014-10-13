@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillFactCommands extends BaseGrillCommand implements CommandMarker {
+public class LensFactCommands extends BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show facts",
       help = "display list of fact tables in database")

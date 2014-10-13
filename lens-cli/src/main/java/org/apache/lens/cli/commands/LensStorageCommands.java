@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillStorageCommands extends  BaseGrillCommand implements CommandMarker {
+public class LensStorageCommands extends  BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show storages", help = "list storages")
   public String getStorages() {

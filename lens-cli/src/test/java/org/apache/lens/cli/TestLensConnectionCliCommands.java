@@ -21,7 +21,7 @@ package org.apache.lens.cli;
 
 
 
-import org.apache.lens.cli.commands.GrillConnectionCommands;
+import org.apache.lens.cli.commands.LensConnectionCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +31,10 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
-public class TestGrillConnectionCliCommands extends GrillCliApplicationTest {
+public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(
-      TestGrillConnectionCliCommands.class);
+      TestLensConnectionCliCommands.class);
 
 
   @Test
@@ -53,7 +53,7 @@ public class TestGrillConnectionCliCommands extends GrillCliApplicationTest {
   @Test
   public void testConnectionCommand() {
     GrillClient client = new GrillClient();
-    GrillConnectionCommands commands = new GrillConnectionCommands();
+    LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     String key = "connectiontest1";
     String value = "connectiontest1val";
@@ -70,7 +70,7 @@ public class TestGrillConnectionCliCommands extends GrillCliApplicationTest {
   @Test
   public void testFileCommands() {
     GrillClient client = new GrillClient();
-    GrillConnectionCommands commands = new GrillConnectionCommands();
+    LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     LOG.debug("Testing set/remove file operations");
 
@@ -95,7 +95,7 @@ public class TestGrillConnectionCliCommands extends GrillCliApplicationTest {
   @Test
   public void testJarCommands() {
     GrillClient client = new GrillClient();
-    GrillConnectionCommands commands = new GrillConnectionCommands();
+    LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     LOG.debug("Testing set/remove file operations");
 

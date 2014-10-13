@@ -19,10 +19,7 @@ package org.apache.lens.cli;
  * #L%
  */
 
-import org.apache.lens.api.metastore.XDimension;
-
-import org.apache.lens.cli.commands.GrillDimensionCommands;
-import org.apache.lens.cli.commands.GrillDimensionTableCommands;
+import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,16 +30,16 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-public class TestGrillDimensionCommands extends GrillCliApplicationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillDimensionCommands.class);
+public class TestLensDimensionCommands extends GrillCliApplicationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionCommands.class);
 
-  private static GrillDimensionCommands command = null;
+  private static LensDimensionCommands command = null;
 
 
-  private static GrillDimensionCommands getCommand() {
+  private static LensDimensionCommands getCommand() {
     if (command == null) {
       GrillClient client = new GrillClient();
-      command = new GrillDimensionCommands();
+      command = new LensDimensionCommands();
       command.setClient(client);
     }
     return command;
@@ -50,7 +47,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
 
   public static void createDimension() throws URISyntaxException {
     URL dimensionSpec =
-        TestGrillDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
+        TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
     getCommand().createDimension(new File(dimensionSpec.toURI()).getAbsolutePath());
   }
 
@@ -58,7 +55,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
   public void testDimensionCommands() throws Exception {
     LOG.debug("Starting to test dimension commands");
     URL dimensionSpec =
-        TestGrillDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
+        TestLensDimensionCommands.class.getClassLoader().getResource("test-dimension.xml");
     String dimensionList = getCommand().showDimensions();
     Assert.assertFalse(
         dimensionList.contains("test_dim"));
@@ -74,7 +71,7 @@ public class TestGrillDimensionCommands extends GrillCliApplicationTest {
         dimensionList.contains("test_dim"));
   }
 
-  private void testUpdateCommand(File f, GrillDimensionCommands command) {
+  private void testUpdateCommand(File f, LensDimensionCommands command) {
     try {
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(f));

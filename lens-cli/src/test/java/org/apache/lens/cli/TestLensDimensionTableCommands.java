@@ -21,7 +21,7 @@ package org.apache.lens.cli;
 
 
 
-import org.apache.lens.cli.commands.GrillDimensionTableCommands;
+import org.apache.lens.cli.commands.LensDimensionTableCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,17 +31,17 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
+public class TestLensDimensionTableCommands extends GrillCliApplicationTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillDimensionTableCommands.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionTableCommands.class);
   public static final String DIM_LOCAL = "dim_local";
-  private static GrillDimensionTableCommands command = null;
+  private static LensDimensionTableCommands command = null;
 
 
-  private static GrillDimensionTableCommands getCommand() {
+  private static LensDimensionTableCommands getCommand() {
     if (command == null) {
       GrillClient client = new GrillClient();
-      command = new GrillDimensionTableCommands();
+      command = new LensDimensionTableCommands();
       command.setClient(client);
     }
     return command;
@@ -61,16 +61,16 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
 
 
   public static void addDim1Table(String tableName,String specName, String storageSpecName, String storageName) {
-    GrillDimensionTableCommands command = getCommand();
+    LensDimensionTableCommands command = getCommand();
     String dimList = command.showDimensionTables();
     Assert.assertEquals("No Dimensions Found", dimList,
         "Dim tables should not be found");
     //add local storage before adding fact table
-    TestGrillStorageCommands.addLocalStorage(storageName);
+    TestLensStorageCommands.addLocalStorage(storageName);
     URL dimSpec =
-        TestGrillDimensionTableCommands.class.getClassLoader().getResource(specName);
+        TestLensDimensionTableCommands.class.getClassLoader().getResource(specName);
     URL factStorageSpec =
-        TestGrillDimensionTableCommands.class.getClassLoader().getResource(storageSpecName);
+        TestLensDimensionTableCommands.class.getClassLoader().getResource(storageSpecName);
 
     try {
       command.createDimensionTable(new File(dimSpec.toURI()).getAbsolutePath()
@@ -86,9 +86,9 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
 
   private static void updateDim1Table() {
     try {
-      GrillDimensionTableCommands command = getCommand();
+      LensDimensionTableCommands command = getCommand();
       URL dimSpec =
-          TestGrillFactCommands.class.getClassLoader().getResource("dim_table2.xml");
+          TestLensFactCommands.class.getClassLoader().getResource("dim_table2.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(dimSpec.getFile()));
       String s;
@@ -130,7 +130,7 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
   }
 
   private static void testDimStorageActions() {
-    GrillDimensionTableCommands command = getCommand();
+    LensDimensionTableCommands command = getCommand();
     String result = command.getDimStorages("dim_table2");
     Assert.assertEquals(DIM_LOCAL, result);
     command.dropAllDimStorages("dim_table2");
@@ -144,9 +144,9 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
   }
 
   private static void addLocalStorageToDim() {
-    GrillDimensionTableCommands command = getCommand();
+    LensDimensionTableCommands command = getCommand();
     String result;
-    URL resource = TestGrillFactCommands.class.getClassLoader().getResource("dim-local-storage-element.xml");
+    URL resource = TestLensFactCommands.class.getClassLoader().getResource("dim-local-storage-element.xml");
     try {
       command.addNewDimStorage("dim_table2 " + new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
@@ -163,7 +163,7 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
 
 
   private static void testDimPartitionActions() {
-    GrillDimensionTableCommands command = getCommand();
+    LensDimensionTableCommands command = getCommand();
     String result;
     result = command.getAllPartitionsOfDim("dim_table2 "+ DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
@@ -177,8 +177,8 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
   }
 
   public static void addPartitionToStorage(String tableName, String storageName, String localPartSpec) {
-    GrillDimensionTableCommands command = getCommand();
-    URL resource = TestGrillFactCommands.class.getClassLoader().getResource(localPartSpec);
+    LensDimensionTableCommands command = getCommand();
+    URL resource = TestLensFactCommands.class.getClassLoader().getResource(localPartSpec);
     try {
       command.addPartitionToFact(tableName+" "+ storageName +" " + new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
@@ -188,13 +188,13 @@ public class TestGrillDimensionTableCommands extends GrillCliApplicationTest {
   }
 
   public static void dropDim1Table() {
-    GrillDimensionTableCommands command = getCommand();
+    LensDimensionTableCommands command = getCommand();
     String dimList = command.showDimensionTables();
     Assert.assertEquals("dim_table2", dimList, "dim_table table should be found");
     command.dropDimensionTable("dim_table2", false);
     dimList = command.showDimensionTables();
     Assert.assertEquals("No Dimensions Found", dimList,
         "Dim tables should not be found");
-    TestGrillStorageCommands.dropStorage(DIM_LOCAL);
+    TestLensStorageCommands.dropStorage(DIM_LOCAL);
   }
 }

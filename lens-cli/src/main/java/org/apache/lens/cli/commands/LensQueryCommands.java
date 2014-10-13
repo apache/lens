@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class GrillQueryCommands extends  BaseGrillCommand implements CommandMarker {
+public class LensQueryCommands extends  BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "query execute", help = "Execute query in async/sync manner")
   public String executeQuery(
