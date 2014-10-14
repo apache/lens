@@ -45,7 +45,7 @@ public class StatisticsLogRollupHandler {
   public void initialize(Configuration conf) {
     task = new StatisticsLogFileScannerTask();
     timer = new Timer();
-    rate = conf.getLong(GrillConfConstants.GRILL_STATS_ROLLUP_SCAN_RATE,
+    rate = conf.getLong(GrillConfConstants.STATS_ROLLUP_SCAN_RATE,
         GrillConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
   }
 

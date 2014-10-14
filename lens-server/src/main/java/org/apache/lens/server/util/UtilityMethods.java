@@ -78,13 +78,13 @@ public class UtilityMethods {
   }
   public static BasicDataSource getDataSourceFromConf(Configuration conf) {
     BasicDataSource tmp = new BasicDataSource();
-    tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_DB_DRIVER_NAME,
+    tmp.setDriverClassName(conf.get(GrillConfConstants.SERVER_DB_DRIVER_NAME,
       GrillConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
-    tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_URL,
+    tmp.setUrl(conf.get(GrillConfConstants.SERVER_DB_JDBC_URL,
       GrillConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
-    tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_USER,
+    tmp.setUsername(conf.get(GrillConfConstants.SERVER_DB_JDBC_USER,
       GrillConfConstants.DEFAULT_SERVER_DB_USER));
-    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_PASS,
+    tmp.setPassword(conf.get(GrillConfConstants.SERVER_DB_JDBC_PASS,
       GrillConfConstants.DEFAULT_SERVER_DB_PASS));
     return tmp;
   }

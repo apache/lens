@@ -2,7 +2,7 @@ package org.apache.lens.server.api;
 
 /*
  * #%L
- * Grill API for server and extensions
+ * Lens API for server and extensions
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -33,37 +33,24 @@ public class GrillConfConstants {
   public static final Boolean DEFAULT_PREPARE_ON_EXPLAIN = true;
   public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
 
-  public static final String ENGINE_DRIVER_CLASSES = "grill.drivers";
   public static final String SERVICE_NAMES = SERVER_PFX + "servicenames";
   public static final String WS_RESOURCE_NAMES = SERVER_PFX + "ws.resourcenames";
   public static final String WS_LISTENER_NAMES = SERVER_PFX + "ws.listenernames";
   public static final String WS_FILTER_NAMES = SERVER_PFX + "ws.filternames";
   public static final String WS_FEATURE_NAMES = SERVER_PFX + "ws.featurenames";
 
-  public static final String STORAGE_COST = "grill.storage.cost";
   public static final String SERVICE_IMPL_SFX = ".service.impl";
   public static final String WS_RESOURCE_IMPL_SFX = ".ws.resource.impl";
   public static final String WS_FEATURE_IMPL_SFX = ".ws.feature.impl";
   public static final String WS_LISTENER_IMPL_SFX = ".ws.listener.impl";
   public static final String WS_FILTER_IMPL_SFX = ".ws.filter.impl";
 
-  public static final String GRILL_SERVICE_NAMES = "grill.servicenames";
-  public static final String GRILL_WS_RESOURCE_NAMES = "grill.ws.resourcenames";
-  public static final String GRILL_WS_LISTENER_NAMES = "grill.ws.listenernames";
-  public static final String GRILL_WS_FILTER_NAMES = "grill.ws.filternames";
-  public static final String GRILL_WS_FEATURE_NAMES = "grill.ws.featurenames";
   public static final String QUERY_STATE_LOGGER_ENABLED = SERVER_PFX + "query.state.logger.enabled";
   public static final String EVENT_SERVICE_THREAD_POOL_SIZE = SERVER_PFX + "event.service.thread.pool.size";
   
-  public static final String GRILL_PFX = "grill.";
   public static final String SERVER_BASE_URL = SERVER_PFX + "base.url";
   public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/lensapi";
 
-  public static final String GRILL_SERVICE_IMPL_SFX = ".service.impl";
-  public static final String GRILL_WS_RESOURCE_IMPL_SFX = ".ws.resource.impl";
-  public static final String GRILL_WS_FEATURE_IMPL_SFX = ".ws.feature.impl";
-  public static final String GRILL_WS_LISTENER_IMPL_SFX = ".ws.listener.impl";
-  public static final String GRILL_WS_FILTER_IMPL_SFX = ".ws.filter.impl";
   public static final String SERVER_RESTART_ENABLED = SERVER_PFX + "restart.enabled";
   public static final boolean DEFAULT_SERVER_RESTART_ENABLED = true;
   public static final String SERVER_STATE_PERSIST_LOCATION = SERVER_PFX + "persist.location";
@@ -79,35 +66,8 @@ public class GrillConfConstants {
   public static final String SERVER_UI_ENABLE_CACHING = SERVER_PFX + "ui.enable.caching";
   public static final boolean DEFAULT_SERVER_UI_ENABLE_CACHING = true;
 
-  public static final String GRILL_QUERY_STATE_LOGGER_ENABLED = "grill.query.state.logger.enabled";
-  public static final String EVENT_SERVICE_THREAD_POOL_SIZE = "grill.event.service.thread.pool.size";
   public static final String SERVER_SNAPSHOT_INTERVAL = SERVER_PFX + "snapshot.interval";
   public static final long DEFAULT_SERVER_SNAPSHOT_INTERVAL = 5 * 60 * 1000;
-
-  public static final String GRILL_SERVER_BASE_URL = "grill.server.base.url";
-  public static final String DEFAULT_GRILL_SERVER_BASE_URL = "http://0.0.0.0:9999/";
-
-  public static final String GRILL_SERVER_RESTART_ENABLED = "grill.server.restart.enabled";
-  public static final boolean DEFAULT_GRILL_SERVER_RESTART_ENABLED = true;
-  public static final String GRILL_SERVER_PERSIST_LOCATION = "grill.server.persist.location";
-  public static final String DEFAULT_GRILL_SERVER_PERSIST_LOCATION = "file:///tmp/grillserver";
-  public static final String GRILL_SERVER_RECOVER_ON_RESTART = "grill.server.recover.onrestart";
-  public static final boolean DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART = true;
-  public static final String GRILL_SESSION_TIMEOUT_SECONDS = "grill.server.session.timeout.seconds";
-  public static final long GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT = 1440 * 60; // Default is one day
-  public static final String GRILL_SERVER_UI_URI = "grill.server.ui.base.uri";
-  public static final String DEFAULT_GRILL_SERVER_UI_URI = "http://0.0.0.0:19999/";
-  public static final String GRILL_SERVER_UI_STATIC_DIR = "grill.server.ui.static.dir";
-  public static final String DEFAULT_GRILL_SERVER_UI_STATIC_DIR = "webapp/grill-server/static";
-  public static final String GRILL_SERVER_UI_ENABLE_CACHING = "grill.server.ui.enable.caching";
-  public static final boolean DEFAULT_GRILL_SERVER_UI_ENABLE_CACHING = true;
-
-  // These properties should be set in native tables if their underlying DB or table names are different
-  public static final String GRILL_NATIVE_DB_NAME = "grill.native.db.name";
-  public static final String GRILL_NATIVE_TABLE_NAME = "grill.native.table.name";
-  public static final String GRILL_SERVER_SNAPSHOT_INTERVAL = "grill.server.snapshot.interval";
-  public static final long DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL = 5 * 60 * 1000;
-
 
   // Email related configurations
   public static final String QUERY_MAIL_NOTIFY = QUERY_PFX + "enable.mail.notify";
@@ -270,15 +230,15 @@ public class GrillConfConstants {
   //Statistics Store configuration keys
   public static final String STATS_STORE_CLASS = SERVER_PFX + "statistics.store.class";
 
-  public static final String GRILL_STATISTICS_WAREHOUSE_KEY = SERVER_PFX + "statistics.warehouse.dir";
+  public static final String STATISTICS_WAREHOUSE_KEY = SERVER_PFX + "statistics.warehouse.dir";
 
   public static final String DEFAULT_STATISTICS_WAREHOUSE = "file:///tmp/lens/statistics/warehouse";
 
-  public static final String GRILL_STATISTICS_DATABASE_KEY = SERVER_PFX + "statistics.db";
+  public static final String STATISTICS_DATABASE_KEY = SERVER_PFX + "statistics.db";
 
   public static final String DEFAULT_STATISTICS_DATABASE = "lensstats";
 
-  public static final String GRILL_STATS_ROLLUP_SCAN_RATE = SERVER_PFX + "statistics.log.rollover.interval";
+  public static final String STATS_ROLLUP_SCAN_RATE = SERVER_PFX + "statistics.log.rollover.interval";
 
   public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
 

@@ -42,8 +42,8 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    querySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY);
-    keys = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
+    querySql = conf.get(GrillConfConstants.USER_RESOLVER_DB_QUERY);
+    keys = conf.get(GrillConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     ds = UtilityMethods.getDataSourceFromConf(conf);
     cache = CacheBuilder
       .newBuilder()
