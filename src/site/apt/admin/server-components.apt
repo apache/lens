@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,16 +17,16 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill server components
+Lens server components
 
-  Grill server comes up with embedded http server. It offers services for
+  Lens server comes up with embedded http server. It offers services for
   session management, metastore and query. 
   
   Here is the diagram describing all the components:
 
-[../figures/serverdesign.png] Grill Server components
+[../figures/serverdesign.png] Lens Server components
 
-* Grill services
+* Lens services
 
 ** Session service
 
@@ -42,18 +42,18 @@ Grill server components
    {{{../resource_MetastoreResource.html#path__metastore_storages_-storage-.html}Storage API}} for details.
    
       Metastore service talks to Hive metastore server.Hive metastore server end point
-   has to be configured for grill server.
+   has to be configured for lens server.
 
 ** Query service
 
    Allows user to launch query, monitor the query and get results. User can also look
    at history of his queries.
    
-   Grill server allows pluggable execution drivers for running queries. Available
+   Lens server allows pluggable execution drivers for running queries. Available
    execution engines are Hive and JDBC. For configuring Hive as an execution engine,
    administrator should configure the HiveServer2 end point. More details on configuring multiple drivers
    will be covered in {{{./config-server.html} configuration guide}}
    
 * Authentication and authorization
 
-   Currently no authentication and authorization is built in grill server
+   Currently no authentication and authorization is built in lens server

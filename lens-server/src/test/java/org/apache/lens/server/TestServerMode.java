@@ -103,16 +103,16 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
         new GrillConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle grillSessionId = target.request().post(
+    final GrillSessionHandle lensSessionId = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
-    Assert.assertNotNull(grillSessionId);
+    Assert.assertNotNull(lensSessionId);
 
     // creata a database
     WebTarget dbTarget = target().path("metastore").path("databases");
 
     try {
       APIResult result = dbTarget.queryParam("sessionid",
-          grillSessionId).request(MediaType.APPLICATION_XML_TYPE).post(Entity.xml("newdb"), APIResult.class);
+          lensSessionId).request(MediaType.APPLICATION_XML_TYPE).post(Entity.xml("newdb"), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
@@ -126,7 +126,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
 
     // drop the database
     try {
-      APIResult drop = dbTarget.path("newdb").queryParam("sessionid", grillSessionId).request().delete(APIResult.class);
+      APIResult drop = dbTarget.path("newdb").queryParam("sessionid", lensSessionId).request().delete(APIResult.class);
       assertNotNull(drop);
       assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
@@ -145,7 +145,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
     final FormDataMultiPart query = new FormDataMultiPart();
 
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select name from table"));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -169,7 +169,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
     }
 
     // Get all queries; should always pass
-    List<QueryHandle> allQueriesXML = queryTarget.queryParam("sessionid", grillSessionId).request(MediaType.APPLICATION_XML)
+    List<QueryHandle> allQueriesXML = queryTarget.queryParam("sessionid", lensSessionId).request(MediaType.APPLICATION_XML)
         .get(new GenericType<List<QueryHandle>>() {
         });
     Assert.assertTrue(allQueriesXML.size() >= 1);
@@ -177,20 +177,20 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
     if (!mode.equals(SERVICE_MODE.READ_ONLY)) {
       assertNotNull(qhandle);
       // wait for query completion if mode is not read only
-      GrillQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      GrillQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
       // wait till the query finishes
       QueryStatus stat = ctx.getStatus();
       while (!stat.isFinished()) {
-        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }
     }
     
     // close the session
-    APIResult sessionclose = target.queryParam("sessionid", grillSessionId).request().delete(APIResult.class);
+    APIResult sessionclose = target.queryParam("sessionid", lensSessionId).request().delete(APIResult.class);
     Assert.assertEquals(sessionclose.getStatus(), APIResult.Status.SUCCEEDED);
   }
 }

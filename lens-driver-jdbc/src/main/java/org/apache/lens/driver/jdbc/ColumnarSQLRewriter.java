@@ -683,9 +683,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         if (tree.getChildCount() == 2) {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
-          String grillTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(metastoreClient, grillTable);
-          String db = getUnderlyingDBName(metastoreClient, grillTable);
+          String lensTable = tableIdentifier.getText();
+          String table = getUnderlyingTableName(metastoreClient, lensTable);
+          String db = getUnderlyingDBName(metastoreClient, lensTable);
 
           // Replace both table and db names
           if ("default".equalsIgnoreCase(db)) {
@@ -700,15 +700,15 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           }
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
-          String grillTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(metastoreClient, grillTable);
+          String lensTable = tableIdentifier.getText();
+          String table = getUnderlyingTableName(metastoreClient, lensTable);
           // Replace table name
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
           }
 
           // Add db name as a new child
-          String dbName = getUnderlyingDBName(metastoreClient, grillTable);
+          String dbName = getUnderlyingDBName(metastoreClient, lensTable);
           if (StringUtils.isNotBlank(dbName)
               && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(

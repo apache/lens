@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -19,7 +19,7 @@
 ~~~
 Admin Documentation Overview
 
-  Grill server gets shipped in a state where it can be used straight away. Install the
+  Lens server gets shipped in a state where it can be used straight away. Install the
   server, setup configuration and start the server. This guide covers more 
   complex details on deployment options, server components, configuration,
   monitoring, tuning and etc.

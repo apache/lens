@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,9 +17,9 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Welcome to Grill!
+Welcome to Lens!
 
-  Grill provides an Unified Analytics interface. Grill aims to cut the Data Analytics silos by providing a single view of data across multiple tiered data stores and optimal execution environment for the analytical query. It seamlessly integrates Hadoop with traditional data warehouses to appear like one. 
+  Lens provides an Unified Analytics interface. Lens aims to cut the Data Analytics silos by providing a single view of data across multiple tiered data stores and optimal execution environment for the analytical query. It seamlessly integrates Hadoop with traditional data warehouses to appear like one. 
   
   At a high level the project provides these features - 
 
@@ -31,13 +31,13 @@ Welcome to Grill!
 
 	* A <<JDBC driver>> and <<Java client libraries>> to issue queries, and a CLI for ad hoc queries.
 
-	* <<Grill application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
+	* <<Lens application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
 
 	* <<Driver based architecture>> allows plugging in reporting systems like Hive, Columnar data warehouses, Redshift, Impala etc.
 
 	* <<Cost based engine selection>> - allows optimal use of resources by selecting the best execution engine for a given query based on the query cost.
 
 
-	The following diagram shows Grill architecture.
+	The following diagram shows Lens architecture.
 
-[./figures/arch.png] Grill Architecture
+[./figures/arch.png] Lens Architecture

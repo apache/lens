@@ -56,21 +56,21 @@ import org.testng.annotations.Test;
 public class TestResultFormatting extends GrillJerseyTest {
 
   QueryExecutionServiceImpl queryService;
-  GrillSessionHandle grillSessionId;
+  GrillSessionHandle lensSessionId;
 
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-    GrillTestUtil.createTable(testTable, target(), grillSessionId);
-    GrillTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), grillSessionId);
+    lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    GrillTestUtil.createTable(testTable, target(), lensSessionId);
+    GrillTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), lensSessionId);
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    GrillTestUtil.dropTable(testTable, target(), grillSessionId);
-    queryService.closeSession(grillSessionId);
+    GrillTestUtil.dropTable(testTable, target(), lensSessionId);
+    queryService.closeSession(lensSessionId);
     super.tearDown();
   }
 
@@ -140,7 +140,7 @@ public class TestResultFormatting extends GrillJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select ID, IDSTR from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -157,12 +157,12 @@ public class TestResultFormatting extends GrillJerseyTest {
 
     // Get query
     GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid",
-        grillSessionId).request().get(GrillQuery.class);
+        lensSessionId).request().get(GrillQuery.class);
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid",
-          grillSessionId).request().get(GrillQuery.class);
+          lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -171,9 +171,9 @@ public class TestResultFormatting extends GrillJerseyTest {
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
       // fetch results
       TestQueryService.validatePersistedResult(handle, target(),
-          grillSessionId, isDir);
+          lensSessionId, isDir);
       if (!isDir) {
-        TestQueryService.validateHttpEndPoint(target(), grillSessionId, handle, reDirectUrl);
+        TestQueryService.validateHttpEndPoint(target(), lensSessionId, handle, reDirectUrl);
       }
     }
   }

@@ -17,9 +17,9 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Configuring grill server
+Configuring lens server
 
-  This document guides you through configuring grill server.
+  This document guides you through configuring lens server.
   
 * Server configuration
 
@@ -27,14 +27,14 @@ Configuring grill server
   can configure the offered services from server, available drivers for query execution,
   query output options, enabling metrics from server and etc. The configuration parameters and
   their detailed description and default values are available {{{./config.html} here}}.
-  The overridden configuration can be part of grill-site.xml.
+  The overridden configuration can be part of lens-site.xml.
 
 * Driver configuration
 
   The supported drivers are configured through classnames in this release. The configuration 
   for each driver can be specified in their site.xml file. For example, HiveDriver's
   configuration should be specified in hive-site.xml. Supported drivers in this version
-  are com.inmobi.grill.driver.hive.HiveDriver and com.inmobi.grill.driver.jdbc.JDBCDriver.
+  are com.inmobi.lens.driver.hive.HiveDriver and com.inmobi.lens.driver.jdbc.JDBCDriver.
   The configuration parameters and
   their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}
   and for JDBCDriver available {{{./jdbcdriver-config.html} here}}. 
@@ -46,4 +46,4 @@ Configuring grill server
   The configuration that user can override for each session is documented {{{./session-config.html} here}}.
   These configuration mostly include query parameters, which can be overriden by query as well.
   Server should be configured with appropriate values for them in the site file.
-  The overridden configuration can be part of grill-site.xml.
+  The overridden configuration can be part of lens-site.xml.

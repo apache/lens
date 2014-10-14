@@ -32,7 +32,7 @@ import javax.servlet.ServletContextListener;
  * Initialize the webapp
  */
 public class GrillServletContextListener  implements ServletContextListener {
-  public static final String LOG_PROPERTIES_FILE_KEY = "grill.server.log4j.properties";
+  public static final String LOG_PROPERTIES_FILE_KEY = "lens.server.log4j.properties";
 
   /**
    * * Notification that the web application initialization
@@ -61,7 +61,7 @@ public class GrillServletContextListener  implements ServletContextListener {
       BasicConfigurator.configure();
     }
 
-    // start up all grill services
+    // start up all lens services
     HiveConf conf = GrillServerConf.get();
     GrillServices services = GrillServices.get();
     services.init(conf);

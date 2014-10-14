@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,22 +17,22 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill Java Client Library Guide
+Lens Java Client Library Guide
 
-  This document describes how to use Grill Java Client library in your projects.
+  This document describes how to use Lens Java Client library in your projects.
 
 
-  <<Configuring Grill Client>>
+  <<Configuring Lens Client>>
 
-    Add <<<grill-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
+    Add <<<lens-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
 
 
   <<Running and Managing queries>>
 
-    For connecting to Grill Server please take a look at {{{../apidocs/com/inmobi/grill/client/GrillConnection.html}GrillConnection}}
+    For connecting to Lens Server please take a look at {{{../apidocs/org/apache/lens/client/LensConnection.html}LensConnection}}
 
-    For Running queries please take a look at {{{../apidocs/com/inmobi/grill/client/GrillStatement.html}GrillStatement}}
+    For Running queries please take a look at {{{../apidocs/org/apache/lens/client/LensStatement.html}LensStatement}}
 
-    For Metadata operation please take a look at {{{../apidocs/com/inmobi/grill/client/GrillMetadataClient.html}GrillMetadataClient}}
+    For Metadata operation please take a look at {{{../apidocs/org/apache/lens/client/LensMetadataClient.html}LensMetadataClient}}
     
-    {{{../apidocs/com/inmobi/grill/client/GrillClient.html} GrillClient}} is the common client for all the operations.
+    {{{../apidocs/org/apache/lens/client/LensClient.html} LensClient}} is the common client for all the operations.

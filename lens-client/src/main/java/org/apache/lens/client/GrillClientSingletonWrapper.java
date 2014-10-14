@@ -41,10 +41,10 @@ public enum GrillClientSingletonWrapper {
         try{
           client = new GrillClient(Credentials.prompt());
           break;
-        } catch(GrillClientServerConnectionException grillClientServerConnectionException) {
-          explainFailedAttempt(grillClientServerConnectionException);
+        } catch(GrillClientServerConnectionException lensClientServerConnectionException) {
+          explainFailedAttempt(lensClientServerConnectionException);
           if(i == MAX_RETRIES - 1) {
-            throw grillClientServerConnectionException;
+            throw lensClientServerConnectionException;
           }
         }
       }

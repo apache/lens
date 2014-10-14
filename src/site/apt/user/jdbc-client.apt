@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -19,20 +19,20 @@
 ~~~
 JDBC Client
 
-  This document describes how to use Grill JDBC Client library in your projects.
+  This document describes how to use Lens JDBC Client library in your projects.
 
 
   <<Using JDBC driver.>>
 
-    The main driver class for accessing grill server is <<<com.inmobi.grill.client.jdbc.GrillJdbcDriver.java>>>
+    The main driver class for accessing lens server is <<<com.inmobi.lens.client.jdbc.LensJdbcDriver.java>>>
 
-    Add <<<grill-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
+    Add <<<lens-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
 
-    The URI format for connecting to the grill server is of following format :
+    The URI format for connecting to the lens server is of following format :
 
 
-    <<<jdbc:grill://<hostname>:<port>/<database>;<session confs key value pairs delimited by ;>?<grill-conf key value pair delimited by ;>#<session variables key value pair seperated by ;> >>>
+    <<<jdbc:lens://<hostname>:<port>/<database>;<session confs key value pairs delimited by ;>?<lens-conf key value pair delimited by ;>#<session variables key value pair seperated by ;> >>>
 
     For Example:
 
-    <<<jdbc:grill://localhost:9000/default;key1=val1;key2=val2?gck1=val1#sess-var1=val1>>>
+    <<<jdbc:lens://localhost:9000/default;key1=val1;key2=val2?gck1=val1#sess-var1=val1>>>

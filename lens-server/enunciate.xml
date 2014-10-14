@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<enunciate label="grill" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<enunciate label="lens" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://enunciate.codehaus.org/schemas/enunciate-1.25.xsd">
-		<deployment protocol="https" host="github.com" context="/pages/InMobi/grill/wsdocs"/>
+		<deployment protocol="https" host="github.com" context="/pages/InMobi/lens/wsdocs"/>
 		<namespaces>
 			<namespace uri="http://github.com/InMobi/grill" id="grill"/>
   	</namespaces>
@@ -18,7 +18,7 @@
         <include pattern="org.apache.lens.server.session.*"/>
     </api-classes>
     <modules>
-        <docs docsDir="grill-server" title="Lens Server REST API"/>
+        <docs docsDir="lens-server" title="Lens Server REST API"/>
         <csharp disabled="true"/>
         <c disabled="true"/>
         <obj-c disabled="true"></obj-c>

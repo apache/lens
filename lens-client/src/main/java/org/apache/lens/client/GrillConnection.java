@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Top level client connection class which is used to connect to a grill server
+ * Top level client connection class which is used to connect to a lens server
  */
 public class GrillConnection {
   private static final Log LOG = LogFactory.getLog(GrillConnection.class);
@@ -55,7 +55,7 @@ public class GrillConnection {
   private GrillSessionHandle sessionHandle;
 
   /**
-   * Construct a connection to grill server specified by connection parameters
+   * Construct a connection to lens server specified by connection parameters
    *
    * @param params parameters to be used for creating a connection
    */
@@ -64,8 +64,8 @@ public class GrillConnection {
   }
 
   /**
-   * Check if the connection is opened. Please note that,grill connections are
-   * persistent connections. But a session mapped by ID running on the grill
+   * Check if the connection is opened. Please note that,lens connections are
+   * persistent connections. But a session mapped by ID running on the lens
    * server.
    *
    * @return true if connected to server
@@ -126,7 +126,7 @@ public class GrillConnection {
         sessionHandle = handle;
         LOG.debug("Created a new session " + sessionHandle.getPublicId());
       } else {
-        throw new IllegalStateException("Unable to connect to grill " +
+        throw new IllegalStateException("Unable to connect to lens " +
           "server with following paramters" + params);
       }
     } catch(ProcessingException e) {
@@ -138,7 +138,7 @@ public class GrillConnection {
     APIResult result = attachDatabaseToSession();
     LOG.debug("Successfully switched to database " + params.getDbName());
     if (result.getStatus() != APIResult.Status.SUCCEEDED) {
-      throw new IllegalStateException("Unable to connect to grill database "
+      throw new IllegalStateException("Unable to connect to lens database "
           + params.getDbName());
     }
 
@@ -168,7 +168,7 @@ public class GrillConnection {
     APIResult result =  target.queryParam("sessionid",
         this.sessionHandle).request().delete(APIResult.class);
     if(result.getStatus() != APIResult.Status.SUCCEEDED) {
-      throw new IllegalStateException("Unable to close grill connection " +
+      throw new IllegalStateException("Unable to close lens connection " +
           "with params " + params);
     }
     LOG.debug("Grill connection closed.");

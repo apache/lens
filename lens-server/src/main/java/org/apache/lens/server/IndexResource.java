@@ -40,7 +40,7 @@ public class IndexResource {
   @Path("/index")
   @Produces(MediaType.TEXT_PLAIN)
   public String getIndexMessage() {
-      return "Hello World! from grill";
+      return "Hello World! from lens";
   }
 
   @GET

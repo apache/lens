@@ -29,27 +29,27 @@ import java.util.Map;
 import org.apache.lens.api.GrillConf;
 
 /**
- * Top level class which encapsulates connections parameters required for grill
+ * Top level class which encapsulates connections parameters required for lens
  * connection.
  */
 public class GrillConnectionParams {
 
-  private Map<String, String> grillConfs = new HashMap<String, String>();
-  private Map<String, String> grillVars = new HashMap<String, String>();
+  private Map<String, String> lensConfs = new HashMap<String, String>();
+  private Map<String, String> lensVars = new HashMap<String, String>();
   private Map<String, String> sessionVars = new HashMap<String, String>();
 
   private final GrillClientConfig conf;
 
   /**
-   * Construct parameters required to connect to grill server using values in
-   * grill-client-site.xml
+   * Construct parameters required to connect to lens server using values in
+   * lens-client-site.xml
    */
   public GrillConnectionParams() {
     this.conf = new GrillClientConfig();
   }
 
   /**
-   * Construct parameters required to connect to grill server from values passed
+   * Construct parameters required to connect to lens server from values passed
    * in configuration.
    *
    * @param conf from which connection parameters are defined.
@@ -59,7 +59,7 @@ public class GrillConnectionParams {
   }
 
   /**
-   * Gets the Database to which grill client should connect to.
+   * Gets the Database to which lens client should connect to.
    *
    * @return database to connect to
    */
@@ -69,11 +69,11 @@ public class GrillConnectionParams {
 
 
   public Map<String, String> getGrillConfs() {
-    return grillConfs;
+    return lensConfs;
   }
 
   public Map<String, String> getGrillVars() {
-    return grillVars;
+    return lensVars;
   }
 
   public Map<String, String> getSessionVars() {
@@ -121,13 +121,13 @@ public class GrillConnectionParams {
       Map.Entry<String, String> entry = itr.next();
       conf.addProperty(entry.getKey(), entry.getValue());
     }
-    for (Map.Entry<String, String> entry : grillConfs.entrySet()) {
+    for (Map.Entry<String, String> entry : lensConfs.entrySet()) {
       conf.addProperty(entry.getKey(), entry.getValue());
     }
     for (Map.Entry<String, String> entry : sessionVars.entrySet()) {
       conf.addProperty(entry.getKey(), entry.getValue());
     }
-    for (Map.Entry<String, String> entry : grillVars.entrySet()) {
+    for (Map.Entry<String, String> entry : lensVars.entrySet()) {
       conf.addProperty(entry.getKey(), entry.getValue());
     }
     return conf;
@@ -135,12 +135,12 @@ public class GrillConnectionParams {
 
   @Override
   public String toString() {
-    return new StringBuilder("GrillConnectionParams{")
+    return new StringBuilder("LensConnectionParams{")
     .append("dbName='").append(this.conf.getGrillDatabase()).append('\'')
     .append(", baseUrl='").append(this.conf.getBaseURL()).append('\'')
     .append(", user=").append(this.conf.getUser())
-    .append(", grillConfs=").append(grillConfs)
-    .append(", grillVars=").append(grillVars)
+    .append(", lensConfs=").append(lensConfs)
+    .append(", lensVars=").append(lensVars)
     .append(", sessionVars=").append(sessionVars)
     .append('}')
     .toString();

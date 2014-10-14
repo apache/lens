@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -31,7 +31,7 @@ OLAP Data cube concepts
   
 [../figures/data-layout.png] Fact data and dimension data
   
-  Grill provides an abstraction to represent above layout, and allows user to define schema
+  Lens provides an abstraction to represent above layout, and allows user to define schema
   of the data at conceptual level and also query the same, without knowing
   the physical storages and rollups, which is described in below sections.
 
@@ -129,13 +129,13 @@ QUARTERLY, YEARLY update periods.
 * Metastore API
 
   GRILL provides {{{../resource_MetastoreResource.html} REST api}},
-  {{{../apidocs/com/inmobi/grill/client/GrillMetadataClient.html} Java client api}}
+  {{{../apidocs/org/apache/lens/client/LensMetadataClient.html} Java client api}}
   and {{{./cli.html#OLAP_Data_cube_metadata_management} CLI}} for doing CRUD on metastore.
 
 
 * Query Language
 
-  User can query the grill through OLAP Cube QL, which is subset of Hive QL.
+  User can query the lens through OLAP Cube QL, which is subset of Hive QL.
   
   Here is the grammar:
 
@@ -192,7 +192,7 @@ QUARTERLY, YEARLY update periods.
 * Query API
 
   GRILL provides {{{../resource_QueryServiceResource.html} REST api}},
-  {{{../apidocs/com/inmobi/grill/client/GrillStatement.html} Java client api}},
+  {{{../apidocs/org/apache/lens/client/LensStatement.html} Java client api}},
   {{{./jdbc-client.html} JDBC client}} 
   and {{{./cli.html#Query_Management} CLI}} for doing submitting queries, checking status and fetching results.
 

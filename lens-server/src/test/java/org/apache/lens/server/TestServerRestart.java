@@ -106,13 +106,13 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     LOG.info("Server restart test");
 
     QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    GrillSessionHandle grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    GrillSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     // Create data file
     createRestartTestDataFile();
 
     // Create a test table
-    GrillTestUtil.createTable("test_server_restart", target(), grillSessionId);
-    GrillTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), grillSessionId);
+    GrillTestUtil.createTable("test_server_restart", target(), lensSessionId);
+    GrillTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), lensSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -136,7 +136,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-          grillSessionId, MediaType.APPLICATION_XML_TYPE));
+          lensSessionId, MediaType.APPLICATION_XML_TYPE));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select COUNT(ID) from test_server_restart"));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -152,16 +152,16 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
       Assert.assertNotNull(handle);
       GrillQuery ctx = target.path(handle.toString())
-        .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+        .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       QueryStatus stat = ctx.getStatus();
       LOG.info(i + " submitted query " + handle + " state: " + ctx.getStatus().getStatus());
       launchedQueries.add(handle);
     }
 
     // Restart the server
-    LOG.info("Restarting grill server!");
+    LOG.info("Restarting lens server!");
     restartGrillServer();
-    LOG.info("Restarted grill server!");
+    LOG.info("Restarted lens server!");
     queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
 
     // All queries should complete after server restart
@@ -169,18 +169,18 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       LOG.info("Polling query " + handle);
       try {
         GrillQuery ctx = target.path(handle.toString())
-          .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+          .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
         QueryStatus stat = ctx.getStatus();
         while (!stat.isFinished()) {
           LOG.info("Polling query " + handle + " Status:" + stat);
-          ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+          ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
           stat = ctx.getStatus();
           Thread.sleep(1000);
         }
         Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL,
           "Expected to be successful " + handle);
         PersistentQueryResult resultset = target.path(handle.toString()).path(
-          "resultset").queryParam("sessionid", grillSessionId).request().get(PersistentQueryResult.class);
+          "resultset").queryParam("sessionid", lensSessionId).request().get(PersistentQueryResult.class);
         List<String> rows = TestQueryService.readResultSet(resultset, handle, true);
         Assert.assertEquals(rows.size(), 1);
         Assert.assertEquals(rows.get(0), "" + NROWS);
@@ -191,25 +191,25 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       }
     }
     LOG.info("End server restart test");
-    GrillTestUtil.dropTable("test_server_restart", target(), grillSessionId);
-    queryService.closeSession(grillSessionId);
+    GrillTestUtil.dropTable("test_server_restart", target(), lensSessionId);
+    queryService.closeSession(lensSessionId);
   }
 
   @Test
   public void testHiveServerRestart() throws Exception {
     QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    GrillSessionHandle grillSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    GrillSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     // Create data file
     createRestartTestDataFile();
 
     // Add a resource to check if its added after server restart.
-    queryService.addResource(grillSessionId, "FILE", dataFile.toURI().toString());
-    queryService.getSession(grillSessionId).addResource("FILE", dataFile.toURI().toString());
+    queryService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
+    queryService.getSession(lensSessionId).addResource("FILE", dataFile.toURI().toString());
     LOG.info("@@ Added resource " + dataFile.toURI());
 
     // Create a test table
-    GrillTestUtil.createTable("test_hive_server_restart", target(), grillSessionId);
-    GrillTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), grillSessionId);
+    GrillTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
+    GrillTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -219,7 +219,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     // Submit query, restart HS2, submit another query
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-      grillSessionId, MediaType.APPLICATION_XML_TYPE));
+      lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
       "select COUNT(ID) from test_hive_server_restart"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -236,7 +236,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     Assert.assertNotNull(handle);
 
     List<GrillSessionImpl.ResourceEntry> sessionResources =
-      queryService.getSession(grillSessionId).getGrillSessionPersistInfo().getResources();
+      queryService.getSession(lensSessionId).getGrillSessionPersistInfo().getResources();
     int[] restoreCounts = new int[sessionResources.size()];
     for (int i = 0; i < sessionResources.size(); i++) {
       restoreCounts[i] = sessionResources.get(i).getRestoreCount();
@@ -262,11 +262,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
     // Poll for first query, we should not get any exception
     GrillQuery ctx = target.path(handle.toString())
-      .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
       LOG.info("Polling query " + handle + " Status:" + stat);
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -278,7 +278,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       // Submit another query, again no exception expected
       mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         "select COUNT(ID) from test_hive_server_restart"));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
@@ -295,11 +295,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
       // Poll for second query, this should finish successfully
       ctx = target.path(handle.toString())
-        .queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+        .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       while (!stat.isFinished()) {
         LOG.info("Post restart polling query " + handle + " Status:" + stat);
-        ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+        ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }
@@ -318,8 +318,8 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     //    "Expected to be successful " + handle);
 
     LOG.info("End hive server restart test");
-    GrillTestUtil.dropTable("test_hive_server_restart", target(), grillSessionId);
-    queryService.closeSession(grillSessionId);
+    GrillTestUtil.dropTable("test_hive_server_restart", target(), lensSessionId);
+    queryService.closeSession(lensSessionId);
   }
 
   @Test
@@ -348,7 +348,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     setpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
       restartTestSession, MediaType.APPLICATION_XML_TYPE));
     setpart.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("key").build(), "grill.session.testRestartKey"));
+      FormDataContentDisposition.name("key").build(), "lens.session.testRestartKey"));
     setpart.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("value").build(), "myvalue"));
     APIResult result = paramTarget.request().put(
@@ -381,11 +381,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
         .queryParam("verbose", true).request().get(
           StringList.class);
     sessionParams = paramTarget.queryParam("sessionid", restartTestSession)
-        .queryParam("key", "grill.session.testRestartKey").request().get(
+        .queryParam("key", "lens.session.testRestartKey").request().get(
             StringList.class);
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertEquals(sessionParams.getElements().size(), 1);
-    Assert.assertTrue(sessionParams.getElements().contains("grill.session.testRestartKey=myvalue"));
+    Assert.assertTrue(sessionParams.getElements().contains("lens.session.testRestartKey=myvalue"));
 
     // Check resources added again
     HiveSessionService sessionService = GrillServices.get().getService("session");

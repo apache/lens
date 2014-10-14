@@ -50,7 +50,7 @@ public class JDBCResultSet extends InMemoryResultSet {
   ResultSetMetaData resultMeta;
   private final ResultSet resultSet;
   private final QueryResult queryResult;
-  private GrillResultSetMetadata grillResultMeta;
+  private GrillResultSetMetadata lensResultMeta;
   private final boolean closeAfterFetch;
   
   public JDBCResultSet(QueryResult queryResult, ResultSet resultSet,
@@ -80,8 +80,8 @@ public class JDBCResultSet extends InMemoryResultSet {
   
   @Override
   public synchronized GrillResultSetMetadata getMetadata() throws GrillException {
-    if (grillResultMeta == null) {
-        grillResultMeta =  new GrillResultSetMetadata() {
+    if (lensResultMeta == null) {
+        lensResultMeta =  new GrillResultSetMetadata() {
         @Override
         public List<ColumnDescriptor> getColumns() {
           try{
@@ -102,7 +102,7 @@ public class JDBCResultSet extends InMemoryResultSet {
         }
       };
     }
-    return grillResultMeta;
+    return lensResultMeta;
   }
 
   public static String getHiveTypeForSQLType(int index, ResultSetMetaData rsmeta) throws SQLException {

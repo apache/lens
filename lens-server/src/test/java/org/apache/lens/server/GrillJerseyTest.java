@@ -48,7 +48,7 @@ public abstract class GrillJerseyTest extends JerseyTest {
 
   @Override
   protected URI getBaseUri() {
-    return UriBuilder.fromUri(getUri()).path("grill-server").build();
+    return UriBuilder.fromUri(getUri()).path("lens-server").build();
   }
 
   @BeforeSuite

@@ -26,7 +26,7 @@ import lombok.Getter;
 
 /**
  * Class used to capture statistics information for various components.
- * Grill statistics extends grill event as we are piggy backing the event
+ * Grill statistics extends lens event as we are piggy backing the event
  * dispatch system to avoid worrying about how to handle dispatch and notification.
  */
 public abstract class GrillStatistics extends GrillEvent {

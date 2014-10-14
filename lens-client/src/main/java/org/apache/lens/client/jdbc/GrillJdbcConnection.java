@@ -30,7 +30,7 @@ import org.apache.lens.client.GrillConnection;
 import org.apache.lens.client.GrillConnectionParams;
 
 /**
- * JDBC connection class which handles connection level operations to grill server.
+ * JDBC connection class which handles connection level operations to lens server.
  */
 public class GrillJdbcConnection implements Connection {
 

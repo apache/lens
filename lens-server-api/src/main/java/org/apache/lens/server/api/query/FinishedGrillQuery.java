@@ -27,7 +27,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 /**
- * Class to represent the Finished grill query which is serialized to database.
+ * Class to represent the Finished lens query which is serialized to database.
  */
 @EqualsAndHashCode
 @ToString

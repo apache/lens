@@ -44,11 +44,11 @@ public class JDBCUtils {
    */
    static final String DB_PROPERTY_KEY = "DBNAME";
   /**
-   * Property key for host on which grill server is running.
+   * Property key for host on which lens server is running.
    */
   static final String HOST_PROPERTY_KEY = "HOST";
   /**
-   * Property key for port on which grill server is running.
+   * Property key for port on which lens server is running.
    */
   static final String PORT_PROPERTY_KEY = "PORT";
 
@@ -64,7 +64,7 @@ public class JDBCUtils {
    * <p/>
    * The URL format is specified as following :
    * <ul>
-   * <li> hostname which contains hosts on which grill server is
+   * <li> hostname which contains hosts on which lens server is
    * hosted parsed from authority section</li>
    * <li>port number if specificed in authority part.</li>
    * <li>db name from path</li>
@@ -79,7 +79,7 @@ public class JDBCUtils {
    * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?[optional configuration settings for connection]#[optional variables to be used in query]
    * </code>
    *
-   * @param uri to be used to connect to grill server
+   * @param uri to be used to connect to lens server
    * @return final list of connection parameters
    * @throws IllegalArgumentException if URI provided is malformed
    */

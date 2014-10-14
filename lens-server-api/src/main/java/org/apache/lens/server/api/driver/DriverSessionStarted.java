@@ -2,30 +2,19 @@ package org.apache.lens.server.api.driver;
 
 import java.util.UUID;
 
+import lombok.Getter;
+
 public class DriverSessionStarted extends DriverEvent {
-  private final String eventID = UUID.randomUUID().toString();
-  private final String grillSessionID;
-  private final String driverSessionID;
+  @Getter private final String eventId = UUID.randomUUID().toString();
+  @Getter private final String lensSessionID;
+  @Getter private final String driverSessionID;
 
   public DriverSessionStarted(long eventTime,
                               GrillDriver driver,
-                              String grillSessionID,
+                              String lensSessionID,
                               String driverSessionID) {
     super(eventTime, driver);
-    this.grillSessionID = grillSessionID;
+    this.lensSessionID = lensSessionID;
     this.driverSessionID = driverSessionID;
-  }
-
-  @Override
-  public String getEventId() {
-    return eventID;
-  }
-
-  public String getGrillSessionID() {
-    return grillSessionID;
-  }
-
-  public String getDriverSessionID() {
-    return driverSessionID;
   }
 }
