@@ -20,7 +20,7 @@ package org.apache.lens.cli;
  */
 
 
-import org.apache.lens.cli.commands.GrillNativeTableCommands;
+import org.apache.lens.cli.commands.LensNativeTableCommands;
 import org.apache.lens.client.GrillClient;
 import org.apache.lens.server.GrillTestUtil;
 import org.slf4j.Logger;
@@ -28,14 +28,14 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestGrillNativeTableCommands extends GrillCliApplicationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillNativeTableCommands.class);
+public class TestLensNativeTableCommands extends GrillCliApplicationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensNativeTableCommands.class);
 
   @Test
   public void testNativeTableCommands() throws Exception {
     try {
     GrillClient client = new GrillClient();
-    GrillNativeTableCommands command = new GrillNativeTableCommands();
+    LensNativeTableCommands command = new LensNativeTableCommands();
     command.setClient(client);
     LOG.debug("Starting to test nativetable commands");
     String tblList = command.showNativeTables();

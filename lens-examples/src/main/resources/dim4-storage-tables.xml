@@ -43,7 +43,7 @@
         external="true"
         field_delimiter=","
         table_location="/tmp/db-storage.db"
-        storage_handler_name="com.inmobi.lens.storage.db.DBStorageHandler">
+        storage_handler_name="org.apache.lens.storage.db.DBStorageHandler">
         <table_parameters>
             <properties name="lens.native.db.name" value="default" />
         </table_parameters>

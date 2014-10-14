@@ -20,7 +20,7 @@ package org.apache.lens.cli;
  */
 
 
-import org.apache.lens.cli.commands.GrillCubeCommands;
+import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +30,17 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestGrillCubeCommands extends GrillCliApplicationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillCubeCommands.class);
+public class TestLensCubeCommands extends GrillCliApplicationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensCubeCommands.class);
 
   @Test
   public void testCubeCommands() throws Exception {
     GrillClient client = new GrillClient();
-    GrillCubeCommands command = new GrillCubeCommands();
+    LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
     LOG.debug("Starting to test cube commands");
     URL cubeSpec =
-        TestGrillCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+        TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
     String cubeList = command.showCubes();
     Assert.assertFalse(
         cubeList.contains("sample_cube"));
@@ -56,7 +56,7 @@ public class TestGrillCubeCommands extends GrillCliApplicationTest {
         cubeList.contains("sample_cube"));
   }
 
-  private void testUpdateCommand(File f, GrillCubeCommands command) {
+  private void testUpdateCommand(File f, LensCubeCommands command) {
     try {
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(f));

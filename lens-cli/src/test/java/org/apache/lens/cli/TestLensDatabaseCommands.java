@@ -21,20 +21,20 @@ package org.apache.lens.cli;
 
 
 
-import org.apache.lens.cli.commands.GrillDatabaseCommands;
+import org.apache.lens.cli.commands.LensDatabaseCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestGrillDatabaseCommands extends GrillCliApplicationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillDatabaseCommands.class);
+public class TestLensDatabaseCommands extends GrillCliApplicationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensDatabaseCommands.class);
 
   @Test
   public void testDatabaseCommands() {
     GrillClient client = new GrillClient();
-    GrillDatabaseCommands command = new GrillDatabaseCommands();
+    LensDatabaseCommands command = new LensDatabaseCommands();
     command.setClient(client);
 
     String myDatabase = "my_db";

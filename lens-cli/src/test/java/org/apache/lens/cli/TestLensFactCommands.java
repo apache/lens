@@ -20,7 +20,7 @@ package org.apache.lens.cli;
  */
 
 
-import org.apache.lens.cli.commands.GrillFactCommands;
+import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,10 +30,10 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestGrillFactCommands extends GrillCliApplicationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillFactCommands.class);
+public class TestLensFactCommands extends GrillCliApplicationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensFactCommands.class);
   public static final String FACT_LOCAL = "fact_local";
-  private static GrillFactCommands command = null;
+  private static LensFactCommands command = null;
 
   @Test
   public void testFactCommands() {
@@ -46,10 +46,10 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
 
 
-  private static GrillFactCommands getCommand() {
+  private static LensFactCommands getCommand() {
     if(command == null ) {
       GrillClient client = new GrillClient();
-      command = new GrillFactCommands();
+      command = new LensFactCommands();
       command.setClient(client);
     }
     return command;
@@ -57,16 +57,16 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
 
   public static void addFact1Table() {
-    GrillFactCommands command = getCommand();
+    LensFactCommands command = getCommand();
     String factList = command.showFacts();
     Assert.assertEquals("No Facts Found", factList,
         "Fact tables should not be found");
     //add local storage before adding fact table
-    TestGrillStorageCommands.addLocalStorage(FACT_LOCAL);
+    TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
     URL factSpec =
-        TestGrillFactCommands.class.getClassLoader().getResource("fact1.xml");
+        TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
     URL factStorageSpec =
-        TestGrillFactCommands.class.getClassLoader().getResource("fact1-storage-spec.xml");
+        TestLensFactCommands.class.getClassLoader().getResource("fact1-storage-spec.xml");
     try {
       command.createFact(new File(factSpec.toURI()).getAbsolutePath()
           + " " + new File(factStorageSpec.toURI()).getAbsolutePath());
@@ -79,9 +79,9 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
   public static void updateFact1Table() {
     try {
-      GrillFactCommands command = getCommand();
+      LensFactCommands command = getCommand();
       URL factSpec =
-          TestGrillFactCommands.class.getClassLoader().getResource("fact1.xml");
+          TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(factSpec.getFile()));
       String s;
@@ -129,7 +129,7 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
 
   private static void testFactStorageActions() {
-    GrillFactCommands command = getCommand();
+    LensFactCommands command = getCommand();
     String result = command.getFactStorages("fact1");
     Assert.assertEquals(FACT_LOCAL, result);
     command.dropAllFactStorages("fact1");
@@ -143,9 +143,9 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
   }
 
   private static void addLocalStorageToFact1() {
-    GrillFactCommands command = getCommand();
+    LensFactCommands command = getCommand();
     String result;
-    URL resource = TestGrillFactCommands.class.getClassLoader().getResource("fact-local-storage-element.xml");
+    URL resource = TestLensFactCommands.class.getClassLoader().getResource("fact-local-storage-element.xml");
     try {
       command.addNewFactStorage("fact1 " + new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
@@ -163,11 +163,11 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
 
 
   private void testFactPartitionActions() {
-    GrillFactCommands command = getCommand();
+    LensFactCommands command = getCommand();
     String result;
     result = command.getAllPartitionsOfFact("fact1 "+FACT_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
-    URL resource = TestGrillFactCommands.class.getClassLoader().getResource("fact1-local-part.xml");
+    URL resource = TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml");
     try {
       command.addPartitionToFact("fact1 "+ FACT_LOCAL +" " + new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
@@ -182,13 +182,13 @@ public class TestGrillFactCommands extends GrillCliApplicationTest {
   }
 
   public static void dropFact1Table() {
-    GrillFactCommands command = getCommand();
+    LensFactCommands command = getCommand();
     String factList = command.showFacts();
     Assert.assertEquals("fact1", factList, "Fact1 table should be found");
     command.dropFact("fact1", false);
     factList = command.showFacts();
     Assert.assertEquals("No Facts Found", factList,
         "Fact tables should not be found");
-    TestGrillStorageCommands.dropStorage(FACT_LOCAL);
+    TestLensStorageCommands.dropStorage(FACT_LOCAL);
   }
 }

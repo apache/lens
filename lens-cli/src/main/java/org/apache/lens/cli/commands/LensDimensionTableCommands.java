@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-public class GrillDimensionTableCommands extends BaseGrillCommand implements CommandMarker {
+public class LensDimensionTableCommands extends BaseGrillCommand implements CommandMarker {
 
   @CliCommand(value = "show dimtables",
       help = "show list of dimension tables in database")

@@ -29,13 +29,13 @@ done
 BASEDIR=`dirname ${PRG}`
 BASEDIR=`cd ${BASEDIR}/..;pwd`
 
-if [ -z "$GRILL_CONF" ]; then
-  GRILL_CONF=${BASEDIR}/conf
+if [ -z "$LENS_CONF" ]; then
+  LENS_CONF=${BASEDIR}/conf
 fi
-export GRILL_CONF
+export LENS_CONF
 
-if [ -f "${GRILL_CONF}/grill-env.sh" ]; then
-  . "${GRILL_CONF}/grill-env.sh"
+if [ -f "${LENS_CONF}/lens-env.sh" ]; then
+  . "${LENS_CONF}/lens-env.sh"
 fi
 
 if test -z ${JAVA_HOME}
@@ -55,55 +55,55 @@ fi
 
 # default the heap size to 1GB
 DEFAULT_JAVA_HEAP_MAX=-Xmx1024m
-GRILL_OPTS="$DEFAULT_JAVA_HEAP_MAX $GRILL_OPTS"
+LENS_OPTS="$DEFAULT_JAVA_HEAP_MAX $LENS_OPTS"
 
 type="$1"
 shift
 case $type in
   client)
     # set the client class path
-    GRILLCPPATH="$GRILL_CONF:${BASEDIR}/lib/*"
-    GRILL_OPTS="$GRILL_OPTS $GRILL_CLIENT_OPTS $GRILL_CLIENT_HEAP"
-    GRILL_LOG_DIR="${GRILL_LOG_DIR:-$BASEDIR/logs}"
-    export GRILL_LOG_DIR    
-    GRILL_HOME_DIR="${GRILL_HOME_DIR:-$BASEDIR}"
-    export GRILL_HOME_DIR    
+    LENSCPPATH="$LENS_CONF:${BASEDIR}/lib/*"
+    LENS_OPTS="$LENS_OPTS $LENS_CLIENT_OPTS $LENS_CLIENT_HEAP"
+    LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
+    export LENS_LOG_DIR    
+    LENS_HOME_DIR="${LENS_HOME_DIR:-$BASEDIR}"
+    export LENS_HOME_DIR    
   ;;
   server)
-    GRILL_OPTS="$GRILL_OPTS $GRILL_SERVER_OPTS $GRILL_SERVER_HEAP"
-    GRILLCPPATH="$GRILL_CONF" 
-    GRILL_EXPANDED_WEBAPP_DIR=${GRILL_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
-    export GRILL_EXPANDED_WEBAPP_DIR
+    LENS_OPTS="$LENS_OPTS $LENS_SERVER_OPTS $LENS_SERVER_HEAP"
+    LENSCPPATH="$LENS_CONF" 
+    LENS_EXPANDED_WEBAPP_DIR=${LENS_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
+    export LENS_EXPANDED_WEBAPP_DIR
     # set the server classpath
-    if [ ! -d ${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF ]; then
-      mkdir -p ${GRILL_EXPANDED_WEBAPP_DIR}/grill-server
-      cd ${GRILL_EXPANDED_WEBAPP_DIR}/grill-server
-      $JAR_BIN -xf ${BASEDIR}/webapp/grill-server.war
+    if [ ! -d ${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF ]; then
+      mkdir -p ${LENS_EXPANDED_WEBAPP_DIR}/lens-server
+      cd ${LENS_EXPANDED_WEBAPP_DIR}/lens-server
+      $JAR_BIN -xf ${BASEDIR}/webapp/lens-server.war
       cd -
     fi
-    GRILLCPPATH="${GRILLCPPATH}:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/classes"
-    GRILLCPPATH="${GRILLCPPATH}:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/lib/*:${BASEDIR}/lib/*"
+    LENSCPPATH="${LENSCPPATH}:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/classes"
+    LENSCPPATH="${LENSCPPATH}:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/*:${BASEDIR}/lib/*"
 
-    HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${GRILL_EXPANDED_WEBAPP_DIR}/grill-server/WEB-INF/lib/*"
+    HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/*"
     export HADOOP_CLASSPATH
     
     # log and pid dirs for applications
-    GRILL_LOG_DIR="${GRILL_LOG_DIR:-$BASEDIR/logs}"
-    export GRILL_LOG_DIR
-    GRILL_PID_DIR="${GRILL_PID_DIR:-$GRILL_LOG_DIR}"
+    LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
+    export LENS_LOG_DIR
+    LENS_PID_DIR="${LENS_PID_DIR:-$LENS_LOG_DIR}"
     # create the pid dir if its not there
-    [ -w "$GRILL_PID_DIR" ] ||  mkdir -p "$GRILL_PID_DIR"
-    export GRILL_PID_DIR
-    GRILL_PID_FILE=${GRILL_PID_DIR}/${grill-server}.pid
-    export GRILL_PID_FILE
-    GRILL_DATA_DIR=${GRILL_DATA_DIR:-${BASEDIR}/data}
-    GRILL_HOME_DIR="${GRILL_HOME_DIR:-$BASEDIR}"
-    export GRILL_HOME_DIR
+    [ -w "$LENS_PID_DIR" ] ||  mkdir -p "$LENS_PID_DIR"
+    export LENS_PID_DIR
+    LENS_PID_FILE=${LENS_PID_DIR}/${lens-server}.pid
+    export LENS_PID_FILE
+    LENS_DATA_DIR=${LENS_DATA_DIR:-${BASEDIR}/data}
+    LENS_HOME_DIR="${LENS_HOME_DIR:-$BASEDIR}"
+    export LENS_HOME_DIR
   ;;
   *)
     echo "Invalid option for type: $type"
     exit 1
   ;;
 esac
-export GRILLCPPATH
-export GRILL_OPTS
+export LENSCPPATH
+export LENS_OPTS

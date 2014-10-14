@@ -286,7 +286,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
 
     try {
       acquire(sessionid);
-      System.out.println("# Columns: "+ columns);
+      LOG.info("# Columns: "+ columns);
       getClient(sessionid).createCubeDimensionTable(xDimTable.getDimName(),
           dimTblName,
           columns,

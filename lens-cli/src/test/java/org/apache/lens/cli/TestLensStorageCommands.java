@@ -22,7 +22,7 @@ package org.apache.lens.cli;
 
 
 
-import org.apache.lens.cli.commands.GrillStorageCommands;
+import org.apache.lens.cli.commands.LensStorageCommands;
 import org.apache.lens.client.GrillClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,10 +32,10 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestGrillStorageCommands extends GrillCliApplicationTest {
+public class TestLensStorageCommands extends GrillCliApplicationTest {
 
-  private static GrillStorageCommands command;
-  private static final Logger LOG = LoggerFactory.getLogger(TestGrillStorageCommands.class);
+  private static LensStorageCommands command;
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensStorageCommands.class);
 
 
   @Test
@@ -46,10 +46,10 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
   }
 
-  private static GrillStorageCommands getCommand() {
+  private static LensStorageCommands getCommand() {
     if(command == null) {
       GrillClient client = new GrillClient();
-      command = new GrillStorageCommands();
+      command = new LensStorageCommands();
       command.setClient(client);
     }
     return command;
@@ -57,16 +57,16 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
 
   public static void dropStorage(String storageName) {
     String storageList;
-    GrillStorageCommands command = getCommand();
+    LensStorageCommands command = getCommand();
     command.dropStorage(storageName);
     storageList = command.getStorages();
     Assert.assertFalse( storageList.contains(storageName),"Storage list contains "+storageName);
   }
 
   public synchronized static void addLocalStorage(String storageName) {
-    GrillStorageCommands command = getCommand();
+    LensStorageCommands command = getCommand();
     URL storageSpec =
-        TestGrillStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+        TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
     File newFile = new File("/tmp/local-"+storageName+".xml");
     try {
       StringBuilder sb = new StringBuilder();
@@ -104,9 +104,9 @@ public class TestGrillStorageCommands extends GrillCliApplicationTest {
   private void testUpdateStorage(String storageName) {
 
     try {
-      GrillStorageCommands command = getCommand();
+      LensStorageCommands command = getCommand();
       URL storageSpec =
-          TestGrillStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+          TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
       String s;

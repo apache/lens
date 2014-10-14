@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class GrillDatabaseCommands extends  BaseGrillCommand implements CommandMarker {
+public class LensDatabaseCommands extends  BaseGrillCommand implements CommandMarker {
 
 
 
