@@ -46,13 +46,13 @@ Lens server configuration
 *--+--+---+--+
 |11|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
-|12|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored.|
+|12|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored.    Also used for database based user config loaders|
 *--+--+---+--+
-|13|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table|
+|13|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|14|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located.|
+|14|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located.    Also used for database based user config loaders|
 *--+--+---+--+
-|15|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table|
+|15|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
 |16|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users.    For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+
