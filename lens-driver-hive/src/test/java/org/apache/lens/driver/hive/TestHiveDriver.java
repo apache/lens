@@ -478,13 +478,6 @@ public class TestHiveDriver {
     driver.closeQuery(qctx.getQueryHandle());
     driver.closePreparedQuery(pctx.getPrepareHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
-
-    conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
-    plan = driver.explain("SELECT ID FROM test_explain", conf);
-    assertTrue(plan instanceof HiveQueryPlan);
-    assertNull(plan.getHandle());
-    conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, true);
-    Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
   @Test

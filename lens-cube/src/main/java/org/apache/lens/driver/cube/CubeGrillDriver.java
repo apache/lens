@@ -108,7 +108,6 @@ public class CubeGrillDriver implements GrillDriver {
         public int compare(GrillDriver d1, GrillDriver d2) {
           DriverQueryPlan c1 = null;
           DriverQueryPlan c2 = null;
-          conf.setBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN, false);
           //Handle cases where the queries can be null because the storages are not
           //supported.
           if(driverQueries.get(d1) == null) {
@@ -274,11 +273,6 @@ public class CubeGrillDriver implements GrillDriver {
   @Override
   public DriverQueryPlan explain(String query, Configuration conf)
       throws GrillException {
-    if (conf.getBoolean(GrillConfConstants.PREPARE_ON_EXPLAIN,
-        GrillConfConstants.DEFAULT_PREPARE_ON_EXPLAIN)) {
-      PreparedQueryContext ctx = new PreparedQueryContext(query, null, conf);
-      return explainAndPrepare(ctx);
-    }
     Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
         query, drivers, conf);
     GrillDriver driver = selectDriver(driverQueries, conf);

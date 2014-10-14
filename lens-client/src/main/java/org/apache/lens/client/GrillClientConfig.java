@@ -114,4 +114,8 @@ public class GrillClientConfig extends Configuration {
   public String getMetastoreResourcePath() {
     return DEFAULT_METASTORE_RESOURCE_PATH;
   }
+
+  public void setBaseUrl(String baseUrl) {
+    this.set(SERVER_BASE_URL, baseUrl);
+  }
 }

@@ -57,7 +57,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     from = conf.get(GrillConfConstants.MAIL_FROM_ADDRESS);
     host = conf.get(GrillConfConstants.MAIL_HOST);
     port = conf.get(GrillConfConstants.MAIL_PORT);
-    mailSmtpTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_TIMEOUT,
+    mailSmtpTimeout = Integer.parseInt(conf.get(GrillConfConstants.MAIL_SMTP_TIMEOUT,
       GrillConfConstants.MAIL_DEFAULT_SMTP_TIMEOUT));
     mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.MAIL_SMTP_CONNECTIONTIMEOUT,
       GrillConfConstants.MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));

@@ -145,4 +145,8 @@ public class GrillConnectionParams {
     .append('}')
     .toString();
   }
+
+  public void setBaseUrl(String baseUrl) {
+    conf.setBaseUrl(baseUrl);
+  }
 }

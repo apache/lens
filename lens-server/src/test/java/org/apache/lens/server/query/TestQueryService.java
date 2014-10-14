@@ -1048,9 +1048,9 @@ public class TestQueryService extends GrillJerseyTest {
     // query specific conf
     Assert.assertEquals(conf.get("test.query.conf"), "qvalue");
     // grillsession default should be loaded
-    Assert.assertNotNull(conf.get("grill.persistent.resultset"));
+    Assert.assertNotNull(conf.get("lens.query.enable.persistent.resultset"));
     // grill site should be loaded
-    Assert.assertEquals(conf.get("test.grill.site.key"), "gsvalue");
+    Assert.assertEquals(conf.get("test.lens.site.key"), "gsvalue");
     // hive default variables should not be set
     Assert.assertNull(conf.get("hive.exec.local.scratchdir"));
     // hive site variables should not be set

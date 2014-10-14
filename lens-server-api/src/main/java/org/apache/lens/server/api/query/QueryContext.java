@@ -100,7 +100,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
     this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
+    this.isPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_SET,
         GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
     this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
         GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
