@@ -20,8 +20,12 @@ package org.apache.lens.server.util;
  * #L%
  */
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.lens.server.api.GrillConfConstants;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -71,5 +75,17 @@ public class UtilityMethods {
         return result;
       }
     }, args);
+  }
+  public static BasicDataSource getDataSourceFromConf(Configuration conf) {
+    BasicDataSource tmp = new BasicDataSource();
+    tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_DB_DRIVER_NAME,
+      GrillConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+    tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_URL,
+      GrillConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
+    tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_USER,
+      GrillConfConstants.DEFAULT_SERVER_DB_USER));
+    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_PASS,
+      GrillConfConstants.DEFAULT_SERVER_DB_PASS));
+    return tmp;
   }
 }

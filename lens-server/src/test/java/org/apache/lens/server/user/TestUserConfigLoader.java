@@ -9,9 +9,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.GrillException;
 import org.apache.lens.server.GrillServerConf;
 import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.user.DatabaseUserConfigLoader;
-import org.apache.lens.server.user.UserConfigLoader;
-import org.apache.lens.server.user.UserConfigLoaderFactory;
+import org.apache.lens.server.util.UtilityMethods;
 import org.hsqldb.server.Server;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -93,7 +91,7 @@ public class TestUserConfigLoader {
     server.setDatabaseName(0, dbName);
     server.setDatabasePath(0, "file:" + path);
     server.start();
-    BasicDataSource ds = DatabaseUserConfigLoader.getDataSourceFromConf(conf);
+    BasicDataSource ds = UtilityMethods.getDataSourceFromConf(conf);
     Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
       new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
     liquibase.dropAll();
