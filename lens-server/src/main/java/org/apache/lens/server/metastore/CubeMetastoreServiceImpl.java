@@ -1191,4 +1191,104 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
+  public void getFlattenedColumnView(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
+    // First check if the table is a cube or dimension
+    try {
+      acquire(sessionHandle);
+      CubeMetastoreClient client = getClient(sessionHandle);
+
+      boolean isCube = false;
+      AbstractCubeTable cubeTbl = null;
+      if (client.isCube(tableName)) {
+        isCube = true;
+        CubeInterface cube = client.getCube(tableName);
+        if (cube instanceof Cube) {
+          cubeTbl = (Cube)cube;
+        } else if (cube instanceof DerivedCube) {
+          cubeTbl = (DerivedCube) cube;
+        }
+      } else if (client.isDimension(tableName)) {
+        cubeTbl = client.getDimension(tableName);
+      } else {
+        throw new BadRequestException("Can't get reachable columns. '"
+          + tableName + "' is neither a cube nor a dimension");
+      }
+      getFlattenedColumnView(client, cubeTbl, isCube);
+    } catch (GrillException exc) {
+      throw exc;
+    } catch (HiveException e) {
+      throw new GrillException("Error getting flattened view for " + tableName, e);
+    } finally {
+      release(sessionHandle);
+    }
+  }
+
+  private SchemaGraph getSchemaGraph(CubeMetastoreClient client) throws HiveException {
+    SchemaGraph graph = client.getSchemaGraph();
+    if (graph == null) {
+      graph = new SchemaGraph(client);
+      graph.buildSchemaGraph();
+      client.setSchemaGraph(graph);
+    }
+    return graph;
+  }
+
+  private void getFlattenedColumnView(CubeMetastoreClient client,
+                                      AbstractCubeTable table,
+                                      boolean isCube) throws HiveException {
+    SchemaGraph schemaGraph = getSchemaGraph(client);
+    Map<AbstractCubeTable, Set<SchemaGraph.TableRelationship>> graph =
+      isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
+    Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
+
+    // Do a BFS over the schema graph
+    Queue<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
+    Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
+    toVisit.offer(table);
+
+    while (toVisit.isEmpty()) {
+      AbstractCubeTable node = toVisit.poll();
+      visited.add(node);
+      String nodeName = node.getName();
+
+      if (table instanceof CubeInterface) {
+        Cube cube = null;
+
+        if (table instanceof Cube) {
+          cube = (Cube) node;
+        } else if (table instanceof DerivedCube) {
+          cube = ((DerivedCube) node).getParent();
+        }
+
+        // Add columns of the cube
+        for (CubeMeasure measure : cube.getMeasures()) {
+          columnMap.put(nodeName + "." + measure.getName(), measure);
+        }
+
+        for (CubeDimAttribute dimAttribute : cube.getDimAttributes()) {
+          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+        }
+
+        for (ExprColumn expression : cube.getExpressions()) {
+          columnMap.put(nodeName + "." + expression.getName(), expression);
+        }
+      } else if (table instanceof Dimension) {
+        Dimension dim = (Dimension) table;
+        for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
+          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+        }
+      }
+
+      // Add referenced tables to visited list
+      for (SchemaGraph.TableRelationship edge : graph.get(table)) {
+        if (!visited.contains(edge.getFromTable())) {
+          toVisit.offer(edge.getFromTable());
+        }
+        if (!visited.contains(edge.getToTable())) {
+          toVisit.offer(edge.getToTable());
+        }
+      }
+    } // end bfs
+    // columnMap now contains flattened view
+  }
 }
