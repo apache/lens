@@ -727,14 +727,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       throws HiveException {
     Table tbl = client.getHiveTable(table);
     return tbl == null ? null : tbl
-        .getProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME);
+        .getProperty(GrillConfConstants.NATIVE_DB_NAME);
   }
 
   String getUnderlyingTableName(CubeMetastoreClient client, String table)
       throws HiveException {
     Table tbl = client.getHiveTable(table);
     return tbl == null ? null : tbl
-        .getProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME);
+        .getProperty(GrillConfConstants.NATIVE_TABLE_NAME);
   }
 
 }

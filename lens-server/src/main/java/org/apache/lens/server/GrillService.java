@@ -80,7 +80,7 @@ public abstract class GrillService extends CompositeService implements Externali
   }
 
   public String getServerDomain() {
-    return cliService.getHiveConf().get(GrillConfConstants.GRILL_SERVER_DOMAIN);
+    return cliService.getHiveConf().get(GrillConfConstants.SERVER_DOMAIN);
   }
 
   public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
@@ -99,12 +99,12 @@ public abstract class GrillService extends CompositeService implements Externali
       }
       Map<String, String> userConfig = UserConfigLoaderFactory.getUserConfig(username);
       UtilityMethods.mergeMaps(sessionConf, userConfig, false);
-      sessionConf.put(GrillConfConstants.GRILL_SESSION_LOGGEDIN_USER, username);
-      if(sessionConf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER) == null) {
+      sessionConf.put(GrillConfConstants.SESSION_LOGGEDIN_USER, username);
+      if(sessionConf.get(GrillConfConstants.SESSION_CLUSTER_USER) == null) {
         LOG.info("Didn't get cluster user from user config loader. Setting same as logged in user: " + username);
-        sessionConf.put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, username);
+        sessionConf.put(GrillConfConstants.SESSION_CLUSTER_USER, username);
       }
-      String clusterUser = sessionConf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER);
+      String clusterUser = sessionConf.get(GrillConfConstants.SESSION_CLUSTER_USER);
       password = "useless";
       if (
           cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
@@ -161,7 +161,7 @@ public abstract class GrillService extends CompositeService implements Externali
     for(ConfVars var: new ConfVars[]{ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN}) {
       if(cliService.getHiveConf().getVar(var) == null) {
         cliService.getHiveConf().setVar(var,
-          cliService.getHiveConf().get(GrillConfConstants.GRILL_SERVER_DOMAIN));
+          cliService.getHiveConf().get(GrillConfConstants.SERVER_DOMAIN));
       }
     }
     String authType = cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);

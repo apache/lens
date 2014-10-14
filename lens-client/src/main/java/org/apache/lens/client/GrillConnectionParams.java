@@ -59,24 +59,6 @@ public class GrillConnectionParams {
   }
 
   /**
-   * Gets host to which grill client should connect to.
-   *
-   * @return hostname of grill server
-   */
-  public String getHost() {
-    return conf.getGrillHost();
-  }
-
-  /**
-   * Gets the port to which grill client should connect to.
-   *
-   * @return portnumber of grill server
-   */
-  public int getPort() {
-    return conf.getGrillPort();
-  }
-
-  /**
    * Gets the Database to which grill client should connect to.
    *
    * @return database to connect to
@@ -98,23 +80,13 @@ public class GrillConnectionParams {
     return sessionVars;
   }
 
-  public void setHost(String host) {
-    this.conf.setGrillHost(host);
-  }
-
-  public void setPort(int port) {
-    this.conf.setGrillPort(port);
-  }
-
   public void setDbName(String dbName) {
     this.conf.setGrillDatabase(dbName);
   }
 
 
   public String getBaseConnectionUrl() {
-    return "http://" + this.getHost() + ":"
-        + this.getPort() + "/"
-        + this.conf.getAppBasePath();
+    return conf.getBaseURL();
   }
 
   public GrillClientConfig getConf() {
@@ -123,9 +95,6 @@ public class GrillConnectionParams {
 
   public String getUser() {
     return this.conf.getUser();
-    /*
-    return this.sessionVars.get("user.name")!= null ?
-        this.sessionVars.get("user.name") : "";*/
   }
 
   public String getSessionResourcePath() {
@@ -168,8 +137,7 @@ public class GrillConnectionParams {
   public String toString() {
     return new StringBuilder("GrillConnectionParams{")
     .append("dbName='").append(this.conf.getGrillDatabase()).append('\'')
-    .append(", host='").append(this.conf.getGrillHost()).append('\'')
-    .append(", port=").append(this.conf.getGrillPort())
+    .append(", baseUrl='").append(this.conf.getBaseURL()).append('\'')
     .append(", user=").append(this.conf.getUser())
     .append(", grillConfs=").append(grillConfs)
     .append(", grillVars=").append(grillVars)

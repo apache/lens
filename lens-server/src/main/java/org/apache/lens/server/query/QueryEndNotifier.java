@@ -54,13 +54,13 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     HiveConf hiveConf) {
     this.queryService = queryService;
     this.conf = hiveConf;
-    from = conf.get(GrillConfConstants.GRILL_MAIL_FROM_ADDRESS);
-    host = conf.get(GrillConfConstants.GRILL_MAIL_HOST);
-    port = conf.get(GrillConfConstants.GRILL_MAIL_PORT);
+    from = conf.get(GrillConfConstants.MAIL_FROM_ADDRESS);
+    host = conf.get(GrillConfConstants.MAIL_HOST);
+    port = conf.get(GrillConfConstants.MAIL_PORT);
     mailSmtpTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_TIMEOUT,
-      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_TIMEOUT));
-    mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.GRILL_MAIL_SMTP_CONNECTIONTIMEOUT,
-      GrillConfConstants.GRILL_MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
+      GrillConfConstants.MAIL_DEFAULT_SMTP_TIMEOUT));
+    mailSmtpConnectionTimeout = Integer.parseInt(conf.get(GrillConfConstants.MAIL_SMTP_CONNECTIONTIMEOUT,
+      GrillConfConstants.MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
 
   }
 
@@ -76,8 +76,8 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       return;
     }
 
-    boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY,
-      GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY_DEFAULT));
+    boolean whetherMailNotify = Boolean.parseBoolean(queryContext.getConf().get(GrillConfConstants.QUERY_MAIL_NOTIFY,
+      GrillConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT));
 
     if(!whetherMailNotify){
       return;
@@ -92,8 +92,8 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
 
     String to = queryContext.getSubmittedUser() + "@" + queryService.getServerDomain();
 
-    String cc = queryContext.getConf().get(GrillConfConstants.GRILL_QUERY_RESULT_EMAIL_CC,
-      GrillConfConstants.GRILL_QUERY_RESULT_DEFAULT_EMAIL_CC);
+    String cc = queryContext.getConf().get(GrillConfConstants.QUERY_RESULT_EMAIL_CC,
+      GrillConfConstants.QUERY_RESULT_DEFAULT_EMAIL_CC);
 
     LOG.info("Sending completion email for query handle: " + event.getQueryHandle());
     sendMail(host, port, from, to, cc, mailSubject, mailMessage,
@@ -105,8 +105,8 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     switch(queryContext.getStatus().getStatus()){
       case SUCCESSFUL:
         msgBuilder.append("Result available at ");
-        String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
-          GrillConfConstants.DEFAULT_GRILL_SERVER_BASE_URL);
+        String baseURI = conf.get(GrillConfConstants.SERVER_BASE_URL,
+          GrillConfConstants.DEFAULT_SERVER_BASE_URL);
         msgBuilder.append(baseURI);
         msgBuilder.append("queryapi/queries/");
         msgBuilder.append(queryContext.getQueryHandle());

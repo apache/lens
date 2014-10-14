@@ -660,7 +660,7 @@ public class TestQueryService extends GrillJerseyTest {
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(GrillConfConstants.GRILL_WHETHER_MAIL_NOTIFY, "true");
+    conf.addProperty(GrillConfConstants.QUERY_MAIL_NOTIFY, "true");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
       grillSessionId, MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),

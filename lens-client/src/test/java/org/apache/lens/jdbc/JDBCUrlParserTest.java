@@ -46,9 +46,7 @@ public class JDBCUrlParserTest {
     Assert.assertEquals(
         GrillClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName(),"The database should be default database");
     Assert.assertEquals(
-        GrillClientConfig.DEFAULT_SERVER_PORT, params.getPort(),"The port should be default port");
-    Assert.assertEquals(
-        GrillClientConfig.DEFAULT_SERVER_HOST_VALUE, params.getHost(),"The host should be dedault host");
+        GrillClientConfig.DEFAULT_SERVER_BASE_URL, params.getBaseConnectionUrl(),"The base url should be default");
 
     Map<String, String> sessionVars = params.getSessionVars();
     Assert.assertEquals( 2,
@@ -80,9 +78,9 @@ public class JDBCUrlParserTest {
   public void testJDBCWithCustomHostAndPortAndDB() {
     String uri = "jdbc:grill://myhost:9000/mydb";
     GrillConnectionParams params = JDBCUtils.parseUrl(uri);
-    Assert.assertEquals( "myhost",
-        params.getHost(),"The host name should be myhost");
-    Assert.assertEquals( 9000, params.getPort(),"The port should be 9000");
+    //Assert.assertEquals( "myhost",
+    //    params.getHost(),"The host name should be myhost");
+    //Assert.assertEquals( 9000, params.getPort(),"The port should be 9000");
     Assert.assertEquals("mydb",
         params.getDbName(),"The database should be mydb");
     Assert.assertTrue(

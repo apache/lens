@@ -34,25 +34,24 @@ public class GrillClientConfig extends Configuration {
     addResource("lens-client-site.xml");
   }
 
-  public static final String GRILL_SERVER_HOST_KEY = "grill.host";
-  public static final String DEFAULT_SERVER_HOST_VALUE = "localhost";
-  public static final String GRILL_SERVER_PORT_KEY = "grill.port";
-  public static final int DEFAULT_SERVER_PORT = 9999;
-  public static final String GRILL_DBNAME_KEY = "grill.dbname";
+  // config prefixes
+  // All the config variables will use one of these prefixes
+  public static final String CLIENT_PFX = "lens.client.";
+
+  public static final String DBNAME_KEY = CLIENT_PFX + "dbname";
   public static final String DEFAULT_DBNAME_VALUE = "default";
-  public static final String GRILL_BASE_PATH = "grill.base.path";
-  public static final String DEFAULT_APP_BASE_PATH = "";
-  public static final String GRILL_SESSION_RESOURCE_PATH = "grill.session.resource.path";
-  public static final String GRILL_SESSION_CLUSTER_USER = "grill.session.cluster.user";
-  public static final String DEFAULT_SESSION_RESOURCE_PATH = "session";
-  private static final String GRILL_QUERY_RESOURCE_PATH = "grill.query.resource.path";
-  private static final String DEFAULT_QUERY_RESOURCE_PATH = "queryapi";
-  private static final String GRILL_QUERY_POLL_INTERVAL_KEY = "grill.query.poll.interval";
+  private static final String QUERY_POLL_INTERVAL_KEY = CLIENT_PFX + "query.poll.interval";
   private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000l;
-  private static final String GRILL_METASTORE_RESOURCE_PATH = "grill.metastore.resource.path";
-  private static final String DEFAULT_GRILL_METASTORE_RESOURCE_PATH = "metastore";
-  private static final String GRILL_USER_NAME = "grill.user.name";
+  private static final String USER_NAME = CLIENT_PFX + "user.name";
   public static final String DEFAULT_USER_NAME = "anonymous";
+  private static final String DEFAULT_METASTORE_RESOURCE_PATH = "metastore";
+  private static final String DEFAULT_QUERY_RESOURCE_PATH = "queryapi";
+  public static final String DEFAULT_SESSION_RESOURCE_PATH = "session";
+
+  // server side conf properties copied here
+  public static final String SERVER_BASE_URL = "lens.server.base.url";
+  public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/";
+  public static final String SESSION_CLUSTER_USER = "lens.session.cluster.user";
 
   /**
    * Get the username from config
@@ -60,28 +59,19 @@ public class GrillClientConfig extends Configuration {
    * @return Returns grill client user name
    */
   public String getUser() {
-    return this.get(GRILL_USER_NAME, DEFAULT_USER_NAME);
+    return this.get(USER_NAME, DEFAULT_USER_NAME);
   }
   public void setUser(String user) {
-    this.set(GRILL_USER_NAME, user);
+    this.set(USER_NAME, user);
   }
 
   /**
-   * Returns the configured grill server hostname
+   * Returns the configured grill server url
    *
-   * @return hostname of grill server, defaults to localhost
+   * @return server url
    */
-  public String getGrillHost() {
-    return this.get(GRILL_SERVER_HOST_KEY, DEFAULT_SERVER_HOST_VALUE);
-  }
-
-  /**
-   * Returns the configured grill server port
-   *
-   * @return port number of the grill server, defaults to 8080
-   */
-  public int getGrillPort() {
-    return this.getInt(GRILL_SERVER_PORT_KEY, DEFAULT_SERVER_PORT);
+  public String getBaseURL() {
+    return this.get(SERVER_BASE_URL, DEFAULT_SERVER_BASE_URL);
   }
 
   /**
@@ -90,16 +80,7 @@ public class GrillClientConfig extends Configuration {
    * @return database returns database to connect, defaults to 'default'
    */
   public String getGrillDatabase() {
-    return this.get(GRILL_DBNAME_KEY, DEFAULT_DBNAME_VALUE);
-  }
-
-  /**
-   * Returns the web app path which grill server is deployed to.
-   *
-   * @return web app fragment, default to root path.
-   */
-  public String getAppBasePath() {
-    return this.get(GRILL_BASE_PATH, DEFAULT_APP_BASE_PATH);
+    return this.get(DBNAME_KEY, DEFAULT_DBNAME_VALUE);
   }
 
   /**
@@ -107,8 +88,7 @@ public class GrillClientConfig extends Configuration {
    * @return web app fragment pointing to session service, defaults to session
    */
   public String getSessionResourcePath() {
-    return this.get(GRILL_SESSION_RESOURCE_PATH,
-        DEFAULT_SESSION_RESOURCE_PATH);
+    return DEFAULT_SESSION_RESOURCE_PATH;
   }
 
   /**
@@ -116,26 +96,7 @@ public class GrillClientConfig extends Configuration {
    * @return web app fragment pointing to query service, defaults to queryapi
    */
   public String getQueryResourcePath() {
-    return this.get(GRILL_QUERY_RESOURCE_PATH,
-        DEFAULT_QUERY_RESOURCE_PATH);
-  }
-
-  /**
-   * Set the configured girll server hostname
-   *
-   * @param host name of host where grill server is located
-   */
-  public void setGrillHost(String host) {
-    this.set(GRILL_SERVER_HOST_KEY, host);
-  }
-
-  /**
-   * Sets the configured grill server port.
-   *
-   * @param port where grill server is listening for requests
-   */
-  public void setGrillPort(int port) {
-    this.setInt(GRILL_SERVER_PORT_KEY, port);
+    return DEFAULT_QUERY_RESOURCE_PATH;
   }
 
   /**
@@ -143,18 +104,14 @@ public class GrillClientConfig extends Configuration {
    * @param dbName database to connect to
    */
   public void setGrillDatabase(String dbName) {
-    this.set(GRILL_DBNAME_KEY, dbName);
-  }
-
-  public void setGrillBasePath(String basePath) {
-    this.set(GRILL_BASE_PATH, basePath);
+    this.set(DBNAME_KEY, dbName);
   }
 
   public long getQueryPollInterval() {
-    return this.getLong(GRILL_QUERY_POLL_INTERVAL_KEY, DEFAULT_QUERY_POLL_INTERVAL);
+    return this.getLong(QUERY_POLL_INTERVAL_KEY, DEFAULT_QUERY_POLL_INTERVAL);
   }
 
   public String getMetastoreResourcePath() {
-    return this.get(GRILL_METASTORE_RESOURCE_PATH, DEFAULT_GRILL_METASTORE_RESOURCE_PATH);
+    return DEFAULT_METASTORE_RESOURCE_PATH;
   }
 }

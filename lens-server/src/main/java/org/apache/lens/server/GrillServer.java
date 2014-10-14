@@ -55,8 +55,8 @@ public class GrillServer {
   private GrillServer(HiveConf conf) throws IOException {
     this.conf = conf;
     startServices(conf);
-    String baseURI = conf.get(GrillConfConstants.GRILL_SERVER_BASE_URL,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_BASE_URL);
+    String baseURI = conf.get(GrillConfConstants.SERVER_BASE_URL,
+        GrillConfConstants.DEFAULT_SERVER_BASE_URL);
     server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(),
         getApp(), false);
 
@@ -72,8 +72,8 @@ public class GrillServer {
     sgMetrics.addMapping("/admin/*");
 
     adminCtx.deploy(this.server);
-    String uiServerURI = conf.get(GrillConfConstants.GRILL_SERVER_UI_URI,
-      GrillConfConstants.DEFAULT_GRILL_SERVER_UI_URI);
+    String uiServerURI = conf.get(GrillConfConstants.SERVER_UI_URI,
+      GrillConfConstants.DEFAULT_SERVER_UI_URI);
     this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
       getUIApp(), false);
   }

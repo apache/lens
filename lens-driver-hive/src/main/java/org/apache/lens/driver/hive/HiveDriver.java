@@ -69,8 +69,8 @@ import org.codehaus.jackson.type.TypeReference;
 public class HiveDriver implements GrillDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
 
-  public static final String GRILL_HIVE_CONNECTION_CLASS = "grill.hive.connection.class";
-  public static final String GRILL_CONNECTION_EXPIRY_DELAY = "grill.hs2.connection.expiry.delay";
+  public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
+  public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hs2.connection.expiry.delay";
   // Default expiry is 10 minutes
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
 
@@ -193,12 +193,12 @@ public class HiveDriver implements GrillDriver {
     this.driverConf.addResource("hivedriver-default.xml");
     this.driverConf.addResource("hivedriver-site.xml");
     connectionClass = this.driverConf.getClass(
-        GRILL_HIVE_CONNECTION_CLASS, 
+        HIVE_CONNECTION_CLASS, 
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
     connectionExpiryTimeout = 
-        this.driverConf.getLong(GRILL_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+        this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
   }
 
   @Override
@@ -562,7 +562,7 @@ public class HiveDriver implements GrillDriver {
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
     if (context.isDriverPersistent() &&
-        context.getConf().getBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE,
+        context.getConf().getBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE,
             GrillConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
       // store persistent data into user specified location
       // If absent, take default home directory

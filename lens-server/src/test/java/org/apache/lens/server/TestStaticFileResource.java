@@ -81,9 +81,9 @@ public class TestStaticFileResource extends GrillJerseyTest {
 
   @Test
   public void testStaticFileResource()  throws Exception {
-    GrillServices.get().getHiveConf().set(GrillConfConstants.GRILL_SERVER_UI_STATIC_DIR,
+    GrillServices.get().getHiveConf().set(GrillConfConstants.SERVER_UI_STATIC_DIR,
     "src/main/webapp/static");
-    GrillServices.get().getHiveConf().setBoolean(GrillConfConstants.GRILL_SERVER_UI_ENABLE_CACHING, false);
+    GrillServices.get().getHiveConf().setBoolean(GrillConfConstants.SERVER_UI_ENABLE_CACHING, false);
 
     System.out.println("@@@@ " + target().path("index.html").getUri());
     Response response = target().path("index.html").request().get();

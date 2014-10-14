@@ -70,7 +70,7 @@ public class TestHiveDriver {
     System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
     assertNotNull(System.getProperty("hadoop.bin.path"));
     conf.addResource("hivedriver-site.xml");
-    conf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS,
+    conf.setClass(HiveDriver.HIVE_CONNECTION_CLASS,
         EmbeddedThriftConnection.class, 
         ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
@@ -84,12 +84,12 @@ public class TestHiveDriver {
 
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext context = new QueryContext(
         "USE " + TestHiveDriver.class.getSimpleName(), null, conf);
     driver.execute(context);
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     System.out.println("Driver created");
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -124,7 +124,7 @@ public class TestHiveDriver {
   @Test
   public void testInsertOverwriteConf() throws Exception {
     createTestTable("test_insert_overwrite");
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     String query = "SELECT ID FROM test_insert_overwrite";
     QueryContext context = new QueryContext(query, null, conf);
     driver.addPersistentPath(context);
@@ -385,8 +385,8 @@ public class TestHiveDriver {
   public void testPersistentResultSet() throws Exception {
     createTestTable("test_persistent_result_set");
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
-    conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
+    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
     QueryContext ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
     GrillResultSet resultSet = driver.execute(ctx);
     validatePersistentResult(resultSet, TEST_DATA_FILE, ctx.getHDFSResultDir(), false);

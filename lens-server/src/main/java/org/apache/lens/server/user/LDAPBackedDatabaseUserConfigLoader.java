@@ -59,29 +59,29 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
 
   public LDAPBackedDatabaseUserConfigLoader(final HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    expiryHours = conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY, 2);
-    intermediateQuerySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_QUERY);
-    intermediateDeleteSql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_DELETE_SQL);
-    intermediateInsertSql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL);
-    ldapFields = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_FIELDS).split("\\s*,\\s*");
-    searchBase = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_BASE);
-    searchFilterPattern = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_SEARCH_FILTER);
+    expiryHours = conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2);
+    intermediateQuerySql = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_INTERMEDIATE_DB_QUERY);
+    intermediateDeleteSql = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_INTERMEDIATE_DB_DELETE_SQL);
+    intermediateInsertSql = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_INTERMEDIATE_DB_INSERT_SQL);
+    ldapFields = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_FIELDS).split("\\s*,\\s*");
+    searchBase = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_SEARCH_BASE);
+    searchFilterPattern = conf.get(GrillConfConstants.USER_RESOLVER_LDAP_SEARCH_FILTER);
     intermediateCache = CacheBuilder
       .newBuilder()
       .expireAfterWrite(expiryHours, TimeUnit.HOURS)
-      .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .maximumSize(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
     cache = CacheBuilder
       .newBuilder()
       .expireAfterWrite(expiryHours, TimeUnit.HOURS)
-      .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .maximumSize(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
 
     Hashtable<String, Object> env = new Hashtable<String, Object>(){
       {
         put(Context.SECURITY_AUTHENTICATION, "simple");
-        put(Context.SECURITY_PRINCIPAL, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_DN));
-        put(Context.SECURITY_CREDENTIALS, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_BIND_PASSWORD));
+        put(Context.SECURITY_PRINCIPAL, conf.get(GrillConfConstants.USER_RESOLVER_LDAP_BIND_DN));
+        put(Context.SECURITY_CREDENTIALS, conf.get(GrillConfConstants.USER_RESOLVER_LDAP_BIND_PASSWORD));
         put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
-        put(Context.PROVIDER_URL, conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_LDAP_URL));
+        put(Context.PROVIDER_URL, conf.get(GrillConfConstants.USER_RESOLVER_LDAP_URL));
         put("java.naming.ldap.attributes.binary", "objectSID");
       }
     };

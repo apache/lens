@@ -47,10 +47,10 @@ public class GrillApplication extends Application {
 
     final Set<Class<?>> classes = new HashSet<Class<?>>();
 
-    String[] resourceNames = conf.getStrings(GrillConfConstants.GRILL_WS_RESOURCE_NAMES);
-    String[] featureNames = conf.getStrings(GrillConfConstants.GRILL_WS_FEATURE_NAMES);
-    String[] listenerNames = conf.getStrings(GrillConfConstants.GRILL_WS_LISTENER_NAMES);
-    String[] filterNames = conf.getStrings(GrillConfConstants.GRILL_WS_FILTER_NAMES);
+    String[] resourceNames = conf.getStrings(GrillConfConstants.WS_RESOURCE_NAMES);
+    String[] featureNames = conf.getStrings(GrillConfConstants.WS_FEATURE_NAMES);
+    String[] listenerNames = conf.getStrings(GrillConfConstants.WS_LISTENER_NAMES);
+    String[] filterNames = conf.getStrings(GrillConfConstants.WS_FILTER_NAMES);
 
     // register root resource
     for(String rName : resourceNames) {

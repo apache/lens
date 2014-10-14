@@ -145,8 +145,8 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getResultSetParentDir() {
-    return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
+    return conf.get(GrillConfConstants.RESULT_SET_PARENT_DIR,
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }
 
   public Path getHDFSResultDir() {
@@ -217,6 +217,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getClusterUser() {
-    return conf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, submittedUser);
+    return conf.get(GrillConfConstants.SESSION_CLUSTER_USER, submittedUser);
   }
 }

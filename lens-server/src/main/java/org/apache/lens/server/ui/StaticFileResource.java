@@ -53,8 +53,8 @@ public class StaticFileResource {
         @Override
         public String load(String filePath) throws Exception {
           if (baseDir == null) {
-            baseDir = GrillServices.get().getHiveConf().get(GrillConfConstants.GRILL_SERVER_UI_STATIC_DIR,
-                GrillConfConstants.DEFAULT_GRILL_SERVER_UI_STATIC_DIR);
+            baseDir = GrillServices.get().getHiveConf().get(GrillConfConstants.SERVER_UI_STATIC_DIR,
+                GrillConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
           }
           return loadFile(baseDir, filePath);
         }
@@ -69,13 +69,13 @@ public class StaticFileResource {
   public Response getStaticResource(@PathParam("filePath") String filePath) {
     try {
       HiveConf conf = GrillServices.get().getHiveConf();
-      if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_UI_ENABLE_CACHING,
-          GrillConfConstants.DEFAULT_GRILL_SERVER_UI_ENABLE_CACHING)) {
+      if (conf.getBoolean(GrillConfConstants.SERVER_UI_ENABLE_CACHING,
+          GrillConfConstants.DEFAULT_SERVER_UI_ENABLE_CACHING)) {
         return Response.ok(contentCache.get(filePath), getMediaType(filePath)).build();
       } else {
         // This is for dev mode
-        String baseDir = conf.get(GrillConfConstants.GRILL_SERVER_UI_STATIC_DIR,
-            GrillConfConstants.DEFAULT_GRILL_SERVER_UI_STATIC_DIR);
+        String baseDir = conf.get(GrillConfConstants.SERVER_UI_STATIC_DIR,
+            GrillConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
         return Response.ok(loadFile(baseDir, filePath), getMediaType(filePath)).build();
       }
     } catch (Exception e) {

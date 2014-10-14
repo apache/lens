@@ -23,67 +23,67 @@
 
 <configuration>
 <property>
-  <name>grill.driver.jdbc.connection.provider</name>
+  <name>lens.driver.jdbc.connection.provider</name>
   <value></value>
   <description>A contract for obtaining JDBC connections</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.query.rewriter</name>
+  <name>lens.driver.jdbc.query.rewriter</name>
   <value>org.apache.lens.driver.jdbc.ColumnarSQLRewriter</value>
   <description>Rewriting the HQL to optimized sql queries</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.driver.class</name>
+  <name>lens.driver.jdbc.driver.class</name>
   <value>com.mysql.jdbc.Driver</value>
   <description>Type of JDBC driver used to connect backend database</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.db.uri</name>
+  <name>lens.driver.jdbc.db.uri</name>
   <value></value>
   <description>JDBC connection URL in the format jdbc:dbms://host:port/dbname</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.db.user</name>
+  <name>lens.driver.jdbc.db.user</name>
   <value></value>
   <description>The database user on whose behalf the connection is being made</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.db.password</name>
+  <name>lens.driver.jdbc.db.password</name>
   <value></value>
   <description>The database user's password</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.pool.max.size</name>
+  <name>lens.driver.jdbc.pool.max.size</name>
   <value>15</value>
   <description>Maximum number of concurrent connections allowed in pool</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.pool.idle.time</name>
+  <name>lens.driver.jdbc.pool.idle.time</name>
   <value>600</value>
   <description>Maximum idle time in sec before a connection is closed</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.pool.max.statements</name>
+  <name>lens.driver.jdbc.pool.max.statements</name>
   <value>20</value>
   <description>Maximum number of prepared statements to cache per connection</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.get.connection.timeout</name>
+  <name>lens.driver.jdbc.get.connection.timeout</name>
   <value>10000</value>
   <description>Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket</description>
 </property>
 
 <property>
-  <name>grill.driver.jdbc.explain.keyword</name>
+  <name>lens.driver.jdbc.explain.keyword</name>
   <value>Explain</value>
   <description>Explain keyword used to get the query plan of underlying database</description>
 </property>

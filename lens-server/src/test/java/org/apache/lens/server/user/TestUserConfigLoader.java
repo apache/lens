@@ -60,7 +60,7 @@ public class TestUserConfigLoader {
     UserConfigLoaderFactory.init(conf);
     HashMap<String, String> expected = new HashMap<String, String>() {
       {
-        put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, "grilluser");
+        put(GrillConfConstants.SESSION_CLUSTER_USER, "lensuser");
       }
     };
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), expected);
@@ -69,17 +69,17 @@ public class TestUserConfigLoader {
   @Test
   public void testPropertyBased() throws GrillException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/propertybased.xml"));
-    conf.set(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_PROPERTYBASED_FILENAME, TestUserConfigLoader.class.getResource("/user/propertybased.txt").getPath());
+    conf.set(GrillConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, TestUserConfigLoader.class.getResource("/user/propertybased.txt").getPath());
     UserConfigLoaderFactory.init(conf);
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), new HashMap<String, String>() {
       {
-        put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, "clusteruser1");
+        put(GrillConfConstants.SESSION_CLUSTER_USER, "clusteruser1");
         put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, "queue1");
       }
     });
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user2"), new HashMap<String, String>() {
       {
-        put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, "clusteruser2");
+        put(GrillConfConstants.SESSION_CLUSTER_USER, "clusteruser2");
         put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, "queue2");
       }
     });
@@ -116,7 +116,7 @@ public class TestUserConfigLoader {
     for(final String[] sa: valuesToVerify) {
       Assert.assertEquals(UserConfigLoaderFactory.getUserConfig(sa[0]), new HashMap<String, String>() {
         {
-          put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, sa[1]);
+          put(GrillConfConstants.SESSION_CLUSTER_USER, sa[1]);
           put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, sa[2]);
         }
       });

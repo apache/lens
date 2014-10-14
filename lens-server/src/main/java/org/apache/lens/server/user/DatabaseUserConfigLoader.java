@@ -46,35 +46,35 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    String className = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME);
-    String jdbcUrl = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL);
-    String userName = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME);
-    String pass = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, "");
-    querySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY);
-    keys = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
+    String className = conf.get(GrillConfConstants.USER_RESOLVER_DB_DRIVER_NAME);
+    String jdbcUrl = conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_URL);
+    String userName = conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_USERNAME);
+    String pass = conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_PASSWORD, "");
+    querySql = conf.get(GrillConfConstants.USER_RESOLVER_DB_QUERY);
+    keys = conf.get(GrillConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     if(UtilityMethods.anyNull(className, jdbcUrl, userName, pass, querySql, keys)) {
       throw new UserConfigLoaderException("You need to specify all of the following in conf: ["
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_DRIVER_NAME + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_JDBC_URL + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_JDBC_USERNAME + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_JDBC_PASSWORD + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_QUERY + ", "
+        + GrillConfConstants.USER_RESOLVER_DB_KEYS + ", "
       + "]");
     }
     ds = getDataSourceFromConf(conf);
     cache = CacheBuilder
       .newBuilder()
-      .expireAfterWrite(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-      .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .expireAfterWrite(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+      .maximumSize(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   public static BasicDataSource getDataSourceFromConf(HiveConf conf) {
     BasicDataSource tmp = new BasicDataSource();
-    tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME));
-    tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL));
-    tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME));
-    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, ""));
+    tmp.setDriverClassName(conf.get(GrillConfConstants.USER_RESOLVER_DB_DRIVER_NAME));
+    tmp.setUrl(conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_URL));
+    tmp.setUsername(conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_USERNAME));
+    tmp.setPassword(conf.get(GrillConfConstants.USER_RESOLVER_DB_JDBC_PASSWORD, ""));
     return tmp;
   }
 

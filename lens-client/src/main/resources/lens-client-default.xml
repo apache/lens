@@ -21,48 +21,14 @@
 
 <configuration>
   <property>
-    <name>grill.host</name>
-    <value>localhost</value>
-    <description>Grill server hostname</description>
-  </property>
-
-  <property>
-    <name>grill.port</name>
-    <value>9999</value>
-    <description>Default Grill server port</description>
-  </property>
-
-  <property>
-    <name>grill.dbname</name>
+    <name>lens.client.dbname</name>
     <value>default</value>
-    <description>Default grill database</description>
+    <description>Default lens database</description>
   </property>
 
   <property>
-    <name>grill.base.path</name>
-    <value>grillapi</value>
-    <description>default grill server base path</description>
-  </property>
-
-  <property>
-    <name>grill.session.resource.path</name>
-    <value>session</value>
-    <description>resource path to session webservice</description>
-  </property>
-  <property>
-    <name>grill.query.resource.path</name>
-    <value>queryapi</value>
-    <description>resource path to query webservice</description>
-  </property>
-  <property>
-    <name>grill.metastore.resource.path</name>
-    <value>metastore</value>
-    <description>resource path to query webservice</description>
-  </property>
-  <property>
-    <name>grill.user.name</name>
+    <name>lens.client.user.name</name>
     <value>anonymous</value>
-    <description>Grill client user name</description>
+    <description>Lens client user name</description>
   </property>
-
 </configuration>

@@ -72,7 +72,7 @@ public class CubeGrillDriver implements GrillDriver {
 
   private void loadDrivers() throws GrillException {
     String[] driverClasses = conf.getStrings(
-        GrillConfConstants.ENGINE_DRIVER_CLASSES);
+        GrillConfConstants.DRIVER_CLASSES);
     if (driverClasses != null) {
       for (String driverClass : driverClasses) {
         try {

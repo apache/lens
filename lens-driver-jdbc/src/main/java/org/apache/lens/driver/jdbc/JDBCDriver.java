@@ -23,12 +23,10 @@ package org.apache.lens.driver.jdbc;
 
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.GrillException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
@@ -56,7 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.Getter;
 import lombok.Setter;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_CASE;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
 /**
@@ -181,7 +178,7 @@ public class JDBCDriver implements GrillDriver {
         queryContext.setQueryResult(result);
 
         try {
-          conn = getConnection(queryContext.getGrillContext().getConf());
+          conn = getConnection();
           result.conn = conn;
         } catch (GrillException e) {
           LOG.error("Error obtaining connection: " + e.getMessage(), e);
@@ -251,8 +248,8 @@ public class JDBCDriver implements GrillDriver {
   @Override
   public void configure(Configuration conf) throws GrillException {
     this.conf = new Configuration(conf);
-    //Add grill-jdbc-site to resource path
-    this.conf.addResource("grill-jdbc-site.xml");
+    this.conf.addResource("jdbcdriver-default.xml");
+    this.conf.addResource("jdbcdriver-site.xml");
     init(conf);
     configured = true;
     LOG.info("JDBC Driver configured");
@@ -285,11 +282,10 @@ public class JDBCDriver implements GrillDriver {
       throw new IllegalStateException("JDBC Driver is not configured!");
   }
 
-  protected synchronized Connection getConnection(Configuration conf) throws GrillException {
+  protected synchronized Connection getConnection() throws GrillException {
     try {
       //Add here to cover the path when the queries are executed it does not
       //use the driver conf
-      conf.addResource("grill-jdbc-site.xml");
       return connectionProvider.getConnection(conf);
     } catch (SQLException e) {
       throw new GrillException(e);
@@ -413,7 +409,7 @@ public class JDBCDriver implements GrillDriver {
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
-      conn = getConnection(pContext.getConf());
+      conn = getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
     } catch (SQLException sql) {
       throw new GrillException(sql);
