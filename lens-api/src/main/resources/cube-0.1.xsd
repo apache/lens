@@ -92,6 +92,7 @@
         <xs:attribute type="xs:dateTime" name="end_time" />
         <xs:attribute type="xs:double" name="cost" />
         <xs:attribute type="xs:string" name="unit" />
+        <xs:attribute type="xs:string" name="cube_table"/>
     </xs:complexType>
 
     <xs:complexType name="x_measures">
@@ -127,6 +128,7 @@
         <xs:attribute type="xs:string" name="description" />
         <xs:attribute type="xs:string" name="display_string" />
         <xs:attribute type="xs:string" name="expr" />
+        <xs:attribute type="xs:string" name="cube_table"/>
     </xs:complexType>
 
     <xs:complexType name="x_expressions">
@@ -156,7 +158,8 @@
         <xs:attribute type="xs:dateTime" name="start_time" />
         <xs:attribute type="xs:dateTime" name="end_time" />
         <xs:attribute type="xs:double" name="cost" />
-        <xs:attribute type="xs:string" name="expr" />        
+        <xs:attribute type="xs:string" name="expr" />
+        <xs:attribute type="xs:string" name="cube_table"/>
     </xs:complexType>
     <xs:complexType name="x_tablereference">
         <xs:attribute type="xs:string" name="dest_table" use="required"/>
@@ -398,6 +401,16 @@
         <xs:attribute name="createtime" type="xs:int" use="required" />
         <xs:attribute name="lastAccessTime" type="xs:int" use="required" />
     </xs:complexType>
+
+    <xs:element name="flattened_columns">
+        <xs:complexType>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="measure" type="x_measure" />
+                <xs:element name="expression" type="x_expr_column" />
+                <xs:element name="dim_attribute" type="x_dim_attribute" />
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
 
 </xs:schema>
            

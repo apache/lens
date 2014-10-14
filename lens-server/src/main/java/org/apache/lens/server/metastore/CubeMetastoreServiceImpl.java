@@ -51,6 +51,7 @@ import java.util.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import javax.xml.bind.JAXB;
 
 public class CubeMetastoreServiceImpl extends GrillService implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
@@ -1191,14 +1192,15 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
-  public void getFlattenedColumnView(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
-    // First check if the table is a cube or dimension
+  public FlattenedColumns getFlattenedColumnView(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
+
     try {
       acquire(sessionHandle);
       CubeMetastoreClient client = getClient(sessionHandle);
 
       boolean isCube = false;
       AbstractCubeTable cubeTbl = null;
+      // check if the table is a cube or dimension
       if (client.isCube(tableName)) {
         isCube = true;
         CubeInterface cube = client.getCube(tableName);
@@ -1213,7 +1215,32 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
         throw new BadRequestException("Can't get reachable columns. '"
           + tableName + "' is neither a cube nor a dimension");
       }
-      getFlattenedColumnView(client, cubeTbl, isCube);
+
+      Map<String, CubeColumn> columnMap = getFlattenedColumnView(client, cubeTbl, isCube);
+      // Convert this to the JAXB collection
+      ObjectFactory objectFactory = new ObjectFactory();
+      FlattenedColumns flattenedColumns = objectFactory.createFlattenedColumns();
+      List<Object> columnList = flattenedColumns.getMeasureOrExpressionOrDimAttribute();
+
+      for (Map.Entry<String, CubeColumn> entry : columnMap.entrySet()) {
+        String colName = entry.getKey();
+        CubeColumn column = entry.getValue();
+        String table = colName.substring(colName.indexOf('.'));
+        if (column instanceof CubeMeasure) {
+          XMeasure xmeasure = JAXBUtils.xMeasureFromHiveMeasure((CubeMeasure) column);
+          xmeasure.setCubeTable(table);
+          columnList.add(xmeasure);
+        } else if (column instanceof CubeDimAttribute) {
+          XDimAttribute xDimAttribute = JAXBUtils.xDimAttrFromHiveDimAttr((CubeDimAttribute)column);
+          xDimAttribute.setCubeTable(table);
+          columnList.add(xDimAttribute);
+        } else if (column instanceof ExprColumn) {
+          XExprColumn xExprColumn = JAXBUtils.xExprColumnFromHiveExprColumn((ExprColumn) column);
+          xExprColumn.setCubeTable(table);
+          columnList.add(xExprColumn);
+        }
+      }
+      return flattenedColumns;
     } catch (GrillException exc) {
       throw exc;
     } catch (HiveException e) {
@@ -1233,7 +1260,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     return graph;
   }
 
-  private void getFlattenedColumnView(CubeMetastoreClient client,
+  private Map<String, CubeColumn> getFlattenedColumnView(CubeMetastoreClient client,
                                       AbstractCubeTable table,
                                       boolean isCube) throws HiveException {
     SchemaGraph schemaGraph = getSchemaGraph(client);
@@ -1290,5 +1317,6 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       }
     } // end bfs
     // columnMap now contains flattened view
+    return columnMap;
   }
 }
