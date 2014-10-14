@@ -303,4 +303,7 @@ public interface CubeMetastoreService {
       String cubeTableName, String storageName, String values) throws GrillException;
   public void dropPartitionFromStorageByFilter(GrillSessionHandle sessionid,
       String cubeTableName, String storageName, String filter) throws GrillException;
+
+  public FlattenedColumns getFlattenedColumns(GrillSessionHandle sessionHandle, String tableName) throws GrillException;
+
 }
