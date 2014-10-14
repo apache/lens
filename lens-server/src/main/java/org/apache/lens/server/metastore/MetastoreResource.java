@@ -1434,4 +1434,23 @@ public class MetastoreResource {
     }
     return SUCCESS;
   }
+
+  /**
+   * Get flattened list of columns reachable from a cube or a dimension
+   * @param sessionid session id
+   * @param tableName name of the table
+   * @return list of measures, expressions or dimension attributes
+   */
+  @GET
+  @Path("/{tableName}/flattened")
+  public FlattenedColumns getFlattenedColumns(
+    @QueryParam("sessionid") GrillSessionHandle sessionid,
+    @PathParam("tableName") String tableName) {
+    checkSessionId(sessionid);
+    try {
+      return getSvc().getFlattenedColumns(sessionid, tableName);
+    } catch (GrillException exc) {
+      throw new WebApplicationException(exc);
+    }
+  }
 }

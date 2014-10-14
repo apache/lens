@@ -1192,8 +1192,8 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
-  public FlattenedColumns getFlattenedColumnView(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
-
+  @Override
+  public FlattenedColumns getFlattenedColumns(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
     try {
       acquire(sessionHandle);
       CubeMetastoreClient client = getClient(sessionHandle);
