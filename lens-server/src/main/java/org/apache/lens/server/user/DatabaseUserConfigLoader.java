@@ -46,22 +46,8 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    String className = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME);
-    String jdbcUrl = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL);
-    String userName = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME);
-    String pass = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, "");
     querySql = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY);
     keys = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
-    if(UtilityMethods.anyNull(className, jdbcUrl, userName, pass, querySql, keys)) {
-      throw new UserConfigLoaderException("You need to specify all of the following in conf: ["
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_QUERY + ", "
-        + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_KEYS + ", "
-      + "]");
-    }
     ds = getDataSourceFromConf(conf);
     cache = CacheBuilder
       .newBuilder()
@@ -71,10 +57,14 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   public static BasicDataSource getDataSourceFromConf(HiveConf conf) {
     BasicDataSource tmp = new BasicDataSource();
-    tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME));
-    tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL));
-    tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME));
-    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD, ""));
+    tmp.setDriverClassName(conf.get(GrillConfConstants.GRILL_SERVER_DB_DRIVER_NAME,
+      GrillConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+    tmp.setUrl(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_URL,
+      GrillConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
+    tmp.setUsername(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_USER,
+      GrillConfConstants.DEFAULT_SERVER_DB_USER));
+    tmp.setPassword(conf.get(GrillConfConstants.GRILL_SERVER_DB_JDBC_PASS,
+      GrillConfConstants.DEFAULT_SERVER_DB_PASS));
     return tmp;
   }
 

@@ -96,10 +96,6 @@ public class GrillConfConstants {
   public static final String GRILL_SERVER_USER_RESOLVER_TYPE = "grill.server.user.resolver.type";
   public static final String GRILL_SERVER_USER_RESOLVER_FIXED_VALUE = "grill.server.user.resolver.fixed.value";
   public static final String GRILL_SERVER_USER_RESOLVER_PROPERTYBASED_FILENAME = "grill.server.user.resolver.propertybased.filename";
-  public static final String GRILL_SERVER_USER_RESOLVER_DB_DRIVER_NAME = "grill.server.user.resolver.db.driver.name";
-  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_URL = "grill.server.user.resolver.db.jdbc.url";
-  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_USERNAME = "grill.server.user.resolver.db.jdbc.username";
-  public static final String GRILL_SERVER_USER_RESOLVER_DB_JDBC_PASSWORD = "grill.server.user.resolver.db.jdbc.password";
   public static final String GRILL_SERVER_USER_RESOLVER_DB_KEYS = "grill.server.user.resolver.db.keys";
   public static final String GRILL_SERVER_USER_RESOLVER_DB_QUERY = "grill.server.user.resolver.db.query";
   public static final String GRILL_SERVER_USER_RESOLVER_CUSTOM_CLASS = "grill.server.user.resolver.custom.class";
