@@ -47,7 +47,7 @@ public class GrillConfConstants {
   public static final String EVENT_SERVICE_THREAD_POOL_SIZE = SERVER_PFX + "event.service.thread.pool.size";
   
   public static final String SERVER_BASE_URL = SERVER_PFX + "base.url";
-  public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/";
+  public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/lensapi";
 
   public static final String SERVER_RESTART_ENABLED = SERVER_PFX + "restart.enabled";
   public static final boolean DEFAULT_SERVER_RESTART_ENABLED = true;
