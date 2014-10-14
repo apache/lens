@@ -33,7 +33,7 @@ public class CustomUserConfigLoader extends UserConfigLoader {
   public CustomUserConfigLoader(HiveConf conf) {
     super(conf);
     this.customHandlerClass = (Class<? extends UserConfigLoader>) hiveConf.getClass(
-      GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CUSTOM_CLASS,
+      GrillConfConstants.USER_RESOLVER_CUSTOM_CLASS,
       UserConfigLoader.class
     );
     try {

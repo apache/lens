@@ -61,7 +61,7 @@ public abstract class TestAbstractFileFormatter {
     Configuration conf = new Configuration();
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -73,7 +73,7 @@ public abstract class TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -87,7 +87,7 @@ public abstract class TestAbstractFileFormatter {
         org.apache.hadoop.io.compress.DefaultCodec.class.getCanonicalName());
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate",getMockedResultSet());
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -99,7 +99,7 @@ public abstract class TestAbstractFileFormatter {
     conf.set(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -112,7 +112,7 @@ public abstract class TestAbstractFileFormatter {
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -122,7 +122,7 @@ public abstract class TestAbstractFileFormatter {
   public void testOutputPath() throws IOException {
     Configuration conf = new Configuration();
     String outputParent = "target/" + getClass().getSimpleName();
-    conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, outputParent);
+    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, outputParent);
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv",getMockedResultSet());
     // validate rows
@@ -134,7 +134,7 @@ public abstract class TestAbstractFileFormatter {
   public void testCompressionWithCustomOutputPath() throws IOException {
     Configuration conf = new Configuration();
     String outputParent = "target/" + getClass().getSimpleName();
-    conf.set(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR, outputParent);
+    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, outputParent);
     conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv.gz",getMockedResultSet());

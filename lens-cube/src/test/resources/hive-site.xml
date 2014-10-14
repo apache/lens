@@ -24,7 +24,7 @@
 <configuration>
 
 <property>
-  <name>grill.drivers</name>
+  <name>lens.server.drivers</name>
   <value>org.apache.lens.driver.cube.MockDriver</value>
 </property>
 

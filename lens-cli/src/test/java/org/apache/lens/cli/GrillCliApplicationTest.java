@@ -38,7 +38,7 @@ public class GrillCliApplicationTest extends GrillAllApplicationJerseyTest {
 
   @Override
   protected URI getBaseUri() {
-    return UriBuilder.fromUri(getUri()).path("grillapi").build();
+    return UriBuilder.fromUri(getUri()).path("lensapi").build();
   }
 
   @BeforeTest

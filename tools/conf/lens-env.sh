@@ -18,38 +18,38 @@
 # The java implementation to use. If JAVA_HOME is not found we expect java and jar to be in path
 #export JAVA_HOME=
 
-# The hadoop installation location. If Grill is configured to run queries through Hive, which in turn uses Hadoop for execution, the variable is required
+# The hadoop installation location. 
 #export HADOOP_HOME=
 
-# The Hive installation location. Grill adds hive lib in the classpath.
+# The Hive installation location. Lens adds hive lib in the classpath.
 #export HIVE_HOME=
 
 # any additional java opts you want to set. This will apply to both client and server operations
-#export GRILL_OPTS=
+#export LENS_OPTS=
 
 # any additional java opts that you want to set for client only
-#export GRILL_CLIENT_OPTS=
+#export LENS_CLIENT_OPTS=
 
 # java heap size we want to set for the client. Default is 1024MB
-#export GRILL_CLIENT_HEAP=
+#export LENS_CLIENT_HEAP=
 
-# any additional opts you want to set for grill server.
+# any additional opts you want to set for lens server.
 export LENS_SERVER_OPTS="-XX:PermSize=256m -XX:MaxPermSize=256m"
 
-# java heap size we want to set for the grill server. Default is 1024MB
-#export GRILL_SERVER_HEAP=
+# java heap size we want to set for the lens server. Default is 1024MB
+#export LENS_SERVER_HEAP=
 
-# What is is considered as grill home dir. Default is the base location of the installed software
-#export GRILL_HOME_DIR=
+# What is is considered as lens home dir. Default is the base location of the installed software
+#export LENS_HOME_DIR=
 
 # Where log files are stored. Default is logs directory under the base install location
-#export GRILL_LOG_DIR=
+#export LENS_LOG_DIR=
 
 # Where pid files are stored. Default is logs directory under the base install location
-#export GRILL_PID_DIR=
+#export LENS_PID_DIR=
 
 # Where do you want to expand the war file. By Default it is in /webapp dir under the base install dir.
-#export GRILL_EXPANDED_WEBAPP_DIR=
+#export LENS_EXPANDED_WEBAPP_DIR=
 
-#Classpath for grill server or client
-#export GRILLCPPATH=
+#Classpath for lens server or client
+#export LENSCPPATH=

@@ -24,20 +24,8 @@ Lens client configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|grill.base.path|grillapi|default grill server base path|
+|1|lens.client.dbname|default|Default lens database|
 *--+--+---+--+
-|2|grill.dbname|default|Default grill database|
-*--+--+---+--+
-|3|grill.host|localhost|Grill server hostname|
-*--+--+---+--+
-|4|grill.metastore.resource.path|metastore|resource path to query webservice|
-*--+--+---+--+
-|5|grill.port|9999|Default Grill server port|
-*--+--+---+--+
-|6|grill.query.resource.path|queryapi|resource path to query webservice|
-*--+--+---+--+
-|7|grill.session.resource.path|session|resource path to session webservice|
-*--+--+---+--+
-|8|grill.user.name|anonymous|Grill client user name|
+|2|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
 The configuration parameters and their default values

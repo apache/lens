@@ -76,7 +76,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
   @Test
   public void testQueryCommands() throws Exception {
     client = new GrillClient();
-    client.setConnectionParam("grill.persistent.resultset.indriver", "false");
+    client.setConnectionParam("lens.query.enable.persistent.resultset.indriver", "false");
     setup(client);
     LensQueryCommands qCom = new LensQueryCommands();
     qCom.setClient(client);
@@ -243,7 +243,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
 
   private void testShowPersistentResultSet(LensQueryCommands qCom) throws Exception {
     System.out.println("@@PERSISTENT_RESULT_TEST-------------");
-    client.setConnectionParam("grill.persistent.resultset.indriver", "true");
+    client.setConnectionParam("lens.query.enable.persistent.resultset.indriver", "true");
     String query = "cube select id,name from test_dim";
     try {
       String result = qCom.executeQuery(query, false, "testQuery3");
@@ -259,8 +259,8 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
 
   private void testPurgedFinishedResultSet(LensQueryCommands qCom) {
     System.out.println("@@START_FINISHED_PURGED_RESULT_TEST-------------");
-    client.setConnectionParam("grill.max.finished.queries", "0");
-    client.setConnectionParam("grill.persistent.resultset","true");
+    client.setConnectionParam("lens.server.max.finished.queries", "0");
+    client.setConnectionParam("lens.query.enable.persistent.resultset","true");
     String query = "cube select id,name from test_dim";
     try {
       String qh = qCom.executeQuery(query, true, "testQuery");

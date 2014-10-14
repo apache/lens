@@ -87,8 +87,8 @@ public class GrillServices extends CompositeService implements ServiceProvider {
       conf.addResource("lensserver-default.xml");
       conf.addResource("lens-site.xml");
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getCanonicalName());
-      serviceMode = conf.getEnum(GrillConfConstants.GRILL_SERVER_MODE,
-          SERVICE_MODE.valueOf(GrillConfConstants.DEFAULT_GRILL_SERVER_MODE));
+      serviceMode = conf.getEnum(GrillConfConstants.SERVER_MODE,
+          SERVICE_MODE.valueOf(GrillConfConstants.DEFAULT_SERVER_MODE));
       cliService = new CLIService();
 
       // Add default services
@@ -99,7 +99,7 @@ public class GrillServices extends CompositeService implements ServiceProvider {
       
       // Add configured services, these are instances of GrillService which need a CLIService instance
       // for session management
-      String[] serviceNames = conf.getStrings(GrillConfConstants.GRILL_SERVICE_NAMES);
+      String[] serviceNames = conf.getStrings(GrillConfConstants.SERVICE_NAMES);
       for (String sName : serviceNames) {
         try {
           Class<? extends GrillService> serviceClass = conf.getClass(
@@ -125,8 +125,8 @@ public class GrillServices extends CompositeService implements ServiceProvider {
       super.init(conf);
 
       //setup persisted state
-      String persistPathStr = conf.get(GrillConfConstants.GRILL_SERVER_PERSIST_LOCATION,
-          GrillConfConstants.DEFAULT_GRILL_SERVER_PERSIST_LOCATION);
+      String persistPathStr = conf.get(GrillConfConstants.SERVER_STATE_PERSIST_LOCATION,
+          GrillConfConstants.DEFAULT_SERVER_STATE_PERSIST_LOCATION);
       persistDir = new Path(persistPathStr);
       try {
         setupPersistedState();
@@ -134,8 +134,8 @@ public class GrillServices extends CompositeService implements ServiceProvider {
         LOG.error("Could not recover from persisted state", e);
         throw new RuntimeException("Could not recover from persisted state", e);
       }
-      snapShotInterval = conf.getLong(GrillConfConstants.GRILL_SERVER_SNAPSHOT_INTERVAL,
-          GrillConfConstants.DEFAULT_GRILL_SERVER_SNAPSHOT_INTERVAL);
+      snapShotInterval = conf.getLong(GrillConfConstants.SERVER_SNAPSHOT_INTERVAL,
+          GrillConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized grill services: " + services.keySet().toString());
       UserConfigLoaderFactory.init(conf);
       timer = new Timer("grill-server-snapshotter", true);
@@ -160,8 +160,8 @@ public class GrillServices extends CompositeService implements ServiceProvider {
   }
 
   private void setupPersistedState() throws IOException, ClassNotFoundException {
-    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RECOVER_ON_RESTART,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_RECOVER_ON_RESTART)) {
+    if (conf.getBoolean(GrillConfConstants.SERVER_RECOVER_ON_RESTART,
+        GrillConfConstants.DEFAULT_SERVER_RECOVER_ON_RESTART)) {
       FileSystem fs = persistDir.getFileSystem(conf);
 
       for (GrillService service : grillServices) {
@@ -185,8 +185,8 @@ public class GrillServices extends CompositeService implements ServiceProvider {
   }
 
   private synchronized void persistGrillServiceState() throws IOException {
-    if (conf.getBoolean(GrillConfConstants.GRILL_SERVER_RESTART_ENABLED,
-        GrillConfConstants.DEFAULT_GRILL_SERVER_RESTART_ENABLED)) {
+    if (conf.getBoolean(GrillConfConstants.SERVER_RESTART_ENABLED,
+        GrillConfConstants.DEFAULT_SERVER_RESTART_ENABLED)) {
       FileSystem fs = persistDir.getFileSystem(conf);
       LOG.info("Persisting server state in " + persistDir);
 

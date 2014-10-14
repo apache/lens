@@ -47,8 +47,8 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     ds = UtilityMethods.getDataSourceFromConf(conf);
     cache = CacheBuilder
       .newBuilder()
-      .expireAfterWrite(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-      .maximumSize(conf.getInt(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .expireAfterWrite(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+      .maximumSize(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   @Override

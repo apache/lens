@@ -79,7 +79,7 @@ public class TestJdbcDriver {
     Connection conn = null;
     Statement stmt = null;
     try {
-      conn = driver.getConnection(baseConf);
+      conn = driver.getConnection();
       stmt = conn.createStatement();
       stmt.execute("CREATE TABLE " + table + " (ID INT)");
       
@@ -98,7 +98,7 @@ public class TestJdbcDriver {
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
-      conn = driver.getConnection(baseConf);
+      conn = driver.getConnection();
       stmt = conn.prepareStatement("INSERT INTO " + table + " VALUES(?)");
       
       for (int i = 0; i < 10; i ++) {

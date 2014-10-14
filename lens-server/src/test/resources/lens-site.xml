@@ -23,29 +23,29 @@
 
 <configuration>
 <property>
-  <name>grill.drivers</name>
+  <name>lens.server.drivers</name>
   <value>org.apache.lens.driver.hive.HiveDriver</value>
 </property>
 
 <property>
-  <name>test.grill.site.key</name>
+  <name>test.lens.site.key</name>
   <value>gsvalue</value>
 </property>
 
 <property>
-  <name>grill.enable.console.metrics</name>
+  <name>lens.server.enable.console.metrics</name>
   <value>true</value>
   <description>Enable metrics to be reported on console</description>
 </property>
 
 <property>
-  <name>grill.server.persist.location</name>
+  <name>lens.server.persist.location</name>
   <value>target/persist-dir</value>
 </property>
 
 <property>
-  <name>grill.result.parent.dir</name>
-  <value>target/grill-results</value>
+  <name>lens.query.result.parent.dir</name>
+  <value>target/lens-results</value>
 </property>
 
 <property>
@@ -65,62 +65,62 @@
 
 
 <property>
-  <name>grill.whether.mail.notify</name>
+  <name>lens.query.whether.mail.notify</name>
   <value>true</value>
   <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 
 <property>
-  <name>grill.mail.from.address</name>
+  <name>lens.server.mail.from.address</name>
   <value>blah@company.com</value>
   <description>The from field in the notifier mail to the submitter.</description>
 </property>
 
 <property>
-  <name>grill.mail.host</name>
+  <name>lens.server.mail.host</name>
   <value>localhost</value>
   <description>SMTP Host for sending mail</description>
 </property>
 
 <property>
-  <name>grill.mail.port</name>
+  <name>lens.server.mail.port</name>
   <value>25000</value>
   <description>SMTP Port</description>
 </property>
 
 <property>
-  <name>grill.ws.resourcenames</name>
+  <name>lens.server.ws.resourcenames</name>
   <value>session,metastore,query,quota,scheduler,index,test</value>
-  <description>These JAX-RS resources would be started in the specified order when grill-server starts up</description>
+  <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
 </property>
 
 <property>
-  <name>grill.test.ws.resource.impl</name>
+  <name>lens.server.test.ws.resource.impl</name>
   <value>org.apache.lens.server.TestResource</value>
   <description>Implementation class for Test Resource</description>
 </property>
 
 <property>
-  <name>grill.server.user.resolver.type</name>
+  <name>lens.server.user.resolver.type</name>
   <value>FIXED</value>
 </property>
 <property>
-  <name>grill.server.user.resolver.fixed.value</name>
-  <value>testgrilluser</value>
+  <name>lens.server.user.resolver.fixed.value</name>
+  <value>testlensuser</value>
 </property>
 <property>
-  <name>grill.server.domain</name>
+  <name>lens.server.domain</name>
   <value>localhost</value>
 </property>
 
 <property>
     <!-- Immediately insert all finished queries to DB -->
-    <name>grill.max.finished.queries</name>
+    <name>lens.server.max.finished.queries</name>
     <value>1</value>
 </property>
 
 <property>
-    <name>grill.server.db.jdbc.url</name>
+    <name>lens.server.db.jdbc.url</name>
     <value>jdbc:hsqldb:target/queries.db</value>
 </property>
 </configuration>

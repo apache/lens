@@ -585,10 +585,10 @@ public class TestColumnarSQLRewriter {
     Table tbl1 = new Table(db, table);
 
     if (StringUtils.isNotBlank(udb)) {
-      tbl1.setProperty(GrillConfConstants.GRILL_NATIVE_DB_NAME, udb);
+      tbl1.setProperty(GrillConfConstants.NATIVE_DB_NAME, udb);
     }
     if (StringUtils.isNotBlank(utable)) {
-      tbl1.setProperty(GrillConfConstants.GRILL_NATIVE_TABLE_NAME, utable);
+      tbl1.setProperty(GrillConfConstants.NATIVE_TABLE_NAME, utable);
     }
 
     List<FieldSchema> columns = new ArrayList<FieldSchema>();

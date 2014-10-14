@@ -109,7 +109,7 @@ public class TestJDBCFinal {
     String insertDim4 = "insert into location_dim values "
         + "(223,'loc1'),(224,'loc2'),(225,'loc4'),(226,'loc4')";
     try {
-      conn = driver.getConnection(baseConf);
+      conn = driver.getConnection();
       stmt = conn.createStatement();
       // stmt.execute(dropTables);
       stmt.execute(createFact);

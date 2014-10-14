@@ -51,7 +51,7 @@ public class TestStatisticsLogPartitionHandler {
   @Test
   public void testPartitionHandler() throws Exception {
     Configuration conf = configureHiveTables();
-    String fileName = "/tmp/grillstats.log";
+    String fileName = "/tmp/lensstats.log";
     File f = createDummyFile(fileName);
     StatisticsLogPartitionHandler handler = new StatisticsLogPartitionHandler();
     handler.initialize(conf);

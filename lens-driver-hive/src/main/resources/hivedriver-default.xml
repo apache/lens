@@ -24,7 +24,7 @@
 <configuration>
 
 <property>
-  <name>grill.hive.connection.class</name>
+  <name>lens.driver.hive.connection.class</name>
   <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>
   <description>The connection class from HiveDriver to HiveServer. The default is
    an embedded connection which does not require a remote hive server.
@@ -34,7 +34,7 @@
 </property>
 
 <property>
-  <name>grill.hs2.connection.expiry.delay</name>
+  <name>lens.driver.hive.hs2.connection.expiry.delay</name>
   <value>600000</value>
   <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
 </property>

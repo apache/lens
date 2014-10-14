@@ -34,8 +34,8 @@ public class FixedUserConfigLoader extends UserConfigLoader {
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) {
     HashMap<String, String> userConfig = new HashMap<String, String>();
-    userConfig.put(GrillConfConstants.GRILL_SESSION_CLUSTER_USER,
-      hiveConf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_FIXED_VALUE));
+    userConfig.put(GrillConfConstants.SESSION_CLUSTER_USER,
+      hiveConf.get(GrillConfConstants.USER_RESOLVER_FIXED_VALUE));
     return userConfig;
   }
 }

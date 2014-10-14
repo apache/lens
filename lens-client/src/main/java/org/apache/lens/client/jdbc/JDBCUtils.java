@@ -52,7 +52,7 @@ public class JDBCUtils {
    */
   static final String PORT_PROPERTY_KEY = "PORT";
 
-  public static final String URL_PREFIX = "jdbc:grill://";
+  public static final String URL_PREFIX = "jdbc:lens://";
 
 
   private static final String URI_JDBC_PREFIX = "jdbc:";
@@ -76,7 +76,7 @@ public class JDBCUtils {
    * Examples :-
    * </p>
    * <code>
-   * jdbc:grill://hostname:port/dbname;[optional key value pair of session settings]?[optional configuration settings for connection]#[optional variables to be used in query]
+   * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?[optional configuration settings for connection]#[optional variables to be used in query]
    * </code>
    *
    * @param uri to be used to connect to grill server
@@ -97,13 +97,13 @@ public class JDBCUtils {
 
     URI jdbcUri = URI.create(uri.substring(URI_JDBC_PREFIX.length()));
 
-    if (jdbcUri.getHost() != null) {
+ /*   if (jdbcUri.getHost() != null) {
       params.setHost(jdbcUri.getHost());
     }
     if (jdbcUri.getPort() > 0) {
       params.setPort(jdbcUri.getPort());
     }
-
+*/
     Pattern pattern = Pattern.compile(keyValueRegex);
     // dbname and session settings
     String sessVars = jdbcUri.getPath();
@@ -200,8 +200,8 @@ public class JDBCUtils {
     }
 
     GrillConnectionParams params = parseUrl(url);
-    urlProperties.put(HOST_PROPERTY_KEY, params.getHost());
-    urlProperties.put(PORT_PROPERTY_KEY, params.getPort());
+  //  urlProperties.put(HOST_PROPERTY_KEY, params.getHost());
+  //  urlProperties.put(PORT_PROPERTY_KEY, params.getPort());
     urlProperties.put(DB_PROPERTY_KEY, params.getDbName());
 
     return urlProperties;
