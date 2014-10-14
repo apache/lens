@@ -22,23 +22,24 @@ package org.apache.lens.driver.jdbc;
 
 
 public interface JDBCDriverConfConstants {
-  public static final String JDBC_CONNECTION_PROVIDER = "grill.driver.jdbc.connection.provider";
-  public static final String JDBC_QUERY_REWRITER_CLASS = "grill.driver.jdbc.query.rewriter";
-  public static final String JDBC_DRIVER_CLASS = "grill.driver.jdbc.driver.class";
-  public static final String JDBC_DB_URI = "grill.driver.jdbc.db.uri";
-  public static final String JDBC_USER = "grill.driver.jdbc.db.user";
-  public static final String JDBC_PASSWORD = "grill.driver.jdbc.db.password";
-  public static final String JDBC_POOL_MAX_SIZE = "grill.driver.jdbc.pool.max.size";
+  public static final String JDBC_DRIVER_PFX = "lens.driver.jdbc.";
+  public static final String JDBC_CONNECTION_PROVIDER = JDBC_DRIVER_PFX + "connection.provider";
+  public static final String JDBC_QUERY_REWRITER_CLASS = JDBC_DRIVER_PFX + "query.rewriter";
+  public static final String JDBC_DRIVER_CLASS = JDBC_DRIVER_PFX + "driver.class";
+  public static final String JDBC_DB_URI = JDBC_DRIVER_PFX + "db.uri";
+  public static final String JDBC_USER = JDBC_DRIVER_PFX + "db.user";
+  public static final String JDBC_PASSWORD = JDBC_DRIVER_PFX + "db.password";
+  public static final String JDBC_POOL_MAX_SIZE = JDBC_DRIVER_PFX + "pool.max.size";
   public static final int JDBC_POOL_MAX_SIZE_DEFAULT = 15;
 
-  public static final String JDBC_POOL_IDLE_TIME = "grill.driver.jdbc.pool.idle.time";
+  public static final String JDBC_POOL_IDLE_TIME = JDBC_DRIVER_PFX + "pool.idle.time";
   public static final int JDBC_POOL_IDLE_TIME_DEFAULT = 600;
-  public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = 
-      "grill.driver.jdbc.pool.max.statements";
+  public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = JDBC_DRIVER_PFX + 
+      "pool.max.statements";
   public static final int JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT = 20;
 
-  public static final String JDBC_GET_CONNECTION_TIMEOUT = "grill.driver.jdbc.get.connection.timeout";
+  public static final String JDBC_GET_CONNECTION_TIMEOUT = JDBC_DRIVER_PFX + "get.connection.timeout";
   public static final int JDBC_GET_CONNECTION_TIMEOUT_DEFAULT = 10000;
-  public static final String JDBC_EXPLAIN_KEYWORD_PARAM = "grill.driver.jdbc.explain.keyword";
+  public static final String JDBC_EXPLAIN_KEYWORD_PARAM = JDBC_DRIVER_PFX + "explain.keyword";
   public static final String DEFAULT_JDBC_EXPLAIN_KEYWORD = "explain ";
 }

@@ -3,15 +3,15 @@
 
 <configuration>
   <property>
-    <name>grill.driver.jdbc.driver.class</name>
+    <name>lens.driver.jdbc.driver.class</name>
     <value>org.hsqldb.jdbcDriver</value>
   </property>
   <property>
-    <name>grill.driver.jdbc.db.uri</name>
+    <name>lens.driver.jdbc.db.uri</name>
     <value>jdbc:hsqldb:/tmp/db-storage.db;MODE=MYSQL</value>
   </property>
   <property>
-    <name>grill.driver.jdbc.db.user</name>
+    <name>lens.driver.jdbc.db.user</name>
     <value>SA</value>
   </property>
   <property>
@@ -19,11 +19,11 @@
     <value>mydb</value>
   </property>
   <property>
-    <name>grill.driver.jdbc.query.rewriter</name>
+    <name>lens.driver.jdbc.query.rewriter</name>
     <value>org.apache.lens.driver.jdbc.ColumnarSQLRewriter</value>
   </property>
   <property>
-    <name>grill.driver.jdbc.explain.keyword</name>
+    <name>lens.driver.jdbc.explain.keyword</name>
     <value>explain plan for </value>
   </property>
 </configuration>

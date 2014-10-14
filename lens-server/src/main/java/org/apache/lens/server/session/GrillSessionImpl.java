@@ -80,8 +80,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
       HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
-    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
-      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
+    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS,
+      GrillConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
     if (sessionConf != null) {
       for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
         conf.set(entry.getKey(), entry.getValue());
@@ -100,8 +100,8 @@ public class GrillSessionImpl extends HiveSessionImpl {
                           HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
-    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
-      GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT);
+    sessionTimeout = 1000 * serverConf.getLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS,
+      GrillConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
   }
 
 
@@ -175,7 +175,7 @@ public class GrillSessionImpl extends HiveSessionImpl {
   }
 
   public String getLoggedInUser() {
-    return getHiveConf().get(GrillConfConstants.GRILL_SESSION_LOGGEDIN_USER);
+    return getHiveConf().get(GrillConfConstants.SESSION_LOGGEDIN_USER);
   }
 
   public String getClusterUser() {

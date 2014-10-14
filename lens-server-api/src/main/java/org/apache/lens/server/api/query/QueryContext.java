@@ -100,7 +100,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
     this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.GRILL_PERSISTENT_RESULT_SET,
+    this.isPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_SET,
         GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
     this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
         GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
@@ -145,8 +145,8 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getResultSetParentDir() {
-    return conf.get(GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR,
-        GrillConfConstants.GRILL_RESULT_SET_PARENT_DIR_DEFAULT);
+    return conf.get(GrillConfConstants.RESULT_SET_PARENT_DIR,
+        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }
 
   public Path getHDFSResultDir() {
@@ -217,6 +217,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getClusterUser() {
-    return conf.get(GrillConfConstants.GRILL_SESSION_CLUSTER_USER, submittedUser);
+    return conf.get(GrillConfConstants.SESSION_CLUSTER_USER, submittedUser);
   }
 }

@@ -38,10 +38,10 @@ public class PropertyBasedUserConfigLoader extends UserConfigLoader {
     super(conf);
     userMap = new HashMap<String, Map<String, String>>();
     Properties properties = new Properties();
-    String filename = hiveConf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_PROPERTYBASED_FILENAME, null);
+    String filename = hiveConf.get(GrillConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, null);
     if(filename == null) {
       throw new UserConfigLoaderException("property file path not provided for property based resolver." +
-        "Please set property " + GrillConfConstants.GRILL_SERVER_USER_RESOLVER_PROPERTYBASED_FILENAME);
+        "Please set property " + GrillConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);
     }
     try {
       properties.load(new InputStreamReader(new FileInputStream(new File(

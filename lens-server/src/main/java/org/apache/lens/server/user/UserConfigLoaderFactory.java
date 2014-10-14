@@ -43,7 +43,7 @@ public class UserConfigLoaderFactory {
     CUSTOM
   }
   public static UserConfigLoader initializeUserConfigLoader() {
-    String resolverType = conf.get(GrillConfConstants.GRILL_SERVER_USER_RESOLVER_TYPE);
+    String resolverType = conf.get(GrillConfConstants.USER_RESOLVER_TYPE);
     if(resolverType == null || resolverType.length() == 0) {
       throw new UserConfigLoaderException("user resolver type not determined. value was not provided in conf");
     }

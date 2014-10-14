@@ -34,26 +34,26 @@ Jdbc driver configuration
 *--+--+---+--+
 |5|cube.query.time.range.writer.class|org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter |
 *--+--+---+--+
-|6|grill.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
+|6|lens.driver.jdbc.connection.provider| |A contract for obtaining JDBC connections|
 *--+--+---+--+
-|7|grill.driver.jdbc.db.password| |The database user's password|
+|7|lens.driver.jdbc.db.password| |The database user's password|
 *--+--+---+--+
-|8|grill.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
+|8|lens.driver.jdbc.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname|
 *--+--+---+--+
-|9|grill.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
+|9|lens.driver.jdbc.db.user| |The database user on whose behalf the connection is being made|
 *--+--+---+--+
-|10|grill.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
+|10|lens.driver.jdbc.driver.class|com.mysql.jdbc.Driver|Type of JDBC driver used to connect backend database|
 *--+--+---+--+
-|11|grill.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+|11|lens.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
 *--+--+---+--+
-|12|grill.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+|12|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
 *--+--+---+--+
-|13|grill.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+|13|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
 *--+--+---+--+
-|14|grill.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+|14|lens.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
 *--+--+---+--+
-|15|grill.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+|15|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
 *--+--+---+--+
-|16|grill.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+|16|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
 The configuration parameters and their default values

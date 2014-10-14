@@ -25,18 +25,16 @@ package org.apache.lens.client;
  */
 public class GrillConnectionBuilder {
 
-  private String hostName;
-  private int portNumber=-1;
+  private String baseUrl;
   private String database;
   private String user;
   private String password;
 
-  public GrillConnectionBuilder(String hostName) {
-    this.hostName = hostName;
+  public GrillConnectionBuilder() {
   }
 
-  public GrillConnectionBuilder port(int portNumber) {
-    this.portNumber = portNumber;
+  public GrillConnectionBuilder baseUrl(String baseUrl) {
+    this.baseUrl = baseUrl;
     return this;
   }
 
@@ -58,11 +56,8 @@ public class GrillConnectionBuilder {
 
   public GrillConnection build() {
     GrillConnectionParams params = new GrillConnectionParams();
-    if(hostName != null && !hostName.isEmpty()){
-      params.setHost(hostName);
-    }
-    if(portNumber != -1) {
-      params.setPort(portNumber);
+    if(baseUrl != null && !baseUrl.isEmpty()){
+      params.setBaseUrl(baseUrl);
     }
     if(database != null && !database.isEmpty()) {
       params.setDbName(database);

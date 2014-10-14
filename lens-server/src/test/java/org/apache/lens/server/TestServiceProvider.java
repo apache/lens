@@ -16,7 +16,7 @@ public class TestServiceProvider extends GrillAllApplicationJerseyTest {
   @Test
   public void testServiceProvider() throws Exception {
     HiveConf conf = GrillServerConf.get();
-    Class<? extends ServiceProviderFactory> spfClass = conf.getClass(GrillConfConstants.GRILL_SERVICE_PROVIDER_FACTORY,
+    Class<? extends ServiceProviderFactory> spfClass = conf.getClass(GrillConfConstants.SERVICE_PROVIDER_FACTORY,
       null,
       ServiceProviderFactory.class);
 

@@ -40,8 +40,8 @@
 </property>
 
 <property>
-  <name>grill.result.parent.dir</name>
-  <value>target/grill-results</value>
+  <name>lens.query.result.parent.dir</name>
+  <value>target/lens-results</value>
 </property>
 
 </configuration>

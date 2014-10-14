@@ -59,8 +59,8 @@ public class GrillClient {
     this.conf = conf;
     conf.setUser(username);
     this.password = password;
-    if(this.conf.get(GrillClientConfig.GRILL_SESSION_CLUSTER_USER) == null) {
-      this.conf.set(GrillClientConfig.GRILL_SESSION_CLUSTER_USER, System.getProperty("user.name"));
+    if(this.conf.get(GrillClientConfig.SESSION_CLUSTER_USER) == null) {
+      this.conf.set(GrillClientConfig.SESSION_CLUSTER_USER, System.getProperty("user.name"));
     }
     connectToGrillServer();
     mc = new GrillMetadataClient(conn);

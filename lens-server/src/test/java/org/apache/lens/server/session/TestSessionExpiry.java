@@ -40,7 +40,7 @@ public class TestSessionExpiry {
   public void testSessionExpiry() throws Exception {
     HiveConf conf = GrillServerConf.get();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getName());
-    conf.setLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS, 1L);
+    conf.setLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();
     cliService.init(conf);
     HiveSessionService grillService = new HiveSessionService(cliService);
@@ -53,8 +53,8 @@ public class TestSessionExpiry {
       GrillSessionImpl session = grillService.getSession(sessionHandle);
       assertTrue(session.isActive());
       session.setLastAccessTime(session.getLastAccessTime()
-        - 2000 * conf.getLong(GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS,
-        GrillConfConstants.GRILL_SESSION_TIMEOUT_SECONDS_DEFAULT));
+        - 2000 * conf.getLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS,
+        GrillConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
 
       // run the expiry thread

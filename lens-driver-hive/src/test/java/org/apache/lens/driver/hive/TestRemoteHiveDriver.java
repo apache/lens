@@ -77,7 +77,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   }
 
   public static void createHS2Service() throws Exception {
-    remoteConf.setClass(HiveDriver.GRILL_HIVE_CONNECTION_CLASS, RemoteThriftConnection.class,
+    remoteConf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, RemoteThriftConnection.class,
         ThriftConnection.class);
     remoteConf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     remoteConf.setVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST, HS2_HOST);
@@ -87,7 +87,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_DELAY_SECONDS, 10);
     remoteConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_SHUTDOWN_TIMEOUT, 1);
     remoteConf.setIntVar(HiveConf.ConfVars.SERVER_READ_SOCKET_TIMEOUT, 60000);
-    remoteConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
+    remoteConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     server = new HiveServer2();
     server.init(remoteConf);
     server.start();
@@ -119,10 +119,10 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
@@ -140,7 +140,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     // Launch two threads
     createTestTable("test_multithreads");
     HiveConf thConf = new HiveConf(conf, TestRemoteHiveDriver.class);
-    thConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
+    thConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf);
@@ -218,12 +218,12 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   public void testHiveDriverPersistence() throws Exception {
     System.out.println("@@@@ start_persistence_test");
     HiveConf driverConf = new HiveConf(conf, TestRemoteHiveDriver.class);
-    driverConf.setLong(HiveDriver.GRILL_CONNECTION_EXPIRY_DELAY, 10000);
+    driverConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
 
     final HiveDriver oldDriver = new HiveDriver();
     oldDriver.configure(driverConf);
 
-    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    driverConf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
     oldDriver.execute(ctx);
@@ -241,7 +241,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     ctx = new QueryContext(dataLoad, null, driverConf);
     oldDriver.execute(ctx);
 
-    driverConf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, true);
+    driverConf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     // Fire two queries
     QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
@@ -316,7 +316,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   }
 
   private void createPartitionedTable(String tableName, int partitions) throws Exception {
-    conf.setBoolean(GrillConfConstants.GRILL_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
 
     QueryContext ctx =

@@ -147,7 +147,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private void initializeQueryAcceptorsAndListeners() {
-    if (conf.getBoolean(GrillConfConstants.GRILL_QUERY_STATE_LOGGER_ENABLED, true)) {
+    if (conf.getBoolean(GrillConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
       getEventService().addListener(new QueryStatusLogger());
       LOG.info("Registered query state logger");
     }
@@ -161,9 +161,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private void loadDriversAndSelector() throws GrillException {
-    conf.get(GrillConfConstants.ENGINE_DRIVER_CLASSES);
+    conf.get(GrillConfConstants.DRIVER_CLASSES);
     String[] driverClasses = conf.getStrings(
-        GrillConfConstants.ENGINE_DRIVER_CLASSES);
+        GrillConfConstants.DRIVER_CLASSES);
     if (driverClasses != null) {
       for (String driverClass : driverClasses) {
         try {
