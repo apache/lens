@@ -88,4 +88,12 @@ public class UtilityMethods {
       GrillConfConstants.DEFAULT_SERVER_DB_PASS));
     return tmp;
   }
+
+  public static String confToString(Configuration conf) {
+    StringBuilder sb = new StringBuilder();
+    for(Map.Entry<String, String> entry: conf) {
+      sb.append(entry.getKey()).append(":").append(entry.getValue()).append("\n");
+    }
+    return sb.toString();
+  }
 }

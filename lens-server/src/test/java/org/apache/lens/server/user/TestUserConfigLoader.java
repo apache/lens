@@ -100,7 +100,7 @@ public class TestUserConfigLoader {
 
   @Test
   public void testDatabase() throws GrillException, SQLException, LiquibaseException {
-    String path = "target/userconfig_hsql.db";
+    String path = "target/queries.db";
     String dbName = "main";
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/database.xml"));
     UserConfigLoaderFactory.init(conf);

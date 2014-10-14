@@ -22,7 +22,6 @@ package org.apache.lens.server.api;
 
 public class GrillConfConstants {
 
-  public static final String PREPARE_ON_EXPLAIN = "grill.doprepare.on.explain";
   // config prefixes
   // All the config variables will use one of these prefixes
   public static final String SERVER_PFX = "lens.server.";
@@ -30,7 +29,6 @@ public class GrillConfConstants {
   public static final String SESSION_PFX = "lens.session.";
   public static final String METASTORE_PFX = "lens.metastore.";
 
-  public static final Boolean DEFAULT_PREPARE_ON_EXPLAIN = true;
   public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
 
   public static final String SERVICE_NAMES = SERVER_PFX + "servicenames";
