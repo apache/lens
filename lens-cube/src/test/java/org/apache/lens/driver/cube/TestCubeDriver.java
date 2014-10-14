@@ -72,30 +72,6 @@ public class TestCubeDriver {
     String planString = plan.getPlan();
     Assert.assertEquals(query, planString);
 
-    // execute async from handle
-    cubeDriver.executePrepareAsync(plan.getHandle(), conf);
-    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
-        QueryStatus.Status.SUCCESSFUL); 
-    Assert.assertFalse(cubeDriver.cancelQuery(plan.getHandle()));
-
-    // execute sync from handle
-    result = cubeDriver.executePrepare(plan.getHandle(), conf);
-    Assert.assertNotNull(result);
-    Assert.assertNotNull(result.getMetadata());
-    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
-        QueryStatus.Status.SUCCESSFUL); 
-
-    cubeDriver.closeQuery(plan.getHandle());
-
-    // getStatus on closed query
-    Throwable th = null;
-    try {
-      cubeDriver.getStatus(plan.getHandle());
-    } catch (GrillException e) {
-      th = e;
-    }
-    Assert.assertNotNull(th);
-
     result = cubeDriver.execute(query, conf);
     Assert.assertNotNull(result);
     Assert.assertNotNull(result.getMetadata());
@@ -107,7 +83,7 @@ public class TestCubeDriver {
 
     cubeDriver.closeQuery(handle);
 
-    th = null;
+    Throwable th = null;
     try {
       cubeDriver.getStatus(handle);
     } catch (GrillException e) {
@@ -146,14 +122,7 @@ public class TestCubeDriver {
     // Test read/write for cube driver
     CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
     String query = "select name from table";
-    DriverQueryPlan plan = cubeDriver.explain(query, conf);
-    String planString = plan.getPlan();
-    Assert.assertEquals(query, planString);
-
-    // execute async from handle
-    cubeDriver.executePrepareAsync(plan.getHandle(), conf);
-    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
-        QueryStatus.Status.SUCCESSFUL); 
+    QueryHandle handle = cubeDriver.executeAsync(query, conf);
 
     ByteArrayOutputStream driverOut = new ByteArrayOutputStream();
     ObjectOutputStream out = new ObjectOutputStream(driverOut);
@@ -167,7 +136,7 @@ public class TestCubeDriver {
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
     
-    Assert.assertEquals(cubeDriver.getStatus(plan.getHandle()).getStatus(),
+    Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(),
         QueryStatus.Status.SUCCESSFUL); 
   }
 

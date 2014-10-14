@@ -38,7 +38,7 @@ Lens server configuration
 *--+--+---+--+
 |7|hive.server2.log.redirection.enabled|false|Disable the log direction on the lens server sessions. There are no logs required for each session in lens sessions. This will decrease number of file handles associated to lens server.|
 *--+--+---+--+
-|8|lens.server.appevent.ws.listener.impl|org.apache.lens.server.LensApplicationListener|Implementation class for Lens Application Listener|
+|8|lens.server.appevent.ws.listener.impl|org.apache.lens.server.GrillApplicationListener|Implementation class for Lens Application Listener|
 *--+--+---+--+
 |9|lens.server.authentication.ws.filter.impl|org.apache.lens.server.AuthenticationFilter|Implementation class for Authentication Filter|
 *--+--+---+--+

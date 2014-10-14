@@ -353,7 +353,7 @@
 
 <property>
     <name>lens.server.appevent.ws.listener.impl</name>
-    <value>org.apache.lens.server.LensApplicationListener</value>
+    <value>org.apache.lens.server.GrillApplicationListener</value>
     <description>Implementation class for Lens Application Listener</description>
 </property>
 

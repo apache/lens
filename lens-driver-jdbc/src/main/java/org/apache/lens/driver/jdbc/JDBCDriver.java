@@ -262,7 +262,7 @@ public class JDBCDriver implements GrillDriver {
       @Override
       public Thread newThread(Runnable runnable) {
         Thread th = new Thread(runnable);
-        th.setName("grill-driver-jdbc-" + thid.incrementAndGet());
+        th.setName("lens-driver-jdbc-" + thid.incrementAndGet());
         return th;
       }
     });

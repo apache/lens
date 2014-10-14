@@ -42,10 +42,12 @@ import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.GrillException;
 import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.log4j.Logger;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 public class ColumnarSQLRewriter implements QueryRewriter {
+
   private Configuration conf;
   private String clauseName = null;
   private QB qb;
@@ -668,7 +670,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   // Replace Grill database names with storage's proper DB and table name based
   // on table properties.
   protected void replaceWithUnderlyingStorage(ASTNode tree,
-      CubeMetastoreClient metastoreClient) throws HiveException {
+      CubeMetastoreClient metastoreClient) {
     if (tree == null) {
       return;
     }
@@ -677,7 +679,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       // If it has two children, the first one is the DB name and second one is
       // table identifier
       // Else, we have to add the DB name as the first child
-
+      try {
         if (tree.getChildCount() == 2) {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
@@ -715,6 +717,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             tree.insertChild(0, dbIdentifier);
           }
         }
+      } catch (HiveException e) {
+        LOG.warn("No corresponding table in metastore:" + e.getMessage());
+      }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
         replaceWithUnderlyingStorage((ASTNode) tree.getChild(i),
