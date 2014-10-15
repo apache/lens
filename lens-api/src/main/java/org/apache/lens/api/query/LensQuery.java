@@ -2,9 +2,9 @@ package org.apache.lens.api.query;
 
 /*
  * #%L
- * Grill API
+ * Lens API
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

@@ -2,9 +2,9 @@ package org.apache.lens.server.api.metastore;
 
 /*
  * #%L
- * Grill API for server and extensions
+ * Lens API for server and extensions
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -136,7 +136,7 @@ public interface CubeMetastoreService {
   /**
    * Get names of all cubes, which can be queried in the current database
    *
-   * @param sessionid Grill session id
+   * @param sessionid  session id
    *
    * @return list of cube names
    */
@@ -145,7 +145,7 @@ public interface CubeMetastoreService {
   /**
    * Get native table for the given name
    *
-   * @param sessionid Grill session id
+   * @param sessionid  session id
    * @param name The table name
    *
    * @return {@link NativeTable} object
@@ -157,7 +157,7 @@ public interface CubeMetastoreService {
   /**
    * Get names of all native tables
    *
-   * @param sessionid Grill session id
+   * @param sessionid  session id
    * @param dboption To get from current or all, the option is ignored if dbname is passed
    * @param dbName The db name
    *

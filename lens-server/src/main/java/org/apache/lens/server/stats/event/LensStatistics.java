@@ -1,9 +1,9 @@
 package org.apache.lens.server.stats.event;
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import org.apache.lens.server.api.events.LensEvent;
 
 /**
  * Class used to capture statistics information for various components.
- * Grill statistics extends lens event as we are piggy backing the event
+ * Lens statistics extends lens event as we are piggy backing the event
  * dispatch system to avoid worrying about how to handle dispatch and notification.
  */
 public abstract class LensStatistics extends LensEvent {

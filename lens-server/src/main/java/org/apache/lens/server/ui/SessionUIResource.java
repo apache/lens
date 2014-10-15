@@ -2,9 +2,9 @@ package org.apache.lens.server.ui;
 
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,10 +71,10 @@ public class SessionUIResource {
   }
 
   /**
-   * Create a new session with Grill server
+   * Create a new session with Lens server
    *
-   * @param username    User name of the Grill server user
-   * @param password    Password of the Grill server user
+   * @param username    User name of the Lens server user
+   * @param password    Password of the Lens server user
    * @param sessionconf Key-value properties which will be used to configure this session
    * @return A Session handle unique to this session
    * @throws WebApplicationException if there was an exception thrown while creating the session
@@ -101,7 +101,7 @@ public class SessionUIResource {
   }
 
   /**
-   * Close a Grill server session
+   * Close a Lens server session
    *
    * @param publicId Session's public id of the session to be closed
    * @return APIResult object indicating if the operation was successful (check result.getStatus())

@@ -38,8 +38,8 @@
   </licenses>
 
     <organization>
-        <name>Inmobi</name>
-        <url>http://www.inmobi.com</url>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org</url>
     </organization>
 
     <mailingLists>
@@ -220,6 +220,9 @@
         <version>1.6</version>
         <configuration>
         <licenseName>apache_v2</licenseName>
+        <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+        <canUpdateCopyright>true</canUpdateCopyright>
+        <canUpdateDescription>true</canUpdateDescription>
         </configuration>
       </plugin>
       <plugin>

@@ -2,9 +2,9 @@ package org.apache.lens.server;
 
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class IndexResource {
   @GET
   @Produces(MediaType.TEXT_PLAIN)
   public String getMessage() {
-      return "Grill server is up!";
+      return "Lens server is up!";
   }
 
   @GET

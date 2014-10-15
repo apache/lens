@@ -1,9 +1,9 @@
 package org.apache.lens.server.stats;
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.

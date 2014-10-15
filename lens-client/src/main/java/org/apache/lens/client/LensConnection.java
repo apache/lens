@@ -2,9 +2,9 @@ package org.apache.lens.client;
 
 /*
  * #%L
- * Grill client
+ * Lens client
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -248,7 +248,7 @@ public class LensConnection {
 
   @Override
   public String toString() {
-    final StringBuilder sb = new StringBuilder("GrillConnection{");
+    final StringBuilder sb = new StringBuilder("LensConnection{");
     sb.append("sessionHandle=").append(sessionHandle.getPublicId());
     sb.append('}');
     return sb.toString();

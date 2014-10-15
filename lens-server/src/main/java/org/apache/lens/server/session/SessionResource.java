@@ -2,9 +2,9 @@ package org.apache.lens.server.session;
 
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
- * Copyright (C) 2014 Inmobi
+ * Copyright (C) 2014 Apache Software Foundation
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,10 +81,10 @@ public class SessionResource {
   }
 
   /**
-   * Create a new session with Grill server
+   * Create a new session with Lens server
    * 
-   * @param username User name of the Grill server user
-   * @param password Password of the Grill server user
+   * @param username User name of the Lens server user
+   * @param password Password of the Lens server user
    * @param sessionconf Key-value properties which will be used to configure this session
    * 
    * @return A Session handle unique to this session
@@ -111,7 +111,7 @@ public class SessionResource {
   }
 
   /**
-   * Close a Grill server session 
+   * Close a Lens server session 
    * 
    * @param sessionid Session handle object of the session to be closed
    * 
@@ -134,11 +134,11 @@ public class SessionResource {
   }
 
   /**
-   * Add a resource to the session to all GrillServices running in this Grill server
+   * Add a resource to the session to all LensServices running in this Lens server
    * 
    * <p>
    * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation
-   * was successful for all services running in this Grill server.
+   * was successful for all services running in this Lens server.
    * </p>
    * 
    * @param sessionid session handle object
@@ -167,7 +167,7 @@ public class SessionResource {
   }
 
   /**
-   * Delete a resource from sesssion from all the @{link GrillService}s running in this Grill server
+   * Delete a resource from sesssion from all the @{link LensService}s running in this Lens server
    * <p>
    * Similar to addResource, this call is successful only if resource was deleted from all services.
    * </p>

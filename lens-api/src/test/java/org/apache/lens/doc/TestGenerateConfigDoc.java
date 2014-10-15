@@ -1,25 +1,5 @@
 package org.apache.lens.doc;
 
-/*
- * #%L
- * Lens API
- * %%
- * Copyright (C) 2014 Inmobi
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -177,23 +157,23 @@ public class TestGenerateConfigDoc {
         });
         // Add license
         apt.println("~~~");
-        apt.println("~~ #%L");
-        apt.println("~~ Lens");
-        apt.println("~~ %%");
-        apt.println("~~ Copyright (C) 2014 Inmobi");
-        apt.println("~~ %%");
-        apt.println("~~ Licensed under the Apache License, Version 2.0 (the \"License\");");
-        apt.println("~~ you may not use this file except in compliance with the License.");
-        apt.println("~~ You may obtain a copy of the License at");
-        apt.println("~~ "); 
-        apt.println("~~      http://www.apache.org/licenses/LICENSE-2.0");
-        apt.println("~~ ");
-        apt.println("~~ Unless required by applicable law or agreed to in writing, software");
-        apt.println("~~ distributed under the License is distributed on an \"AS IS\" BASIS,");
-        apt.println("~~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.");
-        apt.println("~~ See the License for the specific language governing permissions and");
-        apt.println("~~ limitations under the License.");
-        apt.println("~~ #L%");
+        apt.println("~~ #%L
+ * Lens API
+ * %%
+ * Copyright (C) 2014 Apache Software Foundation
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%");
         apt.println("~~~");
 
         // Print header
