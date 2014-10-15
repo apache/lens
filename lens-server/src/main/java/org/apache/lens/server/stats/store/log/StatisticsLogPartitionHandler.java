@@ -56,10 +56,10 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
 
 
   public void initialize(Configuration conf) {
-    String temp = conf.get(GrillConfConstants.GRILL_STATISTICS_WAREHOUSE_KEY,
+    String temp = conf.get(GrillConfConstants.STATISTICS_WAREHOUSE_KEY,
         GrillConfConstants.DEFAULT_STATISTICS_WAREHOUSE);
     warehousePath = new Path(temp);
-    database = conf.get(GrillConfConstants.GRILL_STATISTICS_DATABASE_KEY,
+    database = conf.get(GrillConfConstants.STATISTICS_DATABASE_KEY,
         GrillConfConstants.DEFAULT_STATISTICS_DATABASE);
     try {
       client = Hive.get();

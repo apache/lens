@@ -214,22 +214,24 @@
 <property>
   <name>lens.server.db.driver.name</name>
   <value>org.hsqldb.jdbcDriver</value>
-  <description>Database driver for database where Finished queries have to be stored.</description>
+  <description>Database driver for database where Finished queries have to be stored.
+    Also used for database based user config loaders</description>
 </property>
 <property>
   <name>lens.server.db.jdbc.url</name>
   <value>jdbc:hsqldb:/tmp/lensserver/queries.db</value>
-  <description>JDBC URL where the database for storing finished queries is located.</description>
+  <description>JDBC URL where the database for storing finished queries is located.
+    Also used for database based user config loaders</description>
 </property>
 <property>
   <name>lens.server.db.jdbc.user</name>
   <value>SA</value>
-  <description>JDBC User for Finished queries table</description>
+  <description>JDBC User for Finished queries table. Also used for database based user config loaders</description>
 </property>
 <property>
  <name>lens.server.db.jdbc.pass</name>
  <value></value>
- <description>JDBC Password for Finished queries table</description>
+ <description>JDBC Password for Finished queries table. Also used for database based user config loaders</description>
 </property>
 <property>
   <name>lens.server.snapshot.interval</name>

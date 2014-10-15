@@ -99,7 +99,7 @@ public class QueryExecutionStatistics extends LoggableGrillStatistics {
 
   @Override
   public Table getHiveTable(Configuration conf) {
-    Table table = new Table(conf.get(GrillConfConstants.GRILL_STATISTICS_DATABASE_KEY,
+    Table table = new Table(conf.get(GrillConfConstants.STATISTICS_DATABASE_KEY,
         GrillConfConstants.DEFAULT_STATISTICS_DATABASE),this.getClass().getSimpleName());
     LinkedList<FieldSchema> colList = new LinkedList<FieldSchema>();
     colList.add(new FieldSchema("handle", "string", "Query Handle"));

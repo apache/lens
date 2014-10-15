@@ -2,7 +2,7 @@ package org.apache.lens.server.api;
 
 /*
  * #%L
- * Grill API for server and extensions
+ * Lens API for server and extensions
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -228,15 +228,15 @@ public class GrillConfConstants {
   //Statistics Store configuration keys
   public static final String STATS_STORE_CLASS = SERVER_PFX + "statistics.store.class";
 
-  public static final String GRILL_STATISTICS_WAREHOUSE_KEY = SERVER_PFX + "statistics.warehouse.dir";
+  public static final String STATISTICS_WAREHOUSE_KEY = SERVER_PFX + "statistics.warehouse.dir";
 
   public static final String DEFAULT_STATISTICS_WAREHOUSE = "file:///tmp/lens/statistics/warehouse";
 
-  public static final String GRILL_STATISTICS_DATABASE_KEY = SERVER_PFX + "statistics.db";
+  public static final String STATISTICS_DATABASE_KEY = SERVER_PFX + "statistics.db";
 
   public static final String DEFAULT_STATISTICS_DATABASE = "lensstats";
 
-  public static final String GRILL_STATS_ROLLUP_SCAN_RATE = SERVER_PFX + "statistics.log.rollover.interval";
+  public static final String STATS_ROLLUP_SCAN_RATE = SERVER_PFX + "statistics.log.rollover.interval";
 
   public static final long DEFAULT_STATS_ROLLUP_SCAN_RATE = 3600000;
 
