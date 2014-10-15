@@ -51,6 +51,7 @@ import java.util.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
+import javax.xml.bind.JAXB;
 
 public class CubeMetastoreServiceImpl extends GrillService implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
@@ -1191,4 +1192,134 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     }
   }
 
+  @Override
+  public FlattenedColumns getFlattenedColumns(GrillSessionHandle sessionHandle, String tableName) throws GrillException {
+    try {
+      acquire(sessionHandle);
+      CubeMetastoreClient client = getClient(sessionHandle);
+
+      boolean isCube = false;
+      AbstractCubeTable cubeTbl = null;
+      // check if the table is a cube or dimension
+      if (client.isCube(tableName)) {
+        isCube = true;
+        CubeInterface cube = client.getCube(tableName);
+        if (cube instanceof Cube) {
+          cubeTbl = (Cube)cube;
+        } else if (cube instanceof DerivedCube) {
+          cubeTbl = (DerivedCube) cube;
+        }
+      } else if (client.isDimension(tableName)) {
+        cubeTbl = client.getDimension(tableName);
+      } else {
+        throw new BadRequestException("Can't get reachable columns. '"
+          + tableName + "' is neither a cube nor a dimension");
+      }
+
+      Map<String, CubeColumn> columnMap = getFlattenedColumnView(client, cubeTbl, isCube);
+      // Convert this to the JAXB collection
+      ObjectFactory objectFactory = new ObjectFactory();
+      FlattenedColumns flattenedColumns = objectFactory.createFlattenedColumns();
+      List<Object> columnList = flattenedColumns.getMeasureOrExpressionOrDimAttribute();
+
+      for (Map.Entry<String, CubeColumn> entry : columnMap.entrySet()) {
+        String colName = entry.getKey();
+        CubeColumn column = entry.getValue();
+        String table = colName.substring(0, colName.indexOf('.'));
+        if (column instanceof CubeMeasure) {
+          XMeasure xmeasure = JAXBUtils.xMeasureFromHiveMeasure((CubeMeasure) column);
+          xmeasure.setCubeTable(table);
+          columnList.add(xmeasure);
+        } else if (column instanceof CubeDimAttribute) {
+          XDimAttribute xDimAttribute = JAXBUtils.xDimAttrFromHiveDimAttr((CubeDimAttribute)column);
+          xDimAttribute.setCubeTable(table);
+          columnList.add(xDimAttribute);
+        } else if (column instanceof ExprColumn) {
+          XExprColumn xExprColumn = JAXBUtils.xExprColumnFromHiveExprColumn((ExprColumn) column);
+          xExprColumn.setCubeTable(table);
+          columnList.add(xExprColumn);
+        }
+      }
+      return flattenedColumns;
+    } catch (GrillException exc) {
+      throw exc;
+    } catch (HiveException e) {
+      throw new GrillException("Error getting flattened view for " + tableName, e);
+    } finally {
+      release(sessionHandle);
+    }
+  }
+
+  private SchemaGraph getSchemaGraph(CubeMetastoreClient client) throws HiveException {
+    SchemaGraph graph = client.getSchemaGraph();
+    if (graph == null) {
+      graph = new SchemaGraph(client);
+      graph.buildSchemaGraph();
+      client.setSchemaGraph(graph);
+    }
+    return graph;
+  }
+
+  private Map<String, CubeColumn> getFlattenedColumnView(CubeMetastoreClient client,
+                                      AbstractCubeTable table,
+                                      boolean isCube) throws HiveException {
+    SchemaGraph schemaGraph = getSchemaGraph(client);
+    Map<AbstractCubeTable, Set<SchemaGraph.TableRelationship>> graph =
+      isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
+    Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
+
+    // Do a BFS over the schema graph
+    LinkedList<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
+    Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
+    toVisit.add(table);
+
+    while (!toVisit.isEmpty()) {
+      AbstractCubeTable node = toVisit.removeFirst();
+      visited.add(node);
+      String nodeName = node.getName();
+      if (node instanceof CubeInterface) {
+        Cube cube = null;
+
+        if (node instanceof Cube) {
+          cube = (Cube) node;
+        } else if (node instanceof DerivedCube) {
+          cube = ((DerivedCube) node).getParent();
+        } else {
+          continue;
+        }
+
+        // Add columns of the cube
+        for (CubeMeasure measure : cube.getMeasures()) {
+          columnMap.put(nodeName + "." + measure.getName(), measure);
+        }
+
+        for (CubeDimAttribute dimAttribute : cube.getDimAttributes()) {
+          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+        }
+
+        for (ExprColumn expression : cube.getExpressions()) {
+          columnMap.put(nodeName + "." + expression.getName(), expression);
+        }
+      } else if (node instanceof Dimension) {
+        Dimension dim = (Dimension) node;
+        for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
+          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+        }
+      } else {
+        LOG.warn("Neither cube nor dimension " + node.getName());
+      }
+
+      // Add referenced tables to visited list
+      for (SchemaGraph.TableRelationship edge : graph.get(node)) {
+        if (!visited.contains(edge.getFromTable())) {
+          toVisit.addLast(edge.getFromTable());
+        }
+        if (!visited.contains(edge.getToTable())) {
+          toVisit.addLast(edge.getToTable());
+        }
+      }
+    } // end bfs
+    // columnMap now contains flattened view
+    return columnMap;
+  }
 }

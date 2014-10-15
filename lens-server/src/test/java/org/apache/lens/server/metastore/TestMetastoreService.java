@@ -1859,4 +1859,133 @@ public class TestMetastoreService extends GrillJerseyTest {
     }
   }
 
+  @Test
+  public void testFlattenedView() throws Exception {
+    final String DB = dbPFX + "test_native_tables";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+
+    try {
+      XCube flatTestCube = createTestCube("flatTestCube");
+      XDimAttributes dimAttrs = flatTestCube.getDimAttributes();
+
+      GregorianCalendar c = new GregorianCalendar();
+      c.setTime(new Date());
+      final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
+
+      // Add link from cube to dim1
+      XDimAttribute cubeToDim1Ref = cubeObjectFactory.createXDimAttribute();
+      cubeToDim1Ref.setName("cubeToDim1Ref");
+      cubeToDim1Ref.setType("string");
+      cubeToDim1Ref.setDescription("test ref cube to dim1");
+      cubeToDim1Ref.setDisplayString("cubeToDim1Ref");
+      cubeToDim1Ref.setStartTime(startDate);
+      // Don't set endtime on this dim to validate null handling on server side
+      cubeToDim1Ref.setCost(10.0);
+      XTablereferences xTablereference = cubeObjectFactory.createXTablereferences();
+      cubeToDim1Ref.setReferences(xTablereference);
+      List<XTablereference> refDimRefs = cubeToDim1Ref.getReferences().getTableReferences();
+      XTablereference r = cubeObjectFactory.createXTablereference();
+      r.setDestTable("flatTestDim1");
+      r.setDestColumn("col1");
+      refDimRefs.add(r);
+      dimAttrs.getDimAttributes().add(cubeToDim1Ref);
+
+      // Link from dim1 to dim2
+      XDimension dim1 = createDimension("flatTestDim1");
+      XDimAttributes dim1Attrs = dim1.getAttributes();
+      XDimAttribute dim1ToDim2Ref = cubeObjectFactory.createXDimAttribute();
+      dim1ToDim2Ref.setName("dim1ToDim2Ref");
+      dim1ToDim2Ref.setType("string");
+      dim1ToDim2Ref.setDescription("test ref dim1 to dim2");
+      dim1ToDim2Ref.setDisplayString("dim1ToDim2Ref");
+      dim1ToDim2Ref.setStartTime(startDate);
+      // Don't set endtime on this dim to validate null handling on server side
+      dim1ToDim2Ref.setCost(10.0);
+      XTablereferences xTablereferences2 = cubeObjectFactory.createXTablereferences();
+      dim1ToDim2Ref.setReferences(xTablereferences2);
+      List<XTablereference> refs = dim1ToDim2Ref.getReferences().getTableReferences();
+      XTablereference r2 = cubeObjectFactory.createXTablereference();
+      r2.setDestTable("flatTestDim2");
+      r2.setDestColumn("col1");
+      refs.add(r2);
+      dim1Attrs.getDimAttributes().add(dim1ToDim2Ref);
+
+      XDimension dim2 = createDimension("flatTestDim2");
+
+      // Create the tables
+
+      // Create cube
+      final WebTarget cubeTarget = target().path("metastore").path("cubes");
+      APIResult result =
+        cubeTarget.queryParam("sessionid", grillSessionId).request(mediaType)
+          .post(Entity.xml(cubeObjectFactory.createXCube(flatTestCube)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Dim1
+      final WebTarget dimTarget = target().path("metastore").path("dimensions");
+      result = dimTarget.queryParam("sessionid", grillSessionId).request(
+        mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dim1)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Dim2
+      result = dimTarget.queryParam("sessionid", grillSessionId).request(
+        mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dim2)), APIResult.class);
+      assertNotNull(result);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Now test flattened view
+      final WebTarget flatCubeTarget = target().path("metastore").path("flattened").path("flattestcube");
+      FlattenedColumns flattenedColumns = null;
+      try {
+        flattenedColumns =
+          flatCubeTarget.queryParam("sessionid", grillSessionId).request().get(FlattenedColumns.class);
+      } catch (Exception exc) {
+        exc.printStackTrace();
+        throw exc;
+      }
+      assertNotNull(flattenedColumns);
+
+      List<Object> columns = flattenedColumns.getMeasureOrExpressionOrDimAttribute();
+      assertNotNull(columns);
+      assertTrue(!columns.isEmpty());
+      int i = 0;
+
+      Set<String> tables = new HashSet<String>();
+      Set<String> colSet = new HashSet<String>();
+      for (Object colObject : columns) {
+        assertTrue(colObject instanceof XMeasure || colObject instanceof XDimAttribute || colObject instanceof XExprColumn);
+        if (colObject instanceof XMeasure) {
+          tables.add(((XMeasure) colObject).getCubeTable());
+          colSet.add(((XMeasure) colObject).getCubeTable() + "." + ((XMeasure) colObject).getName() );
+        } else if (colObject instanceof XDimAttribute) {
+          tables.add(((XDimAttribute) colObject).getCubeTable());
+          colSet.add(((XDimAttribute) colObject).getCubeTable() + "." + ((XDimAttribute) colObject).getName() );
+        } else {
+          tables.add(((XExprColumn) colObject).getCubeTable());
+          colSet.add(((XExprColumn) colObject).getCubeTable() + "." + ((XExprColumn) colObject).getName() );
+        }
+      }
+
+      assertEquals(tables, new HashSet<String>(Arrays.asList("flattestcube", "flattestdim1", "flattestdim2")));
+      assertEquals(colSet,new HashSet<String>(Arrays.asList(
+                                      "flattestcube.msr1",
+                                      "flattestcube.msr2",
+                                      "flattestcube.dim1",
+                                      "flattestcube.dim2",
+                                      "flattestcube.cubetodim1ref",
+                                      "flattestcube.expr1",
+                                      "flattestdim1.dim1todim2ref",
+                                      "flattestdim1.col2",
+                                      "flattestdim1.col1",
+                                      "flattestdim2.col2",
+                                      "flattestdim2.col1")));
+    } finally {
+      dropDatabase(DB);
+      setCurrentDatabase(prevDb);
+    }
+  }
 }
