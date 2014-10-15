@@ -20,8 +20,8 @@ package org.apache.lens.server.stats.store.log;
  */
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.events.LensEventService;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 
 import java.util.Timer;
@@ -45,11 +45,11 @@ public class StatisticsLogRollupHandler {
   public void initialize(Configuration conf) {
     task = new StatisticsLogFileScannerTask();
     timer = new Timer();
-    rate = conf.getLong(GrillConfConstants.STATS_ROLLUP_SCAN_RATE,
-        GrillConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
+    rate = conf.getLong(LensConfConstants.STATS_ROLLUP_SCAN_RATE,
+        LensConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
   }
 
-  public void start(GrillEventService service) {
+  public void start(LensEventService service) {
     task.setService(service);
     timer.scheduleAtFixedRate(task, rate, rate);
   }

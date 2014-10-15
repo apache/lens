@@ -6,6 +6,6 @@ import org.apache.lens.server.api.ServiceProviderFactory;
 public class ServiceProviderFactoryImpl implements ServiceProviderFactory{
   @Override
   public ServiceProvider getServiceProvider() {
-    return GrillServices.get();
+    return LensServices.get();
   }
 }

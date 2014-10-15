@@ -25,7 +25,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -78,14 +78,14 @@ public class UtilityMethods {
   }
   public static BasicDataSource getDataSourceFromConf(Configuration conf) {
     BasicDataSource tmp = new BasicDataSource();
-    tmp.setDriverClassName(conf.get(GrillConfConstants.SERVER_DB_DRIVER_NAME,
-      GrillConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
-    tmp.setUrl(conf.get(GrillConfConstants.SERVER_DB_JDBC_URL,
-      GrillConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
-    tmp.setUsername(conf.get(GrillConfConstants.SERVER_DB_JDBC_USER,
-      GrillConfConstants.DEFAULT_SERVER_DB_USER));
-    tmp.setPassword(conf.get(GrillConfConstants.SERVER_DB_JDBC_PASS,
-      GrillConfConstants.DEFAULT_SERVER_DB_PASS));
+    tmp.setDriverClassName(conf.get(LensConfConstants.SERVER_DB_DRIVER_NAME,
+      LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+    tmp.setUrl(conf.get(LensConfConstants.SERVER_DB_JDBC_URL,
+      LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
+    tmp.setUsername(conf.get(LensConfConstants.SERVER_DB_JDBC_USER,
+      LensConfConstants.DEFAULT_SERVER_DB_USER));
+    tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS,
+      LensConfConstants.DEFAULT_SERVER_DB_PASS));
     return tmp;
   }
 

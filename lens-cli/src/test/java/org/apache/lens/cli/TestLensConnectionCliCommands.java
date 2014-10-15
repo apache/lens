@@ -22,7 +22,7 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensConnectionCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
-public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
+public class TestLensConnectionCliCommands extends LensCliApplicationTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(
       TestLensConnectionCliCommands.class);
@@ -39,9 +39,9 @@ public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
 
   @Test
   public void testClientCreation() {
-    GrillClient client = null;
+    LensClient client = null;
     try {
-      client = new GrillClient();
+      client = new LensClient();
     } catch (Throwable t) {
       Assert.fail("Client should have been able to create a connection to server");
     } finally {
@@ -52,7 +52,7 @@ public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
 
   @Test
   public void testConnectionCommand() {
-    GrillClient client = new GrillClient();
+    LensClient client = new LensClient();
     LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     String key = "connectiontest1";
@@ -69,7 +69,7 @@ public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
 
   @Test
   public void testFileCommands() {
-    GrillClient client = new GrillClient();
+    LensClient client = new LensClient();
     LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     LOG.debug("Testing set/remove file operations");
@@ -94,7 +94,7 @@ public class TestLensConnectionCliCommands extends GrillCliApplicationTest {
 
   @Test
   public void testJarCommands() {
-    GrillClient client = new GrillClient();
+    LensClient client = new LensClient();
     LensConnectionCommands commands = new LensConnectionCommands();
     commands.setClient(client);
     LOG.debug("Testing set/remove file operations");

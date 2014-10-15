@@ -32,17 +32,17 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.client.*;
 
 public class SampleQueries {
-  private GrillMetadataClient metaClient;
-  private GrillStatement queryClient;
+  private LensMetadataClient metaClient;
+  private LensStatement queryClient;
   private int retCode = 0;
 
   public SampleQueries() throws JAXBException {
-    metaClient = new GrillMetadataClient(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
-    queryClient = new GrillStatement(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    queryClient = new LensStatement(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
   }
 
   public void close() {
-    GrillClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
   }
 
   public static void main(String[] args) throws Exception {

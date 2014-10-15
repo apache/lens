@@ -23,9 +23,9 @@ package org.apache.lens.server.ui;
 import org.apache.lens.api.metastore.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,10 +48,10 @@ public class MetastoreUIResource {
   public static final Log LOG = LogFactory.getLog(MetastoreUIResource.class);
 
   public CubeMetastoreService getSvc() {
-    return (CubeMetastoreService) GrillServices.get().getService("metastore");
+    return (CubeMetastoreService) LensServices.get().getService("metastore");
   }
 
-  private void checkSessionHandle(GrillSessionHandle sessionHandle) {
+  private void checkSessionHandle(LensSessionHandle sessionHandle) {
     if (sessionHandle == null) {
       throw new BadRequestException("Invalid session handle");
     }
@@ -73,20 +73,20 @@ public class MetastoreUIResource {
    *
    * @param publicId The publicId for the session in which user is working
    * @return JSON string consisting of different table names and types
-   * @throws GrillException, JSONException
+   * @throws LensException, JSONException
    */
   @GET
   @Path("tables")
   @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public String getAllTables(@QueryParam("publicId") UUID publicId) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     JSONArray tableList = new JSONArray();
 
     List<String> cubes;
     try {
       cubes = getSvc().getAllCubeNames(sessionHandle);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
 
@@ -102,7 +102,7 @@ public class MetastoreUIResource {
     List<String> dimTables;
     try {
       dimTables = getSvc().getAllDimensionNames(sessionHandle);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
 
@@ -134,21 +134,21 @@ public class MetastoreUIResource {
    * @param publicId The publicId for the session in which user is working
    * @param name     name of cube or dimension to be described
    * @return JSON string consisting of different dimension and measure names and types
-   * @throws GrillException, JSONException
+   * @throws LensException, JSONException
    */
   @GET
   @Path("tables/{name}")
   @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public String getDescription(@QueryParam("publicId") UUID publicId, @QueryParam("type") String type,
                                @PathParam("name") String name) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     JSONArray attribList = new JSONArray();
     if (type.equals("cube")) {
       XCube cube;
       try {
         cube = getSvc().getCube(sessionHandle, name);
-      } catch (GrillException e) {
+      } catch (LensException e) {
         throw new WebApplicationException(e);
       }
       if (cube.getMeasures() != null) {
@@ -173,7 +173,7 @@ public class MetastoreUIResource {
       XDimension table;
       try {
         table = getSvc().getDimension(sessionHandle, name);
-      } catch (GrillException e) {
+      } catch (LensException e) {
         throw new WebApplicationException(e);
       }
       if (table.getAttributes() != null) {
@@ -206,13 +206,13 @@ public class MetastoreUIResource {
    * @param publicId The publicId for the session in which user is working
    * @param keyword  keyword to be searched
    * @return JSON string consisting of different table and column names and types
-   * @throws GrillException, JSONException
+   * @throws LensException, JSONException
    */
   @GET
   @Path("searchablefields")
   @Produces({MediaType.TEXT_HTML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
   public String getFilterResults(@QueryParam("publicId") UUID publicId, @QueryParam("keyword") String keyword) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     JSONArray tableList = null;
     JSONArray searchResultList = new JSONArray();

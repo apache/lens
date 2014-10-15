@@ -23,7 +23,7 @@ package org.apache.lens.server.api.query;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
 
 /**

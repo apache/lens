@@ -27,10 +27,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.driver.*;
-import org.apache.lens.server.api.events.GrillEventListener;
+import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -48,7 +48,7 @@ import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
 import com.cloudera.impala.thrift.ImpalaService.Client;
 
-public class ImpalaDriver implements GrillDriver {
+public class ImpalaDriver implements LensDriver {
 
   Logger logger = Logger.getLogger(ImpalaDriver.class.getName());
 
@@ -69,8 +69,8 @@ public class ImpalaDriver implements GrillDriver {
     return null;
   }
 
-  public GrillResultSet execute(String query, Configuration conf)
-      throws GrillException {
+  public LensResultSet execute(String query, Configuration conf)
+      throws LensException {
     Query q = new Query();
     q.query = query;
     QueryHandle queryHandle;
@@ -86,28 +86,28 @@ public class ImpalaDriver implements GrillDriver {
         }
         if (qs == QueryState.EXCEPTION) {
           logger.error("Query aborted, unable to fetch data");
-          throw new GrillException(
+          throw new LensException(
               "Query aborted, unable to fetch data");
         }
         try {
           Thread.sleep(100);
         } catch (InterruptedException e) {
           logger.error(e.getMessage(), e);
-          throw new GrillException(e.getMessage(), e);
+          throw new LensException(e.getMessage(), e);
         }
       }
 
     } catch (BeeswaxException e) {
       logger.error(e.getMessage(), e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
 
     } catch (TException e) {
       logger.error(e.getMessage(), e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
 
     } catch (QueryNotFoundException e) {
       logger.error(e.getMessage(), e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
 
     }
 
@@ -117,7 +117,7 @@ public class ImpalaDriver implements GrillDriver {
   }
 
   @Override
-  public void configure(Configuration conf) throws GrillException {
+  public void configure(Configuration conf) throws LensException {
     final String HOST = "HOST";
     final String PORT = "PORT";
     TSocket sock = new TSocket(conf.get(HOST), conf.getInt(PORT, 9999));
@@ -125,7 +125,7 @@ public class ImpalaDriver implements GrillDriver {
       sock.open();
     } catch (TTransportException e) {
       logger.error(e.getMessage());
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
     }
     TBinaryProtocol protocol = new TBinaryProtocol(sock);
     this.client = new ImpalaService.Client(protocol);
@@ -153,7 +153,7 @@ public class ImpalaDriver implements GrillDriver {
 	}
 
 	@Override
-	public void close() throws GrillException {
+	public void close() throws LensException {
 		// TODO Auto-generated method stub
 		
 	}
@@ -164,59 +164,59 @@ public class ImpalaDriver implements GrillDriver {
    * @param driverEventListener
    */
   @Override
-  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+  public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
 
   @Override
   public void closeQuery(org.apache.lens.api.query.QueryHandle arg0)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public void prepare(PreparedQueryContext pContext) throws GrillException {
+  public void prepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
   public void closePreparedQuery(QueryPrepareHandle handle)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public GrillResultSet execute(QueryContext context) throws GrillException {
+  public LensResultSet execute(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
-  public void executeAsync(QueryContext context) throws GrillException {
+  public void executeAsync(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public GrillResultSet fetchResultSet(QueryContext context)
-      throws GrillException {
+  public LensResultSet fetchResultSet(QueryContext context)
+      throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
   @Override
   public void closeResultSet(org.apache.lens.api.query.QueryHandle handle)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     
   }
@@ -224,8 +224,8 @@ public class ImpalaDriver implements GrillDriver {
   @Override
   public void registerForCompletionNotification(
       org.apache.lens.api.query.QueryHandle handle, long timeoutMillis,
-      QueryCompletionListener listener) throws GrillException {
-    throw new GrillException("Not implemented");    
+      QueryCompletionListener listener) throws LensException {
+    throw new LensException("Not implemented");    
   }
 
   @Override

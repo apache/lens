@@ -20,13 +20,12 @@ package org.apache.lens.server.query;
  * #L%
  */
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.EventServiceImpl;
-import org.apache.lens.server.GrillServerConf;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.events.*;
 import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.api.query.QueryFailed;
@@ -36,7 +35,6 @@ import org.apache.log4j.Logger;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -53,40 +51,40 @@ public class TestEventService {
   MockEndedListener endedListener;
   CountDownLatch latch;
 
-  class GenericEventListener extends AsyncEventListener<GrillEvent> {
+  class GenericEventListener extends AsyncEventListener<LensEvent> {
     boolean processed = false;
     @Override
-    public void process(GrillEvent event) {
+    public void process(LensEvent event) {
       processed = true;
       latch.countDown();
-      LOG.info("GrillEvent:" + event.getEventId());
+      LOG.info("LensEvent:" + event.getEventId());
     }
   }
 
-  class MockFailedListener implements GrillEventListener<QueryFailed> {
+  class MockFailedListener implements LensEventListener<QueryFailed> {
     boolean processed = false;
     @Override
-    public void onEvent(QueryFailed change) throws GrillException {
+    public void onEvent(QueryFailed change) throws LensException {
       processed = true;
       latch.countDown();
       LOG.info("Query Failed event: " + change);
     }
   }
 
-  class MockEndedListener implements GrillEventListener<QueryEnded> {
+  class MockEndedListener implements LensEventListener<QueryEnded> {
     boolean processed = false;
     @Override
-    public void onEvent(QueryEnded change) throws GrillException {
+    public void onEvent(QueryEnded change) throws LensException {
       processed = true;
       latch.countDown();
       LOG.info("Query ended event: " + change);
     }
   }
 
-  class MockQueuePositionChange implements GrillEventListener<QueuePositionChange> {
+  class MockQueuePositionChange implements LensEventListener<QueuePositionChange> {
     boolean processed = false;
     @Override
-    public void onEvent(QueuePositionChange change) throws GrillException {
+    public void onEvent(QueuePositionChange change) throws LensException {
       processed = true;
       latch.countDown();
       LOG.info("Query position changed: " + change);
@@ -96,9 +94,9 @@ public class TestEventService {
 
   @BeforeTest
   public void setup() throws Exception {
-    GrillServices.get().init(GrillServerConf.get());
-    GrillServices.get().start();
-    service = GrillServices.get().getService(GrillEventService.NAME);
+    LensServices.get().init(LensServerConf.get());
+    LensServices.get().start();
+    service = LensServices.get().getService(LensEventService.NAME);
     assertNotNull(service);
     LOG.info("Service started " + service) ;
   }
@@ -115,7 +113,7 @@ public class TestEventService {
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListener(queuePositionChangeListener);
 
-    assertTrue(service.getListeners(GrillEvent.class).contains(genericEventListener));
+    assertTrue(service.getListeners(LensEvent.class).contains(genericEventListener));
     assertTrue(service.getListeners(QueryFailed.class).contains(failedListener));
     assertTrue(service.getListeners(QueryEnded.class).contains(endedListener));
     assertTrue(service.getListeners(QueuePositionChange.class).contains(queuePositionChangeListener));
@@ -177,7 +175,7 @@ public class TestEventService {
       assertTrue(queuePositionChangeListener.processed);
       resetListeners();
 
-      GrillEvent genEvent = new GrillEvent(now) {
+      LensEvent genEvent = new LensEvent(now) {
         @Override
         public String getEventId() {
           return "TEST_EVENT";
@@ -192,7 +190,7 @@ public class TestEventService {
       assertFalse(endedListener.processed);
       assertFalse(failedListener.processed);
       assertFalse(queuePositionChangeListener.processed);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       fail(e.getMessage());
     }
   }

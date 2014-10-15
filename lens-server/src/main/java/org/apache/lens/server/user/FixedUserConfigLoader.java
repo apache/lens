@@ -20,7 +20,7 @@ package org.apache.lens.server.user;
  */
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +34,8 @@ public class FixedUserConfigLoader extends UserConfigLoader {
   @Override
   public Map<String, String> getUserConfig(String loggedInUser) {
     HashMap<String, String> userConfig = new HashMap<String, String>();
-    userConfig.put(GrillConfConstants.SESSION_CLUSTER_USER,
-      hiveConf.get(GrillConfConstants.USER_RESOLVER_FIXED_VALUE));
+    userConfig.put(LensConfConstants.SESSION_CLUSTER_USER,
+      hiveConf.get(LensConfConstants.USER_RESOLVER_FIXED_VALUE));
     return userConfig;
   }
 }

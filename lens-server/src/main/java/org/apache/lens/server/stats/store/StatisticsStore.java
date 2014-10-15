@@ -22,15 +22,15 @@ package org.apache.lens.server.stats.store;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.api.events.AsyncEventListener;
-import org.apache.lens.server.api.events.GrillEventService;
-import org.apache.lens.server.stats.event.GrillStatistics;
+import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.stats.event.LensStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Top level class used to persist the Statistics event.
  */
-public abstract class StatisticsStore<T extends GrillStatistics> extends AsyncEventListener<T> {
+public abstract class StatisticsStore<T extends LensStatistics> extends AsyncEventListener<T> {
   private static final Logger LOG = LoggerFactory.getLogger(StatisticsStore.class);
   /**
    * Initialize the store
@@ -42,7 +42,7 @@ public abstract class StatisticsStore<T extends GrillStatistics> extends AsyncEv
   /**
    * Start the Store
    */
-  public void start(GrillEventService service) {
+  public void start(LensEventService service) {
     if(service == null) {
       LOG.warn("Unable to start store as Event service is null");
     }
@@ -51,7 +51,7 @@ public abstract class StatisticsStore<T extends GrillStatistics> extends AsyncEv
   /**
    * Stop the store.
    */
-  public void stop(GrillEventService service) {
+  public void stop(LensEventService service) {
     if(service == null) {
       LOG.warn("Unable to stop store as Event service is null");
     }

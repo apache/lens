@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.StringTokenizer;
 
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
@@ -62,12 +62,12 @@ public class ImpalaResultSet extends InMemoryResultSet {
   }
 
   @Override
-  public boolean hasNext() throws GrillException {
+  public boolean hasNext() throws LensException {
     return (this.hasMoreData || this.a.size() != 0);
   }
 
   @Override
-  public ResultRow next() throws GrillException {
+  public ResultRow next() throws LensException {
 
     Results resultSet = null;
 
@@ -86,7 +86,7 @@ public class ImpalaResultSet extends InMemoryResultSet {
         }
         if (a.size() == 0) {
           logger.error("No more rows" );
-          throw new GrillException("No more rows ");
+          throw new LensException("No more rows ");
         } else {
           return new ResultRow(this.a.remove());
         }
@@ -95,13 +95,13 @@ public class ImpalaResultSet extends InMemoryResultSet {
       }
     } catch (QueryNotFoundException e) {
       logger.error(e.getMessage() , e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
     } catch (BeeswaxException e) {
       logger.error(e.getMessage() , e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
     } catch (TException e) {
       logger.error(e.getMessage() , e);
-      throw new GrillException(e.getMessage(), e);
+      throw new LensException(e.getMessage(), e);
     }
 
   }
@@ -125,7 +125,7 @@ public class ImpalaResultSet extends InMemoryResultSet {
   }
 
   @Override
-  public GrillResultSetMetadata getMetadata() {
+  public LensResultSetMetadata getMetadata() {
     // TODO Auto-generated method stub
     return null;
   }

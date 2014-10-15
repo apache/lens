@@ -28,7 +28,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogPartitionHandler;
@@ -66,12 +66,12 @@ public class TestStatisticsLogPartitionHandler {
     Assert.assertEquals(p.getTable().getTableName(),
         EVENT_NAME);
     Assert.assertEquals(p.getTable().getDbName(),
-        GrillConfConstants.DEFAULT_STATISTICS_DATABASE);
+        LensConfConstants.DEFAULT_STATISTICS_DATABASE);
     Assert.assertEquals(p.getDataLocation(),
-        new Path(GrillConfConstants.
+        new Path(LensConfConstants.
             DEFAULT_STATISTICS_WAREHOUSE, EVENT_NAME + "/random/" + EVENT_NAME + ".log"));
     Assert.assertFalse(f.exists());
-    h.dropTable(GrillConfConstants.DEFAULT_STATISTICS_DATABASE,
+    h.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE,
         EVENT_NAME, true, true);
   }
 
@@ -85,9 +85,9 @@ public class TestStatisticsLogPartitionHandler {
     Table t = stats.getHiveTable(conf);
     Hive h = getHiveClient();
     h.createTable(t);
-    Assert.assertNotNull(h.getTable(GrillConfConstants.DEFAULT_STATISTICS_DATABASE,
+    Assert.assertNotNull(h.getTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE,
         t.getTableName()));
-    h.dropTable(GrillConfConstants.DEFAULT_STATISTICS_DATABASE, t.getTableName(),
+    h.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE, t.getTableName(),
         true, true);
   }
 
@@ -104,12 +104,12 @@ public class TestStatisticsLogPartitionHandler {
     try {
       Hive hive = getHiveClient();
       Database database = new Database();
-      database.setName(GrillConfConstants.DEFAULT_STATISTICS_DATABASE);
-      hive.dropTable(GrillConfConstants.DEFAULT_STATISTICS_DATABASE,
+      database.setName(LensConfConstants.DEFAULT_STATISTICS_DATABASE);
+      hive.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE,
           EVENT_NAME, true, true);
-      hive.dropTable(GrillConfConstants.DEFAULT_STATISTICS_DATABASE,
+      hive.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE,
           QueryExecutionStatistics.class.getSimpleName(), true, true);
-      hive.dropDatabase(GrillConfConstants.DEFAULT_STATISTICS_DATABASE, true, true);
+      hive.dropDatabase(LensConfConstants.DEFAULT_STATISTICS_DATABASE, true, true);
       hive.createDatabase(database);
       Table t = getHiveTable();
       hive.createTable(t);
@@ -120,7 +120,7 @@ public class TestStatisticsLogPartitionHandler {
   }
 
   private Table getHiveTable() {
-    Table t = new Table(GrillConfConstants.DEFAULT_STATISTICS_DATABASE, EVENT_NAME);
+    Table t = new Table(LensConfConstants.DEFAULT_STATISTICS_DATABASE, EVENT_NAME);
     LinkedList<FieldSchema> partCols = new LinkedList<FieldSchema>();
     partCols.add(new FieldSchema("dt", "string", "partCol"));
     t.setPartCols(partCols);

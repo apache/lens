@@ -35,8 +35,8 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.driver.LensDriver;
 
 
 public class RewriteUtil {
@@ -55,7 +55,7 @@ public class RewriteUtil {
   static List<CubeQueryInfo> findCubePositions(String query)
       throws SemanticException, ParseException {
     ASTNode ast = HQLParser.parseHQL(query);
-    CubeGrillDriver.LOG.debug("User query AST:" + ast.dump());
+    CubeDriver.LOG.debug("User query AST:" + ast.dump());
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
     findCubePositions(ast, cubeQueries, query);
     for (CubeQueryInfo cqi : cubeQueries) {
@@ -70,11 +70,11 @@ public class RewriteUtil {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getChild(0) != null) {
-        CubeGrillDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:" + ((ASTNode) ast.getChild(0)).getToken().getType());
+        CubeDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:" + ((ASTNode) ast.getChild(0)).getToken().getType());
       }
       if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
           ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
-        CubeGrillDriver.LOG.debug("Inside cube clause");
+        CubeDriver.LOG.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
         if (ast.getParent() != null) {
@@ -97,7 +97,7 @@ public class RewriteUtil {
                   "UNION ALL");
             } else {
               // Not expected to reach here
-              CubeGrillDriver.LOG.warn("Unknown query pattern found with AST:" + ast.dump());
+              CubeDriver.LOG.warn("Unknown query pattern found with AST:" + ast.dump());
               throw new SemanticException("Unknown query pattern");
             }
           } else {
@@ -105,12 +105,12 @@ public class RewriteUtil {
             // one for next AST
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
-            CubeGrillDriver.LOG.debug("Child of union all");
+            CubeDriver.LOG.debug("Child of union all");
             cqi.endPos = getEndPos(originalQuery,
                 parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
           }
         }
-        CubeGrillDriver.LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
+        CubeDriver.LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
         cubeQueries.add(cqi);
       }
       else {
@@ -119,7 +119,7 @@ public class RewriteUtil {
         }
       }
     } else {
-      CubeGrillDriver.LOG.warn("Null AST!");
+      CubeDriver.LOG.warn("Null AST!");
     }
   }
 
@@ -139,11 +139,11 @@ public class RewriteUtil {
     return backTrackIndex;
   }
 
-  public static Configuration getFinalQueryConf(GrillDriver driver, Configuration queryConf) {
+  public static Configuration getFinalQueryConf(LensDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
       if(entry.getKey().equals("cube.query.driver.supported.storages")){
-        CubeGrillDriver.LOG.warn("cube.query.driver.supported.storages value : "
+        CubeDriver.LOG.warn("cube.query.driver.supported.storages value : "
             + entry.getValue() + " from query conf ignored/");
         continue;
       }
@@ -152,7 +152,7 @@ public class RewriteUtil {
     return conf;
   }
 
-  static CubeQueryRewriter getRewriter(GrillDriver driver, Configuration queryConf) throws SemanticException {
+  static CubeQueryRewriter getRewriter(LensDriver driver, Configuration queryConf) throws SemanticException {
     return new CubeQueryRewriter(getFinalQueryConf(driver, queryConf));
   }
 
@@ -169,43 +169,43 @@ public class RewriteUtil {
     return finalQuery;
   }
 
-  public static Map<GrillDriver, String> rewriteQuery(final String query,
-      Collection<GrillDriver> drivers, Configuration queryconf) throws GrillException {
+  public static Map<LensDriver, String> rewriteQuery(final String query,
+      Collection<LensDriver> drivers, Configuration queryconf) throws LensException {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
-      Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
+      Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
       StringBuilder rewriteFailure = new StringBuilder();
       String failureCause = null;
       boolean useBuilder = false;
       if (lowerCaseQuery.startsWith("add") ||
           lowerCaseQuery.startsWith("set")) {
-        for (GrillDriver driver : drivers) {
+        for (LensDriver driver : drivers) {
           driverQueries.put(driver, replacedQuery);
         } 
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
-        for (GrillDriver driver : drivers) {
+        for (LensDriver driver : drivers) {
           CubeQueryRewriter rewriter = getRewriter(driver, queryconf);
           StringBuilder builder = new StringBuilder();
           int start = 0;
           try {
             for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
-              CubeGrillDriver.LOG.debug("Rewriting cube query:" + cqi.query);
+              CubeDriver.LOG.debug("Rewriting cube query:" + cqi.query);
               if (start != cqi.startPos) {
                 builder.append(replacedQuery.substring(start, cqi.startPos));
               }
               String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
-              CubeGrillDriver.LOG.debug("Rewritten query:" + hqlQuery);
+              CubeDriver.LOG.debug("Rewritten query:" + hqlQuery);
               builder.append(hqlQuery);
               start = cqi.endPos;
             }
             builder.append(replacedQuery.substring(start));
             String finalQuery = builder.toString();
-            CubeGrillDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
+            CubeDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
             driverQueries.put(driver, finalQuery);
           } catch (SemanticException e) {
-            CubeGrillDriver.LOG.warn("Driver : " + driver.getClass().getName() +
+            CubeDriver.LOG.warn("Driver : " + driver.getClass().getName() +
                 " Skipped for the query rewriting due to " + e.getMessage());
             rewriteFailure.append(" Driver :").append(driver.getClass().getName());
             rewriteFailure.append(" Cause :" + e.getLocalizedMessage());
@@ -219,12 +219,12 @@ public class RewriteUtil {
         }
       }
       if (driverQueries.isEmpty()) {
-        throw new GrillException("No driver accepted the query, because " +
+        throw new LensException("No driver accepted the query, because " +
             (useBuilder ? rewriteFailure.toString() : failureCause));
       }
       return driverQueries;
     } catch (Exception e) {
-      throw new GrillException("Rewriting failed, cause :" + e.getMessage(), e);
+      throw new LensException("Rewriting failed, cause :" + e.getMessage(), e);
     }
   }
 

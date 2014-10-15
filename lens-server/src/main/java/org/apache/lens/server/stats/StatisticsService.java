@@ -23,8 +23,8 @@ package org.apache.lens.server.stats;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 import org.apache.lens.server.EventServiceImpl;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.stats.store.StatisticsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ public class StatisticsService extends AbstractService {
   @Override
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
-    String storeClassName = hiveConf.get(GrillConfConstants.STATS_STORE_CLASS);
+    String storeClassName = hiveConf.get(LensConfConstants.STATS_STORE_CLASS);
     if (storeClassName == null) {
       LOG.warn("Statistics service configured with no Stores defined");
       return;
@@ -64,8 +64,8 @@ public class StatisticsService extends AbstractService {
   @Override
   public synchronized void start() {
     if (store != null) {
-      store.start((org.apache.lens.server.api.events.GrillEventService)
-          GrillServices.get().getService(EventServiceImpl.NAME));
+      store.start((org.apache.lens.server.api.events.LensEventService)
+          LensServices.get().getService(EventServiceImpl.NAME));
     } else {
       LOG.warn("Unable to start the LogStore.");
     }
@@ -76,8 +76,8 @@ public class StatisticsService extends AbstractService {
   @Override
   public synchronized void stop() {
     if (store != null) {
-      store.stop((org.apache.lens.server.api.events.GrillEventService)
-          GrillServices.get().getService(EventServiceImpl.NAME));
+      store.stop((org.apache.lens.server.api.events.LensEventService)
+          LensServices.get().getService(EventServiceImpl.NAME));
     } else {
       LOG.warn("Not starting the LogStore as it was not started.");
     }

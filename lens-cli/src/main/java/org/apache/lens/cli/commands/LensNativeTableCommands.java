@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class LensNativeTableCommands extends  BaseGrillCommand implements CommandMarker {
+public class LensNativeTableCommands extends  BaseLensCommand implements CommandMarker {
 
 
 

@@ -10,7 +10,7 @@ public class DriverSessionStarted extends DriverEvent {
   @Getter private final String driverSessionID;
 
   public DriverSessionStarted(long eventTime,
-                              GrillDriver driver,
+                              LensDriver driver,
                               String lensSessionID,
                               String driverSessionID) {
     super(eventTime, driver);

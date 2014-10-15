@@ -28,11 +28,11 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.*;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.server.GrillService;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.LensService;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 
 import javax.ws.rs.NotFoundException;
@@ -45,10 +45,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class HiveSessionService extends GrillService {
+public class HiveSessionService extends LensService {
   public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
   public static final String NAME = "session";
-  private List<GrillSessionImpl.GrillSessionPersistInfo> restorableSessions;
+  private List<LensSessionImpl.LensSessionPersistInfo> restorableSessions;
   private ScheduledExecutorService sessionExpiryThread;
   private Runnable sessionExpiryRunnable = new SessionExpiryRunnable();
 
@@ -56,14 +56,14 @@ public class HiveSessionService extends GrillService {
     super(NAME, cliService);
   }
 
-  public int addResourceToAllServices(GrillSessionHandle sessionid, String type, String path) {
+  public int addResourceToAllServices(LensSessionHandle sessionid, String type, String path) {
     int numAdded = 0;
     boolean error = false;
-    for (GrillService service : GrillServices.get().getGrillServices()) {
+    for (LensService service : LensServices.get().getLensServices()) {
       try {
         service.addResource(sessionid,  type, path);
         numAdded++;
-      } catch (GrillException e) {
+      } catch (LensException e) {
         LOG.error("Failed to add resource type:" + type + " path:" + path + " in service:" + service, e);
         error = true;
         break;
@@ -75,7 +75,7 @@ public class HiveSessionService extends GrillService {
     return numAdded;
   }
 
-  public void addResource(GrillSessionHandle sessionid, String type, String path) {
+  public void addResource(LensSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
@@ -87,7 +87,7 @@ public class HiveSessionService extends GrillService {
     }
   }
 
-  public void deleteResource(GrillSessionHandle sessionid, String type, String path) {
+  public void deleteResource(LensSessionHandle sessionid, String type, String path) {
     String command = "delete " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
@@ -123,12 +123,12 @@ public class HiveSessionService extends GrillService {
     }
   }
 
-  public GrillSessionHandle openSession(String username, String password, Map<String, String> configuration)
-      throws GrillException {
-    GrillSessionHandle sessionid = super.openSession(username, password, configuration);
+  public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
+      throws LensException {
+    LensSessionHandle sessionid = super.openSession(username, password, configuration);
     LOG.info("Opened session " + sessionid + " for user " + username);
     // add auxuiliary jars
-    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(GrillConfConstants.AUX_JARS);
+    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(LensConfConstants.AUX_JARS);
     if (auxJars != null) {
       LOG.info("Adding aux jars:" + auxJars);
       for (String jar : auxJars) {
@@ -138,8 +138,8 @@ public class HiveSessionService extends GrillService {
     return sessionid;
   }
 
-  public List<String> getAllSessionParameters(GrillSessionHandle sessionid,
-      boolean verbose, String key) throws GrillException {
+  public List<String> getAllSessionParameters(LensSessionHandle sessionid,
+      boolean verbose, String key) throws LensException {
     List<String> result = new ArrayList<String>();
     acquire(sessionid);
     try {
@@ -166,11 +166,11 @@ public class HiveSessionService extends GrillService {
     return result;
   }
 
-  public void setSessionParameter(GrillSessionHandle sessionid, String key, String value) {
+  public void setSessionParameter(LensSessionHandle sessionid, String key, String value) {
     setSessionParameter(sessionid, key, value, true);
   }
 
-  protected void setSessionParameter(GrillSessionHandle sessionid, String key, String value, boolean addToSession) {
+  protected void setSessionParameter(LensSessionHandle sessionid, String key, String value, boolean addToSession) {
     LOG.info("Request to Set param key:" + key + " value:" + value);
     String command = "set" + " " + key + "= " + value;
     try {
@@ -210,18 +210,18 @@ public class HiveSessionService extends GrillService {
       return;
     }
 
-    for (GrillSessionImpl.GrillSessionPersistInfo persistInfo : restorableSessions) {
+    for (LensSessionImpl.LensSessionPersistInfo persistInfo : restorableSessions) {
       try {
-        GrillSessionHandle sessionHandle = persistInfo.getSessionHandle();
+        LensSessionHandle sessionHandle = persistInfo.getSessionHandle();
         restoreSession(sessionHandle, persistInfo.getUsername(), persistInfo.getPassword());
-        GrillSessionImpl session = getSession(sessionHandle);
+        LensSessionImpl session = getSession(sessionHandle);
         session.setLastAccessTime(persistInfo.getLastAccessTime());
-        session.getGrillSessionPersistInfo().setConfig(persistInfo.getConfig());
-        session.getGrillSessionPersistInfo().setResources(persistInfo.getResources());
+        session.getLensSessionPersistInfo().setConfig(persistInfo.getConfig());
+        session.getLensSessionPersistInfo().setResources(persistInfo.getResources());
         session.setCurrentDatabase(persistInfo.getDatabase());
 
         // Add resources for restored sessions
-        for (GrillSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
+        for (LensSessionImpl.ResourceEntry resourceEntry : session.getResources()) {
           try {
             addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation());
           } catch (Exception e) {
@@ -239,7 +239,7 @@ public class HiveSessionService extends GrillService {
           }
         }
         LOG.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
-      } catch (GrillException e) {
+      } catch (LensException e) {
         throw new RuntimeException(e);
       }
     }
@@ -258,9 +258,9 @@ public class HiveSessionService extends GrillService {
   public void writeExternal(ObjectOutput out) throws IOException {
     // Write out all the sessions
     out.writeInt(sessionMap.size());
-    for (GrillSessionHandle sessionHandle : sessionMap.values()) {
-        GrillSessionImpl session = getSession(sessionHandle);
-        session.getGrillSessionPersistInfo().writeExternal(out);
+    for (LensSessionHandle sessionHandle : sessionMap.values()) {
+        LensSessionImpl session = getSession(sessionHandle);
+        session.getLensSessionPersistInfo().writeExternal(out);
     }
     LOG.info("Session service pesristed " + sessionMap.size() + " sessions");
   }
@@ -268,10 +268,10 @@ public class HiveSessionService extends GrillService {
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     int numSessions = in.readInt();
-    restorableSessions = new ArrayList<GrillSessionImpl.GrillSessionPersistInfo>();
+    restorableSessions = new ArrayList<LensSessionImpl.LensSessionPersistInfo>();
 
     for (int i = 0; i < numSessions; i++) {
-      GrillSessionImpl.GrillSessionPersistInfo persistInfo = new GrillSessionImpl.GrillSessionPersistInfo();
+      LensSessionImpl.LensSessionPersistInfo persistInfo = new LensSessionImpl.LensSessionPersistInfo();
       persistInfo.readExternal(in);
       restorableSessions.add(persistInfo);
       sessionMap.put(persistInfo.getSessionHandle().getPublicId().toString(), persistInfo.getSessionHandle());
@@ -280,10 +280,10 @@ public class HiveSessionService extends GrillService {
   }
 
   @Override
-  public void closeSession(GrillSessionHandle sessionHandle) throws GrillException {
+  public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Inform query service
-    GrillService svc = GrillServices.get().getService(QueryExecutionServiceImpl.NAME);
+    LensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
     if (svc instanceof QueryExecutionServiceImpl) {
       ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
     }
@@ -295,12 +295,12 @@ public class HiveSessionService extends GrillService {
 
   public class SessionExpiryRunnable implements Runnable {
     public void runInternal() {
-      List<GrillSessionHandle> sessionsToRemove = new ArrayList<GrillSessionHandle>(sessionMap.values());
-      Iterator<GrillSessionHandle> itr = sessionsToRemove.iterator();
+      List<LensSessionHandle> sessionsToRemove = new ArrayList<LensSessionHandle>(sessionMap.values());
+      Iterator<LensSessionHandle> itr = sessionsToRemove.iterator();
       while (itr.hasNext()) {
-        GrillSessionHandle sessionHandle = itr.next();
+        LensSessionHandle sessionHandle = itr.next();
         try {
-          GrillSessionImpl session = getSession(sessionHandle);
+          LensSessionImpl session = getSession(sessionHandle);
           if (session.isActive()) {
             itr.remove();
           }
@@ -310,7 +310,7 @@ public class HiveSessionService extends GrillService {
       }
 
       // Now close all inactive sessions
-      for (GrillSessionHandle sessionHandle : sessionsToRemove) {
+      for (LensSessionHandle sessionHandle : sessionsToRemove) {
         try {
           long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
           closeSession(sessionHandle);
@@ -318,7 +318,7 @@ public class HiveSessionService extends GrillService {
             + new Date(lastAccessTime));
         } catch (NotFoundException nfe) {
           // Do nothing
-        } catch (GrillException e) {
+        } catch (LensException e) {
           LOG.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage());
         }
       }

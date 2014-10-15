@@ -1,7 +1,7 @@
 package org.apache.lens.server.stats.event.query;
  /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -28,15 +28,15 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.lib.query.JSonSerde;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.stats.event.LoggableGrillStatistics;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.stats.event.LoggableLensStatistics;
 
 import java.util.LinkedList;
 
 /**
  * Statistics class used to capture query information.
  */
-public class QueryExecutionStatistics extends LoggableGrillStatistics {
+public class QueryExecutionStatistics extends LoggableLensStatistics {
   @Getter
   @Setter
   private String handle;
@@ -99,14 +99,14 @@ public class QueryExecutionStatistics extends LoggableGrillStatistics {
 
   @Override
   public Table getHiveTable(Configuration conf) {
-    Table table = new Table(conf.get(GrillConfConstants.STATISTICS_DATABASE_KEY,
-        GrillConfConstants.DEFAULT_STATISTICS_DATABASE),this.getClass().getSimpleName());
+    Table table = new Table(conf.get(LensConfConstants.STATISTICS_DATABASE_KEY,
+        LensConfConstants.DEFAULT_STATISTICS_DATABASE),this.getClass().getSimpleName());
     LinkedList<FieldSchema> colList = new LinkedList<FieldSchema>();
     colList.add(new FieldSchema("handle", "string", "Query Handle"));
     colList.add(new FieldSchema("userQuery", "string", "User Query before rewrite"));
     colList.add(new FieldSchema("submitter", "string", "submitter"));
     colList.add(new FieldSchema("clusterUser", "string", "Cluster User which will do all operations on hdfs"));
-    colList.add(new FieldSchema("sessionId","string", "Grill Session which ran the query"));
+    colList.add(new FieldSchema("sessionId","string", "Lens Session which ran the query"));
     colList.add(new FieldSchema("submissionTime", "bigint", "Time which query was submitted"));
     colList.add(new FieldSchema("startTime", "bigint", "Timestamp which query was Started"));
     colList.add(new FieldSchema("endTime", "bigint", "Timestamp which query was finished"));

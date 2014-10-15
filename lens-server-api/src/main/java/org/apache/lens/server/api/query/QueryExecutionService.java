@@ -25,11 +25,11 @@ import java.util.List;
 
 import javax.ws.rs.core.Response;
 
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.api.query.GrillPreparedQuery;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensPreparedQuery;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryHandleWithResultSet;
 import org.apache.lens.api.query.QueryPlan;
@@ -49,10 +49,10 @@ public interface QueryExecutionService {
    * 
    * @return The query plan;
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryPlan explain(GrillSessionHandle sessionHandle, String query, GrillConf conf)
-      throws GrillException;
+  public QueryPlan explain(LensSessionHandle sessionHandle, String query, LensConf conf)
+      throws LensException;
 
   /**
    * Prepare the query
@@ -64,10 +64,10 @@ public interface QueryExecutionService {
    * @param queryName
    * @return Prepare handle
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
-      throws GrillException;
+  public QueryPrepareHandle prepare(LensSessionHandle sessionHandle, String query, LensConf conf, String queryName)
+      throws LensException;
 
   /**
    * Explain the given query and prepare it as well.
@@ -80,10 +80,10 @@ public interface QueryExecutionService {
    * @return The query plan; Query plan also consists of prepare handle,
    * if it should be used to executePrepare
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
-      throws GrillException;
+  public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle, String query, LensConf conf, String queryName)
+      throws LensException;
 
   /**
    * Execute already prepared query asynchronously. 
@@ -93,10 +93,10 @@ public interface QueryExecutionService {
    * @param conf The configuration for the query to execute
    * 
    * @return Returns the query handle
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
-      GrillConf conf, String queryName) throws GrillException;
+  public QueryHandle executePrepareAsync(LensSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
+      LensConf conf, String queryName) throws LensException;
 
   /**
    * Execute already prepared query with timeout. 
@@ -107,10 +107,10 @@ public interface QueryExecutionService {
    *  query did not finish before.
    * @param conf The configuration for the query to execute
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryHandleWithResultSet executePrepare(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
-      long timeoutmillis, GrillConf conf, String queryName) throws GrillException;
+  public QueryHandleWithResultSet executePrepare(LensSessionHandle sessionHandle, QueryPrepareHandle prepareHandle,
+      long timeoutmillis, LensConf conf, String queryName) throws LensException;
 
   /**
    * Asynchronously execute the query
@@ -121,10 +121,10 @@ public interface QueryExecutionService {
    * @param queryName
    * @return a query handle, which can used to know the status.
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query, GrillConf conf, String queryName)
-      throws GrillException;
+  public QueryHandle executeAsync(LensSessionHandle sessionHandle, String query, LensConf conf, String queryName)
+      throws LensException;
 
   /**
    * Update the query conf
@@ -134,8 +134,8 @@ public interface QueryExecutionService {
    * 
    * @return true if update is successful 
    */
-  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryHandle queryHandle, GrillConf newconf)
-      throws GrillException;
+  public boolean updateQueryConf(LensSessionHandle sessionHandle, QueryHandle queryHandle, LensConf newconf)
+      throws LensException;
 
   /**
    * Execute the query with a timeout 
@@ -149,10 +149,10 @@ public interface QueryExecutionService {
    * @return a query handle, if query did not finish within the timeout specified
    * else result will also be returned.
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutmillis,
-                                          GrillConf conf, String queryName) throws GrillException;
+  public QueryHandleWithResultSet execute(LensSessionHandle sessionHandle, String query, long timeoutmillis,
+                                          LensConf conf, String queryName) throws LensException;
 
   /**
    * Get the query, specified by the handle
@@ -161,17 +161,17 @@ public interface QueryExecutionService {
    * 
    * @return query status
    */
-  public GrillQuery getQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+  public LensQuery getQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
   /**
    * Get the result set metadata - list of columns(names and types) and result size.
    * 
    * @param queryHandle
    * @return The result set metadata
-   * @throws GrillException
+   * @throws LensException
    */
-  public QueryResultSetMetadata getResultSetMetadata(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
-      throws GrillException;
+  public QueryResultSetMetadata getResultSetMetadata(LensSessionHandle sessionHandle, QueryHandle queryHandle)
+      throws LensException;
 
   /**
    * Fetch the results of the query, specified by the handle
@@ -182,8 +182,8 @@ public interface QueryExecutionService {
    * 
    * @return returns the result set
    */
-  public QueryResult fetchResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
-      int fetchSize ) throws GrillException;
+  public QueryResult fetchResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
+      int fetchSize ) throws LensException;
 
   /**
    * Get the http end point for the result set
@@ -193,15 +193,15 @@ public interface QueryExecutionService {
    *
    * @return returns javax.ws.rs.core.Response object
    */
-  public Response getHttpResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+  public Response getHttpResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
   /**
    * Closes result set by releasing any resources used in serving the resultset.
    * 
    * @param queryHandle
-   * @throws GrillException
+   * @throws LensException
    */
-  public void closeResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+  public void closeResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
   /**
    * Cancel the execution of the query, specified by the handle
@@ -210,7 +210,7 @@ public interface QueryExecutionService {
    * 
    * @return true if cancel was successful, false otherwise
    */
-  public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException;
+  public boolean cancelQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException;
 
   /**
    * Returns all the queries in the specified state, for the given user and matching query name.
@@ -222,13 +222,13 @@ public interface QueryExecutionService {
    * @param toDate end date of the time range interval
    * @return List of query handles
    */
-  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle,
+  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle,
                                          String state,
                                          String user,
                                          String queryName,
                                          long fromDate,
                                          long toDate)
-      throws GrillException;
+      throws LensException;
 
   /**
    * Returns all the prepared queries for the specified user. 
@@ -241,9 +241,9 @@ public interface QueryExecutionService {
    * @param toDate end time for filtering prepared queries by preparation time
    * @return List of query prepare handles
    */
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle, String user, String queryName,
+  public List<QueryPrepareHandle> getAllPreparedQueries(LensSessionHandle sessionHandle, String user, String queryName,
                                                         long fromDate, long toDate)
-      throws GrillException;
+      throws LensException;
 
   /**
    * Destroy a prepared query
@@ -251,19 +251,19 @@ public interface QueryExecutionService {
    * @param prepared
    * @return return true if successful, false otherwise
    */
-  public boolean destroyPrepared(GrillSessionHandle sessionHandle, QueryPrepareHandle prepared)
-      throws GrillException;
+  public boolean destroyPrepared(LensSessionHandle sessionHandle, QueryPrepareHandle prepared)
+      throws LensException;
 
   /**
    * Get prepared query
    * 
    * @param prepareHandle
    * @return PreparedQueryContext object
-   * @throws GrillException
+   * @throws LensException
    */
-  public GrillPreparedQuery getPreparedQuery(
-      GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle)
-      throws GrillException;
+  public LensPreparedQuery getPreparedQuery(
+      LensSessionHandle sessionHandle, QueryPrepareHandle prepareHandle)
+      throws LensException;
 
   /**
    * Update configuration for prepared query
@@ -272,10 +272,10 @@ public interface QueryExecutionService {
    * @param newconf
    * @return true if update is successful, false otherwise
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, GrillConf newconf)
-      throws GrillException;
+  public boolean updateQueryConf(LensSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, LensConf newconf)
+      throws LensException;
   
   /**
    * Get queued queries count

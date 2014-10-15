@@ -20,8 +20,8 @@ package org.apache.lens.jdbc;
  * #L%
  */
 
-import org.apache.lens.client.GrillClientConfig;
-import org.apache.lens.client.GrillConnectionParams;
+import org.apache.lens.client.LensClientConfig;
+import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.jdbc.JDBCUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -42,11 +42,11 @@ public class JDBCUrlParserTest {
   @Test
   public void testDefaultsWithConfigurationVariables() {
     String uri = "jdbc:lens:///;username=johndoe;password=blah?conf1=blah1;conf2=blah2#var1=123;var2=456";
-    GrillConnectionParams params = JDBCUtils.parseUrl(uri);
+    LensConnectionParams params = JDBCUtils.parseUrl(uri);
     Assert.assertEquals(
-        GrillClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName(),"The database should be default database");
+        LensClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName(),"The database should be default database");
     Assert.assertEquals(
-        GrillClientConfig.DEFAULT_SERVER_BASE_URL, params.getBaseConnectionUrl(),"The base url should be default");
+        LensClientConfig.DEFAULT_SERVER_BASE_URL, params.getBaseConnectionUrl(),"The base url should be default");
 
     Map<String, String> sessionVars = params.getSessionVars();
     Assert.assertEquals( 2,
@@ -56,7 +56,7 @@ public class JDBCUrlParserTest {
     Assert.assertEquals("blah",
         sessionVars.get("password"),"The password should be blah");
 
-    Map<String, String> lensConf = params.getGrillConfs();
+    Map<String, String> lensConf = params.getLensConfs();
     Assert.assertEquals(2,
         lensConf.size(),"You should have two configuration variables");
     Assert.assertEquals( "blah1",
@@ -64,7 +64,7 @@ public class JDBCUrlParserTest {
     Assert.assertEquals( "blah2",
         lensConf.get("conf2"),"The value for conf2 should be blah2");
 
-    Map<String, String> lensVars = params.getGrillVars();
+    Map<String, String> lensVars = params.getLensVars();
 
     Assert.assertEquals( 2,
         lensVars.size(),"You should have two lens variables");
@@ -77,7 +77,7 @@ public class JDBCUrlParserTest {
   @Test
   public void testJDBCWithCustomHostAndPortAndDB() {
     String uri = "jdbc:lens://myhost:9000/mydb";
-    GrillConnectionParams params = JDBCUtils.parseUrl(uri);
+    LensConnectionParams params = JDBCUtils.parseUrl(uri);
     //Assert.assertEquals( "myhost",
     //    params.getHost(),"The host name should be myhost");
     //Assert.assertEquals( 9000, params.getPort(),"The port should be 9000");
@@ -86,8 +86,8 @@ public class JDBCUrlParserTest {
     Assert.assertTrue(
         params.getSessionVars().isEmpty(),"Session Variable list should be empty");
     Assert.assertTrue(
-        params.getGrillConfs().isEmpty(),"The conf list should be empty");
+        params.getLensConfs().isEmpty(),"The conf list should be empty");
     Assert.assertTrue(
-        params.getGrillVars().isEmpty(),"The lens var list should be empty");
+        params.getLensVars().isEmpty(),"The lens var list should be empty");
   }
 }

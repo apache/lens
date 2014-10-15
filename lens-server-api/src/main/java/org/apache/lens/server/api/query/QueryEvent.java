@@ -24,7 +24,7 @@ package org.apache.lens.server.api.query;
 import java.util.UUID;
 
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.events.GrillEvent;
+import org.apache.lens.server.api.events.LensEvent;
 
 import lombok.Getter;
 
@@ -36,7 +36,7 @@ import lombok.Getter;
  *
  * @param <T> Type of changed information about the query
  */
-public abstract class QueryEvent<T> extends GrillEvent {
+public abstract class QueryEvent<T> extends LensEvent {
   @Getter protected final T previousValue;
   @Getter protected final T currentValue;
   @Getter protected final QueryHandle queryHandle;

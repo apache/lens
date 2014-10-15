@@ -23,7 +23,7 @@ package org.apache.lens.lib.query;
 import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 
 
@@ -39,7 +39,7 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter
   protected Path finalPath;
 
   @Override
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException {
+  public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     super.init(ctx, metadata);
     setupOutputs();
   }

@@ -20,14 +20,14 @@ package org.apache.lens.server.api.driver;
  * #L%
  */
 
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.PersistentQueryResult;
 import org.apache.lens.api.query.QueryResult;
 
-public abstract class PersistentResultSet extends GrillResultSet {
-  public abstract String getOutputPath() throws GrillException;
+public abstract class PersistentResultSet extends LensResultSet {
+  public abstract String getOutputPath() throws LensException;
 
-  public QueryResult toQueryResult() throws GrillException {
+  public QueryResult toQueryResult() throws LensException {
     return new PersistentQueryResult(getOutputPath(), size());
   }
 }

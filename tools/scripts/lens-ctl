@@ -142,12 +142,12 @@ start() {
 
   if [ -n "$opt_verbose" ] ; then
     JAVA_PROPERTIES="-Dlensserver.root.logger=INFO,CONSOLE -Dlensserver.request.logger=INFO,CONSOLE ${JAVA_PROPERTIES}"
-    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.GrillServer $*
+    ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $*
   else 
   pushd ${BASEDIR} > /dev/null
     TIME=`date +%Y%m%d%H%M%s`
 
-    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.GrillServer $* > "${LENS_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
+    nohup ${JAVA_BIN} ${JAVA_PROPERTIES} -cp ${LENSCPPATH} org.apache.lens.server.LensServer $* > "${LENS_LOG_DIR}/lensserver.out.$TIME" 2>&1 < /dev/null &
     echo $! > $LENS_PID_FILE
     popd > /dev/null
 

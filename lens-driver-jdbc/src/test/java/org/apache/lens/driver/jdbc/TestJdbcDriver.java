@@ -29,14 +29,14 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
-import org.apache.lens.server.api.driver.GrillResultSet;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSet;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.QueryCompletionListener;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
@@ -124,7 +124,7 @@ public class TestJdbcDriver {
     Throwable th = null;
     try {
       driver.rewriteQuery(query, baseConf);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
       th = e;
     }
@@ -135,7 +135,7 @@ public class TestJdbcDriver {
     th = null;
     try {
       driver.rewriteQuery(query, baseConf);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
       th = e;
     }
@@ -146,7 +146,7 @@ public class TestJdbcDriver {
     th = null;
     try {
       driver.rewriteQuery(query, baseConf);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
       th = e;
     }
@@ -157,7 +157,7 @@ public class TestJdbcDriver {
     th = null;
     try {
       driver.rewriteQuery(query, baseConf);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
       th = e;
     }
@@ -175,7 +175,7 @@ public class TestJdbcDriver {
     try {
     driver.explain(query2,baseConf); 
     Assert.fail("Running explain on a non existing table.");
-    } catch(GrillException ex) {
+    } catch(LensException ex) {
       System.out.println("Error : " + ex);
     }
  }
@@ -191,11 +191,11 @@ public class TestJdbcDriver {
     String query = "SELECT * FROM execute_test";
     
     QueryContext context = new QueryContext(query, "SA", baseConf);
-    GrillResultSet resultSet = driver.execute(context);
+    LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
     if (resultSet instanceof InMemoryResultSet) {
       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
-      GrillResultSetMetadata rsMeta = rs.getMetadata();
+      LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
       
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
@@ -269,7 +269,7 @@ public class TestJdbcDriver {
       e.printStackTrace();
     }
     
-    GrillResultSet grs = driver.fetchResultSet(context);
+    LensResultSet grs = driver.fetchResultSet(context);
     
     // Check multiple fetchResultSet return same object
     for (int i = 0; i < 5; i++) {
@@ -279,7 +279,7 @@ public class TestJdbcDriver {
     assertNotNull(grs);
     if (grs instanceof InMemoryResultSet) {
       InMemoryResultSet rs = (InMemoryResultSet) grs;
-      GrillResultSetMetadata rsMeta = rs.getMetadata();
+      LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
       
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
@@ -298,7 +298,7 @@ public class TestJdbcDriver {
       try {
         driver.closeQuery(handle);
         fail("Close again should have thrown exception");
-      } catch (GrillException ex) {
+      } catch (LensException ex) {
         assertTrue(ex.getMessage().contains("not found") 
             && ex.getMessage().contains(handle.getHandleId().toString()));
         System.out.println("Matched exception");
@@ -349,11 +349,11 @@ public class TestJdbcDriver {
     QueryContext ctx = new QueryContext(query, "SA", baseConf);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
-     GrillResultSet resultSet = driver.execute(ctx);
+     LensResultSet resultSet = driver.execute(ctx);
      assertNotNull(resultSet);
      if (resultSet instanceof InMemoryResultSet) {
        InMemoryResultSet rs = (InMemoryResultSet) resultSet;
-       GrillResultSetMetadata rsMeta = rs.getMetadata();
+       LensResultSetMetadata rsMeta = rs.getMetadata();
        assertEquals(rsMeta.getColumns().size(), 1);
        
        ColumnDescriptor col1 = rsMeta.getColumns().get(0);
@@ -396,9 +396,9 @@ public class TestJdbcDriver {
     String query = "SELECT * FROM invalid_table";
     QueryContext ctx = new QueryContext(query, "SA", baseConf);
     try {
-      GrillResultSet rs = driver.execute(ctx);
+      LensResultSet rs = driver.execute(ctx);
       fail("Should have thrown exception");
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
     }
     
@@ -438,7 +438,7 @@ public class TestJdbcDriver {
     try {
       driver.fetchResultSet(ctx);
       fail("should have thrown error");
-    } catch (GrillException e) {
+    } catch (LensException e) {
       e.printStackTrace();
     }
     driver.closeQuery(handle);

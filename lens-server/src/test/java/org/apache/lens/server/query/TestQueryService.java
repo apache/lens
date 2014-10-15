@@ -55,8 +55,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.lens.api.*;
-import org.apache.lens.api.query.GrillPreparedQuery;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.query.LensPreparedQuery;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.InMemoryQueryResult;
 import org.apache.lens.api.query.PersistentQueryResult;
 import org.apache.lens.api.query.QueryHandle;
@@ -68,11 +68,11 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.driver.hive.TestHiveDriver.FailHook;
-import org.apache.lens.server.GrillJerseyTest;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.GrillTestUtil;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.query.QueryApp;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
@@ -84,12 +84,12 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 @Test(groups="unit-test")
-public class TestQueryService extends GrillJerseyTest {
+public class TestQueryService extends LensJerseyTest {
   public static final Log LOG = LogFactory.getLog(TestQueryService.class);
 
   QueryExecutionServiceImpl queryService;
   MetricsService metricsSvc;
-  GrillSessionHandle lensSessionId;
+  LensSessionHandle lensSessionId;
   final int NROWS = 10000;
   private Wiser wiser;
 
@@ -99,8 +99,8 @@ public class TestQueryService extends GrillJerseyTest {
     wiser = new Wiser();
     wiser.setHostname("localhost");
     wiser.setPort(25000);
-    queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    metricsSvc = (MetricsService)GrillServices.get().getService(MetricsService.NAME);
+    queryService = (QueryExecutionServiceImpl)LensServices.get().getService("query");
+    metricsSvc = (MetricsService)LensServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
     sessionconf.put("test.session.key", "svalue");
     lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); //@localhost should be removed automatically
@@ -112,7 +112,7 @@ public class TestQueryService extends GrillJerseyTest {
   public void tearDown() throws Exception {
     dropTable(testTable);
     queryService.closeSession(lensSessionId);
-    for (GrillDriver driver : queryService.getDrivers()) {
+    for (LensDriver driver : queryService.getDrivers()) {
       if (driver instanceof HiveDriver) {
         assertFalse(((HiveDriver) driver).hasLensSession(lensSessionId));
       }
@@ -134,15 +134,15 @@ public class TestQueryService extends GrillJerseyTest {
   public static final String TEST_DATA_FILE = "../lens-driver-hive/testdata/testdata2.txt";
 
   private void createTable(String tblName) throws InterruptedException {
-    GrillTestUtil.createTable(tblName, target(), lensSessionId);
+    LensTestUtil.createTable(tblName, target(), lensSessionId);
   }
 
   private void loadData(String tblName, final String TEST_DATA_FILE)
       throws InterruptedException {
-    GrillTestUtil.loadData(tblName, TEST_DATA_FILE, target(), lensSessionId);
+    LensTestUtil.loadData(tblName, TEST_DATA_FILE, target(), lensSessionId);
   }
   private void dropTable(String tblName) throws InterruptedException {
-    GrillTestUtil.dropTable(tblName, target(), lensSessionId);
+    LensTestUtil.dropTable(tblName, target(), lensSessionId);
   }
 
   // test get a random query, should return 400
@@ -159,7 +159,7 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
     long failedQueries = metricsSvc.getTotalFailedQueries();
     System.out.println("%% " + failedQueries);
-    GrillConf conf = new GrillConf();
+    LensConf conf = new LensConf();
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
@@ -178,10 +178,10 @@ public class TestQueryService extends GrillJerseyTest {
 
     Assert.assertNotNull(handle);
     
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       System.out.println("%% query " + ctx.getQueryHandle() + " status:" + stat);
       Thread.sleep(1000);
@@ -203,7 +203,7 @@ public class TestQueryService extends GrillJerseyTest {
   public void testQueriesAPI() throws InterruptedException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
-    GrillConf conf = new GrillConf();
+    LensConf conf = new LensConf();
     conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
@@ -256,13 +256,13 @@ public class TestQueryService extends GrillJerseyTest {
     Response response = target.path(handle.toString() + "001").queryParam("sessionid", lensSessionId).request().get();
     Assert.assertEquals(response.getStatus(), 404);
 
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       switch (stat.getStatus()) {
       case RUNNING:
@@ -284,7 +284,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Update conf for query
     final FormDataMultiPart confpart = new FormDataMultiPart();
-    conf = new GrillConf();
+    conf = new LensConf();
     conf.addProperty("my.property", "myvalue");
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
@@ -303,7 +303,7 @@ public class TestQueryService extends GrillJerseyTest {
   public void testExecuteWithoutSessionId() throws Exception {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
-    GrillConf conf = new GrillConf();
+    LensConf conf = new LensConf();
     conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
 
@@ -344,7 +344,7 @@ public class TestQueryService extends GrillJerseyTest {
         "explain"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final QueryPlan plan = target.request().post(
@@ -377,7 +377,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final QueryPrepareHandle pHandle = target.request().post(
@@ -391,8 +391,8 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertTrue(allQueries.size() >= 1);
     Assert.assertTrue(allQueries.contains(pHandle));
 
-    GrillPreparedQuery ctx = target.path(pHandle.toString()).queryParam("sessionid", lensSessionId).request().get(
-        GrillPreparedQuery.class);
+    LensPreparedQuery ctx = target.path(pHandle.toString()).queryParam("sessionid", lensSessionId).request().get(
+        LensPreparedQuery.class);
     Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase(
         "select ID from " + testTable));
     Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase(
@@ -403,7 +403,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Update conf for prepared query
     final FormDataMultiPart confpart = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
+    LensConf conf = new LensConf();
     conf.addProperty("my.property", "myvalue");
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
@@ -417,7 +417,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(updateConf.getStatus(), APIResult.Status.SUCCEEDED);
 
     ctx = target.path(pHandle.toString()).queryParam("sessionid", lensSessionId).request().get(
-        GrillPreparedQuery.class);
+        LensPreparedQuery.class);
     Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
         "myvalue");
 
@@ -435,28 +435,28 @@ public class TestQueryService extends GrillJerseyTest {
         QueryHandle.class);
     Assert.assertNotEquals(handle1, handle2);
 
-    GrillQuery ctx1 = target().path("queryapi/queries").path(
-        handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx1 = target().path("queryapi/queries").path(
+        handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertEquals(ctx1.getQueryName().toLowerCase(), "testquery1");
     // wait till the query finishes
     QueryStatus stat = ctx1.getStatus();
     while (!stat.isFinished()) {
       ctx1 = target().path("queryapi/queries").path(
-          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx1.getStatus();
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
-    GrillQuery ctx2 = target().path("queryapi/queries").path(
-        handle2.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx2 = target().path("queryapi/queries").path(
+        handle2.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertNotNull(ctx2);
     Assert.assertEquals(ctx2.getQueryName().toLowerCase(), "testqueryname2");
     // wait till the query finishes
     stat = ctx2.getStatus();
     while (!stat.isFinished()) {
       ctx2 = target().path("queryapi/queries").path(
-          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx2.getStatus();
       Thread.sleep(1000);
     }
@@ -486,7 +486,7 @@ public class TestQueryService extends GrillJerseyTest {
         "explain_and_prepare"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     final QueryPlan plan = target.request().post(
@@ -496,8 +496,8 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertTrue(plan.getTablesQueried().get(0).equalsIgnoreCase(testTable));
     Assert.assertNotNull(plan.getPrepareHandle());
 
-    GrillPreparedQuery ctx = target.path(plan.getPrepareHandle().toString())
-        .queryParam("sessionid", lensSessionId).request().get(GrillPreparedQuery.class);
+    LensPreparedQuery ctx = target.path(plan.getPrepareHandle().toString())
+        .queryParam("sessionid", lensSessionId).request().get(LensPreparedQuery.class);
     Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase(
         "select ID from " + testTable));
     Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase(
@@ -508,7 +508,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     // Update conf for prepared query
     final FormDataMultiPart confpart = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
+    LensConf conf = new LensConf();
     conf.addProperty("my.property", "myvalue");
     confpart.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
@@ -522,7 +522,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertEquals(updateConf.getStatus(), APIResult.Status.SUCCEEDED);
 
     ctx = target.path(plan.getPrepareHandle().toString()).queryParam("sessionid", lensSessionId).request().get(
-        GrillPreparedQuery.class);
+        LensPreparedQuery.class);
     Assert.assertEquals(ctx.getConf().getProperties().get("my.property"),
         "myvalue");
 
@@ -536,25 +536,25 @@ public class TestQueryService extends GrillJerseyTest {
         QueryHandle.class);
     Assert.assertNotEquals(handle1, handle2);
 
-    GrillQuery ctx1 = target().path("queryapi/queries").path(
-        handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx1 = target().path("queryapi/queries").path(
+        handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     // wait till the query finishes
     QueryStatus stat = ctx1.getStatus();
     while (!stat.isFinished()) {
       ctx1 = target().path("queryapi/queries").path(
-          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx1.getStatus();
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx1.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
 
-    GrillQuery ctx2 = target().path("queryapi/queries").path(
-        handle2.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx2 = target().path("queryapi/queries").path(
+        handle2.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     // wait till the query finishes
     stat = ctx2.getStatus();
     while (!stat.isFinished()) {
       ctx2 = target().path("queryapi/queries").path(
-          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+          handle1.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx2.getStatus();
       Thread.sleep(1000);
     }
@@ -594,7 +594,7 @@ public class TestQueryService extends GrillJerseyTest {
         "execute"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -602,7 +602,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNotNull(handle);
 
     // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
         ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
         ctx.getStatus().getStatus().equals(Status.RUNNING) ||
@@ -611,7 +611,7 @@ public class TestQueryService extends GrillJerseyTest {
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       switch (stat.getStatus()) {
       case RUNNING:
@@ -644,8 +644,8 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertTrue(result.getStatus().equals(APIResult.Status.SUCCEEDED) ||
         result.getStatus().equals(APIResult.Status.FAILED));
 
-    GrillQuery ctx2 = target.path(handle2.toString()).queryParam("sessionid",
-        lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx2 = target.path(handle2.toString()).queryParam("sessionid",
+        lensSessionId).request().get(LensQuery.class);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL);
     } else {
@@ -658,9 +658,9 @@ public class TestQueryService extends GrillJerseyTest {
     wiser.start();
     final WebTarget target = target().path("queryapi/queries");
     final FormDataMultiPart mp2 = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(GrillConfConstants.QUERY_MAIL_NOTIFY, "true");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(LensConfConstants.QUERY_MAIL_NOTIFY, "true");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
       lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -677,7 +677,7 @@ public class TestQueryService extends GrillJerseyTest {
 
     Assert.assertNotNull(handle);
 
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
       ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
       ctx.getStatus().getStatus().equals(Status.RUNNING) ||
@@ -686,7 +686,7 @@ public class TestQueryService extends GrillJerseyTest {
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -705,7 +705,7 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   static void validatePersistedResult(QueryHandle handle, WebTarget parent,
-      GrillSessionHandle lensSessionId, boolean isDir) throws IOException {
+      LensSessionHandle lensSessionId, boolean isDir) throws IOException {
     final WebTarget target = parent.path("queryapi/queries");
     // fetch results
     validateResultSetMetadata(handle, parent, lensSessionId);
@@ -773,7 +773,7 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   static void validateHttpEndPoint(WebTarget parent,
-      GrillSessionHandle lensSessionId,
+      LensSessionHandle lensSessionId,
       QueryHandle handle, String redirectUrl) throws IOException {
     Response response = parent.path(
         "queryapi/queries/" +handle.toString() + "/httpresultset")
@@ -801,7 +801,7 @@ public class TestQueryService extends GrillJerseyTest {
     }
   }
 
-  static void validNotFoundForHttpResult(WebTarget parent, GrillSessionHandle lensSessionId,
+  static void validNotFoundForHttpResult(WebTarget parent, LensSessionHandle lensSessionId,
       QueryHandle handle) {
     try {
       Response response = parent.path(
@@ -824,8 +824,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -843,7 +843,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNotNull(handle);
 
     // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
         ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
         ctx.getStatus().getStatus().equals(Status.RUNNING) ||
@@ -852,7 +852,7 @@ public class TestQueryService extends GrillJerseyTest {
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -874,8 +874,8 @@ public class TestQueryService extends GrillJerseyTest {
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -893,7 +893,7 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNotNull(handle);
 
     // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED) ||
         ctx.getStatus().getStatus().equals(Status.LAUNCHED) ||
         ctx.getStatus().getStatus().equals(Status.RUNNING) ||
@@ -902,7 +902,7 @@ public class TestQueryService extends GrillJerseyTest {
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -927,12 +927,12 @@ public class TestQueryService extends GrillJerseyTest {
     Assert.assertNotNull(handle2);
 
     // Get query
-    ctx = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    ctx = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
 
     // wait till the query finishes
     stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -947,13 +947,13 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   static void validateResultSetMetadata(QueryHandle handle, WebTarget parent,
-      GrillSessionHandle lensSessionId) {
+      LensSessionHandle lensSessionId) {
     validateResultSetMetadata(handle, "", parent, lensSessionId);
   }
 
   static void validateResultSetMetadata(QueryHandle handle,
       String outputTablePfx, WebTarget parent,
-      GrillSessionHandle lensSessionId) {
+      LensSessionHandle lensSessionId) {
     final WebTarget target = parent.path("queryapi/queries");
 
     QueryResultSetMetadata metadata = target.path(handle.toString()).path(
@@ -1002,7 +1002,7 @@ public class TestQueryService extends GrillJerseyTest {
         "300000"));
     mp.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("conf").fileName("conf").build(),
-      new GrillConf(),
+      new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
 
     QueryHandleWithResultSet result = target.request().post(
@@ -1013,8 +1013,8 @@ public class TestQueryService extends GrillJerseyTest {
         result.getQueryHandle(), true);
     
     final FormDataMultiPart mp2 = new FormDataMultiPart();
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -1038,10 +1038,10 @@ public class TestQueryService extends GrillJerseyTest {
   }
 
   @Test
-  public void testDefaultConfig() throws GrillException {
-    GrillConf queryConf = new GrillConf();
+  public void testDefaultConfig() throws LensException {
+    LensConf queryConf = new LensConf();
     queryConf.addProperty("test.query.conf", "qvalue");
-    Configuration conf = queryService.getGrillConf(lensSessionId, queryConf);
+    Configuration conf = queryService.getLensConf(lensSessionId, queryConf);
 
     // session specific conf
     Assert.assertEquals(conf.get("test.session.key"), "svalue");

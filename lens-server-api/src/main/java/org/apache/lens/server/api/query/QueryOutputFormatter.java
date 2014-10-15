@@ -23,7 +23,7 @@ package org.apache.lens.server.api.query;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configurable;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
 
 /**
@@ -39,10 +39,10 @@ public interface QueryOutputFormatter {
    * Initialize the formatter
    *
    * @param ctx The {@link QueryContext} object
-   * @param metadata {@link GrillResultSetMetadata} object
+   * @param metadata {@link LensResultSetMetadata} object
    * @throws IOException 
    */
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException;
+  public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException;
 
   /**
    * Write the header
@@ -92,7 +92,7 @@ public interface QueryOutputFormatter {
   /**
    * Get resultset metadata
    *
-   * @return {@link GrillResultSetMetadata}
+   * @return {@link LensResultSetMetadata}
    */
-  public GrillResultSetMetadata getMetadata();
+  public LensResultSetMetadata getMetadata();
 }

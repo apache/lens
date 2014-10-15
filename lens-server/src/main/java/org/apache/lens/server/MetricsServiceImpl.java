@@ -33,9 +33,9 @@ import lombok.Getter;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
@@ -105,7 +105,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   }
   
   private QueryExecutionService getQuerySvc() {
-    return (QueryExecutionService) GrillServices.get().getService(QueryExecutionService.NAME);
+    return (QueryExecutionService) LensServices.get().getService(QueryExecutionService.NAME);
   }
 
   private static int timeBetweenPolls = 10;
@@ -113,16 +113,16 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public synchronized void init(HiveConf hiveConf) {
     queryStatusListener = new AsyncQueryStatusListener();
-    GrillEventService eventService = 
-        (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
+    LensEventService eventService = 
+        (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
     healthCheck = new HealthCheckRegistry();
     initCounters();
-    timeBetweenPolls = hiveConf.getInt(GrillConfConstants.REPORTING_PERIOD , 10);
+    timeBetweenPolls = hiveConf.getInt(LensConfConstants.REPORTING_PERIOD , 10);
 
     reporters = new ArrayList<ScheduledReporter>();
-    if (hiveConf.getBoolean(GrillConfConstants.ENABLE_CONSOLE_METRICS, false)) {
+    if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
       // Start console reporter
       ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
           .convertRatesTo(TimeUnit.SECONDS)
@@ -131,11 +131,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       reporters.add(reporter);
     }
 
-    if (hiveConf.getBoolean(GrillConfConstants.ENABLE_CONSOLE_METRICS, false)) {
+    if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
       GMetric ganglia;
       try {
-        ganglia = new GMetric(hiveConf.get(GrillConfConstants.GANGLIA_SERVERNAME),
-            hiveConf.getInt(GrillConfConstants.GANGLIA_PORT, 8080),
+        ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME),
+            hiveConf.getInt(LensConfConstants.GANGLIA_PORT, 8080),
             UDPAddressingMode.MULTICAST, 1);
         GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry)
             .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS)
@@ -205,8 +205,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public synchronized void stop() {
     // unregister 
-    GrillEventService eventService = 
-        (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
+    LensEventService eventService = 
+        (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.removeListener(queryStatusListener);
     queryStatusListener.stop();
     for (ScheduledReporter reporter : reporters) {

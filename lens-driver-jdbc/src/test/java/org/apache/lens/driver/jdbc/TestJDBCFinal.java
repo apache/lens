@@ -37,8 +37,8 @@ import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
 import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
-import org.apache.lens.server.api.driver.GrillResultSet;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSet;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.annotations.AfterTest;
@@ -152,12 +152,12 @@ public class TestJDBCFinal {
         + "order by dollars_sold desc";
 
     QueryContext context = new QueryContext(query, "SA", baseConf);
-    GrillResultSet resultSet = driver.execute(context);
+    LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 
     if (resultSet instanceof InMemoryResultSet) {
       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
-      GrillResultSetMetadata rsMeta = rs.getMetadata();
+      LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 4);
 
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
@@ -206,12 +206,12 @@ public class TestJDBCFinal {
         + "order by dollars_sold  desc "; 
 
     QueryContext context = new QueryContext(query, "SA", baseConf);
-    GrillResultSet resultSet = driver.execute(context);
+    LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 
     if (resultSet instanceof InMemoryResultSet) {
       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
-      GrillResultSetMetadata rsMeta = rs.getMetadata();
+      LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 4);
 
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);

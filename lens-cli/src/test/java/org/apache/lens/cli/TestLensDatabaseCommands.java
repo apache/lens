@@ -22,18 +22,18 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensDatabaseCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestLensDatabaseCommands extends GrillCliApplicationTest {
+public class TestLensDatabaseCommands extends LensCliApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestLensDatabaseCommands.class);
 
   @Test
   public void testDatabaseCommands() {
-    GrillClient client = new GrillClient();
+    LensClient client = new LensClient();
     LensDatabaseCommands command = new LensDatabaseCommands();
     command.setClient(client);
 

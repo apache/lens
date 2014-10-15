@@ -20,7 +20,7 @@ package org.apache.lens.server.stats;
  */
 
 
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask;
 import org.apache.log4j.FileAppender;
@@ -68,7 +68,7 @@ public class TestStatisticsLogFileScannerTask {
 
     StatisticsLogFileScannerTask task = new StatisticsLogFileScannerTask();
     task.addLogFile(TestStatisticsLogFileScannerTask.class.getName());
-    GrillEventService service = Mockito.mock(GrillEventService.class);
+    LensEventService service = Mockito.mock(LensEventService.class);
     final List<PartitionEvent> events = new ArrayList<PartitionEvent>();
     try {
       Mockito.doAnswer(new Answer<Void>() {

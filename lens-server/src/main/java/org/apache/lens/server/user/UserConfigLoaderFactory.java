@@ -21,7 +21,7 @@ package org.apache.lens.server.user;
  */
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class UserConfigLoaderFactory {
     CUSTOM
   }
   public static UserConfigLoader initializeUserConfigLoader() {
-    String resolverType = conf.get(GrillConfConstants.USER_RESOLVER_TYPE);
+    String resolverType = conf.get(LensConfConstants.USER_RESOLVER_TYPE);
     if(resolverType == null || resolverType.length() == 0) {
       throw new UserConfigLoaderException("user resolver type not determined. value was not provided in conf");
     }

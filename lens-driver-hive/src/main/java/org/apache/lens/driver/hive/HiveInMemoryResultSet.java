@@ -32,9 +32,9 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.RowSet;
 import org.apache.hive.service.cli.TableSchema;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 
 
@@ -59,21 +59,21 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   }
 
   @Override
-  public int size() throws GrillException {
+  public int size() throws LensException {
     return -1;
   }
 
   @Override
-  public GrillResultSetMetadata getMetadata() throws GrillException {
+  public LensResultSetMetadata getMetadata() throws LensException {
     //Removed Anonymous inner class and changed it to concrete class
     //for serialization to JSON
-    HiveGrillResultSetMetadata hrsMeta = new HiveGrillResultSetMetadata();
+    HiveResultSetMetadata hrsMeta = new HiveResultSetMetadata();
     hrsMeta.setColumns(metadata.getColumnDescriptors());
     return hrsMeta;
   }
 
   @Override
-  public boolean hasNext() throws GrillException {
+  public boolean hasNext() throws LensException {
     if (fetchedRowsItr == null || !fetchedRowsItr.hasNext()) {
       try {
         rowSet = client.fetchResults(opHandle, FetchOrientation.FETCH_NEXT, fetchSize);
@@ -87,14 +87,14 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
         }
         fetchedRowsItr = rowSet.iterator();
       } catch (Exception e) {
-        throw new GrillException(e);
+        throw new LensException(e);
       }
     }
     return fetchedRowsItr.hasNext();
   }
 
   @Override
-  public ResultRow next() throws GrillException {
+  public ResultRow next() throws LensException {
     List<Object> results = new ArrayList<Object>(numColumns);
     Object[] row = fetchedRowsItr.next();
     results.addAll(Arrays.asList(row));
@@ -103,7 +103,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   }
 
   @Override
-  public void setFetchSize(int size) throws GrillException {
+  public void setFetchSize(int size) throws LensException {
     assert size >= 0;
     fetchSize = size == 0 ? Integer.MAX_VALUE : size;
   }

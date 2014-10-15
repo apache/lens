@@ -55,11 +55,11 @@ import org.apache.hive.service.cli.CLIService;
 
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.TypeDescriptor;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.api.query.GrillPreparedQuery;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensPreparedQuery;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryHandleWithResultSet;
 import org.apache.lens.api.query.QueryPlan;
@@ -69,25 +69,25 @@ import org.apache.lens.api.query.QueryResultSetMetadata;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.SubmitOp;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.driver.cube.CubeGrillDriver;
+import org.apache.lens.driver.cube.CubeDriver;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.server.GrillService;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensService;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
-import org.apache.lens.server.api.events.GrillEventListener;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
-import org.apache.lens.server.session.GrillSessionImpl;
+import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.util.UtilityMethods;
 import org.codehaus.jackson.*;
 import org.codehaus.jackson.map.*;
 import org.codehaus.jackson.map.module.SimpleModule;
 
-public class QueryExecutionServiceImpl extends GrillService implements QueryExecutionService {
+public class QueryExecutionServiceImpl extends LensService implements QueryExecutionService {
   public static final Log LOG = LogFactory.getLog(QueryExecutionServiceImpl.class);
   public static final String PREPARED_QUERIES_COUNTER = "prepared-queries";
   public static final String QUERY_SUBMITTER_COUNTER = "query-submitter-errors";
@@ -122,16 +122,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   private final Thread prepareQueryPurger = new Thread(new PreparedQueryPurger(),
       "PrepareQueryPurger");
   private List<QueryAcceptor> queryAcceptors = new ArrayList<QueryAcceptor>();
-  private final Map<String, GrillDriver> drivers = new HashMap<String, GrillDriver>();
+  private final Map<String, LensDriver> drivers = new HashMap<String, LensDriver>();
   private DriverSelector driverSelector;
-  private Map<QueryHandle, GrillResultSet> resultSets = new HashMap<QueryHandle, GrillResultSet>();
-  private GrillEventService eventService;
+  private Map<QueryHandle, LensResultSet> resultSets = new HashMap<QueryHandle, LensResultSet>();
+  private LensEventService eventService;
   private MetricsService metricsService;
   private StatisticsService statisticsService;
   private int maxFinishedQueries;
-  GrillServerDAO lensServerDao;
+  LensServerDAO lensServerDao;
 
-  final GrillEventListener<DriverEvent> driverEventListener = new GrillEventListener<DriverEvent>() {
+  final LensEventListener<DriverEvent> driverEventListener = new LensEventListener<DriverEvent>() {
     @Override
     public void onEvent(DriverEvent event) {
       // Need to restore session only in case of hive driver
@@ -142,12 +142,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   };
 
-  public QueryExecutionServiceImpl(CLIService cliService) throws GrillException {
+  public QueryExecutionServiceImpl(CLIService cliService) throws LensException {
     super(NAME, cliService);
   }
 
   private void initializeQueryAcceptorsAndListeners() {
-    if (conf.getBoolean(GrillConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
+    if (conf.getBoolean(LensConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
       getEventService().addListener(new QueryStatusLogger());
       LOG.info("Registered query state logger");
     }
@@ -160,15 +160,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     LOG.info("Registered query result formatter");
   }
 
-  private void loadDriversAndSelector() throws GrillException {
-    conf.get(GrillConfConstants.DRIVER_CLASSES);
+  private void loadDriversAndSelector() throws LensException {
+    conf.get(LensConfConstants.DRIVER_CLASSES);
     String[] driverClasses = conf.getStrings(
-        GrillConfConstants.DRIVER_CLASSES);
+        LensConfConstants.DRIVER_CLASSES);
     if (driverClasses != null) {
       for (String driverClass : driverClasses) {
         try {
           Class<?> clazz = Class.forName(driverClass);
-          GrillDriver driver = (GrillDriver) clazz.newInstance();
+          LensDriver driver = (LensDriver) clazz.newInstance();
           driver.configure(conf);
 
           if (driver instanceof HiveDriver) {
@@ -179,18 +179,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           LOG.info("Driver for " + driverClass + " is loaded");
         } catch (Exception e) {
           LOG.warn("Could not load the driver:" + driverClass, e);
-          throw new GrillException("Could not load driver " + driverClass, e);
+          throw new LensException("Could not load driver " + driverClass, e);
         }
       }
     } else {
-      throw new GrillException("No drivers specified");
+      throw new LensException("No drivers specified");
     }
-    driverSelector = new CubeGrillDriver.MinQueryCostSelector();
+    driverSelector = new CubeDriver.MinQueryCostSelector();
   }
 
-  protected GrillEventService getEventService() {
+  protected LensEventService getEventService() {
     if (eventService == null) {
-      eventService = (GrillEventService) GrillServices.get().getService(GrillEventService.NAME);
+      eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
       if (eventService == null) {
         throw new NullPointerException("Could not get event service");
       }
@@ -200,7 +200,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private synchronized MetricsService getMetrics() {
     if (metricsService == null) {
-      metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       if (metricsService == null) {
         throw new NullPointerException("Could not get metrics service");
       }
@@ -210,7 +210,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
   private synchronized StatisticsService getStatisticsService() {
     if (statisticsService == null) {
-      statisticsService = (StatisticsService) GrillServices.get().getService(StatisticsService.STATS_SVC_NAME);
+      statisticsService = (StatisticsService) LensServices.get().getService(StatisticsService.STATS_SVC_NAME);
       if (statisticsService == null) {
         throw new NullPointerException("Could not get statistics service");
       }
@@ -226,10 +226,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     getMetrics().decrCounter(QueryExecutionService.class, counter);
   }
 
-  public static class QueryStatusLogger implements GrillEventListener<StatusChange> {
+  public static class QueryStatusLogger implements LensEventListener<StatusChange> {
     public static final Log STATUS_LOG = LogFactory.getLog(QueryStatusLogger.class);
     @Override
-    public void onEvent(StatusChange event) throws GrillException {
+    public void onEvent(StatusChange event) throws LensException {
       STATUS_LOG.info(event.toString());
     }
   }
@@ -341,7 +341,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               // session is not required to update status of the query
               //acquire(ctx.getLensSessionIdentifier());
               updateStatus(ctx.getQueryHandle());
-            } catch (GrillException e) {
+            } catch (LensException e) {
               LOG.error("Error updating status ", e);
             } finally {
               //release(ctx.getLensSessionIdentifier());
@@ -361,7 +361,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   void setFailedStatus(QueryContext ctx, String statusMsg,
-      String reason) throws GrillException {
+      String reason) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0f,
       QueryStatus.Status.FAILED,
@@ -370,7 +370,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
 
-  private void setLaunchedStatus(QueryContext ctx) throws GrillException {
+  private void setLaunchedStatus(QueryContext ctx) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(ctx.getStatus().getProgress(),
         QueryStatus.Status.LAUNCHED,
@@ -381,7 +381,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   private void setCancelledStatus(QueryContext ctx, String statusMsg)
-      throws GrillException {
+      throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0f,
         QueryStatus.Status.CANCELED,
@@ -402,7 +402,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     finishedQueries.add(new FinishedQuery(ctx));
   }
 
-  void setSuccessState(QueryContext ctx) throws GrillException {
+  void setSuccessState(QueryContext ctx) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(1.0f,
         QueryStatus.Status.SUCCESSFUL,
@@ -411,7 +411,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
 
-  private void updateStatus(final QueryHandle handle) throws GrillException {
+  private void updateStatus(final QueryHandle handle) throws LensException {
     QueryContext ctx = allQueries.get(handle);
     if (ctx != null) {
       synchronized(ctx) {
@@ -423,7 +423,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           try {
             ctx.getSelectedDriver().updateStatus(ctx);
             ctx.setStatus(ctx.getDriverStatus().toQueryStatus());
-          } catch (GrillException exc) {
+          } catch (LensException exc) {
             // Driver gave exception while updating status
             setFailedStatus(ctx, "Status update failed", exc.getMessage());
             LOG.error("Status update failed for " + handle, exc);
@@ -492,8 +492,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     if (event != null) {
       try {
         getEventService().notifyEvent(event);
-      } catch (GrillException e) {
-        LOG.warn("GrillEventService encountered error while handling event: " + event.getEventId(), e);
+      } catch (LensException e) {
+        LOG.warn("LensEventService encountered error while handling event: " + event.getEventId(), e);
       }
     }
   }
@@ -511,13 +511,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           return;
         }
         try {
-          FinishedGrillQuery finishedQuery = new FinishedGrillQuery(finished.getCtx());
+          FinishedLensQuery finishedQuery = new FinishedLensQuery(finished.getCtx());
           if (finished.ctx.getStatus().getStatus()
               == Status.SUCCESSFUL) {
             if (finished.ctx.getStatus().isResultSetAvailable()) {
-              GrillResultSet set = getResultset(finished.getCtx().getQueryHandle());
+              LensResultSet set = getResultset(finished.getCtx().getQueryHandle());
               if(set != null &&PersistentResultSet.class.isAssignableFrom(set.getClass())) {
-                GrillResultSetMetadata metadata = set.getMetadata();
+                LensResultSetMetadata metadata = set.getMetadata();
                 String outputPath = ((PersistentResultSet) set).getOutputPath();
                 int rows = set.size();
                 finishedQuery.setMetadataClass(metadata.getClass().getName());
@@ -553,7 +553,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
             new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
             finished.getCtx().getStatus());
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
-        } catch (GrillException e) {
+        } catch (LensException e) {
           incrCounter(QUERY_PURGER_COUNTER);
           LOG.error("Error closing  query ", e);
         }  catch (Exception e) {
@@ -574,7 +574,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
           PreparedQueryContext prepared = preparedQueryQueue.take();
           destroyPreparedQuery(prepared);
           LOG.info("Purged prepared query: " + prepared.getPrepareHandle());
-        } catch (GrillException e) {
+        } catch (LensException e) {
           incrCounter(PREPARED_QUERY_PURGER_COUNTER);
           LOG.error("Error closing prepared query ", e);
         } catch (InterruptedException e) {
@@ -595,17 +595,17 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     initializeQueryAcceptorsAndListeners();
     try {
       loadDriversAndSelector();
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new IllegalStateException("Could not load drivers");
     }
-    maxFinishedQueries = conf.getInt(GrillConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
-        GrillConfConstants.DEFAULT_FINISHED_QUERIES);
+    maxFinishedQueries = conf.getInt(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
+        LensConfConstants.DEFAULT_FINISHED_QUERIES);
     initalizeFinishedQueryStore(conf);
     LOG.info("Query execution service initialized");
   }
 
   private void initalizeFinishedQueryStore(Configuration conf) {
-    this.lensServerDao = new GrillServerDAO();
+    this.lensServerDao = new LensServerDAO();
     this.lensServerDao.init(conf);
     try {
       this.lensServerDao.createFinishedQueriesTable();
@@ -670,12 +670,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         try {
           if (sessionMap.containsKey(ctx.getLensSessionIdentifier())) {
             // try setting configuration if the query session is still not closed
-            ctx.setConf(getGrillConf(getSessionHandle(
+            ctx.setConf(getLensConf(getSessionHandle(
                 ctx.getLensSessionIdentifier()), ctx.getQconf()));
           } else {
-            ctx.setConf(getGrillConf(ctx.getQconf()));
+            ctx.setConf(getLensConf(ctx.getQconf()));
           }
-        } catch (GrillException e) {
+        } catch (LensException e) {
           LOG.error("Could not set query conf");
         }
       }
@@ -687,23 +687,23 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     prepareQueryPurger.start();
   }
 
-  private void rewriteAndSelect(QueryContext ctx) throws GrillException {
-    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
+  private void rewriteAndSelect(QueryContext ctx) throws LensException {
+    Map<LensDriver, String> driverQueries = RewriteUtil.rewriteQuery(
         ctx.getUserQuery(), drivers.values(), ctx.getConf());
 
     // 2. select driver to run the query
-    GrillDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
+    LensDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
 
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }
 
-  private void rewriteAndSelect(PreparedQueryContext ctx) throws GrillException {
-    Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(
+  private void rewriteAndSelect(PreparedQueryContext ctx) throws LensException {
+    Map<LensDriver, String> driverQueries = RewriteUtil.rewriteQuery(
         ctx.getUserQuery(), drivers.values(), ctx.getConf());
 
     // 2. select driver to run the query
-    GrillDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
+    LensDriver driver = driverSelector.select(drivers.values(), driverQueries, conf);
 
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
@@ -711,7 +711,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
 
   private void accept(String query, Configuration conf, SubmitOp submitOp)
-      throws GrillException {
+      throws LensException {
     // run through all the query acceptors, and throw Exception if any of them
     // return false
     for (QueryAcceptor acceptor : queryAcceptors) {
@@ -719,33 +719,33 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       String rejectionCause = acceptor.accept(query, conf, submitOp);
       if (rejectionCause !=null) {
         getEventService().notifyEvent(new QueryRejected(System.currentTimeMillis(), query, rejectionCause, null));
-        throw new GrillException("Query not accepted because " + cause);
+        throw new LensException("Query not accepted because " + cause);
       }
     }
     getEventService().notifyEvent(new QueryAccepted(System.currentTimeMillis(), null, query, null));
   }
 
-  private GrillResultSet getResultsetFromDAO(QueryHandle queryHandle) throws GrillException {
-    FinishedGrillQuery query = lensServerDao.getQuery(queryHandle.toString());
+  private LensResultSet getResultsetFromDAO(QueryHandle queryHandle) throws LensException {
+    FinishedLensQuery query = lensServerDao.getQuery(queryHandle.toString());
     if(query != null) {
       if(query.getResult() == null) {
         throw new NotFoundException("InMemory Query result purged " + queryHandle);
       }
       try {
-        Class<GrillResultSetMetadata> mdKlass =
-            (Class<GrillResultSetMetadata>) Class.forName(query.getMetadataClass());
-        return new GrillPersistentResult(
+        Class<LensResultSetMetadata> mdKlass =
+            (Class<LensResultSetMetadata>) Class.forName(query.getMetadataClass());
+        return new LensPersistentResult(
             mapper.readValue(query.getMetadata(), mdKlass),
             query.getResult(), query.getRows());
       } catch (Exception e) {
-        throw new GrillException(e);
+        throw new LensException(e);
       }
     }
     throw new NotFoundException("Query not found: " + queryHandle); 
   }
 
-  private GrillResultSet getResultset(QueryHandle queryHandle)
-      throws GrillException {
+  private LensResultSet getResultset(QueryHandle queryHandle)
+      throws LensException {
     QueryContext ctx = allQueries.get(queryHandle);
     if (ctx == null) {
       return getResultsetFromDAO(queryHandle);
@@ -754,10 +754,10 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         if (ctx.isFinishedQueryPersisted()) {
           return getResultsetFromDAO(queryHandle);
         }
-        GrillResultSet resultSet = resultSets.get(queryHandle);
+        LensResultSet resultSet = resultSets.get(queryHandle);
         if (resultSet == null) {
           if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
-            resultSets.put(queryHandle, new GrillPersistentResult(
+            resultSets.put(queryHandle, new LensPersistentResult(
                 ctx.getQueryOutputFormatter().getMetadata(),
                 ctx.getQueryOutputFormatter().getFinalOutputPath().toString(),
                 ctx.getQueryOutputFormatter().getNumRows()));
@@ -774,15 +774,15 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  GrillResultSet getDriverResultset(QueryHandle queryHandle)
-      throws GrillException {
+  LensResultSet getDriverResultset(QueryHandle queryHandle)
+      throws LensException {
     return allQueries.get(queryHandle).getSelectedDriver().
         fetchResultSet(allQueries.get(queryHandle));
   }
 
   @Override
-  public QueryPrepareHandle prepare(GrillSessionHandle sessionHandle, String query, GrillConf lensConf, String queryName)
-      throws GrillException {
+  public QueryPrepareHandle prepare(LensSessionHandle sessionHandle, String query, LensConf lensConf, String queryName)
+      throws LensException {
     try {
       acquire(sessionHandle);
       PreparedQueryContext prepared =  prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
@@ -794,9 +794,9 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private PreparedQueryContext prepareQuery(GrillSessionHandle sessionHandle,
-      String query, GrillConf lensConf, SubmitOp op) throws GrillException {
-    Configuration conf = getGrillConf(sessionHandle, lensConf);
+  private PreparedQueryContext prepareQuery(LensSessionHandle sessionHandle,
+      String query, LensConf lensConf, SubmitOp op) throws LensException {
+    Configuration conf = getLensConf(sessionHandle, lensConf);
     accept(query, conf, op);
     PreparedQueryContext prepared = new PreparedQueryContext(query,
         getSession(sessionHandle).getLoggedInUser(), conf, lensConf);
@@ -808,8 +808,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryPlan explainAndPrepare(GrillSessionHandle sessionHandle,
-                                     String query, GrillConf lensConf, String queryName) throws GrillException {
+  public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle,
+                                     String query, LensConf lensConf, String queryName) throws LensException {
     try {
       LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
@@ -820,22 +820,22 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
     } catch (UnsupportedEncodingException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     } finally {
       release(sessionHandle);
     }
   }
 
   @Override
-  public QueryHandle executePrepareAsync(GrillSessionHandle sessionHandle,
-      QueryPrepareHandle prepareHandle, GrillConf conf, String queryName)
-          throws GrillException {
+  public QueryHandle executePrepareAsync(LensSessionHandle sessionHandle,
+      QueryPrepareHandle prepareHandle, LensConf conf, String queryName)
+          throws LensException {
     try {
       LOG.info("ExecutePrepareAsync: " + sessionHandle.toString() +
           " query:" + prepareHandle.getPrepareHandleId());
       acquire(sessionHandle);
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
-      Configuration qconf = getGrillConf(sessionHandle, conf);
+      Configuration qconf = getLensConf(sessionHandle, conf);
       accept(pctx.getUserQuery(), qconf, SubmitOp.EXECUTE);
       QueryContext ctx = createContext(pctx,
           getSession(sessionHandle).getLoggedInUser(), conf, qconf);
@@ -852,16 +852,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryHandleWithResultSet executePrepare(GrillSessionHandle sessionHandle,
+  public QueryHandleWithResultSet executePrepare(LensSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle, long timeoutMillis,
-      GrillConf conf,
-      String queryName) throws GrillException {
+      LensConf conf,
+      String queryName) throws LensException {
     try {
       LOG.info("ExecutePrepare: " + sessionHandle.toString() +
           " query:" + prepareHandle.getPrepareHandleId() + " timeout:" + timeoutMillis);
       acquire(sessionHandle);
       PreparedQueryContext pctx = getPreparedQueryContext(sessionHandle, prepareHandle);
-      Configuration qconf = getGrillConf(sessionHandle, conf);
+      Configuration qconf = getLensConf(sessionHandle, conf);
       QueryContext ctx = createContext(pctx,
           getSession(sessionHandle).getLoggedInUser(), conf, qconf);
       if (StringUtils.isNotBlank(queryName)) {
@@ -877,12 +877,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryHandle executeAsync(GrillSessionHandle sessionHandle, String query,
-                                  GrillConf conf, String queryName) throws GrillException {
+  public QueryHandle executeAsync(LensSessionHandle sessionHandle, String query,
+                                  LensConf conf, String queryName) throws LensException {
     try {
       LOG.info("ExecuteAsync: "  + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, conf);
+      Configuration qconf = getLensConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
       QueryContext ctx = createContext(query,
           getSession(sessionHandle).getLoggedInUser(), conf, qconf);
@@ -895,18 +895,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
 
 
   protected QueryContext createContext(String query, String userName,
-      GrillConf conf, Configuration qconf) throws GrillException {
+      LensConf conf, Configuration qconf) throws LensException {
     QueryContext ctx = new QueryContext(query,userName, conf, qconf);
     return ctx;
   }
 
   protected QueryContext createContext(PreparedQueryContext pctx, String userName,
-      GrillConf conf, Configuration qconf) throws GrillException {
+      LensConf conf, Configuration qconf) throws LensException {
     QueryContext ctx = new QueryContext(pctx, userName, conf, qconf);
     return ctx;
   }
 
-  private QueryHandle executeAsyncInternal(GrillSessionHandle sessionHandle, QueryContext ctx) throws GrillException {
+  private QueryHandle executeAsyncInternal(LensSessionHandle sessionHandle, QueryContext ctx) throws LensException {
     ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0,
@@ -920,8 +920,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryHandle queryHandle, GrillConf newconf)
-      throws GrillException {
+  public boolean updateQueryConf(LensSessionHandle sessionHandle, QueryHandle queryHandle, LensConf newconf)
+      throws LensException {
     try {
       LOG.info("UpdateQueryConf:" + sessionHandle.toString() + " query: " + queryHandle);
       acquire(sessionHandle);
@@ -939,8 +939,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public boolean updateQueryConf(GrillSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, GrillConf newconf)
-      throws GrillException {
+  public boolean updateQueryConf(LensSessionHandle sessionHandle, QueryPrepareHandle prepareHandle, LensConf newconf)
+      throws LensException {
     try {
       LOG.info("UpdatePreparedQueryConf:" + sessionHandle.toString() + " query: " + prepareHandle);
       acquire(sessionHandle);
@@ -952,13 +952,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private QueryContext getQueryContext(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
-      throws GrillException {
+  private QueryContext getQueryContext(LensSessionHandle sessionHandle, QueryHandle queryHandle)
+      throws LensException {
     try {
       acquire(sessionHandle);
       QueryContext ctx = allQueries.get(queryHandle);
       if (ctx == null) {
-        FinishedGrillQuery query = lensServerDao.getQuery(queryHandle.toString());
+        FinishedLensQuery query = lensServerDao.getQuery(queryHandle.toString());
         if(query == null) {
           throw new NotFoundException("Query not found " + queryHandle);
         }
@@ -990,14 +990,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public GrillQuery getQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
-      throws GrillException {
-    return getQueryContext(sessionHandle, queryHandle).toGrillQuery();
+  public LensQuery getQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle)
+      throws LensException {
+    return getQueryContext(sessionHandle, queryHandle).toLensQuery();
   }
 
-  private PreparedQueryContext getPreparedQueryContext(GrillSessionHandle sessionHandle,
+  private PreparedQueryContext getPreparedQueryContext(LensSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
-          throws GrillException {
+          throws LensException {
     try {
       acquire(sessionHandle);
       PreparedQueryContext ctx = preparedQueries.get(prepareHandle);
@@ -1011,20 +1011,20 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public GrillPreparedQuery getPreparedQuery(GrillSessionHandle sessionHandle,
+  public LensPreparedQuery getPreparedQuery(LensSessionHandle sessionHandle,
       QueryPrepareHandle prepareHandle)
-          throws GrillException {
+          throws LensException {
     return getPreparedQueryContext(sessionHandle, prepareHandle).toPreparedQuery();
   }
 
   @Override
-  public QueryHandleWithResultSet execute(GrillSessionHandle sessionHandle, String query, long timeoutMillis,
-                                          GrillConf conf, String queryName) throws GrillException {
+  public QueryHandleWithResultSet execute(LensSessionHandle sessionHandle, String query, long timeoutMillis,
+                                          LensConf conf, String queryName) throws LensException {
     try {
       LOG.info("Blocking execute " + sessionHandle.toString() + " query: "
           + query + " timeout: " + timeoutMillis);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, conf);
+      Configuration qconf = getLensConf(sessionHandle, conf);
       accept(query, qconf, SubmitOp.EXECUTE);
       QueryContext ctx = createContext(query,
           getSession(sessionHandle).getLoggedInUser(), conf, qconf);
@@ -1035,8 +1035,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private QueryHandleWithResultSet executeTimeoutInternal(GrillSessionHandle sessionHandle, QueryContext ctx, long timeoutMillis,
-                                                          Configuration conf) throws GrillException {
+  private QueryHandleWithResultSet executeTimeoutInternal(LensSessionHandle sessionHandle, QueryContext ctx, long timeoutMillis,
+                                                          Configuration conf) throws LensException {
     QueryHandle handle = executeAsyncInternal(sessionHandle, ctx);
     QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
     // getQueryContext calls updateStatus, which fires query events if there's a change in status
@@ -1091,12 +1091,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryResultSetMetadata getResultSetMetadata(GrillSessionHandle sessionHandle, QueryHandle queryHandle)
-      throws GrillException {
+  public QueryResultSetMetadata getResultSetMetadata(LensSessionHandle sessionHandle, QueryHandle queryHandle)
+      throws LensException {
     try {
       LOG.info("GetResultSetMetadata: " + sessionHandle.toString() + " query: " + queryHandle);
       acquire(sessionHandle);
-      GrillResultSet resultSet = getResultset(queryHandle);
+      LensResultSet resultSet = getResultset(queryHandle);
       if (resultSet != null) {
         return resultSet.getMetadata().toQueryResultSetMetadata();
       } else {
@@ -1109,8 +1109,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryResult fetchResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
-      int fetchSize) throws GrillException {
+  public QueryResult fetchResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle, long startIndex,
+      int fetchSize) throws LensException {
     try {
       LOG.info("FetchResultSet:" + sessionHandle.toString() + " query:" + queryHandle);
       acquire(sessionHandle);
@@ -1121,7 +1121,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public void closeResultSet(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException {
+  public void closeResultSet(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
     try {
       LOG.info("CloseResultSet:" + sessionHandle.toString() + " query: " + queryHandle);
       acquire(sessionHandle);
@@ -1134,7 +1134,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public boolean cancelQuery(GrillSessionHandle sessionHandle, QueryHandle queryHandle) throws GrillException {
+  public boolean cancelQuery(LensSessionHandle sessionHandle, QueryHandle queryHandle) throws LensException {
     try {
       LOG.info("CancelQuery: " + sessionHandle.toString() + " query:" + queryHandle);
       acquire(sessionHandle);
@@ -1161,13 +1161,13 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public List<QueryHandle> getAllQueries(GrillSessionHandle sessionHandle,
+  public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle,
                                          String state,
                                          String userName,
                                          String queryName,
                                          long fromDate,
                                          long toDate)
-      throws GrillException {
+      throws LensException {
     validateTimeRange(fromDate, toDate);
     userName = UtilityMethods.removeDomain(userName);
     try {
@@ -1222,12 +1222,12 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public List<QueryPrepareHandle> getAllPreparedQueries(GrillSessionHandle sessionHandle,
+  public List<QueryPrepareHandle> getAllPreparedQueries(LensSessionHandle sessionHandle,
                                                         String user,
                                                         String queryName,
                                                         long fromDate,
                                                         long toDate)
-      throws GrillException {
+      throws LensException {
     validateTimeRange(fromDate, toDate);
     user = UtilityMethods.removeDomain(user);
     try {
@@ -1271,8 +1271,8 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public boolean destroyPrepared(GrillSessionHandle sessionHandle, QueryPrepareHandle prepared)
-      throws GrillException {
+  public boolean destroyPrepared(LensSessionHandle sessionHandle, QueryPrepareHandle prepared)
+      throws LensException {
     try {
       LOG.info("DestroyPrepared: " + sessionHandle.toString() + " query:" + prepared);
       acquire(sessionHandle);
@@ -1283,7 +1283,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private void destroyPreparedQuery(PreparedQueryContext ctx) throws GrillException {
+  private void destroyPreparedQuery(PreparedQueryContext ctx) throws LensException {
     ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
     preparedQueries.remove(ctx.getPrepareHandle());
     preparedQueryQueue.remove(ctx);
@@ -1291,21 +1291,21 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public QueryPlan explain(GrillSessionHandle sessionHandle, String query,
-      GrillConf lensConf) throws GrillException {
+  public QueryPlan explain(LensSessionHandle sessionHandle, String query,
+      LensConf lensConf) throws LensException {
     try {
       LOG.info("Explain: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
-      Configuration qconf = getGrillConf(sessionHandle, lensConf);
+      Configuration qconf = getLensConf(sessionHandle, lensConf);
       accept(query, qconf, SubmitOp.EXPLAIN);
-      Map<GrillDriver, String> driverQueries = RewriteUtil.rewriteQuery(query,
+      Map<LensDriver, String> driverQueries = RewriteUtil.rewriteQuery(query,
           drivers.values(), qconf);
       // select driver to run the query
-      GrillDriver selectedDriver = driverSelector.select(drivers.values(),
+      LensDriver selectedDriver = driverSelector.select(drivers.values(),
           driverQueries, conf);
       return selectedDriver.explain(driverQueries.get(selectedDriver), qconf)
           .toQueryPlan();
-    } catch (GrillException e) {
+    } catch (LensException e) {
       QueryPlan plan;
       if (e.getCause().getMessage() != null)
         plan = new QueryPlan(true, e.getCause().getMessage());
@@ -1313,16 +1313,16 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         plan = new QueryPlan(true, e.getMessage());
       return plan;
     } catch (UnsupportedEncodingException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     } finally {
       release(sessionHandle);
     }
   }
 
-  public void addResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
+  public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
     try {
       acquire(sessionHandle);
-      for (GrillDriver driver : drivers.values()) {
+      for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
           driver.execute(createAddResourceQuery(sessionHandle, type, path));
         }
@@ -1332,29 +1332,29 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     }
   }
 
-  private QueryContext createAddResourceQuery(GrillSessionHandle sessionHandle, String type, String path)
-    throws GrillException {
+  private QueryContext createAddResourceQuery(LensSessionHandle sessionHandle, String type, String path)
+    throws LensException {
     String command = "add " + type.toLowerCase() + " " + path;
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     QueryContext addQuery = new QueryContext(command, 
       getSession(sessionHandle).getLoggedInUser(),
-      getGrillConf(sessionHandle, conf));
+      getLensConf(sessionHandle, conf));
     addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     return addQuery;
   }
 
-  public void deleteResource(GrillSessionHandle sessionHandle, String type, String path) throws GrillException {
+  public void deleteResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
     try {
       acquire(sessionHandle);
       String command = "delete " + type.toLowerCase() + " " + path;
-      for (GrillDriver driver : drivers.values()) {
+      for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          GrillConf conf = new GrillConf();
-          conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+          LensConf conf = new LensConf();
+          conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
           QueryContext addQuery = new QueryContext(command,
               getSession(sessionHandle).getLoggedInUser(),
-              getGrillConf(sessionHandle, conf));
+              getLensConf(sessionHandle, conf));
           addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
           driver.execute(addQuery);
         }
@@ -1373,14 +1373,14 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
       int numDrivers = in.readInt();
       for (int i =0; i < numDrivers; i++) {
         String driverClsName = in.readUTF();
-        GrillDriver driver = drivers.get(driverClsName);
+        LensDriver driver = drivers.get(driverClsName);
         if (driver == null) {
           // this driver is removed in the current server restart
           // we will create an instance and read its state still.
           try {
-            Class<? extends GrillDriver> driverCls =
-                (Class<? extends GrillDriver>)Class.forName(driverClsName);
-            driver = (GrillDriver) driverCls.newInstance();
+            Class<? extends LensDriver> driverCls =
+                (Class<? extends LensDriver>)Class.forName(driverClsName);
+            driver = (LensDriver) driverCls.newInstance();
             driver.configure(conf);
           } catch (Exception e) {
             LOG.error("Could not instantiate driver:" + driverClsName);
@@ -1436,7 +1436,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     // persist all drivers
     synchronized (drivers) {
       out.writeInt(drivers.size());
-      for (GrillDriver driver : drivers.values()) {
+      for (LensDriver driver : drivers.values()) {
         out.writeUTF(driver.getClass().getName());
         driver.writeExternal(out);
       }
@@ -1466,11 +1466,11 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
   }
 
   @Override
-  public Response getHttpResultSet(GrillSessionHandle sessionHandle,
-      QueryHandle queryHandle) throws GrillException {
+  public Response getHttpResultSet(LensSessionHandle sessionHandle,
+      QueryHandle queryHandle) throws LensException {
     final QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
-    GrillResultSet result = getResultset(queryHandle);
-    if (result instanceof GrillPersistentResult) {
+    LensResultSet result = getResultset(queryHandle);
+    if (result instanceof LensPersistentResult) {
       final Path resultPath = new Path(((PersistentResultSet)result).getOutputPath());
       try {
         FileSystem fs = resultPath.getFileSystem(conf);
@@ -1483,7 +1483,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         throw new NotFoundException("Http result not available for query:"
             + queryHandle.toString());
       }
-      String resultFSReadUrl = ctx.getConf().get(GrillConfConstants.RESULT_FS_READ_URL);
+      String resultFSReadUrl = ctx.getConf().get(LensConfConstants.RESULT_FS_READ_URL);
       if (resultFSReadUrl != null) {
         try {
           URI resultReadPath = new URI(resultFSReadUrl +
@@ -1493,7 +1493,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
               .header("content-disposition","attachment; filename = "+ resultPath.getName())
               .type(MediaType.APPLICATION_OCTET_STREAM).build();
         } catch (URISyntaxException e) {
-          throw new GrillException(e);
+          throw new LensException(e);
         }
       } else {
         StreamingOutput stream = new StreamingOutput() {
@@ -1525,22 +1525,22 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
    * Allow drivers to release resources acquired for a session if any.
    * @param sessionHandle
    */
-  public void closeDriverSessions(GrillSessionHandle sessionHandle) {
-    for (GrillDriver driver : drivers.values()) {
+  public void closeDriverSessions(LensSessionHandle sessionHandle) {
+    for (LensDriver driver : drivers.values()) {
       if (driver instanceof HiveDriver) {
         ((HiveDriver) driver).closeSession(sessionHandle);
       }
     }
   }
 
-  public void closeSession(GrillSessionHandle sessionHandle) throws GrillException {
+  public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Call driver session close in case some one closes sessions directly on query service
     closeDriverSessions(sessionHandle);
   }
 
   // Used in test code
-  Collection<GrillDriver> getDrivers(){
+  Collection<LensDriver> getDrivers(){
     return drivers.values();
   }
 
@@ -1568,18 +1568,18 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
     HiveDriver hiveDriver = (HiveDriver) event.getDriver();
 
     String lensSession = sessionStarted.getLensSessionID();
-    GrillSessionHandle sessionHandle = getSessionHandle(lensSession);
+    LensSessionHandle sessionHandle = getSessionHandle(lensSession);
     if (sessionHandle == null) {
-      LOG.warn("Grill session went away for sessionid:" + lensSession);
+      LOG.warn("Lens session went away for sessionid:" + lensSession);
       return;
     }
     try {
-      GrillSessionImpl session = getSession(sessionHandle);
+      LensSessionImpl session = getSession(sessionHandle);
       acquire(sessionHandle);
       // Add resources for this session
-      List<GrillSessionImpl.ResourceEntry> resources = session.getGrillSessionPersistInfo().getResources();
+      List<LensSessionImpl.ResourceEntry> resources = session.getLensSessionPersistInfo().getResources();
       if (resources != null && !resources.isEmpty()) {
-        for (GrillSessionImpl.ResourceEntry resource : resources) {
+        for (LensSessionImpl.ResourceEntry resource : resources) {
           LOG.info("Restoring resource " + resource + " for session " + lensSession);
           try {
             // Execute add resource query in blocking mode
@@ -1594,7 +1594,7 @@ public class QueryExecutionServiceImpl extends GrillService implements QueryExec
         LOG.info("No resources to restore for session " + lensSession);
       }
     } catch (Exception e) {
-      LOG.warn("Grill session went away! " + lensSession + " driver session: "
+      LOG.warn("Lens session went away! " + lensSession + " driver session: "
         + ((DriverSessionStarted) event).getDriverSessionID(), e);
     } finally {
       release(sessionHandle);

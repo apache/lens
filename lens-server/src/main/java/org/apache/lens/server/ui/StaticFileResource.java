@@ -27,8 +27,8 @@ import com.google.common.io.Files;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -53,8 +53,8 @@ public class StaticFileResource {
         @Override
         public String load(String filePath) throws Exception {
           if (baseDir == null) {
-            baseDir = GrillServices.get().getHiveConf().get(GrillConfConstants.SERVER_UI_STATIC_DIR,
-                GrillConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
+            baseDir = LensServices.get().getHiveConf().get(LensConfConstants.SERVER_UI_STATIC_DIR,
+                LensConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
           }
           return loadFile(baseDir, filePath);
         }
@@ -68,14 +68,14 @@ public class StaticFileResource {
   @Path("/{filePath:.*}")
   public Response getStaticResource(@PathParam("filePath") String filePath) {
     try {
-      HiveConf conf = GrillServices.get().getHiveConf();
-      if (conf.getBoolean(GrillConfConstants.SERVER_UI_ENABLE_CACHING,
-          GrillConfConstants.DEFAULT_SERVER_UI_ENABLE_CACHING)) {
+      HiveConf conf = LensServices.get().getHiveConf();
+      if (conf.getBoolean(LensConfConstants.SERVER_UI_ENABLE_CACHING,
+          LensConfConstants.DEFAULT_SERVER_UI_ENABLE_CACHING)) {
         return Response.ok(contentCache.get(filePath), getMediaType(filePath)).build();
       } else {
         // This is for dev mode
-        String baseDir = conf.get(GrillConfConstants.SERVER_UI_STATIC_DIR,
-            GrillConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
+        String baseDir = conf.get(LensConfConstants.SERVER_UI_STATIC_DIR,
+            LensConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
         return Response.ok(loadFile(baseDir, filePath), getMediaType(filePath)).build();
       }
     } catch (Exception e) {

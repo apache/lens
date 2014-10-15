@@ -29,7 +29,7 @@ import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
@@ -40,12 +40,12 @@ import org.apache.lens.api.query.ResultColumn;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.events.GrillEventListener;
+import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
 
-public class MockDriver implements GrillDriver {
+public class MockDriver implements LensDriver {
 
   Configuration conf;
   String query;
@@ -60,7 +60,7 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public void configure(Configuration conf) throws GrillException {
+  public void configure(Configuration conf) throws LensException {
     this.conf = conf;
     ioTestVal = conf.getInt("mock.driver.test.val", -1);
   }
@@ -84,28 +84,28 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public DriverQueryPlan explain(String query, Configuration conf)
-      throws GrillException {
+      throws LensException {
     return new MockQueryPlan(query);
   }
 
   @Override
-  public void updateStatus(QueryContext context) throws GrillException {
+  public void updateStatus(QueryContext context) throws LensException {
     context.getDriverStatus().setProgress(1.0);
     context.getDriverStatus().setStatusMessage("Done");
     context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
   }
 
   @Override
-  public boolean cancelQuery(QueryHandle handle) throws GrillException {
+  public boolean cancelQuery(QueryHandle handle) throws LensException {
     return false;
   }
 
   @Override
-  public void closeQuery(QueryHandle handle) throws GrillException {
+  public void closeQuery(QueryHandle handle) throws LensException {
   }
 
   @Override
-  public void close() throws GrillException {
+  public void close() throws LensException {
   }
 
   /**
@@ -114,19 +114,19 @@ public class MockDriver implements GrillDriver {
    * @param driverEventListener
    */
   @Override
-  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+  public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
 
   @Override
-  public void prepare(PreparedQueryContext pContext) throws GrillException {
+  public void prepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
-      throws GrillException {
+      throws LensException {
     DriverQueryPlan p = new MockQueryPlan(pContext.getDriverQuery());
     p.setPrepareHandle(pContext.getPrepareHandle());
     return p;
@@ -134,26 +134,26 @@ public class MockDriver implements GrillDriver {
 
   @Override
   public void closePreparedQuery(QueryPrepareHandle handle)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     
   }
 
   @Override
-  public GrillResultSet execute(QueryContext context) throws GrillException {
+  public LensResultSet execute(QueryContext context) throws LensException {
     this.query = context.getDriverQuery();
     return new PersistentResultSet() {
       
       @Override
-      public int size() throws GrillException {
+      public int size() throws LensException {
         // TODO Auto-generated method stub
         return 0;
       }
       
       @Override
-      public GrillResultSetMetadata getMetadata() throws GrillException {
+      public LensResultSetMetadata getMetadata() throws LensException {
         // TODO Auto-generated method stub
-        return new GrillResultSetMetadata() {
+        return new LensResultSetMetadata() {
 
           @Override
           public List<ColumnDescriptor> getColumns() {
@@ -164,7 +164,7 @@ public class MockDriver implements GrillDriver {
       }
       
       @Override
-      public String getOutputPath() throws GrillException {
+      public String getOutputPath() throws LensException {
         // TODO Auto-generated method stub
         return null;
       }
@@ -172,24 +172,24 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public void executeAsync(QueryContext context) throws GrillException {
+  public void executeAsync(QueryContext context) throws LensException {
     this.query = context.getDriverQuery();
   }
 
   @Override
-  public GrillResultSet fetchResultSet(QueryContext context)
-      throws GrillException {
+  public LensResultSet fetchResultSet(QueryContext context)
+      throws LensException {
     return new InMemoryResultSet() {
       
       @Override
-      public int size() throws GrillException {
+      public int size() throws LensException {
         // TODO Auto-generated method stub
         return 0;
       }
       
       @Override
-      public GrillResultSetMetadata getMetadata() throws GrillException {
-        return new GrillResultSetMetadata() {
+      public LensResultSetMetadata getMetadata() throws LensException {
+        return new LensResultSetMetadata() {
 
           @Override
           public List<ColumnDescriptor> getColumns() {
@@ -200,19 +200,19 @@ public class MockDriver implements GrillDriver {
       }
       
       @Override
-      public void setFetchSize(int size) throws GrillException {
+      public void setFetchSize(int size) throws LensException {
         // TODO Auto-generated method stub
         
       }
       
       @Override
-      public ResultRow next() throws GrillException {
+      public ResultRow next() throws LensException {
         // TODO Auto-generated method stub
         return null;
       }
       
       @Override
-      public boolean hasNext() throws GrillException {
+      public boolean hasNext() throws LensException {
         // TODO Auto-generated method stub
         return false;
       }
@@ -220,14 +220,14 @@ public class MockDriver implements GrillDriver {
   }
 
   @Override
-  public void closeResultSet(QueryHandle handle) throws GrillException {
+  public void closeResultSet(QueryHandle handle) throws LensException {
     // TODO Auto-generated method stub
   }
 
   @Override
   public void registerForCompletionNotification(QueryHandle handle,
       long timeoutMillis, QueryCompletionListener listener)
-      throws GrillException {
+      throws LensException {
     // TODO Auto-generated method stub
     
   }

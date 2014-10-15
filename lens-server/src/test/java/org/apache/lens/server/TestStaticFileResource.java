@@ -21,8 +21,8 @@ package org.apache.lens.server;
  */
 
 
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.ui.UIApp;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.testng.annotations.AfterTest;
@@ -39,7 +39,7 @@ import static org.testng.Assert.assertEquals;
 
 
 @Test(groups="unit-test")
-public class TestStaticFileResource extends GrillJerseyTest {
+public class TestStaticFileResource extends LensJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -81,9 +81,9 @@ public class TestStaticFileResource extends GrillJerseyTest {
 
   @Test
   public void testStaticFileResource()  throws Exception {
-    GrillServices.get().getHiveConf().set(GrillConfConstants.SERVER_UI_STATIC_DIR,
+    LensServices.get().getHiveConf().set(LensConfConstants.SERVER_UI_STATIC_DIR,
     "src/main/webapp/static");
-    GrillServices.get().getHiveConf().setBoolean(GrillConfConstants.SERVER_UI_ENABLE_CACHING, false);
+    LensServices.get().getHiveConf().setBoolean(LensConfConstants.SERVER_UI_ENABLE_CACHING, false);
 
     System.out.println("@@@@ " + target().path("index.html").getUri());
     Response response = target().path("index.html").request().get();

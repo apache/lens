@@ -33,9 +33,9 @@ public class ConsistentStateFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if (GrillServices.get().isStopping() ||
-      GrillServices.get().getServiceState().equals(STATE.NOTINITED) ||
-          GrillServices.get().getServiceState().equals(STATE.STOPPED)) {
+    if (LensServices.get().isStopping() ||
+      LensServices.get().getServiceState().equals(STATE.NOTINITED) ||
+          LensServices.get().getServiceState().equals(STATE.STOPPED)) {
       requestContext.abortWith(Response.status(Status.SERVICE_UNAVAILABLE)
           .entity("Server is going down or is getting initialized").build());
     }

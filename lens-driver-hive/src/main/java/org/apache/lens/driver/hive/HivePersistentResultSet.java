@@ -22,8 +22,8 @@ package org.apache.lens.driver.hive;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hive.service.cli.*;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.PersistentResultSet;
 
 
@@ -38,20 +38,20 @@ public class HivePersistentResultSet extends PersistentResultSet {
   }
 
   @Override
-  public int size() throws GrillException {
+  public int size() throws LensException {
     return -1;
   }
 
   @Override
-  public String getOutputPath() throws GrillException {
+  public String getOutputPath() throws LensException {
     return path.toString();
   }
 
   @Override
-  public GrillResultSetMetadata getMetadata() throws GrillException {
+  public LensResultSetMetadata getMetadata() throws LensException {
     //Removed Anonymous inner class and changed it to concrete class
     //for serialization to JSON
-    HiveGrillResultSetMetadata hrsMeta = new HiveGrillResultSetMetadata();
+    HiveResultSetMetadata hrsMeta = new HiveResultSetMetadata();
     hrsMeta.setColumns(metadata.getColumnDescriptors());
     return hrsMeta;
   }

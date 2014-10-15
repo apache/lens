@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.lens.lib.query.GrillFileOutputFormat.GrillRowWriter;
+import org.apache.lens.lib.query.LensFileOutputFormat.LensRowWriter;
 
 
 /**
@@ -40,7 +40,7 @@ import org.apache.lens.lib.query.GrillFileOutputFormat.GrillRowWriter;
 public class HadoopFileFormatter extends AbstractFileFormatter {
 
   private Path outputPath;
-  protected GrillRowWriter rowWriter;
+  protected LensRowWriter rowWriter;
 
   public void setupOutputs() throws IOException {
     String pathStr = ctx.getResultSetParentDir();
@@ -50,7 +50,7 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     outputPath = new Path(pathStr, ctx.getQueryHandle().toString());
     Path tmpWorkPath = new Path(outputPath + ".tmp");
     try {
-      rowWriter = GrillFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath,
+      rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath,
           Reporter.NULL, ctx.getCompressOutput(), ctx.getOuptutFileExtn(),
           ctx.getResultEncoding());
     } catch (IOException e) {

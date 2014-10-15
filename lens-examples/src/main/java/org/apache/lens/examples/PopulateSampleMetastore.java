@@ -30,16 +30,16 @@ import org.apache.lens.client.*;
 import org.apache.lens.api.metastore.XPartition;
 
 public class PopulateSampleMetastore {
-  private GrillMetadataClient metaClient;
+  private LensMetadataClient metaClient;
   private APIResult result;
   private int retCode = 0;
 
   public PopulateSampleMetastore() throws JAXBException {
-    metaClient = new GrillMetadataClient(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
   }
 
   public void close() {
-    GrillClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
   }
 
   public static void main(String[] args) throws Exception {

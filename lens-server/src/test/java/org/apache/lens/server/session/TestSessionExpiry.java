@@ -22,10 +22,10 @@ package org.apache.lens.server.session;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.server.GrillServerConf;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.session.GrillSessionImpl;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.session.HiveSessionService;
 import org.testng.annotations.Test;
 
@@ -38,9 +38,9 @@ import static org.testng.Assert.fail;
 @Test(groups="unit-test")
 public class TestSessionExpiry {
   public void testSessionExpiry() throws Exception {
-    HiveConf conf = GrillServerConf.get();
-    conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, GrillSessionImpl.class.getName());
-    conf.setLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
+    HiveConf conf = LensServerConf.get();
+    conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
+    conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();
     cliService.init(conf);
     HiveSessionService lensService = new HiveSessionService(cliService);
@@ -48,13 +48,13 @@ public class TestSessionExpiry {
     lensService.start();
 
     try {
-      GrillSessionHandle sessionHandle =
+      LensSessionHandle sessionHandle =
         lensService.openSession("foo", "bar", new HashMap<String, String>());
-      GrillSessionImpl session = lensService.getSession(sessionHandle);
+      LensSessionImpl session = lensService.getSession(sessionHandle);
       assertTrue(session.isActive());
       session.setLastAccessTime(session.getLastAccessTime()
-        - 2000 * conf.getLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS,
-        GrillConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
+        - 2000 * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
+        LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
 
       // run the expiry thread

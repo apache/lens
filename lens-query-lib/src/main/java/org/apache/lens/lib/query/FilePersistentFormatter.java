@@ -33,7 +33,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
@@ -48,7 +48,7 @@ public class FilePersistentFormatter extends WrappedFileFormatter
 
   public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException {
+  public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     super.init(ctx, metadata);
   }
 

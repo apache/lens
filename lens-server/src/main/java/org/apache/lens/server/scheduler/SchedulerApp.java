@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.GrillApplicationListener;
+import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 
 
@@ -37,7 +37,7 @@ public class SchedulerApp extends Application {
       final Set<Class<?>> classes = new HashSet<Class<?>>();
       // register root resource
       classes.add(ScheduleResource.class);
-      classes.add(GrillApplicationListener.class);
+      classes.add(LensApplicationListener.class);
       classes.add(LoggingFilter.class);
       return classes;
   }

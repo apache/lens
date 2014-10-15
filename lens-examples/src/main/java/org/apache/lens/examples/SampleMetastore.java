@@ -30,14 +30,14 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
-import org.apache.lens.client.GrillClientSingletonWrapper;
-import org.apache.lens.client.GrillConnection;
-import org.apache.lens.client.GrillConnectionParams;
-import org.apache.lens.client.GrillMetadataClient;
+import org.apache.lens.client.LensClientSingletonWrapper;
+import org.apache.lens.client.LensConnection;
+import org.apache.lens.client.LensConnectionParams;
+import org.apache.lens.client.LensMetadataClient;
 
 public class SampleMetastore {
-  private GrillConnection connection;
-  private GrillMetadataClient metaClient;
+  private LensConnection connection;
+  private LensMetadataClient metaClient;
   public static Unmarshaller jaxbUnmarshaller;
   private APIResult result;
   private int retCode = 0;
@@ -61,11 +61,11 @@ public class SampleMetastore {
   }
 
   public SampleMetastore() throws JAXBException {
-    metaClient = new GrillMetadataClient(GrillClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
   }
 
   public void close() {
-    GrillClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
   }
 
   public void createCube() throws JAXBException, IOException {

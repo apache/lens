@@ -66,7 +66,7 @@ public class ZipFileFormatter extends AbstractFileFormatter {
     zipOut.putNextEntry(zipEntry);
     encoding = ctx.getResultEncoding();
     // Write the UTF-16LE BOM (FF FE)
-    if (encoding.equals(GrillFileOutputFormat.UTF16LE)) {
+    if (encoding.equals(LensFileOutputFormat.UTF16LE)) {
       zipOut.write(0xFF);
       zipOut.write(0xFE);
       out = new OutputStreamWriter(zipOut, encoding);
@@ -122,7 +122,7 @@ public class ZipFileFormatter extends AbstractFileFormatter {
       // Making new zip-entry.
       ZipEntry zipEntry = new ZipEntry(getQueryResultFileName());
       zipOut.putNextEntry(zipEntry);
-      if (encoding.equals(GrillFileOutputFormat.UTF16LE)) {
+      if (encoding.equals(LensFileOutputFormat.UTF16LE)) {
         zipOut.write(0xFF);
         zipOut.write(0xFE);
       }

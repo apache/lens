@@ -23,11 +23,11 @@ package org.apache.lens.server.ui;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.SessionResource;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -46,7 +46,7 @@ import java.util.UUID;
 @Path("/uisession")
 public class SessionUIResource {
   public static final Log LOG = LogFactory.getLog(SessionResource.class);
-  public static HashMap<UUID, GrillSessionHandle> openSessions = new HashMap<UUID, GrillSessionHandle>();
+  public static HashMap<UUID, LensSessionHandle> openSessions = new HashMap<UUID, LensSessionHandle>();
   private HiveSessionService sessionService;
 
   /**
@@ -60,11 +60,11 @@ public class SessionUIResource {
     return "session is up!";
   }
 
-  public SessionUIResource() throws GrillException {
-    sessionService = (HiveSessionService) GrillServices.get().getService("session");
+  public SessionUIResource() throws LensException {
+    sessionService = (HiveSessionService) LensServices.get().getService("session");
   }
 
-  private void checkSessionHandle(GrillSessionHandle sessionHandle) {
+  private void checkSessionHandle(LensSessionHandle sessionHandle) {
     if (sessionHandle == null) {
       throw new BadRequestException("Invalid session handle");
     }
@@ -82,9 +82,9 @@ public class SessionUIResource {
   @POST
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public GrillSessionHandle openSession(@FormDataParam("username") String username,
+  public LensSessionHandle openSession(@FormDataParam("username") String username,
                                         @FormDataParam("password") String password,
-                                        @FormDataParam("sessionconf") GrillConf sessionconf) {
+                                        @FormDataParam("sessionconf") LensConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {
@@ -92,10 +92,10 @@ public class SessionUIResource {
       } else {
         conf = new HashMap<String, String>();
       }
-      GrillSessionHandle handle = sessionService.openSession(username, password, conf);
+      LensSessionHandle handle = sessionService.openSession(username, password, conf);
       openSessions.put(handle.getPublicId(), handle);
       return handle;
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -111,12 +111,12 @@ public class SessionUIResource {
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult closeSession(@QueryParam("publicId") UUID publicId) {
-    GrillSessionHandle sessionHandle = openSessions.get(publicId);
+    LensSessionHandle sessionHandle = openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     openSessions.remove(publicId);
     try {
       sessionService.closeSession(sessionHandle);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return new APIResult(Status.SUCCEEDED,

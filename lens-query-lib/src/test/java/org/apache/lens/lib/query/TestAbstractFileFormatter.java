@@ -36,8 +36,8 @@ import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.lens.lib.query.WrappedFileFormatter;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -61,7 +61,7 @@ public abstract class TestAbstractFileFormatter {
     Configuration conf = new Configuration();
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -70,10 +70,10 @@ public abstract class TestAbstractFileFormatter {
   @Test
   public void testCompression() throws IOException {
     Configuration conf = new Configuration();
-    conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
+    conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -82,12 +82,12 @@ public abstract class TestAbstractFileFormatter {
   @Test
   public void testCustomCompression() throws IOException {
     Configuration conf = new Configuration();
-    conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
-    conf.set(GrillConfConstants.QUERY_OUTPUT_COMPRESSION_CODEC,
+    conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
+    conf.set(LensConfConstants.QUERY_OUTPUT_COMPRESSION_CODEC,
         org.apache.hadoop.io.compress.DefaultCodec.class.getCanonicalName());
     setConf(conf);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8"), getExpectedCSVRows());
@@ -96,10 +96,10 @@ public abstract class TestAbstractFileFormatter {
   @Test
   public void testEncoding() throws IOException {
     Configuration conf = new Configuration();
-    conf.set(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
+    conf.set(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -108,11 +108,11 @@ public abstract class TestAbstractFileFormatter {
   @Test
   public void testCompressionAndEncoding() throws IOException {
     Configuration conf = new Configuration();
-    conf.set(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
-    conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
+    conf.set(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
+    conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"), getExpectedCSVRows());
@@ -122,7 +122,7 @@ public abstract class TestAbstractFileFormatter {
   public void testOutputPath() throws IOException {
     Configuration conf = new Configuration();
     String outputParent = "target/" + getClass().getSimpleName();
-    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, outputParent);
+    conf.set(LensConfConstants.RESULT_SET_PARENT_DIR, outputParent);
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv",getMockedResultSet());
     // validate rows
@@ -134,8 +134,8 @@ public abstract class TestAbstractFileFormatter {
   public void testCompressionWithCustomOutputPath() throws IOException {
     Configuration conf = new Configuration();
     String outputParent = "target/" + getClass().getSimpleName();
-    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, outputParent);
-    conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
+    conf.set(LensConfConstants.RESULT_SET_PARENT_DIR, outputParent);
+    conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UTF8", outputParent, ".csv.gz",getMockedResultSet());
     // validate rows
@@ -152,7 +152,7 @@ public abstract class TestAbstractFileFormatter {
 
   protected void testFormatter(Configuration conf, String charsetEncoding,
       String outputParentDir,
-      String fileExtn, GrillResultSetMetadata columnNames ) throws IOException {
+      String fileExtn, LensResultSetMetadata columnNames ) throws IOException {
     QueryContext ctx = new QueryContext("test writer query", "testuser", null, conf);
     formatter = createFormatter();
 
@@ -211,8 +211,8 @@ public abstract class TestAbstractFileFormatter {
     return result;
 
   }
-  protected GrillResultSetMetadata getMockedResultSet() {
-    return new GrillResultSetMetadata() {
+  protected LensResultSetMetadata getMockedResultSet() {
+    return new LensResultSetMetadata() {
 
       @Override
       public List<ColumnDescriptor> getColumns() {
@@ -229,8 +229,8 @@ public abstract class TestAbstractFileFormatter {
     };
   }
   
-  protected GrillResultSetMetadata getMockedResultSetWithoutComma() {
-    return new GrillResultSetMetadata() {
+  protected LensResultSetMetadata getMockedResultSetWithoutComma() {
+    return new LensResultSetMetadata() {
 
       @Override
       public List<ColumnDescriptor> getColumns() {

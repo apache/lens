@@ -26,7 +26,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.driver.impala.ImpalaDriver;
 import org.apache.lens.driver.impala.ImpalaResultSet;
 
@@ -34,7 +34,7 @@ import org.apache.lens.driver.impala.ImpalaResultSet;
 public class ITImpalaDriver {
 
 	@Test
-	public void testIntegration() throws GrillException {
+	public void testIntegration() throws LensException {
 		ImpalaDriver iDriver = new ImpalaDriver();
 		Configuration config = new Configuration();
 		config.set("PORT", "21000");

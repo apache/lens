@@ -21,7 +21,7 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensFactCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,7 +30,7 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestLensFactCommands extends GrillCliApplicationTest {
+public class TestLensFactCommands extends LensCliApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestLensFactCommands.class);
   public static final String FACT_LOCAL = "fact_local";
   private static LensFactCommands command = null;
@@ -48,7 +48,7 @@ public class TestLensFactCommands extends GrillCliApplicationTest {
 
   private static LensFactCommands getCommand() {
     if(command == null ) {
-      GrillClient client = new GrillClient();
+      LensClient client = new LensClient();
       command = new LensFactCommands();
       command.setClient(client);
     }

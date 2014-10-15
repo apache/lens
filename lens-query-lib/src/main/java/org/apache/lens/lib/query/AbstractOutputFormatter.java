@@ -36,8 +36,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryOutputFormatter;
 
@@ -56,7 +56,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   public static final String HEADER_TYPE = "string";
 
   protected QueryContext ctx;
-  protected GrillResultSetMetadata metadata;
+  protected LensResultSetMetadata metadata;
   protected List<String> columnNames = new ArrayList<String>();
   protected List<String> escapedColumnNames = new ArrayList<String>();
   protected List<TypeInfo> columnTypes = new ArrayList<TypeInfo>();
@@ -68,18 +68,18 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   protected SerDe headerSerde;
 
   @Override
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException {
+  public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     this.ctx = ctx;
     this.metadata = metadata;
     initColumnFields(metadata);
   }
 
   @Override
-  public GrillResultSetMetadata getMetadata() {
+  public LensResultSetMetadata getMetadata() {
     return metadata;
   }
 
-  private void initColumnFields(GrillResultSetMetadata metadata) {
+  private void initColumnFields(LensResultSetMetadata metadata) {
     StringBuilder typesSb = new StringBuilder();
     StringBuilder headerTypes = new StringBuilder();
 
@@ -90,7 +90,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
           headerTypes.append(",");
         }
         String name = metadata.getColumns().get(pos).getName();
-        String type = GrillResultSetMetadata.getQualifiedTypeName(
+        String type = LensResultSetMetadata.getQualifiedTypeName(
             metadata.getColumns().get(pos).getTypeDescriptor());
         typesSb.append(type);
         columnNames.add(name);
@@ -112,9 +112,9 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   private void initHeaderSerde() throws ClassNotFoundException, SerDeException {
     if (headerSerde == null) {
       headerSerde = ReflectionUtils.newInstance(ctx.getConf().getClass(
-          GrillConfConstants.QUERY_OUTPUT_SERDE,
+          LensConfConstants.QUERY_OUTPUT_SERDE,
           (Class<? extends AbstractSerDe>)Class.forName(
-              GrillConfConstants.DEFAULT_OUTPUT_SERDE),
+              LensConfConstants.DEFAULT_OUTPUT_SERDE),
           SerDe.class), ctx.getConf());
 
       Properties hprops = new Properties();

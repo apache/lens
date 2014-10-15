@@ -32,7 +32,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 
 
@@ -94,7 +94,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
             String tableName = tr.replace("alias:", "").trim();
             tablesQueried.add(tableName);
             Table tbl = metastore.getTable(tableName);
-            String costStr = tbl.getParameters().get(GrillConfConstants.STORAGE_COST);
+            String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
             
             Double weight = 1d;
             if (costStr != null) {

@@ -20,7 +20,7 @@ package org.apache.lens.server.user;
  */
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -33,7 +33,7 @@ public class CustomUserConfigLoader extends UserConfigLoader {
   public CustomUserConfigLoader(HiveConf conf) {
     super(conf);
     this.customHandlerClass = (Class<? extends UserConfigLoader>) hiveConf.getClass(
-      GrillConfConstants.USER_RESOLVER_CUSTOM_CLASS,
+      LensConfConstants.USER_RESOLVER_CUSTOM_CLASS,
       UserConfigLoader.class
     );
     try {

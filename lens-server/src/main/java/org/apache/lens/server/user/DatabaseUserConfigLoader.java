@@ -20,7 +20,7 @@ package org.apache.lens.server.user;
  */
 
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.util.UtilityMethods;
 
 import com.google.common.cache.Cache;
@@ -42,13 +42,13 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
-    querySql = conf.get(GrillConfConstants.USER_RESOLVER_DB_QUERY);
-    keys = conf.get(GrillConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
+    querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
+    keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     ds = UtilityMethods.getDataSourceFromConf(conf);
     cache = CacheBuilder
       .newBuilder()
-      .expireAfterWrite(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-      .maximumSize(conf.getInt(GrillConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   @Override

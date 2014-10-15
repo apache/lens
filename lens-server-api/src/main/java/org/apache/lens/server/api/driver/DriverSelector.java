@@ -27,6 +27,6 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 
 public interface DriverSelector {
-  public GrillDriver select(Collection<GrillDriver> drivers,
-      Map<GrillDriver, String> queries, Configuration conf);
+  public LensDriver select(Collection<LensDriver> drivers,
+      Map<LensDriver, String> queries, Configuration conf);
 }

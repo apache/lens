@@ -26,7 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 
 
 public class EmbeddedThriftConnection implements ThriftConnection {
@@ -35,7 +35,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
 	private boolean connected;
 	
 	@Override
-	public ThriftCLIServiceClient getClient(HiveConf conf) throws GrillException {
+	public ThriftCLIServiceClient getClient(HiveConf conf) throws LensException {
 		if (!connected) {
 	    client = new ThriftCLIServiceClient(new EmbeddedThriftBinaryCLIService());
 	    connected = true;

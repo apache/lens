@@ -26,7 +26,7 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.RetryingThriftCLIServiceClient;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 
 
 /**
@@ -42,7 +42,7 @@ public class RemoteThriftConnection implements ThriftConnection {
 	}
 
 	@Override
-	public CLIServiceClient getClient(HiveConf conf) throws GrillException {
+	public CLIServiceClient getClient(HiveConf conf) throws LensException {
 		if (!connected) {
       try {
         LOG.info("HiveDriver connecting to HiveServer @ " + conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST)
@@ -53,7 +53,7 @@ public class RemoteThriftConnection implements ThriftConnection {
           + ":" + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
 
       } catch (HiveSQLException e) {
-        throw new GrillException(e);
+        throw new LensException(e);
       }
       connected = true;
 		}

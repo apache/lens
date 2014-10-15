@@ -23,16 +23,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.stats.event.LoggableGrillStatistics;
+import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.StatisticsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics> {
+public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> {
   private static final Logger LOG = LoggerFactory.getLogger(LogStatisticsStore.class);
   public static final String LOG_STORE_ERRORS = "log-store-errors";
   private final ObjectMapper mapper;
@@ -55,7 +55,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
 
 
   @Override
-  public void process(LoggableGrillStatistics event) {
+  public void process(LoggableLensStatistics event) {
     try {
       Class eventClass = event.getClass();
       String representation = null;
@@ -69,17 +69,17 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
           .info(representation);
       }
     } catch (Exception exc) {
-      MetricsService metricsService = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(LogStatisticsStore.class, LOG_STORE_ERRORS);
       LOG.error("Unknown error ", exc);
     }
 
   }
 
-  public void start(GrillEventService service) {
+  public void start(LensEventService service) {
     super.start(service);
     if(service != null) {
-      service.addListenerForType(this, LoggableGrillStatistics.class);
+      service.addListenerForType(this, LoggableLensStatistics.class);
       service.addListenerForType(handler, PartitionEvent.class);
       rollupHandler.start(service);
     } else {
@@ -88,10 +88,10 @@ public class LogStatisticsStore extends StatisticsStore<LoggableGrillStatistics>
 
   }
 
-  public void stop(GrillEventService service) {
+  public void stop(LensEventService service) {
     super.stop(service);
     if (service != null) {
-      service.removeListenerForType(this, LoggableGrillStatistics.class);
+      service.removeListenerForType(this, LoggableLensStatistics.class);
       service.removeListenerForType(handler, PartitionEvent.class);
       rollupHandler.stop();
     } else {

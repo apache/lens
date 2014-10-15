@@ -32,9 +32,9 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.driver.cube.RewriteUtil;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.api.driver.LensDriver;
 
 import static org.mockito.Matchers.any;
 import org.powermock.api.mockito.PowerMockito;
@@ -119,8 +119,8 @@ public class TestRewriting {
 
   @Test
   public void testCubeQuery()
-      throws ParseException, SemanticException, GrillException {
-    List<GrillDriver> drivers = new ArrayList<GrillDriver>();
+      throws ParseException, SemanticException, LensException {
+    List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
     Configuration conf = new Configuration();
     driver.configure(conf);

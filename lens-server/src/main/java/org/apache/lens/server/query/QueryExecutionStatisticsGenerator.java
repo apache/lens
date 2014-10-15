@@ -19,11 +19,11 @@ package org.apache.lens.server.query;
  * #L%
  */
 
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.events.AsyncEventListener;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.stats.event.query.QueryDriverStatistics;
@@ -39,10 +39,10 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
 
   private static final Logger LOG = LoggerFactory.getLogger(QueryExecutionStatisticsGenerator.class);
   private final QueryExecutionServiceImpl queryService;
-  private final GrillEventService eventService;
+  private final LensEventService eventService;
 
   public QueryExecutionStatisticsGenerator(QueryExecutionServiceImpl queryService,
-                                           GrillEventService eventService) {
+                                           LensEventService eventService) {
     this.queryService = queryService;
     this.eventService = eventService;
   }
@@ -83,7 +83,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
         LOG.debug("Notifying Statistics " + event);
       }
       eventService.notifyEvent(event);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       LOG.warn("Unable to notify Execution statistics", e);
     }
   }

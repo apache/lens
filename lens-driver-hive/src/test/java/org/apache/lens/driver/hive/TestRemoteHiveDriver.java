@@ -38,14 +38,14 @@ import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.driver.hive.RemoteThriftConnection;
 import org.apache.lens.driver.hive.ThriftConnection;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
@@ -119,11 +119,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
@@ -158,7 +158,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       try {
         qctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
         thrDriver.executeAsync(qctx);
-      } catch (GrillException e) {
+      } catch (LensException e) {
         errCount.incrementAndGet();
         LOG.info(q + " executeAsync error: " + e.getCause());
         continue;
@@ -182,7 +182,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
                   break;
                 }
                 Thread.sleep(POLL_DELAY);
-              } catch (GrillException e) {
+              } catch (LensException e) {
                 LOG.error("Got Exception", e.getCause());
                 e.printStackTrace();
                 errCount.incrementAndGet();
@@ -223,8 +223,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     final HiveDriver oldDriver = new HiveDriver();
     oldDriver.configure(driverConf);
 
-    driverConf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
+    driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
@@ -241,8 +241,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     ctx = new QueryContext(dataLoad, null, driverConf);
     oldDriver.execute(ctx);
 
-    driverConf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
-    driverConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
+    driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     // Fire two queries
     QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
     oldDriver.executeAsync(ctx1);
@@ -296,7 +296,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     return baos.toByteArray();
   }
 
-  private QueryContext readContext(byte[] bytes, GrillDriver driver) throws IOException, ClassNotFoundException {
+  private QueryContext readContext(byte[] bytes, LensDriver driver) throws IOException, ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
     ObjectInputStream in = new ObjectInputStream(bais);
     QueryContext ctx;
@@ -316,8 +316,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   }
 
   private void createPartitionedTable(String tableName, int partitions) throws Exception {
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
 
     QueryContext ctx =
         new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS "

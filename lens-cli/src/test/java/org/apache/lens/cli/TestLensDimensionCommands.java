@@ -20,7 +20,7 @@ package org.apache.lens.cli;
  */
 
 import org.apache.lens.cli.commands.LensDimensionCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,7 +30,7 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-public class TestLensDimensionCommands extends GrillCliApplicationTest {
+public class TestLensDimensionCommands extends LensCliApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionCommands.class);
 
   private static LensDimensionCommands command = null;
@@ -38,7 +38,7 @@ public class TestLensDimensionCommands extends GrillCliApplicationTest {
 
   private static LensDimensionCommands getCommand() {
     if (command == null) {
-      GrillClient client = new GrillClient();
+      LensClient client = new LensClient();
       command = new LensDimensionCommands();
       command.setClient(client);
     }

@@ -34,12 +34,12 @@ import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.Type;
 import org.apache.hive.service.cli.TypeDescriptor;
 import org.apache.hive.service.cli.TypeQualifiers;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.ResultColumn;
 import org.apache.lens.api.query.ResultColumnType;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.JDBCDriver.QueryResult;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.log4j.Logger;
 
@@ -50,7 +50,7 @@ public class JDBCResultSet extends InMemoryResultSet {
   ResultSetMetaData resultMeta;
   private final ResultSet resultSet;
   private final QueryResult queryResult;
-  private GrillResultSetMetadata lensResultMeta;
+  private LensResultSetMetadata lensResultMeta;
   private final boolean closeAfterFetch;
   
   public JDBCResultSet(QueryResult queryResult, ResultSet resultSet,
@@ -61,27 +61,27 @@ public class JDBCResultSet extends InMemoryResultSet {
   }
   
   
-  private ResultSetMetaData getRsMetadata() throws GrillException {
+  private ResultSetMetaData getRsMetadata() throws LensException {
     if (resultMeta == null) {
       try {
         resultMeta = resultSet.getMetaData();
       } catch (SQLException e) {
-        throw new GrillException(e);
+        throw new LensException(e);
       }
     }
     return resultMeta;
   }
   
   @Override
-  public int size() throws GrillException {
+  public int size() throws LensException {
     LOG.warn("Size of result set is not supported");
     return -1;
   }
   
   @Override
-  public synchronized GrillResultSetMetadata getMetadata() throws GrillException {
+  public synchronized LensResultSetMetadata getMetadata() throws LensException {
     if (lensResultMeta == null) {
-        lensResultMeta =  new GrillResultSetMetadata() {
+        lensResultMeta =  new LensResultSetMetadata() {
         @Override
         public List<ColumnDescriptor> getColumns() {
           try{
@@ -184,20 +184,20 @@ public class JDBCResultSet extends InMemoryResultSet {
     default:
       hiveType = new TypeDescriptor(Type.USER_DEFINED_TYPE); break;
     }
-    return GrillResultSetMetadata.getQualifiedTypeName(hiveType);
+    return LensResultSetMetadata.getQualifiedTypeName(hiveType);
   }
 
   @Override
-  public void setFetchSize(int size) throws GrillException {
+  public void setFetchSize(int size) throws LensException {
     try {
       resultSet.setFetchSize(size);
     } catch (SQLException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
   }
   
   @Override
-  public synchronized ResultRow next() throws GrillException {
+  public synchronized ResultRow next() throws LensException {
     ResultSetMetaData meta = getRsMetadata();
     try {
       List<Object> row = new ArrayList<Object>(meta.getColumnCount());
@@ -206,12 +206,12 @@ public class JDBCResultSet extends InMemoryResultSet {
       }
       return new ResultRow(row);
     } catch (SQLException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
   }
   
   @Override
-  public synchronized boolean hasNext() throws GrillException {
+  public synchronized boolean hasNext() throws LensException {
     try {
       boolean hasMore = resultSet.next();
       if (!hasMore && closeAfterFetch) {
@@ -219,7 +219,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       }
       return hasMore;
     } catch (SQLException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
   }
   

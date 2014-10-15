@@ -6,9 +6,9 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.GrillServerConf;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.util.UtilityMethods;
 import org.hsqldb.server.Server;
 import org.testng.Assert;
@@ -44,8 +44,8 @@ public class TestUserConfigLoader {
 
   @BeforeTest(alwaysRun = true)
   public void init() {
-    GrillServerConf.conf = null;
-    conf = GrillServerConf.get();
+    LensServerConf.conf = null;
+    conf = LensServerConf.get();
   }
   @AfterTest
   public void resetFactory() {
@@ -53,32 +53,32 @@ public class TestUserConfigLoader {
     UserConfigLoaderFactory.init(conf);
   }
   @Test
-  public void testFixed() throws GrillException {
+  public void testFixed() throws LensException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/fixed.xml"));
     UserConfigLoaderFactory.init(conf);
     HashMap<String, String> expected = new HashMap<String, String>() {
       {
-        put(GrillConfConstants.SESSION_CLUSTER_USER, "lensuser");
+        put(LensConfConstants.SESSION_CLUSTER_USER, "lensuser");
       }
     };
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), expected);
   }
 
   @Test
-  public void testPropertyBased() throws GrillException {
+  public void testPropertyBased() throws LensException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/propertybased.xml"));
-    conf.set(GrillConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, TestUserConfigLoader.class.getResource("/user/propertybased.txt").getPath());
+    conf.set(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, TestUserConfigLoader.class.getResource("/user/propertybased.txt").getPath());
     UserConfigLoaderFactory.init(conf);
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), new HashMap<String, String>() {
       {
-        put(GrillConfConstants.SESSION_CLUSTER_USER, "clusteruser1");
-        put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, "queue1");
+        put(LensConfConstants.SESSION_CLUSTER_USER, "clusteruser1");
+        put(LensConfConstants.MAPRED_JOB_QUEUE_NAME, "queue1");
       }
     });
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user2"), new HashMap<String, String>() {
       {
-        put(GrillConfConstants.SESSION_CLUSTER_USER, "clusteruser2");
-        put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, "queue2");
+        put(LensConfConstants.SESSION_CLUSTER_USER, "clusteruser2");
+        put(LensConfConstants.MAPRED_JOB_QUEUE_NAME, "queue2");
       }
     });
   }
@@ -99,7 +99,7 @@ public class TestUserConfigLoader {
   }
 
   @Test
-  public void testDatabase() throws GrillException, SQLException, LiquibaseException {
+  public void testDatabase() throws LensException, SQLException, LiquibaseException {
     String path = "target/queries.db";
     String dbName = "main";
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/database.xml"));
@@ -114,15 +114,15 @@ public class TestUserConfigLoader {
     for(final String[] sa: valuesToVerify) {
       Assert.assertEquals(UserConfigLoaderFactory.getUserConfig(sa[0]), new HashMap<String, String>() {
         {
-          put(GrillConfConstants.SESSION_CLUSTER_USER, sa[1]);
-          put(GrillConfConstants.MAPRED_JOB_QUEUE_NAME, sa[2]);
+          put(LensConfConstants.SESSION_CLUSTER_USER, sa[1]);
+          put(LensConfConstants.MAPRED_JOB_QUEUE_NAME, sa[2]);
         }
       });
     }
   }
 
   @Test
-  public void testCustom() throws GrillException {
+  public void testCustom() throws LensException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/custom.xml"));
     UserConfigLoaderFactory.init(conf);
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), FooBarConfigLoader.CONST_HASH_MAP);

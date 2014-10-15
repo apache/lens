@@ -26,7 +26,7 @@ import java.util.Set;
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.GrillApplicationListener;
+import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -40,7 +40,7 @@ public class QueryApp extends Application {
       classes.add(QueryServiceResource.class);
       classes.add(MultiPartFeature.class);
       classes.add(LoggingFilter.class);
-      classes.add(GrillApplicationListener.class);
+      classes.add(LensApplicationListener.class);
       return classes;
   }
 }

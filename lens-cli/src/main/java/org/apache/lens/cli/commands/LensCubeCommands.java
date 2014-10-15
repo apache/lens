@@ -35,7 +35,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
-public class LensCubeCommands extends BaseGrillCommand implements CommandMarker {
+public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "show cubes", help = "show list of cubes in database")
   public String showCubes() {

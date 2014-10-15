@@ -23,14 +23,14 @@ package org.apache.lens.server.api.events;
 
 import java.util.concurrent.*;
 
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 
 /**
  * Event listeners should implement this class if they wish to process events asynchronously.
  * This should be used when event processing can block, or is computationally intensive.
  * @param <T>
  */
-public abstract class AsyncEventListener<T extends GrillEvent> implements GrillEventListener<T> {
+public abstract class AsyncEventListener<T extends LensEvent> implements LensEventListener<T> {
   protected final ThreadPoolExecutor processor;
   protected final BlockingQueue<Runnable> eventQueue;
 
@@ -79,10 +79,10 @@ public abstract class AsyncEventListener<T extends GrillEvent> implements GrillE
   /**
    * Creates a new runnable and calls the process method in it
    * @param event
-   * @throws GrillException
+   * @throws LensException
    */
   @Override
-  public void onEvent(final T event) throws GrillException {
+  public void onEvent(final T event) throws LensException {
     try {
       processor.execute(new Runnable() {
         @Override
@@ -91,7 +91,7 @@ public abstract class AsyncEventListener<T extends GrillEvent> implements GrillE
         }
       });
     } catch (RejectedExecutionException rejected) {
-      throw new GrillException(rejected);
+      throw new LensException(rejected);
     }
   }
 

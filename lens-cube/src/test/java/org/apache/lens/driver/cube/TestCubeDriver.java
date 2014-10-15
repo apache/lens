@@ -27,13 +27,13 @@ import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.driver.cube.CubeGrillDriver;
+import org.apache.lens.driver.cube.CubeDriver;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.GrillDriver;
-import org.apache.lens.server.api.driver.GrillResultSet;
+import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.driver.LensResultSet;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -43,11 +43,11 @@ import org.testng.annotations.Test;
 public class TestCubeDriver {
 
   Configuration conf = new Configuration();
-  CubeGrillDriver cubeDriver;
+  CubeDriver cubeDriver;
 
   @BeforeTest
   public void beforeTest() throws Exception {
-    cubeDriver = new CubeGrillDriver(conf);
+    cubeDriver = new CubeDriver(conf);
     conf.setInt("mock.driver.test.val", 5);
   }
 
@@ -58,7 +58,7 @@ public class TestCubeDriver {
   @Test
   public void testCubeDriver() throws Exception {
     String addQ = "add jar xyz.jar";
-    GrillResultSet result = cubeDriver.execute(addQ, conf);
+    LensResultSet result = cubeDriver.execute(addQ, conf);
     Assert.assertNotNull(result);
     Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, addQ);
 
@@ -86,7 +86,7 @@ public class TestCubeDriver {
     Throwable th = null;
     try {
       cubeDriver.getStatus(handle);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       th = e;
     }
     Assert.assertNotNull(th);
@@ -95,7 +95,7 @@ public class TestCubeDriver {
   @Test
   public void testCubeDriverReadWrite() throws Exception {
     // Test read/write for cube driver
-    CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
+    CubeDriver cubeDriver = new CubeDriver(conf);
     ByteArrayOutputStream driverOut = new ByteArrayOutputStream();
     ObjectOutputStream out = new ObjectOutputStream(driverOut);
     cubeDriver.writeExternal(out);
@@ -104,12 +104,12 @@ public class TestCubeDriver {
     
     ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
     conf.setInt("mock.driver.test.val", -1);
-    CubeGrillDriver newDriver = new CubeGrillDriver(conf);
+    CubeDriver newDriver = new CubeDriver(conf);
     newDriver.readExternal(new ObjectInputStream(driverIn));
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
     
-    for (GrillDriver driver : newDriver.getDrivers()) {
+    for (LensDriver driver : newDriver.getDrivers()) {
       if (driver instanceof MockDriver) {
         MockDriver md = (MockDriver) driver;
         Assert.assertEquals(md.getTestIOVal(), 5);
@@ -120,7 +120,7 @@ public class TestCubeDriver {
   @Test
   public void testCubeDriverRestart() throws Exception {
     // Test read/write for cube driver
-    CubeGrillDriver cubeDriver = new CubeGrillDriver(conf);
+    CubeDriver cubeDriver = new CubeDriver(conf);
     String query = "select name from table";
     QueryHandle handle = cubeDriver.executeAsync(query, conf);
 
@@ -131,7 +131,7 @@ public class TestCubeDriver {
     System.out.println(Arrays.toString(driverOut.toByteArray()));
     
     ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
-    CubeGrillDriver newDriver = new CubeGrillDriver(conf);
+    CubeDriver newDriver = new CubeDriver(conf);
     newDriver.readExternal(new ObjectInputStream(driverIn));
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());

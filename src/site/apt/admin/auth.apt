@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -19,7 +19,7 @@
 ~~~
 Authentication and Authorization guide
 
-  GrillServer uses authentication model from Hive service.
+  LensServer uses authentication model from Hive service.
   The same configuration parameters available in hive can be set for lens server.
   Hive auth documentation is available at:
   {{{https://cwiki.apache.org/confluence/display/Hive/Setting+Up+HiveServer2} Hive Doc}} and 

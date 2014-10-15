@@ -51,14 +51,14 @@ import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.apache.hive.service.cli.thrift.TOperationHandle;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.events.GrillEventListener;
+import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -66,7 +66,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
 
-public class HiveDriver implements GrillDriver {
+public class HiveDriver implements LensDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
 
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
@@ -91,7 +91,7 @@ public class HiveDriver implements GrillDriver {
   private ThriftConnection embeddedConnection;
   // Store mapping of Lens session ID to Hive session identifier
   private Map<String, SessionHandle> lensToHiveSession;
-  private List<GrillEventListener<DriverEvent>> driverListeners;
+  private List<LensEventListener<DriverEvent>> driverListeners;
 
   class ConnectionExpiryRunnable implements Runnable {
     @Override
@@ -171,14 +171,14 @@ public class HiveDriver implements GrillDriver {
   private boolean isEmbedded;
   private long connectionExpiryTimeout; 
 
-  public HiveDriver() throws GrillException {
+  public HiveDriver() throws LensException {
     this.sessionLock = new ReentrantLock();
     this.connectionLock = new ReentrantLock();
     lensToHiveSession = new HashMap<String, SessionHandle>();
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
-    driverListeners = new ArrayList<GrillEventListener<DriverEvent>>();
+    driverListeners = new ArrayList<LensEventListener<DriverEvent>>();
     LOG.info("Hive driver inited");
   }
 
@@ -188,7 +188,7 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public void configure(Configuration conf) throws GrillException {
+  public void configure(Configuration conf) throws LensException {
     this.driverConf = new HiveConf(conf, HiveDriver.class);;
     this.driverConf.addResource("hivedriver-default.xml");
     this.driverConf.addResource("hivedriver-site.xml");
@@ -203,10 +203,10 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public DriverQueryPlan explain(final String query, final Configuration conf)
-      throws GrillException {
+      throws LensException {
     LOG.info("Explain: " + query);
     Configuration explainConf = new Configuration(conf);
-    explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String explainQuery = "EXPLAIN EXTENDED " + query;
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
     // Get result set of explain
@@ -221,7 +221,7 @@ public class HiveDriver implements GrillDriver {
       return new HiveQueryPlan(explainOutput, null,
           this.driverConf);
     } catch (HiveException e) {
-      throw new GrillException("Unable to create hive query plan", e);
+      throw new LensException("Unable to create hive query plan", e);
     }
   }
 
@@ -232,25 +232,25 @@ public class HiveDriver implements GrillDriver {
 
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
-      throws GrillException {
+      throws LensException {
     DriverQueryPlan plan = explain(pContext.getDriverQuery(), pContext.getConf());
     plan.setPrepareHandle(pContext.getPrepareHandle());
     return plan;
   }
 
   @Override
-  public void prepare(PreparedQueryContext pContext) throws GrillException {
+  public void prepare(PreparedQueryContext pContext) throws LensException {
     // NO OP
   }
 
   @Override
   public void closePreparedQuery(QueryPrepareHandle handle)
-      throws GrillException {
+      throws LensException {
     // NO OP
 
   }
 
-  public GrillResultSet execute(QueryContext ctx) throws GrillException {
+  public LensResultSet execute(QueryContext ctx) throws LensException {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
@@ -264,9 +264,9 @@ public class HiveDriver implements GrillDriver {
       OperationStatus status = getClient().getOperationStatus(op);
 
       if (status.getState() == OperationState.ERROR) {
-        throw new GrillException("Unknown error while running query " + ctx.getUserQuery());
+        throw new LensException("Unknown error while running query " + ctx.getUserQuery());
       }
-      GrillResultSet result = createResultSet(ctx, true);
+      LensResultSet result = createResultSet(ctx, true);
       // close the query immediately if the result is not inmemory result set
       if (result == null || !(result instanceof HiveInMemoryResultSet)) {
         closeQuery(ctx.getQueryHandle());
@@ -275,16 +275,16 @@ public class HiveDriver implements GrillDriver {
       hiveHandles.remove(ctx.getQueryHandle());
       return result;
     } catch (IOException e) {
-      throw new GrillException("Error adding persistent path" , e);
+      throw new LensException("Error adding persistent path" , e);
     } catch (HiveSQLException hiveErr) {
       handleHiveServerError(ctx, hiveErr);
-      throw new GrillException("Error executing query" , hiveErr);
+      throw new LensException("Error executing query" , hiveErr);
     }
   }
 
   @Override
   public void executeAsync(QueryContext ctx)
-      throws GrillException {
+      throws LensException {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
@@ -295,15 +295,15 @@ public class HiveDriver implements GrillDriver {
       LOG.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
       hiveHandles.put(ctx.getQueryHandle(), op);
     } catch (IOException e) {
-      throw new GrillException("Error adding persistent path" , e);
+      throw new LensException("Error adding persistent path" , e);
     } catch (HiveSQLException e) {
       handleHiveServerError(ctx, e);
-      throw new GrillException("Error executing async query", e);
+      throw new LensException("Error executing async query", e);
     }
   }
 
   @Override
-  public synchronized void updateStatus(QueryContext context)  throws GrillException {
+  public synchronized void updateStatus(QueryContext context)  throws LensException {
     LOG.debug("GetStatus: " + context.getQueryHandle());
     if (context.getDriverStatus().isFinished()) {
       return;
@@ -350,7 +350,7 @@ public class HiveDriver implements GrillDriver {
         break;
       case UNKNOWN:
       default :
-        throw new GrillException("Query is in unknown state at HiveServer");
+        throw new LensException("Query is in unknown state at HiveServer");
       }
 
       float progress = 0f;
@@ -392,7 +392,7 @@ public class HiveDriver implements GrillDriver {
     } catch (Exception e) {
       LOG.error("Error getting query status", e);
       handleHiveServerError(context, e);
-      throw new GrillException("Error getting query status", e);
+      throw new LensException("Error getting query status", e);
     } finally {
       if (in != null) {
         try {
@@ -413,19 +413,19 @@ public class HiveDriver implements GrillDriver {
   }
 
   @Override
-  public GrillResultSet fetchResultSet(QueryContext ctx)  throws GrillException {
+  public LensResultSet fetchResultSet(QueryContext ctx)  throws LensException {
     LOG.info("FetchResultSet: " + ctx.getQueryHandle());
     // This should be applicable only for a async query
     return createResultSet(ctx, false);
   }
 
   @Override
-  public void closeResultSet(QueryHandle handle) throws GrillException {
+  public void closeResultSet(QueryHandle handle) throws LensException {
     // NO OP ?
   }
 
   @Override
-  public void closeQuery(QueryHandle handle) throws GrillException {
+  public void closeQuery(QueryHandle handle) throws LensException {
     LOG.info("CloseQuery: " + handle);
     OperationHandle opHandle = hiveHandles.remove(handle);
     if (opHandle != null) {
@@ -434,13 +434,13 @@ public class HiveDriver implements GrillDriver {
         getClient().closeOperation(opHandle);
       } catch (HiveSQLException e) {
         checkInvalidOperation(handle, e);
-        throw new GrillException("Unable to close query", e);
+        throw new LensException("Unable to close query", e);
       }
     }
   }
 
   @Override
-  public boolean cancelQuery(QueryHandle handle)  throws GrillException {
+  public boolean cancelQuery(QueryHandle handle)  throws LensException {
     LOG.info("CancelQuery: " + handle);
     OperationHandle hiveHandle = getHiveHandle(handle);
     try {
@@ -449,7 +449,7 @@ public class HiveDriver implements GrillDriver {
       return true;
     } catch (HiveSQLException e) {
       checkInvalidOperation(handle, e);
-      throw new GrillException();
+      throw new LensException();
     }
   }
 
@@ -480,17 +480,17 @@ public class HiveDriver implements GrillDriver {
    * @param driverEventListener
    */
   @Override
-  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+  public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
     driverListeners.add(driverEventListener);
   }
 
-  protected CLIServiceClient getClient() throws GrillException {
+  protected CLIServiceClient getClient() throws LensException {
     if (isEmbedded) {
       if (embeddedConnection == null) {
         try {
           embeddedConnection = connectionClass.newInstance();
         } catch (Exception e) {
-          throw new GrillException(e);
+          throw new LensException(e);
         }
         LOG.info("New thrift connection " + connectionClass);
       }
@@ -520,7 +520,7 @@ public class HiveDriver implements GrillDriver {
                 + Thread.currentThread().getId() + " for user:" + user
                 + " connection ID=" + connection.getConnId() );
           } catch (Exception e) {
-            throw new GrillException(e);
+            throw new LensException(e);
           }
         } else {
           synchronized (thriftConnExpiryQueue) {
@@ -536,8 +536,8 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  private GrillResultSet createResultSet(QueryContext context, boolean closeAfterFetch)
-      throws GrillException {
+  private LensResultSet createResultSet(QueryContext context, boolean closeAfterFetch)
+      throws LensException {
     OperationHandle op = getHiveHandle(context.getQueryHandle());
     LOG.info("Creating result set for hiveHandle:" + op);
     try {
@@ -555,15 +555,15 @@ public class HiveDriver implements GrillDriver {
       }
     } catch (HiveSQLException hiveErr) {
       handleHiveServerError(context, hiveErr);
-      throw new GrillException("Error creating result set", hiveErr);
+      throw new LensException("Error creating result set", hiveErr);
     }
   }
 
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
     if (context.isDriverPersistent() &&
-        context.getConf().getBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE,
-            GrillConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
+        context.getConf().getBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE,
+            LensConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
       // store persistent data into user specified location
       // If absent, take default home directory
       Path resultSetPath = context.getHDFSResultDir();
@@ -573,7 +573,7 @@ public class HiveDriver implements GrillDriver {
           resultSetPath.getFileSystem(context.getConf())).toString());
       builder.append('"').append(resultSetPath).append("\" ");
       String outputDirFormat = context.getConf().get(
-          GrillConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT);
+          LensConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT);
       if (outputDirFormat != null) {
         builder.append(outputDirFormat);
       }
@@ -586,7 +586,7 @@ public class HiveDriver implements GrillDriver {
     context.setDriverQuery(hiveQuery);
   }
 
-  private SessionHandle getSession(QueryContext ctx) throws GrillException {
+  private SessionHandle getSession(QueryContext ctx) throws LensException {
     sessionLock.lock();
     try {
       String lensSession = ctx.getLensSessionIdentifier();
@@ -606,7 +606,7 @@ public class HiveDriver implements GrillDriver {
           LOG.info("New hive session for user: " + ctx.getClusterUser() +
               ", lens session: " + lensSession + " session handle: " +
               hiveSession.getHandleIdentifier());
-          for (GrillEventListener<DriverEvent> eventListener : driverListeners) {
+          for (LensEventListener<DriverEvent> eventListener : driverListeners) {
             try {
               eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this,
                 lensSession, hiveSession.getSessionId().toString()));
@@ -615,7 +615,7 @@ public class HiveDriver implements GrillDriver {
             }
           }
         } catch (Exception e) {
-          throw new GrillException(e);
+          throw new LensException(e);
         }
       } else {
         hiveSession = lensToHiveSession.get(lensSession);
@@ -626,10 +626,10 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  private OperationHandle getHiveHandle(QueryHandle handle) throws GrillException {
+  private OperationHandle getHiveHandle(QueryHandle handle) throws LensException {
     OperationHandle opHandle = hiveHandles.get(handle);
     if (opHandle == null) {
-      throw new GrillException("Query not found " + handle); 
+      throw new LensException("Query not found " + handle); 
     }
     return opHandle;
   }
@@ -642,7 +642,7 @@ public class HiveDriver implements GrillDriver {
     QueryHandle handle;
 
     QueryCompletionNotifier(QueryHandle handle, long timeoutMillis,
-        QueryCompletionListener listener) throws GrillException {
+        QueryCompletionListener listener) throws LensException {
       hiveHandle = getHiveHandle(handle);
       this.timeoutMillis = timeoutMillis;
       this.listener = listener;
@@ -671,12 +671,12 @@ public class HiveDriver implements GrillDriver {
       listener.onError(handle, error);
     }
 
-    private boolean isFinished(OperationHandle hiveHandle) throws GrillException {
+    private boolean isFinished(OperationHandle hiveHandle) throws LensException {
       OperationState state;
       try {
         state = getClient().getOperationStatus(hiveHandle).getState();
       } catch (HiveSQLException e) {
-        throw new GrillException("Could not get Status", e);
+        throw new LensException("Could not get Status", e);
       }
       if (state.equals(OperationState.FINISHED) ||
           state.equals(OperationState.CANCELED) ||
@@ -691,7 +691,7 @@ public class HiveDriver implements GrillDriver {
   @Override
   public void registerForCompletionNotification(QueryHandle handle,
       long timeoutMillis, QueryCompletionListener listener)
-          throws GrillException {
+          throws LensException {
     Thread th = new Thread(new QueryCompletionNotifier(handle, timeoutMillis, listener));
     th.start();
   }
@@ -813,7 +813,7 @@ public class HiveDriver implements GrillDriver {
     }
   }
 
-  public void closeSession(GrillSessionHandle sessionHandle) {
+  public void closeSession(LensSessionHandle sessionHandle) {
     sessionLock.lock();
     try {
       SessionHandle hiveSession = lensToHiveSession.remove(sessionHandle.getPublicId().toString());
@@ -853,7 +853,7 @@ public class HiveDriver implements GrillDriver {
   }
 
   // For test
-  public boolean hasLensSession(GrillSessionHandle session) {
+  public boolean hasLensSession(LensSessionHandle session) {
     return lensToHiveSession.containsKey(session.getPublicId().toString());
   }
 }

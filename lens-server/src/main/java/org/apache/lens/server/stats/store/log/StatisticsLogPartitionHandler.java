@@ -28,11 +28,11 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.stats.event.LoggableGrillStatistics;
+import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,11 +56,11 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
 
 
   public void initialize(Configuration conf) {
-    String temp = conf.get(GrillConfConstants.STATISTICS_WAREHOUSE_KEY,
-        GrillConfConstants.DEFAULT_STATISTICS_WAREHOUSE);
+    String temp = conf.get(LensConfConstants.STATISTICS_WAREHOUSE_KEY,
+        LensConfConstants.DEFAULT_STATISTICS_WAREHOUSE);
     warehousePath = new Path(temp);
-    database = conf.get(GrillConfConstants.STATISTICS_DATABASE_KEY,
-        GrillConfConstants.DEFAULT_STATISTICS_DATABASE);
+    database = conf.get(LensConfConstants.STATISTICS_DATABASE_KEY,
+        LensConfConstants.DEFAULT_STATISTICS_DATABASE);
     try {
       client = Hive.get();
     } catch (Exception e) {
@@ -84,7 +84,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
           new File(entry.getValue()).delete();
         }
       } catch (Exception e) {
-        MetricsService svc = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+        MetricsService svc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
         svc.incrCounter(StatisticsLogPartitionHandler.class, LOG_PARTITION_HANDLER_COUNTER);
         LOG.error("Unable to copy file to the file system", e);
       }
@@ -127,9 +127,9 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
       Database db = new Database();
       db.setName(database);
       client.createDatabase(db, true);
-      Class<LoggableGrillStatistics> statisticsClass = (Class<LoggableGrillStatistics>)
+      Class<LoggableLensStatistics> statisticsClass = (Class<LoggableLensStatistics>)
           Class.forName(className);
-      LoggableGrillStatistics stat = statisticsClass.newInstance();
+      LoggableLensStatistics stat = statisticsClass.newInstance();
       Configuration conf = new Configuration();
       conf.addResource("hive-site.xml");
       tmp = stat.getHiveTable(conf);

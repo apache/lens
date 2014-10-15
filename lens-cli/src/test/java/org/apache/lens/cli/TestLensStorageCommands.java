@@ -23,7 +23,7 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensStorageCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -32,7 +32,7 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestLensStorageCommands extends GrillCliApplicationTest {
+public class TestLensStorageCommands extends LensCliApplicationTest {
 
   private static LensStorageCommands command;
   private static final Logger LOG = LoggerFactory.getLogger(TestLensStorageCommands.class);
@@ -48,7 +48,7 @@ public class TestLensStorageCommands extends GrillCliApplicationTest {
 
   private static LensStorageCommands getCommand() {
     if(command == null) {
-      GrillClient client = new GrillClient();
+      LensClient client = new LensClient();
       command = new LensStorageCommands();
       command.setClient(client);
     }

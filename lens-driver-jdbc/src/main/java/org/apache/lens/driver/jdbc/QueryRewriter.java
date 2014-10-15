@@ -23,8 +23,8 @@ package org.apache.lens.driver.jdbc;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 
 public interface QueryRewriter {
-  public String rewrite(Configuration conf, String query) throws GrillException;
+  public String rewrite(Configuration conf, String query) throws LensException;
 }

@@ -25,21 +25,21 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.events.GrillEvent;
-import org.apache.lens.server.api.events.GrillEventListener;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.events.LensEvent;
+import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.events.LensEventService;
 
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class EventServiceImpl extends AbstractService implements GrillEventService {
+public class EventServiceImpl extends AbstractService implements LensEventService {
   public static final Log LOG = LogFactory.getLog(EventServiceImpl.class);
-  private final Map<Class<? extends GrillEvent>, List<GrillEventListener>> eventListeners =
-    new HashMap<Class<? extends GrillEvent>, List<GrillEventListener>>();
+  private final Map<Class<? extends LensEvent>, List<LensEventListener>> eventListeners =
+    new HashMap<Class<? extends LensEvent>, List<LensEventListener>>();
   private ExecutorService eventHandlerPool;
 
   public EventServiceImpl(String name) {
@@ -50,28 +50,28 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   public synchronized void init(HiveConf hiveConf) {
     int numProcs = Runtime.getRuntime().availableProcessors();
     eventHandlerPool =
-      Executors.newFixedThreadPool(hiveConf.getInt(GrillConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
+      Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
     super.init(hiveConf);
   }
 
   @SuppressWarnings("unchecked")
-  protected final Class<? extends GrillEvent> getListenerType(GrillEventListener listener) {
+  protected final Class<? extends LensEvent> getListenerType(LensEventListener listener) {
     for (Method m : listener.getClass().getMethods()) {
-      if (GrillEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
+      if (LensEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
         // Found handler method
-        return  (Class<? extends GrillEvent>) m.getParameterTypes()[0];
+        return  (Class<? extends LensEvent>) m.getParameterTypes()[0];
       }
     }
     return null;
   }
 
   @Override
-  public void addListener(GrillEventListener listener) {
-    Class<? extends GrillEvent> listenerEventType = getListenerType(listener);
+  public void addListener(LensEventListener listener) {
+    Class<? extends LensEvent> listenerEventType = getListenerType(listener);
     synchronized (eventListeners) {
-      List<GrillEventListener> listeners = eventListeners.get(listenerEventType);
+      List<LensEventListener> listeners = eventListeners.get(listenerEventType);
       if (listeners == null) {
-        listeners = new ArrayList<GrillEventListener>();
+        listeners = new ArrayList<LensEventListener>();
         eventListeners.put(listenerEventType, listeners);
       }
       listeners.add(listener);
@@ -80,9 +80,9 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   }
 
   @Override
-  public void removeListener(GrillEventListener listener) {
+  public void removeListener(LensEventListener listener) {
     synchronized (eventListeners) {
-      for (List<GrillEventListener> listeners : eventListeners.values()) {
+      for (List<LensEventListener> listeners : eventListeners.values()) {
         if (listeners.remove(listener)) {
           LOG.info("Removed listener " + listener);
         }
@@ -91,9 +91,9 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   }
 
   @SuppressWarnings("unchecked")
-  private void handleEvent(List<GrillEventListener> listeners, GrillEvent evt) {
+  private void handleEvent(List<LensEventListener> listeners, LensEvent evt) {
     if (listeners != null && !listeners.isEmpty()) {
-      for (GrillEventListener listener : listeners) {
+      for (LensEventListener listener : listeners) {
         try {
           listener.onEvent(evt);
         } catch (Exception exc) {
@@ -104,20 +104,20 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   }
 
   private final class EventHandler implements Runnable {
-    final GrillEvent event;
+    final LensEvent event;
 
-    EventHandler(GrillEvent event) {
+    EventHandler(LensEvent event) {
       this.event = event;
     }
 
     public void run() {
-      Class<? extends GrillEvent> evtClass = event.getClass();
+      Class<? extends LensEvent> evtClass = event.getClass();
       // Call listeners directly listening for this event type
       handleEvent(eventListeners.get(evtClass), event);
       Class<?> superClass =  evtClass.getSuperclass();
 
       // Call listeners which listen of super types of this event type
-      while (GrillEvent.class.isAssignableFrom(superClass)) {
+      while (LensEvent.class.isAssignableFrom(superClass)) {
         if (eventListeners.containsKey(superClass)) {
           handleEvent(eventListeners.get(superClass), event);
         }
@@ -128,9 +128,9 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
 
   @SuppressWarnings("unchecked")
   @Override
-  public void notifyEvent(final GrillEvent evt) throws GrillException {
+  public void notifyEvent(final LensEvent evt) throws LensException {
     if (getServiceState() != STATE.STARTED) {
-      throw new GrillException("Event service is not in STARTED state. Current state is " + getServiceState());
+      throw new LensException("Event service is not in STARTED state. Current state is " + getServiceState());
     }
 
     if (evt == null) {
@@ -140,7 +140,7 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   }
 
   @Override
-  public Collection<GrillEventListener> getListeners(Class<? extends GrillEvent> eventType) {
+  public Collection<LensEventListener> getListeners(Class<? extends LensEvent> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
@@ -166,16 +166,16 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
     LOG.info("Event service stopped");
   }
 
-  public Map<Class<? extends GrillEvent>, List<GrillEventListener>> getEventListeners() {
+  public Map<Class<? extends LensEvent>, List<LensEventListener>> getEventListeners() {
     return eventListeners;
   }
 
   @Override
-  public void addListenerForType(GrillEventListener listener, Class<? extends GrillEvent> eventType) {
+  public void addListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
     synchronized (eventListeners) {
-      List<GrillEventListener> listeners = eventListeners.get(eventType);
+      List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners == null) {
-        listeners = new ArrayList<GrillEventListener>();
+        listeners = new ArrayList<LensEventListener>();
         eventListeners.put(eventType, listeners);
       }
       listeners.add(listener);
@@ -184,10 +184,10 @@ public class EventServiceImpl extends AbstractService implements GrillEventServi
   }
 
   @Override
-  public void removeListenerForType(GrillEventListener listener,
-      Class<? extends GrillEvent> eventType) {
+  public void removeListenerForType(LensEventListener listener,
+      Class<? extends LensEvent> eventType) {
     synchronized (eventListeners) {
-      List<GrillEventListener> listeners = eventListeners.get(eventType);
+      List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners != null) {
         if (listeners.remove(listener)) {
           LOG.info("Removed listener " + listener);

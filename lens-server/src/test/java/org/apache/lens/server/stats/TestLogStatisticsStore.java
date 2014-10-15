@@ -1,7 +1,7 @@
 package org.apache.lens.server.stats;
  /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -22,8 +22,8 @@ package org.apache.lens.server.stats;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.lens.server.stats.event.GrillStatistics;
-import org.apache.lens.server.stats.event.LoggableGrillStatistics;
+import org.apache.lens.server.stats.event.LensStatistics;
+import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.log.LogStatisticsStore;
 import org.apache.lens.server.stats.store.log.StatisticsLogLayout;
 import org.apache.log4j.Logger;
@@ -36,8 +36,8 @@ import java.io.StringWriter;
 public class TestLogStatisticsStore {
 
 
-  private static class MyLoggableGrill extends LoggableGrillStatistics {
-    public MyLoggableGrill(long eventTime) {
+  private static class MyLoggableLens extends LoggableLensStatistics {
+    public MyLoggableLens(long eventTime) {
       super(eventTime);
     }
 
@@ -58,12 +58,12 @@ public class TestLogStatisticsStore {
     store.initialize(new Configuration());
     //Do some initialization work
     StringWriter writer = new StringWriter();
-    Logger l = Logger.getLogger(MyLoggableGrill.class);
+    Logger l = Logger.getLogger(MyLoggableLens.class);
     WriterAppender appender = new WriterAppender(new StatisticsLogLayout(), writer);
 
-    appender.setName(MyLoggableGrill.class.getSimpleName());
+    appender.setName(MyLoggableLens.class.getSimpleName());
     l.addAppender(appender);
-    MyLoggableGrill sampleEvent = new MyLoggableGrill(System.currentTimeMillis());
+    MyLoggableLens sampleEvent = new MyLoggableLens(System.currentTimeMillis());
     store.process(sampleEvent);
     writer.flush();
     l.removeAppender(appender);

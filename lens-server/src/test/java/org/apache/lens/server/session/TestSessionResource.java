@@ -26,14 +26,14 @@ import java.net.URLClassLoader;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.server.GrillJerseyTest;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.SessionApp;
 import org.glassfish.jersey.client.ClientConfig;
@@ -54,7 +54,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Test(groups="unit-test")
-public class TestSessionResource extends GrillJerseyTest {
+public class TestSessionResource extends LensJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -92,11 +92,11 @@ public class TestSessionResource extends GrillJerseyTest {
         "bar"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(handle);
 
     // get all session params
@@ -156,8 +156,8 @@ public class TestSessionResource extends GrillJerseyTest {
     Assert.assertTrue(sessionParams.getElements().size() > 1);
 
     // Create another session 
-    final GrillSessionHandle handle2 = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle handle2 = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(handle);
 
     // get myvar session params on handle2
@@ -196,11 +196,11 @@ public class TestSessionResource extends GrillJerseyTest {
         "bar"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(handle);
 
     // add a resource
@@ -235,12 +235,12 @@ public class TestSessionResource extends GrillJerseyTest {
   }
 
   @Test
-  public void testAuxJars() throws GrillException {
+  public void testAuxJars() throws LensException {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
-    final GrillConf sessionconf = new GrillConf();
+    final LensConf sessionconf = new LensConf();
 
-    sessionconf.addProperty(GrillConfConstants.AUX_JARS, "test-util/test-aux.jar");
+    sessionconf.addProperty(LensConfConstants.AUX_JARS, "test-util/test-aux.jar");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
         "foo"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
@@ -251,15 +251,15 @@ public class TestSessionResource extends GrillJerseyTest {
         MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle handle = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(handle);
 
     // verify aux jars are loaded
-    HiveSessionService service = (HiveSessionService)GrillServices.get().getService(HiveSessionService.NAME);
+    HiveSessionService service = (HiveSessionService)LensServices.get().getService(HiveSessionService.NAME);
     ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
     boolean found = false;
     for (URL path : ((URLClassLoader)loader).getURLs()) {
@@ -285,7 +285,7 @@ public class TestSessionResource extends GrillJerseyTest {
       "b"));
     mp.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-      new GrillConf(),
+      new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
 
     final Response handle = target.request().post(

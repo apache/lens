@@ -36,7 +36,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.lib.query.FileSerdeFormatter;
 import org.apache.lens.lib.query.WrappedFileFormatter;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -47,16 +47,16 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   @Test
   public void testFormatter() throws IOException {
     super.testFormatter();
-    validateSerde(GrillConfConstants.DEFAULT_OUTPUT_SERDE, Text.class.getCanonicalName());
+    validateSerde(LensConfConstants.DEFAULT_OUTPUT_SERDE, Text.class.getCanonicalName());
   }
 
   @Test
   public void testSerde() throws IOException {
     Configuration conf = new Configuration();
-    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
-    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",getMockedResultSetWithoutComma());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(),
         Text.class.getCanonicalName());
 
@@ -68,11 +68,11 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   @Test
   public void testCompressionWithCustomSerde() throws IOException {
     Configuration conf = new Configuration();
-    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
-    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
-    conf.setBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
+    conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz",getMockedResultSetWithoutComma());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz",getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(),
         Text.class.getCanonicalName());
     // validate rows
@@ -84,12 +84,12 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   public void testTextFileWithZipFormatter() throws IOException {
     Configuration conf = new Configuration();
     setConf(conf);
-    conf.set(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
-    conf.set(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
-    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
-    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
+    conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    conf.setBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSetWithoutComma());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSetWithoutComma());
     // validate rows
     List<String> actual = readZipOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
@@ -100,10 +100,10 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   public void testCSVWithZipFormatter() throws IOException {
     Configuration conf = new Configuration();
     setConf(conf);
-    conf.setBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
-    conf.setLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
+    conf.setBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
+    conf.setLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8",
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSet());
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",getMockedResultSet());
     // validate rows
     List<String> actual = readZipOutputFile(
         new Path(formatter.getFinalOutputPath()), conf, "UTF-8");

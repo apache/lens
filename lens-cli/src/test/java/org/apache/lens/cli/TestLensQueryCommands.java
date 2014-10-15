@@ -26,7 +26,7 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -37,12 +37,12 @@ import java.io.*;
 import java.net.URL;
 import java.util.UUID;
 
-public class TestLensQueryCommands extends GrillCliApplicationTest {
+public class TestLensQueryCommands extends LensCliApplicationTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(
       TestLensQueryCommands.class);
 
-  private GrillClient client;
+  private LensClient client;
 
   private static String explainPlan = "TOK_QUERY\n" +
       "   TOK_FROM\n" +
@@ -75,7 +75,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
 
   @Test
   public void testQueryCommands() throws Exception {
-    client = new GrillClient();
+    client = new LensClient();
     client.setConnectionParam("lens.query.enable.persistent.resultset.indriver", "false");
     setup(client);
     LensQueryCommands qCom = new LensQueryCommands();
@@ -149,7 +149,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
     long submitTime = System.currentTimeMillis();
     String qh = qCom.executeQuery(sql, true, "testQuery1");
     String user =
-      qCom.getClient().getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
+      qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
     String result = qCom.getAllQueries("", "testQuery1", user, -1, Long.MAX_VALUE);
     //this is because previous query has run two query handle will be there
     Assert.assertTrue(result.contains(qh), result);
@@ -182,7 +182,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
     }
 
     String queryName =
-      client.getGrillStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
+      client.getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
     Assert.assertTrue("testQuery1".equalsIgnoreCase(queryName), queryName);
     result = qCom.getAllQueries("", "", "", submitTime, System.currentTimeMillis());
     Assert.assertTrue(result.contains(qh), result);
@@ -209,7 +209,7 @@ public class TestLensQueryCommands extends GrillCliApplicationTest {
   }
 
 
-  public void setup(GrillClient client) throws Exception {
+  public void setup(LensClient client) throws Exception {
     LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
 

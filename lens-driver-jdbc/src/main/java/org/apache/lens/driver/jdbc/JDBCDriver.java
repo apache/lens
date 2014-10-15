@@ -27,15 +27,15 @@ import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.driver.cube.RewriteUtil;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.events.GrillEventListener;
+import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -59,7 +59,7 @@ import static org.apache.lens.driver.jdbc.JDBCDriverConfConstants.*;
 /**
  * This driver is responsible for running queries against databases which can be queried using the JDBC API.
  */
-public class JDBCDriver implements GrillDriver {
+public class JDBCDriver implements LensDriver {
   public static final Logger LOG = Logger.getLogger(JDBCDriver.class);
   public static final AtomicInteger thid = new AtomicInteger();
 
@@ -148,9 +148,9 @@ public class JDBCDriver implements GrillDriver {
       isClosed = true;
     }
 
-    protected synchronized GrillResultSet getGrillResultSet(boolean closeAfterFetch) throws GrillException {
+    protected synchronized LensResultSet getLensResultSet(boolean closeAfterFetch) throws LensException {
       if (error != null) {
-        throw new GrillException("Query failed!", error);
+        throw new LensException("Query failed!", error);
       }
       if (lensResultSet == null) {
         lensResultSet = new JDBCResultSet(this, resultSet, closeAfterFetch);
@@ -180,7 +180,7 @@ public class JDBCDriver implements GrillDriver {
         try {
           conn = getConnection();
           result.conn = conn;
-        } catch (GrillException e) {
+        } catch (LensException e) {
           LOG.error("Error obtaining connection: " + e.getMessage(), e);
           result.error = e;
         }
@@ -227,7 +227,7 @@ public class JDBCDriver implements GrillDriver {
 
   public static class DummyQueryRewriter implements QueryRewriter {
     @Override
-    public String rewrite(Configuration conf, String query) throws GrillException {
+    public String rewrite(Configuration conf, String query) throws LensException {
       return query;
     }
   }
@@ -246,7 +246,7 @@ public class JDBCDriver implements GrillDriver {
    * @param conf The configuration object
    */
   @Override
-  public void configure(Configuration conf) throws GrillException {
+  public void configure(Configuration conf) throws LensException {
     this.conf = new Configuration(conf);
     this.conf.addResource("jdbcdriver-default.xml");
     this.conf.addResource("jdbcdriver-site.xml");
@@ -255,7 +255,7 @@ public class JDBCDriver implements GrillDriver {
     LOG.info("JDBC Driver configured");
   }
 
-  protected void init(Configuration conf) throws GrillException {
+  protected void init(Configuration conf) throws LensException {
     queryContextMap = new ConcurrentHashMap<QueryHandle, JdbcQueryContext>();
     rewriterCache = new ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter>();
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
@@ -273,7 +273,7 @@ public class JDBCDriver implements GrillDriver {
       connectionProvider = cpClass.newInstance();
     } catch (Exception e) {
       LOG.error("Error initializing connection provider: " + e.getMessage(), e);
-      throw new GrillException(e);
+      throw new LensException(e);
     }
   }
 
@@ -282,17 +282,17 @@ public class JDBCDriver implements GrillDriver {
       throw new IllegalStateException("JDBC Driver is not configured!");
   }
 
-  protected synchronized Connection getConnection() throws GrillException {
+  protected synchronized Connection getConnection() throws LensException {
     try {
       //Add here to cover the path when the queries are executed it does not
       //use the driver conf
       return connectionProvider.getConnection(conf);
     } catch (SQLException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
   }
 
-  protected synchronized QueryRewriter getQueryRewriter(Configuration conf) throws GrillException {
+  protected synchronized QueryRewriter getQueryRewriter(Configuration conf) throws LensException {
     QueryRewriter rewriter;
     Class<? extends QueryRewriter> queryRewriterClass = 
         conf.getClass(JDBC_QUERY_REWRITER_CLASS, DummyQueryRewriter.class, QueryRewriter.class);
@@ -304,37 +304,37 @@ public class JDBCDriver implements GrillDriver {
         LOG.info("Initialized :" + queryRewriterClass);
       } catch (Exception e) {
         LOG.error("Unable to create rewriter object", e);
-        throw new GrillException(e);
+        throw new LensException(e);
       }
       rewriterCache.put(queryRewriterClass, rewriter);
     }
     return rewriter;
   }
 
-  protected JdbcQueryContext getQueryContext(QueryHandle handle) throws GrillException {
+  protected JdbcQueryContext getQueryContext(QueryHandle handle) throws LensException {
     JdbcQueryContext ctx = queryContextMap.get(handle);
     if (ctx == null) {
-      throw new GrillException("Query not found:" + handle.getHandleId());
+      throw new LensException("Query not found:" + handle.getHandleId());
     }
     return ctx;
   }
 
-  protected String rewriteQuery(String query, Configuration conf) throws GrillException {
+  protected String rewriteQuery(String query, Configuration conf) throws LensException {
     // check if it is select query
     try {
       ASTNode ast = HQLParser.parseHQL(query);
       if (ast.getToken().getType() != HiveParser.TOK_QUERY) {
-        throw new GrillException("Not allowed statement:" + query);
+        throw new LensException("Not allowed statement:" + query);
       } else {
         // check for insert clause
         ASTNode dest = HQLParser.findNodeByPath(ast, HiveParser.TOK_INSERT);
         if (dest != null && ((ASTNode)(dest.getChild(0).getChild(0).getChild(0)))
             .getToken().getType() != TOK_TMP_FILE) {
-          throw new GrillException("Not allowed statement:" + query);
+          throw new LensException("Not allowed statement:" + query);
         }
       }
     } catch (ParseException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
 
     QueryRewriter rewriter = getQueryRewriter(conf);
@@ -367,15 +367,15 @@ public class JDBCDriver implements GrillDriver {
    * @param query The query should be in HiveQL(SQL like)
    * @param conf  The query configuration
    * @return The query plan object;
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public DriverQueryPlan explain(String query, Configuration conf) throws GrillException {
+  public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
     checkConfigured();
     conf = RewriteUtil.getFinalQueryConf(this, conf);
     String rewrittenQuery = rewriteQuery(query,conf);
     Configuration explainConf = new Configuration(conf);
-    explainConf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM, DEFAULT_JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
@@ -384,7 +384,7 @@ public class JDBCDriver implements GrillDriver {
     try {
     	result = executeInternal(explainQueryCtx, explainQuery);
     	if (result.error != null) {
-        throw new GrillException("Query explain failed!", result.error);
+        throw new LensException("Query explain failed!", result.error);
       }
     } finally {
     	if (result != null) {
@@ -399,10 +399,10 @@ public class JDBCDriver implements GrillDriver {
    * Prepare the given query
    *
    * @param pContext
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void prepare(PreparedQueryContext pContext) throws GrillException {
+  public void prepare(PreparedQueryContext pContext) throws LensException {
     checkConfigured();
     // Only create a prepared statement and then close it
     String rewrittenQuery = rewriteQuery(pContext.getDriverQuery(), pContext.getConf());
@@ -412,7 +412,7 @@ public class JDBCDriver implements GrillDriver {
       conn = getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
     } catch (SQLException sql) {
-      throw new GrillException(sql);
+      throw new LensException(sql);
     } finally {
       if (stmt != null) {
         try {
@@ -438,10 +438,10 @@ public class JDBCDriver implements GrillDriver {
    *
    * @param pContext
    * @return The query plan object;
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws GrillException {
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
     checkConfigured();
     String rewritten = rewriteQuery(pContext.getDriverQuery(), conf);
     prepare(pContext);
@@ -453,10 +453,10 @@ public class JDBCDriver implements GrillDriver {
    * releases all the resources held by the prepared query.
    *
    * @param handle The query handle
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void closePreparedQuery(QueryPrepareHandle handle) throws GrillException {
+  public void closePreparedQuery(QueryPrepareHandle handle) throws LensException {
     checkConfigured();
     // Do nothing
   }
@@ -466,17 +466,17 @@ public class JDBCDriver implements GrillDriver {
    *
    * @param context
    * @return returns the result set
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public GrillResultSet execute(QueryContext context) throws GrillException {
+  public LensResultSet execute(QueryContext context) throws LensException {
     checkConfigured();
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
     String rewrittenQuery = rewriteQuery(context.getDriverQuery(), RewriteUtil.getFinalQueryConf(this, conf));
     LOG.info("Execute " + context.getQueryHandle());
     QueryResult result = executeInternal(context,rewrittenQuery);
-    return result.getGrillResultSet(true);
+    return result.getLensResultSet(true);
     
   }
   
@@ -486,10 +486,10 @@ public class JDBCDriver implements GrillDriver {
    * @param context
    * @param rewrittenQuery
    * @return returns the result set
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   
-  private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws GrillException {
+  private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws LensException {
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
     queryContext.setRewrittenQuery(rewrittenQuery);
@@ -503,10 +503,10 @@ public class JDBCDriver implements GrillDriver {
    *
    * @param context The query context
    * 
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void executeAsync(QueryContext context) throws GrillException {
+  public void executeAsync(QueryContext context) throws LensException {
     checkConfigured();
     //Always use the driver rewritten query not user query. Since the
     //conf we are passing here is query context conf, we need to add jdbc xml in resource path
@@ -519,7 +519,7 @@ public class JDBCDriver implements GrillDriver {
     } catch (RejectedExecutionException e) {
       LOG.error("Query execution rejected: " + context.getQueryHandle() + " reason:" 
           + e.getMessage(), e);
-      throw new GrillException("Query execution rejected: " + context.getQueryHandle() + " reason:" 
+      throw new LensException("Query execution rejected: " + context.getQueryHandle() + " reason:" 
           + e.getMessage(), e);
     }
     queryContextMap.put(context.getQueryHandle(), jdbcCtx);
@@ -532,11 +532,11 @@ public class JDBCDriver implements GrillDriver {
    * @param handle
    * @param timeoutMillis
    * @param listener
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
   public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, 
-      QueryCompletionListener listener) throws GrillException {
+      QueryCompletionListener listener) throws LensException {
     checkConfigured();
     getQueryContext(handle).setListener(listener);
   }
@@ -547,7 +547,7 @@ public class JDBCDriver implements GrillDriver {
    * @param context The query handle
    */
   @Override
-  public void updateStatus(QueryContext context) throws GrillException {
+  public void updateStatus(QueryContext context) throws LensException {
     checkConfigured();
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
     context.getDriverStatus().setDriverStartTime(ctx.getStartTime());
@@ -578,14 +578,14 @@ public class JDBCDriver implements GrillDriver {
    *
    * @param context
    * 
-   * @return returns the {@link GrillResultSet}.
+   * @return returns the {@link LensResultSet}.
    */
   @Override
-  public GrillResultSet fetchResultSet(QueryContext context) throws GrillException {
+  public LensResultSet fetchResultSet(QueryContext context) throws LensException {
     checkConfigured();
     JdbcQueryContext ctx = getQueryContext(context.getQueryHandle());
     if (ctx.isCancelled()) {
-      throw new GrillException("Result set not available for cancelled query "
+      throw new LensException("Result set not available for cancelled query "
           + context.getQueryHandle());
     }
 
@@ -593,15 +593,15 @@ public class JDBCDriver implements GrillDriver {
     QueryHandle queryHandle = context.getQueryHandle();
 
     try {
-      return future.get().getGrillResultSet(true);
+      return future.get().getLensResultSet(true);
     } catch (InterruptedException e) {
-      throw new GrillException("Interrupted while getting resultset for query "
+      throw new LensException("Interrupted while getting resultset for query "
           + queryHandle.getHandleId(), e);
     } catch (ExecutionException e) {
-      throw new GrillException("Error while executing query "
+      throw new LensException("Error while executing query "
           + queryHandle.getHandleId() + " in background", e);
     } catch (CancellationException e) {
-      throw new GrillException("Query was already cancelled "
+      throw new LensException("Query was already cancelled "
           + queryHandle.getHandleId(), e);
     }
   }
@@ -610,10 +610,10 @@ public class JDBCDriver implements GrillDriver {
    * Close the resultset for the query
    *
    * @param handle The query handle
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void closeResultSet(QueryHandle handle) throws GrillException {
+  public void closeResultSet(QueryHandle handle) throws LensException {
     checkConfigured();
     getQueryContext(handle).closeResult();
   }
@@ -625,7 +625,7 @@ public class JDBCDriver implements GrillDriver {
    * @return true if cancel was successful, false otherwise
    */
   @Override
-  public boolean cancelQuery(QueryHandle handle) throws GrillException {
+  public boolean cancelQuery(QueryHandle handle) throws LensException {
     checkConfigured();
     JdbcQueryContext context = getQueryContext(handle);
     boolean cancelResult = context.getResultFuture().cancel(true);
@@ -647,10 +647,10 @@ public class JDBCDriver implements GrillDriver {
    * held by the query.
    *
    * @param handle The query handle
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void closeQuery(QueryHandle handle) throws GrillException {
+  public void closeQuery(QueryHandle handle) throws LensException {
     checkConfigured();
     try {
       JdbcQueryContext ctx = getQueryContext(handle);
@@ -665,16 +665,16 @@ public class JDBCDriver implements GrillDriver {
   /**
    * Close the driver, releasing all resouces used up by the driver
    *
-   * @throws org.apache.lens.api.GrillException
+   * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void close() throws GrillException {
+  public void close() throws LensException {
     checkConfigured();
     try {
       for (QueryHandle query : new ArrayList<QueryHandle>(queryContextMap.keySet())) {
         try {
           closeQuery(query);
-        } catch (GrillException e) {
+        } catch (LensException e) {
           LOG.warn("Error closing query : " + query.getHandleId(), e);
         }
       }
@@ -689,7 +689,7 @@ public class JDBCDriver implements GrillDriver {
    * @param driverEventListener
    */
   @Override
-  public void registerDriverEventListener(GrillEventListener<DriverEvent> driverEventListener) {
+  public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
 

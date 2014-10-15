@@ -45,13 +45,13 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
 import org.apache.hive.service.cli.RowSet;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.server.GrillService;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.server.LensService;
+import org.apache.lens.server.LensServices;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 
@@ -76,8 +76,8 @@ public class SessionResource {
     return "session is up!";
   }
 
-  public SessionResource() throws GrillException {
-    sessionService = (HiveSessionService)GrillServices.get().getService("session");
+  public SessionResource() throws LensException {
+    sessionService = (HiveSessionService)LensServices.get().getService("session");
   }
 
   /**
@@ -94,9 +94,9 @@ public class SessionResource {
   @POST
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public GrillSessionHandle openSession(@FormDataParam("username") String username,
+  public LensSessionHandle openSession(@FormDataParam("username") String username,
       @FormDataParam("password") String password,
-      @FormDataParam("sessionconf") GrillConf sessionconf) {
+      @FormDataParam("sessionconf") LensConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {
@@ -105,7 +105,7 @@ public class SessionResource {
         conf = new HashMap<String, String>();
       }
       return sessionService.openSession(username, password, conf);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -123,10 +123,10 @@ public class SessionResource {
    */
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult closeSession(@QueryParam("sessionid") GrillSessionHandle sessionid) {
+  public APIResult closeSession(@QueryParam("sessionid") LensSessionHandle sessionid) {
     try {
       sessionService.closeSession(sessionid);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       return new APIResult(Status.FAILED, e.getMessage());
     }
     return new APIResult(Status.SUCCEEDED,
@@ -152,13 +152,13 @@ public class SessionResource {
   @Path("resources/add")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult addResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult addResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
     int numAdded = sessionService.addResourceToAllServices(sessionid, type, path);
     if (numAdded == 0) {
       return new APIResult(Status.FAILED,
           "Add resource has failed ");
-    } else if (numAdded != GrillServices.get().getGrillServices().size()) {
+    } else if (numAdded != LensServices.get().getLensServices().size()) {
       return new APIResult(Status.PARTIAL,
           "Add resource is partial");
     }
@@ -184,14 +184,14 @@ public class SessionResource {
   @Path("resources/delete")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult deleteResource(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult deleteResource(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("type") String type, @FormDataParam("path") String path) {
     int numDeleted = 0;
-    for (GrillService service : GrillServices.get().getGrillServices()) {
+    for (LensService service : LensServices.get().getLensServices()) {
       try {
         service.deleteResource(sessionid,  type, path);
         numDeleted++;
-      } catch (GrillException e) {
+      } catch (LensException e) {
         LOG.error("Failed to delete resource in service:" + service, e);
         if (numDeleted != 0) {
           return new APIResult(Status.PARTIAL,
@@ -220,13 +220,13 @@ public class SessionResource {
   @GET
   @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public StringList getParams(@QueryParam("sessionid") GrillSessionHandle sessionid,
+  public StringList getParams(@QueryParam("sessionid") LensSessionHandle sessionid,
       @DefaultValue("false") @QueryParam("verbose") boolean verbose,
       @DefaultValue("") @QueryParam("key") String key) {
     try {
       List<String> result =  sessionService.getAllSessionParameters(sessionid, verbose, key);
       return new StringList(result);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -248,7 +248,7 @@ public class SessionResource {
   @PUT
   @Path("params")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public APIResult setParam(@FormDataParam("sessionid") GrillSessionHandle sessionid,
+  public APIResult setParam(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("key") String key, @FormDataParam("value") String value) {
     sessionService.setSessionParameter(sessionid, key, value);
     return new APIResult(Status.SUCCEEDED, "Set param succeeded");

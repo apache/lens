@@ -27,10 +27,10 @@ import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.query.GrillPreparedQuery;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.query.LensPreparedQuery;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.api.driver.LensDriver;
 
 
 import lombok.Getter;
@@ -42,18 +42,18 @@ public class PreparedQueryContext implements Delayed {
   @Getter private final Date preparedTime;
   @Getter private final String preparedUser;
   transient @Getter private final Configuration conf;
-  @Getter final GrillConf qconf;
-  @Getter @Setter private GrillDriver selectedDriver;
+  @Getter final LensConf qconf;
+  @Getter @Setter private LensDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter @Setter private String queryName;
 
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
   public PreparedQueryContext(String query, String user, Configuration conf) {
-    this(query, user, conf, new GrillConf());
+    this(query, user, conf, new LensConf());
   }
 
-  public PreparedQueryContext(String query, String user, Configuration conf, GrillConf qconf) {
+  public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf) {
     this.userQuery = query;
     this.preparedTime = new Date();
     this.preparedUser = user;
@@ -92,8 +92,8 @@ public class PreparedQueryContext implements Delayed {
     }
   }
 
-  public GrillPreparedQuery toPreparedQuery() {
-    return new GrillPreparedQuery(prepareHandle, userQuery, preparedTime,
+  public LensPreparedQuery toPreparedQuery() {
+    return new LensPreparedQuery(prepareHandle, userQuery, preparedTime,
         preparedUser,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
         driverQuery, qconf);

@@ -21,7 +21,7 @@ package org.apache.lens.server.ui;
  */
 
 import org.apache.lens.server.AuthenticationFilter;
-import org.apache.lens.server.GrillApplicationListener;
+import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import javax.ws.rs.ApplicationPath;
@@ -40,7 +40,7 @@ public class UIApp extends Application {
     classes.add(MetastoreUIResource.class);
     classes.add(MultiPartFeature.class);
     classes.add(AuthenticationFilter.class);
-    classes.add(GrillApplicationListener.class);
+    classes.add(LensApplicationListener.class);
     return classes;
   }
 

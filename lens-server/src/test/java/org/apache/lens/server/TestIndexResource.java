@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 
 
 @Test(groups="unit-test")
-public class TestIndexResource extends GrillJerseyTest {
+public class TestIndexResource extends LensJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {

@@ -25,9 +25,9 @@ import java.io.Closeable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIServiceClient;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 
 
 public interface ThriftConnection extends Closeable {
-	public CLIServiceClient getClient(HiveConf conf) throws GrillException;
+	public CLIServiceClient getClient(HiveConf conf) throws LensException;
 }

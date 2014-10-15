@@ -35,7 +35,7 @@ import java.util.jar.Manifest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.lens.client.GrillConnectionParams;
+import org.apache.lens.client.LensConnectionParams;
 
 public class JDBCUtils {
 
@@ -83,9 +83,9 @@ public class JDBCUtils {
    * @return final list of connection parameters
    * @throws IllegalArgumentException if URI provided is malformed
    */
-  public static GrillConnectionParams parseUrl(String uri) throws
+  public static LensConnectionParams parseUrl(String uri) throws
       IllegalArgumentException {
-    GrillConnectionParams params = new GrillConnectionParams();
+    LensConnectionParams params = new LensConnectionParams();
 
     if (!uri.startsWith(URL_PREFIX)) {
       throw new IllegalArgumentException("Bad URL format");
@@ -135,7 +135,7 @@ public class JDBCUtils {
     if (confStr != null) {
       Matcher confMatcher = pattern.matcher(confStr);
       while (confMatcher.find()) {
-        params.getGrillConfs().put(confMatcher.group(1), confMatcher.group(2));
+        params.getLensConfs().put(confMatcher.group(1), confMatcher.group(2));
       }
     }
 
@@ -144,7 +144,7 @@ public class JDBCUtils {
     if (varStr != null) {
       Matcher varMatcher = pattern.matcher(varStr);
       while (varMatcher.find()) {
-        params.getGrillVars().put(varMatcher.group(1), varMatcher.group(2));
+        params.getLensVars().put(varMatcher.group(1), varMatcher.group(2));
       }
     }
     return params;
@@ -199,7 +199,7 @@ public class JDBCUtils {
       throw new SQLException("Invalid connection url :" + url);
     }
 
-    GrillConnectionParams params = parseUrl(url);
+    LensConnectionParams params = parseUrl(url);
   //  urlProperties.put(HOST_PROPERTY_KEY, params.getHost());
   //  urlProperties.put(PORT_PROPERTY_KEY, params.getPort());
     urlProperties.put(DB_PROPERTY_KEY, params.getDbName());

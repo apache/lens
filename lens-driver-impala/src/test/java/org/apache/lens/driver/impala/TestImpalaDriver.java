@@ -26,7 +26,7 @@ import junit.framework.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.driver.impala.ImpalaDriver;
 import org.apache.lens.driver.impala.ImpalaResultSet;
-import org.apache.lens.server.api.driver.GrillResultSet;
+import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.transport.TSocket;
 import org.mockito.Mockito;
@@ -126,7 +126,7 @@ public class TestImpalaDriver {
 
 			// actual run
 			this.testInst.configure(config);
-			GrillResultSet br = this.testInst.execute("query", null);
+			LensResultSet br = this.testInst.execute("query", null);
 
 			// test and verify
 			Assert.assertEquals(true, ((ImpalaResultSet) br).hasNext());

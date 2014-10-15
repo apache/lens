@@ -23,7 +23,7 @@ package org.apache.lens.cli.commands;
 import com.google.common.base.Joiner;
 
 import org.apache.lens.api.query.*;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Component
-public class LensQueryCommands extends  BaseGrillCommand implements CommandMarker {
+public class LensQueryCommands extends  BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "query execute", help = "Execute query in async/sync manner")
   public String executeQuery(
@@ -44,7 +44,7 @@ public class LensQueryCommands extends  BaseGrillCommand implements CommandMarke
       @CliOption(key = {"name"}, mandatory = false, help = "Query name") String queryName) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result = getClient().getResults(sql, queryName);
+        LensClient.LensClientResultSetWithStats result = getClient().getResults(sql, queryName);
         return formatResultSet(result);
       } catch (Throwable t) {
         return t.getMessage();
@@ -55,7 +55,7 @@ public class LensQueryCommands extends  BaseGrillCommand implements CommandMarke
     }
   }
 
-  private String formatResultSet(GrillClient.GrillClientResultSetWithStats rs) {
+  private String formatResultSet(LensClient.LensClientResultSetWithStats rs) {
     StringBuilder b = new StringBuilder();
     int i = 0;
     if (rs.getResultSet() != null) {
@@ -166,7 +166,7 @@ public class LensQueryCommands extends  BaseGrillCommand implements CommandMarke
   public String getQueryResults(
       @CliOption(key = {"", "query"}, mandatory = true, help = "query-handle for fetching result") String qh)   {
     try {
-      GrillClient.GrillClientResultSetWithStats result = getClient().getAsyncResults(
+      LensClient.LensClientResultSetWithStats result = getClient().getAsyncResults(
           new QueryHandle(UUID.fromString(qh)));
       return formatResultSet(result);
     } catch (Throwable t) {
@@ -197,7 +197,7 @@ public class LensQueryCommands extends  BaseGrillCommand implements CommandMarke
   @CliCommand(value = "prepQuery details", help = "Get prepared query")
   public String getPreparedStatus(@CliOption(key = {"", "handle"},
       mandatory = true, help = "Prepare handle") String ph) {
-    GrillPreparedQuery prepared = getClient().getPreparedQuery(QueryPrepareHandle.fromString(ph));
+    LensPreparedQuery prepared = getClient().getPreparedQuery(QueryPrepareHandle.fromString(ph));
     if (prepared != null) {
       StringBuilder sb = new StringBuilder();
       sb.append("User query:").append(prepared.getUserQuery()).append("\n");
@@ -235,7 +235,7 @@ public class LensQueryCommands extends  BaseGrillCommand implements CommandMarke
       @CliOption(key = {"name"}, mandatory = false, help = "query name") String queryName) {
     if (!asynch) {
       try {
-        GrillClient.GrillClientResultSetWithStats result =
+        LensClient.LensClientResultSetWithStats result =
             getClient().getResultsFromPrepared(QueryPrepareHandle.fromString(phandle), queryName);
         return formatResultSet(result);
       } catch (Throwable t) {

@@ -21,9 +21,9 @@ package org.apache.lens.server.stats.store.log;
 
 import lombok.Setter;
 
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.events.GrillEventService;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
@@ -48,7 +48,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
   private Map<String, String> scanSet = new ConcurrentHashMap<String, String>();
 
   @Setter
-  private GrillEventService service;
+  private LensEventService service;
 
   private Map<String, String> classSet = new ConcurrentHashMap<String, String>();
 
@@ -66,13 +66,13 @@ public class StatisticsLogFileScannerTask extends TimerTask {
           classSet.get(eventName));
         try {
           service.notifyEvent(event);
-        } catch (GrillException e) {
+        } catch (LensException e) {
           LOG.warn("Unable to Notify partition event" +
             event.getEventName() + " with map  " + event.getPartMap());
         }
       }
     } catch (Exception exc) {
-      MetricsService svc = (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+      MetricsService svc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       svc.incrCounter(StatisticsLogFileScannerTask.class, LOG_SCANNER_ERRORS);
       LOG.error("Unknown error in log file scanner ", exc);
     }

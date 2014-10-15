@@ -27,10 +27,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.driver.cube.CubeGrillDriver.MinQueryCostSelector;
+import org.apache.lens.api.LensException;
+import org.apache.lens.driver.cube.CubeDriver.MinQueryCostSelector;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -39,16 +39,16 @@ public class TestMinCostSelector {
 
   static class MockFailDriver extends MockDriver {
     public DriverQueryPlan explain(String query, Configuration conf)
-        throws GrillException {
-      throw new GrillException("failing!");
+        throws LensException {
+      throw new LensException("failing!");
     }
   }
 
   @Test
   public void testMinCostSelector() {
     MinQueryCostSelector selector = new MinQueryCostSelector();
-    List<GrillDriver> drivers = new ArrayList<GrillDriver>();
-    Map<GrillDriver, String> driverQueries = new HashMap<GrillDriver, String>();
+    List<LensDriver> drivers = new ArrayList<LensDriver>();
+    Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
     Configuration conf = new Configuration();
 
     MockDriver d1 = new MockDriver();
@@ -59,7 +59,7 @@ public class TestMinCostSelector {
     drivers.add(d1);
     drivers.add(d2);
     driverQueries.put(d1, "test query");
-    GrillDriver selected = selector.select(drivers, driverQueries, conf);
+    LensDriver selected = selector.select(drivers, driverQueries, conf);
     Assert.assertEquals(d1, selected);
     driverQueries.put(d2, "test query");
     driverQueries.remove(d1);

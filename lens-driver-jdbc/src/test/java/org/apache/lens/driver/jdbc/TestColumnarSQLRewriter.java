@@ -34,9 +34,9 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -169,7 +169,7 @@ public class TestColumnarSQLRewriter {
   @Test
   //Testing multiple queries in one instance
   public void testNoRewrite() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
     
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
     HiveConf conf = new HiveConf();
@@ -206,7 +206,7 @@ public class TestColumnarSQLRewriter {
   
   @Test
   public void testJoinCond() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -237,7 +237,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testAllFilterCond() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -269,7 +269,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testAllAggColumn() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -302,7 +302,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testAllFactKeys() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -331,7 +331,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testFactSubQueries() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -365,7 +365,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testRewrittenQuery() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -416,7 +416,7 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testUnionQuery() throws ParseException, SemanticException,
-      GrillException {
+      LensException {
 
     String query =
 
@@ -585,10 +585,10 @@ public class TestColumnarSQLRewriter {
     Table tbl1 = new Table(db, table);
 
     if (StringUtils.isNotBlank(udb)) {
-      tbl1.setProperty(GrillConfConstants.NATIVE_DB_NAME, udb);
+      tbl1.setProperty(LensConfConstants.NATIVE_DB_NAME, udb);
     }
     if (StringUtils.isNotBlank(utable)) {
-      tbl1.setProperty(GrillConfConstants.NATIVE_TABLE_NAME, utable);
+      tbl1.setProperty(LensConfConstants.NATIVE_TABLE_NAME, utable);
     }
 
     List<FieldSchema> columns = new ArrayList<FieldSchema>();

@@ -2,7 +2,7 @@ package org.apache.lens.server;
 
 /*
  * #%L
- * Grill Server
+ * Lens Server
  * %%
  * Copyright (C) 2014 Inmobi
  * %%
@@ -36,20 +36,20 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hive.service.Service;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.PersistentQueryResult;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
-import org.apache.lens.server.session.GrillSessionImpl;
+import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.session.HiveSessionService;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -61,7 +61,7 @@ import org.testng.annotations.Test;
 
 
 @Test(alwaysRun=true, groups="restart-test",dependsOnGroups="unit-test")
-public class TestServerRestart extends GrillAllApplicationJerseyTest {
+public class TestServerRestart extends LensAllApplicationJerseyTest {
 
   public static final Log LOG = LogFactory.getLog(TestServerRestart.class);
   private File dataFile;
@@ -102,17 +102,17 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
   }
 
   @Test
-  public void testQueryService() throws InterruptedException, IOException, GrillException {
+  public void testQueryService() throws InterruptedException, IOException, LensException {
     LOG.info("Server restart test");
 
-    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    GrillSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)LensServices.get().getService("query");
+    LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     // Create data file
     createRestartTestDataFile();
 
     // Create a test table
-    GrillTestUtil.createTable("test_server_restart", target(), lensSessionId);
-    GrillTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.createTable("test_server_restart", target(), lensSessionId);
+    LensTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), lensSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -145,14 +145,14 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       ));
       mp.bodyPart(new FormDataBodyPart(
           FormDataContentDisposition.name("conf").fileName("conf").build(),
-          new GrillConf(),
+          new LensConf(),
           MediaType.APPLICATION_XML_TYPE));
       final QueryHandle handle = target.request().post(
           Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
       Assert.assertNotNull(handle);
-      GrillQuery ctx = target.path(handle.toString())
-        .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      LensQuery ctx = target.path(handle.toString())
+        .queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       QueryStatus stat = ctx.getStatus();
       LOG.info(i + " submitted query " + handle + " state: " + ctx.getStatus().getStatus());
       launchedQueries.add(handle);
@@ -160,20 +160,20 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
     // Restart the server
     LOG.info("Restarting lens server!");
-    restartGrillServer();
+    restartLensServer();
     LOG.info("Restarted lens server!");
-    queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
+    queryService = (QueryExecutionServiceImpl)LensServices.get().getService("query");
 
     // All queries should complete after server restart
     for (QueryHandle handle : launchedQueries) {
       LOG.info("Polling query " + handle);
       try {
-        GrillQuery ctx = target.path(handle.toString())
-          .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+        LensQuery ctx = target.path(handle.toString())
+          .queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
         QueryStatus stat = ctx.getStatus();
         while (!stat.isFinished()) {
           LOG.info("Polling query " + handle + " Status:" + stat);
-          ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+          ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
           stat = ctx.getStatus();
           Thread.sleep(1000);
         }
@@ -191,14 +191,14 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       }
     }
     LOG.info("End server restart test");
-    GrillTestUtil.dropTable("test_server_restart", target(), lensSessionId);
+    LensTestUtil.dropTable("test_server_restart", target(), lensSessionId);
     queryService.closeSession(lensSessionId);
   }
 
   @Test
   public void testHiveServerRestart() throws Exception {
-    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
-    GrillSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
+    QueryExecutionServiceImpl queryService = (QueryExecutionServiceImpl)LensServices.get().getService("query");
+    LensSessionHandle lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     // Create data file
     createRestartTestDataFile();
 
@@ -208,8 +208,8 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     LOG.info("@@ Added resource " + dataFile.toURI());
 
     // Create a test table
-    GrillTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
-    GrillTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
+    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -228,15 +228,15 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     ));
     mp.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("conf").fileName("conf").build(),
-      new GrillConf(),
+      new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request().post(
       Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
     Assert.assertNotNull(handle);
 
-    List<GrillSessionImpl.ResourceEntry> sessionResources =
-      queryService.getSession(lensSessionId).getGrillSessionPersistInfo().getResources();
+    List<LensSessionImpl.ResourceEntry> sessionResources =
+      queryService.getSession(lensSessionId).getLensSessionPersistInfo().getResources();
     int[] restoreCounts = new int[sessionResources.size()];
     for (int i = 0; i < sessionResources.size(); i++) {
       restoreCounts[i] = sessionResources.get(i).getRestoreCount();
@@ -261,12 +261,12 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     LOG.info("Server restarted");
 
     // Poll for first query, we should not get any exception
-    GrillQuery ctx = target.path(handle.toString())
-      .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString())
+      .queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
       LOG.info("Polling query " + handle + " Status:" + stat);
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -287,7 +287,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       ));
       mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
       handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -295,11 +295,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
       // Poll for second query, this should finish successfully
       ctx = target.path(handle.toString())
-        .queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+        .queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       while (!stat.isFinished()) {
         LOG.info("Post restart polling query " + handle + " Status:" + stat);
-        ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+        ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }
@@ -308,7 +308,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
     // Now we can expect that session resources have been added back exactly once
     for (int i = 0; i < sessionResources.size(); i++) {
-      GrillSessionImpl.ResourceEntry resourceEntry = sessionResources.get(i);
+      LensSessionImpl.ResourceEntry resourceEntry = sessionResources.get(i);
       Assert.assertEquals(resourceEntry.getRestoreCount(), 1 + restoreCounts[i],
         "Restore test failed for " + resourceEntry
           + " pre count=" + restoreCounts[i] + " post count=" + resourceEntry.getRestoreCount());
@@ -318,7 +318,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     //    "Expected to be successful " + handle);
 
     LOG.info("End hive server restart test");
-    GrillTestUtil.dropTable("test_hive_server_restart", target(), lensSessionId);
+    LensTestUtil.dropTable("test_hive_server_restart", target(), lensSessionId);
     queryService.closeSession(lensSessionId);
   }
 
@@ -335,11 +335,11 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
       "bar"));
     sessionForm.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-      new GrillConf(),
+      new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle restartTestSession = sessionTarget.request().post(
-      Entity.entity(sessionForm, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle restartTestSession = sessionTarget.request().post(
+      Entity.entity(sessionForm, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(restartTestSession);
 
     // Set a param
@@ -372,7 +372,7 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
 
 
     // restart server
-    restartGrillServer();
+    restartLensServer();
 
     // Check session exists in the server
 
@@ -388,10 +388,10 @@ public class TestServerRestart extends GrillAllApplicationJerseyTest {
     Assert.assertTrue(sessionParams.getElements().contains("lens.session.testRestartKey=myvalue"));
 
     // Check resources added again
-    HiveSessionService sessionService = GrillServices.get().getService("session");
-    GrillSessionImpl session = sessionService.getSession(restartTestSession);
-    Assert.assertEquals(session.getGrillSessionPersistInfo().getResources().size(), 1);
-    GrillSessionImpl.ResourceEntry resourceEntry = session.getGrillSessionPersistInfo().getResources().get(0);
+    HiveSessionService sessionService = LensServices.get().getService("session");
+    LensSessionImpl session = sessionService.getSession(restartTestSession);
+    Assert.assertEquals(session.getLensSessionPersistInfo().getResources().size(), 1);
+    LensSessionImpl.ResourceEntry resourceEntry = session.getLensSessionPersistInfo().getResources().get(0);
     Assert.assertEquals(resourceEntry.getType(), "file");
     Assert.assertEquals(resourceEntry.getLocation(), "target/test-classes/lens-site.xml");
 

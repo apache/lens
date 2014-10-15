@@ -32,13 +32,13 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.GrillServices.SERVICE_MODE;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.LensServices.SERVICE_MODE;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -49,7 +49,7 @@ import org.testng.annotations.Test;
 
 
 @Test(alwaysRun=true, groups="filter-test",dependsOnGroups="restart-test")
-public class TestServerMode extends GrillAllApplicationJerseyTest {
+public class TestServerMode extends LensAllApplicationJerseyTest {
 
   @BeforeTest
   public void setUp() throws Exception {
@@ -58,7 +58,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
 
   @AfterTest
   public void tearDown() throws Exception {
-    GrillServices.get().setServiceMode(SERVICE_MODE.OPEN);
+    LensServices.get().setServiceMode(SERVICE_MODE.OPEN);
     super.tearDown();
   }
 
@@ -88,7 +88,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
   }
 
   private void testMode(SERVICE_MODE mode) throws InterruptedException {
-    GrillServices.get().setServiceMode(mode);
+    LensServices.get().setServiceMode(mode);
     // open a session
     // should always pass
     final WebTarget target = target().path("session");
@@ -100,11 +100,11 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
         "bar"));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
-    final GrillSessionHandle lensSessionId = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), GrillSessionHandle.class);
+    final LensSessionHandle lensSessionId = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(lensSessionId);
 
     // creata a database
@@ -152,7 +152,7 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
         "execute"));
     query.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new GrillConf(),
+        new LensConf(),
         MediaType.APPLICATION_XML_TYPE));
 
     QueryHandle qhandle = null;
@@ -177,13 +177,13 @@ public class TestServerMode extends GrillAllApplicationJerseyTest {
     if (!mode.equals(SERVICE_MODE.READ_ONLY)) {
       assertNotNull(qhandle);
       // wait for query completion if mode is not read only
-      GrillQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+      LensQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
       // wait till the query finishes
       QueryStatus stat = ctx.getStatus();
       while (!stat.isFinished()) {
-        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
+        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }

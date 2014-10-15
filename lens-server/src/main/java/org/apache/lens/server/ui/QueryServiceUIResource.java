@@ -24,11 +24,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.*;
-import org.apache.lens.server.GrillServices;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
@@ -54,7 +54,7 @@ public class QueryServiceUIResource {
   }
 
   //assert: sessionHandle is not null
-  private void checkSessionHandle(GrillSessionHandle sessionHandle) {
+  private void checkSessionHandle(LensSessionHandle sessionHandle) {
     if (sessionHandle == null) {
       throw new BadRequestException("Invalid session handle");
     }
@@ -62,7 +62,7 @@ public class QueryServiceUIResource {
 
   public QueryServiceUIResource() {
     LOG.info("Query UI Service");
-    queryServer = (QueryExecutionService) GrillServices.get().getService("query");
+    queryServer = (QueryExecutionService) LensServices.get().getService("query");
   }
 
   private QueryHandle getQueryHandle(String queryHandle) {
@@ -93,11 +93,11 @@ public class QueryServiceUIResource {
                                          @DefaultValue("") @QueryParam("queryName") String queryName,
                                          @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
                                          @DefaultValue("-1") @QueryParam("toDate") long toDate) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
       return queryServer.getAllQueries(sessionHandle, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE : toDate);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -118,14 +118,14 @@ public class QueryServiceUIResource {
   public QuerySubmitResult query(@FormDataParam("publicId") UUID publicId,
                                  @FormDataParam("query") String query,
                                  @DefaultValue("") @FormDataParam("queryName") String queryName) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
-    GrillConf conf;
+    LensConf conf;
     checkQuery(query);
     try {
-      conf = new GrillConf();
+      conf = new LensConf();
       return queryServer.executeAsync(sessionHandle, query, conf, queryName);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -135,19 +135,19 @@ public class QueryServiceUIResource {
    *
    * @param publicId    The public id of session handle
    * @param queryHandle The query handle
-   * @return {@link GrillQuery}
+   * @return {@link LensQuery}
    */
   @GET
   @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
-  public GrillQuery getStatus(@QueryParam("publicId") UUID publicId,
+  public LensQuery getStatus(@QueryParam("publicId") UUID publicId,
                               @PathParam("queryHandle") String queryHandle) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
       return queryServer.getQuery(sessionHandle,
           getQueryHandle(queryHandle));
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -169,7 +169,7 @@ public class QueryServiceUIResource {
       @PathParam("queryHandle") String queryHandle,
       @QueryParam("pageNumber") int pageNumber,
       @QueryParam("fetchsize") int fetchSize) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     List<Object> rows = new ArrayList<Object>();
     LOG.info("FetchResultSet for queryHandle:" + queryHandle);
@@ -193,7 +193,7 @@ public class QueryServiceUIResource {
         rows.add("PersistentResultSet");
       }
       return new ResultRow(rows);
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -211,7 +211,7 @@ public class QueryServiceUIResource {
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") UUID publicId,
                                @PathParam("queryHandle") String queryHandle) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
       boolean ret = queryServer.cancelQuery(sessionHandle, getQueryHandle(queryHandle));
@@ -222,7 +222,7 @@ public class QueryServiceUIResource {
         return new APIResult(APIResult.Status.FAILED, "Cancel on the query "
             + queryHandle + " failed");
       }
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }
@@ -241,11 +241,11 @@ public class QueryServiceUIResource {
   public Response getHttpResultSet(
       @QueryParam("sessionid") UUID publicId,
       @PathParam("queryHandle") String queryHandle) {
-    GrillSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
+    LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
       return queryServer.getHttpResultSet(sessionHandle, getQueryHandle(queryHandle));
-    } catch (GrillException e) {
+    } catch (LensException e) {
       throw new WebApplicationException(e);
     }
   }

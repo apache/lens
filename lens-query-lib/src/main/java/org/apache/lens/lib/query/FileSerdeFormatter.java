@@ -34,8 +34,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
@@ -56,7 +56,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
   public FileSerdeFormatter() { 
   }
 
-  public void init(QueryContext ctx, GrillResultSetMetadata metadata) throws IOException {
+  public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     super.init(ctx, metadata);
     initOutputSerde();
   }
@@ -65,8 +65,8 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
   private void initOutputSerde() {
     try {
       outputSerde = ReflectionUtils.newInstance(ctx.getConf().getClass(
-          GrillConfConstants.QUERY_OUTPUT_SERDE,
-          (Class<? extends AbstractSerDe>)Class.forName(GrillConfConstants.DEFAULT_OUTPUT_SERDE),
+          LensConfConstants.QUERY_OUTPUT_SERDE,
+          (Class<? extends AbstractSerDe>)Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE),
           SerDe.class), ctx.getConf());
 
       Properties props = new Properties();

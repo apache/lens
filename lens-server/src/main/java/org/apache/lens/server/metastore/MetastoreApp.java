@@ -21,7 +21,7 @@ package org.apache.lens.server.metastore;
  */
 
 
-import org.apache.lens.server.GrillApplicationListener;
+import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -41,7 +41,7 @@ public class MetastoreApp extends Application {
       classes.add(MetastoreResource.class);
       classes.add(LoggingFilter.class);
       classes.add(MultiPartFeature.class);
-      classes.add(GrillApplicationListener.class);
+      classes.add(LensApplicationListener.class);
       return classes;
   }
 }

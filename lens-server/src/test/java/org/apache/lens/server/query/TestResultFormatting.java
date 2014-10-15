@@ -29,16 +29,16 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillSessionHandle;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.server.GrillJerseyTest;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.GrillTestUtil;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.query.QueryApp;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.glassfish.jersey.client.ClientConfig;
@@ -53,23 +53,23 @@ import org.testng.annotations.Test;
 
 
 @Test(groups="unit-test")
-public class TestResultFormatting extends GrillJerseyTest {
+public class TestResultFormatting extends LensJerseyTest {
 
   QueryExecutionServiceImpl queryService;
-  GrillSessionHandle lensSessionId;
+  LensSessionHandle lensSessionId;
 
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    queryService = (QueryExecutionServiceImpl)GrillServices.get().getService("query");
+    queryService = (QueryExecutionServiceImpl)LensServices.get().getService("query");
     lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-    GrillTestUtil.createTable(testTable, target(), lensSessionId);
-    GrillTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), lensSessionId);
+    LensTestUtil.createTable(testTable, target(), lensSessionId);
+    LensTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), lensSessionId);
   }
 
   @AfterTest
   public void tearDown() throws Exception {
-    GrillTestUtil.dropTable(testTable, target(), lensSessionId);
+    LensTestUtil.dropTable(testTable, target(), lensSessionId);
     queryService.closeSession(lensSessionId);
     super.tearDown();
   }
@@ -94,12 +94,12 @@ public class TestResultFormatting extends GrillJerseyTest {
   // test with execute async post with result formatter, get query, get results
   @Test
   public void testResultFormatterInMemoryResult() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(GrillConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
 
   }
@@ -107,38 +107,38 @@ public class TestResultFormatting extends GrillJerseyTest {
   // test with execute async post with result formatter, get query, get results
   @Test
   public void testResultFormatterHDFSpersistentResult() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, null);
 
-    conf.addProperty(GrillConfConstants.RESULT_FS_READ_URL, "filereadurl://");
+    conf.addProperty(LensConfConstants.RESULT_FS_READ_URL, "filereadurl://");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, false, "filereadurl://");
   }
 
   @Test
   public void testPersistentResultWithMaxSize() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
-    conf.addProperty(GrillConfConstants.RESULT_FORMAT_SIZE_THRESHOLD, "1");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    conf.addProperty(LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD, "1");
     testResultFormatter(conf, QueryStatus.Status.SUCCESSFUL, true, null);
   }
 
   @Test
   public void testResultFormatterFailure() throws InterruptedException, IOException {
-    GrillConf conf = new GrillConf();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(GrillConfConstants.QUERY_OUTPUT_SERDE, "NonexistentSerde.class");
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    conf.addProperty(LensConfConstants.QUERY_OUTPUT_SERDE, "NonexistentSerde.class");
     testResultFormatter(conf, QueryStatus.Status.FAILED, false, null);
   }
 
   // test with execute async post with result formatter, get query, get results
-  private void testResultFormatter(GrillConf conf, Status status,
+  private void testResultFormatter(LensConf conf, Status status,
       boolean isDir, String reDirectUrl) throws InterruptedException, IOException {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
-    conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -156,13 +156,13 @@ public class TestResultFormatting extends GrillJerseyTest {
     Assert.assertNotNull(handle);
 
     // Get query
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid",
-        lensSessionId).request().get(GrillQuery.class);
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid",
+        lensSessionId).request().get(LensQuery.class);
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid",
-          lensSessionId).request().get(GrillQuery.class);
+          lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }

@@ -24,8 +24,8 @@ import org.apache.lens.api.metastore.*;
 
 import java.util.List;
 
-import org.apache.lens.api.GrillException;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 
 
 public interface CubeMetastoreService {
@@ -34,14 +34,14 @@ public interface CubeMetastoreService {
    * 
    * @return the current database name
    */
-  public String getCurrentDatabase(GrillSessionHandle sessionid) throws GrillException;
+  public String getCurrentDatabase(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Change the current database used by the CubeMetastoreClient
    * 
    * @param database
    */
-  public void setCurrentDatabase(GrillSessionHandle sessionid, String database) throws GrillException;
+  public void setCurrentDatabase(LensSessionHandle sessionid, String database) throws LensException;
 
   /**
    * Drop a database from cube metastore
@@ -49,7 +49,7 @@ public interface CubeMetastoreService {
    * @param database database name
    * @param cascade flag indicating if the tables in the database should be dropped as well
    */
-  public void dropDatabase(GrillSessionHandle sessionid, String database, boolean cascade) throws GrillException;
+  public void dropDatabase(LensSessionHandle sessionid, String database, boolean cascade) throws LensException;
 
   /**
    * Create a database in the metastore
@@ -57,31 +57,31 @@ public interface CubeMetastoreService {
    * @param database database name
    * @param ignore ignore if database already exists
    */
-  public void createDatabase(GrillSessionHandle sessionid, String database, boolean ignore) throws GrillException;
+  public void createDatabase(LensSessionHandle sessionid, String database, boolean ignore) throws LensException;
 
   /**
    * Get names of all databases in this metastore
    * @return list of database names
    */
-  public List<String> getAllDatabases(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllDatabases(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Create a storage
    * 
    * @param sessionid
    * @param storage
-   * @throws GrillException
+   * @throws LensException
    */
-  public void createStorage(GrillSessionHandle sessionid, XStorage storage) throws GrillException;
+  public void createStorage(LensSessionHandle sessionid, XStorage storage) throws LensException;
 
   /**
    * Drop a storage specified by name
    * 
    * @param sessionid
    * @param storageName
-   * @throws GrillException
+   * @throws LensException
    */
-  public void dropStorage(GrillSessionHandle sessionid, String storageName) throws GrillException;
+  public void dropStorage(LensSessionHandle sessionid, String storageName) throws LensException;
 
   /**
    * Alter storage specified by name, with new definition
@@ -89,18 +89,18 @@ public interface CubeMetastoreService {
    * @param sessionid
    * @param storageName
    * @param storage
-   * @throws GrillException
+   * @throws LensException
    */
-  public void alterStorage(GrillSessionHandle sessionid, String storageName, XStorage storage) throws GrillException;
+  public void alterStorage(LensSessionHandle sessionid, String storageName, XStorage storage) throws LensException;
 
   /**
    * Get Storage specified by name
    * 
    * @param sessionid
    * @param storageName
-   * @throws GrillException
+   * @throws LensException
    */
-  public XStorage getStorage(GrillSessionHandle sessionid, String storageName) throws GrillException;
+  public XStorage getStorage(LensSessionHandle sessionid, String storageName) throws LensException;
 
   /**
    * Get all storage names in current database
@@ -108,30 +108,30 @@ public interface CubeMetastoreService {
    * @param sessionid
    * 
    * @return returns list of the storage names
-   * @throws GrillException
+   * @throws LensException
    */
-  public List<String> getAllStorageNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllStorageNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all cubes in the current database, includes both base cubes and derived cubes
    * 
    * @return list of cube names
    */
-  public List<String> getAllCubeNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all base cube names in the current database
    * 
    * @return list of cube names
    */
-  public List<String> getAllBaseCubeNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllBaseCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all derived cubes in the current database
    * 
    * @return list of cube names
    */
-  public List<String> getAllDerivedCubeNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllDerivedCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all cubes, which can be queried in the current database
@@ -140,7 +140,7 @@ public interface CubeMetastoreService {
    *
    * @return list of cube names
    */
-  public List<String> getAllQueryableCubeNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getAllQueryableCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get native table for the given name
@@ -150,9 +150,9 @@ public interface CubeMetastoreService {
    *
    * @return {@link NativeTable} object
    *
-   * @throws GrillException
+   * @throws LensException
    */
-  public NativeTable getNativeTable(GrillSessionHandle sessionid, String name) throws GrillException;
+  public NativeTable getNativeTable(LensSessionHandle sessionid, String name) throws LensException;
 
   /**
    * Get names of all native tables
@@ -163,13 +163,13 @@ public interface CubeMetastoreService {
    *
    * @return list of table names
    */
-  public List<String> getAllNativeTableNames(GrillSessionHandle sessionid,
-      String dboption, String dbName) throws GrillException;
+  public List<String> getAllNativeTableNames(LensSessionHandle sessionid,
+      String dboption, String dbName) throws LensException;
 
   /**
    * Create a cube based on JAXB Cube object
    */
-  public void createCube(GrillSessionHandle sessionid, XCube cube) throws GrillException;
+  public void createCube(LensSessionHandle sessionid, XCube cube) throws LensException;
 
   /**
    * Get a cube from the metastore
@@ -178,26 +178,26 @@ public interface CubeMetastoreService {
    * 
    * @return JAXB Cube object
    */
-  public XCube getCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
+  public XCube getCube(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Drop a cube from the metastore in the currently deleted database.
    * 
    * @param cubeName
    */
-  public void dropCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
+  public void dropCube(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Update an existing cube
    * 
    * @param cube JAXB Cube object
    */
-  public void updateCube(GrillSessionHandle sessionid, XCube cube) throws GrillException;
+  public void updateCube(LensSessionHandle sessionid, XCube cube) throws LensException;
 
   /**
    * Create a dimension based on JAXB Dimension object
    */
-  public void createDimension(GrillSessionHandle sessionid, XDimension dimension) throws GrillException;
+  public void createDimension(LensSessionHandle sessionid, XDimension dimension) throws LensException;
 
   /**
    * Get a dimension from the metastore
@@ -206,21 +206,21 @@ public interface CubeMetastoreService {
    *
    * @return JAXB Dimension object
    */
-  public XDimension getDimension(GrillSessionHandle sessionid, String dimName) throws GrillException;
+  public XDimension getDimension(LensSessionHandle sessionid, String dimName) throws LensException;
 
   /**
    * Drop a dimension from the metastore in the currently deleted database.
    *
    * @param cubeName
    */
-  public void dropDimension(GrillSessionHandle sessionid, String dimName) throws GrillException;
+  public void dropDimension(LensSessionHandle sessionid, String dimName) throws LensException;
 
   /**
    * Update an existing dimension
    *
    * @param dim JAXB Dimension object
    */
-  public void updateDimension(GrillSessionHandle sessionid, String dimName, XDimension dimension) throws GrillException;
+  public void updateDimension(LensSessionHandle sessionid, String dimName, XDimension dimension) throws LensException;
 
   /**
    * Get all dimension names in the current session
@@ -229,15 +229,15 @@ public interface CubeMetastoreService {
    *
    * @return List of dimension names as List of string objects
    *
-   * @throws GrillException
+   * @throws LensException
    */
-  public List<String> getAllDimensionNames(GrillSessionHandle sessionid)
-      throws GrillException;
+  public List<String> getAllDimensionNames(LensSessionHandle sessionid)
+      throws LensException;
 
   /**
    * Create a cube dimension table
    */
-  public void createCubeDimensionTable(GrillSessionHandle sessionid, DimensionTable xDimTable, XStorageTables storageTables) throws GrillException;
+  public void createCubeDimensionTable(LensSessionHandle sessionid, DimensionTable xDimTable, XStorageTables storageTables) throws LensException;
 
   /**
    * Drop a dimension table from the cube metastore
@@ -246,9 +246,9 @@ public interface CubeMetastoreService {
    * @param dimTblName
    * @param cascade
    *
-   * @throws GrillException
+   * @throws LensException
    */
-  public void dropDimensionTable(GrillSessionHandle sessionid, String dimTblName, boolean cascade) throws GrillException;
+  public void dropDimensionTable(LensSessionHandle sessionid, String dimTblName, boolean cascade) throws LensException;
 
   /**
    * Get the dimension table from metastore
@@ -256,19 +256,19 @@ public interface CubeMetastoreService {
    * @param dimTblName
    * @return The {@link DimensionTable}
    */
-  public DimensionTable getDimensionTable(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
-  public void updateDimensionTable(GrillSessionHandle sessionid, DimensionTable dimensionTable) throws GrillException;
+  public DimensionTable getDimensionTable(LensSessionHandle sessionid, String dimTblName) throws LensException;
+  public void updateDimensionTable(LensSessionHandle sessionid, DimensionTable dimensionTable) throws LensException;
 
-  public List<String> getDimTableStorages(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
-  public void createDimTableStorage(GrillSessionHandle sessionid, String dimTblName, XStorageTableElement storageTable)
-      throws GrillException;
-  public void dropAllStoragesOfDimTable(GrillSessionHandle sessionid, String dimTblName) throws GrillException;
-  public XStorageTableElement getStorageOfDim(GrillSessionHandle sessionid, String dimTblName, String storageName) throws GrillException;
-  public void dropStorageOfDimTable(GrillSessionHandle sessionid, String dimTblName, String storage) throws GrillException;
-  public List<String> getAllDimTableNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<String> getDimTableStorages(LensSessionHandle sessionid, String dimTblName) throws LensException;
+  public void createDimTableStorage(LensSessionHandle sessionid, String dimTblName, XStorageTableElement storageTable)
+      throws LensException;
+  public void dropAllStoragesOfDimTable(LensSessionHandle sessionid, String dimTblName) throws LensException;
+  public XStorageTableElement getStorageOfDim(LensSessionHandle sessionid, String dimTblName, String storageName) throws LensException;
+  public void dropStorageOfDimTable(LensSessionHandle sessionid, String dimTblName, String storage) throws LensException;
+  public List<String> getAllDimTableNames(LensSessionHandle sessionid) throws LensException;
 
-  public List<XPartition> getAllPartitionsOfDimTableStorage(GrillSessionHandle sessionid, String dimTblName, String storage, String filter) throws GrillException;
-  public void addPartitionToDimStorage(GrillSessionHandle sessionid, String dimTblName, String storageName, XPartition partition) throws GrillException;
+  public List<XPartition> getAllPartitionsOfDimTableStorage(LensSessionHandle sessionid, String dimTblName, String storage, String filter) throws LensException;
+  public void addPartitionToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName, XPartition partition) throws LensException;
 
   /**
    * Get all facts of cube. Cube can also be a derived cube
@@ -278,29 +278,29 @@ public interface CubeMetastoreService {
    *
    * @return List of FactTable objects
    *
-   * @throws GrillException
+   * @throws LensException
    */
-  public List<FactTable> getAllFactsOfCube(GrillSessionHandle sessionid, String cubeName) throws GrillException;
-  public FactTable getFactTable(GrillSessionHandle sessionid, String fact) throws GrillException;
-  public void createFactTable(GrillSessionHandle sessionid, FactTable fact, XStorageTables storageTables) throws GrillException;
-  public void updateFactTable(GrillSessionHandle sessionid, FactTable fact) throws GrillException;
-  public void dropFactTable(GrillSessionHandle sessionid, String fact, boolean cascade) throws GrillException;
-  public List<String> getAllFactNames(GrillSessionHandle sessionid) throws GrillException;
+  public List<FactTable> getAllFactsOfCube(LensSessionHandle sessionid, String cubeName) throws LensException;
+  public FactTable getFactTable(LensSessionHandle sessionid, String fact) throws LensException;
+  public void createFactTable(LensSessionHandle sessionid, FactTable fact, XStorageTables storageTables) throws LensException;
+  public void updateFactTable(LensSessionHandle sessionid, FactTable fact) throws LensException;
+  public void dropFactTable(LensSessionHandle sessionid, String fact, boolean cascade) throws LensException;
+  public List<String> getAllFactNames(LensSessionHandle sessionid) throws LensException;
 
-  public List<String> getStoragesOfFact(GrillSessionHandle sessionid, String fact) throws GrillException;
-  public void dropAllStoragesOfFact(GrillSessionHandle sessionid, String factName) throws GrillException;
-  public XStorageTableElement getStorageOfFact(GrillSessionHandle sessionid, String fact, String storageName) throws GrillException;
-  public void addStorageToFact(GrillSessionHandle sessionid, String fact, XStorageTableElement storageTable) throws GrillException;
-  public void dropStorageOfFact(GrillSessionHandle sessionid, String fact, String storage) throws GrillException;
+  public List<String> getStoragesOfFact(LensSessionHandle sessionid, String fact) throws LensException;
+  public void dropAllStoragesOfFact(LensSessionHandle sessionid, String factName) throws LensException;
+  public XStorageTableElement getStorageOfFact(LensSessionHandle sessionid, String fact, String storageName) throws LensException;
+  public void addStorageToFact(LensSessionHandle sessionid, String fact, XStorageTableElement storageTable) throws LensException;
+  public void dropStorageOfFact(LensSessionHandle sessionid, String fact, String storage) throws LensException;
 
-  public List<XPartition> getAllPartitionsOfFactStorage(GrillSessionHandle sessionid, String fact, String storage, String filter) throws GrillException;
-  public void addPartitionToFactStorage(GrillSessionHandle sessionid, String fact, String storageName, XPartition partition) throws GrillException;
+  public List<XPartition> getAllPartitionsOfFactStorage(LensSessionHandle sessionid, String fact, String storage, String filter) throws LensException;
+  public void addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName, XPartition partition) throws LensException;
 
-  public void dropPartitionFromStorage(GrillSessionHandle sessionid,
+  public void dropPartitionFromStorage(LensSessionHandle sessionid,
       String cubeTableName, String storageName, XTimePartSpec timePartSpec,
-      XPartSpec nonTimePartSpec, String updatePeriod) throws GrillException;
-  public void dropPartitionFromStorageByValues(GrillSessionHandle sessionid,
-      String cubeTableName, String storageName, String values) throws GrillException;
-  public void dropPartitionFromStorageByFilter(GrillSessionHandle sessionid,
-      String cubeTableName, String storageName, String filter) throws GrillException;
+      XPartSpec nonTimePartSpec, String updatePeriod) throws LensException;
+  public void dropPartitionFromStorageByValues(LensSessionHandle sessionid,
+      String cubeTableName, String storageName, String values) throws LensException;
+  public void dropPartitionFromStorageByFilter(LensSessionHandle sessionid,
+      String cubeTableName, String storageName, String filter) throws LensException;
 }

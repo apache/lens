@@ -47,12 +47,12 @@ import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
 import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.GrillSessionHandle;
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
-import org.apache.lens.server.GrillJerseyTest;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.GrillTestUtil;
+import org.apache.lens.server.LensJerseyTest;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
 import org.apache.lens.server.metastore.JAXBUtils;
 import org.apache.lens.server.metastore.MetastoreApp;
@@ -72,21 +72,21 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 @Test(groups="unit-test")
-public class TestMetastoreService extends GrillJerseyTest {
+public class TestMetastoreService extends LensJerseyTest {
   public static final Logger LOG = LogManager.getLogger(TestMetastoreService.class);
   private ObjectFactory cubeObjectFactory;
   protected String mediaType = MediaType.APPLICATION_XML;
   protected MediaType medType = MediaType.APPLICATION_XML_TYPE;
   protected String dbPFX = "TestMetastoreService_";
   CubeMetastoreServiceImpl metastoreService;
-  GrillSessionHandle lensSessionId;
+  LensSessionHandle lensSessionId;
 
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
     BasicConfigurator.configure();
     cubeObjectFactory = new ObjectFactory();
-    metastoreService = (CubeMetastoreServiceImpl)GrillServices.get().getService("metastore");
+    metastoreService = (CubeMetastoreServiceImpl)LensServices.get().getService("metastore");
     lensSessionId = metastoreService.openSession("foo", "bar", new HashMap<String, String>());
 
   }
@@ -1772,7 +1772,7 @@ public class TestMetastoreService extends GrillJerseyTest {
       // create hive table
       String tableName = "test_simple_table";
       SessionState.get().setCurrentDatabase(DB);
-      GrillTestUtil.createHiveTable(tableName);
+      LensTestUtil.createHiveTable(tableName);
 
       WebTarget target = target().path("metastore").path("nativetables");
       // get all native tables

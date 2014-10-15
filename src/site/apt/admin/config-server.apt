@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -23,7 +23,7 @@ Configuring lens server
   
 * Server configuration
 
-  Grill server provides you with various configuration options. Administrator
+  Lens server provides you with various configuration options. Administrator
   can configure the offered services from server, available drivers for query execution,
   query output options, enabling metrics from server and etc. The configuration parameters and
   their detailed description and default values are available {{{./config.html} here}}.

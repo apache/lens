@@ -71,7 +71,7 @@ public class IndexResource {
   @Path("/admin/status")
   @Produces(MediaType.TEXT_PLAIN)
   public String getStatus() {
-      return GrillServices.get().getServiceState().toString();
+      return LensServices.get().getServiceState().toString();
   }
 
 }

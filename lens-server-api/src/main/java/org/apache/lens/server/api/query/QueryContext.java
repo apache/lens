@@ -27,16 +27,16 @@ import java.util.UUID;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.lens.api.GrillConf;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
-import org.apache.lens.api.query.GrillQuery;
+import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryStatus;
-import org.apache.lens.server.api.driver.GrillDriver;
+import org.apache.lens.server.api.driver.LensDriver;
 
 
 import lombok.Getter;
@@ -50,11 +50,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter final private String userQuery;
   @Getter final private String submittedUser;  // Logged in user.
   transient @Getter @Setter private Configuration conf;
-  @Getter private GrillConf qconf;
+  @Getter private LensConf qconf;
   @Getter private Priority priority;
   @Getter final private boolean isPersistent;
   @Getter final private boolean isDriverPersistent;
-  transient @Getter @Setter private GrillDriver selectedDriver;
+  transient @Getter @Setter private LensDriver selectedDriver;
   @Getter @Setter private String driverQuery;
   @Getter private QueryStatus status;
   @Getter @Setter private String resultSetPath;
@@ -71,39 +71,39 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Getter @Setter private String queryName;
 
   public QueryContext(String query, String user, Configuration conf) {
-    this(query, user, new GrillConf(), conf, query, null, new Date().getTime());
+    this(query, user, new LensConf(), conf, query, null, new Date().getTime());
   }
 
-  public QueryContext(String query, String user, GrillConf qconf, Configuration conf) {
+  public QueryContext(String query, String user, LensConf qconf, Configuration conf) {
     this(query, user, qconf, conf, query, null, new Date().getTime());
   }
 
   public QueryContext(PreparedQueryContext prepared, String user, 
       Configuration conf) {
-    this(prepared, user, new GrillConf(), conf);
+    this(prepared, user, new LensConf(), conf);
   }
 
-  public QueryContext(PreparedQueryContext prepared, String user, GrillConf qconf,
+  public QueryContext(PreparedQueryContext prepared, String user, LensConf qconf,
       Configuration conf) {
     this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf),
         prepared.getDriverQuery(), prepared.getSelectedDriver(), new Date().getTime());
   }
 
   public QueryContext(String query, String user, Configuration conf, long submissionTime) {
-    this(query, user, new GrillConf(), conf, query, null, submissionTime);
+    this(query, user, new LensConf(), conf, query, null, submissionTime);
   }
 
-  public QueryContext(String userQuery, String user, GrillConf qconf,
-      Configuration conf, String driverQuery, GrillDriver selectedDriver, long submissionTime) {
+  public QueryContext(String userQuery, String user, LensConf qconf,
+      Configuration conf, String driverQuery, LensDriver selectedDriver, long submissionTime) {
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
     this.priority = Priority.NORMAL;
     this.conf = conf;
-    this.isPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_SET,
-        GrillConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
-    this.isDriverPersistent = conf.getBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
-        GrillConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
+    this.isPersistent = conf.getBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_SET,
+        LensConfConstants.DEFAULT_PERSISTENT_RESULT_SET);
+    this.isDriverPersistent = conf.getBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
+        LensConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
     this.userQuery = userQuery;
     this.submittedUser = user;
     this.driverQuery = driverQuery;
@@ -145,19 +145,19 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getResultSetParentDir() {
-    return conf.get(GrillConfConstants.RESULT_SET_PARENT_DIR,
-        GrillConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
+    return conf.get(LensConfConstants.RESULT_SET_PARENT_DIR,
+        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }
 
   public Path getHDFSResultDir() {
     return new Path(new Path (getResultSetParentDir(), conf.get(
-        GrillConfConstants.QUERY_HDFS_OUTPUT_PATH,
-        GrillConfConstants.DEFAULT_HDFS_OUTPUT_PATH)),
+        LensConfConstants.QUERY_HDFS_OUTPUT_PATH,
+        LensConfConstants.DEFAULT_HDFS_OUTPUT_PATH)),
         queryHandle.toString());
   }
 
-  public GrillQuery toGrillQuery() {
-    return new GrillQuery(queryHandle, userQuery,
+  public LensQuery toLensQuery() {
+    return new LensQuery(queryHandle, userQuery,
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
         driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
@@ -172,51 +172,51 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   /*
   Introduced for Recovering finished query.
    */
-  public void setStatusSkippingTransitionTest(QueryStatus newStatus) throws GrillException {
+  public void setStatusSkippingTransitionTest(QueryStatus newStatus) throws LensException {
     this.status = newStatus;
   }
 
-  public synchronized void setStatus(QueryStatus newStatus) throws GrillException {
+  public synchronized void setStatus(QueryStatus newStatus) throws LensException {
     if (!this.status.isValidateTransition(newStatus.getStatus())) {
-      throw new GrillException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
+      throw new LensException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
     }
     this.status = newStatus;
   }
   
   public String getResultHeader() {
-    return getConf().get(GrillConfConstants.QUERY_OUTPUT_HEADER);
+    return getConf().get(LensConfConstants.QUERY_OUTPUT_HEADER);
   }
 
   public String getResultFooter() {
-    return getConf().get(GrillConfConstants.QUERY_OUTPUT_FOOTER);
+    return getConf().get(LensConfConstants.QUERY_OUTPUT_FOOTER);
   }
 
   public String getResultEncoding() {
-    return conf.get(GrillConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
-        GrillConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
+    return conf.get(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
+        LensConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
   }
 
   public String getOuptutFileExtn() {
-    return conf.get(GrillConfConstants.QUERY_OUTPUT_FILE_EXTN,
-        GrillConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
+    return conf.get(LensConfConstants.QUERY_OUTPUT_FILE_EXTN,
+        LensConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
   }
 
   public boolean getCompressOutput() {
-    return conf.getBoolean(GrillConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
-        GrillConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
+    return conf.getBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION,
+        LensConfConstants.DEFAULT_OUTPUT_ENABLE_COMPRESSION);
   }
 
   public long getMaxResultSplitRows() {
-    return conf.getLong(GrillConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
-        GrillConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
+    return conf.getLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS,
+        LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
   }
 
   public boolean splitResultIntoMultipleFiles() {
-    return conf.getBoolean(GrillConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
-        GrillConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
+    return conf.getBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
+        LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);
   }
 
   public String getClusterUser() {
-    return conf.get(GrillConfConstants.SESSION_CLUSTER_USER, submittedUser);
+    return conf.get(LensConfConstants.SESSION_CLUSTER_USER, submittedUser);
   }
 }

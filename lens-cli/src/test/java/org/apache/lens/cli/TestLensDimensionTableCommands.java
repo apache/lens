@@ -22,7 +22,7 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensDimensionTableCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -31,7 +31,7 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestLensDimensionTableCommands extends GrillCliApplicationTest {
+public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(TestLensDimensionTableCommands.class);
   public static final String DIM_LOCAL = "dim_local";
@@ -40,7 +40,7 @@ public class TestLensDimensionTableCommands extends GrillCliApplicationTest {
 
   private static LensDimensionTableCommands getCommand() {
     if (command == null) {
-      GrillClient client = new GrillClient();
+      LensClient client = new LensClient();
       command = new LensDimensionTableCommands();
       command.setClient(client);
     }

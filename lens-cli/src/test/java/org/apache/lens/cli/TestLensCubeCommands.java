@@ -21,7 +21,7 @@ package org.apache.lens.cli;
 
 
 import org.apache.lens.cli.commands.LensCubeCommands;
-import org.apache.lens.client.GrillClient;
+import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -30,12 +30,12 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
-public class TestLensCubeCommands extends GrillCliApplicationTest {
+public class TestLensCubeCommands extends LensCliApplicationTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestLensCubeCommands.class);
 
   @Test
   public void testCubeCommands() throws Exception {
-    GrillClient client = new GrillClient();
+    LensClient client = new LensClient();
     LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
     LOG.debug("Starting to test cube commands");
@@ -79,7 +79,7 @@ public class TestLensCubeCommands extends GrillCliApplicationTest {
       writer.close();
 
       String desc = command.describeCube("sample_cube");
-      GrillClient client = command.getClient();
+      LensClient client = command.getClient();
       LOG.debug(desc);
       String propString = "name : sample_cube.prop  value : sample";
       String propString1 = "name : sample_cube.prop1  value : sample1";

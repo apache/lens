@@ -21,7 +21,7 @@ package org.apache.lens.server.api.query;
  */
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.SubmitOp;
 
 
@@ -35,8 +35,8 @@ public interface QueryAcceptor {
    *
    * @return null if query should be accepted, rejection cause otherwise
    * 
-   * @throws GrillException
+   * @throws LensException
    */
-  public String accept(String query, Configuration conf, SubmitOp submitOp) throws GrillException;
+  public String accept(String query, Configuration conf, SubmitOp submitOp) throws LensException;
 
 }

@@ -23,12 +23,12 @@ import lombok.Getter;
 
 import java.util.Map;
 
-import org.apache.lens.server.api.events.GrillEvent;
+import org.apache.lens.server.api.events.LensEvent;
 
 /**
  * Event class which encapsulates the partition information.
  */
-public class PartitionEvent extends GrillEvent {
+public class PartitionEvent extends LensEvent {
 
   private final String eventName;
 

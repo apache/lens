@@ -38,7 +38,7 @@ import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultColumn;
 import org.apache.lens.driver.hive.EmbeddedThriftConnection;
@@ -47,10 +47,10 @@ import org.apache.lens.driver.hive.HiveInMemoryResultSet;
 import org.apache.lens.driver.hive.HivePersistentResultSet;
 import org.apache.lens.driver.hive.HiveQueryPlan;
 import org.apache.lens.driver.hive.ThriftConnection;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.GrillResultSet;
-import org.apache.lens.server.api.driver.GrillResultSetMetadata;
+import org.apache.lens.server.api.driver.LensResultSet;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -84,13 +84,13 @@ public class TestHiveDriver {
 
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext context = new QueryContext(
         "USE " + TestHiveDriver.class.getSimpleName(), null, conf);
     driver.execute(context);
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     System.out.println("Driver created");
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
@@ -105,11 +105,11 @@ public class TestHiveDriver {
   protected void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName  +"(ID STRING)" +
-        " TBLPROPERTIES ('" + GrillConfConstants.STORAGE_COST + "'='500')";
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+        " TBLPROPERTIES ('" + LensConfConstants.STORAGE_COST + "'='500')";
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     // Craete again
     QueryContext context = new QueryContext(createTable, null, conf);
-    GrillResultSet resultSet = driver.execute(context);
+    LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
 
     // Load some data into the table
@@ -124,7 +124,7 @@ public class TestHiveDriver {
   @Test
   public void testInsertOverwriteConf() throws Exception {
     createTestTable("test_insert_overwrite");
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     String query = "SELECT ID FROM test_insert_overwrite";
     QueryContext context = new QueryContext(query, null, conf);
     driver.addPersistentPath(context);
@@ -136,11 +136,11 @@ public class TestHiveDriver {
   @Test
   public void testTemptable() throws Exception {
     createTestTable("test_temp");
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     Hive.get(conf).dropTable("test_temp_output");
     String query = "CREATE TABLE test_temp_output AS SELECT ID FROM test_temp";
     QueryContext context = new QueryContext(query, null, conf);
-    GrillResultSet resultSet = driver.execute(context);
+    LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
@@ -156,18 +156,18 @@ public class TestHiveDriver {
   @Test
   public void testExecuteQuery() throws Exception {
     createTestTable("test_execute");
-    GrillResultSet resultSet = null;
+    LensResultSet resultSet = null;
     // Execute a select query
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String select = "SELECT ID FROM test_execute";
     QueryContext context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
     validateInMemoryResult(resultSet);
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     context = new QueryContext(select, null, conf);
     resultSet = driver.execute(context);
     validatePersistentResult(resultSet, TEST_DATA_FILE, context.getHDFSResultDir(), false);
-    conf.set(GrillConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
+    conf.set(LensConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
@@ -178,18 +178,18 @@ public class TestHiveDriver {
     Assert.assertEquals(0, driver.getHiveHandleSize());
   }
 
-  private void validateInMemoryResult(GrillResultSet resultSet) throws GrillException, IOException {
+  private void validateInMemoryResult(LensResultSet resultSet) throws LensException, IOException {
     validateInMemoryResult(resultSet, null);
   }
 
-  private void validateInMemoryResult(GrillResultSet resultSet, String outputTable)
-      throws GrillException, IOException {
+  private void validateInMemoryResult(LensResultSet resultSet, String outputTable)
+      throws LensException, IOException {
     assertNotNull(resultSet);
     assertTrue(resultSet instanceof HiveInMemoryResultSet);
     HiveInMemoryResultSet inmemrs = (HiveInMemoryResultSet) resultSet;
 
     // check metadata
-    GrillResultSetMetadata rsMeta = inmemrs.getMetadata();
+    LensResultSetMetadata rsMeta = inmemrs.getMetadata();
     List<ColumnDescriptor>  columns = rsMeta.getColumns();
     assertNotNull(columns);
     assertEquals(columns.size(), 1);
@@ -230,7 +230,7 @@ public class TestHiveDriver {
 
     @Override
     public void preDriverRun(HiveDriverRunHookContext arg0) throws Exception {
-      throw new GrillException("Failing this run");
+      throw new LensException("Failing this run");
     }
     
   }
@@ -241,7 +241,7 @@ public class TestHiveDriver {
 
     // Now run a command that would fail
     String expectFail = "SELECT ID FROM test_execute_sync";
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     conf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     QueryContext context = new QueryContext(expectFail, null, conf);
     driver.executeAsync(context);
@@ -254,7 +254,7 @@ public class TestHiveDriver {
     conf.set("hive.exec.driver.run.hooks", "");
     //  Async select query
     String select = "SELECT ID FROM test_execute_sync";
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
     Assert.assertEquals(1, driver.getHiveHandleSize());
@@ -262,7 +262,7 @@ public class TestHiveDriver {
     driver.closeQuery(context.getQueryHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     context = new QueryContext(select, null, conf);
     driver.executeAsync(context);
     Assert.assertEquals(1, driver.getHiveHandleSize());
@@ -270,7 +270,7 @@ public class TestHiveDriver {
     driver.closeQuery(context.getQueryHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
-    conf.set(GrillConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
+    conf.set(LensConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
@@ -313,7 +313,7 @@ public class TestHiveDriver {
   @Test
   public void testCancelAsyncQuery() throws Exception {
     createTestTable("test_cancel_async");
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext context = new QueryContext("SELECT ID FROM test_cancel_async", null, conf);
     driver.executeAsync(context);
     driver.cancelQuery(context.getQueryHandle());
@@ -325,12 +325,12 @@ public class TestHiveDriver {
     try {
       driver.cancelQuery(context.getQueryHandle());
       fail("Cancel on closed query should throw error");
-    } catch (GrillException exc) {
+    } catch (LensException exc) {
       assertTrue(exc.getMessage().startsWith("Query not found"));
     }
   }
 
-  private void validatePersistentResult(GrillResultSet resultSet, String dataFile, 
+  private void validatePersistentResult(LensResultSet resultSet, String dataFile, 
       Path outptuDir, boolean formatNulls) throws Exception {
     assertTrue(resultSet instanceof HivePersistentResultSet);
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
@@ -384,11 +384,11 @@ public class TestHiveDriver {
   @Test
   public void testPersistentResultSet() throws Exception {
     createTestTable("test_persistent_result_set");
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    conf.setBoolean(GrillConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
-    conf.set(GrillConfConstants.RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
+    conf.set(LensConfConstants.RESULT_SET_PARENT_DIR, TEST_OUTPUT_DIR);
     QueryContext ctx = new QueryContext("SELECT ID FROM test_persistent_result_set", null, conf);
-    GrillResultSet resultSet = driver.execute(ctx);
+    LensResultSet resultSet = driver.execute(ctx);
     validatePersistentResult(resultSet, TEST_DATA_FILE, ctx.getHDFSResultDir(), false);
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
@@ -399,7 +399,7 @@ public class TestHiveDriver {
     driver.closeQuery(ctx.getQueryHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
-    conf.set(GrillConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
+    conf.set(LensConfConstants.QUERY_OUTPUT_DIRECTORY_FORMAT,
         "ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'" +
             " WITH SERDEPROPERTIES ('serialization.null.format'='-NA-'," +
         " 'field.delim'=','  ) STORED AS TEXTFILE ");
@@ -447,7 +447,7 @@ public class TestHiveDriver {
         "SELECT ID FROM test_explain", null, conf);
     plan = driver.explainAndPrepare(pctx);
     QueryContext qctx = new QueryContext(pctx, null, conf);
-    GrillResultSet result = driver.execute(qctx);
+    LensResultSet result = driver.execute(qctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
     validateInMemoryResult(result);
 
@@ -505,7 +505,7 @@ public class TestHiveDriver {
   @Test
   public void testExplainOutputPersistent() throws Exception {
     createTestTable("explain_test_1");
-    conf.setBoolean(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
+    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
     PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
@@ -516,7 +516,7 @@ public class TestHiveDriver {
     assertTrue(plan2.getTableWeights().containsKey("explain_test_1"));
     assertEquals(plan2.getNumSels(), 1);
     QueryContext ctx = new QueryContext(pctx, null, conf);
-    GrillResultSet resultSet = driver.execute(ctx);
+    LensResultSet resultSet = driver.execute(ctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;
     String path = persistentResultSet.getOutputPath();

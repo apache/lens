@@ -40,8 +40,8 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.api.GrillException;
-import org.apache.lens.server.api.GrillConfConstants;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.log4j.Logger;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
@@ -626,7 +626,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public synchronized String rewrite(Configuration conf, String query)
-      throws GrillException {
+      throws LensException {
     this.query = query;
     this.conf = conf;
     StringBuilder mergedQuery = new StringBuilder();
@@ -658,16 +658,16 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
     } catch (ParseException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     } catch (SemanticException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     } catch (HiveException e) {
-      throw new GrillException(e);
+      throw new LensException(e);
     }
     return queryReplacedUdf;
   }
 
-  // Replace Grill database names with storage's proper DB and table name based
+  // Replace Lens database names with storage's proper DB and table name based
   // on table properties.
   protected void replaceWithUnderlyingStorage(ASTNode tree,
       CubeMetastoreClient metastoreClient) {
@@ -732,14 +732,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       throws HiveException {
     Table tbl = client.getHiveTable(table);
     return tbl == null ? null : tbl
-        .getProperty(GrillConfConstants.NATIVE_DB_NAME);
+        .getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
   String getUnderlyingTableName(CubeMetastoreClient client, String table)
       throws HiveException {
     Table tbl = client.getHiveTable(table);
     return tbl == null ? null : tbl
-        .getProperty(GrillConfConstants.NATIVE_TABLE_NAME);
+        .getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 
 }

@@ -30,7 +30,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    switch (GrillServices.get().getServiceMode()) {
+    switch (LensServices.get().getServiceMode()) {
     case READ_ONLY:
       // Allows all requests on session and only GET everywhere 
       if (!requestContext.getUriInfo().getPath().startsWith("/session")) {

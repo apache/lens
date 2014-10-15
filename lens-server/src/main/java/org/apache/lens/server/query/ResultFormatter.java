@@ -25,11 +25,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.lens.api.GrillException;
+import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.GrillServices;
-import org.apache.lens.server.api.GrillConfConstants;
-import org.apache.lens.server.api.driver.GrillResultSet;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.PersistentResultSet;
 import org.apache.lens.server.api.events.AsyncEventListener;
@@ -64,15 +64,15 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       }
       if (ctx.isResultAvailableInDriver()) {
         LOG.info("Result formatter for " + queryHandle);
-        GrillResultSet resultSet = queryService.getDriverResultset(queryHandle);
+        LensResultSet resultSet = queryService.getDriverResultset(queryHandle);
         if (resultSet instanceof PersistentResultSet) {
           // skip result formatting if persisted size is huge
           Path persistedDirectory = new Path(ctx.getHdfsoutPath());
           FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
           long size = fs.getContentSummary(persistedDirectory).getLength();
           long threshold = ctx.getConf().getLong(
-              GrillConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
-              GrillConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
+              LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
+              LensConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
           LOG.info(" size :" + size + " threshold:" + threshold);
           if (size > threshold) {
             LOG.warn("Persisted result size more than the threshold, size:" +
@@ -86,8 +86,8 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         QueryOutputFormatter formatter = ctx.getQueryOutputFormatter();
         try {
           formatter.init(ctx, resultSet.getMetadata());
-          if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_HEADER,
-              GrillConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
+          if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_HEADER,
+              LensConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
             formatter.writeHeader();
           }
           if (resultSet instanceof PersistentResultSet) {
@@ -102,8 +102,8 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
               ((InMemoryOutputFormatter)formatter).writeRow(inmemory.next());
             }
           }
-          if (ctx.getConf().getBoolean(GrillConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
-              GrillConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
+          if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
+              LensConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
             formatter.writeFooter();
           }
           formatter.commit();
@@ -115,39 +115,39 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       }
     } catch (Exception e) {
       MetricsService metricsService =
-        (MetricsService) GrillServices.get().getService(MetricsService.NAME);
+        (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
         queryService.setFailedStatus(ctx, "Result formatting failed!", e.getLocalizedMessage());
-      } catch (GrillException e1) {
+      } catch (LensException e1) {
         LOG.error("Exception while setting failure for " + queryHandle, e1);
       }
     }
   }
 
   @SuppressWarnings("unchecked")
-  void createAndSetFormatter(QueryContext ctx) throws GrillException {
+  void createAndSetFormatter(QueryContext ctx) throws LensException {
     if (ctx.getQueryOutputFormatter() == null && ctx.isPersistent()) {
       QueryOutputFormatter formatter;
       try {
         if (ctx.isDriverPersistent()) {
           formatter = ReflectionUtils.newInstance(
               ctx.getConf().getClass(
-                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  LensConfConstants.QUERY_OUTPUT_FORMATTER,
                   (Class<? extends PersistedOutputFormatter>)Class.forName(
-                      GrillConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER),
+                      LensConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER),
                       PersistedOutputFormatter.class), ctx.getConf());
         } else {
           formatter = ReflectionUtils.newInstance(
               ctx.getConf().getClass(
-                  GrillConfConstants.QUERY_OUTPUT_FORMATTER,
+                  LensConfConstants.QUERY_OUTPUT_FORMATTER,
                   (Class<? extends InMemoryOutputFormatter>)Class.forName(
-                      GrillConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
+                      LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
                       InMemoryOutputFormatter.class), ctx.getConf()); 
         }
       } catch (ClassNotFoundException e) {
-        throw new GrillException(e);
+        throw new LensException(e);
       }
       LOG.info("Created result formatter:" + formatter.getClass().getCanonicalName());
       ctx.setQueryOutputFormatter(formatter);
