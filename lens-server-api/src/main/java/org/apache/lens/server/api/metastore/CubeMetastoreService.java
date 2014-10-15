@@ -303,4 +303,7 @@ public interface CubeMetastoreService {
       String cubeTableName, String storageName, String values) throws LensException;
   public void dropPartitionFromStorageByFilter(LensSessionHandle sessionid,
       String cubeTableName, String storageName, String filter) throws LensException;
+
+  public FlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName) throws LensException;
+
 }
