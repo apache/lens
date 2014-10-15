@@ -118,7 +118,7 @@ public class GrillServer {
       @Override
       public void handle(Signal signal) {
         try {
-          LOG.info("Request for stopping grill server received");
+          LOG.info("Request for stopping lens server received");
           if (thisServer != null) {
             synchronized (thisServer) {
               thisServer.notify();

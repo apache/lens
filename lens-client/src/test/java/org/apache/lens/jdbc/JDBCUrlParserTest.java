@@ -56,22 +56,22 @@ public class JDBCUrlParserTest {
     Assert.assertEquals("blah",
         sessionVars.get("password"),"The password should be blah");
 
-    Map<String, String> grillConf = params.getGrillConfs();
+    Map<String, String> lensConf = params.getGrillConfs();
     Assert.assertEquals(2,
-        grillConf.size(),"You should have two configuration variables");
+        lensConf.size(),"You should have two configuration variables");
     Assert.assertEquals( "blah1",
-        grillConf.get("conf1"),"The value for conf1 should be blah1");
+        lensConf.get("conf1"),"The value for conf1 should be blah1");
     Assert.assertEquals( "blah2",
-        grillConf.get("conf2"),"The value for conf2 should be blah2");
+        lensConf.get("conf2"),"The value for conf2 should be blah2");
 
-    Map<String, String> grillVars = params.getGrillVars();
+    Map<String, String> lensVars = params.getGrillVars();
 
     Assert.assertEquals( 2,
-        grillVars.size(),"You should have two grill variables");
+        lensVars.size(),"You should have two lens variables");
     Assert.assertEquals( "123",
-        grillVars.get("var1"),"The value for var1 should be 123");
+        lensVars.get("var1"),"The value for var1 should be 123");
     Assert.assertEquals("456",
-        grillVars.get("var2"),"The value for var2 should be 456");
+        lensVars.get("var2"),"The value for var2 should be 456");
   }
 
   @Test
@@ -88,6 +88,6 @@ public class JDBCUrlParserTest {
     Assert.assertTrue(
         params.getGrillConfs().isEmpty(),"The conf list should be empty");
     Assert.assertTrue(
-        params.getGrillVars().isEmpty(),"The grill var list should be empty");
+        params.getGrillVars().isEmpty(),"The lens var list should be empty");
   }
 }

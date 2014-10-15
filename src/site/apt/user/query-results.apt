@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -21,7 +21,7 @@ Query results
 
   This document contains details on query result - fetching, formatting and etc.
   
-  Grill query service allows users to fetch results of query by specifying the
+  Lens query service allows users to fetch results of query by specifying the
   handle-id. It provides rest api to fetch result-metadata and the results.
   
   Here are various options provided for result formatting and fetching:
@@ -32,8 +32,8 @@ Query results
   results of the query, with a custom format.
 
   User can provide a custom output formatter which implements 
-  {{{../apidocs/com/inmobi/grill/server/api/query/InMemoryOutputFormatter.html}InMemoryOutputFormatter}} or 
-  {{{../apidocs/com/inmobi/grill/server/api/query/PersistedOutputFormatter.html}PersistedOutputFormatter}}
+  {{{../apidocs/org/apache/lens/server/api/query/InMemoryOutputFormatter.html}InMemoryOutputFormatter}} or 
+  {{{../apidocs/org/apache/lens/server/api/query/PersistedOutputFormatter.html}PersistedOutputFormatter}}
 
   Default implementation of formatting offers writing it into a file, but a new
   implementation can be provided which persist in a db or whatever.

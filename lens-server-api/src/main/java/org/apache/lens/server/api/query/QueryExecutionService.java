@@ -188,7 +188,7 @@ public interface QueryExecutionService {
   /**
    * Get the http end point for the result set
    *
-   * @param sessionHandle The grill session handle
+   * @param sessionHandle The lens session handle
    * @param queryHandle The query handle
    *
    * @return returns javax.ws.rs.core.Response object

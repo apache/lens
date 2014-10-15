@@ -51,7 +51,7 @@ import org.testng.Assert;
 public class GrillTestUtil {
 
   public static void createTable(String tblName, WebTarget parent,
-      GrillSessionHandle grillSessionId) throws InterruptedException {
+      GrillSessionHandle lensSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
@@ -60,7 +60,7 @@ public class GrillTestUtil {
     String createTable = "CREATE TABLE IF NOT EXISTS " + tblName  +"(ID INT, IDSTR STRING)";
   
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         createTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -74,10 +74,10 @@ public class GrillTestUtil {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
   
     // wait till the query finishes
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -90,7 +90,7 @@ public class GrillTestUtil {
   }
 
   public static void loadData(String tblName, final String TEST_DATA_FILE,
-      WebTarget parent, GrillSessionHandle grillSessionId) throws InterruptedException {
+      WebTarget parent, GrillSessionHandle lensSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
@@ -100,7 +100,7 @@ public class GrillTestUtil {
         "' OVERWRITE INTO TABLE " + tblName;
   
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         dataLoad));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -114,10 +114,10 @@ public class GrillTestUtil {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
   
     // wait till the query finishes
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
@@ -126,7 +126,7 @@ public class GrillTestUtil {
   }
 
   public static void dropTable(String tblName, WebTarget parent,
-      GrillSessionHandle grillSessionId) throws InterruptedException {
+      GrillSessionHandle lensSessionId) throws InterruptedException {
     GrillConf conf = new GrillConf();
     conf.addProperty(GrillConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
@@ -135,7 +135,7 @@ public class GrillTestUtil {
     String createTable = "DROP TABLE IF EXISTS " + tblName ;
   
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        grillSessionId, MediaType.APPLICATION_XML_TYPE));
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
         createTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
@@ -149,10 +149,10 @@ public class GrillTestUtil {
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
   
     // wait till the query finishes
-    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+    GrillQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
     QueryStatus stat = ctx.getStatus();
     while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", grillSessionId).request().get(GrillQuery.class);
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(GrillQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }

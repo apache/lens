@@ -63,7 +63,7 @@ public abstract class GrillService extends CompositeService implements Externali
   protected boolean stopped = false;
 
   //Static session map which is used by query submission thread to get the
-  //grill session before submitting a query to hive server
+  //lens session before submitting a query to hive server
   protected static ConcurrentHashMap<String, GrillSessionHandle> sessionMap =
       new ConcurrentHashMap<String, GrillSessionHandle>();
 
@@ -129,15 +129,15 @@ public abstract class GrillService extends CompositeService implements Externali
     } catch (Exception e) {
       throw new GrillException (e);
     }
-    GrillSessionHandle grillSession = new GrillSessionHandle(
+    GrillSessionHandle lensSession = new GrillSessionHandle(
         sessionHandle.getHandleIdentifier().getPublicId(),
         sessionHandle.getHandleIdentifier().getSecretId());
-    sessionMap.put(grillSession.getPublicId().toString(), grillSession);
-    return grillSession;
+    sessionMap.put(lensSession.getPublicId().toString(), lensSession);
+    return lensSession;
   }
 
   /**
-   * Restore session from previous instance of grill server
+   * Restore session from previous instance of lens server
    */
   public void restoreSession(GrillSessionHandle sessionHandle,
                                String userName,
@@ -204,12 +204,12 @@ public abstract class GrillService extends CompositeService implements Externali
   }
 
   public void acquire(GrillSessionHandle sessionHandle) {
-    LOG.debug("Acquiring grill session:" + sessionHandle.getPublicId());
+    LOG.debug("Acquiring lens session:" + sessionHandle.getPublicId());
     getSession(sessionHandle).acquire();
   }
 
   /**
-   * Acquire a grill session specified by the public UUID
+   * Acquire a lens session specified by the public UUID
    * @param sessionHandle public UUID of the session
    * @throws GrillException if session cannot be acquired
    */
@@ -219,11 +219,11 @@ public abstract class GrillService extends CompositeService implements Externali
 
   public void release(GrillSessionHandle sessionHandle) {
     getSession(sessionHandle).release();
-    LOG.debug("Released grill session:" + sessionHandle.getPublicId());
+    LOG.debug("Released lens session:" + sessionHandle.getPublicId());
   }
 
   /**
-   * Releases a grill session specified by the public UUID
+   * Releases a lens session specified by the public UUID
    * @throws GrillException if session cannot be released
    */
   public void release(String sessionHandle) throws GrillException {
@@ -242,9 +242,9 @@ public abstract class GrillService extends CompositeService implements Externali
       String path) throws GrillException {
   }
 
-  public static SessionHandle getHiveSessionHandle(GrillSessionHandle grillHandle) {
+  public static SessionHandle getHiveSessionHandle(GrillSessionHandle lensHandle) {
     return new SessionHandle(
-        new HandleIdentifier(grillHandle.getPublicId(), grillHandle.getSecretId()), CLIService.SERVER_VERSION);
+        new HandleIdentifier(lensHandle.getPublicId(), lensHandle.getSecretId()), CLIService.SERVER_VERSION);
   }
 
   public Configuration getGrillConf(GrillSessionHandle sessionHandle, GrillConf conf) throws GrillException {

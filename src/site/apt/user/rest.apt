@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,4 +17,4 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill REST API Docs
+Lens REST API Docs

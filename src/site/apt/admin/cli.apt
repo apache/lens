@@ -21,23 +21,23 @@ Admin Command Line Interface Documentation
 
 * Server administration
 
-  The grill server installation comes with grill-ctl which provides following
+  The lens server installation comes with lens-ctl which provides following
 commands.
 
 +---+
 
-       bin/grill-ctl start // Start the server
-       bin/grill-ctl stop // Stop the server
-       bin/grill-ctl restart // Restart the server, stop followed by stop
-       bin/grill-ctl force [stop|restart] // Forcefully stop the server 
-       bin/grill-ctl status // Server status
-       bin/grill-ctl stack // Dump the thread stacks
-       bin/grill-ctl memory-histogram // Server's memory histogram
-       bin/grill-ctl memory-dump // Server's memory dump dumped to file in log directory
+       bin/lens-ctl start // Start the server
+       bin/lens-ctl stop // Stop the server
+       bin/lens-ctl restart // Restart the server, stop followed by stop
+       bin/lens-ctl force [stop|restart] // Forcefully stop the server 
+       bin/lens-ctl status // Server status
+       bin/lens-ctl stack // Dump the thread stacks
+       bin/lens-ctl memory-histogram // Server's memory histogram
+       bin/lens-ctl memory-dump // Server's memory dump dumped to file in log directory
 
 +---+
 
-  grill-ctl accepts the following options for all the commands
+  lens-ctl accepts the following options for all the commands
   
   * "--conf or -c" : User can pass optional conf directory
   

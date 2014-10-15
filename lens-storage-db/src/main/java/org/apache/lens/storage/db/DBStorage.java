@@ -30,7 +30,7 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 public class DBStorage extends Storage {
 
-  public static final String DB_URL ="grill.storage.db.url";
+  public static final String DB_URL ="lens.storage.db.url";
   private String dbUrl = null;
   protected DBStorage(String dbUrl, String name, Map<String, String> properties) {
     super(name, properties);

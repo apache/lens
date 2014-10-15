@@ -51,12 +51,12 @@ import org.apache.lens.server.user.UserConfigLoaderFactory;
 public class GrillServices extends CompositeService implements ServiceProvider {
   public static final Log LOG = LogFactory.getLog(GrillServices.class);
 
-  public static final String GRILL_SERVICES_NAME = "grill_services";
+  public static final String GRILL_SERVICES_NAME = "lens_services";
   private static GrillServices INSTANCE = new GrillServices(GRILL_SERVICES_NAME);
   private HiveConf conf;
   private CLIService cliService;
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
-  private final List<GrillService> grillServices = new ArrayList<GrillService>();
+  private final List<GrillService> lensServices = new ArrayList<GrillService>();
   private Path persistDir;
   private boolean stopping = false;
   private long snapShotInterval;
@@ -110,7 +110,7 @@ public class GrillServices extends CompositeService implements ServiceProvider {
           GrillService service  = (GrillService) constructor.newInstance(new Object[]
               {cliService});
           addService(service);
-          grillServices.add(service);
+          lensServices.add(service);
         } catch (Exception e) {
           LOG.warn("Could not add service:" + sName, e);
           throw new RuntimeException("Could not add service:" + sName, e);
@@ -136,9 +136,9 @@ public class GrillServices extends CompositeService implements ServiceProvider {
       }
       snapShotInterval = conf.getLong(GrillConfConstants.SERVER_SNAPSHOT_INTERVAL,
           GrillConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
-      LOG.info("Initialized grill services: " + services.keySet().toString());
+      LOG.info("Initialized lens services: " + services.keySet().toString());
       UserConfigLoaderFactory.init(conf);
-      timer = new Timer("grill-server-snapshotter", true);
+      timer = new Timer("lens-server-snapshotter", true);
     }
   }
 
@@ -153,7 +153,7 @@ public class GrillServices extends CompositeService implements ServiceProvider {
           persistGrillServiceState();
           LOG.info("SnapShot of Grill Services created");
         } catch (IOException e) {
-          LOG.warn("Unable to persist grill server state", e);
+          LOG.warn("Unable to persist lens server state", e);
         }
       }
     }, snapShotInterval, snapShotInterval);
@@ -164,7 +164,7 @@ public class GrillServices extends CompositeService implements ServiceProvider {
         GrillConfConstants.DEFAULT_SERVER_RECOVER_ON_RESTART)) {
       FileSystem fs = persistDir.getFileSystem(conf);
 
-      for (GrillService service : grillServices) {
+      for (GrillService service : lensServices) {
         ObjectInputStream in = null;
         try {
           try {
@@ -190,7 +190,7 @@ public class GrillServices extends CompositeService implements ServiceProvider {
       FileSystem fs = persistDir.getFileSystem(conf);
       LOG.info("Persisting server state in " + persistDir);
 
-      for (GrillService service : grillServices) {
+      for (GrillService service : lensServices) {
         LOG.info("Persisting state of service:" + service.getName());
         Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
         ObjectOutputStream out = null;
@@ -217,9 +217,9 @@ public class GrillServices extends CompositeService implements ServiceProvider {
 
   public synchronized void stop() {
     if (getServiceState() != STATE.STOPPED) {
-      LOG.info("Stopping grill server");
+      LOG.info("Stopping lens server");
       stopping = true;
-      for (GrillService service : grillServices) {
+      for (GrillService service : lensServices) {
         service.prepareStopping();
       }
       timer.cancel();
@@ -254,6 +254,6 @@ public class GrillServices extends CompositeService implements ServiceProvider {
   }
 
   public List<GrillService> getGrillServices() {
-    return grillServices;
+    return lensServices;
   }
 }

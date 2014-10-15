@@ -24,7 +24,7 @@ package org.apache.lens.client;
 import org.apache.hadoop.conf.Configuration;
 
 /**
- * Configuration Class which is used in the grill client
+ * Configuration Class which is used in the lens client
  */
 public class GrillClientConfig extends Configuration {
 
@@ -56,7 +56,7 @@ public class GrillClientConfig extends Configuration {
   /**
    * Get the username from config
    *
-   * @return Returns grill client user name
+   * @return Returns lens client user name
    */
   public String getUser() {
     return this.get(USER_NAME, DEFAULT_USER_NAME);
@@ -66,7 +66,7 @@ public class GrillClientConfig extends Configuration {
   }
 
   /**
-   * Returns the configured grill server url
+   * Returns the configured lens server url
    *
    * @return server url
    */
@@ -75,7 +75,7 @@ public class GrillClientConfig extends Configuration {
   }
 
   /**
-   * Returns the configured grill server database client wants to access
+   * Returns the configured lens server database client wants to access
    *
    * @return database returns database to connect, defaults to 'default'
    */
@@ -84,7 +84,7 @@ public class GrillClientConfig extends Configuration {
   }
 
   /**
-   * Returns the session service path on grill server
+   * Returns the session service path on lens server
    * @return web app fragment pointing to session service, defaults to session
    */
   public String getSessionResourcePath() {
@@ -92,7 +92,7 @@ public class GrillClientConfig extends Configuration {
   }
 
   /**
-   * Returns the query service path on grill server
+   * Returns the query service path on lens server
    * @return web app fragment pointing to query service, defaults to queryapi
    */
   public String getQueryResourcePath() {
@@ -100,7 +100,7 @@ public class GrillClientConfig extends Configuration {
   }
 
   /**
-   * Sets the database to connect on grill server
+   * Sets the database to connect on lens server
    * @param dbName database to connect to
    */
   public void setGrillDatabase(String dbName) {

@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 
 
 /**
- * Top level JDBC driver for Grill
+ * Top level JDBC driver for Lens
  */
 public class GrillJdbcDriver implements Driver {
 
@@ -67,18 +67,18 @@ public class GrillJdbcDriver implements Driver {
     DriverPropertyInfo hostProp = new DriverPropertyInfo(
         JDBCUtils.HOST_PROPERTY_KEY, info.getProperty(JDBCUtils.HOST_PROPERTY_KEY));
     hostProp.required = false;
-    hostProp.description = "Hostname of Grill Server. Defaults to localhost";
+    hostProp.description = "Hostname of Lens Server. Defaults to localhost";
 
     DriverPropertyInfo portProp = new DriverPropertyInfo(
         JDBCUtils.PORT_PROPERTY_KEY, info.getProperty(JDBCUtils.PORT_PROPERTY_KEY));
     portProp.required = false;
-    portProp.description = "Portnumber where grill server runs. " +
+    portProp.description = "Portnumber where lens server runs. " +
         "Defaults to 8080";
 
     DriverPropertyInfo dbProp = new DriverPropertyInfo(
         JDBCUtils.DB_PROPERTY_KEY, info.getProperty(JDBCUtils.DB_PROPERTY_KEY));
     dbProp.required = false;
-    dbProp.description = "Database to connect to on grill server. " +
+    dbProp.description = "Database to connect to on lens server. " +
         "Defaults to 'default'";
 
 

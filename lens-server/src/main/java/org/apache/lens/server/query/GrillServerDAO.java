@@ -70,7 +70,7 @@ public class GrillServerDAO {
   }
 
   /**
-   * Method to create finished queries table, this is required for embedded grill server.
+   * Method to create finished queries table, this is required for embedded lens server.
    * For production server we will not be creating tables as it would be created upfront.
    */
   public void createFinishedQueriesTable() throws Exception {

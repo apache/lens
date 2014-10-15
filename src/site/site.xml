@@ -1,6 +1,6 @@
 <!--
   #%L
-  Grill
+  Lens
   %%
   Copyright (C) 2014 Inmobi
   %%
@@ -17,37 +17,37 @@
   limitations under the License.
   #L%
   -->
-<project name="Grill" xmlns="http://maven.apache.org/DECORATION/1.3.0"
+<project name="Lens" xmlns="http://maven.apache.org/DECORATION/1.3.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/DECORATION/1.3.0 http://maven.apache.org/xsd/decoration-1.3.0.xsd">
 
 	<publishDate position="right"/>
 	<version position="right"/>
 	<bannerLeft>
-    <name>Grill Analytics Platform for InMobi</name>
-		<title>Grill Analytics Platform</title>
+    <name>Lens Analytics Platform for InMobi</name>
+		<title>Lens Analytics Platform</title>
 		<src>http://inmobi.github.io/grill/grill-logo.png</src>
 		<href>http://inmobi.github.io/grill</href>
   </bannerLeft>
 	
  <body>
-    <menu name="Grill" >
+    <menu name="Lens" >
       <item name="Overview" href="index.html" />
       <item name="Getting Started" href="./gettingstarted/quick-start.html" />
       <item name="Install and Run" href="./gettingstarted/install-steps.html" />
       <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
     </menu>
 		<menu name="User Documentation">
-      <item name="Grill User Guide" href="./user/index.html" />
+      <item name="Lens User Guide" href="./user/index.html" />
       <item name="OLAP data cube" href="./user/olap-cube.html" />
       <item name="REST API" href="./rest.html" />
-      <item name="Grill CLI" href="./user/cli.html" />
+      <item name="Lens CLI" href="./user/cli.html" />
 			<item name="Java Client Library" href="./user/java-client.html"/>
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
 			<item name="FAQ" href="./user/faq.html"/>
 		</menu>
 		<menu name="Developer Documentation">
-      <item name="Grill Design" href="./developer/design.html" />
+      <item name="Lens Design" href="./developer/design.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
     </menu>
 		<menu name="Admin Documentation">
@@ -59,7 +59,7 @@
     <menu ref="reports"/>
     <breadcrumbs>
       <item name="InMobi" href="https://github.com/InMobi" />
-			<item name="Grill" href="https://github.com/InMobi/grill" />
+			<item name="Lens" href="https://github.com/InMobi/grill" />
     </breadcrumbs>
   </body>
   <skin>

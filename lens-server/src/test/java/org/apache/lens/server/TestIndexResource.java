@@ -57,6 +57,6 @@ public class TestIndexResource extends GrillJerseyTest {
     WebTarget target = target().path("index");
     System.out.println("target path:" + target.getUri());
     String s = target().path("index").request().get(String.class);
-    Assert.assertEquals("Hello World! from grill", s);
+    Assert.assertEquals("Hello World! from lens", s);
   }
 }

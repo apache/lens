@@ -37,7 +37,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 /**
- * Top level class which is used to execute grill queries.
+ * Top level class which is used to execute lens queries.
  */
 public class GrillStatement {
 

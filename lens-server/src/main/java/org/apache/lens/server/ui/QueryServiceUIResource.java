@@ -131,7 +131,7 @@ public class QueryServiceUIResource {
   }
 
   /**
-   * Get grill query and its current status
+   * Get lens query and its current status
    *
    * @param publicId    The public id of session handle
    * @param queryHandle The query handle

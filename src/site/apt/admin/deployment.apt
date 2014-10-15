@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,20 +17,20 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill server deployment
+Lens server deployment
 
-  This document describes the deployment of grill server in a distributed cluster.
+  This document describes the deployment of lens server in a distributed cluster.
   Make sure you have finished {{{../gettingstarted/install-steps.html} Install and run}} doc,
   before proceeding.
 
-  Grill server requires Hive metastore. Hive server is required if Hive is one
+  Lens server requires Hive metastore. Hive server is required if Hive is one
   of the execution engines.
 
   Deployment suggested at Inmobi is depicted in the following  diagram
 
-[../figures/deployment.png] Grill Server deployment
+[../figures/deployment.png] Lens Server deployment
 
-  It requires HiveMetastore server, HiveServer2 and Grill Server running on different machines.
+  It requires HiveMetastore server, HiveServer2 and Lens Server running on different machines.
 
 
 * Dependencies and their versions
@@ -45,21 +45,21 @@ Grill server deployment
    
 * Restart and recovery
 
-  Grill server should not have problems with Hive Metastore server, Hive Server2 or Hadoop restarts. Grill server can persist its state before going and recover from previous state upon restart. 
+  Lens server should not have problems with Hive Metastore server, Hive Server2 or Hadoop restarts. Lens server can persist its state before going and recover from previous state upon restart. 
   
   * Recoverability
   
-  ** To enable grill server with recoverability, i.e. to allow users access queries before restart, grill server should be started with grill.server.restart.enabled set to true.
+  ** To enable lens server with recoverability, i.e. to allow users access queries before restart, lens server should be started with lens.server.restart.enabled set to true.
   Admin can set this to false if no recoverability is required.
 
   * Restarting 
 
-  ** To start the grill server a fresh grill.server.recover.onrestart should be disabled. If it is true, the server will load its persisted state before restart.
+  ** To start the lens server a fresh lens.server.recover.onrestart should be disabled. If it is true, the server will load its persisted state before restart.
   
   
 * Server modes
 
-  Grill server can be started in various modes. The server mode can be specified via configuration when it is starting up. Available modes are
+  Lens server can be started in various modes. The server mode can be specified via configuration when it is starting up. Available modes are
   
   * READ_ONLY : Allows all requests on sesssion resource and Only GET requests on all other resources
   

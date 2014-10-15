@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -19,25 +19,25 @@
 ~~~
 User CLI Commands
 
-  Grill provides CLI on a shell. This document provides various commands available
-  in grill CLI.  All the commands documented below can be seen by typing <<help>>
+  Lens provides CLI on a shell. This document provides various commands available
+  in lens CLI.  All the commands documented below can be seen by typing <<help>>
   from the CLI shell.
 
 %{toc}
 
 * Session management
 
-  Opening the grill CLI shell is equivalent to open a session with grill server. This
+  Opening the lens CLI shell is equivalent to open a session with lens server. This
   section provides all the commands available for in shell which are applicable for the full session.
    
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-| set <name>=<value> | Assign <<value>> to session parameter specified with <<name>> on grill server|
+| set <name>=<value> | Assign <<value>> to session parameter specified with <<name>> on lens server|
 *--+--+
-| get <name>| Fetches and prints session parameter specified with name <<name>> from grill server|
+| get <name>| Fetches and prints session parameter specified with name <<name>> from lens server|
 *--+--+
-| show params| Fetches and prints  all session parameter from grill server|
+| show params| Fetches and prints  all session parameter from lens server|
 *--+--+
 | add jar <path to jar file>| Adds jar resource to the session|
 *--+--+
@@ -47,9 +47,9 @@ User CLI Commands
 *--+--+
 | remove file <path to file> | remove the file resource from the session|
 *--+--+
-| close| Closes the session on the grill server and exits the shell. It is mandatory to call close to release all the resource of the session|
+| close| Closes the session on the lens server and exits the shell. It is mandatory to call close to release all the resource of the session|
 *--+--+
-  <<Grill Session Management Command list>>
+  <<Lens Session Management Command list>>
   
 ===  
 
@@ -60,7 +60,7 @@ User CLI Commands
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-| show database | prints a list of databases on grill server|
+| show database | prints a list of databases on lens server|
 *--+--+
 | use <database-name>| Sets the session database to database specified by <database-name>|
 *--+--+
@@ -68,7 +68,7 @@ User CLI Commands
 *--+--+
 | drop database <database-name> | drops the database specified by <database-name>|
 *--+--+
-  <<Grill Database Management Command list>>
+  <<Lens Database Management Command list>>
   
 ===
   
@@ -85,7 +85,7 @@ User CLI Commands
 *--+--+
 | describe storage <storage-table> | Prints the Schema and properties of Storage table <storage-table> |
 *--+--+
-  <<Grill Storage Management List>>
+  <<Lens Storage Management List>>
   
 ===
   
@@ -133,7 +133,7 @@ User CLI Commands
 *--+--+
 | dim add partition <dimension-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <dimension-table>|
 *--+--+
-  <<Grill Dimension Table Management Command list>>
+  <<Lens Dimension Table Management Command list>>
   
 ===
   
@@ -164,7 +164,7 @@ User CLI Commands
 *--+--+
 | fact add partition <fact-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <fact-table>|
 *--+--+
-  <<Grill Fact table Management list>>
+  <<Lens Fact table Management list>>
 
 * Query Management
 
@@ -173,7 +173,7 @@ User CLI Commands
   prepare a query, destroy a prepared query and list all prepared queries.
 
   Please note that, character <<<">>> is used as delimiter by the Spring Shell
-  framework, which is used to build grill cli. So queries which require <<<">>>,
+  framework, which is used to build lens cli. So queries which require <<<">>>,
   should be prefixed with another double quote. For example
   <<<query execute cube select id,name from dim_table where name != ""first"">>>,
   will be parsed as <<<cube select id,name from dim_table where name != "first">>>
@@ -205,7 +205,7 @@ User CLI Commands
 *--+--+
 | prepQuery destroy <prepare-handle> | Destroys the prepared query|
 *--+--+
-  <<Grill Query management Command>>
+  <<Lens Query management Command>>
 
 ===
 

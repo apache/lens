@@ -54,15 +54,15 @@ public class TestGrillDAO extends GrillJerseyTest {
     FinishedGrillQuery finishedGrillQuery = new FinishedGrillQuery(queryContext);
     finishedGrillQuery.setStatus(QueryStatus.Status.SUCCESSFUL.name());
     String finishedHandle = finishedGrillQuery.getHandle();
-    service.grillServerDao.insertFinishedQuery(finishedGrillQuery);
-    FinishedGrillQuery actual = service.grillServerDao.getQuery(finishedHandle);
+    service.lensServerDao.insertFinishedQuery(finishedGrillQuery);
+    FinishedGrillQuery actual = service.lensServerDao.getQuery(finishedHandle);
     Assert.assertEquals(actual.getHandle(), finishedHandle);
 
     // Test find finished queries
     GrillSessionHandle session =
     service.openSession("foo@localhost", "bar", new HashMap<String, String>());
 
-    List<QueryHandle> persistedHandles = service.grillServerDao.findFinishedQueries(null, null, null, submissionTime,
+    List<QueryHandle> persistedHandles = service.lensServerDao.findFinishedQueries(null, null, null, submissionTime,
       System.currentTimeMillis());
     if (persistedHandles != null) {
       for (QueryHandle handle : persistedHandles) {
@@ -76,7 +76,7 @@ public class TestGrillDAO extends GrillJerseyTest {
 
     System.out.println("@@ State = " + queryContext.getStatus().getStatus().name());
     List<QueryHandle> daoTestQueryHandles =
-      service.grillServerDao.findFinishedQueries(finishedGrillQuery.getStatus(),
+      service.lensServerDao.findFinishedQueries(finishedGrillQuery.getStatus(),
       queryContext.getSubmittedUser(), "daotestquery1", -1L, Long.MAX_VALUE);
     Assert.assertEquals(daoTestQueryHandles.size(), 1);
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);

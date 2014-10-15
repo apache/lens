@@ -68,7 +68,7 @@ public class GrillJdbcStatement implements Statement {
     }
     boolean status = statement.kill();
     if (!status) {
-      throw new SQLException("Unable to close the Statement on grill server");
+      throw new SQLException("Unable to close the Statement on lens server");
     }
   }
 

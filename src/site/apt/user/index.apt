@@ -1,6 +1,6 @@
 ~~~
 ~~ #%L
-~~ Grill
+~~ Lens
 ~~ %%
 ~~ Copyright (C) 2014 Inmobi
 ~~ %%
@@ -17,42 +17,42 @@
 ~~ limitations under the License.
 ~~ #L%
 ~~~
-Grill User Guide
+Lens User Guide
 
 %{toc}
 
 * Overview
 
-	Grill Server runs several services which can be used from their REST endpoints.
+	Lens Server runs several services which can be used from their REST endpoints.
 	This document covers some of the important services, their purpose and key API calls.
 	
-	Grill server provides metastore service for managing metadata. Metadata exposed by grill 
+	Lens server provides metastore service for managing metadata. Metadata exposed by lens 
 	is inspired by OLAP data cubes. See {{{./olap-cube.html#Metastore_model} Metastore Model}} for metastore constructs
-	that grill provides.
+	that lens provides.
 	
-	Grill server also provides query service for querying data exposed by grill. See
+	Lens server also provides query service for querying data exposed by lens. See
 	{{{./olap-cube.html#Query_Language} Query Language}} for the grammar of the query.
 	
-	To access any service on grill, user should be working in a session. User can also pass 
+	To access any service on lens, user should be working in a session. User can also pass 
 	various configuration parameters from client.
 	
 	The sections below give more details on each service and configuration. 
 
 * Configuration
 
-  Client configuration can be overridden in grill-client-site.xml.
+  Client configuration can be overridden in lens-client-site.xml.
   See {{{./client-config.html}client configuration}} for all the configuration parameters
   available and their default values.
    
 * Session Service
 
-	To use any Grill service the user must first create a session. Each Grill session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Grill Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
+	To use any Lens service the user must first create a session. Each Lens session is associated with a unique session handle, which must be passed when making queries, or doing metadata operations in the same session. To check if the session service is deployed in the Lens Server, user can send a GET request to /session. An OK response means that the session service is deployed. 
 	
 	Sessions also allow users to set configuration or resources which could be shared across a group of queries. For example, if a group of queries need to call a UDF available in some specific jar, then the jar file can be added as a resource in the session. All queries started within the same session can make use of the jar file.
 
 
   GRILL provides {{{../resource_SessionResource.html} REST api}},
-  {{{../apidocs/com/inmobi/grill/client/GrillConnection.html} Java client api}}
+  {{{../apidocs/org/apache/lens/client/LensConnection.html} Java client api}}
   and {{{./cli.html#Session_management} CLI}} for doing all session level operations.
 
 	The important API calls exposed by the session resource are -
@@ -67,13 +67,13 @@ Grill User Guide
 
 * Query Execution Service
 	
-	The {{{../resource_QueryServiceResource.html}Query Execution Service}} is used to query data exposed by Grill. 
+	The {{{../resource_QueryServiceResource.html}Query Execution Service}} is used to query data exposed by Lens. 
 
 ** Query Submission Workflow
 
 	* Create a session using the session service
 
-	* Submit a query by sending a POST to the <<</queryapi/queries>>> endpoint. By default this call should return immediately with the query handle of the newly created query. Each query in Grill is associated with a unique query handle. Query handle can be used to check query status and get results. If users wish to submit an interactive query which finishes fast, the '<<<op>>>' parameter must be set to <<<EXECUTE_WITH_TIMEOUT>>>. This behaviour is explained in detail below.
+	* Submit a query by sending a POST to the <<</queryapi/queries>>> endpoint. By default this call should return immediately with the query handle of the newly created query. Each query in Lens is associated with a unique query handle. Query handle can be used to check query status and get results. If users wish to submit an interactive query which finishes fast, the '<<<op>>>' parameter must be set to <<<EXECUTE_WITH_TIMEOUT>>>. This behaviour is explained in detail below.
 
 	* In case of async execution, poll for query status by sending a GET to <<</queryapi/queries/queryhandle}>>>. Once the query reaches <<SUCCESSFUL>> state, its results can be retrieved using the <<</queryapi/queries/{queryhandle}/resultset>>> endpoint.
 
@@ -116,21 +116,21 @@ Grill User Guide
 	Various query result formatting and fetching options
 	are described in {{{./query-results.html} query result doc}}.
 
-** Life of a Query in the Grill Server
+** Life of a Query in the Lens Server
 
-	The following diagram shows query state transition in the Grill Server 
+	The following diagram shows query state transition in the Lens Server 
 
-[../figures/querystate.png] Query States in Grill
+[../figures/querystate.png] Query States in Lens
 
 
-	When user submits a query to the Grill Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Grill server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Grill server starts processing the query, it enters the <<LAUNCHED>> state. At this stage Grill has decided which backend engine will be used to execute the query. 
+	When user submits a query to the Lens Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Lens server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Lens server starts processing the query, it enters the <<LAUNCHED>> state. At this stage Lens has decided which backend engine will be used to execute the query. 
 
-	For each query Grill server will poll the chosen backend engine for query status. A GET on the query endpoint returns the latest status of the query.
+	For each query Lens server will poll the chosen backend engine for query status. A GET on the query endpoint returns the latest status of the query.
 
 
 		The <<RUNNING>> state indicates that the query is currently being processed by the query backend. 
 
-		After the <<RUNNING>> state, the query can enter either the <<SUCCESSFUL>> or <<FAILED>> states, depending on the result of query execution. If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Grill server state.
+		After the <<RUNNING>> state, the query can enter either the <<SUCCESSFUL>> or <<FAILED>> states, depending on the result of query execution. If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Lens server state.
 
 	In any state, if the user requests that the query be cancelled, the query will enter into <<CANCELLED>> state. Query can be cancelled by sending a DELETE at the query endpoint. 
 
@@ -144,7 +144,7 @@ Grill User Guide
 
   * {{{../resource_QueryServiceResource.html#path__queryapi_preparedqueries_-prepareHandle-.html}Rest api for handling a prepared query}}
   
-  * {{{../apidocs/com/inmobi/grill/client/GrillStatement.html} Java client api}}
+  * {{{../apidocs/org/apache/lens/client/LensStatement.html} Java client api}}
   
   * {{{./cli.html#Query_Management} CLI query management}}
   

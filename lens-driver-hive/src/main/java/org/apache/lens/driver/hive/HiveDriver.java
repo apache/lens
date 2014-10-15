@@ -89,8 +89,8 @@ public class HiveDriver implements GrillDriver {
 
   // assigned only in case of embedded connection
   private ThriftConnection embeddedConnection;
-  // Store mapping of Grill session ID to Hive session identifier
-  private Map<String, SessionHandle> grillToHiveSession;
+  // Store mapping of Lens session ID to Hive session identifier
+  private Map<String, SessionHandle> lensToHiveSession;
   private List<GrillEventListener<DriverEvent>> driverListeners;
 
   class ConnectionExpiryRunnable implements Runnable {
@@ -174,7 +174,7 @@ public class HiveDriver implements GrillDriver {
   public HiveDriver() throws GrillException {
     this.sessionLock = new ReentrantLock();
     this.connectionLock = new ReentrantLock();
-    grillToHiveSession = new HashMap<String, SessionHandle>();
+    lensToHiveSession = new HashMap<String, SessionHandle>();
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
@@ -459,16 +459,16 @@ public class HiveDriver implements GrillDriver {
     // Close this driver and release all resources
     sessionLock.lock();
     try {
-      for (String grillSession : grillToHiveSession.keySet()) {
+      for (String lensSession : lensToHiveSession.keySet()) {
         try {
-          getClient().closeSession(grillToHiveSession.get(grillSession));
+          getClient().closeSession(lensToHiveSession.get(lensSession));
         } catch (Exception e) {
           checkInvalidSession(e);
-          LOG.warn("Error closing session for grill session: " + grillSession + ", hive session: "
-              + grillToHiveSession.get(grillSession), e);
+          LOG.warn("Error closing session for lens session: " + lensSession + ", hive session: "
+              + lensToHiveSession.get(lensSession), e);
         }
       }
-      grillToHiveSession.clear();
+      lensToHiveSession.clear();
     } finally {
       sessionLock.unlock();
     }
@@ -589,27 +589,27 @@ public class HiveDriver implements GrillDriver {
   private SessionHandle getSession(QueryContext ctx) throws GrillException {
     sessionLock.lock();
     try {
-      String grillSession = ctx.getGrillSessionIdentifier();
-      if (grillSession == null && SessionState.get() != null) {
-        grillSession = SessionState.get().getSessionId();
+      String lensSession = ctx.getLensSessionIdentifier();
+      if (lensSession == null && SessionState.get() != null) {
+        lensSession = SessionState.get().getSessionId();
       }
 
-      if (grillSession == null) {
-        throw new IllegalStateException("Current session state does not have a Grill session id");
+      if (lensSession == null) {
+        throw new IllegalStateException("Current session state does not have a Lens session id");
       }
 
       SessionHandle hiveSession;
-      if (!grillToHiveSession.containsKey(grillSession)) {
+      if (!lensToHiveSession.containsKey(lensSession)) {
         try {
           hiveSession = getClient().openSession(ctx.getClusterUser(), "");
-          grillToHiveSession.put(grillSession, hiveSession);
+          lensToHiveSession.put(lensSession, hiveSession);
           LOG.info("New hive session for user: " + ctx.getClusterUser() +
-              ", grill session: " + grillSession + " session handle: " +
+              ", lens session: " + lensSession + " session handle: " +
               hiveSession.getHandleIdentifier());
           for (GrillEventListener<DriverEvent> eventListener : driverListeners) {
             try {
               eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this,
-                grillSession, hiveSession.getSessionId().toString()));
+                lensSession, hiveSession.getSessionId().toString()));
             } catch (Exception exc) {
               LOG.error("Error sending driver start event to listener " + eventListener, exc);
             }
@@ -618,7 +618,7 @@ public class HiveDriver implements GrillDriver {
           throw new GrillException(e);
         }
       } else {
-        hiveSession = grillToHiveSession.get(grillSession);
+        hiveSession = lensToHiveSession.get(lensSession);
       }
       return hiveSession;
     } finally {
@@ -709,12 +709,12 @@ public class HiveDriver implements GrillDriver {
       LOG.info("HiveDriver recovered " + hiveHandles.size() + " queries");
       int numSessions = in.readInt();
       for (int i = 0; i < numSessions; i++) {
-        String grillId = in.readUTF();
+        String lensId = in.readUTF();
         SessionHandle sHandle = new SessionHandle((TSessionHandle) in.readObject(),
             TProtocolVersion.HIVE_CLI_SERVICE_PROTOCOL_V6);
-        grillToHiveSession.put(grillId, sHandle);
+        lensToHiveSession.put(lensId, sHandle);
       }
-      LOG.info("HiveDriver recovered " + grillToHiveSession.size() + " sessions");
+      LOG.info("HiveDriver recovered " + lensToHiveSession.size() + " sessions");
     }
   }
 
@@ -729,12 +729,12 @@ public class HiveDriver implements GrillDriver {
         LOG.debug("Hive driver persisted " + entry.getKey() + ":" + entry.getValue());
       }
       LOG.info("HiveDriver persisted " + hiveHandles.size() + " queries");
-      out.writeInt(grillToHiveSession.size());
-      for (Map.Entry<String, SessionHandle> entry : grillToHiveSession.entrySet()) {
+      out.writeInt(lensToHiveSession.size());
+      for (Map.Entry<String, SessionHandle> entry : lensToHiveSession.entrySet()) {
         out.writeUTF(entry.getKey());
         out.writeObject(entry.getValue().toTSessionHandle());
       }
-      LOG.info("HiveDriver persisted " + grillToHiveSession.size() + " sessions");
+      LOG.info("HiveDriver persisted " + lensToHiveSession.size() + " sessions");
     }
   }
 
@@ -757,26 +757,26 @@ public class HiveDriver implements GrillDriver {
 
     HiveSQLException exc = (HiveSQLException)e;
 
-    String grillSession = null;
+    String lensSession = null;
     if (SessionState.get() != null) {
-      grillSession = SessionState.get().getSessionId();
+      lensSession = SessionState.get().getSessionId();
     }
 
-    SessionHandle session = grillToHiveSession.get(grillSession);
+    SessionHandle session = lensToHiveSession.get(lensSession);
 
-    if (session == null || grillSession == null) {
+    if (session == null || lensSession == null) {
       return;
     }
 
     if (isSessionInvalid(exc, session)) {
       // We have to expire previous session
-      LOG.info("Hive server session "+ session + " for grill session " + grillSession + " has become invalid");
+      LOG.info("Hive server session "+ session + " for lens session " + lensSession + " has become invalid");
       sessionLock.lock();
       try {
         // We should close all connections and clear the session map since
         // most likely all sessions are gone
         closeAllConnections();
-        grillToHiveSession.clear();
+        lensToHiveSession.clear();
         LOG.info("Cleared all sessions");
       } finally {
         sessionLock.unlock();
@@ -816,15 +816,15 @@ public class HiveDriver implements GrillDriver {
   public void closeSession(GrillSessionHandle sessionHandle) {
     sessionLock.lock();
     try {
-      SessionHandle hiveSession = grillToHiveSession.remove(sessionHandle.getPublicId().toString());
+      SessionHandle hiveSession = lensToHiveSession.remove(sessionHandle.getPublicId().toString());
       if (hiveSession != null) {
         try {
           getClient().closeSession(hiveSession);
           LOG.info("Closed Hive session " + hiveSession.getHandleIdentifier()
-              + " for Grill session " + sessionHandle.getPublicId());
+              + " for lens session " + sessionHandle.getPublicId());
         } catch (Exception e) {
           LOG.error("Error closing hive session " + hiveSession.getHandleIdentifier()
-              + " for Grill session " + sessionHandle.getPublicId(), e);
+              + " for lens session " + sessionHandle.getPublicId(), e);
         }
       }
     } finally {
@@ -853,7 +853,7 @@ public class HiveDriver implements GrillDriver {
   }
 
   // For test
-  public boolean hasGrillSession(GrillSessionHandle session) {
-    return grillToHiveSession.containsKey(session.getPublicId().toString());
+  public boolean hasLensSession(GrillSessionHandle session) {
+    return lensToHiveSession.containsKey(session.getPublicId().toString());
   }
 }

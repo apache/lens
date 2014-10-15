@@ -450,7 +450,7 @@ public class QueryServiceResource {
   }
 
   /**
-   * Get grill query and its current status
+   * Get lens query and its current status
    * 
    * @param sessionid The user session handle
    * @param queryHandle The query handle

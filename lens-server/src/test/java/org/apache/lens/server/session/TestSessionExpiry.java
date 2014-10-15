@@ -43,14 +43,14 @@ public class TestSessionExpiry {
     conf.setLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();
     cliService.init(conf);
-    HiveSessionService grillService = new HiveSessionService(cliService);
-    grillService.init(conf);
-    grillService.start();
+    HiveSessionService lensService = new HiveSessionService(cliService);
+    lensService.init(conf);
+    lensService.start();
 
     try {
       GrillSessionHandle sessionHandle =
-        grillService.openSession("foo", "bar", new HashMap<String, String>());
-      GrillSessionImpl session = grillService.getSession(sessionHandle);
+        lensService.openSession("foo", "bar", new HashMap<String, String>());
+      GrillSessionImpl session = lensService.getSession(sessionHandle);
       assertTrue(session.isActive());
       session.setLastAccessTime(session.getLastAccessTime()
         - 2000 * conf.getLong(GrillConfConstants.SESSION_TIMEOUT_SECONDS,
@@ -58,16 +58,16 @@ public class TestSessionExpiry {
       assertFalse(session.isActive());
 
       // run the expiry thread
-      grillService.getSessionExpiryRunnable().run();
+      lensService.getSessionExpiryRunnable().run();
       try {
-        grillService.getSession(sessionHandle);
+        lensService.getSession(sessionHandle);
         // should throw exception since session should be expired by now
         fail("Expected get session to fail for session " + sessionHandle.getPublicId());
       } catch (Exception e) {
         // pass
       }
     } finally {
-      grillService.stop();
+      lensService.stop();
     }
   }
 }

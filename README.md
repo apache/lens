@@ -1,6 +1,6 @@
-grill
+Lens
 =====
 
-Grill is a unified Analytics Platform by InMobi
+Lens is a unified Analytics Platform
 
 [Detailed documentation for the project is available here](https://inmobi.github.io/grill)

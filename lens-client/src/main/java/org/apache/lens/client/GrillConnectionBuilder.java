@@ -21,7 +21,7 @@ package org.apache.lens.client;
  */
 
 /**
- * Top level builder class for grill connection
+ * Top level builder class for lens connection
  */
 public class GrillConnectionBuilder {
 

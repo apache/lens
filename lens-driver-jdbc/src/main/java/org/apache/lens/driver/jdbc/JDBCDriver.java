@@ -74,7 +74,7 @@ public class JDBCDriver implements GrillDriver {
    * Data related to a query submitted to JDBCDriver
    */
   protected class JdbcQueryContext {
-    @Getter private final QueryContext grillContext;
+    @Getter private final QueryContext lensContext;
     @Getter @Setter private Future<QueryResult> resultFuture;
     @Getter @Setter private String rewrittenQuery;
     @Getter @Setter private boolean isPrepared;
@@ -86,20 +86,20 @@ public class JDBCDriver implements GrillDriver {
     @Getter @Setter private long endTime;
 
     public JdbcQueryContext(QueryContext context) {
-      this.grillContext = context;
+      this.lensContext = context;
     }
 
     public void notifyError(Throwable th) {
       // If query is closed in another thread while the callable is still waiting for result
       // set, then it throws an SQLException in the callable. We don't want to send that exception
       if (listener != null && !isClosed) {
-        listener.onError(grillContext.getQueryHandle(), th.getMessage());
+        listener.onError(lensContext.getQueryHandle(), th.getMessage());
       }
     }
 
     public void notifyComplete() {
       if (listener != null) {
-        listener.onCompletion(grillContext.getQueryHandle());
+        listener.onCompletion(lensContext.getQueryHandle());
       }
     }
 
@@ -121,7 +121,7 @@ public class JDBCDriver implements GrillDriver {
     private Connection conn;
     private Statement stmt;
     private boolean isClosed;
-    private JDBCResultSet grillResultSet;
+    private JDBCResultSet lensResultSet;
 
     protected synchronized void close() {
       if (isClosed) {
@@ -152,10 +152,10 @@ public class JDBCDriver implements GrillDriver {
       if (error != null) {
         throw new GrillException("Query failed!", error);
       }
-      if (grillResultSet == null) {
-        grillResultSet = new JDBCResultSet(this, resultSet, closeAfterFetch);
+      if (lensResultSet == null) {
+        lensResultSet = new JDBCResultSet(this, resultSet, closeAfterFetch);
       }
-      return grillResultSet;
+      return lensResultSet;
     }
   }
 
@@ -197,10 +197,10 @@ public class JDBCDriver implements GrillDriver {
           } catch (SQLException sqlEx) {
             if (queryContext.isClosed()) {
               LOG.info("Ignored exception on already closed query: "
-                  + queryContext.getGrillContext().getQueryHandle() +" - " + sqlEx);
+                  + queryContext.getLensContext().getQueryHandle() +" - " + sqlEx);
             } else {
               LOG.error(
-                  "Error executing SQL query: " + queryContext.getGrillContext().getQueryHandle()
+                  "Error executing SQL query: " + queryContext.getLensContext().getQueryHandle()
                   + " reason: " + sqlEx.getMessage(), sqlEx);
               result.error = sqlEx;
               // Close connection in case of failed queries. For successful queries, connection is closed

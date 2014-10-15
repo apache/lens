@@ -68,7 +68,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     event.setCause(ended.getCause() != null ? ended.getCause() : "");
     event.setResult(ctx.getResultSetPath());
     event.setUserQuery(ctx.getUserQuery());
-    event.setSessionId(ctx.getGrillSessionIdentifier());
+    event.setSessionId(ctx.getLensSessionIdentifier());
     event.setHandle(ctx.getQueryHandle().toString());
     event.setSubmitter(ctx.getSubmittedUser());
     event.setClusterUser(ctx.getClusterUser());
