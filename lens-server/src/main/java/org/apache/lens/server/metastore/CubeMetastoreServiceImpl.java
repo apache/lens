@@ -1225,7 +1225,7 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
       for (Map.Entry<String, CubeColumn> entry : columnMap.entrySet()) {
         String colName = entry.getKey();
         CubeColumn column = entry.getValue();
-        String table = colName.substring(colName.indexOf('.'));
+        String table = colName.substring(0, colName.indexOf('.'));
         if (column instanceof CubeMeasure) {
           XMeasure xmeasure = JAXBUtils.xMeasureFromHiveMeasure((CubeMeasure) column);
           xmeasure.setCubeTable(table);
@@ -1269,22 +1269,23 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
     Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
 
     // Do a BFS over the schema graph
-    Queue<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
+    LinkedList<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
     Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
-    toVisit.offer(table);
+    toVisit.add(table);
 
-    while (toVisit.isEmpty()) {
-      AbstractCubeTable node = toVisit.poll();
+    while (!toVisit.isEmpty()) {
+      AbstractCubeTable node = toVisit.removeFirst();
       visited.add(node);
       String nodeName = node.getName();
-
-      if (table instanceof CubeInterface) {
+      if (node instanceof CubeInterface) {
         Cube cube = null;
 
-        if (table instanceof Cube) {
+        if (node instanceof Cube) {
           cube = (Cube) node;
-        } else if (table instanceof DerivedCube) {
+        } else if (node instanceof DerivedCube) {
           cube = ((DerivedCube) node).getParent();
+        } else {
+          continue;
         }
 
         // Add columns of the cube
@@ -1299,20 +1300,22 @@ public class CubeMetastoreServiceImpl extends GrillService implements CubeMetast
         for (ExprColumn expression : cube.getExpressions()) {
           columnMap.put(nodeName + "." + expression.getName(), expression);
         }
-      } else if (table instanceof Dimension) {
-        Dimension dim = (Dimension) table;
+      } else if (node instanceof Dimension) {
+        Dimension dim = (Dimension) node;
         for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
           columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
         }
+      } else {
+        LOG.warn("Neither cube nor dimension " + node.getName());
       }
 
       // Add referenced tables to visited list
-      for (SchemaGraph.TableRelationship edge : graph.get(table)) {
+      for (SchemaGraph.TableRelationship edge : graph.get(node)) {
         if (!visited.contains(edge.getFromTable())) {
-          toVisit.offer(edge.getFromTable());
+          toVisit.addLast(edge.getFromTable());
         }
         if (!visited.contains(edge.getToTable())) {
-          toVisit.offer(edge.getToTable());
+          toVisit.addLast(edge.getToTable());
         }
       }
     } // end bfs

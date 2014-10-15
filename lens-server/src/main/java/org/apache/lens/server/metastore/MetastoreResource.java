@@ -1442,7 +1442,7 @@ public class MetastoreResource {
    * @return list of measures, expressions or dimension attributes
    */
   @GET
-  @Path("/{tableName}/flattened")
+  @Path("flattened/{tableName}")
   public FlattenedColumns getFlattenedColumns(
     @QueryParam("sessionid") GrillSessionHandle sessionid,
     @PathParam("tableName") String tableName) {
