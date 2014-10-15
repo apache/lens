@@ -51,7 +51,7 @@ Lens User Guide
 	Sessions also allow users to set configuration or resources which could be shared across a group of queries. For example, if a group of queries need to call a UDF available in some specific jar, then the jar file can be added as a resource in the session. All queries started within the same session can make use of the jar file.
 
 
-  GRILL provides {{{../resource_SessionResource.html} REST api}},
+  LENS provides {{{../resource_SessionResource.html} REST api}},
   {{{../apidocs/org/apache/lens/client/LensConnection.html} Java client api}}
   and {{{./cli.html#Session_management} CLI}} for doing all session level operations.
 

@@ -119,7 +119,7 @@ public abstract class LensJerseyTest extends JerseyTest {
   public void restartLensServer(HiveConf conf) {
     LensServices.get().stop();
     System.out.println("Lens services stopped!");
-    LensServices.setInstance(new LensServices(LensServices.GRILL_SERVICES_NAME));
+    LensServices.setInstance(new LensServices(LensServices.LENS_SERVICES_NAME));
     LensServices.get().init(conf);
     LensServices.get().start();
     System.out.println("Lens services restarted!");

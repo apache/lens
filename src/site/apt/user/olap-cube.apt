@@ -128,7 +128,7 @@ QUARTERLY, YEARLY update periods.
 
 * Metastore API
 
-  GRILL provides {{{../resource_MetastoreResource.html} REST api}},
+  LENS provides {{{../resource_MetastoreResource.html} REST api}},
   {{{../apidocs/org/apache/lens/client/LensMetadataClient.html} Java client api}}
   and {{{./cli.html#OLAP_Data_cube_metadata_management} CLI}} for doing CRUD on metastore.
 
@@ -191,7 +191,7 @@ QUARTERLY, YEARLY update periods.
 
 * Query API
 
-  GRILL provides {{{../resource_QueryServiceResource.html} REST api}},
+  LENS provides {{{../resource_QueryServiceResource.html} REST api}},
   {{{../apidocs/org/apache/lens/client/LensStatement.html} Java client api}},
   {{{./jdbc-client.html} JDBC client}} 
   and {{{./cli.html#Query_Management} CLI}} for doing submitting queries, checking status and fetching results.

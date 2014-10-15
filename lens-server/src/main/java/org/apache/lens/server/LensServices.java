@@ -51,8 +51,8 @@ import org.apache.lens.server.user.UserConfigLoaderFactory;
 public class LensServices extends CompositeService implements ServiceProvider {
   public static final Log LOG = LogFactory.getLog(LensServices.class);
 
-  public static final String GRILL_SERVICES_NAME = "lens_services";
-  private static LensServices INSTANCE = new LensServices(GRILL_SERVICES_NAME);
+  public static final String LENS_SERVICES_NAME = "lens_services";
+  private static LensServices INSTANCE = new LensServices(LENS_SERVICES_NAME);
   private HiveConf conf;
   private CLIService cliService;
   private final Map<String, Service> services = new LinkedHashMap<String, Service>();
