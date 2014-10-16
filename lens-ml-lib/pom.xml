@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>Lens ML Lib</name>
+
+    <parent>
+        <artifactId>lens-parent</artifactId>
+        <groupId>org.apache.lens</groupId>
+        <version>1.1.1-SNAPSHOT</version>
+    </parent>
+
+    <properties>
+        <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
+        <sparkVervion>1.0.1</sparkVervion>
+    </properties>
+
+
+    <artifactId>lens-ml-lib</artifactId>
+    <packaging>jar</packaging>
+    <description>Lens ML Lib</description>
+
+    <dependencies>
+        <dependency>
+		    <groupId>org.apache.lens</groupId>
+            <artifactId>lens-server-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lens</groupId>
+            <artifactId>lens-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.lens</groupId>
+            <artifactId>lens-client</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+
+        <dependency> <!-- Spark dependency -->
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.10</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_2.10</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hive.hcatalog</groupId>
+            <artifactId>hive-hcatalog-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.jersey.media</groupId>
+            <artifactId>jersey-media-multipart</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.15</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <hadoop.bin.path>${pom.basedir}/../lens-driver-hive/testutils/hadoop</hadoop.bin.path>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                        <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
+                    </environmentVariables>
+                    <!--argLine>-Xms256m -Xmx512m</argLine-->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.8</version>
+                <executions>
+                    <execution>
+                        <id>build-classpath</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>build-classpath</goal>
+                        </goals>
+                        <configuration>
+                            <outputFile>${mvn.classpath.file}</outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>    
