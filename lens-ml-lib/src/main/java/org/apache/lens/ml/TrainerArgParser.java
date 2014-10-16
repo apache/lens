@@ -57,7 +57,7 @@ public class TrainerArgParser {
           } else {
             // check if the trainer provides a deserializer for this param
             String customParserClass = trainer.getConf()
-              .getProperties().get("grill.ml.args."+ key);
+              .getProperties().get("lens.ml.args."+ key);
             if (customParserClass != null) {
               Class<? extends CustomArgParser<?>> clz =
                 (Class<? extends CustomArgParser<?>>) Class.forName(customParserClass);

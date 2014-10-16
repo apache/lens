@@ -295,7 +295,7 @@ public class MLServiceResource {
       report.getAlgorithm(),
       report.getModelID(),
       report.getReportID(),
-      report.getGrillQueryID()
+      report.getLensQueryID()
     );
     return result;
   }

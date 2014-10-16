@@ -43,5 +43,5 @@ public class MLTestReport implements Serializable {
   private String predictionResultColumn;
 
   @Getter @Setter
-  private String grillQueryID;
+  private String lensQueryID;
 }
