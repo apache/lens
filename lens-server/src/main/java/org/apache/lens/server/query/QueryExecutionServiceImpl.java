@@ -819,6 +819,13 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
+    } catch (LensException e) {
+      QueryPlan plan;
+      if (e.getCause().getMessage() != null)
+        plan = new QueryPlan(true, e.getCause().getMessage());
+      else
+        plan = new QueryPlan(true, e.getMessage());
+      return plan;
     } catch (UnsupportedEncodingException e) {
       throw new LensException(e);
     } finally {
