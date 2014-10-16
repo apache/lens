@@ -61,7 +61,7 @@ public class QueryPlan extends QuerySubmitResult {
   @Getter @Setter private QueryPrepareHandle prepareHandle;
   @XmlElement private String planString;
   @XmlElement @Getter private QueryCost queryCost;
-  @XmlElement @Getter private boolean hasError = false;
+  @XmlElement @Getter private boolean error = false;
   @XmlElement @Getter private String errorMsg;
   
   public String getPlanString() throws UnsupportedEncodingException {
@@ -69,7 +69,7 @@ public class QueryPlan extends QuerySubmitResult {
   }
 
   public QueryPlan(boolean hasError, String errorMsg) {
-    this.hasError = hasError;
+    this.error = hasError;
     this.errorMsg = errorMsg;
   }
 }

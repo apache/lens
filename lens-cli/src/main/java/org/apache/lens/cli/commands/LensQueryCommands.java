@@ -123,7 +123,7 @@ public class LensQueryCommands extends  BaseLensCommand implements CommandMarker
       throws UnsupportedEncodingException {
     
     QueryPlan plan = getClient().getQueryPlan(sql);
-    if (plan.isHasError() == true) {
+    if (plan.isError()) {
       return "Explain FAILED:" + plan.getErrorMsg();
     }
     return plan.getPlanString();
@@ -264,7 +264,7 @@ public class LensQueryCommands extends  BaseLensCommand implements CommandMarker
       throws UnsupportedEncodingException {
 
     QueryPlan plan = getClient().explainAndPrepare(sql, queryName);
-    if (plan.isHasError() == true) {
+    if (plan.isError()) {
       return "Explain FAILED:" + plan.getErrorMsg();
     }
     StringBuilder planStr = new StringBuilder(plan.getPlanString());

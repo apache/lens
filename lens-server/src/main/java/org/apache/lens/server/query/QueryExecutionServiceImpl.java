@@ -820,11 +820,13 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
     } catch (LensException e) {
+      LOG.info("Explain and prepare failed", e);
       QueryPlan plan;
-      if (e.getCause().getMessage() != null)
+      if (e.getCause() != null && e.getCause().getMessage() != null) {
         plan = new QueryPlan(true, e.getCause().getMessage());
-      else
+      } else {
         plan = new QueryPlan(true, e.getMessage());
+      }
       return plan;
     } catch (UnsupportedEncodingException e) {
       throw new LensException(e);
@@ -1314,10 +1316,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           .toQueryPlan();
     } catch (LensException e) {
       QueryPlan plan;
-      if (e.getCause().getMessage() != null)
+      if (e.getCause() != null && e.getCause().getMessage() != null) {
         plan = new QueryPlan(true, e.getCause().getMessage());
-      else
+      } else {
         plan = new QueryPlan(true, e.getMessage());
+      }
       return plan;
     } catch (UnsupportedEncodingException e) {
       throw new LensException(e);
