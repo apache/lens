@@ -3,7 +3,7 @@
 
 <configuration>
   <property>
-    <name>lens.query.persistent.resultset.indriver</name>
+    <name>lens.query.enable.persistent.resultset.indriver</name>
     <value>false</value>
     <description>Whether to enable persistent resultset on the driver for queries</description>
   </property>
