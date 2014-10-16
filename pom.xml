@@ -20,6 +20,7 @@
     <slf4j.version>1.7.6</slf4j.version>
     <metrics.version>3.0.2</metrics.version>
     <hadoop.version>2.4.0</hadoop.version>
+    <spark.version>1.1.0</spark.version>
   </properties>
 
   <groupId>org.apache.lens</groupId>
@@ -714,6 +715,23 @@
        <version>1.5</version>
      </dependency>
 
+   <dependency> <!-- Spark dependency -->
+       <groupId>org.apache.spark</groupId>
+       <artifactId>spark-core_2.10</artifactId>
+       <version>${spark.version}</version>
+   </dependency>
+   <dependency>
+       <groupId>org.apache.spark</groupId>
+       <artifactId>spark-mllib_2.10</artifactId>
+       <version>${spark.version}</version>
+   </dependency>
+
+   <dependency>
+       <groupId>org.apache.hive.hcatalog</groupId>
+       <artifactId>hive-hcatalog-core</artifactId>
+       <version>${hive.version}</version>
+   </dependency>
+
    </dependencies>
 
  </dependencyManagement>
@@ -751,6 +769,7 @@
     <module>lens-examples</module>
     <module>lens-dist</module>
     <module>lens-client-dist</module>
+    <module>lens-ml-lib</module>
   </modules>
 
   <profiles>

@@ -1,0 +1,72 @@
+package org.apache.lens.ml.spark;
+
+import com.google.common.base.Preconditions;
+import org.apache.lens.ml.spark.FeatureFunction;
+import org.apache.lens.ml.spark.FeatureValueMapper;
+import org.apache.hadoop.io.WritableComparable;
+import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.log4j.Logger;
+import org.apache.spark.mllib.linalg.Vectors;
+import org.apache.spark.mllib.regression.LabeledPoint;
+import scala.Tuple2;
+
+/**
+ * A feature function that directly maps an HCatRecord to a feature vector.
+ * Each column becomes a feature in the vector, with the value of the feature obtained using the
+ * value mapper for that column
+ */
+public class ColumnFeatureFunction extends FeatureFunction {
+  public static final Logger LOG = Logger.getLogger(ColumnFeatureFunction.class);
+  private final FeatureValueMapper[] featureValueMappers;
+  private final int[] featurePositions;
+  private final int labelColumnPos;
+  private final int numFeatures;
+  private final LabeledPoint defaultLabeledPoint;
+
+  /**
+   * Feature positions and value mappers are parallel arrays.
+   * featurePositions[i] gives the position of ith feature in the HCatRecord, and
+   * valueMappers[i] gives the value mapper used to map that feature to a Double value
+   * @param featurePositions position number of feature column in the HCatRecord
+   * @param valueMappers mapper for each column position
+   * @param labelColumnPos position of the label column
+   * @param numFeatures number of features in the feature vector
+   * @param defaultLabel default lable to be used for null records
+   */
+  public ColumnFeatureFunction(int featurePositions[],
+                               FeatureValueMapper valueMappers[],
+                               int labelColumnPos,
+                               int numFeatures,
+                               double defaultLabel) {
+    Preconditions.checkNotNull(valueMappers, "Value mappers argument is required");
+    Preconditions.checkNotNull(featurePositions, "Feature positions are required");
+    Preconditions.checkArgument(valueMappers.length == featurePositions.length,
+      "Mismatch between number of value mappers and feature positions");
+
+    this.featurePositions = featurePositions;
+    this.featureValueMappers = valueMappers;
+    this.labelColumnPos = labelColumnPos;
+    this.numFeatures = numFeatures;
+    defaultLabeledPoint = new LabeledPoint(defaultLabel, Vectors.dense(new double[numFeatures]));
+  }
+
+  @Override
+  public LabeledPoint call(Tuple2<WritableComparable, HCatRecord> tuple) throws Exception {
+    HCatRecord record = tuple._2();
+
+    if (record == null) {
+      LOG.info("@@@ Null record");
+      return defaultLabeledPoint;
+    }
+
+    double features[] = new double[numFeatures];
+
+    for (int i = 0; i < numFeatures; i++) {
+      int featurePos = featurePositions[i];
+      features[i] = featureValueMappers[i].call(record.get(featurePos));
+    }
+
+    double label = featureValueMappers[labelColumnPos].call(record.get(labelColumnPos));
+    return new LabeledPoint(label, Vectors.dense(features));
+  }
+}
