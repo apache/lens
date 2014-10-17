@@ -83,6 +83,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     testExecuteSyncQuery(qCom);
     testExecuteAsyncQuery(qCom);
     testExplainQuery(qCom);
+    testExplainFailQuery(qCom);
     testPreparedQuery(qCom);
     testShowPersistentResultSet(qCom);
     testPurgedFinishedResultSet(qCom);
@@ -141,6 +142,17 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     LOG.debug(result);
     Assert.assertTrue(result.contains(explainPlan));
 
+  }
+
+  private void testExplainFailQuery(LensQueryCommands qCom) throws Exception {
+    String sql = "cube select id2, name from test_dim";
+    String result = qCom.explainQuery(sql, "");
+
+    LOG.debug(result);
+    Assert.assertTrue(result.contains("Explain FAILED:"));
+
+    result = qCom.explainAndPrepare(sql, "");
+    Assert.assertTrue(result.contains("Explain FAILED:"));
   }
 
   private void testExecuteAsyncQuery(LensQueryCommands qCom) throws Exception {

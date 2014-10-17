@@ -21,6 +21,7 @@ package org.apache.lens.client;
  */
 
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.query.*;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -119,8 +120,10 @@ public class LensStatement {
         sql));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         op));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
-      queryName));
+    if (!StringUtils.isBlank(queryName)) {
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
+          queryName));
+    }
     return mp;
   }
 

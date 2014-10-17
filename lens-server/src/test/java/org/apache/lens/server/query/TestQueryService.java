@@ -353,6 +353,72 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
     Assert.assertTrue(plan.getTablesQueried().get(0).equalsIgnoreCase(testTable));
     Assert.assertNull(plan.getPrepareHandle());
+
+    // Test explain and prepare
+    final WebTarget ptarget = target().path("queryapi/preparedqueries");
+
+    final FormDataMultiPart mp2 = new FormDataMultiPart();
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select ID from " + testTable));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "explain_and_prepare"));
+    mp2.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        new LensConf(),
+        MediaType.APPLICATION_XML_TYPE));
+
+    final QueryPlan plan2 = ptarget.request().post(
+        Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+    Assert.assertEquals(plan2.getNumSels(), 1);
+    Assert.assertEquals(plan2.getTablesQueried().size(), 1);
+    Assert.assertTrue(plan2.getTablesQueried().get(0).equalsIgnoreCase(testTable));
+    Assert.assertNotNull(plan2.getPrepareHandle());
+  }
+
+  // Test explain failure
+  @Test
+  public void testExplainFailure() throws InterruptedException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select NO_ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "explain"));
+    mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        new LensConf(),
+        MediaType.APPLICATION_XML_TYPE));
+
+    final QueryPlan plan = target.request().post(
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+    Assert.assertTrue(plan.isError());
+    Assert.assertNotNull(plan.getErrorMsg());
+
+    // Test explain and prepare
+    final WebTarget ptarget = target().path("queryapi/preparedqueries");
+
+    final FormDataMultiPart mp2 = new FormDataMultiPart();
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        lensSessionId, MediaType.APPLICATION_XML_TYPE));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+        "select NO_ID from " + testTable));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
+        "explain_and_prepare"));
+    mp2.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("conf").fileName("conf").build(),
+        new LensConf(),
+        MediaType.APPLICATION_XML_TYPE));
+
+    final QueryPlan plan2 = ptarget.request().post(
+        Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+    Assert.assertTrue(plan2.isError());
+    Assert.assertNotNull(plan2.getErrorMsg());
+    Assert.assertNull(plan2.getPrepareHandle());
   }
 
   // post to preparedqueries
