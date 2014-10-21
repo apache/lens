@@ -20,17 +20,18 @@ package org.apache.lens.server;
  * #L%
  */
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
 
 import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.Service;
+import org.apache.hive.service.Service.STATE;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
-import org.apache.lens.server.LensRequestListener;
-import org.apache.lens.server.LensServerConf;
-import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.glassfish.jersey.test.JerseyTest;
@@ -61,6 +62,12 @@ public abstract class LensJerseyTest extends JerseyTest {
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     LensServices.get().init(LensServerConf.get());
     LensServices.get().start();
+    
+    // Check if mock service is started
+    Service mockSvc = LensServices.get().getService(MockNonLensService.NAME);
+    assertNotNull(mockSvc);
+    assertTrue(mockSvc instanceof MockNonLensService, mockSvc.getClass().getName());
+    assertEquals(mockSvc.getServiceState(), STATE.STARTED);
     System.out.println("Lens services started!");
   }
 
@@ -125,3 +132,5 @@ public abstract class LensJerseyTest extends JerseyTest {
     System.out.println("Lens services restarted!");
   }
 }
+
+
