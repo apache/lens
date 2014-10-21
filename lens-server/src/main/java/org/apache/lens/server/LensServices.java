@@ -32,6 +32,9 @@ import lombok.Setter;
 
 
 
+
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -80,6 +83,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
     INSTANCE = newInstance;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public synchronized void init(HiveConf hiveConf) {
     if (getServiceState() == STATE.NOTINITED) {
@@ -102,20 +106,38 @@ public class LensServices extends CompositeService implements ServiceProvider {
       String[] serviceNames = conf.getStrings(LensConfConstants.SERVICE_NAMES);
       for (String sName : serviceNames) {
         try {
-          Class<? extends LensService> serviceClass = conf.getClass(
-              LensConfConstants.getServiceImplConfKey(sName), null,
-              LensService.class);
-          LOG.info("Adding " + sName + " service with " + serviceClass);
-          Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
-          LensService service  = (LensService) constructor.newInstance(new Object[]
-              {cliService});
-          addService(service);
-          lensServices.add(service);
+
+          String serviceClassName = conf.get(LensConfConstants.getServiceImplConfKey(sName));
+
+          if (StringUtils.isBlank(serviceClassName)) {
+            LOG.warn("Invalid class for service " + sName + " class=" + serviceClassName);
+            continue;
+          }
+
+          Class<?> cls = Class.forName(serviceClassName);
+
+          if (LensService.class.isAssignableFrom(cls)) {
+            Class<? extends LensService> serviceClass = (Class<? extends LensService>) cls;
+            LOG.info("Adding " + sName + " service with " + serviceClass);
+            Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
+            LensService service  = (LensService) constructor.newInstance(new Object[]
+                {cliService});
+            addService(service);
+            lensServices.add(service);
+          } else if (Service.class.isAssignableFrom(cls)) {
+            Class<? extends Service> serviceClass = (Class<? extends Service>) cls;
+            // Assuming default constructor
+            Service svc = serviceClass.newInstance();
+            addService(svc);
+          } else {
+            LOG.warn("Unsupported service class " + serviceClassName + " for service " + sName);
+          }
         } catch (Exception e) {
           LOG.warn("Could not add service:" + sName, e);
           throw new RuntimeException("Could not add service:" + sName, e);
         }
       }
+
 
       for (Service svc : getServices()) {
         services.put(svc.getName(), svc);
@@ -136,7 +158,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       }
       snapShotInterval = conf.getLong(LensConfConstants.SERVER_SNAPSHOT_INTERVAL,
           LensConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
-      LOG.info("Initialized lens services: " + services.keySet().toString());
+      LOG.info("Initialized services: " + services.keySet().toString());
       UserConfigLoaderFactory.init(conf);
       timer = new Timer("lens-server-snapshotter", true);
     }

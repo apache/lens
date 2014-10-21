@@ -123,4 +123,18 @@
     <name>lens.server.db.jdbc.url</name>
     <value>jdbc:hsqldb:target/queries.db</value>
 </property>
+
+
+<property>
+  <name>lens.server.servicenames</name>
+  <value>session,query,metastore,scheduler,quota,mocknonlens</value>
+</property>
+
+
+<property>
+  <name>lens.server.mocknonlens.service.impl</name>
+  <value>org.apache.lens.server.MockNonLensService</value>
+  <description>Implementation class for session service</description>
+</property>
+
 </configuration>
