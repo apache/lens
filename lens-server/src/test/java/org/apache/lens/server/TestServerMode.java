@@ -47,15 +47,27 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-
-@Test(alwaysRun=true, groups="filter-test",dependsOnGroups="restart-test")
+/**
+ * The Class TestServerMode.
+ */
+@Test(alwaysRun = true, groups = "filter-test", dependsOnGroups = "restart-test")
 public class TestServerMode extends LensAllApplicationJerseyTest {
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#setUp()
+   */
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
   @AfterTest
   public void tearDown() throws Exception {
     LensServices.get().setServiceMode(SERVICE_MODE.OPEN);
@@ -67,26 +79,58 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     return 8090;
   }
 
+  /**
+   * Test read only mode.
+   *
+   * @throws InterruptedException
+   *           the interrupted exception
+   */
   @Test
   public void testReadOnlyMode() throws InterruptedException {
     testMode(SERVICE_MODE.READ_ONLY);
   }
 
+  /**
+   * Test metastore no drop mode.
+   *
+   * @throws InterruptedException
+   *           the interrupted exception
+   */
   @Test
   public void testMetastoreNoDropMode() throws InterruptedException {
     testMode(SERVICE_MODE.METASTORE_NODROP);
   }
 
+  /**
+   * Test metastore read only mode.
+   *
+   * @throws InterruptedException
+   *           the interrupted exception
+   */
   @Test
   public void testMetastoreReadOnlyMode() throws InterruptedException {
     testMode(SERVICE_MODE.METASTORE_READONLY);
   }
 
+  /**
+   * Test open mode.
+   *
+   * @throws InterruptedException
+   *           the interrupted exception
+   */
   @Test
   public void testOpenMode() throws InterruptedException {
     testMode(SERVICE_MODE.OPEN);
   }
 
+  /**
+   * Test mode.
+   *
+   * @param mode
+   *          the mode
+   * @throws InterruptedException
+   *           the interrupted exception
+   */
   private void testMode(SERVICE_MODE mode) throws InterruptedException {
     LensServices.get().setServiceMode(mode);
     // open a session
@@ -94,14 +138,10 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
 
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
-        "foo"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
-        "bar"));
-    mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new LensConf(),
-        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        new LensConf(), MediaType.APPLICATION_XML_TYPE));
 
     final LensSessionHandle lensSessionId = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
@@ -111,8 +151,8 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     WebTarget dbTarget = target().path("metastore").path("databases");
 
     try {
-      APIResult result = dbTarget.queryParam("sessionid",
-          lensSessionId).request(MediaType.APPLICATION_XML_TYPE).post(Entity.xml("newdb"), APIResult.class);
+      APIResult result = dbTarget.queryParam("sessionid", lensSessionId).request(MediaType.APPLICATION_XML_TYPE)
+          .post(Entity.xml("newdb"), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
@@ -144,21 +184,16 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
     final FormDataMultiPart query = new FormDataMultiPart();
 
-    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        lensSessionId, MediaType.APPLICATION_XML_TYPE));
-    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-        "select name from table"));
-    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
-        "execute"));
-    query.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new LensConf(),
+    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
+    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select name from table"));
+    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
+        new LensConf(), MediaType.APPLICATION_XML_TYPE));
 
     QueryHandle qhandle = null;
     try {
-      qhandle = queryTarget.request().post(
-          Entity.entity(query, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      qhandle = queryTarget.request().post(Entity.entity(query, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
     } catch (NotAllowedException nae) {
       if (mode.equals(SERVICE_MODE.READ_ONLY)) {
         // expected
@@ -169,21 +204,23 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     }
 
     // Get all queries; should always pass
-    List<QueryHandle> allQueriesXML = queryTarget.queryParam("sessionid", lensSessionId).request(MediaType.APPLICATION_XML)
-        .get(new GenericType<List<QueryHandle>>() {
+    List<QueryHandle> allQueriesXML = queryTarget.queryParam("sessionid", lensSessionId)
+        .request(MediaType.APPLICATION_XML).get(new GenericType<List<QueryHandle>>() {
         });
     Assert.assertTrue(allQueriesXML.size() >= 1);
 
     if (!mode.equals(SERVICE_MODE.READ_ONLY)) {
       assertNotNull(qhandle);
       // wait for query completion if mode is not read only
-      LensQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
+      LensQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
+          .get(LensQuery.class);
       // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
       // wait till the query finishes
       QueryStatus stat = ctx.getStatus();
       while (!stat.isFinished()) {
-        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
+        ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
+            .get(LensQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }

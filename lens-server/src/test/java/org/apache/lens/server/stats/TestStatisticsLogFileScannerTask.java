@@ -1,4 +1,5 @@
 package org.apache.lens.server.stats;
+
 /*
  * #%L
  * Lens Server
@@ -19,7 +20,6 @@ package org.apache.lens.server.stats;
  * #L%
  */
 
-
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask;
@@ -37,11 +37,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The Class TestStatisticsLogFileScannerTask.
+ */
 public class TestStatisticsLogFileScannerTask {
 
-
+  /** The f. */
   private File f;
+
+  /** The hidden. */
   private File hidden;
+
+  /**
+   * Creates the test log file.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeMethod
   public void createTestLogFile() throws Exception {
     f = new File("/tmp/test.log.2014-08-05-11-28");
@@ -50,13 +62,24 @@ public class TestStatisticsLogFileScannerTask {
     f.createNewFile();
   }
 
+  /**
+   * Delete test file.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @AfterMethod
   public void deleteTestFile() throws Exception {
     f.delete();
     hidden.delete();
   }
 
-
+  /**
+   * Test scanner.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testScanner() throws Exception {
     Logger l = Logger.getLogger(TestStatisticsLogFileScannerTask.class);
@@ -78,18 +101,16 @@ public class TestStatisticsLogFileScannerTask {
           return null;
         }
       }).when(service).notifyEvent(Mockito.any(PartitionEvent.class));
-    } catch (Exception e ) {
+    } catch (Exception e) {
       e.printStackTrace();
     }
     task.setService(service);
     task.run();
     Assert.assertEquals(events.size(), 1);
     PartitionEvent event = events.get(0);
-    Assert.assertEquals(event.getEventName(),
-        TestStatisticsLogFileScannerTask.class.getSimpleName());
+    Assert.assertEquals(event.getEventName(), TestStatisticsLogFileScannerTask.class.getSimpleName());
     Assert.assertEquals(event.getPartMap().size(), 1);
     Assert.assertTrue(event.getPartMap().containsKey("2014-08-05-11-28"));
-    Assert.assertEquals(event.getPartMap().get("2014-08-05-11-28"),
-        f.getAbsolutePath());
+    Assert.assertEquals(event.getPartMap().get("2014-08-05-11-28"), f.getAbsolutePath());
   }
 }

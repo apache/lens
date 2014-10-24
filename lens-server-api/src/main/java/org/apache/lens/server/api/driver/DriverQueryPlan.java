@@ -32,42 +32,105 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPlan;
 import org.apache.lens.api.query.QueryPrepareHandle;
 
-
+/**
+ * The Class DriverQueryPlan.
+ */
 public abstract class DriverQueryPlan {
 
+  /**
+   * The Enum ExecMode.
+   */
   public enum ExecMode {
+
+    /** The interactive. */
     INTERACTIVE,
+
+    /** The batch. */
     BATCH,
+
+    /** The not accepted. */
     NOT_ACCEPTED
   };
 
+  /**
+   * The Enum ScanMode.
+   */
   public enum ScanMode {
+
+    /** The in memory. */
     IN_MEMORY,
+
+    /** The index scan. */
     INDEX_SCAN,
+
+    /** The partial scan. */
     PARTIAL_SCAN,
+
+    /** The full scan. */
     FULL_SCAN
   }
 
+  /** The num joins. */
   protected int numJoins = 0;
+
+  /** The num gbys. */
   protected int numGbys = 0;
+
+  /** The num sels. */
   protected int numSels = 0;
+
+  /** The num sel di. */
   protected int numSelDi = 0;
+
+  /** The num having. */
   protected int numHaving = 0;
+
+  /** The num obys. */
   protected int numObys = 0;
+
+  /** The num aggr exprs. */
   protected int numAggrExprs = 0;
+
+  /** The num filters. */
   protected int numFilters = 0;
+
+  /** The tables queried. */
   protected final List<String> tablesQueried = new ArrayList<String>();
+
+  /** The has sub query. */
   protected boolean hasSubQuery = false;
+
+  /** The result destination. */
   protected String resultDestination;
+
+  /** The exec mode. */
   protected ExecMode execMode;
+
+  /** The scan mode. */
   protected ScanMode scanMode;
+
+  /** The table weights. */
   protected final Map<String, Double> tableWeights = new HashMap<String, Double>();
+
+  /** The join weight. */
   protected Double joinWeight;
+
+  /** The gby weight. */
   protected Double gbyWeight;
+
+  /** The filter weight. */
   protected Double filterWeight;
+
+  /** The having weight. */
   protected Double havingWeight;
+
+  /** The oby weight. */
   protected Double obyWeight;
+
+  /** The select weight. */
   protected Double selectWeight;
+
+  /** The handle. */
   protected QueryPrepareHandle handle;
 
   /**
@@ -96,7 +159,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of groupbys
    *
-   * @param numGbys the numGbys to set
+   * @param numGbys
+   *          the numGbys to set
    */
   protected void setNumGbys(int numGbys) {
     this.numGbys = numGbys;
@@ -114,7 +178,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of select expressions
    *
-   * @param numSels the numSels to set
+   * @param numSels
+   *          the numSels to set
    */
   protected void setNumSels(int numSels) {
     this.numSels = numSels;
@@ -132,7 +197,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of distinct select expressions
    *
-   * @param numSelDi the numSelDi to set
+   * @param numSelDi
+   *          the numSelDi to set
    */
   protected void setNumSelDistincts(int numSelDi) {
     this.numSelDi = numSelDi;
@@ -150,7 +216,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of join expressions on query
    *
-   * @param numJoins the numJoins to set
+   * @param numJoins
+   *          the numJoins to set
    */
   protected void setNumJoins(int numJoins) {
     this.numJoins = numJoins;
@@ -168,7 +235,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of having expressions on query
    *
-   * @param numHaving the numHaving to set
+   * @param numHaving
+   *          the numHaving to set
    */
   protected void setNumHaving(int numHaving) {
     this.numHaving = numHaving;
@@ -186,7 +254,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of order by expressions on query
    *
-   * @param numObys the numObys to set
+   * @param numObys
+   *          the numObys to set
    */
   protected void setNumOrderBys(int numObys) {
     this.numObys = numObys;
@@ -202,9 +271,10 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * Set the list of table names to be queried
+   * Set the list of table names to be queried.
    *
-   * @param tablesQueried the tablesQueried to set
+   * @param table
+   *          the table
    */
   protected void addTablesQueries(String table) {
     this.tablesQueried.add(table);
@@ -222,14 +292,15 @@ public abstract class DriverQueryPlan {
   /**
    * Set the number of filters in query
    *
-   * @param numFilters the numFilters to set
+   * @param numFilters
+   *          the numFilters to set
    */
   protected void setNumFilters(int numFilters) {
     this.numFilters = numFilters;
   }
 
   /**
-   * Get if the query has a subquery or not
+   * Get if the query has a subquery or not.
    *
    * @return the hasSubQuery true if query has subquery, false otherwise
    */
@@ -247,8 +318,7 @@ public abstract class DriverQueryPlan {
   /**
    * Get the result destination
    *
-   * @return the resultDestination The destination can be another table or
-   *           filesystem path or inmemory result
+   * @return the resultDestination The destination can be another table or filesystem path or inmemory result
    */
   public String getResultDestination() {
     return resultDestination;
@@ -257,7 +327,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set string representation of the destination
    *
-   * @param resultDestination the resultDestination to set
+   * @param resultDestination
+   *          the resultDestination to set
    */
   protected void setResultDestination(String resultDestination) {
     this.resultDestination = resultDestination;
@@ -276,7 +347,7 @@ public abstract class DriverQueryPlan {
    * Get the weight of the table.
    *
    * @param tableName
-   *
+   *          the table name
    * @return the weight
    */
   public Double getTableWeight(String tableName) {
@@ -284,12 +355,13 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * Set the weight of the table
+   * Set the weight of the table.
    *
-   * @param tableName The name of the table.
-   *
-   * @param tableWeight Weight of the table being queried. This should reflect
-   *  the amount of data being read/scanned from the table, scan cost
+   * @param tableName
+   *          The name of the table.
+   * @param tableWeight
+   *          Weight of the table being queried. This should reflect the amount of data being read/scanned from the
+   *          table, scan cost
    */
   protected void setTableWeight(String tableName, Double tableWeight) {
     this.tableWeights.put(tableName, tableWeight);
@@ -307,7 +379,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the exec mode
    *
-   * @param execMode the {@link ExecMode} to set
+   * @param execMode
+   *          the {@link ExecMode} to set
    */
   protected void setExecMode(ExecMode execMode) {
     this.execMode = execMode;
@@ -325,7 +398,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the scan mode
    *
-   * @param scanMode the {@link ScanMode} to set
+   * @param scanMode
+   *          the {@link ScanMode} to set
    */
   protected void setScanMode(ScanMode scanMode) {
     this.scanMode = scanMode;
@@ -343,7 +417,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with joins
    *
-   * @param joinWeight the joinWeight to set
+   * @param joinWeight
+   *          the joinWeight to set
    */
   protected void setJoinWeight(Double joinWeight) {
     this.joinWeight = joinWeight;
@@ -361,7 +436,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with group by expressions.
    *
-   * @param gbyWeight the gbyWeight to set
+   * @param gbyWeight
+   *          the gbyWeight to set
    */
   protected void setGbyWeight(Double gbyWeight) {
     this.gbyWeight = gbyWeight;
@@ -379,7 +455,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with filter expressions.
    *
-   * @param filterWeight the filterWeight to set
+   * @param filterWeight
+   *          the filterWeight to set
    */
   protected void setFilterWeight(Double filterWeight) {
     this.filterWeight = filterWeight;
@@ -397,7 +474,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with order by expressions.
    *
-   * @param obyWeight the obyWeight to set
+   * @param obyWeight
+   *          the obyWeight to set
    */
   protected void setObyWeight(Double obyWeight) {
     this.obyWeight = obyWeight;
@@ -415,7 +493,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with having expressions.
    *
-   * @param havingWeight the havingWeight to set
+   * @param havingWeight
+   *          the havingWeight to set
    */
   protected void setHavingWeight(Double havingWeight) {
     this.havingWeight = havingWeight;
@@ -433,7 +512,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set the weight associated with select expressions.
    *
-   * @param selectWeight the selectWeight to set
+   * @param selectWeight
+   *          the selectWeight to set
    */
   protected void setSelectWeight(Double selectWeight) {
     this.selectWeight = selectWeight;
@@ -461,7 +541,8 @@ public abstract class DriverQueryPlan {
 
   /**
    *
-   * @param handle the handle to set
+   * @param handle
+   *          the handle to set
    */
   public void setPrepareHandle(QueryPrepareHandle handle) {
     this.handle = handle;
@@ -473,21 +554,24 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get list of partitions queried for each table
+   * 
    * @return
    */
   public Map<String, List<String>> getPartitions() {
     return null;
   }
 
-
-
-
+  /**
+   * To query plan.
+   *
+   * @return the query plan
+   * @throws UnsupportedEncodingException
+   *           the unsupported encoding exception
+   */
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
-    return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
-        numHaving, numObys, numAggrExprs, numFilters, tablesQueried, hasSubQuery,
-        execMode != null ? execMode.name() : null,
-            scanMode != null ? scanMode.name() : null, tableWeights, joinWeight,
-                gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
-                URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
+    return new QueryPlan(numJoins, numGbys, numSels, numSelDi, numHaving, numObys, numAggrExprs, numFilters,
+        tablesQueried, hasSubQuery, execMode != null ? execMode.name() : null, scanMode != null ? scanMode.name()
+            : null, tableWeights, joinWeight, gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
+        URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
   }
 }

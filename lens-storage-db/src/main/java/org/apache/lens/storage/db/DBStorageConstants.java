@@ -20,6 +20,9 @@ package org.apache.lens.storage.db;
  * #L%
  */
 
+/**
+ * The Class DBStorageConstants.
+ */
 public class DBStorageConstants {
 
 }

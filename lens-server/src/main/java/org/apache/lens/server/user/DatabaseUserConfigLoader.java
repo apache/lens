@@ -1,4 +1,5 @@
 package org.apache.lens.server.user;
+
 /*
  * #%L
  * Lens Server
@@ -34,23 +35,46 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The Class DatabaseUserConfigLoader.
+ */
 public class DatabaseUserConfigLoader extends UserConfigLoader {
+
+  /** The query sql. */
   protected final String querySql;
+
+  /** The keys. */
   protected final String[] keys;
+
+  /** The cache. */
   protected final Cache<String, Map<String, String>> cache;
+
+  /** The ds. */
   protected DataSource ds;
 
+  /**
+   * Instantiates a new database user config loader.
+   *
+   * @param conf
+   *          the conf
+   * @throws UserConfigLoaderException
+   *           the user config loader exception
+   */
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
     querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     ds = UtilityMethods.getDataSourceFromConf(conf);
-    cache = CacheBuilder
-        .newBuilder()
+    cache = CacheBuilder.newBuilder()
         .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
         .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
+   */
   @Override
   public Map<String, String> getUserConfig(final String loggedInUser) throws UserConfigLoaderException {
     try {
@@ -60,13 +84,13 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
           try {
             final String[] config = UtilityMethods.queryDatabase(ds, querySql, false, loggedInUser);
-            if(config.length != keys.length) {
-              throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") " +
-                  "is not equal to the number of keys required(" + keys.length + ").");
+            if (config.length != keys.length) {
+              throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") "
+                  + "is not equal to the number of keys required(" + keys.length + ").");
             }
-            return new HashMap<String, String>(){
+            return new HashMap<String, String>() {
               {
-                for(int i = 0; i < keys.length; i++) {
+                for (int i = 0; i < keys.length; i++) {
                   put(keys[i], config[i]);
                 }
               }

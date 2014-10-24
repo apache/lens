@@ -41,18 +41,52 @@ import java.util.concurrent.TimeUnit;
 
 import static org.testng.Assert.*;
 
-@Test(groups="unit-test")
+/**
+ * The Class TestEventService.
+ */
+@Test(groups = "unit-test")
 public class TestEventService {
+
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(TestEventService.class);
+
+  /** The service. */
   EventServiceImpl service;
+
+  /** The generic event listener. */
   GenericEventListener genericEventListener;
+
+  /** The failed listener. */
   MockFailedListener failedListener;
+
+  /** The queue position change listener. */
   MockQueuePositionChange queuePositionChangeListener;
+
+  /** The ended listener. */
   MockEndedListener endedListener;
+
+  /** The latch. */
   CountDownLatch latch;
 
+  /**
+   * The listener interface for receiving genericEvent events. The class that is interested in processing a genericEvent
+   * event implements this interface, and the object created with that class is registered with a component using the
+   * component's <code>addGenericEventListener<code> method. When
+   * the genericEvent event occurs, that object's appropriate
+   * method is invoked.
+   *
+   * @see GenericEventEvent
+   */
   class GenericEventListener extends AsyncEventListener<LensEvent> {
+
+    /** The processed. */
     boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
+     */
     @Override
     public void process(LensEvent event) {
       processed = true;
@@ -61,8 +95,25 @@ public class TestEventService {
     }
   }
 
+  /**
+   * The listener interface for receiving mockFailed events. The class that is interested in processing a mockFailed
+   * event implements this interface, and the object created with that class is registered with a component using the
+   * component's <code>addMockFailedListener<code> method. When
+   * the mockFailed event occurs, that object's appropriate
+   * method is invoked.
+   *
+   * @see MockFailedEvent
+   */
   class MockFailedListener implements LensEventListener<QueryFailed> {
+
+    /** The processed. */
     boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
     @Override
     public void onEvent(QueryFailed change) throws LensException {
       processed = true;
@@ -71,8 +122,25 @@ public class TestEventService {
     }
   }
 
+  /**
+   * The listener interface for receiving mockEnded events. The class that is interested in processing a mockEnded event
+   * implements this interface, and the object created with that class is registered with a component using the
+   * component's <code>addMockEndedListener<code> method. When
+   * the mockEnded event occurs, that object's appropriate
+   * method is invoked.
+   *
+   * @see MockEndedEvent
+   */
   class MockEndedListener implements LensEventListener<QueryEnded> {
+
+    /** The processed. */
     boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
     @Override
     public void onEvent(QueryEnded change) throws LensException {
       processed = true;
@@ -81,8 +149,19 @@ public class TestEventService {
     }
   }
 
+  /**
+   * The Class MockQueuePositionChange.
+   */
   class MockQueuePositionChange implements LensEventListener<QueuePositionChange> {
+
+    /** The processed. */
     boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
     @Override
     public void onEvent(QueuePositionChange change) throws LensException {
       processed = true;
@@ -91,16 +170,24 @@ public class TestEventService {
     }
   }
 
-
+  /**
+   * Setup.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeTest
   public void setup() throws Exception {
     LensServices.get().init(LensServerConf.get());
     LensServices.get().start();
     service = LensServices.get().getService(LensEventService.NAME);
     assertNotNull(service);
-    LOG.info("Service started " + service) ;
+    LOG.info("Service started " + service);
   }
 
+  /**
+   * Test add listener.
+   */
   @Test
   public void testAddListener() {
     int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
@@ -119,6 +206,9 @@ public class TestEventService {
     assertTrue(service.getListeners(QueuePositionChange.class).contains(queuePositionChangeListener));
   }
 
+  /**
+   * Test remove listener.
+   */
   @Test
   public void testRemoveListener() {
     MockFailedListener toRemove = new MockFailedListener();
@@ -128,6 +218,9 @@ public class TestEventService {
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
   }
 
+  /**
+   * Reset listeners.
+   */
   private void resetListeners() {
     genericEventListener.processed = false;
     endedListener.processed = false;
@@ -135,8 +228,14 @@ public class TestEventService {
     queuePositionChangeListener.processed = false;
   }
 
+  /**
+   * Test handle event.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
-  public void testHandleEvent() throws Exception{
+  public void testHandleEvent() throws Exception {
     QueryHandle query = new QueryHandle(UUID.randomUUID());
     String user = "user";
     long now = System.currentTimeMillis();

@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api.query;
 
 /*
@@ -28,16 +31,40 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+/**
+ * The Class QueryCost.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new query cost.
+ *
+ * @param estimatedExecTimeMillis
+ *          the estimated exec time millis
+ * @param estimatedResourceUsage
+ *          the estimated resource usage
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new query cost.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryCost implements Comparable<QueryCost> {
 
-  @XmlElement @Getter
+  /** The estimated exec time millis. */
+  @XmlElement
+  @Getter
   private long estimatedExecTimeMillis;
-  @XmlElement @Getter
+
+  /** The estimated resource usage. */
+  @XmlElement
+  @Getter
   private double estimatedResourceUsage;
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
   @Override
   public int compareTo(QueryCost other) {
     if (estimatedExecTimeMillis == other.estimatedExecTimeMillis) {

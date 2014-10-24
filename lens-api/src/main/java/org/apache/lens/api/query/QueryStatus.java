@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api.query;
 
 /*
@@ -31,35 +34,107 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * The Class QueryStatus.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new query status.
+ *
+ * @param progress
+ *          the progress
+ * @param status
+ *          the status
+ * @param statusMessage
+ *          the status message
+ * @param isResultSetAvailable
+ *          the is result set available
+ * @param progressMessage
+ *          the progress message
+ * @param errorMessage
+ *          the error message
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new query status.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryStatus implements Serializable {
+
+  /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 1L;
 
+  /**
+   * The Enum Status.
+   */
   public enum Status {
+
+    /** The new. */
     NEW,
+
+    /** The queued. */
     QUEUED,
+
+    /** The launched. */
     LAUNCHED,
+
+    /** The running. */
     RUNNING,
+
+    /** The executed. */
     EXECUTED,
+
+    /** The successful. */
     SUCCESSFUL,
+
+    /** The failed. */
     FAILED,
+
+    /** The canceled. */
     CANCELED,
+
+    /** The closed. */
     CLOSED
   }
 
-  @XmlElement @Getter private double progress;
-  @XmlElement @Getter private Status status;
-  @XmlElement @Getter private String statusMessage;
-  @XmlElement @Getter private boolean isResultSetAvailable = false;
-  @Getter @Setter private String progressMessage;
-  @Getter @Setter private String errorMessage;
+  /** The progress. */
+  @XmlElement
+  @Getter
+  private double progress;
 
+  /** The status. */
+  @XmlElement
+  @Getter
+  private Status status;
+
+  /** The status message. */
+  @XmlElement
+  @Getter
+  private String statusMessage;
+
+  /** The is result set available. */
+  @XmlElement
+  @Getter
+  private boolean isResultSetAvailable = false;
+
+  /** The progress message. */
+  @Getter
+  @Setter
+  private String progressMessage;
+
+  /** The error message. */
+  @Getter
+  @Setter
+  private String errorMessage;
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
-    StringBuilder str = new StringBuilder(status.toString()).append(':').
-        append(statusMessage);
+    StringBuilder str = new StringBuilder(status.toString()).append(':').append(statusMessage);
     if (status.equals(Status.RUNNING)) {
       str.append(" - Progress:").append(progress).append(":").append(progressMessage);
     }
@@ -77,10 +152,18 @@ public class QueryStatus implements Serializable {
   }
 
   public boolean isFinished() {
-    return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) ||
-        status.equals(Status.CANCELED);
+    return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) || status.equals(Status.CANCELED);
   }
 
+  /**
+   * Checks if is valid transition.
+   *
+   * @param oldState
+   *          the old state
+   * @param newState
+   *          the new state
+   * @return true, if is valid transition
+   */
   public static boolean isValidTransition(Status oldState, Status newState) {
     switch (oldState) {
     case NEW:
@@ -136,6 +219,13 @@ public class QueryStatus implements Serializable {
     return false;
   }
 
+  /**
+   * Checks if is validate transition.
+   *
+   * @param newState
+   *          the new state
+   * @return true, if is validate transition
+   */
   public boolean isValidateTransition(Status newState) {
     return isValidTransition(this.status, newState);
   }

@@ -1,4 +1,5 @@
 package org.apache.lens.server.query;
+
 /*
  * #%L
  * Lens Server
@@ -31,35 +32,49 @@ import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * Top level class which handles all Query Events
+ * Top level class which handles all Query Events.
  */
 public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryEnded> {
 
+  /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(QueryExecutionStatisticsGenerator.class);
+
+  /** The query service. */
   private final QueryExecutionServiceImpl queryService;
+
+  /** The event service. */
   private final LensEventService eventService;
 
-  public QueryExecutionStatisticsGenerator(QueryExecutionServiceImpl queryService,
-      LensEventService eventService) {
+  /**
+   * Instantiates a new query execution statistics generator.
+   *
+   * @param queryService
+   *          the query service
+   * @param eventService
+   *          the event service
+   */
+  public QueryExecutionStatisticsGenerator(QueryExecutionServiceImpl queryService, LensEventService eventService) {
     this.queryService = queryService;
     this.eventService = eventService;
   }
 
-
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
+   */
   @Override
   public void process(QueryEnded ended) {
     if (ended.getCurrentValue() == QueryStatus.Status.CLOSED) {
       return;
     }
     QueryHandle handle = ended.getQueryHandle();
-    QueryExecutionStatistics event = new QueryExecutionStatistics(
-        System.currentTimeMillis());
+    QueryExecutionStatistics event = new QueryExecutionStatistics(System.currentTimeMillis());
     QueryContext ctx = queryService.getQueryContext(handle);
     if (ctx == null) {
-      LOG.warn("Could not find the context for " + handle + " for event:"
-          + ended.getCurrentValue() + ". No stat generated");
+      LOG.warn("Could not find the context for " + handle + " for event:" + ended.getCurrentValue()
+          + ". No stat generated");
       return;
     }
     event.setEndTime(ctx.getEndTime());
@@ -87,6 +102,5 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
       LOG.warn("Unable to notify Execution statistics", e);
     }
   }
-
 
 }

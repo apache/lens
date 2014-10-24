@@ -38,63 +38,214 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
 
-
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * The Class QueryContext.
+ */
 public class QueryContext implements Comparable<QueryContext>, Serializable {
 
+  /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 1L;
 
-  @Getter @Setter private QueryHandle queryHandle;
-  @Getter final private String userQuery;
-  @Getter final private String submittedUser;  // Logged in user.
-  transient @Getter @Setter private Configuration conf;
-  @Getter private LensConf qconf;
-  @Getter private Priority priority;
-  @Getter final private boolean isPersistent;
-  @Getter final private boolean isDriverPersistent;
-  transient @Getter @Setter private LensDriver selectedDriver;
-  @Getter @Setter private String driverQuery;
-  @Getter private QueryStatus status;
-  @Getter @Setter private String resultSetPath;
-  @Getter @Setter private String hdfsoutPath;
-  @Getter final private long submissionTime;
-  @Getter @Setter private long launchTime;
-  @Getter @Setter private long endTime;
-  @Getter @Setter private long closedTime;
-  @Getter @Setter private String lensSessionIdentifier;
-  @Getter @Setter private String driverOpHandle;
-  @Getter final DriverQueryStatus driverStatus;
-  transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
-  @Getter @Setter private boolean finishedQueryPersisted = false;
-  @Getter @Setter private String queryName;
+  /** The query handle. */
+  @Getter
+  @Setter
+  private QueryHandle queryHandle;
 
+  /** The user query. */
+  @Getter
+  final private String userQuery;
+
+  /** The submitted user. */
+  @Getter
+  final private String submittedUser; // Logged in user.
+
+  /** The conf. */
+  transient @Getter @Setter private Configuration conf;
+
+  /** The qconf. */
+  @Getter
+  private LensConf qconf;
+
+  /** The priority. */
+  @Getter
+  private Priority priority;
+
+  /** The is persistent. */
+  @Getter
+  final private boolean isPersistent;
+
+  /** The is driver persistent. */
+  @Getter
+  final private boolean isDriverPersistent;
+
+  /** The selected driver. */
+  transient @Getter @Setter private LensDriver selectedDriver;
+
+  /** The driver query. */
+  @Getter
+  @Setter
+  private String driverQuery;
+
+  /** The status. */
+  @Getter
+  private QueryStatus status;
+
+  /** The result set path. */
+  @Getter
+  @Setter
+  private String resultSetPath;
+
+  /** The hdfsout path. */
+  @Getter
+  @Setter
+  private String hdfsoutPath;
+
+  /** The submission time. */
+  @Getter
+  final private long submissionTime;
+
+  /** The launch time. */
+  @Getter
+  @Setter
+  private long launchTime;
+
+  /** The end time. */
+  @Getter
+  @Setter
+  private long endTime;
+
+  /** The closed time. */
+  @Getter
+  @Setter
+  private long closedTime;
+
+  /** The lens session identifier. */
+  @Getter
+  @Setter
+  private String lensSessionIdentifier;
+
+  /** The driver op handle. */
+  @Getter
+  @Setter
+  private String driverOpHandle;
+
+  /** The driver status. */
+  @Getter
+  final DriverQueryStatus driverStatus;
+
+  /** The query output formatter. */
+  transient @Getter @Setter private QueryOutputFormatter queryOutputFormatter;
+
+  /** The finished query persisted. */
+  @Getter
+  @Setter
+  private boolean finishedQueryPersisted = false;
+
+  /** The query name. */
+  @Getter
+  @Setter
+  private String queryName;
+
+  /**
+   * Instantiates a new query context.
+   *
+   * @param query
+   *          the query
+   * @param user
+   *          the user
+   * @param conf
+   *          the conf
+   */
   public QueryContext(String query, String user, Configuration conf) {
     this(query, user, new LensConf(), conf, query, null, new Date().getTime());
   }
 
+  /**
+   * Instantiates a new query context.
+   *
+   * @param query
+   *          the query
+   * @param user
+   *          the user
+   * @param qconf
+   *          the qconf
+   * @param conf
+   *          the conf
+   */
   public QueryContext(String query, String user, LensConf qconf, Configuration conf) {
     this(query, user, qconf, conf, query, null, new Date().getTime());
   }
 
-  public QueryContext(PreparedQueryContext prepared, String user,
-      Configuration conf) {
+  /**
+   * Instantiates a new query context.
+   *
+   * @param prepared
+   *          the prepared
+   * @param user
+   *          the user
+   * @param conf
+   *          the conf
+   */
+  public QueryContext(PreparedQueryContext prepared, String user, Configuration conf) {
     this(prepared, user, new LensConf(), conf);
   }
 
-  public QueryContext(PreparedQueryContext prepared, String user, LensConf qconf,
-      Configuration conf) {
-    this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf),
-        prepared.getDriverQuery(), prepared.getSelectedDriver(), new Date().getTime());
+  /**
+   * Instantiates a new query context.
+   *
+   * @param prepared
+   *          the prepared
+   * @param user
+   *          the user
+   * @param qconf
+   *          the qconf
+   * @param conf
+   *          the conf
+   */
+  public QueryContext(PreparedQueryContext prepared, String user, LensConf qconf, Configuration conf) {
+    this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf), prepared.getDriverQuery(), prepared
+        .getSelectedDriver(), new Date().getTime());
   }
 
+  /**
+   * Instantiates a new query context.
+   *
+   * @param query
+   *          the query
+   * @param user
+   *          the user
+   * @param conf
+   *          the conf
+   * @param submissionTime
+   *          the submission time
+   */
   public QueryContext(String query, String user, Configuration conf, long submissionTime) {
     this(query, user, new LensConf(), conf, query, null, submissionTime);
   }
 
-  public QueryContext(String userQuery, String user, LensConf qconf,
-      Configuration conf, String driverQuery, LensDriver selectedDriver, long submissionTime) {
+  /**
+   * Instantiates a new query context.
+   *
+   * @param userQuery
+   *          the user query
+   * @param user
+   *          the user
+   * @param qconf
+   *          the qconf
+   * @param conf
+   *          the conf
+   * @param driverQuery
+   *          the driver query
+   * @param selectedDriver
+   *          the selected driver
+   * @param submissionTime
+   *          the submission time
+   */
+  public QueryContext(String userQuery, String user, LensConf qconf, Configuration conf, String driverQuery,
+      LensDriver selectedDriver, long submissionTime) {
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
@@ -112,8 +263,16 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this.driverStatus = new DriverQueryStatus();
   }
 
-  private static Configuration mergeConf(Configuration prepared,
-      Configuration current) {
+  /**
+   * Merge conf.
+   *
+   * @param prepared
+   *          the prepared
+   * @param current
+   *          the current
+   * @return the configuration
+   */
+  private static Configuration mergeConf(Configuration prepared, Configuration current) {
     Configuration conf = new Configuration(false);
     for (Map.Entry<String, String> entry : prepared) {
       conf.set(entry.getKey(), entry.getValue());
@@ -124,53 +283,61 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     return conf;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
   @Override
   public int compareTo(QueryContext other) {
     int pcomp = this.priority.compareTo(other.priority);
     if (pcomp == 0) {
-      return (int)(this.submissionTime - other.submissionTime);
+      return (int) (this.submissionTime - other.submissionTime);
     } else {
       return pcomp;
     }
   }
 
   /**
-   * @param confoverlay the conf to set
+   * Update conf.
+   *
+   * @param confoverlay
+   *          the conf to set
    */
-  public void updateConf(Map<String,String> confoverlay) {
+  public void updateConf(Map<String, String> confoverlay) {
     qconf.getProperties().putAll(confoverlay);
-    for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
+    for (Map.Entry<String, String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }
   }
 
   public String getResultSetParentDir() {
-    return conf.get(LensConfConstants.RESULT_SET_PARENT_DIR,
-        LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
+    return conf.get(LensConfConstants.RESULT_SET_PARENT_DIR, LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT);
   }
 
   public Path getHDFSResultDir() {
-    return new Path(new Path (getResultSetParentDir(), conf.get(
-        LensConfConstants.QUERY_HDFS_OUTPUT_PATH,
-        LensConfConstants.DEFAULT_HDFS_OUTPUT_PATH)),
-        queryHandle.toString());
+    return new Path(new Path(getResultSetParentDir(), conf.get(LensConfConstants.QUERY_HDFS_OUTPUT_PATH,
+        LensConfConstants.DEFAULT_HDFS_OUTPUT_PATH)), queryHandle.toString());
   }
 
+  /**
+   * To lens query.
+   *
+   * @return the lens query
+   */
   public LensQuery toLensQuery() {
-    return new LensQuery(queryHandle, userQuery,
-        submittedUser, priority, isPersistent,
-        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
-            driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
-            launchTime, driverStatus.getDriverStartTime(),
-            driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
+    return new LensQuery(queryHandle, userQuery, submittedUser, priority, isPersistent,
+        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null, driverQuery, status,
+        resultSetPath, driverOpHandle, qconf, submissionTime, launchTime, driverStatus.getDriverStartTime(),
+        driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
   }
 
   public boolean isResultAvailableInDriver() {
-    return isDriverPersistent()|| driverStatus.isResultSetAvailable();
+    return isDriverPersistent() || driverStatus.isResultSetAvailable();
   }
 
   /*
-  Introduced for Recovering finished query.
+   * Introduced for Recovering finished query.
    */
   public void setStatusSkippingTransitionTest(QueryStatus newStatus) throws LensException {
     this.status = newStatus;
@@ -178,7 +345,8 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
 
   public synchronized void setStatus(QueryStatus newStatus) throws LensException {
     if (!this.status.isValidateTransition(newStatus.getStatus())) {
-      throw new LensException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus() + "]");
+      throw new LensException("Invalid state transition:[" + this.status.getStatus() + "->" + newStatus.getStatus()
+          + "]");
     }
     this.status = newStatus;
   }
@@ -192,13 +360,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   }
 
   public String getResultEncoding() {
-    return conf.get(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING,
-        LensConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
+    return conf.get(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, LensConfConstants.DEFAULT_OUTPUT_CHARSET_ENCODING);
   }
 
   public String getOuptutFileExtn() {
-    return conf.get(LensConfConstants.QUERY_OUTPUT_FILE_EXTN,
-        LensConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
+    return conf.get(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, LensConfConstants.DEFAULT_OUTPUT_FILE_EXTN);
   }
 
   public boolean getCompressOutput() {
@@ -211,6 +377,11 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
         LensConfConstants.DEFAULT_RESULT_SPLIT_MULTIPLE_MAX_ROWS);
   }
 
+  /**
+   * Split result into multiple files.
+   *
+   * @return true, if successful
+   */
   public boolean splitResultIntoMultipleFiles() {
     return conf.getBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE,
         LensConfConstants.DEFAULT_RESULT_SPLIT_INTO_MULTIPLE);

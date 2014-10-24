@@ -32,12 +32,15 @@ import java.util.List;
  * serialize to JSON.
  */
 
+/**
+ * Instantiates a new hive result set metadata.
+ */
 @NoArgsConstructor
 public class HiveResultSetMetadata extends LensResultSetMetadata {
 
+  /** The columns. */
   @Setter
   private List<ColumnDescriptor> columns;
-
 
   @Override
   public List<ColumnDescriptor> getColumns() {

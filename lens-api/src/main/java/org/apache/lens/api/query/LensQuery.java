@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api.query;
 
 /*
@@ -26,31 +29,147 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
 
-
 import lombok.*;
 
+/**
+ * The Class LensQuery.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new lens query.
+ *
+ * @param queryHandle
+ *          the query handle
+ * @param userQuery
+ *          the user query
+ * @param submittedUser
+ *          the submitted user
+ * @param priority
+ *          the priority
+ * @param isPersistent
+ *          the is persistent
+ * @param selectedDriverClassName
+ *          the selected driver class name
+ * @param driverQuery
+ *          the driver query
+ * @param status
+ *          the status
+ * @param resultSetPath
+ *          the result set path
+ * @param driverOpHandle
+ *          the driver op handle
+ * @param queryConf
+ *          the query conf
+ * @param submissionTime
+ *          the submission time
+ * @param launchTime
+ *          the launch time
+ * @param driverStartTime
+ *          the driver start time
+ * @param driverFinishTime
+ *          the driver finish time
+ * @param finishTime
+ *          the finish time
+ * @param closedTime
+ *          the closed time
+ * @param queryName
+ *          the query name
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new lens query.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LensQuery {
 
-  @XmlElement @Getter private QueryHandle queryHandle;
-  @XmlElement @Getter private String userQuery;
-  @XmlElement @Getter private String submittedUser;
-  @XmlElement @Getter private Priority priority;
-  @XmlElement @Getter private boolean isPersistent;
-  @XmlElement @Getter private String selectedDriverClassName;
-  @XmlElement @Getter private String driverQuery;
-  @XmlElement @Getter private QueryStatus status;
-  @XmlElement @Getter private String resultSetPath;
-  @XmlElement @Getter private String driverOpHandle;
-  @XmlElement @Getter private LensConf queryConf;
-  @XmlElement @Getter private long submissionTime;
-  @XmlElement @Getter private long launchTime;
-  @XmlElement @Getter private long driverStartTime;
-  @XmlElement @Getter private long driverFinishTime;
-  @XmlElement @Getter private long finishTime;
-  @XmlElement @Getter private long closedTime;
-  @XmlElement @Getter private String queryName;
+  /** The query handle. */
+  @XmlElement
+  @Getter
+  private QueryHandle queryHandle;
+
+  /** The user query. */
+  @XmlElement
+  @Getter
+  private String userQuery;
+
+  /** The submitted user. */
+  @XmlElement
+  @Getter
+  private String submittedUser;
+
+  /** The priority. */
+  @XmlElement
+  @Getter
+  private Priority priority;
+
+  /** The is persistent. */
+  @XmlElement
+  @Getter
+  private boolean isPersistent;
+
+  /** The selected driver class name. */
+  @XmlElement
+  @Getter
+  private String selectedDriverClassName;
+
+  /** The driver query. */
+  @XmlElement
+  @Getter
+  private String driverQuery;
+
+  /** The status. */
+  @XmlElement
+  @Getter
+  private QueryStatus status;
+
+  /** The result set path. */
+  @XmlElement
+  @Getter
+  private String resultSetPath;
+
+  /** The driver op handle. */
+  @XmlElement
+  @Getter
+  private String driverOpHandle;
+
+  /** The query conf. */
+  @XmlElement
+  @Getter
+  private LensConf queryConf;
+
+  /** The submission time. */
+  @XmlElement
+  @Getter
+  private long submissionTime;
+
+  /** The launch time. */
+  @XmlElement
+  @Getter
+  private long launchTime;
+
+  /** The driver start time. */
+  @XmlElement
+  @Getter
+  private long driverStartTime;
+
+  /** The driver finish time. */
+  @XmlElement
+  @Getter
+  private long driverFinishTime;
+
+  /** The finish time. */
+  @XmlElement
+  @Getter
+  private long finishTime;
+
+  /** The closed time. */
+  @XmlElement
+  @Getter
+  private long closedTime;
+
+  /** The query name. */
+  @XmlElement
+  @Getter
+  private String queryName;
 
 }

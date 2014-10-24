@@ -39,31 +39,53 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The Class StaticFileResource.
+ */
 @Path("/")
 public class StaticFileResource {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(StaticFileResource.class);
 
   // Cache for file content, bound by both size and time
-  private static final LoadingCache<String, String> contentCache = CacheBuilder.newBuilder()
-      .maximumSize(100)
-      .expireAfterAccess(10, TimeUnit.MINUTES)
-      .build(new CacheLoader<String, String>() {
+  /** The Constant contentCache. */
+  private static final LoadingCache<String, String> contentCache = CacheBuilder.newBuilder().maximumSize(100)
+      .expireAfterAccess(10, TimeUnit.MINUTES).build(new CacheLoader<String, String>() {
         String baseDir = null;
 
         @Override
         public String load(String filePath) throws Exception {
           if (baseDir == null) {
-            baseDir = LensServices.get().getHiveConf().get(LensConfConstants.SERVER_UI_STATIC_DIR,
-                LensConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
+            baseDir = LensServices.get().getHiveConf()
+                .get(LensConfConstants.SERVER_UI_STATIC_DIR, LensConfConstants.DEFAULT_SERVER_UI_STATIC_DIR);
           }
           return loadFile(baseDir, filePath);
         }
       });
 
+  /**
+   * Load file.
+   *
+   * @param baseDir
+   *          the base dir
+   * @param filePath
+   *          the file path
+   * @return the string
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   private static String loadFile(String baseDir, String filePath) throws IOException {
     return Files.toString(new File(baseDir, filePath), Charset.forName("UTF-8"));
   }
 
+  /**
+   * Gets the static resource.
+   *
+   * @param filePath
+   *          the file path
+   * @return the static resource
+   */
   @GET
   @Path("/{filePath:.*}")
   public Response getStaticResource(@PathParam("filePath") String filePath) {
@@ -79,14 +101,20 @@ public class StaticFileResource {
         return Response.ok(loadFile(baseDir, filePath), getMediaType(filePath)).build();
       }
     } catch (Exception e) {
-      if (e.getCause() instanceof FileNotFoundException
-          || e instanceof FileNotFoundException) {
+      if (e.getCause() instanceof FileNotFoundException || e instanceof FileNotFoundException) {
         throw new NotFoundException("Not Found: " + filePath);
       }
       throw new WebApplicationException("Server error: " + e.getCause(), e);
     }
   }
 
+  /**
+   * Gets the media type.
+   *
+   * @param filePath
+   *          the file path
+   * @return the media type
+   */
   private String getMediaType(String filePath) {
     if (filePath == null) {
       return null;

@@ -1,4 +1,5 @@
 package org.apache.lens.cli;
+
 /*
  * #%L
  * Lens CLI
@@ -19,7 +20,6 @@ package org.apache.lens.cli;
  * #L%
  */
 
-
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -27,7 +27,9 @@ import org.testng.annotations.BeforeTest;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
-
+/**
+ * The Class LensCliApplicationTest.
+ */
 public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
 
   @Override
@@ -40,15 +42,24 @@ public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
     return UriBuilder.fromUri(getUri()).path("lensapi").build();
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.glassfish.jersey.test.JerseyTest#setUp()
+   */
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
   }
 
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
   }
-
 
 }

@@ -25,34 +25,82 @@ import lombok.NoArgsConstructor;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * The Class ModelMetadata.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new model metadata.
+ *
+ * @param modelID
+ *          the model id
+ * @param table
+ *          the table
+ * @param algorithm
+ *          the algorithm
+ * @param params
+ *          the params
+ * @param createdAt
+ *          the created at
+ * @param modelPath
+ *          the model path
+ * @param labelColumn
+ *          the label column
+ * @param features
+ *          the features
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new model metadata.
+ */
 @NoArgsConstructor
 public class ModelMetadata {
-  @XmlElement @Getter
+
+  /** The model id. */
+  @XmlElement
+  @Getter
   private String modelID;
 
-  @XmlElement @Getter
+  /** The table. */
+  @XmlElement
+  @Getter
   private String table;
 
-  @XmlElement @Getter
+  /** The algorithm. */
+  @XmlElement
+  @Getter
   private String algorithm;
 
-  @XmlElement @Getter
+  /** The params. */
+  @XmlElement
+  @Getter
   private String params;
 
-  @XmlElement @Getter
+  /** The created at. */
+  @XmlElement
+  @Getter
   private String createdAt;
 
-  @XmlElement @Getter
+  /** The model path. */
+  @XmlElement
+  @Getter
   private String modelPath;
 
-  @XmlElement @Getter
+  /** The label column. */
+  @XmlElement
+  @Getter
   private String labelColumn;
 
-  @XmlElement @Getter
+  /** The features. */
+  @XmlElement
+  @Getter
   private String features;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();

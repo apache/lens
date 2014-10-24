@@ -29,9 +29,11 @@ import javax.ws.rs.core.Application;
 import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 
-
+/**
+ * The Class QuotaApp.
+ */
 @ApplicationPath("/quota")
-public class QuotaApp  extends Application {
+public class QuotaApp extends Application {
   @Override
   public Set<Class<?>> getClasses() {
     final Set<Class<?>> classes = new HashSet<Class<?>>();

@@ -25,37 +25,76 @@ import org.apache.lens.server.api.LensConfConstants;
 
 import java.util.Map;
 
+/**
+ * A factory for creating UserConfigLoader objects.
+ */
 public class UserConfigLoaderFactory {
 
+  /** The conf. */
   private static HiveConf conf;
+
+  /** The user config loader. */
   private static UserConfigLoader userConfigLoader;
 
+  /**
+   * Inits the.
+   *
+   * @param c
+   *          the c
+   */
   public static void init(HiveConf c) {
     conf = c;
     userConfigLoader = initializeUserConfigLoader();
   }
 
+  /**
+   * The Enum RESOLVER_TYPE.
+   */
   public static enum RESOLVER_TYPE {
+
+    /** The fixed. */
     FIXED,
+
+    /** The propertybased. */
     PROPERTYBASED,
+
+    /** The database. */
     DATABASE,
+
+    /** The ldap backed database. */
     LDAP_BACKED_DATABASE,
+
+    /** The custom. */
     CUSTOM
   }
+
+  /**
+   * Initialize user config loader.
+   *
+   * @return the user config loader
+   */
   public static UserConfigLoader initializeUserConfigLoader() {
     String resolverType = conf.get(LensConfConstants.USER_RESOLVER_TYPE);
-    if(resolverType == null || resolverType.length() == 0) {
+    if (resolverType == null || resolverType.length() == 0) {
       throw new UserConfigLoaderException("user resolver type not determined. value was not provided in conf");
     }
-    for(RESOLVER_TYPE type: RESOLVER_TYPE.values()) {
-      if(type.name().equals(resolverType)) {
+    for (RESOLVER_TYPE type : RESOLVER_TYPE.values()) {
+      if (type.name().equals(resolverType)) {
         return getQueryUserResolver(type);
       }
     }
     throw new UserConfigLoaderException("user resolver type not determined. provided value: " + resolverType);
   }
+
+  /**
+   * Gets the query user resolver.
+   *
+   * @param resolverType
+   *          the resolver type
+   * @return the query user resolver
+   */
   public static UserConfigLoader getQueryUserResolver(RESOLVER_TYPE resolverType) {
-    switch(resolverType) {
+    switch (resolverType) {
     case PROPERTYBASED:
       return new PropertyBasedUserConfigLoader(conf);
     case DATABASE:
@@ -64,12 +103,19 @@ public class UserConfigLoaderFactory {
       return new LDAPBackedDatabaseUserConfigLoader(conf);
     case CUSTOM:
       return new CustomUserConfigLoader(conf);
-    case FIXED :
+    case FIXED:
     default:
       return new FixedUserConfigLoader(conf);
     }
   }
 
+  /**
+   * Gets the user config.
+   *
+   * @param loggedInUser
+   *          the logged in user
+   * @return the user config
+   */
   public static Map<String, String> getUserConfig(String loggedInUser) {
     return userConfigLoader.getUserConfig(loggedInUser);
   }

@@ -1,4 +1,5 @@
 package org.apache.lens.cli.commands;
+
 /*
  * #%L
  * Lens CLI
@@ -30,11 +31,21 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 import java.io.IOException;
 
+/**
+ * The Class BaseLensCommand.
+ */
 public class BaseLensCommand {
+
+  /** The mapper. */
   protected ObjectMapper mapper;
+
+  /** The pp. */
   protected DefaultPrettyPrinter pp;
 
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(BaseLensCommand.class);
+
+  /** The is connection active. */
   protected static boolean isConnectionActive;
 
   static {
@@ -45,6 +56,9 @@ public class BaseLensCommand {
     });
   }
 
+  /**
+   * Close client connection.
+   */
   protected static synchronized void closeClientConnection() {
     if (isConnectionActive) {
       LOG.debug("Request for stopping lens cli received");
@@ -53,16 +67,17 @@ public class BaseLensCommand {
     }
   }
 
+  /**
+   * Instantiates a new base lens command.
+   */
   public BaseLensCommand() {
     getClient();
     mapper = new ObjectMapper();
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
       @Override
-      public void writeIndentation(JsonGenerator jg, int level)
-          throws IOException,
-          JsonGenerationException {
-        if(level > 2) {
+      public void writeIndentation(JsonGenerator jg, int level) throws IOException, JsonGenerationException {
+        if (level > 2) {
           jg.writeRaw("  ");
         } else {
           jg.writeRaw("\n");
@@ -88,16 +103,16 @@ public class BaseLensCommand {
   public static LensClientSingletonWrapper getClientWrapper() {
     return LensClientSingletonWrapper.INSTANCE;
   }
+
   /**
-   * Pretty printing JSON object into CLI String
-   * @param json to be formatted
+   * Pretty printing JSON object into CLI String.
+   *
+   * @param json
+   *          to be formatted
    * @return cli formatted string
    */
   public String formatJson(String json) {
-    return json.replaceAll("\\[ \\{","\n\n ").replaceAll("\\{","").
-        replaceAll("}","").
-        replaceAll("\\[", "").
-        replaceAll("]","\n").replaceAll(",","").
-        replaceAll("\"","").replaceAll("\n\n","\n");
+    return json.replaceAll("\\[ \\{", "\n\n ").replaceAll("\\{", "").replaceAll("}", "").replaceAll("\\[", "")
+        .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
   }
 }

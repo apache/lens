@@ -26,20 +26,89 @@ import lombok.NoArgsConstructor;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+/**
+ * The Class TestReport.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new test report.
+ *
+ * @param testTable
+ *          the test table
+ * @param outputTable
+ *          the output table
+ * @param outputColumn
+ *          the output column
+ * @param labelColumn
+ *          the label column
+ * @param featureColumns
+ *          the feature columns
+ * @param algorithm
+ *          the algorithm
+ * @param modelID
+ *          the model id
+ * @param reportID
+ *          the report id
+ * @param queryID
+ *          the query id
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new test report.
+ */
 @NoArgsConstructor
 public class TestReport {
-  @XmlElement @Getter private String testTable;
-  @XmlElement @Getter private String outputTable;
-  @XmlElement @Getter private String outputColumn;
-  @XmlElement @Getter private String labelColumn;
-  @XmlElement @Getter private String featureColumns;
-  @XmlElement @Getter private String algorithm;
-  @XmlElement @Getter private String modelID;
-  @XmlElement @Getter private String reportID;
-  @XmlElement @Getter private String queryID;
 
+  /** The test table. */
+  @XmlElement
+  @Getter
+  private String testTable;
+
+  /** The output table. */
+  @XmlElement
+  @Getter
+  private String outputTable;
+
+  /** The output column. */
+  @XmlElement
+  @Getter
+  private String outputColumn;
+
+  /** The label column. */
+  @XmlElement
+  @Getter
+  private String labelColumn;
+
+  /** The feature columns. */
+  @XmlElement
+  @Getter
+  private String featureColumns;
+
+  /** The algorithm. */
+  @XmlElement
+  @Getter
+  private String algorithm;
+
+  /** The model id. */
+  @XmlElement
+  @Getter
+  private String modelID;
+
+  /** The report id. */
+  @XmlElement
+  @Getter
+  private String reportID;
+
+  /** The query id. */
+  @XmlElement
+  @Getter
+  private String queryID;
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     StringBuilder builder = new StringBuilder();

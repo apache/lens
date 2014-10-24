@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api.query;
 
 /*
@@ -30,10 +33,25 @@ import lombok.Getter;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
+/**
+ * The Class QueryResultSetMetadata.
+ */
 @XmlRootElement
+/**
+ * Instantiates a new query result set metadata.
+ *
+ * @param columns
+ *          the columns
+ */
 @AllArgsConstructor
+/**
+ * Instantiates a new query result set metadata.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryResultSetMetadata {
 
-  @XmlElementWrapper @Getter private List<ResultColumn> columns;
+  /** The columns. */
+  @XmlElementWrapper
+  @Getter
+  private List<ResultColumn> columns;
 }

@@ -39,33 +39,56 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-
+/**
+ * The Class TestCubeDriver.
+ */
 public class TestCubeDriver {
 
+  /** The conf. */
   Configuration conf = new Configuration();
+
+  /** The cube driver. */
   CubeDriver cubeDriver;
 
+  /**
+   * Before test.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeTest
   public void beforeTest() throws Exception {
     cubeDriver = new CubeDriver(conf);
     conf.setInt("mock.driver.test.val", 5);
   }
 
+  /**
+   * After test.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @AfterTest
   public void afterTest() throws Exception {
   }
 
+  /**
+   * Test cube driver.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testCubeDriver() throws Exception {
     String addQ = "add jar xyz.jar";
     LensResultSet result = cubeDriver.execute(addQ, conf);
     Assert.assertNotNull(result);
-    Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, addQ);
+    Assert.assertEquals(((MockDriver) cubeDriver.getDrivers().get(0)).query, addQ);
 
     String setQ = "set xyz=random";
     result = cubeDriver.execute(setQ, conf);
     Assert.assertNotNull(result);
-    Assert.assertEquals(((MockDriver)cubeDriver.getDrivers().get(0)).query, setQ);
+    Assert.assertEquals(((MockDriver) cubeDriver.getDrivers().get(0)).query, setQ);
 
     String query = "select name from table";
     DriverQueryPlan plan = cubeDriver.explain(query, conf);
@@ -77,8 +100,7 @@ public class TestCubeDriver {
     Assert.assertNotNull(result.getMetadata());
 
     QueryHandle handle = cubeDriver.executeAsync(query, conf);
-    Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(),
-        QueryStatus.Status.SUCCESSFUL);
+    Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(), QueryStatus.Status.SUCCESSFUL);
     Assert.assertFalse(cubeDriver.cancelQuery(handle));
 
     cubeDriver.closeQuery(handle);
@@ -92,6 +114,12 @@ public class TestCubeDriver {
     Assert.assertNotNull(th);
   }
 
+  /**
+   * Test cube driver read write.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testCubeDriverReadWrite() throws Exception {
     // Test read/write for cube driver
@@ -117,6 +145,12 @@ public class TestCubeDriver {
     }
   }
 
+  /**
+   * Test cube driver restart.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testCubeDriverRestart() throws Exception {
     // Test read/write for cube driver
@@ -136,8 +170,7 @@ public class TestCubeDriver {
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
 
-    Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(),
-        QueryStatus.Status.SUCCESSFUL);
+    Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
 }

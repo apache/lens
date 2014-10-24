@@ -31,13 +31,21 @@ import org.apache.lens.server.api.query.QueryExecutionService;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-
+/**
+ * The Class TestServiceProvider.
+ */
 public class TestServiceProvider extends LensAllApplicationJerseyTest {
+
+  /**
+   * Test service provider.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testServiceProvider() throws Exception {
     HiveConf conf = LensServerConf.get();
-    Class<? extends ServiceProviderFactory> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
-        null,
+    Class<? extends ServiceProviderFactory> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY, null,
         ServiceProviderFactory.class);
 
     ServiceProviderFactory spf = spfClass.newInstance();

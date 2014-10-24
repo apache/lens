@@ -25,9 +25,8 @@ import java.util.Properties;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-
 /**
- * Top level JDBC driver for Lens
+ * Top level JDBC driver for Lens.
  */
 public class LensJdbcDriver implements Driver {
 
@@ -39,50 +38,58 @@ public class LensJdbcDriver implements Driver {
     }
   }
 
-  /**
-   * Is the JDBC driver fully JDBC Compliant
-   */
+  /** Is the JDBC driver fully JDBC Compliant. */
   private static final boolean JDBC_COMPLIANT = false;
 
-
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.sql.Driver#connect(java.lang.String, java.util.Properties)
+   */
   @Override
   public Connection connect(String s, Properties properties) throws SQLException {
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.sql.Driver#acceptsURL(java.lang.String)
+   */
   @Override
   public boolean acceptsURL(String url) throws SQLException {
     return Pattern.matches(JDBCUtils.URL_PREFIX + ".*", url);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.sql.Driver#getPropertyInfo(java.lang.String, java.util.Properties)
+   */
   @Override
-  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info)
-      throws SQLException {
+  public DriverPropertyInfo[] getPropertyInfo(String url, Properties info) throws SQLException {
     if (info == null) {
       info = new Properties();
     }
     if ((url != null) && url.startsWith(JDBCUtils.URL_PREFIX)) {
       info = JDBCUtils.parseUrlForPropertyInfo(url, info);
     }
-    DriverPropertyInfo hostProp = new DriverPropertyInfo(
-        JDBCUtils.HOST_PROPERTY_KEY, info.getProperty(JDBCUtils.HOST_PROPERTY_KEY));
+    DriverPropertyInfo hostProp = new DriverPropertyInfo(JDBCUtils.HOST_PROPERTY_KEY,
+        info.getProperty(JDBCUtils.HOST_PROPERTY_KEY));
     hostProp.required = false;
     hostProp.description = "Hostname of Lens Server. Defaults to localhost";
 
-    DriverPropertyInfo portProp = new DriverPropertyInfo(
-        JDBCUtils.PORT_PROPERTY_KEY, info.getProperty(JDBCUtils.PORT_PROPERTY_KEY));
+    DriverPropertyInfo portProp = new DriverPropertyInfo(JDBCUtils.PORT_PROPERTY_KEY,
+        info.getProperty(JDBCUtils.PORT_PROPERTY_KEY));
     portProp.required = false;
-    portProp.description = "Portnumber where lens server runs. " +
-        "Defaults to 8080";
+    portProp.description = "Portnumber where lens server runs. " + "Defaults to 8080";
 
-    DriverPropertyInfo dbProp = new DriverPropertyInfo(
-        JDBCUtils.DB_PROPERTY_KEY, info.getProperty(JDBCUtils.DB_PROPERTY_KEY));
+    DriverPropertyInfo dbProp = new DriverPropertyInfo(JDBCUtils.DB_PROPERTY_KEY,
+        info.getProperty(JDBCUtils.DB_PROPERTY_KEY));
     dbProp.required = false;
-    dbProp.description = "Database to connect to on lens server. " +
-        "Defaults to 'default'";
+    dbProp.description = "Database to connect to on lens server. " + "Defaults to 'default'";
 
-
-    return new DriverPropertyInfo[]{hostProp, portProp, dbProp};
+    return new DriverPropertyInfo[] { hostProp, portProp, dbProp };
   }
 
   @Override
@@ -95,6 +102,11 @@ public class LensJdbcDriver implements Driver {
     return JDBCUtils.getVersion(1);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.sql.Driver#jdbcCompliant()
+   */
   @Override
   public boolean jdbcCompliant() {
     return JDBC_COMPLIANT;

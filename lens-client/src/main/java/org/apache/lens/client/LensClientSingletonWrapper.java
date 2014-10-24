@@ -23,36 +23,58 @@ import org.apache.lens.client.exceptions.LensClientServerConnectionException;
  * limitations under the License.
  * #L%
  */
+/**
+ * The Enum LensClientSingletonWrapper.
+ */
 public enum LensClientSingletonWrapper {
+
+  /** The instance. */
   INSTANCE;
+
+  /** The log. */
   private Log LOG = LogFactory.getLog(LensClientSingletonWrapper.class);
+
+  /** The client. */
   private LensClient client;
+
+  /** The Constant MAX_RETRIES. */
   private static final int MAX_RETRIES = 3;
+
+  /**
+   * Instantiates a new lens client singleton wrapper.
+   */
   LensClientSingletonWrapper() {
     try {
       client = new LensClient();
-    } catch(LensClientServerConnectionException e) {
-      if(e.getErrorCode() != 401) {
+    } catch (LensClientServerConnectionException e) {
+      if (e.getErrorCode() != 401) {
         explainFailedAttempt(e);
         throw e;
       }
       // Connecting without password prompt failed.
-      for(int i = 0; i < MAX_RETRIES; i++) {
-        try{
+      for (int i = 0; i < MAX_RETRIES; i++) {
+        try {
           client = new LensClient(Credentials.prompt());
           break;
-        } catch(LensClientServerConnectionException lensClientServerConnectionException) {
+        } catch (LensClientServerConnectionException lensClientServerConnectionException) {
           explainFailedAttempt(lensClientServerConnectionException);
-          if(i == MAX_RETRIES - 1) {
+          if (i == MAX_RETRIES - 1) {
             throw lensClientServerConnectionException;
           }
         }
       }
     }
   }
+
+  /**
+   * Explain failed attempt.
+   *
+   * @param e
+   *          the e
+   */
   public void explainFailedAttempt(LensClientServerConnectionException e) {
     LOG.error("failed login attempt", e);
-    switch(e.getErrorCode()) {
+    switch (e.getErrorCode()) {
     case 401:
       System.console().printf("username/password combination incorrect.\n");
       break;

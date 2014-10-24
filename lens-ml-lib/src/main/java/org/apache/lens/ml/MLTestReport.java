@@ -26,41 +26,69 @@ import lombok.Setter;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Instantiates a new ML test report.
+ */
 @NoArgsConstructor
 public class MLTestReport implements Serializable {
-  @Getter @Setter
+
+  /** The test table. */
+  @Getter
+  @Setter
   private String testTable;
 
-  @Getter @Setter
+  /** The output table. */
+  @Getter
+  @Setter
   private String outputTable;
 
-  @Getter @Setter
+  /** The output column. */
+  @Getter
+  @Setter
   private String outputColumn;
 
-  @Getter @Setter
+  /** The label column. */
+  @Getter
+  @Setter
   private String labelColumn;
 
-  @Getter @Setter
+  /** The feature columns. */
+  @Getter
+  @Setter
   private List<String> featureColumns;
 
-  @Getter @Setter
+  /** The algorithm. */
+  @Getter
+  @Setter
   private String algorithm;
 
-  @Getter @Setter
+  /** The model id. */
+  @Getter
+  @Setter
   private String modelID;
 
-  @Getter @Setter
+  /** The report id. */
+  @Getter
+  @Setter
   private String reportID;
 
-  @Getter @Setter
+  /** The query id. */
+  @Getter
+  @Setter
   private String queryID;
 
-  @Getter @Setter
+  /** The test output path. */
+  @Getter
+  @Setter
   private String testOutputPath;
 
-  @Getter @Setter
+  /** The prediction result column. */
+  @Getter
+  @Setter
   private String predictionResultColumn;
 
-  @Getter @Setter
+  /** The lens query id. */
+  @Getter
+  @Setter
   private String lensQueryID;
 }

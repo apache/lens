@@ -20,8 +20,6 @@ package org.apache.lens.cli;
  * #L%
  */
 
-
-
 import org.apache.lens.cli.commands.LensStorageCommands;
 import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
@@ -32,12 +30,20 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
+/**
+ * The Class TestLensStorageCommands.
+ */
 public class TestLensStorageCommands extends LensCliApplicationTest {
 
+  /** The command. */
   private static LensStorageCommands command;
+
+  /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(TestLensStorageCommands.class);
 
-
+  /**
+   * Test storage commands.
+   */
   @Test
   public void testStorageCommands() {
     addLocalStorage("local_storage_test");
@@ -47,7 +53,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
   }
 
   private static LensStorageCommands getCommand() {
-    if(command == null) {
+    if (command == null) {
       LensClient client = new LensClient();
       command = new LensStorageCommands();
       command.setClient(client);
@@ -55,19 +61,30 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
     return command;
   }
 
+  /**
+   * Drop storage.
+   *
+   * @param storageName
+   *          the storage name
+   */
   public static void dropStorage(String storageName) {
     String storageList;
     LensStorageCommands command = getCommand();
     command.dropStorage(storageName);
     storageList = command.getStorages();
-    Assert.assertFalse( storageList.contains(storageName),"Storage list contains "+storageName);
+    Assert.assertFalse(storageList.contains(storageName), "Storage list contains " + storageName);
   }
 
+  /**
+   * Adds the local storage.
+   *
+   * @param storageName
+   *          the storage name
+   */
   public synchronized static void addLocalStorage(String storageName) {
     LensStorageCommands command = getCommand();
-    URL storageSpec =
-        TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
-    File newFile = new File("/tmp/local-"+storageName+".xml");
+    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+    File newFile = new File("/tmp/local-" + storageName + ".xml");
     try {
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
@@ -80,17 +97,15 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
 
       String xmlContent = sb.toString();
 
-      xmlContent = xmlContent.replace("name=\"local\"",
-          "name=\""+storageName+"\"");
+      xmlContent = xmlContent.replace("name=\"local\"", "name=\"" + storageName + "\"");
 
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
       LOG.debug("Using Storage spec from file : " + newFile.getAbsolutePath());
       String storageList = command.getStorages();
-      Assert.assertFalse(storageList.contains(storageName),
-          " Storage list contains "+storageName + " storage list is  "
-              + storageList + " file used is " + newFile.getAbsolutePath());
+      Assert.assertFalse(storageList.contains(storageName), " Storage list contains " + storageName
+          + " storage list is  " + storageList + " file used is " + newFile.getAbsolutePath());
       command.createStorage(newFile.getAbsolutePath());
       storageList = command.getStorages();
       Assert.assertTrue(storageList.contains(storageName));
@@ -101,12 +116,17 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
     }
   }
 
+  /**
+   * Test update storage.
+   *
+   * @param storageName
+   *          the storage name
+   */
   private void testUpdateStorage(String storageName) {
 
     try {
       LensStorageCommands command = getCommand();
-      URL storageSpec =
-          TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+      URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
       StringBuilder sb = new StringBuilder();
       BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
       String s;
@@ -117,13 +137,12 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       bufferedReader.close();
 
       String xmlContent = sb.toString();
-      xmlContent = xmlContent.replace("name=\"local\"",
-          "name=\""+storageName+"\"");
+      xmlContent = xmlContent.replace("name=\"local\"", "name=\"" + storageName + "\"");
       xmlContent = xmlContent.replace("<properties name=\"storage.url\" value=\"file:///\"/>\n",
-          "<properties name=\"storage.url\" value=\"file:///\"/>" +
-          "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
+          "<properties name=\"storage.url\" value=\"file:///\"/>"
+              + "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
 
-      File newFile = new File("/tmp/"+storageName+".xml");
+      File newFile = new File("/tmp/" + storageName + ".xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
@@ -133,7 +152,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       String propString = "name : storage.url  value : file:///";
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateStorage(storageName+" /tmp/local-storage1.xml");
+      command.updateStorage(storageName + " /tmp/local-storage1.xml");
       desc = command.describeStorage(storageName);
       LOG.debug(desc);
       Assert.assertTrue(desc.contains(propString));
@@ -144,6 +163,5 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       Assert.fail("Testing update storage failed with exception" + t.getMessage());
     }
   }
-
 
 }

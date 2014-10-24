@@ -38,22 +38,48 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.LensDriver;
 
-
+/**
+ * The Class RewriteUtil.
+ */
 public class RewriteUtil {
 
-  static Pattern cubePattern = Pattern.compile(".*CUBE(.*)",
-      Pattern.CASE_INSENSITIVE | Pattern.MULTILINE | Pattern.DOTALL);
+  /** The cube pattern. */
+  static Pattern cubePattern = Pattern.compile(".*CUBE(.*)", Pattern.CASE_INSENSITIVE | Pattern.MULTILINE
+      | Pattern.DOTALL);
+
+  /** The matcher. */
   static Matcher matcher = null;
 
+  /**
+   * The Class CubeQueryInfo.
+   */
   static class CubeQueryInfo {
+
+    /** The start pos. */
     int startPos;
+
+    /** The end pos. */
     int endPos;
+
+    /** The query. */
     String query;
+
+    /** The cube ast. */
     ASTNode cubeAST;
   }
 
-  static List<CubeQueryInfo> findCubePositions(String query)
-      throws SemanticException, ParseException {
+  /**
+   * Find cube positions.
+   *
+   * @param query
+   *          the query
+   * @return the list
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws ParseException
+   *           the parse exception
+   */
+  static List<CubeQueryInfo> findCubePositions(String query) throws SemanticException, ParseException {
     ASTNode ast = HQLParser.parseHQL(query);
     CubeDriver.LOG.debug("User query AST:" + ast.dump());
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
@@ -64,16 +90,28 @@ public class RewriteUtil {
     return cubeQueries;
   }
 
-  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries,
-      String originalQuery)
-          throws SemanticException {
+  /**
+   * Find cube positions.
+   *
+   * @param ast
+   *          the ast
+   * @param cubeQueries
+   *          the cube queries
+   * @param originalQuery
+   *          the original query
+   * @throws SemanticException
+   *           the semantic exception
+   */
+  private static void findCubePositions(ASTNode ast, List<CubeQueryInfo> cubeQueries, String originalQuery)
+      throws SemanticException {
     int child_count = ast.getChildCount();
     if (ast.getToken() != null) {
       if (ast.getChild(0) != null) {
-        CubeDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:" + ((ASTNode) ast.getChild(0)).getToken().getType());
+        CubeDriver.LOG.debug("First child:" + ast.getChild(0) + " Type:"
+            + ((ASTNode) ast.getChild(0)).getToken().getType());
       }
-      if (ast.getToken().getType() == HiveParser.TOK_QUERY &&
-          ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
+      if (ast.getToken().getType() == HiveParser.TOK_QUERY
+          && ((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {
         CubeDriver.LOG.debug("Inside cube clause");
         CubeQueryInfo cqi = new CubeQueryInfo();
         cqi.cubeAST = ast;
@@ -81,20 +119,18 @@ public class RewriteUtil {
           ASTNode parent = (ASTNode) ast.getParent();
           cqi.startPos = ast.getCharPositionInLine();
           int ci = ast.getChildIndex();
-          if (parent.getToken() == null ||
-              parent.getToken().getType() == HiveParser.TOK_EXPLAIN ||
-              parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
+          if (parent.getToken() == null || parent.getToken().getType() == HiveParser.TOK_EXPLAIN
+              || parent.getToken().getType() == HiveParser.TOK_CREATETABLE) {
             // Not a sub query
             cqi.endPos = originalQuery.length();
           } else if (parent.getChildCount() > ci + 1) {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
-              //less for the next start and for close parenthesis
-              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");;
+              // less for the next start and for close parenthesis
+              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
+              ;
             } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
-              //one less for the next start and less the size of string 'UNION ALL'
-              cqi.endPos = getEndPos(originalQuery,
-                  parent.getChild(ci + 1).getCharPositionInLine() - 1,
-                  "UNION ALL");
+              // one less for the next start and less the size of string 'UNION ALL'
+              cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION ALL");
             } else {
               // Not expected to reach here
               CubeDriver.LOG.warn("Unknown query pattern found with AST:" + ast.dump());
@@ -106,16 +142,15 @@ public class RewriteUtil {
             // and one for the close parenthesis if there are no more unionall
             // or one for the string 'UNION ALL' if there are more union all
             CubeDriver.LOG.debug("Child of union all");
-            cqi.endPos = getEndPos(originalQuery,
-                parent.getParent().getChild(1).getCharPositionInLine(), ")", "UNION ALL") ;
+            cqi.endPos = getEndPos(originalQuery, parent.getParent().getChild(1).getCharPositionInLine(), ")",
+                "UNION ALL");
           }
         }
         CubeDriver.LOG.debug("Adding cqi " + cqi + " query:" + originalQuery.substring(cqi.startPos, cqi.endPos));
         cubeQueries.add(cqi);
-      }
-      else {
+      } else {
         for (int child_pos = 0; child_pos < child_count; ++child_pos) {
-          findCubePositions((ASTNode)ast.getChild(child_pos), cubeQueries, originalQuery);
+          findCubePositions((ASTNode) ast.getChild(child_pos), cubeQueries, originalQuery);
         }
       }
     } else {
@@ -123,6 +158,17 @@ public class RewriteUtil {
     }
   }
 
+  /**
+   * Gets the end pos.
+   *
+   * @param query
+   *          the query
+   * @param backTrackIndex
+   *          the back track index
+   * @param backTrackStr
+   *          the back track str
+   * @return the end pos
+   */
   private static int getEndPos(String query, int backTrackIndex, String... backTrackStr) {
     if (backTrackStr != null) {
       String q = query.substring(0, backTrackIndex).toLowerCase();
@@ -139,12 +185,21 @@ public class RewriteUtil {
     return backTrackIndex;
   }
 
+  /**
+   * Gets the final query conf.
+   *
+   * @param driver
+   *          the driver
+   * @param queryConf
+   *          the query conf
+   * @return the final query conf
+   */
   public static Configuration getFinalQueryConf(LensDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
-      if(entry.getKey().equals("cube.query.driver.supported.storages")){
-        CubeDriver.LOG.warn("cube.query.driver.supported.storages value : "
-            + entry.getValue() + " from query conf ignored/");
+      if (entry.getKey().equals("cube.query.driver.supported.storages")) {
+        CubeDriver.LOG.warn("cube.query.driver.supported.storages value : " + entry.getValue()
+            + " from query conf ignored/");
         continue;
       }
       conf.set(entry.getKey(), entry.getValue());
@@ -152,25 +207,49 @@ public class RewriteUtil {
     return conf;
   }
 
+  /**
+   * Gets the rewriter.
+   *
+   * @param driver
+   *          the driver
+   * @param queryConf
+   *          the query conf
+   * @return the rewriter
+   * @throws SemanticException
+   *           the semantic exception
+   */
   static CubeQueryRewriter getRewriter(LensDriver driver, Configuration queryConf) throws SemanticException {
     return new CubeQueryRewriter(getFinalQueryConf(driver, queryConf));
   }
 
   /**
-   * Replaces new lines with spaces;
-   * '&&' with AND; '||' with OR // these two can be removed once HIVE-5326
-   *  gets resolved
+   * Replaces new lines with spaces; '&&' with AND; '||' with OR // these two can be removed once HIVE-5326 gets
+   * resolved.
    *
-   * @return
+   * @param query
+   *          the query
+   * @return the replaced query
    */
   static String getReplacedQuery(final String query) {
-    String finalQuery = query.replaceAll("[\\n\\r]", " ")
-        .replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ");
+    String finalQuery = query.replaceAll("[\\n\\r]", " ").replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ");
     return finalQuery;
   }
 
-  public static Map<LensDriver, String> rewriteQuery(final String query,
-      Collection<LensDriver> drivers, Configuration queryconf) throws LensException {
+  /**
+   * Rewrite query.
+   *
+   * @param query
+   *          the query
+   * @param drivers
+   *          the drivers
+   * @param queryconf
+   *          the queryconf
+   * @return the map
+   * @throws LensException
+   *           the lens exception
+   */
+  public static Map<LensDriver, String> rewriteQuery(final String query, Collection<LensDriver> drivers,
+      Configuration queryconf) throws LensException {
     try {
       String replacedQuery = getReplacedQuery(query);
       String lowerCaseQuery = replacedQuery.toLowerCase();
@@ -178,8 +257,7 @@ public class RewriteUtil {
       StringBuilder rewriteFailure = new StringBuilder();
       String failureCause = null;
       boolean useBuilder = false;
-      if (lowerCaseQuery.startsWith("add") ||
-          lowerCaseQuery.startsWith("set")) {
+      if (lowerCaseQuery.startsWith("add") || lowerCaseQuery.startsWith("set")) {
         for (LensDriver driver : drivers) {
           driverQueries.put(driver, replacedQuery);
         }
@@ -205,8 +283,8 @@ public class RewriteUtil {
             CubeDriver.LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
             driverQueries.put(driver, finalQuery);
           } catch (SemanticException e) {
-            CubeDriver.LOG.warn("Driver : " + driver.getClass().getName() +
-                " Skipped for the query rewriting due to " + e.getMessage());
+            CubeDriver.LOG.warn("Driver : " + driver.getClass().getName() + " Skipped for the query rewriting due to "
+                + e.getMessage());
             rewriteFailure.append(" Driver :").append(driver.getClass().getName());
             rewriteFailure.append(" Cause :" + e.getLocalizedMessage());
             if (failureCause != null && !failureCause.equals(e.getLocalizedMessage())) {
@@ -219,8 +297,8 @@ public class RewriteUtil {
         }
       }
       if (driverQueries.isEmpty()) {
-        throw new LensException("No driver accepted the query, because " +
-            (useBuilder ? rewriteFailure.toString() : failureCause));
+        throw new LensException("No driver accepted the query, because "
+            + (useBuilder ? rewriteFailure.toString() : failureCause));
       }
       return driverQueries;
     } catch (Exception e) {
@@ -228,6 +306,13 @@ public class RewriteUtil {
     }
   }
 
+  /**
+   * Checks if is cube query.
+   *
+   * @param query
+   *          the query
+   * @return true, if is cube query
+   */
   public static boolean isCubeQuery(String query) {
     if (matcher == null) {
       matcher = cubePattern.matcher(query);

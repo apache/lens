@@ -42,10 +42,14 @@ import com.cloudera.beeswax.api.QueryHandle;
 import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
 
-@PowerMockIgnore({"org.apache.commons.logging.*", "org.xml.*", "javax.xml.*", "org.w3c.*"})
+/**
+ * The Class TestImpalaDriver.
+ */
+@PowerMockIgnore({ "org.apache.commons.logging.*", "org.xml.*", "javax.xml.*", "org.w3c.*" })
 @PrepareForTest(ImpalaDriver.class)
 public class TestImpalaDriver {
 
+  /** The test inst. */
   private ImpalaDriver testInst;
 
   @ObjectFactory
@@ -53,11 +57,17 @@ public class TestImpalaDriver {
     return new org.powermock.modules.testng.PowerMockObjectFactory();
   }
 
+  /**
+   * Public setup test.
+   */
   @BeforeTest
   public void publicSetupTest() {
     testInst = new ImpalaDriver();
   }
 
+  /**
+   * Test configure.
+   */
   @Test
   public void testConfigure() {
 
@@ -70,25 +80,25 @@ public class TestImpalaDriver {
       TBinaryProtocol mockTProtocol = mock(TBinaryProtocol.class);
       ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
 
-      whenNew(TSocket.class).withArguments(config.get("HOST"),
-          config.getInt("PORT", 9999)).thenReturn(mockSocket);
-      whenNew(TBinaryProtocol.class).withArguments(mockSocket)
-      .thenReturn(mockTProtocol);
-      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
-      .thenReturn(mockClient);
+      whenNew(TSocket.class).withArguments(config.get("HOST"), config.getInt("PORT", 9999)).thenReturn(mockSocket);
+      whenNew(TBinaryProtocol.class).withArguments(mockSocket).thenReturn(mockTProtocol);
+      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol).thenReturn(mockClient);
 
       this.testInst.configure(config);
       verifyNew(TSocket.class).withArguments("test.com", 123);
       verifyNew(TBinaryProtocol.class).withArguments(mockSocket);
       verifyNew(ImpalaService.Client.class).withArguments(mockTProtocol);
 
-      Mockito.verify(mockSocket ,Mockito.times(1) ).open();
+      Mockito.verify(mockSocket, Mockito.times(1)).open();
     } catch (Exception e) {
       Assert.fail();
     }
 
   }
 
+  /**
+   * Test execute.
+   */
   @Test
   public void testExecute() {
     try {
@@ -98,13 +108,10 @@ public class TestImpalaDriver {
       config.set("PORT", "123");
       config.set("HOST", "test.com");
 
-
       TSocket mockSocket = PowerMockito.mock(TSocket.class);
 
-      TBinaryProtocol mockTProtocol = PowerMockito
-          .mock(TBinaryProtocol.class);
-      ImpalaService.Client mockClient = Mockito
-          .mock(ImpalaService.Client.class);
+      TBinaryProtocol mockTProtocol = PowerMockito.mock(TBinaryProtocol.class);
+      ImpalaService.Client mockClient = Mockito.mock(ImpalaService.Client.class);
 
       Query q = mock(Query.class);
       QueryHandle qh = mock(QueryHandle.class);
@@ -115,14 +122,10 @@ public class TestImpalaDriver {
       when(mockClient.query(q)).thenReturn(qh);
       when(mockClient.get_state(qh)).thenReturn(QueryState.FINISHED);
 
-      whenNew(TSocket.class).withArguments(config.get("HOST"),
-          config.getInt("PORT", 9999)).thenReturn(mockSocket);
-      whenNew(TBinaryProtocol.class).withArguments(mockSocket)
-      .thenReturn(mockTProtocol);
-      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
-      .thenReturn(mockClient);
-      whenNew(ImpalaResultSet.class).withArguments(mockClient, qh)
-      .thenReturn(mockResultSet);
+      whenNew(TSocket.class).withArguments(config.get("HOST"), config.getInt("PORT", 9999)).thenReturn(mockSocket);
+      whenNew(TBinaryProtocol.class).withArguments(mockSocket).thenReturn(mockTProtocol);
+      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol).thenReturn(mockClient);
+      whenNew(ImpalaResultSet.class).withArguments(mockClient, qh).thenReturn(mockResultSet);
 
       // actual run
       this.testInst.configure(config);
@@ -139,13 +142,16 @@ public class TestImpalaDriver {
     }
 
   }
+
+  /**
+   * Test explain.
+   */
   @Test
   public void testExplain() {
 
-    /*QueryCost qs = this.testInst.explain("query");
-		Assert.assertEquals(ExecMode.INTERACTIVE, qs.getExecMode());
-		Assert.assertEquals(-1, qs.getScanSize());
-		Assert.assertEquals(ScanMode.FULL_SCAN, qs.getScanMode());
+    /*
+     * QueryCost qs = this.testInst.explain("query"); Assert.assertEquals(ExecMode.INTERACTIVE, qs.getExecMode());
+     * Assert.assertEquals(-1, qs.getScanSize()); Assert.assertEquals(ScanMode.FULL_SCAN, qs.getScanMode());
      */
   }
 }

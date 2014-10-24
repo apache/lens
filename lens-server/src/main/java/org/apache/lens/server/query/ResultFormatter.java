@@ -40,20 +40,43 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryExecuted;
 import org.apache.lens.server.api.query.QueryOutputFormatter;
 
-
+/**
+ * The Class ResultFormatter.
+ */
 public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
 
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(ResultFormatter.class);
+
+  /** The query service. */
   QueryExecutionServiceImpl queryService;
+
+  /**
+   * Instantiates a new result formatter.
+   *
+   * @param queryService
+   *          the query service
+   */
   public ResultFormatter(QueryExecutionServiceImpl queryService) {
     this.queryService = queryService;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
+   */
   @Override
   public void process(QueryExecuted event) {
     formatOutput(event);
   }
 
+  /**
+   * Format output.
+   *
+   * @param event
+   *          the event
+   */
   private void formatOutput(QueryExecuted event) {
     QueryHandle queryHandle = event.getQueryHandle();
     QueryContext ctx = queryService.getQueryContext(queryHandle);
@@ -70,13 +93,12 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           Path persistedDirectory = new Path(ctx.getHdfsoutPath());
           FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
           long size = fs.getContentSummary(persistedDirectory).getLength();
-          long threshold = ctx.getConf().getLong(
-              LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
+          long threshold = ctx.getConf().getLong(LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
               LensConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
           LOG.info(" size :" + size + " threshold:" + threshold);
           if (size > threshold) {
-            LOG.warn("Persisted result size more than the threshold, size:" +
-                size + " and threshold:" + threshold + "; Skipping formatter");
+            LOG.warn("Persisted result size more than the threshold, size:" + size + " and threshold:" + threshold
+                + "; Skipping formatter");
             queryService.setSuccessState(ctx);
             return;
           }
@@ -93,13 +115,13 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           if (resultSet instanceof PersistentResultSet) {
             LOG.info("Result formatter for " + queryHandle + " in persistent result");
             Path persistedDirectory = new Path(ctx.getHdfsoutPath());
-            //write all files from persistent directory
-            ((PersistedOutputFormatter)formatter).addRowsFromPersistedPath(persistedDirectory);
+            // write all files from persistent directory
+            ((PersistedOutputFormatter) formatter).addRowsFromPersistedPath(persistedDirectory);
           } else {
             LOG.info("Result formatter for " + queryHandle + " in inmemory result");
-            InMemoryResultSet inmemory = (InMemoryResultSet)resultSet;
+            InMemoryResultSet inmemory = (InMemoryResultSet) resultSet;
             while (inmemory.hasNext()) {
-              ((InMemoryOutputFormatter)formatter).writeRow(inmemory.next());
+              ((InMemoryOutputFormatter) formatter).writeRow(inmemory.next());
             }
           }
           if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
@@ -114,8 +136,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         LOG.info("Result formatter has completed. Final path:" + formatter.getFinalOutputPath());
       }
     } catch (Exception e) {
-      MetricsService metricsService =
-          (MetricsService) LensServices.get().getService(MetricsService.NAME);
+      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
@@ -126,6 +147,14 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
     }
   }
 
+  /**
+   * Creates the and set formatter.
+   *
+   * @param ctx
+   *          the ctx
+   * @throws LensException
+   *           the lens exception
+   */
   @SuppressWarnings("unchecked")
   void createAndSetFormatter(QueryContext ctx) throws LensException {
     if (ctx.getQueryOutputFormatter() == null && ctx.isPersistent()) {
@@ -135,16 +164,16 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           formatter = ReflectionUtils.newInstance(
               ctx.getConf().getClass(
                   LensConfConstants.QUERY_OUTPUT_FORMATTER,
-                  (Class<? extends PersistedOutputFormatter>)Class.forName(
-                      LensConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER),
-                      PersistedOutputFormatter.class), ctx.getConf());
+                  (Class<? extends PersistedOutputFormatter>) Class
+                      .forName(LensConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER), PersistedOutputFormatter.class),
+              ctx.getConf());
         } else {
           formatter = ReflectionUtils.newInstance(
               ctx.getConf().getClass(
                   LensConfConstants.QUERY_OUTPUT_FORMATTER,
-                  (Class<? extends InMemoryOutputFormatter>)Class.forName(
-                      LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
-                      InMemoryOutputFormatter.class), ctx.getConf());
+                  (Class<? extends InMemoryOutputFormatter>) Class
+                      .forName(LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER), InMemoryOutputFormatter.class),
+              ctx.getConf());
         }
       } catch (ClassNotFoundException e) {
         throw new LensException(e);

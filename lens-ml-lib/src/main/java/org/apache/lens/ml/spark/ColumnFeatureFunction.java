@@ -30,33 +30,46 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import scala.Tuple2;
 
 /**
- * A feature function that directly maps an HCatRecord to a feature vector.
- * Each column becomes a feature in the vector, with the value of the feature obtained using the
- * value mapper for that column
+ * A feature function that directly maps an HCatRecord to a feature vector. Each column becomes a feature in the vector,
+ * with the value of the feature obtained using the value mapper for that column
  */
 public class ColumnFeatureFunction extends FeatureFunction {
+
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(ColumnFeatureFunction.class);
+
+  /** The feature value mappers. */
   private final FeatureValueMapper[] featureValueMappers;
+
+  /** The feature positions. */
   private final int[] featurePositions;
+
+  /** The label column pos. */
   private final int labelColumnPos;
+
+  /** The num features. */
   private final int numFeatures;
+
+  /** The default labeled point. */
   private final LabeledPoint defaultLabeledPoint;
 
   /**
-   * Feature positions and value mappers are parallel arrays.
-   * featurePositions[i] gives the position of ith feature in the HCatRecord, and
-   * valueMappers[i] gives the value mapper used to map that feature to a Double value
-   * @param featurePositions position number of feature column in the HCatRecord
-   * @param valueMappers mapper for each column position
-   * @param labelColumnPos position of the label column
-   * @param numFeatures number of features in the feature vector
-   * @param defaultLabel default lable to be used for null records
+   * Feature positions and value mappers are parallel arrays. featurePositions[i] gives the position of ith feature in
+   * the HCatRecord, and valueMappers[i] gives the value mapper used to map that feature to a Double value
+   * 
+   * @param featurePositions
+   *          position number of feature column in the HCatRecord
+   * @param valueMappers
+   *          mapper for each column position
+   * @param labelColumnPos
+   *          position of the label column
+   * @param numFeatures
+   *          number of features in the feature vector
+   * @param defaultLabel
+   *          default lable to be used for null records
    */
-  public ColumnFeatureFunction(int featurePositions[],
-      FeatureValueMapper valueMappers[],
-      int labelColumnPos,
-      int numFeatures,
-      double defaultLabel) {
+  public ColumnFeatureFunction(int featurePositions[], FeatureValueMapper valueMappers[], int labelColumnPos,
+      int numFeatures, double defaultLabel) {
     Preconditions.checkNotNull(valueMappers, "Value mappers argument is required");
     Preconditions.checkNotNull(featurePositions, "Feature positions are required");
     Preconditions.checkArgument(valueMappers.length == featurePositions.length,
@@ -69,6 +82,11 @@ public class ColumnFeatureFunction extends FeatureFunction {
     defaultLabeledPoint = new LabeledPoint(defaultLabel, Vectors.dense(new double[numFeatures]));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.spark.FeatureFunction#call(scala.Tuple2)
+   */
   @Override
   public LabeledPoint call(Tuple2<WritableComparable, HCatRecord> tuple) throws Exception {
     HCatRecord record = tuple._2();

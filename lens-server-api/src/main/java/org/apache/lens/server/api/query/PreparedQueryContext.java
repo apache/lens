@@ -32,27 +32,81 @@ import org.apache.lens.api.query.LensPreparedQuery;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.driver.LensDriver;
 
-
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * The Class PreparedQueryContext.
+ */
 public class PreparedQueryContext implements Delayed {
-  @Getter private final QueryPrepareHandle prepareHandle;
-  @Getter private final String userQuery;
-  @Getter private final Date preparedTime;
-  @Getter private final String preparedUser;
-  transient @Getter private final Configuration conf;
-  @Getter final LensConf qconf;
-  @Getter @Setter private LensDriver selectedDriver;
-  @Getter @Setter private String driverQuery;
-  @Getter @Setter private String queryName;
 
+  /** The prepare handle. */
+  @Getter
+  private final QueryPrepareHandle prepareHandle;
+
+  /** The user query. */
+  @Getter
+  private final String userQuery;
+
+  /** The prepared time. */
+  @Getter
+  private final Date preparedTime;
+
+  /** The prepared user. */
+  @Getter
+  private final String preparedUser;
+
+  /** The conf. */
+  transient @Getter private final Configuration conf;
+
+  /** The qconf. */
+  @Getter
+  final LensConf qconf;
+
+  /** The selected driver. */
+  @Getter
+  @Setter
+  private LensDriver selectedDriver;
+
+  /** The driver query. */
+  @Getter
+  @Setter
+  private String driverQuery;
+
+  /** The query name. */
+  @Getter
+  @Setter
+  private String queryName;
+
+  /** The millis in week. */
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
+  /**
+   * Instantiates a new prepared query context.
+   *
+   * @param query
+   *          the query
+   * @param user
+   *          the user
+   * @param conf
+   *          the conf
+   */
   public PreparedQueryContext(String query, String user, Configuration conf) {
     this(query, user, conf, new LensConf());
   }
 
+  /**
+   * Instantiates a new prepared query context.
+   *
+   * @param query
+   *          the query
+   * @param user
+   *          the user
+   * @param conf
+   *          the conf
+   * @param qconf
+   *          the qconf
+   */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf) {
     this.userQuery = query;
     this.preparedTime = new Date();
@@ -63,12 +117,21 @@ public class PreparedQueryContext implements Delayed {
     this.driverQuery = query;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Comparable#compareTo(java.lang.Object)
+   */
   @Override
   public int compareTo(Delayed o) {
-    return (int)(this.getDelay(TimeUnit.MILLISECONDS)
-        - o.getDelay(TimeUnit.MILLISECONDS));
+    return (int) (this.getDelay(TimeUnit.MILLISECONDS) - o.getDelay(TimeUnit.MILLISECONDS));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.util.concurrent.Delayed#getDelay(java.util.concurrent.TimeUnit)
+   */
   @Override
   public long getDelay(TimeUnit units) {
     long delayMillis;
@@ -83,20 +146,26 @@ public class PreparedQueryContext implements Delayed {
   }
 
   /**
-   * @param confoverlay the conf to set
+   * Update conf.
+   *
+   * @param confoverlay
+   *          the conf to set
    */
-  public void updateConf(Map<String,String> confoverlay) {
+  public void updateConf(Map<String, String> confoverlay) {
     qconf.getProperties().putAll(confoverlay);
-    for (Map.Entry<String,String> prop : confoverlay.entrySet()) {
+    for (Map.Entry<String, String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }
   }
 
+  /**
+   * To prepared query.
+   *
+   * @return the lens prepared query
+   */
   public LensPreparedQuery toPreparedQuery() {
-    return new LensPreparedQuery(prepareHandle, userQuery, preparedTime,
-        preparedUser,
-        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
-            driverQuery, qconf);
+    return new LensPreparedQuery(prepareHandle, userQuery, preparedTime, preparedUser,
+        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null, driverQuery, qconf);
   }
 
 }

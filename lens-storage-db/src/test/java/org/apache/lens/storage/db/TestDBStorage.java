@@ -46,17 +46,38 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+/**
+ * The Class TestDBStorage.
+ */
 public class TestDBStorage {
 
+  /** The D b_ storag e1. */
   public static String DB_STORAGE1 = "db1";
+
+  /** The D b_ storag e2. */
   public static String DB_STORAGE2 = "db2";
+
+  /** The conf. */
   HiveConf conf = new HiveConf(this.getClass());
+
+  /** The db1. */
   Storage db1 = new DBStorage(DB_STORAGE1, DB_STORAGE1, null);
+
+  /** The db2. */
   Storage db2 = new DBStorage(DB_STORAGE2, DB_STORAGE2, null);
 
+  /**
+   * Setup.
+   *
+   * @throws AlreadyExistsException
+   *           the already exists exception
+   * @throws HiveException
+   *           the hive exception
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   @BeforeTest
-  public void setup()
-      throws AlreadyExistsException, HiveException, IOException {
+  public void setup() throws AlreadyExistsException, HiveException, IOException {
     SessionState.start(conf);
     Hive client = Hive.get(conf);
     Database database = new Database();
@@ -65,13 +86,26 @@ public class TestDBStorage {
     SessionState.get().setCurrentDatabase(TestDBStorage.class.getSimpleName());
   }
 
+  /**
+   * Tear down.
+   *
+   * @throws HiveException
+   *           the hive exception
+   * @throws NoSuchObjectException
+   *           the no such object exception
+   */
   @AfterTest
   public void tearDown() throws HiveException, NoSuchObjectException {
     Hive client = Hive.get(conf);
-    client.dropDatabase(TestDBStorage.class.getSimpleName(), true, true,
-        true);
+    client.dropDatabase(TestDBStorage.class.getSimpleName(), true, true, true);
   }
 
+  /**
+   * Test db storage.
+   *
+   * @throws HiveException
+   *           the hive exception
+   */
   @Test(groups = "first")
   public void testDBStorage() throws HiveException {
     CubeMetastoreClient cc = CubeMetastoreClient.getInstance(conf);
@@ -83,12 +117,18 @@ public class TestDBStorage {
     }
   }
 
+  /**
+   * Test cube dim.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test(dependsOnGroups = "first")
   public void testCubeDim() throws Exception {
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
     String dimTblName = "ziptableMeta";
 
-    List<FieldSchema>  dimColumns = new ArrayList<FieldSchema>();
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
     dimColumns.add(new FieldSchema("zipcode", "int", "code"));
     dimColumns.add(new FieldSchema("f1", "string", "field1"));
     dimColumns.add(new FieldSchema("f2", "string", "field2"));
@@ -105,18 +145,15 @@ public class TestDBStorage {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(db1.getName(), s1);
     storageTables.put(db2.getName(), s1);
-    client.createCubeDimensionTable("zipdim", dimTblName, dimColumns, 0L,
-        dumpPeriods, null, storageTables);
+    client.createCubeDimensionTable("zipdim", dimTblName, dimColumns, 0L, dumpPeriods, null, storageTables);
 
     Assert.assertTrue(client.tableExists(dimTblName));
 
     // Assert for storage tables
     for (String storage : storageTables.keySet()) {
-      String storageTableName = MetastoreUtil.getDimStorageTableName(dimTblName,
-          storage);
+      String storageTableName = MetastoreUtil.getDimStorageTableName(dimTblName, storage);
       Assert.assertTrue(client.tableExists(storageTableName));
     }
   }
-
 
 }

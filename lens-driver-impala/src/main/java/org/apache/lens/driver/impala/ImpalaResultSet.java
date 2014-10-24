@@ -39,32 +39,69 @@ import com.cloudera.beeswax.api.QueryNotFoundException;
 import com.cloudera.beeswax.api.Results;
 import com.cloudera.impala.thrift.ImpalaService.Client;
 
+/**
+ * The Class ImpalaResultSet.
+ */
 public class ImpalaResultSet extends InMemoryResultSet {
 
+  /** The logger. */
   private Logger logger = Logger.getLogger(ImpalaResultSet.class);
-  private Client client;
-  private Queue<List<Object>> a = new LinkedList<List<Object>>();
-  private QueryHandle queryHandle;
-  private boolean hasMoreData = true;
-  private int size =0;
 
+  /** The client. */
+  private Client client;
+
+  /** The a. */
+  private Queue<List<Object>> a = new LinkedList<List<Object>>();
+
+  /** The query handle. */
+  private QueryHandle queryHandle;
+
+  /** The has more data. */
+  private boolean hasMoreData = true;
+
+  /** The size. */
+  private int size = 0;
+
+  /**
+   * Instantiates a new impala result set.
+   *
+   * @param client
+   *          the client
+   * @param queryHandle
+   *          the query handle
+   */
   public ImpalaResultSet(Client client, QueryHandle queryHandle) {
     this.client = client;
     this.queryHandle = queryHandle;
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensResultSet#size()
+   */
   @Override
   public int size() {
     return this.size;
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
+   */
   @Override
   public boolean hasNext() throws LensException {
     return (this.hasMoreData || this.a.size() != 0);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.InMemoryResultSet#next()
+   */
   @Override
   public ResultRow next() throws LensException {
 
@@ -76,7 +113,7 @@ public class ImpalaResultSet extends InMemoryResultSet {
 
           resultSet = client.fetch(queryHandle, false, -1);
           List<String> results = resultSet.getData();
-          size+=results.size();
+          size += results.size();
           this.a.addAll(convert(results));
           if (!resultSet.isHas_more()) {
             this.hasMoreData = false;
@@ -84,7 +121,7 @@ public class ImpalaResultSet extends InMemoryResultSet {
           }
         }
         if (a.size() == 0) {
-          logger.error("No more rows" );
+          logger.error("No more rows");
           throw new LensException("No more rows ");
         } else {
           return new ResultRow(this.a.remove());
@@ -93,21 +130,24 @@ public class ImpalaResultSet extends InMemoryResultSet {
         return new ResultRow(this.a.remove());
       }
     } catch (QueryNotFoundException e) {
-      logger.error(e.getMessage() , e);
+      logger.error(e.getMessage(), e);
       throw new LensException(e.getMessage(), e);
     } catch (BeeswaxException e) {
-      logger.error(e.getMessage() , e);
+      logger.error(e.getMessage(), e);
       throw new LensException(e.getMessage(), e);
     } catch (TException e) {
-      logger.error(e.getMessage() , e);
+      logger.error(e.getMessage(), e);
       throw new LensException(e.getMessage(), e);
     }
 
   }
+
   /**
-   * converts the impala output to Breeze resultset format
+   * converts the impala output to Breeze resultset format.
+   *
    * @param inputList
-   * @return
+   *          the input list
+   * @return the list
    */
   private List<List<Object>> convert(List<String> inputList) {
     List<List<Object>> returnList = new ArrayList<List<Object>>();

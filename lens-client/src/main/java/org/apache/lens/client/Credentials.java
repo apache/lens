@@ -38,14 +38,35 @@ package org.apache.lens.client;
  */
 import java.io.Console;
 
-
+/**
+ * The Class Credentials.
+ */
 public class Credentials {
+
+  /** The username. */
   public String username;
+
+  /** The password. */
   public String password;
+
+  /**
+   * Instantiates a new credentials.
+   *
+   * @param username
+   *          the username
+   * @param password
+   *          the password
+   */
   public Credentials(String username, String password) {
     this.username = username;
     this.password = password;
   }
+
+  /**
+   * Prompt.
+   *
+   * @return the credentials
+   */
   public static Credentials prompt() {
     Console console = System.console();
     if (console == null) {

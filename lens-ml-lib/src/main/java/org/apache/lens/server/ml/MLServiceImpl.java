@@ -38,12 +38,29 @@ import org.apache.lens.server.ml.MLService;
 
 import java.util.*;
 
+/**
+ * The Class MLServiceImpl.
+ */
 public class MLServiceImpl extends CompositeService implements MLService {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(LensMLImpl.class);
+
+  /** The ml. */
   private LensMLImpl ml;
+
+  /** The service provider. */
   private ServiceProvider serviceProvider;
+
+  /** The service provider factory. */
   private ServiceProviderFactory serviceProviderFactory;
 
+  /**
+   * Instantiates a new ML service impl.
+   *
+   * @param name
+   *          the name
+   */
   public MLServiceImpl(String name) {
     super(name);
   }
@@ -53,21 +70,41 @@ public class MLServiceImpl extends CompositeService implements MLService {
     return ml.getAlgorithms();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getTrainerForName(java.lang.String)
+   */
   @Override
   public MLTrainer getTrainerForName(String algorithm) throws LensException {
     return ml.getTrainerForName(algorithm);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#train(java.lang.String, java.lang.String, java.lang.String[])
+   */
   @Override
   public String train(String table, String algorithm, String[] args) throws LensException {
     return ml.train(table, algorithm, args);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getModels(java.lang.String)
+   */
   @Override
   public List<String> getModels(String algorithm) throws LensException {
     return ml.getModels(algorithm);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getModel(java.lang.String, java.lang.String)
+   */
   @Override
   public MLModel getModel(String algorithm, String modelId) throws LensException {
     return ml.getModel(algorithm, modelId);
@@ -80,11 +117,17 @@ public class MLServiceImpl extends CompositeService implements MLService {
     return serviceProvider;
   }
 
+  /**
+   * Gets the service provider factory.
+   *
+   * @param conf
+   *          the conf
+   * @return the service provider factory
+   */
   private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
-    Class<?> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
-        ServiceProviderFactory.class);
+    Class<?> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY, ServiceProviderFactory.class);
     try {
-      return  (ServiceProviderFactory) spfClass.newInstance();
+      return (ServiceProviderFactory) spfClass.newInstance();
     } catch (InstantiationException e) {
       throw new RuntimeException(e);
     } catch (IllegalAccessException e) {
@@ -92,6 +135,11 @@ public class MLServiceImpl extends CompositeService implements MLService {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.CompositeService#init(org.apache.hadoop.hive.conf.HiveConf)
+   */
   @Override
   public synchronized void init(HiveConf hiveConf) {
     ml = new LensMLImpl(hiveConf);
@@ -101,6 +149,11 @@ public class MLServiceImpl extends CompositeService implements MLService {
     LOG.info("Inited ML service");
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.CompositeService#start()
+   */
   @Override
   public synchronized void start() {
     ml.start();
@@ -108,6 +161,11 @@ public class MLServiceImpl extends CompositeService implements MLService {
     LOG.info("Started ML service");
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.CompositeService#stop()
+   */
   @Override
   public synchronized void stop() {
     ml.stop();
@@ -115,58 +173,106 @@ public class MLServiceImpl extends CompositeService implements MLService {
     LOG.info("Stopped ML service");
   }
 
+  /**
+   * Clear models.
+   */
   public void clearModels() {
     ModelLoader.clearCache();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getModelPath(java.lang.String, java.lang.String)
+   */
   @Override
   public String getModelPath(String algorithm, String modelID) {
     return ml.getModelPath(algorithm, modelID);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#testModel(org.apache.lens.api.LensSessionHandle, java.lang.String, java.lang.String,
+   * java.lang.String)
+   */
   @Override
-  public MLTestReport testModel(LensSessionHandle sessionHandle,
-      String table,
-      String algorithm,
-      String modelID) throws LensException {
+  public MLTestReport testModel(LensSessionHandle sessionHandle, String table, String algorithm, String modelID)
+      throws LensException {
 
     return ml.testModel(sessionHandle, table, algorithm, modelID, new DirectQueryRunner(sessionHandle));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getTestReports(java.lang.String)
+   */
   @Override
   public List<String> getTestReports(String algorithm) throws LensException {
     return ml.getTestReports(algorithm);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getTestReport(java.lang.String, java.lang.String)
+   */
   @Override
   public MLTestReport getTestReport(String algorithm, String reportID) throws LensException {
     return ml.getTestReport(algorithm, reportID);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#predict(java.lang.String, java.lang.String, java.lang.Object[])
+   */
   @Override
   public Object predict(String algorithm, String modelID, Object[] features) throws LensException {
     return ml.predict(algorithm, modelID, features);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#deleteModel(java.lang.String, java.lang.String)
+   */
   @Override
   public void deleteModel(String algorithm, String modelID) throws LensException {
     ml.deleteModel(algorithm, modelID);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#deleteTestReport(java.lang.String, java.lang.String)
+   */
   @Override
   public void deleteTestReport(String algorithm, String reportID) throws LensException {
     ml.deleteTestReport(algorithm, reportID);
   }
 
   /**
-   * Run the test model query directly in the current lens server process
+   * Run the test model query directly in the current lens server process.
    */
   private class DirectQueryRunner extends TestQueryRunner {
 
+    /**
+     * Instantiates a new direct query runner.
+     *
+     * @param sessionHandle
+     *          the session handle
+     */
     public DirectQueryRunner(LensSessionHandle sessionHandle) {
       super(sessionHandle);
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.ml.TestQueryRunner#runQuery(java.lang.String)
+     */
     @Override
     public QueryHandle runQuery(String testQuery) throws LensException {
       // Run the query in query executions service
@@ -176,11 +282,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, false + "");
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false + "");
 
-      QueryHandle testQueryHandle = queryService.executeAsync(sessionHandle,
-          testQuery,
-          queryConf,
-          "ml_test_query"
-          );
+      QueryHandle testQueryHandle = queryService.executeAsync(sessionHandle, testQuery, queryConf, "ml_test_query");
 
       // Wait for test query to complete
       LensQuery query = queryService.getQuery(sessionHandle, testQueryHandle);
@@ -196,14 +298,19 @@ public class MLServiceImpl extends CompositeService implements MLService {
       }
 
       if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
-        throw new LensException("Failed to run test query: " + testQueryHandle.getHandleId()
-            + " reason= " + query.getStatus().getErrorMessage());
+        throw new LensException("Failed to run test query: " + testQueryHandle.getHandleId() + " reason= "
+            + query.getStatus().getErrorMessage());
       }
 
       return testQueryHandle;
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.LensML#getAlgoParamDescription(java.lang.String)
+   */
   @Override
   public Map<String, String> getAlgoParamDescription(String algorithm) {
     return ml.getAlgoParamDescription(algorithm);

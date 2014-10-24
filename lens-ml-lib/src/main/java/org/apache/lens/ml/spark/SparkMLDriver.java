@@ -36,35 +36,73 @@ import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * The Class SparkMLDriver.
+ */
 public class SparkMLDriver implements MLDriver {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(SparkMLDriver.class);
+
+  /** The owns spark context. */
   private boolean ownsSparkContext = true;
 
+  /**
+   * The Enum SparkMasterMode.
+   */
   private enum SparkMasterMode {
     // Embedded mode used in tests
+    /** The embedded. */
     EMBEDDED,
     // Yarn client and Yarn cluster modes are used when deploying the app to Yarn cluster
+    /** The yarn client. */
     YARN_CLIENT,
+
+    /** The yarn cluster. */
     YARN_CLUSTER
   }
 
+  /** The algorithms. */
   private final Algorithms algorithms = new Algorithms();
+
+  /** The client mode. */
   private SparkMasterMode clientMode = SparkMasterMode.EMBEDDED;
+
+  /** The is started. */
   private boolean isStarted;
+
+  /** The spark conf. */
   private SparkConf sparkConf;
+
+  /** The spark context. */
   private JavaSparkContext sparkContext;
 
+  /**
+   * Use spark context.
+   *
+   * @param jsc
+   *          the jsc
+   */
   public void useSparkContext(JavaSparkContext jsc) {
     ownsSparkContext = false;
     this.sparkContext = jsc;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLDriver#isTrainerSupported(java.lang.String)
+   */
   @Override
   public boolean isTrainerSupported(String name) {
     return algorithms.isAlgoSupported(name);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLDriver#getTrainerInstance(java.lang.String)
+   */
   @Override
   public MLTrainer getTrainerInstance(String name) throws LensException {
     checkStarted();
@@ -85,6 +123,9 @@ public class SparkMLDriver implements MLDriver {
     return trainer;
   }
 
+  /**
+   * Register trainers.
+   */
   private void registerTrainers() {
     algorithms.register(NaiveBayesTrainer.class);
     algorithms.register(SVMTrainer.class);
@@ -92,14 +133,18 @@ public class SparkMLDriver implements MLDriver {
     algorithms.register(DecisionTreeTrainer.class);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLDriver#init(org.apache.lens.api.LensConf)
+   */
   @Override
   public void init(LensConf conf) throws LensException {
     sparkConf = new SparkConf();
     registerTrainers();
     for (String key : conf.getProperties().keySet()) {
       if (key.startsWith("Lens.ml.sparkdriver.")) {
-        sparkConf.set(key.substring("Lens.ml.sparkdriver.".length()),
-            conf.getProperties().get(key));
+        sparkConf.set(key.substring("Lens.ml.sparkdriver.".length()), conf.getProperties().get(key));
       }
     }
 
@@ -125,12 +170,16 @@ public class SparkMLDriver implements MLDriver {
     LOG.info("Spark home is set to " + sparkConf.get("spark.home"));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLDriver#start()
+   */
   @Override
   public void start() throws LensException {
     if (sparkContext == null) {
       sparkContext = new JavaSparkContext(sparkConf);
     }
-
 
     // Adding jars to spark context is only required when running in yarn-client mode
     if (clientMode != SparkMasterMode.EMBEDDED) {
@@ -177,10 +226,14 @@ public class SparkMLDriver implements MLDriver {
     }
 
     isStarted = true;
-    LOG.info("Created Spark context for app: '" + sparkContext.appName()
-        + "', Spark master: " + sparkContext.master());
+    LOG.info("Created Spark context for app: '" + sparkContext.appName() + "', Spark master: " + sparkContext.master());
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLDriver#stop()
+   */
   @Override
   public void stop() throws LensException {
     if (!isStarted) {
@@ -199,6 +252,12 @@ public class SparkMLDriver implements MLDriver {
     return algorithms.getAlgorithmNames();
   }
 
+  /**
+   * Check started.
+   *
+   * @throws LensException
+   *           the lens exception
+   */
   public void checkStarted() throws LensException {
     if (!isStarted) {
       throw new LensException("Spark driver is not started yet");

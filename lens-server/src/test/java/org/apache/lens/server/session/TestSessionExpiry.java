@@ -35,8 +35,18 @@ import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
-@Test(groups="unit-test")
+/**
+ * The Class TestSessionExpiry.
+ */
+@Test(groups = "unit-test")
 public class TestSessionExpiry {
+
+  /**
+   * Test session expiry.
+   *
+   * @throws Exception
+   *           the exception
+   */
   public void testSessionExpiry() throws Exception {
     HiveConf conf = LensServerConf.get();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
@@ -48,13 +58,11 @@ public class TestSessionExpiry {
     lensService.start();
 
     try {
-      LensSessionHandle sessionHandle =
-          lensService.openSession("foo", "bar", new HashMap<String, String>());
+      LensSessionHandle sessionHandle = lensService.openSession("foo", "bar", new HashMap<String, String>());
       LensSessionImpl session = lensService.getSession(sessionHandle);
       assertTrue(session.isActive());
-      session.setLastAccessTime(session.getLastAccessTime()
-          - 2000 * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
-              LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
+      session.setLastAccessTime(session.getLastAccessTime() - 2000
+          * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
 
       // run the expiry thread

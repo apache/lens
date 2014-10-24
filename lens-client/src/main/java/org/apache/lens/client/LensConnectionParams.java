@@ -20,8 +20,6 @@ package org.apache.lens.client;
  * #L%
  */
 
-
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,30 +27,34 @@ import java.util.Map;
 import org.apache.lens.api.LensConf;
 
 /**
- * Top level class which encapsulates connections parameters required for lens
- * connection.
+ * Top level class which encapsulates connections parameters required for lens connection.
  */
 public class LensConnectionParams {
 
+  /** The lens confs. */
   private Map<String, String> lensConfs = new HashMap<String, String>();
+
+  /** The lens vars. */
   private Map<String, String> lensVars = new HashMap<String, String>();
+
+  /** The session vars. */
   private Map<String, String> sessionVars = new HashMap<String, String>();
 
+  /** The conf. */
   private final LensClientConfig conf;
 
   /**
-   * Construct parameters required to connect to lens server using values in
-   * lens-client-site.xml
+   * Construct parameters required to connect to lens server using values in lens-client-site.xml
    */
   public LensConnectionParams() {
     this.conf = new LensClientConfig();
   }
 
   /**
-   * Construct parameters required to connect to lens server from values passed
-   * in configuration.
+   * Construct parameters required to connect to lens server from values passed in configuration.
    *
-   * @param conf from which connection parameters are defined.
+   * @param conf
+   *          from which connection parameters are defined.
    */
   public LensConnectionParams(LensClientConfig conf) {
     this.conf = conf;
@@ -66,7 +68,6 @@ public class LensConnectionParams {
   public String getDbName() {
     return conf.getLensDatabase();
   }
-
 
   public Map<String, String> getLensConfs() {
     return lensConfs;
@@ -83,7 +84,6 @@ public class LensConnectionParams {
   public void setDbName(String dbName) {
     this.conf.setLensDatabase(dbName);
   }
-
 
   public String getBaseConnectionUrl() {
     return conf.getBaseURL();
@@ -113,7 +113,6 @@ public class LensConnectionParams {
     return this.conf.getQueryPollInterval();
   }
 
-
   public LensConf getSessionConf() {
     LensConf conf = new LensConf();
     Iterator<Map.Entry<String, String>> itr = this.conf.iterator();
@@ -133,17 +132,17 @@ public class LensConnectionParams {
     return conf;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
-    return new StringBuilder("LensConnectionParams{")
-    .append("dbName='").append(this.conf.getLensDatabase()).append('\'')
-    .append(", baseUrl='").append(this.conf.getBaseURL()).append('\'')
-    .append(", user=").append(this.conf.getUser())
-    .append(", lensConfs=").append(lensConfs)
-    .append(", lensVars=").append(lensVars)
-    .append(", sessionVars=").append(sessionVars)
-    .append('}')
-    .toString();
+    return new StringBuilder("LensConnectionParams{").append("dbName='").append(this.conf.getLensDatabase())
+        .append('\'').append(", baseUrl='").append(this.conf.getBaseURL()).append('\'').append(", user=")
+        .append(this.conf.getUser()).append(", lensConfs=").append(lensConfs).append(", lensVars=").append(lensVars)
+        .append(", sessionVars=").append(sessionVars).append('}').toString();
   }
 
   public void setBaseUrl(String baseUrl) {

@@ -1,4 +1,5 @@
 package org.apache.lens.server.stats.store.log;
+
 /*
  * #%L
  * Lens Server
@@ -41,17 +42,27 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class StatisticsLogFileScannerTask extends TimerTask {
 
-  private static final org.slf4j.Logger LOG =
-      LoggerFactory.getLogger(StatisticsLogFileScannerTask.class);
+  /** The Constant LOG. */
+  private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(StatisticsLogFileScannerTask.class);
 
+  /** The Constant LOG_SCANNER_ERRORS. */
   public static final String LOG_SCANNER_ERRORS = "log-scanner-errors";
+
+  /** The scan set. */
   private Map<String, String> scanSet = new ConcurrentHashMap<String, String>();
 
+  /** The service. */
   @Setter
   private LensEventService service;
 
+  /** The class set. */
   private Map<String, String> classSet = new ConcurrentHashMap<String, String>();
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.util.TimerTask#run()
+   */
   @Override
   public void run() {
     try {
@@ -59,16 +70,13 @@ public class StatisticsLogFileScannerTask extends TimerTask {
         File f = new File(entry.getValue()).getAbsoluteFile();
         String fileName = f.getAbsolutePath();
         File[] latestLogFiles = getLatestLogFile(fileName);
-        HashMap<String, String> partMap = getPartMap(fileName,
-            latestLogFiles);
+        HashMap<String, String> partMap = getPartMap(fileName, latestLogFiles);
         String eventName = entry.getKey();
-        PartitionEvent event = new PartitionEvent(eventName, partMap,
-            classSet.get(eventName));
+        PartitionEvent event = new PartitionEvent(eventName, partMap, classSet.get(eventName));
         try {
           service.notifyEvent(event);
         } catch (LensException e) {
-          LOG.warn("Unable to Notify partition event" +
-              event.getEventName() + " with map  " + event.getPartMap());
+          LOG.warn("Unable to Notify partition event" + event.getEventName() + " with map  " + event.getPartMap());
         }
       }
     } catch (Exception exc) {
@@ -78,15 +86,30 @@ public class StatisticsLogFileScannerTask extends TimerTask {
     }
   }
 
+  /**
+   * Gets the part map.
+   *
+   * @param fileName
+   *          the file name
+   * @param latestLogFiles
+   *          the latest log files
+   * @return the part map
+   */
   private HashMap<String, String> getPartMap(String fileName, File[] latestLogFiles) {
     HashMap<String, String> partMap = new HashMap<String, String>();
     for (File f : latestLogFiles) {
-      partMap.put(f.getPath().replace(fileName + '.', ""),
-          f.getAbsolutePath());
+      partMap.put(f.getPath().replace(fileName + '.', ""), f.getAbsolutePath());
     }
     return partMap;
   }
 
+  /**
+   * Gets the latest log file.
+   *
+   * @param value
+   *          the value
+   * @return the latest log file
+   */
   private File[] getLatestLogFile(String value) {
     File f = new File(value);
     final String fileNamePattern = f.getName();
@@ -94,31 +117,30 @@ public class StatisticsLogFileScannerTask extends TimerTask {
     return parent.listFiles(new FilenameFilter() {
       @Override
       public boolean accept(File file, String name) {
-        return !new File(name).isHidden()
-            &&!name.equals(fileNamePattern)
-            && name.contains(fileNamePattern);
+        return !new File(name).isHidden() && !name.equals(fileNamePattern) && name.contains(fileNamePattern);
       }
     });
   }
 
+  /**
+   * Adds the log file.
+   *
+   * @param event
+   *          the event
+   */
   public void addLogFile(String event) {
     if (scanSet.containsKey(event)) {
       return;
     }
-    String appenderName = event.substring(event.lastIndexOf(".") + 1,
-        event.length());
+    String appenderName = event.substring(event.lastIndexOf(".") + 1, event.length());
     Logger log = Logger.getLogger(event);
     if (log.getAppender(appenderName) == null) {
-      LOG.error("Unable to find " +
-          "statistics log appender for  " + event
-          + " with appender name " + appenderName);
+      LOG.error("Unable to find " + "statistics log appender for  " + event + " with appender name " + appenderName);
       return;
     }
-    String location = ((FileAppender)
-        log.getAppender(appenderName)).getFile();
+    String location = ((FileAppender) log.getAppender(appenderName)).getFile();
     scanSet.put(appenderName, location);
     classSet.put(appenderName, event);
   }
-
 
 }

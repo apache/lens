@@ -30,9 +30,17 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.driver.impala.ImpalaDriver;
 import org.apache.lens.driver.impala.ImpalaResultSet;
 
-
+/**
+ * The Class ITImpalaDriver.
+ */
 public class ITImpalaDriver {
 
+  /**
+   * Test integration.
+   *
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
   public void testIntegration() throws LensException {
     ImpalaDriver iDriver = new ImpalaDriver();
@@ -42,8 +50,7 @@ public class ITImpalaDriver {
     iDriver.configure(config);
 
     List<Object> row = null;
-    ImpalaResultSet iResultSet = (ImpalaResultSet) iDriver
-        .execute("select * from emp", null);
+    ImpalaResultSet iResultSet = (ImpalaResultSet) iDriver.execute("select * from emp", null);
     if (iResultSet.hasNext()) {
       row = iResultSet.next().getValues();
       System.out.println("Row1" + row);
@@ -55,6 +62,5 @@ public class ITImpalaDriver {
     Assert.assertTrue(true);
 
   }
-
 
 }

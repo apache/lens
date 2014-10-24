@@ -30,7 +30,9 @@ import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-
+/**
+ * The Class QueryApp.
+ */
 @ApplicationPath("/queryapi")
 public class QueryApp extends Application {
   @Override

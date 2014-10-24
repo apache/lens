@@ -53,32 +53,84 @@ import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 
+/**
+ * The Class MetricsServiceImpl.
+ */
 public class MetricsServiceImpl extends AbstractService implements MetricsService {
-  public static final String METRICS_SVC_NAME = "metrics";
-  public static final Logger LOG = Logger.getLogger(MetricsService.class);
-  private AsyncEventListener<StatusChange> queryStatusListener;
-  @Getter private MetricRegistry metricRegistry;
-  private List<ScheduledReporter> reporters;
-  @Getter private HealthCheckRegistry healthCheck;
 
+  /** The Constant METRICS_SVC_NAME. */
+  public static final String METRICS_SVC_NAME = "metrics";
+
+  /** The Constant LOG. */
+  public static final Logger LOG = Logger.getLogger(MetricsService.class);
+
+  /** The query status listener. */
+  private AsyncEventListener<StatusChange> queryStatusListener;
+
+  /** The metric registry. */
+  @Getter
+  private MetricRegistry metricRegistry;
+
+  /** The reporters. */
+  private List<ScheduledReporter> reporters;
+
+  /** The health check. */
+  @Getter
+  private HealthCheckRegistry healthCheck;
+
+  /** The total accepted queries. */
   private Counter totalAcceptedQueries;
+
+  /** The total successful queries. */
   private Counter totalSuccessfulQueries;
+
+  /** The total finished queries. */
   private Counter totalFinishedQueries;
+
+  /** The total failed queries. */
   private Counter totalFailedQueries;
+
+  /** The total cancelled queries. */
   private Counter totalCancelledQueries;
 
+  /** The queued queries. */
   private Gauge<Long> queuedQueries;
+
+  /** The running queries. */
   private Gauge<Long> runningQueries;
+
+  /** The finished queries. */
   private Gauge<Long> finishedQueries;
 
+  /**
+   * The listener interface for receiving asyncQueryStatus events. The class that is interested in processing a
+   * asyncQueryStatus event implements this interface, and the object created with that class is registered with a
+   * component using the component's <code>addAsyncQueryStatusListener<code> method. When
+   * the asyncQueryStatus event occurs, that object's appropriate
+   * method is invoked.
+   *
+   * @see AsyncQueryStatusEvent
+   */
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
+     */
     @Override
     public void process(StatusChange event) {
       processCurrentStatus(event.getCurrentValue());
     }
 
+    /**
+     * Process current status.
+     *
+     * @param currentValue
+     *          the current value
+     */
     protected void processCurrentStatus(Status currentValue) {
-      switch(currentValue) {
+      switch (currentValue) {
       case QUEUED:
         totalAcceptedQueries.inc();
         break;
@@ -100,6 +152,12 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     }
   }
 
+  /**
+   * Instantiates a new metrics service impl.
+   *
+   * @param name
+   *          the name
+   */
   public MetricsServiceImpl(String name) {
     super(METRICS_SVC_NAME);
   }
@@ -108,38 +166,39 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     return (QueryExecutionService) LensServices.get().getService(QueryExecutionService.NAME);
   }
 
+  /** The time between polls. */
   private static int timeBetweenPolls = 10;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#init(org.apache.hadoop.hive.conf.HiveConf)
+   */
   @Override
   public synchronized void init(HiveConf hiveConf) {
     queryStatusListener = new AsyncQueryStatusListener();
-    LensEventService eventService =
-        (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
     healthCheck = new HealthCheckRegistry();
     initCounters();
-    timeBetweenPolls = hiveConf.getInt(LensConfConstants.REPORTING_PERIOD , 10);
+    timeBetweenPolls = hiveConf.getInt(LensConfConstants.REPORTING_PERIOD, 10);
 
     reporters = new ArrayList<ScheduledReporter>();
     if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
       // Start console reporter
-      ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry)
-          .convertRatesTo(TimeUnit.SECONDS)
-          .convertDurationsTo(TimeUnit.MILLISECONDS)
-          .build();
+      ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry).convertRatesTo(TimeUnit.SECONDS)
+          .convertDurationsTo(TimeUnit.MILLISECONDS).build();
       reporters.add(reporter);
     }
 
     if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
       GMetric ganglia;
       try {
-        ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME),
-            hiveConf.getInt(LensConfConstants.GANGLIA_PORT, 8080),
-            UDPAddressingMode.MULTICAST, 1);
-        GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry)
-            .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS)
-            .build(ganglia);
+        ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME), hiveConf.getInt(
+            LensConfConstants.GANGLIA_PORT, 8080), UDPAddressingMode.MULTICAST, 1);
+        GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry).convertRatesTo(TimeUnit.SECONDS)
+            .convertDurationsTo(TimeUnit.MILLISECONDS).build(ganglia);
 
         reporters.add(greporter);
       } catch (IOException e) {
@@ -150,42 +209,48 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     super.init(hiveConf);
   }
 
+  /**
+   * Inits the counters.
+   */
   protected void initCounters() {
-    queuedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
-      @Override
-      public Long getValue() {
-        return getQuerySvc().getQueuedQueriesCount();
-      }
-    });
+    queuedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES),
+        new Gauge<Long>() {
+          @Override
+          public Long getValue() {
+            return getQuerySvc().getQueuedQueriesCount();
+          }
+        });
 
-    runningQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
-      @Override
-      public Long getValue() {
-        return getQuerySvc().getRunningQueriesCount();
-      }
-    });
+    runningQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES),
+        new Gauge<Long>() {
+          @Override
+          public Long getValue() {
+            return getQuerySvc().getRunningQueriesCount();
+          }
+        });
 
-    finishedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES), new Gauge<Long>() {
-      @Override
-      public Long getValue() {
-        return getQuerySvc().getFinishedQueriesCount();
-      }
-    });
+    finishedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES),
+        new Gauge<Long>() {
+          @Override
+          public Long getValue() {
+            return getQuerySvc().getFinishedQueriesCount();
+          }
+        });
 
-    totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-" + ACCEPTED_QUERIES));
+    totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
+        + ACCEPTED_QUERIES));
 
     totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-success-queries"));
 
-    totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-" + FINISHED_QUERIES));
+    totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
+        + FINISHED_QUERIES));
 
-    totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-" + FAILED_QUERIES));
+    totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
+        + FAILED_QUERIES));
 
-    totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-" + CANCELLED_QUERIES));
+    totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
+        + CANCELLED_QUERIES));
 
     metricRegistry.register("gc", new GarbageCollectorMetricSet());
     metricRegistry.register("memory", new MemoryUsageGaugeSet());
@@ -193,6 +258,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     metricRegistry.register("jvm", new JvmAttributeGaugeSet());
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#start()
+   */
   @Override
   public synchronized void start() {
     for (ScheduledReporter reporter : reporters) {
@@ -202,11 +272,15 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#stop()
+   */
   @Override
   public synchronized void stop() {
     // unregister
-    LensEventService eventService =
-        (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.removeListener(queryStatusListener);
     queryStatusListener.stop();
     for (ScheduledReporter reporter : reporters) {
@@ -216,31 +290,61 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     super.stop();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#incrCounter(java.lang.String)
+   */
   @Override
   public void incrCounter(String counter) {
     incrCounter(MetricsService.class, counter);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#decrCounter(java.lang.String)
+   */
   @Override
   public void decrCounter(String counter) {
     decrCounter(MetricsService.class, counter);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#incrCounter(java.lang.Class, java.lang.String)
+   */
   @Override
   public void incrCounter(Class<?> cls, String counter) {
     metricRegistry.counter(MetricRegistry.name(cls, counter)).inc();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#decrCounter(java.lang.Class, java.lang.String)
+   */
   @Override
   public void decrCounter(Class<?> cls, String counter) {
     metricRegistry.counter(MetricRegistry.name(cls, counter)).dec();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#getCounter(java.lang.String)
+   */
   @Override
   public long getCounter(String counter) {
     return metricRegistry.counter(MetricRegistry.name(MetricsService.class, counter)).getCount();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#getCounter(java.lang.Class, java.lang.String)
+   */
   @Override
   public long getCounter(Class<?> cls, String counter) {
     return metricRegistry.counter(MetricRegistry.name(cls, counter)).getCount();
@@ -281,6 +385,11 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     return totalFailedQueries.getCount();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.metrics.MetricsService#publishReport()
+   */
   @Override
   public void publishReport() {
     if (reporters != null) {

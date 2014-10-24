@@ -36,9 +36,20 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+/**
+ * The Class TestDataSourceConnectionProvider.
+ */
 public class TestDataSourceConnectionProvider {
+
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(TestDataSourceConnectionProvider.class);
 
+  /**
+   * Test get connection hsql.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testGetConnectionHSQL() throws Exception {
     final Configuration conf = new Configuration();
@@ -97,6 +108,12 @@ public class TestDataSourceConnectionProvider {
     Assert.assertEquals(passed.get(), numThreads);
   }
 
+  /**
+   * Test get connection timeout.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testGetConnectionTimeout() throws Exception {
     final Configuration conf = new Configuration();
@@ -124,8 +141,7 @@ public class TestDataSourceConnectionProvider {
         if (i != MAX_CONNECTIONS) {
           LOG.error("Unexpected getConnection error", sqlEx);
         }
-        assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: "
-            + sqlEx.getMessage());
+        assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: " + sqlEx.getMessage());
       }
     }
 

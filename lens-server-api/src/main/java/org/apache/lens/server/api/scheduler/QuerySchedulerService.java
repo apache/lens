@@ -20,6 +20,9 @@ package org.apache.lens.server.api.scheduler;
  * #L%
  */
 
+/**
+ * The Interface QuerySchedulerService.
+ */
 public interface QuerySchedulerService {
 
 }

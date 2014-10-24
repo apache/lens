@@ -29,20 +29,37 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-
-@Test(groups="unit-test")
+/**
+ * The Class TestIndexResource.
+ */
+@Test(groups = "unit-test")
 public class TestIndexResource extends LensJerseyTest {
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#setUp()
+   */
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#configure()
+   */
   @Override
   protected Application configure() {
     return new IndexApp();
@@ -52,6 +69,9 @@ public class TestIndexResource extends LensJerseyTest {
     return 8081;
   }
 
+  /**
+   * Test client string response.
+   */
   @Test
   public void testClientStringResponse() {
     WebTarget target = target().path("index");

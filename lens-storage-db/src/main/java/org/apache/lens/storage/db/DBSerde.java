@@ -39,10 +39,19 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
 
+/**
+ * The Class DBSerde.
+ */
 public class DBSerde extends AbstractSerDe {
 
+  /** The cached object inspector. */
   private ObjectInspector cachedObjectInspector;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#deserialize(org.apache.hadoop.io.Writable)
+   */
   @Override
   public Object deserialize(Writable arg0) throws SerDeException {
     throw new NotImplementedException();
@@ -58,21 +67,23 @@ public class DBSerde extends AbstractSerDe {
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#initialize(org.apache.hadoop.conf.Configuration,
+   * java.util.Properties)
+   */
   @Override
-  public void initialize(Configuration conf, Properties tbl)
-      throws SerDeException {
+  public void initialize(Configuration conf, Properties tbl) throws SerDeException {
     String columnNameProperty = tbl.getProperty(LIST_COLUMNS);
     String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
     List<String> columnNames = Arrays.asList(columnNameProperty.split(","));
-    List<TypeInfo> columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
-        columnTypeProperty);
+    List<TypeInfo> columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(columnTypeProperty);
 
-    List<ObjectInspector> columnObjectInspectors =
-        new ArrayList<ObjectInspector>(columnNames.size());
+    List<ObjectInspector> columnObjectInspectors = new ArrayList<ObjectInspector>(columnNames.size());
     ObjectInspector colObjectInspector;
     for (int col = 0; col < columnNames.size(); col++) {
-      colObjectInspector = TypeInfoUtils
-          .getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(col));
+      colObjectInspector = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(col));
       columnObjectInspectors.add(colObjectInspector);
     }
 
@@ -85,9 +96,14 @@ public class DBSerde extends AbstractSerDe {
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#serialize(java.lang.Object,
+   * org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector)
+   */
   @Override
-  public Writable serialize(Object arg0, ObjectInspector arg1)
-      throws SerDeException {
+  public Writable serialize(Object arg0, ObjectInspector arg1) throws SerDeException {
     throw new NotImplementedException();
   }
 
