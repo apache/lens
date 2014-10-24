@@ -31,20 +31,11 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.cube.metadata.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.cube.metadata.AbstractCubeTable;
-import org.apache.hadoop.hive.ql.cube.metadata.Cube;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeDimensionTable;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeFactTable;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeInterface;
-import org.apache.hadoop.hive.ql.cube.metadata.DerivedCube;
-import org.apache.hadoop.hive.ql.cube.metadata.Dimension;
-import org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage;
-import org.apache.hadoop.hive.ql.cube.metadata.MetastoreConstants;
-import org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
@@ -460,7 +451,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // Create a non queryable cube
       final XCube qcube = createTestCube("testNoQueryCube");
       XProperty xp = new XProperty();
-      xp.setName(MetastoreConstants.CUBE_CAN_BE_QUERIED);
+      xp.setName(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE);
       xp.setValue("false");
       qcube.getProperties().getProperties().add(xp);
 

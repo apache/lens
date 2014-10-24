@@ -23,10 +23,10 @@ package org.apache.lens.storage.db;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.hive.ql.cube.metadata.Storage;
-import org.apache.hadoop.hive.ql.cube.metadata.StoragePartitionDesc;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.lens.cube.metadata.Storage;
+import org.apache.lens.cube.metadata.StoragePartitionDesc;
 
 public class DBStorage extends Storage {
 

@@ -29,13 +29,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
-import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.parse.CubeQueryRewriter;
+import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.LensDriver;
 
 

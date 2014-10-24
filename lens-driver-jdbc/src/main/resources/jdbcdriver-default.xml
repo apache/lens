@@ -110,14 +110,14 @@
 
   <property>
     <name>cube.query.time.range.writer.class</name>
-    <value>org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter</value>
-    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.hadoop.hive.ql.cube.parse.ORTimeRangeWriter and org.apache.hadoop.hive.ql.cube.parse.BetweenTimeRangeWriter </description>
+    <value>org.apache.lens.cube.parse.BetweenTimeRangeWriter</value>
+    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter </description>
   </property>
 
   <property>
     <name>cube.query.partition.where.clause.format</name>
     <value>yyyy-MM-dd HH:mm:ss</value>
-    <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.hadoop.hive.ql.cube.metadata.UpdatePeriod for each type of partition </description>
+    <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition </description>
   </property>
 
 </configuration>

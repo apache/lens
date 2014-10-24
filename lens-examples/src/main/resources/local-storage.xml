@@ -19,7 +19,7 @@
   #L%
   -->
 
-<x_storage classname="org.apache.hadoop.hive.ql.cube.metadata.HDFSStorage" name="local"
+<x_storage classname="org.apache.lens.cube.metadata.HDFSStorage" name="local"
  xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <properties>

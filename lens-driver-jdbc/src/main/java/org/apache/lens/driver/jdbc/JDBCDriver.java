@@ -23,7 +23,6 @@ package org.apache.lens.driver.jdbc;
 
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -31,6 +30,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;

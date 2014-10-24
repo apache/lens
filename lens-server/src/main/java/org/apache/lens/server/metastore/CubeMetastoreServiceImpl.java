@@ -30,7 +30,6 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.MetaException;
 import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.metastore.api.UnknownDBException;
-import org.apache.hadoop.hive.ql.cube.metadata.*;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
@@ -40,6 +39,7 @@ import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
 import org.apache.lens.server.session.LensSessionImpl;
@@ -1013,7 +1013,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       if (cubes != null && !cubes.isEmpty()) {
         List<String> names = new ArrayList<String>(cubes.size());
         for (CubeInterface cube : cubes) {
-          if (cube.canBeQueried()) {
+          if (cube.allFieldsQueriable()) {
             names.add(cube.getName());
           }
         }

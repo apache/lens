@@ -25,14 +25,14 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.Context;
-import org.apache.hadoop.hive.ql.cube.parse.CubeQueryContext;
-import org.apache.hadoop.hive.ql.cube.parse.CubeQueryRewriter;
-import org.apache.hadoop.hive.ql.cube.parse.HQLParser;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.parse.CubeQueryContext;
+import org.apache.lens.cube.parse.CubeQueryRewriter;
+import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.server.api.driver.LensDriver;
 
