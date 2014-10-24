@@ -203,7 +203,7 @@
       <plugin>
         <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>2.6</version>
+        <version>2.7-SNAPSHOT</version>
         <configuration>
           <header>License-Header.txt</header>
           <licenseName>apache_v2</licenseName>
