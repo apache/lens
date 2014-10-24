@@ -20,7 +20,7 @@ package org.apache.lens.server.metastore;
  * #L%
  */
 
-import javax.ws.rs.core.MediaType;
+
 
 
 public class TestMetastoreServiceJSON { //extends TestMetastoreService {

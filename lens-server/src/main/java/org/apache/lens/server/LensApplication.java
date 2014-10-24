@@ -24,13 +24,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.metastore.MetastoreResource;
-import org.apache.lens.server.query.QueryServiceResource;
-import org.apache.lens.server.quota.QuotaResource;
-import org.apache.lens.server.scheduler.ScheduleResource;
-import org.apache.lens.server.session.SessionResource;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
 import java.util.HashSet;

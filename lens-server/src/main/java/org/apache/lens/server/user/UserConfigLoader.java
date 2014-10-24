@@ -22,7 +22,6 @@ package org.apache.lens.server.user;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 
-import java.sql.SQLException;
 import java.util.Map;
 
 public abstract class UserConfigLoader {

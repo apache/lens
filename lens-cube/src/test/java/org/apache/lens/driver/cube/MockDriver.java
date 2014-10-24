@@ -23,7 +23,6 @@ package org.apache.lens.driver.cube;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,10 +32,6 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.api.query.QueryResult;
-import org.apache.lens.api.query.QueryResultSetMetadata;
-import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.api.query.ResultColumn;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;

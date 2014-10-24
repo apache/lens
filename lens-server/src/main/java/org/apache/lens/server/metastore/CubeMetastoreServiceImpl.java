@@ -23,7 +23,6 @@ package org.apache.lens.server.metastore;
 import org.apache.lens.api.metastore.*;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -51,7 +50,6 @@ import java.util.*;
 
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
-import javax.xml.bind.JAXB;
 
 public class CubeMetastoreServiceImpl extends LensService implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);

@@ -21,7 +21,6 @@ package org.apache.lens.server.quota;
  */
 
 import org.apache.hive.service.cli.CLIService;
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.api.quota.QuotaService;
 
