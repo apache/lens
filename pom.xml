@@ -201,15 +201,32 @@
     </pluginManagement>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
+        <groupId>com.mycila</groupId>
         <artifactId>license-maven-plugin</artifactId>
-        <version>1.6</version>
+        <version>2.6</version>
         <configuration>
+          <header>License-Header.txt</header>
           <licenseName>apache_v2</licenseName>
           <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
           <canUpdateCopyright>true</canUpdateCopyright>
           <canUpdateDescription>true</canUpdateDescription>
+          <excludes>
+            <exclude>**/*.txt</exclude>
+            <exclude>**/README.*</exclude>
+          </excludes>
         </configuration>
+      <!--
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>1.6</version>
+        <configuration>
+          <header>License-Header.txt</header>
+          <licenseHeaderFile>License-Header.txt</licenseHeaderFile>
+          <licenseName>apache_v2</licenseName>
+          <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+          <canUpdateCopyright>true</canUpdateCopyright>
+          <canUpdateDescription>true</canUpdateDescription>
+        </configuration> -->
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
