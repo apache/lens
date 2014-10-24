@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -76,10 +76,10 @@ public class TrainerArgParser {
           } else {
             // check if the trainer provides a deserializer for this param
             String customParserClass = trainer.getConf()
-              .getProperties().get("lens.ml.args."+ key);
+                .getProperties().get("lens.ml.args."+ key);
             if (customParserClass != null) {
               Class<? extends CustomArgParser<?>> clz =
-                (Class<? extends CustomArgParser<?>>) Class.forName(customParserClass);
+                  (Class<? extends CustomArgParser<?>>) Class.forName(customParserClass);
               CustomArgParser<?> parser = clz.newInstance();
               f.set(trainer, parser.parse(value));
             } else {
@@ -89,7 +89,7 @@ public class TrainerArgParser {
         }
       } catch (Exception exc) {
         LOG.error("Error while setting param " + key
-          + " to " + value + " for trainer " + trainer);
+            + " to " + value + " for trainer " + trainer);
       }
     }
     return featureColumns;

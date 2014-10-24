@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "create dimtable", help = "Create a new dimension table")
   public String createDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
+  mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
 
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
@@ -86,9 +86,9 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "drop dimtable", help = "drop dimension table")
   public String dropDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "dimension table name to be dropped") String dim,
-                                   @CliOption(key = {"cascade"}, mandatory = false,
-                                       unspecifiedDefaultValue = "false") boolean cascade) {
+  mandatory = true, help = "dimension table name to be dropped") String dim,
+  @CliOption(key = {"cascade"}, mandatory = false,
+  unspecifiedDefaultValue = "false") boolean cascade) {
     APIResult result = getClient().dropDimensionTable(dim, cascade);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dim + "!!!";
@@ -99,7 +99,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "update dimtable", help = "update dimension table")
   public String updateDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
+  mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -129,7 +129,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "describe dimtable", help = "describe a dimension table")
   public String describeDimensionTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "dimension table name to be described") String dim) {
+  mandatory = true, help = "dimension table name to be described") String dim) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
           getClient().getDimensionTable(dim)));
@@ -141,13 +141,13 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   @CliCommand(value = "dimtable list storage",
       help = "display list of storage associated to dimension table")
   public String getDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> for listing storages") String dim){
+  mandatory = true, help = "<table-name> for listing storages") String dim){
     List<String> storages = getClient().getDimStorages(dim);
     StringBuilder sb = new StringBuilder();
     for(String storage: storages) {
-       if(!storage.isEmpty()) {
-         sb.append(storage).append("\n");
-       }
+      if(!storage.isEmpty()) {
+        sb.append(storage).append("\n");
+      }
     }
 
     if(sb.toString().isEmpty()) {
@@ -159,7 +159,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   @CliCommand(value = "dimtable drop-all storages",
       help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
+  mandatory = true, help = "<table-name> for which all storage should be dropped") String table){
     APIResult result = getClient().dropAllStoragesOfDim(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
@@ -171,7 +171,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "dimtable add storage", help = "adds a new storage to dimension")
   public String addNewDimStorage(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair){
+  mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -201,7 +201,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "dimtable drop storage", help = "drop storage to dimension table")
   public String dropStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
+  mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -222,7 +222,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "dimtable get storage", help = "describe storage of dimension table")
   public String getStorageFromDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
+  mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -243,7 +243,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   @CliCommand(value = "dimtable list partitions",
       help = "get all partitions associated with dimension table")
   public String getAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storageName> " +
+  mandatory = true, help = "<dimension-table-name> <storageName> " +
       "[optional <partition query filter> to get]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
@@ -269,14 +269,14 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     }
 
     return "Syntax error, please try in following " +
-        "format. dim list partitions <table> <storage> [partition values]";
+    "format. dim list partitions <table> <storage> [partition values]";
   }
 
 
   @CliCommand(value = "dimtable drop partitions",
       help = "drop all partitions associated with dimension table")
   public String dropAllPartitionsOfDim(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<dimension-table-name> <storageName> " +
+  mandatory = true, help = "<dimension-table-name> <storageName> " +
       "[optional <partition query filter> to drop]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
@@ -305,7 +305,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
 
   @CliCommand(value = "dimtable add partition", help = "add a partition to dim table")
   public String addPartitionToFact(@CliOption(key = {"","table"},
-      mandatory = true, help = "<dimension-table-name> <storage-name>" +
+  mandatory = true, help = "<dimension-table-name> <storage-name>" +
       " <path to partition specification>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()

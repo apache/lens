@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -129,7 +129,7 @@ public class TableTrainingSpec implements Serializable {
 
     public TableTrainingSpecBuilder trainingFraction(double trainingFraction) {
       Preconditions.checkArgument(trainingFraction >= 0 && trainingFraction <= 1.0,
-        "Training fraction shoule be between 0 and 1");
+          "Training fraction shoule be between 0 and 1");
       spec.trainingFraction = trainingFraction;
       spec.splitTraining = true;
       return this;
@@ -260,7 +260,7 @@ public class TableTrainingSpec implements Serializable {
     }
 
     ColumnFeatureFunction trainPrepFunction =
-      new ColumnFeatureFunction(featurePositions, valueMappers, labelPos, numFeatures, 0);
+        new ColumnFeatureFunction(featurePositions, valueMappers, labelPos, numFeatures, 0);
     labeledRDD = tableRDD.map(trainPrepFunction);
 
     if (splitTraining) {

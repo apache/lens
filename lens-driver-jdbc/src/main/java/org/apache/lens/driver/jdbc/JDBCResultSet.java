@@ -9,9 +9,9 @@ package org.apache.lens.driver.jdbc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,15 +52,15 @@ public class JDBCResultSet extends InMemoryResultSet {
   private final QueryResult queryResult;
   private LensResultSetMetadata lensResultMeta;
   private final boolean closeAfterFetch;
-  
+
   public JDBCResultSet(QueryResult queryResult, ResultSet resultSet,
       boolean closeAfterFetch) {
     this.queryResult = queryResult;
     this.resultSet = resultSet;;
     this.closeAfterFetch = closeAfterFetch;
   }
-  
-  
+
+
   private ResultSetMetaData getRsMetadata() throws LensException {
     if (resultMeta == null) {
       try {
@@ -71,17 +71,17 @@ public class JDBCResultSet extends InMemoryResultSet {
     }
     return resultMeta;
   }
-  
+
   @Override
   public int size() throws LensException {
     LOG.warn("Size of result set is not supported");
     return -1;
   }
-  
+
   @Override
   public synchronized LensResultSetMetadata getMetadata() throws LensException {
     if (lensResultMeta == null) {
-        lensResultMeta =  new LensResultSetMetadata() {
+      lensResultMeta =  new LensResultSetMetadata() {
         @Override
         public List<ColumnDescriptor> getColumns() {
           try{
@@ -89,9 +89,9 @@ public class JDBCResultSet extends InMemoryResultSet {
             List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(rsmeta.getColumnCount());
             for (int i = 1; i <= rsmeta.getColumnCount(); i++) {
               FieldSchema col = new FieldSchema(rsmeta.getColumnName(i),
-                TypeInfoUtils.getTypeInfoFromTypeString(
-                  getHiveTypeForSQLType(i, rsmeta)).getTypeName(),
-                rsmeta.getColumnTypeName(i));
+                  TypeInfoUtils.getTypeInfoFromTypeString(
+                      getHiveTypeForSQLType(i, rsmeta)).getTypeName(),
+                      rsmeta.getColumnTypeName(i));
               columns.add(new ColumnDescriptor(col, i));
             }
             return columns;
@@ -134,7 +134,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       hiveType.setTypeQualifiers(qualifiers);
       break;
     case Types.VARCHAR:
-    case Types.LONGNVARCHAR:   
+    case Types.LONGNVARCHAR:
     case Types.NVARCHAR:
       hiveType = new TypeDescriptor(Type.VARCHAR_TYPE);
       qualifiers = new TypeQualifiers();
@@ -144,7 +144,7 @@ public class JDBCResultSet extends InMemoryResultSet {
 
     case Types.NCLOB:
     case Types.CLOB:
-    case Types.LONGVARCHAR: 
+    case Types.LONGVARCHAR:
     case Types.DATALINK:
     case Types.SQLXML:
       hiveType = new TypeDescriptor(Type.STRING_TYPE); break;
@@ -195,7 +195,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       throw new LensException(e);
     }
   }
-  
+
   @Override
   public synchronized ResultRow next() throws LensException {
     ResultSetMetaData meta = getRsMetadata();
@@ -209,7 +209,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       throw new LensException(e);
     }
   }
-  
+
   @Override
   public synchronized boolean hasNext() throws LensException {
     try {
@@ -222,7 +222,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       throw new LensException(e);
     }
   }
-  
+
   public void close() {
     queryResult.close();
   }

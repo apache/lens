@@ -9,9 +9,9 @@ package org.apache.lens.server.ui;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,8 +83,8 @@ public class SessionUIResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public LensSessionHandle openSession(@FormDataParam("username") String username,
-                                        @FormDataParam("password") String password,
-                                        @FormDataParam("sessionconf") LensConf sessionconf) {
+      @FormDataParam("password") String password,
+      @FormDataParam("sessionconf") LensConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {

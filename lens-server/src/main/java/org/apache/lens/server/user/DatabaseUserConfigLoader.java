@@ -8,9 +8,9 @@ package org.apache.lens.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,9 +46,9 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     ds = UtilityMethods.getDataSourceFromConf(conf);
     cache = CacheBuilder
-      .newBuilder()
-      .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+        .newBuilder()
+        .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   @Override
@@ -62,7 +62,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
             final String[] config = UtilityMethods.queryDatabase(ds, querySql, false, loggedInUser);
             if(config.length != keys.length) {
               throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") " +
-                "is not equal to the number of keys required(" + keys.length + ").");
+                  "is not equal to the number of keys required(" + keys.length + ").");
             }
             return new HashMap<String, String>(){
               {
@@ -77,7 +77,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
         }
       });
     } catch (ExecutionException e) {
-        throw new UserConfigLoaderException(e);
+      throw new UserConfigLoaderException(e);
     }
   }
 }

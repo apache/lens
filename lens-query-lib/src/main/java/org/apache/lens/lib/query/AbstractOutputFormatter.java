@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ import org.apache.commons.lang.StringEscapeUtils;
  *
  * In this it initializes column names, types column object inspectors
  * Also provides methods to construct header from serde
- * 
+ *
  */
 @SuppressWarnings("deprecation")
 public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
@@ -115,7 +115,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
           LensConfConstants.QUERY_OUTPUT_SERDE,
           (Class<? extends AbstractSerDe>)Class.forName(
               LensConfConstants.DEFAULT_OUTPUT_SERDE),
-          SerDe.class), ctx.getConf());
+              SerDe.class), ctx.getConf());
 
       Properties hprops = new Properties();
       if (columnNames.size() > 0) {

@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -194,7 +194,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
 
     return rows;
   }
-  
+
   @Override
   protected WrappedFileFormatter createFormatter() {
     return new FileSerdeFormatter();
@@ -204,7 +204,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   protected void writeAllRows(Configuration conf) throws IOException {
     for (ResultRow row : getTestRows()) {
       ((InMemoryOutputFormatter)formatter).writeRow(row);
-    }    
+    }
   }
 
 }

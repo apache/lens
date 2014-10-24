@@ -9,9 +9,9 @@ package org.apache.lens.server.session;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -155,7 +155,7 @@ public class TestSessionResource extends LensJerseyTest {
     System.out.println("Session params:" + sessionParams.getElements());
     Assert.assertTrue(sessionParams.getElements().size() > 1);
 
-    // Create another session 
+    // Create another session
     final LensSessionHandle handle2 = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(handle);
@@ -280,16 +280,16 @@ public class TestSessionResource extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(),
-      "a"));
+        "a"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(),
-      "b"));
+        "b"));
     mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-      new LensConf(),
-      MediaType.APPLICATION_XML_TYPE));
+        FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        new LensConf(),
+        MediaType.APPLICATION_XML_TYPE));
 
     final Response handle = target.request().post(
-      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
     Assert.assertEquals(handle.getStatus(), 401);
   }
 }

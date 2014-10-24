@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,22 +40,22 @@ import scala.Enumeration;
 import java.util.Map;
 
 @Algorithm(
-  name = "spark_decision_tree",
-  description = "Spark Decision Tree classifier trainer"
-)
+    name = "spark_decision_tree",
+    description = "Spark Decision Tree classifier trainer"
+    )
 public class DecisionTreeTrainer extends BaseSparkTrainer {
   @TrainerParam(name = "algo",
-   help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
+      help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
   private Enumeration.Value algo;
 
   @TrainerParam(name = "impurity",
-    help = "Impurity measure used by the decision tree. " +
+      help = "Impurity measure used by the decision tree. " +
       "Allowed values are 'gini', 'entropy' and 'variance'")
   private Impurity decisionTreeImpurity;
 
   @TrainerParam(name = "maxDepth",
-    help = "Max depth of the decision tree. Integer values expected.",
-    defaultValue = "100")
+      help = "Max depth of the decision tree. Integer values expected.",
+      defaultValue = "100")
   private int maxDepth;
 
   public DecisionTreeTrainer(String name, String description) {
@@ -86,7 +86,7 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD) throws LensException {
     DecisionTreeModel model = DecisionTree$.MODULE$.train(trainingRDD,
-      algo, decisionTreeImpurity, maxDepth);
+        algo, decisionTreeImpurity, maxDepth);
     return new DecisionTreeClassificationModel(modelId, new SparkDecisionTreeModel(model));
   }
 }

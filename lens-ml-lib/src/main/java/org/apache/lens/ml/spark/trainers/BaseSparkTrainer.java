@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   protected transient LensConf conf;
 
   @TrainerParam(name = "trainingFraction", help = "% of dataset to be used for training",
-  defaultValue = "0")
+      defaultValue = "0")
   protected double trainingFraction;
 
   private boolean useTrainingFraction;
@@ -83,11 +83,11 @@ public abstract class BaseSparkTrainer implements MLTrainer {
 
   @Override
   public MLModel train(LensConf conf, String db, String table, String modelId, String... params)
-    throws LensException {
+      throws LensException {
     parseParams(params);
     LOG.info("Training " + " with " + features.size() + " features");
     TableTrainingSpec.TableTrainingSpecBuilder builder =
-      TableTrainingSpec.newBuilder()
+        TableTrainingSpec.newBuilder()
         .hiveConf(toHiveConf(conf))
         .database(db)
         .table(table)
@@ -201,7 +201,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
         TrainerParam param = field.getAnnotation(TrainerParam.class);
         if (param != null) {
           usage.put("[param] " + param.name(), param.help() + " Default Value = "
-            + param.defaultValue());
+              + param.defaultValue());
         }
       }
 

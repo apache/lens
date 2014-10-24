@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ import org.apache.lens.server.api.LensConfConstants;
 
 
 /**
- * File output format which would write Text values in the charset enconding 
+ * File output format which would write Text values in the charset enconding
  * passed.
  *
  */
@@ -85,7 +85,7 @@ public class LensFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
         out.close();
       }
     }
-    
+
     public Path getTmpPath() {
       return tmpPath;
     }
@@ -93,7 +93,7 @@ public class LensFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
     public String getExtn() {
       return extn;
     }
-    
+
     public String getEncoding() {
       return out.getEncoding();
     }
@@ -156,10 +156,10 @@ public class LensFileOutputFormat extends FileOutputFormat<NullWritable, Text> {
     String name = conf.get(LensConfConstants.QUERY_OUTPUT_COMPRESSION_CODEC,
         LensConfConstants.DEFAULT_OUTPUT_COMPRESSION_CODEC);
     try {
-      codecClass = 
+      codecClass =
           conf.getClassByName(name).asSubclass(CompressionCodec.class);
     } catch (ClassNotFoundException e) {
-      throw new IllegalArgumentException("Compression codec " + name + 
+      throw new IllegalArgumentException("Compression codec " + name +
           " was not found.", e);
     }
     return codecClass;

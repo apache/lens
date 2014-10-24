@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -77,11 +77,11 @@ public class TestCSVSerde {
 
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d,e,f,g");
     props.put(serdeConstants.LIST_COLUMN_TYPES,
-      "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
+        "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
     csv.initialize(null, props);
 
     in = new Text("\"hello\",\"yes, okay\",\"1\"," +
-      "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
+        "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
     row = (List<Object>)csv.deserialize(in);
     Assert.assertEquals(row.size(), 7);
     Assert.assertEquals(row.get(0), "hello");
@@ -137,7 +137,7 @@ public class TestCSVSerde {
 
     ser = csv.serialize(row, csv.getObjectInspector());
     Assert.assertEquals(((Text)ser).toString(), "\"hello\",\"yes, okay\",\"1\"," +
-      "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
+        "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d");
     props.put(serdeConstants.LIST_COLUMN_TYPES, "string,varchar(20),int,char(10)");
   }
@@ -173,5 +173,5 @@ public class TestCSVSerde {
     Assert.assertEquals("yes'okay", row.get(1).toString());
     Assert.assertEquals(1, row.get(2));
     Assert.assertEquals("char      ", row.get(3).toString());
-  } 
+  }
 }

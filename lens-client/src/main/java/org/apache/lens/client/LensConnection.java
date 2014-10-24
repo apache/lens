@@ -9,9 +9,9 @@ package org.apache.lens.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -108,16 +108,16 @@ public class LensConnection {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("username").build(), params.getUser()));
+        FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(
-      FormDataContentDisposition.name("password").build(), password));
+        FormDataContentDisposition.name("password").build(), password));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("sessionconf").
-            fileName("sessionconf").build(), params.getSessionConf(),
+        fileName("sessionconf").build(), params.getSessionConf(),
         MediaType.APPLICATION_XML_TYPE));
     try{
       Response response = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+          Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
       if(response.getStatus() != 200) {
         throw new LensClientServerConnectionException(response.getStatus());
       }
@@ -127,7 +127,7 @@ public class LensConnection {
         LOG.debug("Created a new session " + sessionHandle.getPublicId());
       } else {
         throw new IllegalStateException("Unable to connect to lens " +
-          "server with following paramters" + params);
+            "server with following paramters" + params);
       }
     } catch(ProcessingException e) {
       if(e.getCause() != null && e.getCause() instanceof ConnectException) {
@@ -151,8 +151,8 @@ public class LensConnection {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases").path("current").queryParam(
         "sessionid", this.sessionHandle).request(
-      MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
-        APIResult.class);
+            MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()),
+                APIResult.class);
     return result;
 
   }

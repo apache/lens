@@ -9,9 +9,9 @@ package org.apache.lens.server.ui;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -88,11 +88,11 @@ public class QueryServiceUIResource {
   @Path("queries")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public List<QueryHandle> getAllQueries(@QueryParam("publicId") UUID publicId,
-                                         @DefaultValue("") @QueryParam("state") String state,
-                                         @DefaultValue("") @QueryParam("user") String user,
-                                         @DefaultValue("") @QueryParam("queryName") String queryName,
-                                         @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
-                                         @DefaultValue("-1") @QueryParam("toDate") long toDate) {
+      @DefaultValue("") @QueryParam("state") String state,
+      @DefaultValue("") @QueryParam("user") String user,
+      @DefaultValue("") @QueryParam("queryName") String queryName,
+      @DefaultValue("-1") @QueryParam("fromDate") long fromDate,
+      @DefaultValue("-1") @QueryParam("toDate") long toDate) {
     LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
@@ -116,8 +116,8 @@ public class QueryServiceUIResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public QuerySubmitResult query(@FormDataParam("publicId") UUID publicId,
-                                 @FormDataParam("query") String query,
-                                 @DefaultValue("") @FormDataParam("queryName") String queryName) {
+      @FormDataParam("query") String query,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) {
     LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     LensConf conf;
@@ -141,7 +141,7 @@ public class QueryServiceUIResource {
   @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public LensQuery getStatus(@QueryParam("publicId") UUID publicId,
-                              @PathParam("queryHandle") String queryHandle) {
+      @PathParam("queryHandle") String queryHandle) {
     LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
@@ -210,7 +210,7 @@ public class QueryServiceUIResource {
   @Path("queries/{queryHandle}")
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult cancelQuery(@QueryParam("sessionid") UUID publicId,
-                               @PathParam("queryHandle") String queryHandle) {
+      @PathParam("queryHandle") String queryHandle) {
     LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {

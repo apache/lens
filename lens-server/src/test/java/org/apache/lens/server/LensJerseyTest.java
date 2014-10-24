@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
     LensServices.get().init(LensServerConf.get());
     LensServices.get().start();
-    
+
     // Check if mock service is started
     Service mockSvc = LensServices.get().getService(MockNonLensService.NAME);
     assertNotNull(mockSvc);
@@ -85,7 +85,7 @@ public abstract class LensJerseyTest extends JerseyTest {
     System.out.println("Final report");
     MetricsService metrics = ((MetricsService) LensServices.get().getService(MetricsService.NAME));
     metrics.publishReport();
-    
+
     // validate http error count
     long httpClientErrors = metrics.getCounter(LensRequestListener.class,
         LensRequestListener.HTTP_CLIENT_ERROR);
@@ -93,28 +93,28 @@ public abstract class LensJerseyTest extends JerseyTest {
         LensRequestListener.HTTP_SERVER_ERROR);
     long httpOtherErrors = metrics.getCounter(LensRequestListener.class,
         LensRequestListener.HTTP_UNKOWN_ERROR);
-    long httpErrors = metrics.getCounter(LensRequestListener.class, 
+    long httpErrors = metrics.getCounter(LensRequestListener.class,
         LensRequestListener.HTTP_ERROR);
-    assertEquals(httpClientErrors + httpServerErrors + httpOtherErrors, httpErrors, 
+    assertEquals(httpClientErrors + httpServerErrors + httpOtherErrors, httpErrors,
         "Server + Client error should equal total errors");
-    
+
     // validate http metrics
-    long httpReqStarted = metrics.getCounter(LensRequestListener.class, 
+    long httpReqStarted = metrics.getCounter(LensRequestListener.class,
         LensRequestListener.HTTP_REQUESTS_STARTED);
     long httpReqFinished = metrics.getCounter(LensRequestListener.class,
         LensRequestListener.HTTP_REQUESTS_FINISHED);
-    assertEquals(httpReqStarted, httpReqFinished, 
+    assertEquals(httpReqStarted, httpReqFinished,
         "Total requests started should equal total requests finished");
-    
+
     // validate queries in the final state
     long queriesSuccessful = metrics.getTotalSuccessfulQueries();
     long queriesFailed = metrics.getTotalFailedQueries();
     long queriesCancelled = metrics.getTotalCancelledQueries();
     long queriesFinished = metrics.getTotalFinishedQueries();
-    
+
     assertEquals(queriesFinished, queriesSuccessful + queriesFailed + queriesCancelled,
         "Total finished queries should be sum of successful, failed and cancelled queries");
-    
+
   }
 
   public void restartLensServer() {

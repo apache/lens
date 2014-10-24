@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,7 +62,7 @@ public class MLServiceResource {
 
   private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
     Class<?> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
-      ServiceProviderFactory.class);
+        ServiceProviderFactory.class);
     try {
       return  (ServiceProviderFactory) spfClass.newInstance();
     } catch (InstantiationException e) {
@@ -132,22 +132,22 @@ public class MLServiceResource {
   @GET
   @Path("models/{algorithm}/{modelID}")
   public ModelMetadata getModelMetadata(@PathParam("algorithm") String algorithm,
-                                         @PathParam("modelID") String modelID) throws LensException {
+      @PathParam("modelID") String modelID) throws LensException {
     MLModel model = getMlService().getModel(algorithm, modelID);
     if (model == null) {
       throw new NotFoundException("Model not found " + modelID + ", algo=" + algorithm);
     }
 
     ModelMetadata meta = new ModelMetadata(
-      model.getId(),
-      model.getTable(),
-      model.getTrainerName(),
-      StringUtils.join(model.getParams(), ' '),
-      model.getCreatedAt().toString(),
-      getMlService().getModelPath(algorithm, modelID),
-      model.getLabelColumn(),
-      StringUtils.join(model.getFeatureColumns(), ",")
-    );
+        model.getId(),
+        model.getTable(),
+        model.getTrainerName(),
+        StringUtils.join(model.getParams(), ' '),
+        model.getCreatedAt().toString(),
+        getMlService().getModelPath(algorithm, modelID),
+        model.getLabelColumn(),
+        StringUtils.join(model.getFeatureColumns(), ",")
+        );
     return meta;
   }
 
@@ -162,7 +162,7 @@ public class MLServiceResource {
   @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @Path("models/{algorithm}/{modelID}")
   public String deleteModel(@PathParam("algorithm") String algorithm,
-                              @PathParam("modelID") String modelID) throws LensException {
+      @PathParam("modelID") String modelID) throws LensException {
     getMlService().deleteModel(algorithm, modelID);
     return "DELETED model=" + modelID + " algorithm=" + algorithm;
   }
@@ -188,7 +188,7 @@ public class MLServiceResource {
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Path("{algorithm}/train")
   public String train(@PathParam("algorithm") String algorithm,
-                      MultivaluedMap<String, String> form) throws LensException {
+      MultivaluedMap<String, String> form) throws LensException {
 
     // Check if trainer is valid
     if (getMlService().getTrainerForName(algorithm) == null) {
@@ -235,7 +235,7 @@ public class MLServiceResource {
 
     String modelId = getMlService().train(table, algorithm, trainerArgs.toArray(new String[]{}));
     LOG.info("Trained table " + table + " with algo " + algorithm
-      + " params=" + trainerArgs.toString() + ", modelID=" + modelId);
+        + " params=" + trainerArgs.toString() + ", modelID=" + modelId);
     return modelId;
   }
 
@@ -264,9 +264,9 @@ public class MLServiceResource {
   @Path("test/{table}/{algorithm}/{modelID}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   public String test(@PathParam("algorithm") String algorithm,
-                     @PathParam("modelID") String modelID,
-                     @PathParam("table") String table,
-                     @FormDataParam("sessionid") LensSessionHandle session) throws LensException {
+      @PathParam("modelID") String modelID,
+      @PathParam("table") String table,
+      @FormDataParam("sessionid") LensSessionHandle session) throws LensException {
     MLTestReport testReport = getMlService().testModel(session, table, algorithm, modelID);
     return testReport.getReportID();
   }
@@ -298,7 +298,7 @@ public class MLServiceResource {
   @GET
   @Path("reports/{algorithm}/{reportID}")
   public TestReport getTestReport(@PathParam("algorithm") String algorithm,
-                                  @PathParam("reportID") String reportID) throws LensException {
+      @PathParam("reportID") String reportID) throws LensException {
     MLTestReport report = getMlService().getTestReport(algorithm, reportID);
 
     if (report == null) {
@@ -306,16 +306,16 @@ public class MLServiceResource {
     }
 
     TestReport result = new TestReport(
-      report.getTestTable(),
-      report.getOutputTable(),
-      report.getOutputColumn(),
-      report.getLabelColumn(),
-      StringUtils.join(report.getFeatureColumns(), ","),
-      report.getAlgorithm(),
-      report.getModelID(),
-      report.getReportID(),
-      report.getLensQueryID()
-    );
+        report.getTestTable(),
+        report.getOutputTable(),
+        report.getOutputColumn(),
+        report.getLabelColumn(),
+        StringUtils.join(report.getFeatureColumns(), ","),
+        report.getAlgorithm(),
+        report.getModelID(),
+        report.getReportID(),
+        report.getLensQueryID()
+        );
     return result;
   }
 
@@ -330,7 +330,7 @@ public class MLServiceResource {
   @Path("reports/{algorithm}/{reportID}")
   @Consumes( {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public String deleteTestReport(@PathParam("algorithm") String algorithm,
-                                  @PathParam("reportID") String reportID) throws LensException {
+      @PathParam("reportID") String reportID) throws LensException {
     getMlService().deleteTestReport(algorithm, reportID);
     return "DELETED report="+ reportID +  " algorithm=" + algorithm;
   }
@@ -339,8 +339,8 @@ public class MLServiceResource {
   @Path("/predict/{algorithm}/{modelID}")
   @Produces({MediaType.APPLICATION_ATOM_XML, MediaType.APPLICATION_JSON})
   public String predict(@PathParam("algorithm") String algorithm,
-    @PathParam("modelID") String modelID,
-    @Context UriInfo uriInfo) throws LensException {
+      @PathParam("modelID") String modelID,
+      @Context UriInfo uriInfo) throws LensException {
     // Load the model instance
     MLModel<?> model = getMlService().getModel(algorithm, modelID);
 

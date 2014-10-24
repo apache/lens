@@ -9,9 +9,9 @@ package org.apache.lens.driver.hive;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -71,7 +71,7 @@ public class TestHiveDriver {
     assertNotNull(System.getProperty("hadoop.bin.path"));
     conf.addResource("hivedriver-site.xml");
     conf.setClass(HiveDriver.HIVE_CONNECTION_CLASS,
-        EmbeddedThriftConnection.class, 
+        EmbeddedThriftConnection.class,
         ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     SessionState ss = new SessionState(conf, "testuser");
@@ -225,14 +225,14 @@ public class TestHiveDriver {
     @Override
     public void postDriverRun(HiveDriverRunHookContext arg0) throws Exception {
       // TODO Auto-generated method stub
-      
+
     }
 
     @Override
     public void preDriverRun(HiveDriverRunHookContext arg0) throws Exception {
       throw new LensException("Failing this run");
     }
-    
+
   }
   // executeAsync
   @Test
@@ -330,7 +330,7 @@ public class TestHiveDriver {
     }
   }
 
-  private void validatePersistentResult(LensResultSet resultSet, String dataFile, 
+  private void validatePersistentResult(LensResultSet resultSet, String dataFile,
       Path outptuDir, boolean formatNulls) throws Exception {
     assertTrue(resultSet instanceof HivePersistentResultSet);
     HivePersistentResultSet persistentResultSet = (HivePersistentResultSet) resultSet;

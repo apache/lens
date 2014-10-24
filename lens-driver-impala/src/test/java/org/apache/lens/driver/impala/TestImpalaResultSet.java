@@ -9,9 +9,9 @@ package org.apache.lens.driver.impala;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,181 +43,181 @@ import com.cloudera.impala.thrift.ImpalaService;
 @PrepareForTest(ImpalaResultSet.class)
 public class TestImpalaResultSet {
 
-	@ObjectFactory
-	public IObjectFactory getObjectFactory() {
-		return new org.powermock.modules.testng.PowerMockObjectFactory();
-	}
+  @ObjectFactory
+  public IObjectFactory getObjectFactory() {
+    return new org.powermock.modules.testng.PowerMockObjectFactory();
+  }
 
-	@Test
-	public void testSize() throws Exception {
-		List<String> returnResultSet = new ArrayList<String>();
-		returnResultSet.add("one		two");
-		ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
-		Results resultSet = mock(Results.class);
-		resultSet.setData(returnResultSet);
-		QueryHandle qh = mock(QueryHandle.class);
-		when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
-		when(resultSet.getData()).thenReturn(returnResultSet);
-		when(resultSet.isHas_more()).thenReturn(false);
+  @Test
+  public void testSize() throws Exception {
+    List<String> returnResultSet = new ArrayList<String>();
+    returnResultSet.add("one		two");
+    ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+    Results resultSet = mock(Results.class);
+    resultSet.setData(returnResultSet);
+    QueryHandle qh = mock(QueryHandle.class);
+    when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
+    when(resultSet.getData()).thenReturn(returnResultSet);
+    when(resultSet.isHas_more()).thenReturn(false);
 
-		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
+    ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
-		List<Object> result = is.next().getValues();
-
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "one");
-		Assert.assertEquals(result.get(1), "two");
-
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(1)).close(qh);
-
-		// check the size
-		Assert.assertEquals(is.size(), 1);
-
-	}
-
-	@Test
-	public void hasNext() throws Exception {
-		List<String> returnResultSet = new ArrayList<String>();
-		returnResultSet.add("one		two");
-		returnResultSet.add("three		four");
-		ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
-		Results resultSet = mock(Results.class);
-		resultSet.setData(returnResultSet);
-		QueryHandle qh = mock(QueryHandle.class);
-		when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
-		when(resultSet.getData()).thenReturn(returnResultSet);
-		when(resultSet.isHas_more()).thenReturn(false);
-
-		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
-
-		Assert.assertEquals(is.hasNext(), true);
-
-		//do first next
     List<Object> result = is.next().getValues();
 
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "one");
-		Assert.assertEquals(result.get(1), "two");
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "one");
+    Assert.assertEquals(result.get(1), "two");
 
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(1)).close(qh);
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(1)).close(qh);
 
-		// check the size
-		Assert.assertEquals(is.hasNext(), true);
+    // check the size
+    Assert.assertEquals(is.size(), 1);
 
-		//do second next to empty the result set
+  }
+
+  @Test
+  public void hasNext() throws Exception {
+    List<String> returnResultSet = new ArrayList<String>();
+    returnResultSet.add("one		two");
+    returnResultSet.add("three		four");
+    ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+    Results resultSet = mock(Results.class);
+    resultSet.setData(returnResultSet);
+    QueryHandle qh = mock(QueryHandle.class);
+    when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
+    when(resultSet.getData()).thenReturn(returnResultSet);
+    when(resultSet.isHas_more()).thenReturn(false);
+
+    ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
+
+    Assert.assertEquals(is.hasNext(), true);
+
+    //do first next
+    List<Object> result = is.next().getValues();
+
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "one");
+    Assert.assertEquals(result.get(1), "two");
+
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(1)).close(qh);
+
+    // check the size
+    Assert.assertEquals(is.hasNext(), true);
+
+    //do second next to empty the result set
     result = is.next().getValues();
 
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "three");
-		Assert.assertEquals(result.get(1), "four");
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "three");
+    Assert.assertEquals(result.get(1), "four");
 
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(1)).close(qh);
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(1)).close(qh);
 
-		// check the size
-		Assert.assertEquals(is.hasNext(), false);
+    // check the size
+    Assert.assertEquals(is.hasNext(), false);
 
-	}
+  }
 
-	@Test
-	public void nextWithoutMore() throws Exception {
+  @Test
+  public void nextWithoutMore() throws Exception {
 
-		List<String> returnResultSet = new ArrayList<String>();
-		returnResultSet.add("one		two");
-		ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
-		Results resultSet = mock(Results.class);
-		resultSet.setData(returnResultSet);
-		QueryHandle qh = mock(QueryHandle.class);
-		when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
-		when(resultSet.getData()).thenReturn(returnResultSet);
-		when(resultSet.isHas_more()).thenReturn(false);
+    List<String> returnResultSet = new ArrayList<String>();
+    returnResultSet.add("one		two");
+    ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+    Results resultSet = mock(Results.class);
+    resultSet.setData(returnResultSet);
+    QueryHandle qh = mock(QueryHandle.class);
+    when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
+    when(resultSet.getData()).thenReturn(returnResultSet);
+    when(resultSet.isHas_more()).thenReturn(false);
 
-		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
-
-    List<Object> result = is.next().getValues();
-
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "one");
-		Assert.assertEquals(result.get(1), "two");
-
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(1)).close(qh);
-
-	}
-
-	@Test
-	public void nextWithMore() throws Exception {
-
-		List<String> returnResultSet = new ArrayList<String>();
-		returnResultSet.add("one		two");
-		ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
-		Results resultSet = mock(Results.class);
-		resultSet.setData(returnResultSet);
-		QueryHandle qh = mock(QueryHandle.class);
-		when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
-		when(resultSet.getData()).thenReturn(returnResultSet);
-		when(resultSet.isHas_more()).thenReturn(true);
-
-		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
+    ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
     List<Object> result = is.next().getValues();
 
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "one");
-		Assert.assertEquals(result.get(1), "two");
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "one");
+    Assert.assertEquals(result.get(1), "two");
 
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(0)).close(qh);
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(1)).close(qh);
 
-	}
+  }
 
-	/**
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void nextWithTwoCalls() throws Exception {
+  @Test
+  public void nextWithMore() throws Exception {
 
-		List<String> returnResultSet = new ArrayList<String>();
-		returnResultSet.add("one		two");
-		ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
-		Results resultSet = mock(Results.class);
-		resultSet.setData(returnResultSet);
-		QueryHandle qh = mock(QueryHandle.class);
-		when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
-		when(resultSet.getData()).thenReturn(returnResultSet);
-		when(resultSet.isHas_more()).thenReturn(true);
+    List<String> returnResultSet = new ArrayList<String>();
+    returnResultSet.add("one		two");
+    ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+    Results resultSet = mock(Results.class);
+    resultSet.setData(returnResultSet);
+    QueryHandle qh = mock(QueryHandle.class);
+    when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
+    when(resultSet.getData()).thenReturn(returnResultSet);
+    when(resultSet.isHas_more()).thenReturn(true);
 
-		ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
+    ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
 
     List<Object> result = is.next().getValues();
 
-		// test and verify
-		Assert.assertEquals(result.size(), 2);
-		Assert.assertEquals(result.get(0), "one");
-		Assert.assertEquals(result.get(1), "two");
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "one");
+    Assert.assertEquals(result.get(1), "two");
 
-		Mockito.verify(resultSet, Mockito.times(1)).getData();
-		Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(0)).close(qh);
-		when(resultSet.isHas_more()).thenReturn(false);
-		result = is.next().getValues();
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(0)).close(qh);
 
-		Mockito.verify(resultSet, Mockito.times(2)).getData();
-		Mockito.verify(mockClient, Mockito.times(2)).fetch(qh, false, -1);
-		Mockito.verify(mockClient, Mockito.times(1)).close(qh);
+  }
 
-	}
+  /**
+   *
+   * @throws Exception
+   */
+  @Test
+  public void nextWithTwoCalls() throws Exception {
+
+    List<String> returnResultSet = new ArrayList<String>();
+    returnResultSet.add("one		two");
+    ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+    Results resultSet = mock(Results.class);
+    resultSet.setData(returnResultSet);
+    QueryHandle qh = mock(QueryHandle.class);
+    when(mockClient.fetch(qh, false, -1)).thenReturn(resultSet);
+    when(resultSet.getData()).thenReturn(returnResultSet);
+    when(resultSet.isHas_more()).thenReturn(true);
+
+    ImpalaResultSet is = new ImpalaResultSet(mockClient, qh);
+
+    List<Object> result = is.next().getValues();
+
+    // test and verify
+    Assert.assertEquals(result.size(), 2);
+    Assert.assertEquals(result.get(0), "one");
+    Assert.assertEquals(result.get(1), "two");
+
+    Mockito.verify(resultSet, Mockito.times(1)).getData();
+    Mockito.verify(mockClient, Mockito.times(1)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(0)).close(qh);
+    when(resultSet.isHas_more()).thenReturn(false);
+    result = is.next().getValues();
+
+    Mockito.verify(resultSet, Mockito.times(2)).getData();
+    Mockito.verify(mockClient, Mockito.times(2)).fetch(qh, false, -1);
+    Mockito.verify(mockClient, Mockito.times(1)).close(qh);
+
+  }
 }

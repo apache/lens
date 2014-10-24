@@ -9,9 +9,9 @@ package org.apache.lens.driver.jdbc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -90,16 +90,16 @@ public class TestColumnarSQLRewriter {
 
   /*
    * Star schema used for the queries below
-   * 
+   *
    * create table sales_fact (time_key integer, item_key integer, branch_key
    * integer, location_key integer, dollars_sold double, units_sold integer);
-   * 
+   *
    * create table time_dim ( time_key integer, day date);
-   * 
+   *
    * create table item_dim ( item_key integer, item_name varchar(500) );
-   * 
+   *
    * create table branch_dim ( branch_key integer, branch_key varchar(100));
-   * 
+   *
    * create table location_dim (location_key integer,location_name
    * varchar(100));
    */
@@ -169,56 +169,56 @@ public class TestColumnarSQLRewriter {
   @Test
   //Testing multiple queries in one instance
   public void testNoRewrite() throws ParseException, SemanticException,
-      LensException {
-    
+  LensException {
+
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
     HiveConf conf = new HiveConf();
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
-    
+
     String query =  "select count(distinct id) from location_dim" ;
     String actual = qtest.rewrite(conf, query);
     String expected = "select count( distinct  id ) from location_dim ";
     compareQueries(expected, actual);
- 
+
     String query2 =  "select count(distinct id) from location_dim  location_dim" ;
     String actual2 = qtest.rewrite(conf, query2);
     String expected2 = "select count( distinct  id ) from location_dim location_dim";
     compareQueries(expected2, actual2);
- 
-    String query3 = 
+
+    String query3 =
         "select count(distinct location_dim.id) from  global_dw.location_dim location_dim";
     String actual3 = qtest.rewrite(conf, query3);
     String expected3 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim";
     compareQueries(expected3, actual3);
-    
-    String query4 = 
+
+    String query4 =
         "select count(distinct location_dim.id) from  global_dw.location_dim location_dim " +
-        "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id " +
-        "right outer join time_dim time_dim on location_dim.id = time_dim.id " ;
+            "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id " +
+            "right outer join time_dim time_dim on location_dim.id = time_dim.id " ;
     String actual4 = qtest.rewrite(conf, query4);
-    String expected4 = 
+    String expected4 =
         "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim  " +
-        "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  " +
-        "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
+            "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  " +
+            "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
     compareQueries(expected4, actual4);
   }
 
-  
+
   @Test
   public void testJoinCond() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -237,19 +237,19 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testAllFilterCond() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -259,30 +259,30 @@ public class TestColumnarSQLRewriter {
     String rwq = qtest.rewrite(conf, query);
     Set<String> actual = setOf(qtest.rightFilter);
     Assert
-        .assertEquals(
-            actual,
-            setOf(
-                "(( location_dim  .  location_name ) =  'test123' )",
-                "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'",
-                ""));
+    .assertEquals(
+        actual,
+        setOf(
+            "(( location_dim  .  location_name ) =  'test123' )",
+            "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'",
+            ""));
   }
 
   @Test
   public void testAllAggColumn() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
-        + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
+            + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -302,21 +302,21 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testAllFactKeys() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
-        + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold desc ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
+            + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
+            + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -331,22 +331,22 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testFactSubQueries() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
-        + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "and item_dim.item_name = 'item_1' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold desc ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
+            + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
+            + "and item_dim.item_name = 'item_1' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
+            + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -365,23 +365,23 @@ public class TestColumnarSQLRewriter {
 
   @Test
   public void testRewrittenQuery() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,to_date(time_dim.day),item_dim.item_key, "
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
-        + "format_number(sum(fact.units_sold),4),format_number(avg(fact.dollars_sold),'##################.###'),"
-        + "min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between date_add('2013-01-01', 1) and date_sub('2013-01-31',3) "
-        + "and item_dim.item_name = 'item_1' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold  ";
+        "select fact.time_key,time_dim.day_of_week,to_date(time_dim.day),item_dim.item_key, "
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
+            + "format_number(sum(fact.units_sold),4),format_number(avg(fact.dollars_sold),'##################.###'),"
+            + "min(fact.dollars_sold),max(fact.dollars_sold)"
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between date_add('2013-01-01', 1) and date_sub('2013-01-31',3) "
+            + "and item_dim.item_name = 'item_1' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
+            + "order by dollars_sold  ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -389,7 +389,7 @@ public class TestColumnarSQLRewriter {
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
     String actual = qtest.rewrite(conf, query);
-    
+
     String expected = "select ( fact . time_key ), ( time_dim . day_of_week ), date(( time_dim . day )), "
         + "( item_dim . item_key ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
         + "else sum(sum_fact_dollars_sold) end  dollars_sold , format(sum(sum_fact_units_sold),  4 ), "
@@ -410,45 +410,45 @@ public class TestColumnarSQLRewriter {
         + "date_sub( '2013-01-31' , interval 3  day) and (( item_dim . item_name ) =  'item_1' )) "
         + "group by ( fact . time_key ), ( time_dim . day_of_week ), ( time_dim . day ), "
         + "( item_dim . item_key ) order by dollars_sold  asc";
-   
+
     compareQueries(expected, actual);
   }
 
   @Test
   public void testUnionQuery() throws ParseException, SemanticException,
-      LensException {
+  LensException {
 
     String query =
 
-    "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold  "
-        + "union all "
-        + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-02-01' and '2013-02-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold "
-        + "union all "
-        + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
-        + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
-        + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
-        + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold ";
+        "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-01-01' and '2013-01-05' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold  "
+            + "union all "
+            + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-02-01' and '2013-02-05' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold "
+            + "union all "
+            + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+            + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
+            + "from sales_fact fact "
+            + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+            + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
+            + "and location_dim.location_name = 'test123' "
+            + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
+            + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
+            + "order by dollars_sold ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -489,7 +489,7 @@ public class TestColumnarSQLRewriter {
         + "inner join time_dim  time_dim  on (( fact  .  time_key ) = ( time_dim  .  time_key )) "
         + "where ( time_dim  .  time_key ) between  '2013-03-01'  and  '2013-03-05'  group by ( fact  .  time_key ), "
         + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  dollars_sold asc";
-    
+
     compareQueries(expected, actual);
   }
 

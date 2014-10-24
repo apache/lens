@@ -9,9 +9,9 @@ package org.apache.lens.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -56,17 +56,17 @@ public class UserConfigLoaderFactory {
   }
   public static UserConfigLoader getQueryUserResolver(RESOLVER_TYPE resolverType) {
     switch(resolverType) {
-      case PROPERTYBASED:
-        return new PropertyBasedUserConfigLoader(conf);
-      case DATABASE:
-        return new DatabaseUserConfigLoader(conf);
-      case LDAP_BACKED_DATABASE:
-        return new LDAPBackedDatabaseUserConfigLoader(conf);
-      case CUSTOM:
-        return new CustomUserConfigLoader(conf);
-      case FIXED :
-      default:
-        return new FixedUserConfigLoader(conf);
+    case PROPERTYBASED:
+      return new PropertyBasedUserConfigLoader(conf);
+    case DATABASE:
+      return new DatabaseUserConfigLoader(conf);
+    case LDAP_BACKED_DATABASE:
+      return new LDAPBackedDatabaseUserConfigLoader(conf);
+    case CUSTOM:
+      return new CustomUserConfigLoader(conf);
+    case FIXED :
+    default:
+      return new FixedUserConfigLoader(conf);
     }
   }
 

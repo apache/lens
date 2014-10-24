@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -96,7 +96,7 @@ public class LensMLImpl implements LensML {
     String modelId = UUID.randomUUID().toString();
 
     LOG.info("Begin training model " + modelId + ", trainer=" + algorithm + ", table=" + table + ", params="
-      + Arrays.toString(args));
+        + Arrays.toString(args));
 
     String database = null;
     if (SessionState.get() != null) {
@@ -106,7 +106,7 @@ public class LensMLImpl implements LensML {
     }
 
     MLModel model = trainer.train(toLensConf(conf),
-      database, table, modelId, args);
+        database, table, modelId, args);
 
     LOG.info("Done training model: " + modelId);
 
@@ -125,7 +125,7 @@ public class LensMLImpl implements LensML {
 
   private Path getTrainerDir(String trainerName) throws IOException{
     String modelSaveBaseDir =
-      conf.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
+        conf.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
     return new Path(new Path(modelSaveBaseDir), trainerName);
   }
 
@@ -278,19 +278,19 @@ public class LensMLImpl implements LensML {
    * Test a model in embedded mode
    */
   public MLTestReport testModelRemote(LensSessionHandle sessionHandle,
-                                String table,
-                                String algorithm,
-                                String modelID,
-                                String queryApiUrl) throws LensException {
+      String table,
+      String algorithm,
+      String modelID,
+      String queryApiUrl) throws LensException {
     return testModel(sessionHandle, table, algorithm, modelID,
-      new RemoteQueryRunner(sessionHandle, queryApiUrl));
+        new RemoteQueryRunner(sessionHandle, queryApiUrl));
   }
 
   public MLTestReport testModel(LensSessionHandle sessionHandle,
-                                String table,
-                                String algorithm,
-                                String modelID,
-                                TestQueryRunner queryRunner) throws LensException {
+      String table,
+      String algorithm,
+      String modelID,
+      TestQueryRunner queryRunner) throws LensException {
     // check if algorithm exists
     if (!getAlgorithms().contains(algorithm)) {
       throw new LensException("No such algorithm " + algorithm);
@@ -319,21 +319,21 @@ public class LensMLImpl implements LensML {
 
     //TODO support error metric UDAFs
     TableTestingSpec spec = TableTestingSpec.newBuilder()
-      .hiveConf(conf)
-      .database(database == null ? "default" : database)
-      .table(table)
-      .featureColumns(model.getFeatureColumns())
-      .outputColumn(testResultColumn)
-      .labeColumn(model.getLabelColumn())
-      .algorithm(algorithm)
-      .modelID(modelID)
-      .outputTable(testTable)
-      .build();
+        .hiveConf(conf)
+        .database(database == null ? "default" : database)
+        .table(table)
+        .featureColumns(model.getFeatureColumns())
+        .outputColumn(testResultColumn)
+        .labeColumn(model.getLabelColumn())
+        .algorithm(algorithm)
+        .modelID(modelID)
+        .outputTable(testTable)
+        .build();
     String testQuery = spec.getTestQuery();
 
     if (testQuery == null) {
       throw new LensException("Invalid test spec. "
-        + "table=" + table + " algorithm=" + algorithm + " modelID=" + modelID);
+          + "table=" + table + " algorithm=" + algorithm + " modelID=" + modelID);
     }
 
     LOG.info("Running test query " + testQuery);
@@ -368,7 +368,7 @@ public class LensMLImpl implements LensML {
 
   public List<String> getTestReports(String algorithm) throws LensException {
     Path reportBaseDir = new Path(conf.get(ModelLoader.TEST_REPORT_BASE_DIR,
-      ModelLoader.TEST_REPORT_BASE_DIR_DEFAULT));
+        ModelLoader.TEST_REPORT_BASE_DIR_DEFAULT));
     FileSystem fs = null;
 
     try {
@@ -413,7 +413,7 @@ public class LensMLImpl implements LensML {
       LOG.info("DELETED model " + modelID + " algorithm=" + algorithm);
     } catch (IOException e) {
       LOG.error("Error deleting model file. algorithm="
-        + algorithm + " model=" + modelID + " reason: " + e.getMessage(), e);
+          + algorithm + " model=" + modelID + " reason: " + e.getMessage(), e);
       throw new LensException("Unable to delete model " + modelID +" for algorithm " + algorithm, e);
     }
   }
@@ -457,40 +457,40 @@ public class LensMLImpl implements LensML {
     public QueryHandle runQuery(String query) throws LensException {
       // Create jersey client for query endpoint
       Client client = ClientBuilder
-        .newBuilder()
-        .register(MultiPartFeature.class)
-        .build();
+          .newBuilder()
+          .register(MultiPartFeature.class)
+          .build();
       WebTarget target = client.target(queryApiUrl);
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-        sessionHandle, MediaType.APPLICATION_XML_TYPE));
+          sessionHandle, MediaType.APPLICATION_XML_TYPE));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-        query));
+          query));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name(
-        "operation").build(),
-        "execute"));
+          "operation").build(),
+          "execute"));
 
       LensConf LensConf = new LensConf();
       LensConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, false + "");
       LensConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false + "");
       mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("conf").fileName("conf").build(),
-        LensConf,
-        MediaType.APPLICATION_XML_TYPE));
+          FormDataContentDisposition.name("conf").fileName("conf").build(),
+          LensConf,
+          MediaType.APPLICATION_XML_TYPE));
 
       final QueryHandle handle = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+          Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
 
       LensQuery ctx = target.path(handle.toString())
-        .queryParam("sessionid", sessionHandle)
-        .request()
-        .get(LensQuery.class);
+          .queryParam("sessionid", sessionHandle)
+          .request()
+          .get(LensQuery.class);
 
       QueryStatus stat = ctx.getStatus();
       while (!stat.isFinished()) {
         ctx = target.path(handle.toString())
-          .queryParam("sessionid", sessionHandle)
-          .request().get(LensQuery.class);
+            .queryParam("sessionid", sessionHandle)
+            .request().get(LensQuery.class);
         stat = ctx.getStatus();
         try {
           Thread.sleep(500);
@@ -501,7 +501,7 @@ public class LensMLImpl implements LensML {
 
       if (stat.getStatus() != QueryStatus.Status.SUCCESSFUL) {
         throw new LensException("Query failed " + ctx.getQueryHandle().getHandleId()
-          + " reason:" + stat.getErrorMessage());
+            + " reason:" + stat.getErrorMessage());
       }
 
       return ctx.getQueryHandle();

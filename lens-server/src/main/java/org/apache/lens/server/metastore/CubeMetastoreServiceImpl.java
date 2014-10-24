@@ -9,9 +9,9 @@ package org.apache.lens.server.metastore;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -162,9 +162,9 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   /**
    * Get list of all cubes names in the current database
-   * 
+   *
    * @return List of cube names
-   * 
+   *
    * @throws LensException
    */
   @Override
@@ -210,9 +210,9 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   /**
    * Get a cube from the metastore
-   * 
+   *
    * @param cubeName
-   * 
+   *
    * @return The cube object as {@link XCube}
    * @throws LensException
    */
@@ -234,7 +234,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
 
   /**
    * Drop a cube from the metastore in the currently deleted database
-   * 
+   *
    * @param cubeName
    */
   public void dropCube(LensSessionHandle sessionid, String cubeName) throws LensException {
@@ -334,7 +334,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   public void updateDimensionTable(LensSessionHandle sessionid, DimensionTable dimensionTable) throws LensException {
     try {
       acquire(sessionid);
-      getClient(sessionid).alterCubeDimensionTable(dimensionTable.getTableName(), 
+      getClient(sessionid).alterCubeDimensionTable(dimensionTable.getTableName(),
           JAXBUtils.cubeDimTableFromDimTable(dimensionTable));
       LOG.info("Updated dimension table " + dimensionTable.getTableName());
     } catch (HiveException exc) {
@@ -389,7 +389,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       List<String> storageNames = new ArrayList<String>(tab.getStorages());
       for (String s : storageNames) {
         getClient(sessionid).dropStorageFromDim(dimTblName, s);
-        LOG.info("Dropped storage " + s + " from dimension table " + dimTblName 
+        LOG.info("Dropped storage " + s + " from dimension table " + dimTblName
             + " [" + ++i + "/" + total + "]");
       }
       LOG.info("Dropped " + total + " storages from dimension table " + dimTblName);
@@ -410,7 +410,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       List<String> storageNames = new ArrayList<String>(tab.getStorages());
       for (String s : storageNames) {
         getClient(sessionid).dropStorageFromFact(factName, s);
-        LOG.info("Dropped storage " + s + " from fact table " + factName 
+        LOG.info("Dropped storage " + s + " from fact table " + factName
             + " [" + ++i + "/" + total + "]");
       }
       LOG.info("Dropped " + total + " storages from fact table " + factName);
@@ -476,10 +476,10 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     try {
       acquire(sessionid);
       getClient(sessionid).createCubeFactTable(fact.getCubeName(),
-          fact.getName(), 
-          JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()), 
+          fact.getName(),
+          JAXBUtils.fieldSchemaListFromColumns(fact.getColumns()),
           JAXBUtils.getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods()),
-          fact.getWeight(), 
+          fact.getWeight(),
           JAXBUtils.mapFromXProperties(fact.getProperties()),
           JAXBUtils.storageTableMapFromXStorageTables(storageTables));
       LOG.info("Created fact table " + fact.getName());
@@ -500,7 +500,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(e);
     } finally {
       release(sessionid);
-    }		
+    }
   }
 
   @Override
@@ -852,7 +852,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(exc);
     } finally {
       release(sessionid);
-    }    
+    }
   }
 
   public void dropPartitionFromStorageByFilter(LensSessionHandle sessionid, String cubeTableName,
@@ -877,7 +877,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(exc);
     } finally {
       release(sessionid);
-    } 
+    }
   }
 
   @Override
@@ -906,7 +906,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(e);
     } finally {
       release(sessionid);
-    }    
+    }
   }
 
   @Override
@@ -921,7 +921,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(e);
     } finally {
       release(sessionid);
-    }        
+    }
   }
 
   @Override
@@ -934,7 +934,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new LensException(e);
     } finally {
       release(sessionid);
-    }        
+    }
   }
 
   @Override
@@ -1213,7 +1213,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         cubeTbl = client.getDimension(tableName);
       } else {
         throw new BadRequestException("Can't get reachable columns. '"
-          + tableName + "' is neither a cube nor a dimension");
+            + tableName + "' is neither a cube nor a dimension");
       }
 
       Map<String, CubeColumn> columnMap = getFlattenedColumnView(client, cubeTbl, isCube);
@@ -1261,65 +1261,65 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   private Map<String, CubeColumn> getFlattenedColumnView(CubeMetastoreClient client,
-                                      AbstractCubeTable table,
-                                      boolean isCube) throws HiveException {
+      AbstractCubeTable table,
+      boolean isCube) throws HiveException {
     SchemaGraph schemaGraph = getSchemaGraph(client);
     Map<AbstractCubeTable, Set<SchemaGraph.TableRelationship>> graph =
-      isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
-    Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
+        isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
+        Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
 
-    // Do a BFS over the schema graph
-    LinkedList<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
-    Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
-    toVisit.add(table);
+        // Do a BFS over the schema graph
+        LinkedList<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
+        Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
+        toVisit.add(table);
 
-    while (!toVisit.isEmpty()) {
-      AbstractCubeTable node = toVisit.removeFirst();
-      visited.add(node);
-      String nodeName = node.getName();
-      if (node instanceof CubeInterface) {
-        Cube cube = null;
+        while (!toVisit.isEmpty()) {
+          AbstractCubeTable node = toVisit.removeFirst();
+          visited.add(node);
+          String nodeName = node.getName();
+          if (node instanceof CubeInterface) {
+            Cube cube = null;
 
-        if (node instanceof Cube) {
-          cube = (Cube) node;
-        } else if (node instanceof DerivedCube) {
-          cube = ((DerivedCube) node).getParent();
-        } else {
-          continue;
-        }
+            if (node instanceof Cube) {
+              cube = (Cube) node;
+            } else if (node instanceof DerivedCube) {
+              cube = ((DerivedCube) node).getParent();
+            } else {
+              continue;
+            }
 
-        // Add columns of the cube
-        for (CubeMeasure measure : cube.getMeasures()) {
-          columnMap.put(nodeName + "." + measure.getName(), measure);
-        }
+            // Add columns of the cube
+            for (CubeMeasure measure : cube.getMeasures()) {
+              columnMap.put(nodeName + "." + measure.getName(), measure);
+            }
 
-        for (CubeDimAttribute dimAttribute : cube.getDimAttributes()) {
-          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
-        }
+            for (CubeDimAttribute dimAttribute : cube.getDimAttributes()) {
+              columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+            }
 
-        for (ExprColumn expression : cube.getExpressions()) {
-          columnMap.put(nodeName + "." + expression.getName(), expression);
-        }
-      } else if (node instanceof Dimension) {
-        Dimension dim = (Dimension) node;
-        for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
-          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
-        }
-      } else {
-        LOG.warn("Neither cube nor dimension " + node.getName());
-      }
+            for (ExprColumn expression : cube.getExpressions()) {
+              columnMap.put(nodeName + "." + expression.getName(), expression);
+            }
+          } else if (node instanceof Dimension) {
+            Dimension dim = (Dimension) node;
+            for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
+              columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
+            }
+          } else {
+            LOG.warn("Neither cube nor dimension " + node.getName());
+          }
 
-      // Add referenced tables to visited list
-      for (SchemaGraph.TableRelationship edge : graph.get(node)) {
-        if (!visited.contains(edge.getFromTable())) {
-          toVisit.addLast(edge.getFromTable());
-        }
-        if (!visited.contains(edge.getToTable())) {
-          toVisit.addLast(edge.getToTable());
-        }
-      }
-    } // end bfs
-    // columnMap now contains flattened view
-    return columnMap;
+          // Add referenced tables to visited list
+          for (SchemaGraph.TableRelationship edge : graph.get(node)) {
+            if (!visited.contains(edge.getFromTable())) {
+              toVisit.addLast(edge.getFromTable());
+            }
+            if (!visited.contains(edge.getToTable())) {
+              toVisit.addLast(edge.getToTable());
+            }
+          }
+        } // end bfs
+        // columnMap now contains flattened view
+        return columnMap;
   }
 }

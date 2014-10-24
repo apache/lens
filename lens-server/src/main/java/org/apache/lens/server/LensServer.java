@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -73,9 +73,9 @@ public class LensServer {
 
     adminCtx.deploy(this.server);
     String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI,
-      LensConfConstants.DEFAULT_SERVER_UI_URI);
+        LensConfConstants.DEFAULT_SERVER_UI_URI);
     this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
-      getUIApp(), false);
+        getUIApp(), false);
   }
 
   private ResourceConfig getApp() {
@@ -88,7 +88,7 @@ public class LensServer {
   private ResourceConfig getUIApp() {
     ResourceConfig uiApp = ResourceConfig.forApplicationClass(UIApp.class);
     uiApp.register(
-      new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".ui_request"), true));
+        new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".ui_request"), true));
     uiApp.setApplicationName("Lens UI");
     return uiApp;
   }

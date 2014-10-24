@@ -9,9 +9,9 @@ package org.apache.lens.driver.cube;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public class MockDriver implements LensDriver {
   String query;
   private int ioTestVal = -1;
 
-  public MockDriver() {    
+  public MockDriver() {
   }
 
   @Override
@@ -121,7 +121,7 @@ public class MockDriver implements LensDriver {
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -136,20 +136,20 @@ public class MockDriver implements LensDriver {
   public void closePreparedQuery(QueryPrepareHandle handle)
       throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public LensResultSet execute(QueryContext context) throws LensException {
     this.query = context.getDriverQuery();
     return new PersistentResultSet() {
-      
+
       @Override
       public int size() throws LensException {
         // TODO Auto-generated method stub
         return 0;
       }
-      
+
       @Override
       public LensResultSetMetadata getMetadata() throws LensException {
         // TODO Auto-generated method stub
@@ -162,7 +162,7 @@ public class MockDriver implements LensDriver {
           }
         };
       }
-      
+
       @Override
       public String getOutputPath() throws LensException {
         // TODO Auto-generated method stub
@@ -180,13 +180,13 @@ public class MockDriver implements LensDriver {
   public LensResultSet fetchResultSet(QueryContext context)
       throws LensException {
     return new InMemoryResultSet() {
-      
+
       @Override
       public int size() throws LensException {
         // TODO Auto-generated method stub
         return 0;
       }
-      
+
       @Override
       public LensResultSetMetadata getMetadata() throws LensException {
         return new LensResultSetMetadata() {
@@ -198,19 +198,19 @@ public class MockDriver implements LensDriver {
           }
         };
       }
-      
+
       @Override
       public void setFetchSize(int size) throws LensException {
         // TODO Auto-generated method stub
-        
+
       }
-      
+
       @Override
       public ResultRow next() throws LensException {
         // TODO Auto-generated method stub
         return null;
       }
-      
+
       @Override
       public boolean hasNext() throws LensException {
         // TODO Auto-generated method stub
@@ -227,9 +227,9 @@ public class MockDriver implements LensDriver {
   @Override
   public void registerForCompletionNotification(QueryHandle handle,
       long timeoutMillis, QueryCompletionListener listener)
-      throws LensException {
+          throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override

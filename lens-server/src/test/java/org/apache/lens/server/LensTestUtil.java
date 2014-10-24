@@ -37,9 +37,9 @@ import org.testng.Assert;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,10 +55,10 @@ public class LensTestUtil {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
-  
+
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "CREATE TABLE IF NOT EXISTS " + tblName  +"(ID INT, IDSTR STRING)";
-  
+
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -69,10 +69,10 @@ public class LensTestUtil {
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
         MediaType.APPLICATION_XML_TYPE));
-  
+
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
-  
+
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
@@ -94,11 +94,11 @@ public class LensTestUtil {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
-  
+
     final FormDataMultiPart mp = new FormDataMultiPart();
     String dataLoad = "LOAD DATA LOCAL INPATH '"+ TEST_DATA_FILE +
         "' OVERWRITE INTO TABLE " + tblName;
-  
+
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -109,10 +109,10 @@ public class LensTestUtil {
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
         MediaType.APPLICATION_XML_TYPE));
-  
+
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
-  
+
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
@@ -122,7 +122,7 @@ public class LensTestUtil {
       Thread.sleep(1000);
     }
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-  
+
   }
 
   public static void dropTable(String tblName, WebTarget parent,
@@ -130,10 +130,10 @@ public class LensTestUtil {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
-  
+
     final FormDataMultiPart mp = new FormDataMultiPart();
     String createTable = "DROP TABLE IF EXISTS " + tblName ;
-  
+
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
@@ -144,10 +144,10 @@ public class LensTestUtil {
         FormDataContentDisposition.name("conf").fileName("conf").build(),
         conf,
         MediaType.APPLICATION_XML_TYPE));
-  
+
     final QueryHandle handle = target.request().post(
         Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
-  
+
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();

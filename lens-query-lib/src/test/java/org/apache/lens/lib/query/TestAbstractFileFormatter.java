@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,7 +47,7 @@ import org.testng.annotations.Test;
 public abstract class TestAbstractFileFormatter {
 
   protected WrappedFileFormatter formatter;
-  
+
   @AfterMethod
   public void cleanup() throws IOException {
     if (formatter != null) {
@@ -165,7 +165,7 @@ public abstract class TestAbstractFileFormatter {
         ctx.getQueryHandle() + ".tmp" + fileExtn);
     Assert.assertEquals(tmpPath, expectedTmpPath);
 
-    // write header, rows and footer; 
+    // write header, rows and footer;
     formatter.writeHeader();
     writeAllRows(conf);
     formatter.writeFooter();
@@ -228,7 +228,7 @@ public abstract class TestAbstractFileFormatter {
       }
     };
   }
-  
+
   protected LensResultSetMetadata getMockedResultSetWithoutComma() {
     return new LensResultSetMetadata() {
 
@@ -271,7 +271,7 @@ public abstract class TestAbstractFileFormatter {
     return txtRows;
   }
 
-  
+
   protected List<String> getExpectedCSVRowsWithoutComma() {
     List<String> csvRows = new ArrayList<String>();
     csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
@@ -295,21 +295,21 @@ public abstract class TestAbstractFileFormatter {
     txtRows.add("Total rows:5");
     return txtRows;
   }
-  
+
   protected List<String> readZipOutputFile(Path finalPath, Configuration conf,
       String encoding) throws IOException {
     FileSystem fs = finalPath.getFileSystem(conf);
     List<String> result = new ArrayList<String>();
-    ZipEntry ze = null; 
-    ZipInputStream zin = new ZipInputStream(fs.open(finalPath)); 
-    while ((ze = zin.getNextEntry()) != null) { 
+    ZipEntry ze = null;
+    ZipInputStream zin = new ZipInputStream(fs.open(finalPath));
+    while ((ze = zin.getNextEntry()) != null) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(zin, encoding));
       String line = reader.readLine();
       while (line != null) {
         result.add(line);
         line = reader.readLine();
       }
-      zin.closeEntry(); 
+      zin.closeEntry();
     }
     zin.close();
     return result;
@@ -342,7 +342,7 @@ public abstract class TestAbstractFileFormatter {
     txtRows.add("Total rows:5");
     return txtRows;
   }
-  
+
 
   protected List<String> getExpectedCSVRowsWithMultipleWithoutComma() {
     List<String> csvRows = new ArrayList<String>();

@@ -9,9 +9,9 @@ package org.apache.lens.driver.hive;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -81,9 +81,9 @@ public class HiveDriver implements LensDriver {
   private final Lock connectionLock;
 
   // connections need to be separate for each user and each thread
-  private final Map<String, Map<Long, ExpirableConnection>> threadConnections = 
+  private final Map<String, Map<Long, ExpirableConnection>> threadConnections =
       new HashMap<String, Map<Long, ExpirableConnection>>();
-  private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = 
+  private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue =
       new DelayQueue<ExpirableConnection>();
   private final Thread connectionExpiryThread = new Thread(new ConnectionExpiryRunnable());
 
@@ -169,7 +169,7 @@ public class HiveDriver implements LensDriver {
 
   private Class<? extends ThriftConnection> connectionClass;
   private boolean isEmbedded;
-  private long connectionExpiryTimeout; 
+  private long connectionExpiryTimeout;
 
   public HiveDriver() throws LensException {
     this.sessionLock = new ReentrantLock();
@@ -193,11 +193,11 @@ public class HiveDriver implements LensDriver {
     this.driverConf.addResource("hivedriver-default.xml");
     this.driverConf.addResource("hivedriver-site.xml");
     connectionClass = this.driverConf.getClass(
-        HIVE_CONNECTION_CLASS, 
-        EmbeddedThriftConnection.class, 
+        HIVE_CONNECTION_CLASS,
+        EmbeddedThriftConnection.class,
         ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
-    connectionExpiryTimeout = 
+    connectionExpiryTimeout =
         this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
   }
 
@@ -289,7 +289,7 @@ public class HiveDriver implements LensDriver {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx),
-          ctx.getDriverQuery(), 
+          ctx.getDriverQuery(),
           ctx.getConf().getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
       LOG.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
@@ -359,7 +359,7 @@ public class HiveDriver implements LensDriver {
       if (StringUtils.isNotBlank(jsonTaskStatus)) {
         ObjectMapper mapper = new ObjectMapper();
         in = new ByteArrayInputStream(jsonTaskStatus.getBytes("UTF-8"));
-        List<TaskStatus> taskStatuses = 
+        List<TaskStatus> taskStatuses =
             mapper.readValue(in, new TypeReference<List<TaskStatus>>() {});
         int completedTasks = 0;
         StringBuilder errorMessage = new StringBuilder();
@@ -409,7 +409,7 @@ public class HiveDriver implements LensDriver {
     message.append(taskStat.getType()).append("):");
     if (taskStat.getExternalHandle() != null) {
       message.append(taskStat.getExternalHandle()).append(":");
-    }    
+    }
   }
 
   @Override
@@ -609,7 +609,7 @@ public class HiveDriver implements LensDriver {
           for (LensEventListener<DriverEvent> eventListener : driverListeners) {
             try {
               eventListener.onEvent(new DriverSessionStarted(System.currentTimeMillis(), this,
-                lensSession, hiveSession.getSessionId().toString()));
+                  lensSession, hiveSession.getSessionId().toString()));
             } catch (Exception exc) {
               LOG.error("Error sending driver start event to listener " + eventListener, exc);
             }
@@ -629,7 +629,7 @@ public class HiveDriver implements LensDriver {
   private OperationHandle getHiveHandle(QueryHandle handle) throws LensException {
     OperationHandle opHandle = hiveHandles.get(handle);
     if (opHandle == null) {
-      throw new LensException("Query not found " + handle); 
+      throw new LensException("Query not found " + handle);
     }
     return opHandle;
   }
@@ -655,7 +655,7 @@ public class HiveDriver implements LensDriver {
       long timeSpent = 0;
       String error = null;
       try {
-        while (timeSpent <= timeoutMillis) { 
+        while (timeSpent <= timeoutMillis) {
           if (isFinished(hiveHandle)) {
             listener.onCompletion(handle);
             return;

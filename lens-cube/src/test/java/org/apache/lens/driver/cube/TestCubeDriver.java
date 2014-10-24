@@ -9,9 +9,9 @@ package org.apache.lens.driver.cube;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ public class TestCubeDriver {
 
     QueryHandle handle = cubeDriver.executeAsync(query, conf);
     Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(),
-        QueryStatus.Status.SUCCESSFUL); 
+        QueryStatus.Status.SUCCESSFUL);
     Assert.assertFalse(cubeDriver.cancelQuery(handle));
 
     cubeDriver.closeQuery(handle);
@@ -101,14 +101,14 @@ public class TestCubeDriver {
     cubeDriver.writeExternal(out);
     out.close();
     System.out.println(Arrays.toString(driverOut.toByteArray()));
-    
+
     ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
     conf.setInt("mock.driver.test.val", -1);
     CubeDriver newDriver = new CubeDriver(conf);
     newDriver.readExternal(new ObjectInputStream(driverIn));
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
-    
+
     for (LensDriver driver : newDriver.getDrivers()) {
       if (driver instanceof MockDriver) {
         MockDriver md = (MockDriver) driver;
@@ -116,7 +116,7 @@ public class TestCubeDriver {
       }
     }
   }
-  
+
   @Test
   public void testCubeDriverRestart() throws Exception {
     // Test read/write for cube driver
@@ -129,15 +129,15 @@ public class TestCubeDriver {
     cubeDriver.writeExternal(out);
     out.close();
     System.out.println(Arrays.toString(driverOut.toByteArray()));
-    
+
     ByteArrayInputStream driverIn = new ByteArrayInputStream(driverOut.toByteArray());
     CubeDriver newDriver = new CubeDriver(conf);
     newDriver.readExternal(new ObjectInputStream(driverIn));
     driverIn.close();
     Assert.assertEquals(newDriver.getDrivers().size(), cubeDriver.getDrivers().size());
-    
+
     Assert.assertEquals(cubeDriver.getStatus(handle).getStatus(),
-        QueryStatus.Status.SUCCESSFUL); 
+        QueryStatus.Status.SUCCESSFUL);
   }
 
 }

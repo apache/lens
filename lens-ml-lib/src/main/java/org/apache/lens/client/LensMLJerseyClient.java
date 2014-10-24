@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,9 +53,9 @@ public class LensMLJerseyClient {
 
   protected WebTarget getMLWebTarget() {
     Client client = ClientBuilder
-      .newBuilder()
-      .register(MultiPartFeature.class)
-      .build();
+        .newBuilder()
+        .register(MultiPartFeature.class)
+        .build();
     LensConnectionParams connParams = connection.getLensConnectionParams();
     String baseURI = connParams.getBaseConnectionUrl();
     String mlURI = connParams.getConf().get(LENS_ML_RESOURCE_PATH, DEFAULT_ML_RESOURCE_PATH);
@@ -66,8 +66,8 @@ public class LensMLJerseyClient {
   public ModelMetadata getModelMetadata(String algorithm, String modelID) {
     try {
       return getMLWebTarget()
-        .path("models")
-        .path(algorithm).path(modelID).request().get(ModelMetadata.class);
+          .path("models")
+          .path(algorithm).path(modelID).request().get(ModelMetadata.class);
     } catch (NotFoundException exc) {
       return null;
     }
@@ -75,18 +75,18 @@ public class LensMLJerseyClient {
 
   public void deleteModel(String algorithm, String modelID) {
     getMLWebTarget()
-      .path("models")
-      .path(algorithm)
-      .path(modelID)
-      .request().delete();
+    .path("models")
+    .path(algorithm)
+    .path(modelID)
+    .request().delete();
   }
 
   public List<String> getModelsForAlgorithm(String algorithm) {
     try {
       StringList models = getMLWebTarget()
-        .path("models")
-        .path(algorithm)
-        .request().get(StringList.class);
+          .path("models")
+          .path(algorithm)
+          .request().get(StringList.class);
       return models == null ? null : models.getElements();
     } catch (NotFoundException exc) {
       return null;
@@ -95,7 +95,7 @@ public class LensMLJerseyClient {
 
   public List<String> getTrainerNames() {
     StringList trainerNames = getMLWebTarget()
-      .path("trainers").request().get(StringList.class);
+        .path("trainers").request().get(StringList.class);
     return trainerNames == null ? null : trainerNames.getElements();
   }
 
@@ -107,34 +107,34 @@ public class LensMLJerseyClient {
     }
 
     return getMLWebTarget()
-      .path(algorithm)
-      .path("train")
-      .request(MediaType.APPLICATION_JSON_TYPE)
-      .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
+        .path(algorithm)
+        .path("train")
+        .request(MediaType.APPLICATION_JSON_TYPE)
+        .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
   }
 
   public String testModel(String table, String algorithm, String modelID) {
     WebTarget modelTestTarget = getMLWebTarget()
-      .path("test")
-      .path(table)
-      .path(algorithm)
-      .path(modelID);
+        .path("test")
+        .path(table)
+        .path(algorithm)
+        .path(modelID);
 
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-      connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
+        connection.getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
 
     return modelTestTarget.request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
   }
 
   public List<String> getTestReportsOfAlgorithm(String algorithm) {
     try {
       StringList list = getMLWebTarget()
-        .path("reports")
-        .path(algorithm)
-        .request()
-        .get(StringList.class);
+          .path("reports")
+          .path(algorithm)
+          .request()
+          .get(StringList.class);
       return list == null ? null : list.getElements();
     } catch (NotFoundException exc) {
       return null;
@@ -144,11 +144,11 @@ public class LensMLJerseyClient {
   public TestReport getTestReport(String algorithm, String reportID) {
     try {
       return getMLWebTarget()
-        .path("reports")
-        .path(algorithm)
-        .path(reportID)
-        .request()
-        .get(TestReport.class);
+          .path("reports")
+          .path(algorithm)
+          .path(reportID)
+          .request()
+          .get(TestReport.class);
     } catch (NotFoundException exc) {
       return null;
     }
@@ -156,17 +156,17 @@ public class LensMLJerseyClient {
 
   public String deleteTestReport(String algorithm, String reportID) {
     return getMLWebTarget()
-      .path("reports")
-      .path(algorithm)
-      .path(reportID)
-      .request().delete(String.class);
+        .path("reports")
+        .path(algorithm)
+        .path(reportID)
+        .request().delete(String.class);
   }
 
   public String predictSingle(String algorithm, String modelID, Map<String,String> features) {
     WebTarget target = getMLWebTarget()
-      .path("predict")
-      .path(algorithm)
-      .path(modelID);
+        .path("predict")
+        .path(algorithm)
+        .path(modelID);
 
     for (Map.Entry<String, String> entry : features.entrySet()) {
       target.queryParam(entry.getKey(), entry.getValue());
@@ -178,10 +178,10 @@ public class LensMLJerseyClient {
   public List<String> getParamDescriptionOfTrainer(String algorithm) {
     try {
       StringList paramHelp = getMLWebTarget()
-        .path("trainers")
-        .path(algorithm)
-        .request(MediaType.APPLICATION_XML)
-        .get(StringList.class);
+          .path("trainers")
+          .path(algorithm)
+          .request(MediaType.APPLICATION_XML)
+          .get(StringList.class);
       return paramHelp.getElements();
     } catch (NotFoundException exc) {
       return null;

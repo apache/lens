@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ public class LensDimensionCommands extends  BaseLensCommand implements CommandMa
 
   @CliCommand(value = "create dimension", help = "Create a new Dimension")
   public String createDimension(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<path to dimension-spec file>") String dimensionSpec) {
+  mandatory = true, help = "<path to dimension-spec file>") String dimensionSpec) {
     File f = new File(dimensionSpec);
 
     if (!f.exists()) {
@@ -68,7 +68,7 @@ public class LensDimensionCommands extends  BaseLensCommand implements CommandMa
 
   @CliCommand(value = "drop dimension", help = "drop dimension")
   public String dropDimension(@CliOption(key = {"", "table"},
-      mandatory = true, help = "dimension name to be dropped") String dimension) {
+  mandatory = true, help = "dimension name to be dropped") String dimension) {
     APIResult result = getClient().dropDimension(dimension);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dimension + "!!!";
@@ -80,7 +80,7 @@ public class LensDimensionCommands extends  BaseLensCommand implements CommandMa
 
   @CliCommand(value = "update dimension", help = "update dimension")
   public String updateDimension(@CliOption(key = {"", "dimension"}, mandatory = true,
-      help = "<dimension-name> <path to dimension-spec file>") String specPair) {
+  help = "<dimension-name> <path to dimension-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -109,7 +109,7 @@ public class LensDimensionCommands extends  BaseLensCommand implements CommandMa
 
   @CliCommand(value = "describe dimension", help = "describe dimension")
   public String describeDimension(@CliOption(key = {"", "dimension"},
-      mandatory = true, help = "<dimension-name>") String dimensionName) {
+  mandatory = true, help = "<dimension-name>") String dimensionName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
           getClient().getDimension(dimensionName)));

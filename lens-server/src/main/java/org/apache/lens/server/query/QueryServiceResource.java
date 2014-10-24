@@ -9,9 +9,9 @@ package org.apache.lens.server.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -62,9 +62,9 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 
 /**
- * queryapi resource 
- * 
- * This provides api for all things query. 
+ * queryapi resource
+ *
+ * This provides api for all things query.
  *
  */
 @Path("/queryapi")
@@ -86,7 +86,7 @@ public class QueryServiceResource {
   }
   /**
    * API to know if Query service is up and running
-   * 
+   *
    * @return Simple text saying it up
    */
   @GET
@@ -107,7 +107,7 @@ public class QueryServiceResource {
    * Get all the queries in the query server; can be filtered with state and queryName.
    * This will by default only return queries submitted by the user that has started the session.
    * To get queries of all users, set the searchAllUsers parameter to false.
-   * 
+   *
    * @param sessionid The sessionid in which queryName is working
    * @param state If any state is passed, all the queries in that state will be returned,
    * otherwise all queries will be returned. Possible states are {@value QueryStatus.Status#values()}
@@ -139,16 +139,16 @@ public class QueryServiceResource {
     }
   }
 
-  static String submitClue = ". supported values are:" + SubmitOp.EXPLAIN  
+  static String submitClue = ". supported values are:" + SubmitOp.EXPLAIN
       + ", " + SubmitOp.EXECUTE + " and " + SubmitOp.EXECUTE_WITH_TIMEOUT;
   static String prepareClue = ". supported values are:" + SubmitOp.PREPARE
       + " and " + SubmitOp.EXPLAIN_AND_PREPARE;
-  static String submitPreparedClue = ". supported values are:" 
+  static String submitPreparedClue = ". supported values are:"
       + SubmitOp.EXECUTE + " and " + SubmitOp.EXECUTE_WITH_TIMEOUT;
 
   /**
    * Submit the query for explain or execute or execute with a timeout
-   * 
+   *
    * @param sessionid The session in which user is submitting the query. Any
    *  configuration set in the session will be picked up.
    * @param query The query to run
@@ -203,7 +203,7 @@ public class QueryServiceResource {
 
   /**
    * Cancel all the queries in query server; can be filtered with state and user
-   * 
+   *
    * @param sessionid The session in which cancel is issued
    * @param state If any state is passed, all the queries in that state will be cancelled,
    * otherwise all queries will be cancelled. Possible states are {@value QueryStatus.Status#values()}
@@ -212,7 +212,7 @@ public class QueryServiceResource {
    * @param user If any user is passed, all the queries submitted by the user will be cancelled,
    * otherwise all the queries will be cancelled
    * @param queryName Cancel queries matching the query name
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation.
    * APIResult with state {@value Status#FAILED} in case of cancellation failure.
    * APIResult with state {@value Status#PARTIAL} in case of partial cancellation.
@@ -250,17 +250,17 @@ public class QueryServiceResource {
       assert (failed);
       if (numCancelled == 0) {
         return new APIResult(Status.FAILED, "Cancel on the query "
-            + msgString + " has failed");        
+            + msgString + " has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Cancel on the query "
-            + msgString + " is partial");        
+            + msgString + " is partial");
       }
     }
   }
 
   /**
    * Get all prepared queries in the query server; can be filtered with user
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param user returns queries of the user. If set to "all", returns queries of all users. By default returns the queries
    *             of the current user.
@@ -290,7 +290,7 @@ public class QueryServiceResource {
 
   /**
    * Prepare a query or 'explain and prepare' the query
-   * 
+   *
    * @param sessionid The session in which user is preparing the query. Any
    *  configuration set in the session will be picked up.
    * @param query The query to prepare
@@ -299,7 +299,7 @@ public class QueryServiceResource {
    * @param conf The configuration for preparing the query
    * @param queryName human readable query name set by user (optional parameter)
    * @return {@link QueryPrepareHandle} incase of {@value SubmitOp#PREPARE} operation.
-   * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE} and the 
+   * {@link QueryPlan} incase of {@value SubmitOp#EXPLAIN_AND_PREPARE} and the
    * query plan will contain the prepare handle as well.
    */
   @POST
@@ -337,12 +337,12 @@ public class QueryServiceResource {
 
   /**
    * Destroy all the prepared queries; Can be filtered with user
-   * 
+   *
    * @param sessionid The session in which cancel is issued
    * @param user destroys queries of the user. If set to "all", destroys queries of all users. By default destroys the queries
    *             of the current user.
    * @param queryName destroys queries matching the query name
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful destroy.
    * APIResult with state {@value Status#FAILED} in case of destroy failure.
    * APIResult with state {@value Status#PARTIAL} in case of partial destroy.
@@ -378,10 +378,10 @@ public class QueryServiceResource {
       assert (failed);
       if (numDestroyed == 0) {
         return new APIResult(Status.FAILED, "Destroy all prepared "
-            + "queries " + msgString + " has failed");        
+            + "queries " + msgString + " has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Destroy all prepared "
-            + "queries " + msgString +" is partial");        
+            + "queries " + msgString +" is partial");
       }
     }
   }
@@ -404,10 +404,10 @@ public class QueryServiceResource {
 
   /**
    * Get a prepared query specified by handle
-   * 
+   *
    * @param sessionid The user session handle
    * @param prepareHandle The prepare handle
-   * 
+   *
    * @return {@link LensPreparedQuery}
    */
   @GET
@@ -418,7 +418,7 @@ public class QueryServiceResource {
     checkSessionId(sessionid);
     try {
       return queryServer.getPreparedQuery(sessionid,
-        getPrepareHandle(prepareHandle));
+          getPrepareHandle(prepareHandle));
     } catch (LensException e) {
       throw new WebApplicationException(e);
     }
@@ -426,10 +426,10 @@ public class QueryServiceResource {
 
   /**
    * Destroy the prepared query specified by handle
-   * 
+   *
    * @param sessionid The user session handle
    * @param prepareHandle The prepare handle
-   * 
+   *
    * @return APIResult with state {@link Status#SUCCEEDED} in case of successful destroy.
    * APIResult with state {@link Status#FAILED} in case of destroy failure.
    */
@@ -445,16 +445,16 @@ public class QueryServiceResource {
           + prepareHandle + " is successful");
     } else {
       return new APIResult(Status.FAILED, "Destroy on the query "
-          + prepareHandle + " failed");        
+          + prepareHandle + " failed");
     }
   }
 
   /**
    * Get lens query and its current status
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
-   * 
+   *
    * @return {@link LensQuery}
    */
   @GET
@@ -473,10 +473,10 @@ public class QueryServiceResource {
 
   /**
    * Cancel the query specified by the handle
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation.
    * APIResult with state {@value Status#FAILED} in case of cancellation failure.
    */
@@ -492,7 +492,7 @@ public class QueryServiceResource {
           + queryHandle + " is successful");
     } else {
       return new APIResult(Status.FAILED, "Cancel on the query "
-          + queryHandle + " failed");        
+          + queryHandle + " failed");
     }
   }
 
@@ -514,11 +514,11 @@ public class QueryServiceResource {
 
   /**
    * Modify query configuration if it is not running yet.
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * @param conf The new configuration, will be on top of old one
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful update.
    * APIResult with state {@value Status#FAILED} in case of udpate failure.
    */
@@ -527,7 +527,7 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult updateConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
-      @PathParam("queryHandle") String queryHandle, 
+      @PathParam("queryHandle") String queryHandle,
       @FormDataParam("conf") LensConf conf) {
     checkSessionId(sessionid);
     try {
@@ -537,7 +537,7 @@ public class QueryServiceResource {
             + queryHandle + " is successful");
       } else {
         return new APIResult(Status.FAILED, "Update on the query conf for "
-            + queryHandle + " failed");        
+            + queryHandle + " failed");
       }
     } catch (LensException e) {
       throw new WebApplicationException(e);
@@ -547,11 +547,11 @@ public class QueryServiceResource {
   /**
    * Modify prepared query's configuration. This would be picked up for subsequent runs
    * of the prepared queries. The query wont be re-prepared with new configuration.
-   * 
+   *
    * @param sessionid The user session handle
    * @param prepareHandle The prepare handle
    * @param conf The new configuration, will be on top of old one
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful update.
    * APIResult with state {@value Status#FAILED} in case of udpate failure.
    */
@@ -560,7 +560,7 @@ public class QueryServiceResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public APIResult updatePreparedConf(@FormDataParam("sessionid") LensSessionHandle sessionid,
-      @PathParam("prepareHandle") String prepareHandle, 
+      @PathParam("prepareHandle") String prepareHandle,
       @FormDataParam("conf") LensConf conf) {
     checkSessionId(sessionid);
     try {
@@ -570,7 +570,7 @@ public class QueryServiceResource {
             + prepareHandle + " is successful");
       } else {
         return new APIResult(Status.FAILED, "Update on the query conf for "
-            + prepareHandle + " failed");        
+            + prepareHandle + " failed");
       }
     } catch (LensException e) {
       throw new WebApplicationException(e);
@@ -579,7 +579,7 @@ public class QueryServiceResource {
 
   /**
    * Submit prepared query for execution
-   * 
+   *
    * @param sessionid The session in which user is submitting the query. Any
    *  configuration set in the session will be picked up.
    * @param prepareHandle The Query to run
@@ -628,10 +628,10 @@ public class QueryServiceResource {
 
   /**
    * Get resultset metadata of the query
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
-   * 
+   *
    * @return {@link QueryResultSetMetadata}
    */
   @GET
@@ -650,12 +650,12 @@ public class QueryServiceResource {
 
   /**
    * Fetch the result set
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
    * @param startIndex start index of the result
    * @param fetchSize fetch size
-   * 
+   *
    * @return {@link QueryResult}
    */
   @GET
@@ -698,10 +698,10 @@ public class QueryServiceResource {
 
   /**
    * Close the result set once fetching is done
-   * 
+   *
    * @param sessionid The user session handle
    * @param queryHandle The query handle
-   * 
+   *
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful close.
    * APIResult with state {@value Status#FAILED} in case of close failure.
    */
