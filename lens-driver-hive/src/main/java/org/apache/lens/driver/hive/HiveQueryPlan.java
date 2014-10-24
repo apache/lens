@@ -35,28 +35,73 @@ import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 
-
+/**
+ * The Class HiveQueryPlan.
+ */
 public class HiveQueryPlan extends DriverQueryPlan {
+
+  /** The explain output. */
   private String explainOutput;
+
+  /** The partitions. */
   private Map<String, List<String>> partitions;
 
+  /**
+   * The Enum ParserState.
+   */
   enum ParserState {
+
+    /** The begin. */
     BEGIN,
+
+    /** The file output operator. */
     FILE_OUTPUT_OPERATOR,
+
+    /** The table scan. */
     TABLE_SCAN,
+
+    /** The join. */
     JOIN,
+
+    /** The select. */
     SELECT,
+
+    /** The groupby. */
     GROUPBY,
+
+    /** The groupby keys. */
     GROUPBY_KEYS,
+
+    /** The groupby exprs. */
     GROUPBY_EXPRS,
+
+    /** The move. */
     MOVE,
+
+    /** The map reduce. */
     MAP_REDUCE,
+
+    /** The partition list. */
     PARTITION_LIST,
+
+    /** The partition. */
     PARTITION,
   };
 
-  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
-      HiveConf metastoreConf) throws HiveException {
+  /**
+   * Instantiates a new hive query plan.
+   *
+   * @param explainOutput
+   *          the explain output
+   * @param prepared
+   *          the prepared
+   * @param metastoreConf
+   *          the metastore conf
+   * @throws HiveException
+   *           the hive exception
+   */
+  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared, HiveConf metastoreConf)
+      throws HiveException {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
@@ -65,6 +110,16 @@ public class HiveQueryPlan extends DriverQueryPlan {
     this.explainOutput = StringUtils.join(explainOutput, '\n');
   }
 
+  /**
+   * Extract plan details.
+   *
+   * @param explainOutput
+   *          the explain output
+   * @param metastoreConf
+   *          the metastore conf
+   * @throws HiveException
+   *           the hive exception
+   */
   private void extractPlanDetails(List<String> explainOutput, HiveConf metastoreConf) throws HiveException {
     ParserState state = ParserState.BEGIN;
     ParserState prevState = state;
@@ -129,7 +184,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
           List<String> partVals = new ArrayList<String>();
           // Look ahead until we reach partition properties
           String lineAhead = null;
-          for (; i < explainOutput.size(); i++ ) {
+          for (; i < explainOutput.size(); i++) {
             if (explainOutput.get(i).trim().equals("properties:")) {
               break;
             }
@@ -160,6 +215,15 @@ public class HiveQueryPlan extends DriverQueryPlan {
     }
   }
 
+  /**
+   * Next state.
+   *
+   * @param tr
+   *          the tr
+   * @param state
+   *          the state
+   * @return the parser state
+   */
   private ParserState nextState(String tr, ParserState state) {
     if (tr.equals("File Output Operator")) {
       return ParserState.FILE_OUTPUT_OPERATOR;
@@ -195,10 +259,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
   @Override
   public QueryCost getCost() {
     /*
-    Return query cost as 1 so that if JDBC storage and other storage is present,
-    JDBC is given preference.
+     * Return query cost as 1 so that if JDBC storage and other storage is present, JDBC is given preference.
      */
-    return new QueryCost(1,1);
+    return new QueryCost(1, 1);
   }
 
   @Override

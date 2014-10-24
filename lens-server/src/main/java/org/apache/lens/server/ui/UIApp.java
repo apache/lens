@@ -29,6 +29,9 @@ import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The Class UIApp.
+ */
 @ApplicationPath("/ui")
 public class UIApp extends Application {
 

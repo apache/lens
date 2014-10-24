@@ -20,7 +20,6 @@ package org.apache.lens.server;
  * #L%
  */
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -36,35 +35,67 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * The Class EventServiceImpl.
+ */
 public class EventServiceImpl extends AbstractService implements LensEventService {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(EventServiceImpl.class);
-  private final Map<Class<? extends LensEvent>, List<LensEventListener>> eventListeners =
-      new HashMap<Class<? extends LensEvent>, List<LensEventListener>>();
+
+  /** The event listeners. */
+  private final Map<Class<? extends LensEvent>, List<LensEventListener>> eventListeners = new HashMap<Class<? extends LensEvent>, List<LensEventListener>>();
+
+  /** The event handler pool. */
   private ExecutorService eventHandlerPool;
 
+  /**
+   * Instantiates a new event service impl.
+   *
+   * @param name
+   *          the name
+   */
   public EventServiceImpl(String name) {
     super(name);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#init(org.apache.hadoop.hive.conf.HiveConf)
+   */
   @Override
   public synchronized void init(HiveConf hiveConf) {
     int numProcs = Runtime.getRuntime().availableProcessors();
-    eventHandlerPool =
-        Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
+    eventHandlerPool = Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE,
+        numProcs));
     super.init(hiveConf);
   }
 
+  /**
+   * Gets the listener type.
+   *
+   * @param listener
+   *          the listener
+   * @return the listener type
+   */
   @SuppressWarnings("unchecked")
   protected final Class<? extends LensEvent> getListenerType(LensEventListener listener) {
     for (Method m : listener.getClass().getMethods()) {
       if (LensEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
         // Found handler method
-        return  (Class<? extends LensEvent>) m.getParameterTypes()[0];
+        return (Class<? extends LensEvent>) m.getParameterTypes()[0];
       }
     }
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.lens.server.api.events.LensEventService#addListener(org.apache.lens.server.api.events.LensEventListener)
+   */
   @Override
   public void addListener(LensEventListener listener) {
     Class<? extends LensEvent> listenerEventType = getListenerType(listener);
@@ -79,6 +110,13 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     LOG.info("Added listener " + listener);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.lens.server.api.events.LensEventService#removeListener(org.apache.lens.server.api.events.LensEventListener
+   * )
+   */
   @Override
   public void removeListener(LensEventListener listener) {
     synchronized (eventListeners) {
@@ -90,6 +128,14 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     }
   }
 
+  /**
+   * Handle event.
+   *
+   * @param listeners
+   *          the listeners
+   * @param evt
+   *          the evt
+   */
   @SuppressWarnings("unchecked")
   private void handleEvent(List<LensEventListener> listeners, LensEvent evt) {
     if (listeners != null && !listeners.isEmpty()) {
@@ -103,18 +149,34 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     }
   }
 
+  /**
+   * The Class EventHandler.
+   */
   private final class EventHandler implements Runnable {
+
+    /** The event. */
     final LensEvent event;
 
+    /**
+     * Instantiates a new event handler.
+     *
+     * @param event
+     *          the event
+     */
     EventHandler(LensEvent event) {
       this.event = event;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see java.lang.Runnable#run()
+     */
     public void run() {
       Class<? extends LensEvent> evtClass = event.getClass();
       // Call listeners directly listening for this event type
       handleEvent(eventListeners.get(evtClass), event);
-      Class<?> superClass =  evtClass.getSuperclass();
+      Class<?> superClass = evtClass.getSuperclass();
 
       // Call listeners which listen of super types of this event type
       while (LensEvent.class.isAssignableFrom(superClass)) {
@@ -126,6 +188,11 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.LensEventService#notifyEvent(org.apache.lens.server.api.events.LensEvent)
+   */
   @SuppressWarnings("unchecked")
   @Override
   public void notifyEvent(final LensEvent evt) throws LensException {
@@ -139,16 +206,31 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     eventHandlerPool.submit(new EventHandler(evt));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.LensEventService#getListeners(java.lang.Class)
+   */
   @Override
   public Collection<LensEventListener> getListeners(Class<? extends LensEvent> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#start()
+   */
   @Override
   public synchronized void start() {
     super.start();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hive.service.AbstractService#stop()
+   */
   @Override
   public void stop() {
     List<Runnable> pending = eventHandlerPool.shutdownNow();
@@ -170,6 +252,12 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     return eventListeners;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.LensEventService#addListenerForType(org.apache.lens.server.api.events.
+   * LensEventListener, java.lang.Class)
+   */
   @Override
   public void addListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
     synchronized (eventListeners) {
@@ -183,9 +271,14 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     LOG.info("Added listener " + listener + " for type:" + eventType.getName());
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.LensEventService#removeListenerForType(org.apache.lens.server.api.events.
+   * LensEventListener, java.lang.Class)
+   */
   @Override
-  public void removeListenerForType(LensEventListener listener,
-      Class<? extends LensEvent> eventType) {
+  public void removeListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
     synchronized (eventListeners) {
       List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners != null) {

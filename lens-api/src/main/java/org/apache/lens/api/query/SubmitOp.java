@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api.query;
 
 /*
@@ -20,10 +23,23 @@ package org.apache.lens.api.query;
  * #L%
  */
 
+/**
+ * The Enum SubmitOp.
+ */
 public enum SubmitOp {
+
+  /** The execute. */
   EXECUTE,
+
+  /** The explain. */
   EXPLAIN,
+
+  /** The prepare. */
   PREPARE,
+
+  /** The explain and prepare. */
   EXPLAIN_AND_PREPARE,
+
+  /** The execute with timeout. */
   EXECUTE_WITH_TIMEOUT
 }

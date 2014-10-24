@@ -24,46 +24,49 @@ import java.io.IOException;
 
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
-
 /**
  * The interface for query result formatting
  *
- * This is an abstract interface, user should implement
- * {@link InMemoryOutputFormatter} or {@link PersistedOutputFormatter} for
- * formatting the result.
+ * This is an abstract interface, user should implement {@link InMemoryOutputFormatter} or
+ * {@link PersistedOutputFormatter} for formatting the result.
  */
 public interface QueryOutputFormatter {
 
   /**
-   * Initialize the formatter
+   * Initialize the formatter.
    *
-   * @param ctx The {@link QueryContext} object
-   * @param metadata {@link LensResultSetMetadata} object
+   * @param ctx
+   *          The {@link QueryContext} object
+   * @param metadata
+   *          {@link LensResultSetMetadata} object
    * @throws IOException
+   *           Signals that an I/O exception has occurred.
    */
   public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException;
 
   /**
-   * Write the header
+   * Write the header.
    *
    * @throws IOException
+   *           Signals that an I/O exception has occurred.
    */
   public void writeHeader() throws IOException;
 
   /**
-   * Write the footer
+   * Write the footer.
    *
    * @throws IOException
+   *           Signals that an I/O exception has occurred.
    */
   public void writeFooter() throws IOException;
 
   /**
    * Commit the formatting.
    *
-   * This will make the result consumable by user, will be called after
-   * all the writes succeed.
+   * This will make the result consumable by user, will be called after all the writes succeed.
    *
    * @throws IOException
+   *           Signals that an I/O exception has occurred.
    */
   public void commit() throws IOException;
 
@@ -71,6 +74,7 @@ public interface QueryOutputFormatter {
    * Close the formatter. Cleanup any resources.
    *
    * @throws IOException
+   *           Signals that an I/O exception has occurred.
    */
   public void close() throws IOException;
 

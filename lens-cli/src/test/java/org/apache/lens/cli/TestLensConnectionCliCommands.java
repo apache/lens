@@ -1,4 +1,5 @@
 package org.apache.lens.cli;
+
 /*
  * #%L
  * Lens CLI
@@ -19,8 +20,6 @@ package org.apache.lens.cli;
  * #L%
  */
 
-
-
 import org.apache.lens.cli.commands.LensConnectionCommands;
 import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
@@ -31,12 +30,17 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * The Class TestLensConnectionCliCommands.
+ */
 public class TestLensConnectionCliCommands extends LensCliApplicationTest {
 
-  private static final Logger LOG = LoggerFactory.getLogger(
-      TestLensConnectionCliCommands.class);
+  /** The Constant LOG. */
+  private static final Logger LOG = LoggerFactory.getLogger(TestLensConnectionCliCommands.class);
 
-
+  /**
+   * Test client creation.
+   */
   @Test
   public void testClientCreation() {
     LensClient client = null;
@@ -51,6 +55,9 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     }
   }
 
+  /**
+   * Test connection command.
+   */
   @Test
   public void testConnectionCommand() {
     LensClient client = new LensClient();
@@ -68,6 +75,9 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     commands.quitShell();
   }
 
+  /**
+   * Test file commands.
+   */
   @Test
   public void testFileCommands() {
     LensClient client = new LensClient();
@@ -92,7 +102,9 @@ public class TestLensConnectionCliCommands extends LensCliApplicationTest {
     commands.quitShell();
   }
 
-
+  /**
+   * Test jar commands.
+   */
   @Test
   public void testJarCommands() {
     LensClient client = new LensClient();

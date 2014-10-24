@@ -28,8 +28,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+/**
+ * The Class TestResource.
+ */
 @Path("/test")
 public class TestResource {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(TestResource.class);
 
   /**
@@ -38,7 +43,7 @@ public class TestResource {
    * @return Simple text saying its up
    */
   @GET
-  @Produces({MediaType.TEXT_PLAIN})
+  @Produces({ MediaType.TEXT_PLAIN })
   public String getMessage() {
     return "OK";
   }

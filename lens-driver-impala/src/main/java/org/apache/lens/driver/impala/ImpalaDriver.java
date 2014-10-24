@@ -26,7 +26,6 @@ import java.io.ObjectOutput;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.driver.*;
@@ -48,29 +47,54 @@ import com.cloudera.beeswax.api.QueryState;
 import com.cloudera.impala.thrift.ImpalaService;
 import com.cloudera.impala.thrift.ImpalaService.Client;
 
+/**
+ * The Class ImpalaDriver.
+ */
 public class ImpalaDriver implements LensDriver {
 
+  /** The logger. */
   Logger logger = Logger.getLogger(ImpalaDriver.class.getName());
 
+  /** The client. */
   private Client client;
+
+  /** The storages. */
   private List<String> storages = new ArrayList<String>();
 
+  /**
+   * Instantiates a new impala driver.
+   */
   public ImpalaDriver() {
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+   */
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) {
-    /*QueryCost q = new QueryCost();
-    q.setExecMode(ExecMode.INTERACTIVE);
-    q.setScanMode(ScanMode.FULL_SCAN);
-    q.setScanSize(-1);
-
-    return q;*/
+    /*
+     * QueryCost q = new QueryCost(); q.setExecMode(ExecMode.INTERACTIVE); q.setScanMode(ScanMode.FULL_SCAN);
+     * q.setScanSize(-1);
+     * 
+     * return q;
+     */
     return null;
   }
 
-  public LensResultSet execute(String query, Configuration conf)
-      throws LensException {
+  /**
+   * Execute.
+   *
+   * @param query
+   *          the query
+   * @param conf
+   *          the conf
+   * @return the lens result set
+   * @throws LensException
+   *           the lens exception
+   */
+  public LensResultSet execute(String query, Configuration conf) throws LensException {
     Query q = new Query();
     q.query = query;
     QueryHandle queryHandle;
@@ -86,8 +110,7 @@ public class ImpalaDriver implements LensDriver {
         }
         if (qs == QueryState.EXCEPTION) {
           logger.error("Query aborted, unable to fetch data");
-          throw new LensException(
-              "Query aborted, unable to fetch data");
+          throw new LensException("Query aborted, unable to fetch data");
         }
         try {
           Thread.sleep(100);
@@ -116,6 +139,11 @@ public class ImpalaDriver implements LensDriver {
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
+   */
   @Override
   public void configure(Configuration conf) throws LensException {
     final String HOST = "HOST";
@@ -129,17 +157,26 @@ public class ImpalaDriver implements LensDriver {
     }
     TBinaryProtocol protocol = new TBinaryProtocol(sock);
     this.client = new ImpalaService.Client(protocol);
-    logger.info("Successfully connected to host" + conf.get(HOST) + ":"
-        + conf.getInt(PORT, 9999));
+    logger.info("Successfully connected to host" + conf.get(HOST) + ":" + conf.getInt(PORT, 9999));
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#updateStatus(org.apache.lens.server.api.query.QueryContext)
+   */
   @Override
   public void updateStatus(QueryContext context) {
     // TODO Auto-generated method stub
     return;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#cancelQuery(org.apache.lens.api.query.QueryHandle)
+   */
   @Override
   public boolean cancelQuery(org.apache.lens.api.query.QueryHandle handle) {
     // TODO Auto-generated method stub
@@ -152,6 +189,11 @@ public class ImpalaDriver implements LensDriver {
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#close()
+   */
   @Override
   public void close() throws LensException {
     // TODO Auto-generated method stub
@@ -159,81 +201,135 @@ public class ImpalaDriver implements LensDriver {
   }
 
   /**
-   * Add a listener for driver events
+   * Add a listener for driver events.
    *
    * @param driverEventListener
+   *          the driver event listener
    */
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#closeQuery(org.apache.lens.api.query.QueryHandle)
+   */
   @Override
-  public void closeQuery(org.apache.lens.api.query.QueryHandle arg0)
-      throws LensException {
+  public void closeQuery(org.apache.lens.api.query.QueryHandle arg0) throws LensException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#prepare(org.apache.lens.server.api.query.PreparedQueryContext)
+   */
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.lens.server.api.driver.LensDriver#explainAndPrepare(org.apache.lens.server.api.query.PreparedQueryContext
+   * )
+   */
   @Override
-  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext)
-      throws LensException {
+  public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#closePreparedQuery(org.apache.lens.api.query.QueryPrepareHandle)
+   */
   @Override
-  public void closePreparedQuery(QueryPrepareHandle handle)
-      throws LensException {
+  public void closePreparedQuery(QueryPrepareHandle handle) throws LensException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#execute(org.apache.lens.server.api.query.QueryContext)
+   */
   @Override
   public LensResultSet execute(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#executeAsync(org.apache.lens.server.api.query.QueryContext)
+   */
   @Override
   public void executeAsync(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#fetchResultSet(org.apache.lens.server.api.query.QueryContext)
+   */
   @Override
-  public LensResultSet fetchResultSet(QueryContext context)
-      throws LensException {
+  public LensResultSet fetchResultSet(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensDriver#closeResultSet(org.apache.lens.api.query.QueryHandle)
+   */
   @Override
-  public void closeResultSet(org.apache.lens.api.query.QueryHandle handle)
-      throws LensException {
+  public void closeResultSet(org.apache.lens.api.query.QueryHandle handle) throws LensException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see
+   * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification(org.apache.lens.api.query.QueryHandle
+   * , long, org.apache.lens.server.api.driver.QueryCompletionListener)
+   */
   @Override
-  public void registerForCompletionNotification(
-      org.apache.lens.api.query.QueryHandle handle, long timeoutMillis,
+  public void registerForCompletionNotification(org.apache.lens.api.query.QueryHandle handle, long timeoutMillis,
       QueryCompletionListener listener) throws LensException {
     throw new LensException("Not implemented");
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
+   */
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     // TODO Auto-generated method stub
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
+   */
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // TODO Auto-generated method stub

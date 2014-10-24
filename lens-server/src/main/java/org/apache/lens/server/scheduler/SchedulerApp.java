@@ -29,7 +29,9 @@ import javax.ws.rs.core.Application;
 import org.apache.lens.server.LensApplicationListener;
 import org.glassfish.jersey.filter.LoggingFilter;
 
-
+/**
+ * The Class SchedulerApp.
+ */
 @ApplicationPath("/queryscheduler")
 public class SchedulerApp extends Application {
   @Override

@@ -40,6 +40,9 @@ import com.cloudera.beeswax.api.QueryHandle;
 import com.cloudera.beeswax.api.Results;
 import com.cloudera.impala.thrift.ImpalaService;
 
+/**
+ * The Class TestImpalaResultSet.
+ */
 @PrepareForTest(ImpalaResultSet.class)
 public class TestImpalaResultSet {
 
@@ -48,6 +51,12 @@ public class TestImpalaResultSet {
     return new org.powermock.modules.testng.PowerMockObjectFactory();
   }
 
+  /**
+   * Test size.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testSize() throws Exception {
     List<String> returnResultSet = new ArrayList<String>();
@@ -78,6 +87,12 @@ public class TestImpalaResultSet {
 
   }
 
+  /**
+   * Checks for next.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void hasNext() throws Exception {
     List<String> returnResultSet = new ArrayList<String>();
@@ -95,7 +110,7 @@ public class TestImpalaResultSet {
 
     Assert.assertEquals(is.hasNext(), true);
 
-    //do first next
+    // do first next
     List<Object> result = is.next().getValues();
 
     // test and verify
@@ -110,7 +125,7 @@ public class TestImpalaResultSet {
     // check the size
     Assert.assertEquals(is.hasNext(), true);
 
-    //do second next to empty the result set
+    // do second next to empty the result set
     result = is.next().getValues();
 
     // test and verify
@@ -127,6 +142,12 @@ public class TestImpalaResultSet {
 
   }
 
+  /**
+   * Next without more.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void nextWithoutMore() throws Exception {
 
@@ -155,6 +176,12 @@ public class TestImpalaResultSet {
 
   }
 
+  /**
+   * Next with more.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void nextWithMore() throws Exception {
 
@@ -184,8 +211,10 @@ public class TestImpalaResultSet {
   }
 
   /**
+   * Next with two calls.
    *
    * @throws Exception
+   *           the exception
    */
   @Test
   public void nextWithTwoCalls() throws Exception {

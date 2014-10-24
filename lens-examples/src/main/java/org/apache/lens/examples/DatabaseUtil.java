@@ -27,8 +27,17 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
 
+/**
+ * The Class DatabaseUtil.
+ */
 public class DatabaseUtil {
 
+  /**
+   * Initalize database storage.
+   *
+   * @throws Exception
+   *           the exception
+   */
   public static void initalizeDatabaseStorage() throws Exception {
 
     try {
@@ -36,8 +45,7 @@ public class DatabaseUtil {
     } catch (ClassNotFoundException e) {
       System.err.println("Unable to locate the JDBC driver class for DB Storage");
     }
-    Connection con = DriverManager.getConnection(
-        "jdbc:hsqldb:/tmp/db-storage.db", "SA", "");
+    Connection con = DriverManager.getConnection("jdbc:hsqldb:/tmp/db-storage.db", "SA", "");
 
     con.setAutoCommit(true);
     Statement statement = con.createStatement();
@@ -56,6 +64,14 @@ public class DatabaseUtil {
     con.close();
   }
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   * @throws Exception
+   *           the exception
+   */
   public static void main(String[] args) throws Exception {
     DatabaseUtil.initalizeDatabaseStorage();
   }

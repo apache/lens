@@ -1,4 +1,5 @@
 package org.apache.lens.server.stats.event.query;
+
 /*
  * #%L
  * Lens Server
@@ -27,18 +28,22 @@ import lombok.Setter;
  */
 public class QueryDriverStatistics {
 
+  /** The name. */
   @Getter
   @Setter
   private String name;
 
+  /** The driver query. */
   @Getter
   @Setter
   private String driverQuery;
 
+  /** The start time. */
   @Getter
   @Setter
   private long startTime;
 
+  /** The end time. */
   @Getter
   @Setter
   private long endTime;

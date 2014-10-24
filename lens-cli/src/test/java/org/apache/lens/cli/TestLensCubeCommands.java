@@ -1,4 +1,5 @@
 package org.apache.lens.cli;
+
 /*
  * #%L
  * Lens CLI
@@ -19,7 +20,6 @@ package org.apache.lens.cli;
  * #L%
  */
 
-
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.client.LensClient;
 import org.slf4j.Logger;
@@ -30,32 +30,47 @@ import org.testng.annotations.Test;
 import java.io.*;
 import java.net.URL;
 
+/**
+ * The Class TestLensCubeCommands.
+ */
 public class TestLensCubeCommands extends LensCliApplicationTest {
+
+  /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(TestLensCubeCommands.class);
 
+  /**
+   * Test cube commands.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testCubeCommands() throws Exception {
     LensClient client = new LensClient();
     LensCubeCommands command = new LensCubeCommands();
     command.setClient(client);
     LOG.debug("Starting to test cube commands");
-    URL cubeSpec =
-        TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
     String cubeList = command.showCubes();
-    Assert.assertFalse(
-        cubeList.contains("sample_cube"));
+    Assert.assertFalse(cubeList.contains("sample_cube"));
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     cubeList = command.showCubes();
-    Assert.assertTrue(
-        cubeList.contains("sample_cube"));
+    Assert.assertTrue(cubeList.contains("sample_cube"));
 
     testUpdateCommand(new File(cubeSpec.toURI()), command);
     command.dropCube("sample_cube");
     cubeList = command.showCubes();
-    Assert.assertFalse(
-        cubeList.contains("sample_cube"));
+    Assert.assertFalse(cubeList.contains("sample_cube"));
   }
 
+  /**
+   * Test update command.
+   *
+   * @param f
+   *          the f
+   * @param command
+   *          the command
+   */
   private void testUpdateCommand(File f, LensCubeCommands command) {
     try {
       StringBuilder sb = new StringBuilder();
@@ -70,8 +85,8 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       String xmlContent = sb.toString();
 
       xmlContent = xmlContent.replace("<properties name=\"sample_cube.prop\" value=\"sample\" />\n",
-          "<properties name=\"sample_cube.prop\" value=\"sample\" />" +
-          "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
+          "<properties name=\"sample_cube.prop\" value=\"sample\" />"
+              + "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
 
       File newFile = new File("/tmp/sample_cube1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

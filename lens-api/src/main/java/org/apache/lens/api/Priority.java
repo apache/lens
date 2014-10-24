@@ -1,3 +1,6 @@
+/*
+ * 
+ */
 package org.apache.lens.api;
 
 /*
@@ -20,10 +23,23 @@ package org.apache.lens.api;
  * #L%
  */
 
+/**
+ * The Enum Priority.
+ */
 public enum Priority {
+
+  /** The very high. */
   VERY_HIGH,
+
+  /** The high. */
   HIGH,
+
+  /** The normal. */
   NORMAL,
+
+  /** The low. */
   LOW,
+
+  /** The very low. */
   VERY_LOW
 }

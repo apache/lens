@@ -29,10 +29,16 @@ import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The Class LensApplication.
+ */
 @ApplicationPath("/")
 public class LensApplication extends Application {
 
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(LensApplication.class);
+
+  /** The conf. */
   public static HiveConf conf = LensServerConf.get();
 
   @Override
@@ -46,27 +52,23 @@ public class LensApplication extends Application {
     String[] filterNames = conf.getStrings(LensConfConstants.WS_FILTER_NAMES);
 
     // register root resource
-    for(String rName : resourceNames) {
-      Class wsResourceClass = conf.getClass(
-          LensConfConstants.getWSResourceImplConfKey(rName), null);
+    for (String rName : resourceNames) {
+      Class wsResourceClass = conf.getClass(LensConfConstants.getWSResourceImplConfKey(rName), null);
       classes.add(wsResourceClass);
       LOG.info("Added resource " + wsResourceClass);
     }
-    for(String fName : featureNames) {
-      Class wsFeatureClass = conf.getClass(
-          LensConfConstants.getWSFeatureImplConfKey(fName), null);
+    for (String fName : featureNames) {
+      Class wsFeatureClass = conf.getClass(LensConfConstants.getWSFeatureImplConfKey(fName), null);
       classes.add(wsFeatureClass);
       LOG.info("Added feature " + wsFeatureClass);
     }
-    for(String lName : listenerNames) {
-      Class wsListenerClass = conf.getClass(
-          LensConfConstants.getWSListenerImplConfKey(lName), null);
+    for (String lName : listenerNames) {
+      Class wsListenerClass = conf.getClass(LensConfConstants.getWSListenerImplConfKey(lName), null);
       classes.add(wsListenerClass);
       LOG.info("Added listener " + wsListenerClass);
     }
-    for(String filterName : filterNames) {
-      Class wsFilterClass = conf.getClass(
-          LensConfConstants.getWSFilterImplConfKey(filterName), null);
+    for (String filterName : filterNames) {
+      Class wsFilterClass = conf.getClass(LensConfConstants.getWSFilterImplConfKey(filterName), null);
       classes.add(wsFilterClass);
       LOG.info("Added filter " + wsFilterClass);
     }

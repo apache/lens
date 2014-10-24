@@ -20,7 +20,6 @@ package org.apache.lens.lib.query;
  * #L%
  */
 
-
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.Text;
 import org.apache.lens.lib.query.JSonSerde;
@@ -32,31 +31,43 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+/**
+ * The Class TestJSONSerde.
+ */
 @SuppressWarnings("unchecked")
 public class TestJSONSerde {
 
-  private final JSonSerde jsonSerde= new JSonSerde();
+  /** The json serde. */
+  private final JSonSerde jsonSerde = new JSonSerde();
 
+  /** The props. */
   private final Properties props = new Properties();
 
-
+  /**
+   * Setup.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeTest
   public void setup() throws Exception {
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d");
     props.put(serdeConstants.LIST_COLUMN_TYPES, "string,varchar(20),int,char(10)");
   }
 
+  /**
+   * Test deseralize.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testDeseralize() throws Exception {
 
     jsonSerde.initialize(null, props);
 
-    Text in = new Text("{\n" +
-        "  \"a\":\"hello\",\n" +
-        "  \"b\":\"yes\",\n" +
-        "  \"c\":1,\n" +
-        "  \"d\":\"char\"\n" +
-        "}");
+    Text in = new Text("{\n" + "  \"a\":\"hello\",\n" + "  \"b\":\"yes\",\n" + "  \"c\":1,\n" + "  \"d\":\"char\"\n"
+        + "}");
 
     List<Object> row = (List<Object>) jsonSerde.deserialize(in);
 
@@ -65,11 +76,7 @@ public class TestJSONSerde {
     Assert.assertEquals(1, row.get(2));
     Assert.assertEquals("char", row.get(3).toString());
 
-    in = new Text("{\n" +
-        "  \"a\":\"hello\",\n" +
-        "  \"c\":1,\n" +
-        "  \"d\":\"char\"\n" +
-        "}");
+    in = new Text("{\n" + "  \"a\":\"hello\",\n" + "  \"c\":1,\n" + "  \"d\":\"char\"\n" + "}");
 
     row = (List<Object>) jsonSerde.deserialize(in);
 
@@ -78,10 +85,7 @@ public class TestJSONSerde {
     Assert.assertEquals(1, row.get(2));
     Assert.assertEquals("char", row.get(3).toString());
 
-    in = new Text("{\n" +
-        "  \"a\":\"hello\",\n" +
-        "  \"b\":\"yes\"\n" +
-        "}");
+    in = new Text("{\n" + "  \"a\":\"hello\",\n" + "  \"b\":\"yes\"\n" + "}");
     row = (List<Object>) jsonSerde.deserialize(in);
 
     Assert.assertEquals("hello", row.get(0));
@@ -94,41 +98,26 @@ public class TestJSONSerde {
 
     jsonSerde.initialize(null, props);
 
-    in = new Text("{\n" +
-        "  \"a\": [\n" +
-        "    1,\n" +
-        "    2,\n" +
-        "    3\n" +
-        "  ],\n" +
-        "  \"b\": {\n" +
-        "    \"a\": \"b\",\n" +
-        "    \"c\": \"d\",\n" +
-        "    \"e\": \"f\"\n" +
-        "  },\n" +
-        "  \"c\": {\n" +
-        "    \"a\":1,\n" +
-        "    \"b\":2\n" +
-        "  }\n" +
-        "}");
+    in = new Text("{\n" + "  \"a\": [\n" + "    1,\n" + "    2,\n" + "    3\n" + "  ],\n" + "  \"b\": {\n"
+        + "    \"a\": \"b\",\n" + "    \"c\": \"d\",\n" + "    \"e\": \"f\"\n" + "  },\n" + "  \"c\": {\n"
+        + "    \"a\":1,\n" + "    \"b\":2\n" + "  }\n" + "}");
 
     row = (List<Object>) jsonSerde.deserialize(in);
-    Object[] objs = (Object[])row.get(0);
-    Map<String, String> map = (Map<String, String>)row.get(1);
+    Object[] objs = (Object[]) row.get(0);
+    Map<String, String> map = (Map<String, String>) row.get(1);
     Assert.assertEquals(objs.length, 3);
-    Assert.assertEquals(objs[0],1);
+    Assert.assertEquals(objs[0], 1);
     Assert.assertEquals(objs[1], 2);
     Assert.assertEquals(objs[2], 3);
 
-    Assert.assertEquals(map.size(),3);
+    Assert.assertEquals(map.size(), 3);
     Assert.assertEquals(map.get("a"), "b");
     Assert.assertEquals(map.get("c"), "d");
     Assert.assertEquals(map.get("e"), "f");
-    Map<String, Object> map1 = (Map<String, Object>)row.get(2);
+    Map<String, Object> map1 = (Map<String, Object>) row.get(2);
     Assert.assertEquals(map1.size(), 2);
-    Assert.assertEquals(map1.get("a"),1);
+    Assert.assertEquals(map1.get("a"), 1);
     Assert.assertEquals(map1.get("b"), 2);
   }
-
-
 
 }

@@ -1,4 +1,5 @@
 package org.apache.lens.server.stats.store.log;
+
 /*
  * #%L
  * Lens Server
@@ -31,35 +32,54 @@ import java.util.Timer;
  */
 public class StatisticsLogRollupHandler {
 
-
-
+  /** The task. */
   private org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask task;
+
+  /** The timer. */
   private Timer timer;
+
+  /** The rate. */
   private long rate;
+
+  /** The scan set. */
   private final ConcurrentHashSet<String> scanSet = new ConcurrentHashSet<String>();
+
   /**
    * Initalize the handler.
    *
-   * @param conf configuration to be used while initialization.
+   * @param conf
+   *          configuration to be used while initialization.
    */
   public void initialize(Configuration conf) {
     task = new StatisticsLogFileScannerTask();
     timer = new Timer();
-    rate = conf.getLong(LensConfConstants.STATS_ROLLUP_SCAN_RATE,
-        LensConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
+    rate = conf.getLong(LensConfConstants.STATS_ROLLUP_SCAN_RATE, LensConfConstants.DEFAULT_STATS_ROLLUP_SCAN_RATE);
   }
 
+  /**
+   * Start.
+   *
+   * @param service
+   *          the service
+   */
   public void start(LensEventService service) {
     task.setService(service);
     timer.scheduleAtFixedRate(task, rate, rate);
   }
 
-
+  /**
+   * Stop.
+   */
   public void stop() {
     timer.cancel();
   }
 
-
+  /**
+   * Adds the to scan task.
+   *
+   * @param event
+   *          the event
+   */
   public void addToScanTask(String event) {
     if (!scanSet.contains(event)) {
       scanSet.add(event);
@@ -68,4 +88,3 @@ public class StatisticsLogRollupHandler {
   }
 
 }
-

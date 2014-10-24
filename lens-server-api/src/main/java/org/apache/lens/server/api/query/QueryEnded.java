@@ -20,7 +20,6 @@ package org.apache.lens.server.api.query;
  * #L%
  */
 
-
 import java.util.EnumSet;
 
 import org.apache.lens.api.query.QueryHandle;
@@ -33,15 +32,36 @@ import lombok.Getter;
  * irrespective of its success or failure, then that listener can subscribe for this event type
  */
 public class QueryEnded extends StatusChange {
-  @Getter private final String user;
-  @Getter private final String cause;
 
-  public static final EnumSet<QueryStatus.Status> END_STATES =
-      EnumSet.of(QueryStatus.Status.SUCCESSFUL,
-          QueryStatus.Status.CANCELED, QueryStatus.Status.CLOSED, QueryStatus.Status.FAILED);
+  /** The user. */
+  @Getter
+  private final String user;
 
-  public QueryEnded(long eventTime, QueryStatus.Status prev,
-      QueryStatus.Status current, QueryHandle handle,
+  /** The cause. */
+  @Getter
+  private final String cause;
+
+  /** The Constant END_STATES. */
+  public static final EnumSet<QueryStatus.Status> END_STATES = EnumSet.of(QueryStatus.Status.SUCCESSFUL,
+      QueryStatus.Status.CANCELED, QueryStatus.Status.CLOSED, QueryStatus.Status.FAILED);
+
+  /**
+   * Instantiates a new query ended.
+   *
+   * @param eventTime
+   *          the event time
+   * @param prev
+   *          the prev
+   * @param current
+   *          the current
+   * @param handle
+   *          the handle
+   * @param user
+   *          the user
+   * @param cause
+   *          the cause
+   */
+  public QueryEnded(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
       String user, String cause) {
     super(eventTime, prev, current, handle);
     this.user = user;

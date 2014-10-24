@@ -27,6 +27,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * The Class IndexResource.
+ */
 @Path("/")
 public class IndexResource {
 
@@ -58,8 +61,7 @@ public class IndexResource {
     StringBuilder builder = new StringBuilder();
     builder.append("Total number of threads:").append(nr).append("\n");
     for (int i = 0; i < nr; i++) {
-      builder.append(threads[i].getName()).append("\n\tState: ").
-      append(threads[i].getState()).append("\n");
+      builder.append(threads[i].getName()).append("\n\tState: ").append(threads[i].getState()).append("\n");
       String stackTrace = StringUtils.join(threads[i].getStackTrace(), "\n");
       builder.append(stackTrace);
       builder.append("\n----------------------\n\n");

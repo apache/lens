@@ -46,27 +46,55 @@ import org.apache.commons.lang.StringEscapeUtils;
 /**
  * Provides abstract implementation of the query output formatter.
  *
- * In this it initializes column names, types column object inspectors
- * Also provides methods to construct header from serde
+ * In this it initializes column names, types column object inspectors Also provides methods to construct header from
+ * serde
  *
  */
 @SuppressWarnings("deprecation")
 public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
 
+  /** The Constant HEADER_TYPE. */
   public static final String HEADER_TYPE = "string";
 
+  /** The ctx. */
   protected QueryContext ctx;
+
+  /** The metadata. */
   protected LensResultSetMetadata metadata;
+
+  /** The column names. */
   protected List<String> columnNames = new ArrayList<String>();
+
+  /** The escaped column names. */
   protected List<String> escapedColumnNames = new ArrayList<String>();
+
+  /** The column types. */
   protected List<TypeInfo> columnTypes = new ArrayList<TypeInfo>();
+
+  /** The column o is. */
   protected List<ObjectInspector> columnOIs = new ArrayList<ObjectInspector>();
+
+  /** The column header o is. */
   protected List<ObjectInspector> columnHeaderOIs = new ArrayList<ObjectInspector>();
+
+  /** The htypes. */
   protected String htypes;
+
+  /** The types. */
   protected String types;
+
+  /** The header oi. */
   protected ObjectInspector headerOI;
+
+  /** The header serde. */
   protected SerDe headerSerde;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.query.QueryOutputFormatter#init(org.apache.lens.server.api.query.QueryContext,
+   * org.apache.lens.server.api.driver.LensResultSetMetadata)
+   */
   @Override
   public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     this.ctx = ctx;
@@ -79,6 +107,12 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
     return metadata;
   }
 
+  /**
+   * Inits the column fields.
+   *
+   * @param metadata
+   *          the metadata
+   */
   private void initColumnFields(LensResultSetMetadata metadata) {
     StringBuilder typesSb = new StringBuilder();
     StringBuilder headerTypes = new StringBuilder();
@@ -90,16 +124,15 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
           headerTypes.append(",");
         }
         String name = metadata.getColumns().get(pos).getName();
-        String type = LensResultSetMetadata.getQualifiedTypeName(
-            metadata.getColumns().get(pos).getTypeDescriptor());
+        String type = LensResultSetMetadata.getQualifiedTypeName(metadata.getColumns().get(pos).getTypeDescriptor());
         typesSb.append(type);
         columnNames.add(name);
         escapedColumnNames.add(StringEscapeUtils.escapeCsv(name));
         TypeInfo typeInfo = TypeInfoUtils.getTypeInfoFromTypeString(type);
         columnTypes.add(typeInfo);
         columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo));
-        columnHeaderOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(
-            TypeInfoUtils.getTypeInfoFromTypeString(HEADER_TYPE)));
+        columnHeaderOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(TypeInfoUtils
+            .getTypeInfoFromTypeString(HEADER_TYPE)));
         headerTypes.append(HEADER_TYPE);
       }
     }
@@ -108,14 +141,21 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
     htypes = headerTypes.toString();
   }
 
+  /**
+   * Inits the header serde.
+   *
+   * @throws ClassNotFoundException
+   *           the class not found exception
+   * @throws SerDeException
+   *           the ser de exception
+   */
   @SuppressWarnings("unchecked")
   private void initHeaderSerde() throws ClassNotFoundException, SerDeException {
     if (headerSerde == null) {
-      headerSerde = ReflectionUtils.newInstance(ctx.getConf().getClass(
-          LensConfConstants.QUERY_OUTPUT_SERDE,
-          (Class<? extends AbstractSerDe>)Class.forName(
-              LensConfConstants.DEFAULT_OUTPUT_SERDE),
-              SerDe.class), ctx.getConf());
+      headerSerde = ReflectionUtils.newInstance(
+          ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
+              (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
+          ctx.getConf());
 
       Properties hprops = new Properties();
       if (columnNames.size() > 0) {
@@ -126,8 +166,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
       }
       headerSerde.initialize(ctx.getConf(), hprops);
 
-      headerOI = ObjectInspectorFactory.getStandardStructObjectInspector(
-          columnNames, columnHeaderOIs);
+      headerOI = ObjectInspectorFactory.getStandardStructObjectInspector(columnNames, columnHeaderOIs);
     }
   }
 

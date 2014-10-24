@@ -1,4 +1,5 @@
 package org.apache.lens.server.query;
+
 /*
  * #%L
  * Lens Server
@@ -38,12 +39,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Top level class which logs and retrieves finished query from Database
+ * Top level class which logs and retrieves finished query from Database.
  */
 public class LensServerDAO {
+
+  /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(LensServerDAO.class);
+
+  /** The ds. */
   private DataSource ds;
 
+  /**
+   * Inits the.
+   *
+   * @param conf
+   *          the conf
+   */
   public void init(Configuration conf) {
     ds = UtilityMethods.getDataSourceFromConf(conf);
   }
@@ -52,12 +63,22 @@ public class LensServerDAO {
     return ds.getConnection();
   }
 
-
+  /**
+   * Creates the table.
+   *
+   * @param sql
+   *          the sql
+   * @throws SQLException
+   *           the SQL exception
+   */
   private void createTable(String sql) throws SQLException {
     QueryRunner runner = new QueryRunner(ds);
     runner.update(sql);
   }
 
+  /**
+   * Drop finished queries table.
+   */
   public void dropFinishedQueriesTable() {
     QueryRunner runner = new QueryRunner(ds);
     try {
@@ -68,26 +89,18 @@ public class LensServerDAO {
   }
 
   /**
-   * Method to create finished queries table, this is required for embedded lens server.
-   * For production server we will not be creating tables as it would be created upfront.
+   * Method to create finished queries table, this is required for embedded lens server. For production server we will
+   * not be creating tables as it would be created upfront.
+   *
+   * @throws Exception
+   *           the exception
    */
   public void createFinishedQueriesTable() throws Exception {
-    String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique," +
-        "userquery varchar(255) not null," +
-        "submitter varchar(255) not null," +
-        "starttime bigint, " +
-        "endtime bigint," +
-        "result varchar(255)," +
-        "status varchar(255), " +
-        "metadata varchar(100000), " +
-        "rows int, " +
-        "errormessage varchar(10000), " +
-        "driverstarttime bigint, " +
-        "driverendtime bigint, " +
-        "metadataclass varchar(10000)," +
-        "queryname varchar(255)," +
-        "submissiontime bigint" +
-        ")";
+    String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique,"
+        + "userquery varchar(255) not null," + "submitter varchar(255) not null," + "starttime bigint, "
+        + "endtime bigint," + "result varchar(255)," + "status varchar(255), " + "metadata varchar(100000), "
+        + "rows int, " + "errormessage varchar(10000), " + "driverstarttime bigint, " + "driverendtime bigint, "
+        + "metadataclass varchar(10000)," + "queryname varchar(255)," + "submissiontime bigint" + ")";
     try {
       createTable(sql);
       ds.getConnection().commit();
@@ -98,39 +111,34 @@ public class LensServerDAO {
   }
 
   /**
-   * DAO method to insert a new Finished query into Table
-   * @param query to be inserted
+   * DAO method to insert a new Finished query into Table.
+   *
+   * @param query
+   *          to be inserted
+   * @throws Exception
+   *           the exception
    */
   public void insertFinishedQuery(FinishedLensQuery query) throws Exception {
-    String sql = "insert into finished_queries (handle, userquery,submitter," +
-        "starttime,endtime,result,status,metadata,rows," +
-        "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)" +
-        " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+    String sql = "insert into finished_queries (handle, userquery,submitter,"
+        + "starttime,endtime,result,status,metadata,rows,"
+        + "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)"
+        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     QueryRunner runner = new QueryRunner(ds);
     try {
-      runner.update(sql, query.getHandle(),
-          query.getUserQuery(),
-          query.getSubmitter(),
-          query.getStartTime(),
-          query.getEndTime(),
-          query.getResult(),
-          query.getStatus(),
-          query.getMetadata(),
-          query.getRows(),
-          query.getErrorMessage(),
-          query.getDriverStartTime(),
-          query.getDriverEndTime(),
-          query.getMetadataClass(),
-          query.getQueryName(),
-          query.getSubmissionTime());
+      runner.update(sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
+          query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
+          query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
+          query.getQueryName(), query.getSubmissionTime());
     } catch (SQLException e) {
       throw new Exception(e);
     }
   }
 
   /**
-   * Fetch Finished query from Database
-   * @param handle to be fetched
+   * Fetch Finished query from Database.
+   *
+   * @param handle
+   *          to be fetched
    * @return Finished query.
    */
   public FinishedLensQuery getQuery(String handle) {
@@ -138,16 +146,34 @@ public class LensServerDAO {
     String sql = "select * from finished_queries where handle=?";
     QueryRunner runner = new QueryRunner(ds);
     try {
-      return runner.query(sql,rsh, handle);
+      return runner.query(sql, rsh, handle);
     } catch (SQLException e) {
       e.printStackTrace();
     }
     return null;
   }
 
+  /**
+   * Find finished queries.
+   *
+   * @param state
+   *          the state
+   * @param user
+   *          the user
+   * @param queryName
+   *          the query name
+   * @param fromDate
+   *          the from date
+   * @param toDate
+   *          the to date
+   * @return the list
+   * @throws LensException
+   *           the lens exception
+   */
   public List<QueryHandle> findFinishedQueries(String state, String user, String queryName, long fromDate, long toDate)
       throws LensException {
-    boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
+    boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user)
+        || StringUtils.isNotBlank(queryName);
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
     List<Object> params = null;
     if (addFilter) {

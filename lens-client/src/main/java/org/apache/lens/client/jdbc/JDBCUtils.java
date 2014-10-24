@@ -20,7 +20,6 @@ package org.apache.lens.client.jdbc;
  * #L%
  */
 
-
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URI;
@@ -37,11 +36,12 @@ import java.util.regex.Pattern;
 
 import org.apache.lens.client.LensConnectionParams;
 
+/**
+ * The Class JDBCUtils.
+ */
 public class JDBCUtils {
 
-  /**
-   * Property key for the Database name
-   */
+  /** Property key for the Database name. */
   static final String DB_PROPERTY_KEY = "DBNAME";
   /**
    * Property key for host on which lens server is running.
@@ -52,11 +52,13 @@ public class JDBCUtils {
    */
   static final String PORT_PROPERTY_KEY = "PORT";
 
+  /** The Constant URL_PREFIX. */
   public static final String URL_PREFIX = "jdbc:lens://";
 
-
+  /** The Constant URI_JDBC_PREFIX. */
   private static final String URI_JDBC_PREFIX = "jdbc:";
 
+  /** The Constant keyValueRegex. */
   private static final String keyValueRegex = "([^;]*)=([^;]*)[;]?";
 
   /**
@@ -64,13 +66,12 @@ public class JDBCUtils {
    * <p/>
    * The URL format is specified as following :
    * <ul>
-   * <li> hostname which contains hosts on which lens server is
-   * hosted parsed from authority section</li>
+   * <li>hostname which contains hosts on which lens server is hosted parsed from authority section</li>
    * <li>port number if specificed in authority part.</li>
    * <li>db name from path</li>
    * <li>session settings from path, separated by ;</li>
    * <li>configuration settings separated by ; from query setting</li>
-   * <li>variables setting separated by ;  from fragment</li>
+   * <li>variables setting separated by ; from fragment</li>
    * </ul>
    * <p>
    * Examples :-
@@ -79,12 +80,13 @@ public class JDBCUtils {
    * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?[optional configuration settings for connection]#[optional variables to be used in query]
    * </code>
    *
-   * @param uri to be used to connect to lens server
+   * @param uri
+   *          to be used to connect to lens server
    * @return final list of connection parameters
-   * @throws IllegalArgumentException if URI provided is malformed
+   * @throws IllegalArgumentException
+   *           if URI provided is malformed
    */
-  public static LensConnectionParams parseUrl(String uri) throws
-  IllegalArgumentException {
+  public static LensConnectionParams parseUrl(String uri) throws IllegalArgumentException {
     LensConnectionParams params = new LensConnectionParams();
 
     if (!uri.startsWith(URL_PREFIX)) {
@@ -97,12 +99,9 @@ public class JDBCUtils {
 
     URI jdbcUri = URI.create(uri.substring(URI_JDBC_PREFIX.length()));
 
-    /*   if (jdbcUri.getHost() != null) {
-      params.setHost(jdbcUri.getHost());
-    }
-    if (jdbcUri.getPort() > 0) {
-      params.setPort(jdbcUri.getPort());
-    }
+    /*
+     * if (jdbcUri.getHost() != null) { params.setHost(jdbcUri.getHost()); } if (jdbcUri.getPort() > 0) {
+     * params.setPort(jdbcUri.getPort()); }
      */
     Pattern pattern = Pattern.compile(keyValueRegex);
     // dbname and session settings
@@ -150,8 +149,15 @@ public class JDBCUtils {
     return params;
   }
 
+  /** The manifest attributes. */
   private static Attributes manifestAttributes = null;
 
+  /**
+   * Load manifest attributes.
+   *
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   private static synchronized void loadManifestAttributes() throws IOException {
     if (manifestAttributes != null) {
       return;
@@ -159,20 +165,34 @@ public class JDBCUtils {
 
     Class<?> clazz = JDBCUtils.class;
 
-    String classContainer = clazz.getProtectionDomain().getCodeSource().
-        getLocation().toString();
+    String classContainer = clazz.getProtectionDomain().getCodeSource().getLocation().toString();
     URL manifestUrl = new URL("jar:" + classContainer + "!/META-INF/MANIFEST.MF");
     Manifest manifest = new Manifest(manifestUrl.openStream());
     manifestAttributes = manifest.getMainAttributes();
 
   }
 
+  /**
+   * Fetch manifest attribute.
+   *
+   * @param attributeName
+   *          the attribute name
+   * @return the string
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   private static String fetchManifestAttribute(Attributes.Name attributeName) throws IOException {
     loadManifestAttributes();
     return manifestAttributes.getValue(attributeName);
   }
 
-
+  /**
+   * Gets the version.
+   *
+   * @param tokenPosition
+   *          the token position
+   * @return the version
+   */
   static int getVersion(int tokenPosition) {
     int version = -1;
     try {
@@ -189,25 +209,43 @@ public class JDBCUtils {
     return version;
   }
 
-  static Properties parseUrlForPropertyInfo(String url, Properties info)
-      throws SQLException {
+  /**
+   * Parses the url for property info.
+   *
+   * @param url
+   *          the url
+   * @param info
+   *          the info
+   * @return the properties
+   * @throws SQLException
+   *           the SQL exception
+   */
+  static Properties parseUrlForPropertyInfo(String url, Properties info) throws SQLException {
 
-    Properties urlProperties = (info != null) ? new Properties(info) :
-      new Properties();
+    Properties urlProperties = (info != null) ? new Properties(info) : new Properties();
 
     if (url == null || !url.startsWith(URL_PREFIX)) {
       throw new SQLException("Invalid connection url :" + url);
     }
 
     LensConnectionParams params = parseUrl(url);
-    //  urlProperties.put(HOST_PROPERTY_KEY, params.getHost());
-    //  urlProperties.put(PORT_PROPERTY_KEY, params.getPort());
+    // urlProperties.put(HOST_PROPERTY_KEY, params.getHost());
+    // urlProperties.put(PORT_PROPERTY_KEY, params.getPort());
     urlProperties.put(DB_PROPERTY_KEY, params.getDbName());
 
     return urlProperties;
   }
 
-  public static int getSQLType(String type) throws SQLException{
+  /**
+   * Gets the SQL type.
+   *
+   * @param type
+   *          the type
+   * @return the SQL type
+   * @throws SQLException
+   *           the SQL exception
+   */
+  public static int getSQLType(String type) throws SQLException {
 
     if ("string".equalsIgnoreCase(type)) {
       return Types.VARCHAR;
@@ -248,12 +286,18 @@ public class JDBCUtils {
 
   }
 
-
-
-  static int columnDisplaySize(int columnType)
-      throws SQLException {
+  /**
+   * Column display size.
+   *
+   * @param columnType
+   *          the column type
+   * @return the int
+   * @throws SQLException
+   *           the SQL exception
+   */
+  static int columnDisplaySize(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
-    switch(columnType) {
+    switch (columnType) {
     case Types.BOOLEAN:
       return columnPrecision(columnType);
     case Types.CHAR:
@@ -278,7 +322,7 @@ public class JDBCUtils {
     case Types.DOUBLE:
       return 25; // e.g. -(17#).e-####
     case Types.DECIMAL:
-      return columnPrecision(columnType) + 2;  // '-' sign and '.'
+      return columnPrecision(columnType) + 2; // '-' sign and '.'
     case Types.JAVA_OBJECT:
     case Types.ARRAY:
     case Types.STRUCT:
@@ -288,10 +332,18 @@ public class JDBCUtils {
     }
   }
 
-  static int columnPrecision(int columnType)
-      throws SQLException {
+  /**
+   * Column precision.
+   *
+   * @param columnType
+   *          the column type
+   * @return the int
+   * @throws SQLException
+   *           the SQL exception
+   */
+  static int columnPrecision(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
-    switch(columnType) {
+    switch (columnType) {
     case Types.BOOLEAN:
       return 1;
     case Types.CHAR:
@@ -326,10 +378,18 @@ public class JDBCUtils {
     }
   }
 
-  static int columnScale(int columnType)
-      throws SQLException {
+  /**
+   * Column scale.
+   *
+   * @param columnType
+   *          the column type
+   * @return the int
+   * @throws SQLException
+   *           the SQL exception
+   */
+  static int columnScale(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
-    switch(columnType) {
+    switch (columnType) {
     case Types.BOOLEAN:
     case Types.CHAR:
     case Types.VARCHAR:
@@ -344,7 +404,7 @@ public class JDBCUtils {
       return 7;
     case Types.DOUBLE:
       return 15;
-    case  Types.TIMESTAMP:
+    case Types.TIMESTAMP:
       return 9;
     case Types.DECIMAL:
       return 5;
@@ -357,9 +417,17 @@ public class JDBCUtils {
     }
   }
 
-  static String columnClassName(int columnType)
-      throws SQLException {
-    switch(columnType) {
+  /**
+   * Column class name.
+   *
+   * @param columnType
+   *          the column type
+   * @return the string
+   * @throws SQLException
+   *           the SQL exception
+   */
+  static String columnClassName(int columnType) throws SQLException {
+    switch (columnType) {
     case Types.BOOLEAN:
       return Boolean.class.getName();
     case Types.CHAR:
@@ -379,7 +447,7 @@ public class JDBCUtils {
       return Float.class.getName();
     case Types.DOUBLE:
       return Double.class.getName();
-    case  Types.TIMESTAMP:
+    case Types.TIMESTAMP:
       return Timestamp.class.getName();
     case Types.DECIMAL:
       return BigInteger.class.getName();
@@ -393,6 +461,5 @@ public class JDBCUtils {
       throw new SQLException("Invalid column type: " + columnType);
     }
   }
-
 
 }

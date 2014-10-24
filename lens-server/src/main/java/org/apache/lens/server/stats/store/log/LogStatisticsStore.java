@@ -1,4 +1,5 @@
 package org.apache.lens.server.stats.store.log;
+
 /*
  * #%L
  * Lens Server
@@ -31,19 +32,39 @@ import org.apache.lens.server.stats.store.StatisticsStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+/**
+ * The Class LogStatisticsStore.
+ */
 public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> {
+
+  /** The Constant LOG. */
   private static final Logger LOG = LoggerFactory.getLogger(LogStatisticsStore.class);
+
+  /** The Constant LOG_STORE_ERRORS. */
   public static final String LOG_STORE_ERRORS = "log-store-errors";
+
+  /** The mapper. */
   private final ObjectMapper mapper;
+
+  /** The handler. */
   private StatisticsLogPartitionHandler handler;
+
+  /** The rollup handler. */
   private StatisticsLogRollupHandler rollupHandler;
 
+  /**
+   * Instantiates a new log statistics store.
+   */
   public LogStatisticsStore() {
     this.mapper = new ObjectMapper();
     mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.stats.store.StatisticsStore#initialize(org.apache.hadoop.conf.Configuration)
+   */
   public void initialize(Configuration conf) {
     LOG.info("Creating new Partition handler");
     handler = new StatisticsLogPartitionHandler();
@@ -53,7 +74,11 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
     rollupHandler.initialize(conf);
   }
 
-
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
+   */
   @Override
   public void process(LoggableLensStatistics event) {
     try {
@@ -65,8 +90,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
       }
       if (representation != null) {
         rollupHandler.addToScanTask(eventClass.getName());
-        LoggerFactory.getLogger(eventClass)
-        .info(representation);
+        LoggerFactory.getLogger(eventClass).info(representation);
       }
     } catch (Exception exc) {
       MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
@@ -76,9 +100,14 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.stats.store.StatisticsStore#start(org.apache.lens.server.api.events.LensEventService)
+   */
   public void start(LensEventService service) {
     super.start(service);
-    if(service != null) {
+    if (service != null) {
       service.addListenerForType(this, LoggableLensStatistics.class);
       service.addListenerForType(handler, PartitionEvent.class);
       rollupHandler.start(service);
@@ -88,6 +117,11 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.stats.store.StatisticsStore#stop(org.apache.lens.server.api.events.LensEventService)
+   */
   public void stop(LensEventService service) {
     super.stop(service);
     if (service != null) {

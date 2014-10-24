@@ -47,13 +47,25 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-
 import static org.testng.Assert.*;
 
+/**
+ * The Class TestJdbcDriver.
+ */
 public class TestJdbcDriver {
+
+  /** The base conf. */
   Configuration baseConf;
+
+  /** The driver. */
   JDBCDriver driver;
 
+  /**
+   * Test create jdbc driver.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeTest
   public void testCreateJdbcDriver() throws Exception {
     baseConf = new Configuration();
@@ -69,12 +81,25 @@ public class TestJdbcDriver {
     assertTrue(driver.configured);
   }
 
-
+  /**
+   * Close.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @AfterTest
   public void close() throws Exception {
     driver.close();
   }
 
+  /**
+   * Creates the table.
+   *
+   * @param table
+   *          the table
+   * @throws Exception
+   *           the exception
+   */
   synchronized void createTable(String table) throws Exception {
     Connection conn = null;
     Statement stmt = null;
@@ -94,6 +119,14 @@ public class TestJdbcDriver {
     }
   }
 
+  /**
+   * Insert data.
+   *
+   * @param table
+   *          the table
+   * @throws Exception
+   *           the exception
+   */
   void insertData(String table) throws Exception {
     Connection conn = null;
     PreparedStatement stmt = null;
@@ -101,7 +134,7 @@ public class TestJdbcDriver {
       conn = driver.getConnection();
       stmt = conn.prepareStatement("INSERT INTO " + table + " VALUES(?)");
 
-      for (int i = 0; i < 10; i ++) {
+      for (int i = 0; i < 10; i++) {
         stmt.setInt(1, i);
         stmt.executeUpdate();
       }
@@ -117,6 +150,9 @@ public class TestJdbcDriver {
     }
   }
 
+  /**
+   * Test ddl queries.
+   */
   @Test
   public void testDDLQueries() {
     String query = "DROP TABLE TEMP";
@@ -164,22 +200,34 @@ public class TestJdbcDriver {
     Assert.assertNotNull(th);
   }
 
+  /**
+   * Test explain.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testExplain() throws Exception {
     createTable("explain_test"); // Create table
-    insertData("explain_test");  // Insert some data into table
+    insertData("explain_test"); // Insert some data into table
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
-    driver.explain(query1,baseConf);
+    driver.explain(query1, baseConf);
 
     try {
-      driver.explain(query2,baseConf);
+      driver.explain(query2, baseConf);
       Assert.fail("Running explain on a non existing table.");
-    } catch(LensException ex) {
+    } catch (LensException ex) {
       System.out.println("Error : " + ex);
     }
   }
 
+  /**
+   * Test execute.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testExecute() throws Exception {
     createTable("execute_test");
@@ -213,6 +261,12 @@ public class TestJdbcDriver {
     }
   }
 
+  /**
+   * Test prepare.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testPrepare() throws Exception {
     createTable("prepare_test");
@@ -223,6 +277,12 @@ public class TestJdbcDriver {
     driver.prepare(pContext);
   }
 
+  /**
+   * Test execute async.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testExecuteAsync() throws Exception {
     createTable("execute_async_test");
@@ -249,7 +309,7 @@ public class TestJdbcDriver {
     QueryHandle handle = context.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
 
-    while(true) {
+    while (true) {
       driver.updateStatus(context);
       System.out.println("Query: " + handle + " Status: " + context.getDriverStatus());
       if (context.getDriverStatus().isFinished()) {
@@ -299,8 +359,7 @@ public class TestJdbcDriver {
         driver.closeQuery(handle);
         fail("Close again should have thrown exception");
       } catch (LensException ex) {
-        assertTrue(ex.getMessage().contains("not found")
-            && ex.getMessage().contains(handle.getHandleId().toString()));
+        assertTrue(ex.getMessage().contains("not found") && ex.getMessage().contains(handle.getHandleId().toString()));
         System.out.println("Matched exception");
       }
     } else {
@@ -309,6 +368,12 @@ public class TestJdbcDriver {
 
   }
 
+  /**
+   * Test connection close for failed queries.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testConnectionCloseForFailedQueries() throws Exception {
     createTable("invalid_conn_close");
@@ -320,7 +385,7 @@ public class TestJdbcDriver {
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
       driver.executeAsync(ctx);
       driver.updateStatus(ctx);
-      System.out.println("@@@@ QUERY " + (i+1));
+      System.out.println("@@@@ QUERY " + (i + 1));
     }
 
     String validQuery = "SELECT * FROM invalid_conn_close";
@@ -340,6 +405,12 @@ public class TestJdbcDriver {
     driver.closeQuery(validCtx.getQueryHandle());
   }
 
+  /**
+   * Test connection close for successful queries.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testConnectionCloseForSuccessfulQueries() throws Exception {
     createTable("valid_conn_close");
@@ -365,7 +436,7 @@ public class TestJdbcDriver {
           List<Object> rowObjects = row.getValues();
         }
       }
-      System.out.println("@@@@ QUERY " + (i+1));
+      System.out.println("@@@@ QUERY " + (i + 1));
     }
 
     String validQuery = "SELECT * FROM valid_conn_close";
@@ -374,6 +445,12 @@ public class TestJdbcDriver {
     driver.execute(validCtx);
   }
 
+  /**
+   * Test cancel query.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testCancelQuery() throws Exception {
     createTable("cancel_query_test");
@@ -391,6 +468,12 @@ public class TestJdbcDriver {
     driver.closeQuery(handle);
   }
 
+  /**
+   * Test invalid query.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testInvalidQuery() throws Exception {
     String query = "SELECT * FROM invalid_table";
@@ -420,7 +503,7 @@ public class TestJdbcDriver {
     QueryHandle handle = ctx.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
 
-    while(true) {
+    while (true) {
       driver.updateStatus(ctx);
       System.out.println("Query: " + handle + " Status: " + ctx.getDriverStatus());
       if (ctx.getDriverStatus().isFinished()) {

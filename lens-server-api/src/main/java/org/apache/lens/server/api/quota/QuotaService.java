@@ -20,6 +20,9 @@ package org.apache.lens.server.api.quota;
  * #L%
  */
 
+/**
+ * The Interface QuotaService.
+ */
 public interface QuotaService {
 
 }

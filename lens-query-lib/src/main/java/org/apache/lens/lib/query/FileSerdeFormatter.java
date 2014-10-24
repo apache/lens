@@ -39,35 +39,49 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
-
 /**
  * File format which provides implementation for {@link InMemoryOutputFormatter}
  *
- * This is a wrapped formatter, which serializes the rows of the result with
- * configured serde. It would only accept the Serde's whose serialization
- * class is {@link Text}
+ * This is a wrapped formatter, which serializes the rows of the result with configured serde. It would only accept the
+ * Serde's whose serialization class is {@link Text}
  *
  */
 @SuppressWarnings("deprecation")
 public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {
+
+  /** The output serde. */
   private SerDe outputSerde;
+
+  /** The input oi. */
   private ObjectInspector inputOI;
 
+  /**
+   * Instantiates a new file serde formatter.
+   */
   public FileSerdeFormatter() {
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.lib.query.WrappedFileFormatter#init(org.apache.lens.server.api.query.QueryContext,
+   * org.apache.lens.server.api.driver.LensResultSetMetadata)
+   */
   public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
     super.init(ctx, metadata);
     initOutputSerde();
   }
 
+  /**
+   * Inits the output serde.
+   */
   @SuppressWarnings("unchecked")
   private void initOutputSerde() {
     try {
-      outputSerde = ReflectionUtils.newInstance(ctx.getConf().getClass(
-          LensConfConstants.QUERY_OUTPUT_SERDE,
-          (Class<? extends AbstractSerDe>)Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE),
-          SerDe.class), ctx.getConf());
+      outputSerde = ReflectionUtils.newInstance(
+          ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
+              (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
+          ctx.getConf());
 
       Properties props = new Properties();
       if (columnNames.size() > 0) {
@@ -77,8 +91,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
         props.setProperty(serdeConstants.LIST_COLUMN_TYPES, types);
       }
       outputSerde.initialize(ctx.getConf(), props);
-      inputOI = ObjectInspectorFactory.getStandardStructObjectInspector(
-          columnNames, columnOIs);
+      inputOI = ObjectInspectorFactory.getStandardStructObjectInspector(columnNames, columnOIs);
     } catch (ClassNotFoundException e) {
       throw new IllegalArgumentException(e);
     } catch (SerDeException e) {
@@ -86,6 +99,11 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.query.InMemoryOutputFormatter#writeRow(org.apache.lens.api.query.ResultRow)
+   */
   @Override
   public void writeRow(ResultRow row) throws IOException {
     try {

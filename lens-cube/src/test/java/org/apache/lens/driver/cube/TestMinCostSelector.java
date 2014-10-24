@@ -33,16 +33,29 @@ import org.apache.lens.server.api.driver.LensDriver;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-
+/**
+ * The Class TestMinCostSelector.
+ */
 public class TestMinCostSelector {
 
+  /**
+   * The Class MockFailDriver.
+   */
   static class MockFailDriver extends MockDriver {
-    public DriverQueryPlan explain(String query, Configuration conf)
-        throws LensException {
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.lens.driver.cube.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+     */
+    public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
       throw new LensException("failing!");
     }
   }
 
+  /**
+   * Test min cost selector.
+   */
   @Test
   public void testMinCostSelector() {
     MinQueryCostSelector selector = new MinQueryCostSelector();

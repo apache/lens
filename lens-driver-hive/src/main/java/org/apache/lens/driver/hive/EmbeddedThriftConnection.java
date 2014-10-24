@@ -27,12 +27,22 @@ import org.apache.hive.service.cli.thrift.EmbeddedThriftBinaryCLIService;
 import org.apache.hive.service.cli.thrift.ThriftCLIServiceClient;
 import org.apache.lens.api.LensException;
 
-
+/**
+ * The Class EmbeddedThriftConnection.
+ */
 public class EmbeddedThriftConnection implements ThriftConnection {
 
+  /** The client. */
   private ThriftCLIServiceClient client;
+
+  /** The connected. */
   private boolean connected;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.driver.hive.ThriftConnection#getClient(org.apache.hadoop.hive.conf.HiveConf)
+   */
   @Override
   public ThriftCLIServiceClient getClient(HiveConf conf) throws LensException {
     if (!connected) {
@@ -42,6 +52,11 @@ public class EmbeddedThriftConnection implements ThriftConnection {
     return client;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.io.Closeable#close()
+   */
   @Override
   public void close() throws IOException {
     // Does nothing

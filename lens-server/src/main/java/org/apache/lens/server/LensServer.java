@@ -40,11 +40,21 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+/**
+ * The Class LensServer.
+ */
 public class LensServer {
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(LensServer.class);
 
+  /** The server. */
   final HttpServer server;
+
+  /** The ui server. */
   final HttpServer uiServer;
+
+  /** The conf. */
   final HiveConf conf;
 
   static {
@@ -52,30 +62,33 @@ public class LensServer {
     SLF4JBridgeHandler.install();
   }
 
+  /**
+   * Instantiates a new lens server.
+   *
+   * @param conf
+   *          the conf
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   private LensServer(HiveConf conf) throws IOException {
     this.conf = conf;
     startServices(conf);
-    String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL,
-        LensConfConstants.DEFAULT_SERVER_BASE_URL);
-    server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(),
-        getApp(), false);
+    String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
+    server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(), false);
 
     WebappContext adminCtx = new WebappContext("admin", "");
-    adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry",
-        ((MetricsServiceImpl)LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME))
-        .getMetricRegistry());
+    adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", ((MetricsServiceImpl) LensServices
+        .get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getMetricRegistry());
     adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-        ((MetricsServiceImpl)LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME))
-        .getHealthCheck());
+        ((MetricsServiceImpl) LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getHealthCheck());
 
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");
 
     adminCtx.deploy(this.server);
-    String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI,
-        LensConfConstants.DEFAULT_SERVER_UI_URI);
-    this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
-        getUIApp(), false);
+    String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI, LensConfConstants.DEFAULT_SERVER_UI_URI);
+    this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(), getUIApp(),
+        false);
   }
 
   private ResourceConfig getApp() {
@@ -87,30 +100,53 @@ public class LensServer {
 
   private ResourceConfig getUIApp() {
     ResourceConfig uiApp = ResourceConfig.forApplicationClass(UIApp.class);
-    uiApp.register(
-        new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".ui_request"), true));
+    uiApp.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".ui_request"), true));
     uiApp.setApplicationName("Lens UI");
     return uiApp;
   }
 
+  /**
+   * Start services.
+   *
+   * @param conf
+   *          the conf
+   */
   public void startServices(HiveConf conf) {
     LensServices.get().init(conf);
     LensServices.get().start();
   }
 
+  /**
+   * Start.
+   *
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   */
   public void start() throws IOException {
     server.start();
     uiServer.start();
   }
 
+  /**
+   * Stop.
+   */
   public void stop() {
     server.shutdownNow();
     uiServer.shutdownNow();
     LensServices.get().stop();
   }
 
+  /** The this server. */
   private static LensServer thisServer;
 
+  /**
+   * The main method.
+   *
+   * @param args
+   *          the arguments
+   * @throws Exception
+   *           the exception
+   */
   @SuppressWarnings("restriction")
   public static void main(String[] args) throws Exception {
     Signal.handle(new Signal("TERM"), new SignalHandler() {
@@ -124,8 +160,7 @@ public class LensServer {
               thisServer.notify();
             }
           }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
           LOG.warn("Error in shutting down databus", e);
         }
       }

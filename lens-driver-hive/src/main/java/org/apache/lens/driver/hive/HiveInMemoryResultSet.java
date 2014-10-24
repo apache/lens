@@ -36,20 +36,52 @@ import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 
-
+/**
+ * The Class HiveInMemoryResultSet.
+ */
 public class HiveInMemoryResultSet extends InMemoryResultSet {
+
+  /** The client. */
   private final CLIServiceClient client;
+
+  /** The op handle. */
   private final OperationHandle opHandle;
+
+  /** The metadata. */
   private TableSchema metadata;
+
+  /** The row set. */
   private RowSet rowSet;
+
+  /** The fetch size. */
   private int fetchSize = 100;
+
+  /** The fetched rows itr. */
   private Iterator<Object[]> fetchedRowsItr;
+
+  /** The no more results. */
   private boolean noMoreResults;
+
+  /** The close after fecth. */
   private boolean closeAfterFecth;
+
+  /** The num columns. */
   int numColumns;
 
-  public HiveInMemoryResultSet(OperationHandle hiveHandle,
-      CLIServiceClient client, boolean closeAfterFecth) throws HiveSQLException {
+  /**
+   * Instantiates a new hive in memory result set.
+   *
+   * @param hiveHandle
+   *          the hive handle
+   * @param client
+   *          the client
+   * @param closeAfterFecth
+   *          the close after fecth
+   * @throws HiveSQLException
+   *           the hive sql exception
+   */
+  public HiveInMemoryResultSet(OperationHandle hiveHandle, CLIServiceClient client, boolean closeAfterFecth)
+      throws HiveSQLException {
     this.client = client;
     this.opHandle = hiveHandle;
     this.closeAfterFecth = closeAfterFecth;
@@ -57,6 +89,11 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     this.numColumns = metadata.getColumnDescriptors().size();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.LensResultSet#size()
+   */
   @Override
   public int size() throws LensException {
     return -1;
@@ -64,13 +101,18 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   @Override
   public LensResultSetMetadata getMetadata() throws LensException {
-    //Removed Anonymous inner class and changed it to concrete class
-    //for serialization to JSON
+    // Removed Anonymous inner class and changed it to concrete class
+    // for serialization to JSON
     HiveResultSetMetadata hrsMeta = new HiveResultSetMetadata();
     hrsMeta.setColumns(metadata.getColumnDescriptors());
     return hrsMeta;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
+   */
   @Override
   public boolean hasNext() throws LensException {
     if (fetchedRowsItr == null || !fetchedRowsItr.hasNext()) {
@@ -92,6 +134,11 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     return fetchedRowsItr.hasNext();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.driver.InMemoryResultSet#next()
+   */
   @Override
   public ResultRow next() throws LensException {
     List<Object> results = new ArrayList<Object>(numColumns);

@@ -19,7 +19,6 @@
  */
 package org.apache.lens.ml;
 
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.exec.Description;
@@ -39,24 +38,38 @@ import org.apache.hadoop.mapred.JobConf;
 import java.io.IOException;
 
 /**
- * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as
- * argument
+ * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as argument.
  */
-@Description(
-    name = "predict",
-    value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given " +
-    "algorithm name, model ID and input feature columns")
+@Description(name = "predict", value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given "
+    + "algorithm name, model ID and input feature columns")
 public class HiveMLUDF extends GenericUDF {
 
+  /** The Constant UDF_NAME. */
   public static final String UDF_NAME = "predict";
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(HiveMLUDF.class);
+
+  /** The conf. */
   private JobConf conf;
+
+  /** The soi. */
   private StringObjectInspector soi;
+
+  /** The doi. */
   private LazyDoubleObjectInspector doi;
+
+  /** The model. */
   private MLModel model;
 
   /**
-   * Currently we only support double as the return value
+   * Currently we only support double as the return value.
+   *
+   * @param objectInspectors
+   *          the object inspectors
+   * @return the object inspector
+   * @throws UDFArgumentException
+   *           the UDF argument exception
    */
   @Override
   public ObjectInspector initialize(ObjectInspector[] objectInspectors) throws UDFArgumentException {
@@ -69,6 +82,12 @@ public class HiveMLUDF extends GenericUDF {
     return PrimitiveObjectInspectorFactory.javaDoubleObjectInspector;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#evaluate(org.apache.hadoop.hive.ql.udf.generic.GenericUDF.
+   * DeferredObject[])
+   */
   @Override
   public Object evaluate(DeferredObject[] deferredObjects) throws HiveException {
     String algorithm = soi.getPrimitiveJavaObject(deferredObjects[0].get());
@@ -91,11 +110,21 @@ public class HiveMLUDF extends GenericUDF {
     return model.predict(features);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#getDisplayString(java.lang.String[])
+   */
   @Override
   public String getDisplayString(String[] strings) {
     return UDF_NAME;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#configure(org.apache.hadoop.hive.ql.exec.MapredContext)
+   */
   @Override
   public void configure(MapredContext context) {
     super.configure(context);

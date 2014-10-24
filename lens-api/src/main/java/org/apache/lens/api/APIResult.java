@@ -33,16 +33,27 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED
- * message- detailed message.
+ * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED message- detailed message.
  */
 @XmlRootElement(name = "result")
 @XmlAccessorType(XmlAccessType.FIELD)
+/**
+ * Instantiates a new API result.
+ */
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class APIResult {
-  @XmlElement @Getter private Status status;
-  @XmlElement @Getter private String message;
 
+  /** The status. */
+  @XmlElement
+  @Getter
+  private Status status;
+
+  /** The message. */
+  @XmlElement
+  @Getter
+  private String message;
+
+  /** The Constant JAXB_CONTEXT. */
   private static final JAXBContext JAXB_CONTEXT;
   static {
     try {
@@ -56,15 +67,34 @@ public class APIResult {
    * API Result status.
    */
   public static enum Status {
-    SUCCEEDED, PARTIAL, FAILED
+
+    /** The succeeded. */
+    SUCCEEDED,
+    /** The partial. */
+    PARTIAL,
+    /** The failed. */
+    FAILED
   }
 
+  /**
+   * Instantiates a new API result.
+   *
+   * @param status
+   *          the status
+   * @param message
+   *          the message
+   */
   public APIResult(Status status, String message) {
     super();
     this.status = status;
     this.message = message;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see java.lang.Object#toString()
+   */
   @Override
   public String toString() {
     try {

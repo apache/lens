@@ -20,7 +20,6 @@ package org.apache.lens.server;
  * #L%
  */
 
-
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.ui.UIApp;
@@ -37,26 +36,42 @@ import java.util.Set;
 
 import static org.testng.Assert.assertEquals;
 
-
-@Test(groups="unit-test")
+/**
+ * The Class TestStaticFileResource.
+ */
+@Test(groups = "unit-test")
 public class TestStaticFileResource extends LensJerseyTest {
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#setUp()
+   */
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#tearDown()
+   */
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
   }
-
 
   @Override
   protected int getTestPort() {
     return 19999;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.glassfish.jersey.test.JerseyTest#configure()
+   */
   @Override
   protected Application configure() {
     return new UIApp() {
@@ -79,10 +94,15 @@ public class TestStaticFileResource extends LensJerseyTest {
     return getUri();
   }
 
+  /**
+   * Test static file resource.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
-  public void testStaticFileResource()  throws Exception {
-    LensServices.get().getHiveConf().set(LensConfConstants.SERVER_UI_STATIC_DIR,
-        "src/main/webapp/static");
+  public void testStaticFileResource() throws Exception {
+    LensServices.get().getHiveConf().set(LensConfConstants.SERVER_UI_STATIC_DIR, "src/main/webapp/static");
     LensServices.get().getHiveConf().setBoolean(LensConfConstants.SERVER_UI_ENABLE_CACHING, false);
 
     System.out.println("@@@@ " + target().path("index.html").getUri());

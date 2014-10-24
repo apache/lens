@@ -20,8 +20,9 @@ package org.apache.lens.server.api;
  * #L%
  */
 
-
-
+/**
+ * A factory for creating ServiceProvider objects.
+ */
 public interface ServiceProviderFactory {
   public ServiceProvider getServiceProvider();
 }

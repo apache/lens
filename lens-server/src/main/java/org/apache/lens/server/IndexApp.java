@@ -28,6 +28,9 @@ import javax.ws.rs.core.Application;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The Class IndexApp.
+ */
 @ApplicationPath("/")
 public class IndexApp extends Application {
 

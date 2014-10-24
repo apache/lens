@@ -19,7 +19,6 @@
  */
 package org.apache.lens.ml;
 
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -33,15 +32,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The Class ExampleUtils.
+ */
 public class ExampleUtils {
-  public static void createExampleTable(
-      HiveConf conf,
-      String database,
-      String tableName,
-      String sampleDataFile,
-      String labelColumn,
-      String ... features)
-          throws HiveException {
+
+  /**
+   * Creates the example table.
+   *
+   * @param conf
+   *          the conf
+   * @param database
+   *          the database
+   * @param tableName
+   *          the table name
+   * @param sampleDataFile
+   *          the sample data file
+   * @param labelColumn
+   *          the label column
+   * @param features
+   *          the features
+   * @throws HiveException
+   *           the hive exception
+   */
+  public static void createExampleTable(HiveConf conf, String database, String tableName, String sampleDataFile,
+      String labelColumn, String... features) throws HiveException {
     File dataFile = new File(sampleDataFile);
     File partDir = dataFile.getParentFile();
     // Create table
