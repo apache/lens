@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,9 +46,9 @@ import scala.Tuple2;
 import java.util.List;
 
 @Algorithm(
-  name = "spark_kmeans_trainer",
-  description = "Spark MLLib KMeans trainer"
-)
+    name = "spark_kmeans_trainer",
+    description = "Spark MLLib KMeans trainer"
+    )
 public class KMeansTrainer implements MLTrainer {
   private transient LensConf conf;
   private JavaSparkContext sparkContext;
@@ -60,15 +60,15 @@ public class KMeansTrainer implements MLTrainer {
   private int k;
 
   @TrainerParam(name ="maxIterations", help = "Maximum number of iterations",
-  defaultValue = "100")
+      defaultValue = "100")
   private int maxIterations = 100;
 
   @TrainerParam(name = "runs", help = "Number of parallel run",
-  defaultValue = "1")
+      defaultValue = "1")
   private int runs = 1;
 
   @TrainerParam(name = "initializationMode", help = "initialization model, either \"random\" or \"k-means||\" (default).",
-  defaultValue = "k-means||")
+      defaultValue = "k-means||")
   private String initializationMode = "k-means||";
 
   @Override
@@ -93,7 +93,7 @@ public class KMeansTrainer implements MLTrainer {
 
   @Override
   public MLModel train(LensConf conf, String db, String table, String modelId, String... params)
-    throws LensException {
+      throws LensException {
     List<String> features = TrainerArgParser.parseArgs(this, params);
     final int featurePositions[] = new int[features.size()];
     final int NUM_FEATURES = features.size();
@@ -112,7 +112,7 @@ public class KMeansTrainer implements MLTrainer {
       }
 
       rdd = HiveTableRDD.createHiveTableRDD(sparkContext,
-        toHiveConf(conf), db, table, partFilter);
+          toHiveConf(conf), db, table, partFilter);
       JavaRDD<Vector> trainableRDD = rdd.map(new Function<Tuple2<WritableComparable, HCatRecord>, Vector>() {
         @Override
         public Vector call(Tuple2<WritableComparable, HCatRecord> v1) throws Exception {
@@ -127,7 +127,7 @@ public class KMeansTrainer implements MLTrainer {
       });
 
       KMeansModel model =
-        KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
+          KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
       return new KMeansClusteringModel(modelId, model);
     } catch (Exception e) {
       throw new LensException("KMeans trainer failed for " + db + "." + table, e);

@@ -9,9 +9,9 @@ package org.apache.lens.storage.db;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,21 +42,21 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   @Override
   public void configureInputJobProperties(TableDesc arg0,
-      Map<String, String> arg1) {    
+      Map<String, String> arg1) {
   }
 
   @Override
-  public void configureJobConf(TableDesc arg0, JobConf arg1) {    
+  public void configureJobConf(TableDesc arg0, JobConf arg1) {
   }
 
   @Override
   public void configureOutputJobProperties(TableDesc arg0,
-      Map<String, String> arg1) {    
+      Map<String, String> arg1) {
   }
 
   @Override
   public void configureTableJobProperties(TableDesc arg0,
-      Map<String, String> arg1) {    
+      Map<String, String> arg1) {
   }
 
   @Override
@@ -96,27 +96,27 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
   }
 
   @Override
-  public void commitCreateTable(Table arg0) throws MetaException {    
+  public void commitCreateTable(Table arg0) throws MetaException {
   }
 
   @Override
-  public void commitDropTable(Table arg0, boolean arg1) throws MetaException {    
+  public void commitDropTable(Table arg0, boolean arg1) throws MetaException {
   }
 
   @Override
-  public void preCreateTable(Table arg0) throws MetaException {    
+  public void preCreateTable(Table arg0) throws MetaException {
   }
 
   @Override
-  public void preDropTable(Table arg0) throws MetaException {    
+  public void preDropTable(Table arg0) throws MetaException {
   }
 
   @Override
-  public void rollbackCreateTable(Table arg0) throws MetaException {    
+  public void rollbackCreateTable(Table arg0) throws MetaException {
   }
 
   @Override
-  public void rollbackDropTable(Table arg0) throws MetaException {    
+  public void rollbackDropTable(Table arg0) throws MetaException {
   }
 
 }

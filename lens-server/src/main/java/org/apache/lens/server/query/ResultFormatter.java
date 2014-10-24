@@ -9,9 +9,9 @@ package org.apache.lens.server.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,7 +51,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
 
   @Override
   public void process(QueryExecuted event) {
-    formatOutput(event);    
+    formatOutput(event);
   }
 
   private void formatOutput(QueryExecuted event) {
@@ -76,7 +76,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           LOG.info(" size :" + size + " threshold:" + threshold);
           if (size > threshold) {
             LOG.warn("Persisted result size more than the threshold, size:" +
-              size + " and threshold:" + threshold + "; Skipping formatter");
+                size + " and threshold:" + threshold + "; Skipping formatter");
             queryService.setSuccessState(ctx);
             return;
           }
@@ -115,7 +115,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       }
     } catch (Exception e) {
       MetricsService metricsService =
-        (MetricsService) LensServices.get().getService(MetricsService.NAME);
+          (MetricsService) LensServices.get().getService(MetricsService.NAME);
       metricsService.incrCounter(ResultFormatter.class, "formatting-errors");
       LOG.warn("Exception while formatting result for " + queryHandle, e);
       try {
@@ -144,7 +144,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
                   LensConfConstants.QUERY_OUTPUT_FORMATTER,
                   (Class<? extends InMemoryOutputFormatter>)Class.forName(
                       LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER),
-                      InMemoryOutputFormatter.class), ctx.getConf()); 
+                      InMemoryOutputFormatter.class), ctx.getConf());
         }
       } catch (ClassNotFoundException e) {
         throw new LensException(e);

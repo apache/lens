@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -140,16 +140,16 @@ public abstract class LensService extends CompositeService implements Externaliz
    * Restore session from previous instance of lens server
    */
   public void restoreSession(LensSessionHandle sessionHandle,
-                               String userName,
-                               String password) throws LensException {
+      String userName,
+      String password) throws LensException {
     HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
     SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
     try {
       SessionHandle restoredHandle =
-        cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
+          cliService.restoreSession(hiveSessionHandle, userName, password, new HashMap<String, String>());
       LensSessionHandle restoredSession = new LensSessionHandle(
-        restoredHandle.getHandleIdentifier().getPublicId(),
-        restoredHandle.getHandleIdentifier().getSecretId());
+          restoredHandle.getHandleIdentifier().getPublicId(),
+          restoredHandle.getHandleIdentifier().getSecretId());
       sessionMap.put(restoredSession.getPublicId().toString(), restoredSession);
     } catch (HiveSQLException e) {
       throw new LensException("Error restoring session " + sessionHandle, e);
@@ -161,7 +161,7 @@ public abstract class LensService extends CompositeService implements Externaliz
     for(ConfVars var: new ConfVars[]{ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN}) {
       if(cliService.getHiveConf().getVar(var) == null) {
         cliService.getHiveConf().setVar(var,
-          cliService.getHiveConf().get(LensConfConstants.SERVER_DOMAIN));
+            cliService.getHiveConf().get(LensConfConstants.SERVER_DOMAIN));
       }
     }
     String authType = cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION);
@@ -169,9 +169,9 @@ public abstract class LensService extends CompositeService implements Externaliz
     if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
         AuthenticationProviderFactory.AuthMethods authMethod =
-          AuthenticationProviderFactory.AuthMethods.getValidAuthMethod(authType);
+            AuthenticationProviderFactory.AuthMethods.getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider =
-          AuthenticationProviderFactory.getAuthenticationProvider(authMethod, cliService.getHiveConf());
+            AuthenticationProviderFactory.getAuthenticationProvider(authMethod, cliService.getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
         LOG.error("Auth error: " + e);
@@ -278,7 +278,7 @@ public abstract class LensService extends CompositeService implements Externaliz
 
   @Override
   public void readExternal(ObjectInput in) throws IOException,
-      ClassNotFoundException {
+  ClassNotFoundException {
   }
 
   @Override

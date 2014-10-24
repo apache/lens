@@ -9,9 +9,9 @@ package org.apache.lens.server.session;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -55,7 +55,7 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   private void initPersistInfo(SessionHandle sessionHandle, String username, String password, Map<String, String> sessionConf) {
     persistInfo.setSessionHandle(new LensSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
-      sessionHandle.getHandleIdentifier().getSecretId()));
+        sessionHandle.getHandleIdentifier().getSecretId()));
     persistInfo.setUsername(username);
     persistInfo.setPassword(password);
     persistInfo.setLastAccessTime(lastAccessTime);
@@ -81,7 +81,7 @@ public class LensSessionImpl extends HiveSessionImpl {
     super(protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
-      LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
+        LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
     if (sessionConf != null) {
       for (Map.Entry<String, String> entry : sessionConf.entrySet()) {
         conf.set(entry.getKey(), entry.getValue());
@@ -90,18 +90,18 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public Configuration getSessionConf() {
-    return conf; 
+    return conf;
   }
 
   /**
    * Constructor used when restoring session
    */
   public LensSessionImpl(SessionHandle sessionHandle, TProtocolVersion protocol, String username, String password,
-                          HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
+      HiveConf serverConf, Map<String, String> sessionConf, String ipAddress) {
     super(sessionHandle, protocol, username, password, serverConf, sessionConf, ipAddress);
     initPersistInfo(getSessionHandle(), username, password, sessionConf);
     sessionTimeout = 1000 * serverConf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS,
-      LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
+        LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT);
   }
 
 

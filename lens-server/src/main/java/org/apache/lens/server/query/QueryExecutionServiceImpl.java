@@ -9,9 +9,9 @@ package org.apache.lens.server.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -156,7 +156,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     getEventService().addListenerForType(
         new QueryExecutionStatisticsGenerator(this,getEventService()), QueryEnded.class);
     getEventService().addListenerForType(
-      new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
+        new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
   }
 
@@ -364,8 +364,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       String reason) throws LensException {
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0f,
-      QueryStatus.Status.FAILED,
-      statusMsg, false, null, reason));
+        QueryStatus.Status.FAILED,
+        statusMsg, false, null, reason));
     updateFinishedQuery(ctx, before);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
   }
@@ -550,8 +550,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             resultSets.remove(finished.getCtx().getQueryHandle());
           }
           fireStatusChangeEvent(finished.getCtx(),
-            new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
-            finished.getCtx().getStatus());
+              new QueryStatus(1f, Status.CLOSED, "Query purged", false, null, null),
+              finished.getCtx().getStatus());
           LOG.info("Query purged: " + finished.getCtx().getQueryHandle());
         } catch (LensException e) {
           incrCounter(QUERY_PURGER_COUNTER);
@@ -616,8 +616,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     module.addSerializer(ColumnDescriptor.class, new JsonSerializer<ColumnDescriptor>() {
       @Override
       public void serialize(ColumnDescriptor columnDescriptor, JsonGenerator jsonGenerator,
-        SerializerProvider serializerProvider) throws IOException,
-        JsonProcessingException {
+          SerializerProvider serializerProvider) throws IOException,
+          JsonProcessingException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("name", columnDescriptor.getName());
         jsonGenerator.writeStringField("comment", columnDescriptor.getComment());
@@ -629,14 +629,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     module.addDeserializer(ColumnDescriptor.class, new JsonDeserializer<ColumnDescriptor>() {
       @Override
       public ColumnDescriptor deserialize(JsonParser jsonParser,
-        DeserializationContext deserializationContext)
-        throws IOException, JsonProcessingException {
+          DeserializationContext deserializationContext)
+              throws IOException, JsonProcessingException {
         ObjectCodec oc = jsonParser.getCodec();
         JsonNode node = oc.readTree(jsonParser);
         org.apache.hive.service.cli.Type t = org.apache.hive.service.cli.Type.getType(node.get("type").asText());
         return new ColumnDescriptor(node.get("name").asText(),
-          node.get("comment").asText(),
-          new TypeDescriptor(t), node.get("position").asInt());
+            node.get("comment").asText(),
+            new TypeDescriptor(t), node.get("position").asInt());
       }
     });
     mapper.registerModule(module);
@@ -741,7 +741,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         throw new LensException(e);
       }
     }
-    throw new NotFoundException("Query not found: " + queryHandle); 
+    throw new NotFoundException("Query not found: " + queryHandle);
   }
 
   private LensResultSet getResultset(QueryHandle queryHandle)
@@ -809,12 +809,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle,
-                                     String query, LensConf lensConf, String queryName) throws LensException {
+      String query, LensConf lensConf, String queryName) throws LensException {
     try {
       LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
       PreparedQueryContext prepared = prepareQuery(sessionHandle, query,
-        lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
+          lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
@@ -887,7 +887,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public QueryHandle executeAsync(LensSessionHandle sessionHandle, String query,
-                                  LensConf conf, String queryName) throws LensException {
+      LensConf conf, String queryName) throws LensException {
     try {
       LOG.info("ExecuteAsync: "  + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
@@ -978,9 +978,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0,
             QueryStatus.Status.valueOf(query.getStatus()),
             query.getErrorMessage() == null ? "" : query.getErrorMessage(),
-            query.getResult() != null,
-            null,
-            null));
+                query.getResult() != null,
+                null,
+                null));
         finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());
         finishedCtx.getDriverStatus().setDriverFinishTime(query.getDriverEndTime());
         finishedCtx.setResultSetPath(query.getResult());
@@ -1028,7 +1028,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public QueryHandleWithResultSet execute(LensSessionHandle sessionHandle, String query, long timeoutMillis,
-                                          LensConf conf, String queryName) throws LensException {
+      LensConf conf, String queryName) throws LensException {
     try {
       LOG.info("Blocking execute " + sessionHandle.toString() + " query: "
           + query + " timeout: " + timeoutMillis);
@@ -1045,7 +1045,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private QueryHandleWithResultSet executeTimeoutInternal(LensSessionHandle sessionHandle, QueryContext ctx, long timeoutMillis,
-                                                          Configuration conf) throws LensException {
+      Configuration conf) throws LensException {
     QueryHandle handle = executeAsyncInternal(sessionHandle, ctx);
     QueryHandleWithResultSet result = new QueryHandleWithResultSet(handle);
     // getQueryContext calls updateStatus, which fires query events if there's a change in status
@@ -1171,12 +1171,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public List<QueryHandle> getAllQueries(LensSessionHandle sessionHandle,
-                                         String state,
-                                         String userName,
-                                         String queryName,
-                                         long fromDate,
-                                         long toDate)
-      throws LensException {
+      String state,
+      String userName,
+      String queryName,
+      long fromDate,
+      long toDate)
+          throws LensException {
     validateTimeRange(fromDate, toDate);
     userName = UtilityMethods.removeDomain(userName);
     try {
@@ -1217,7 +1217,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           userName = null;
         }
         List<QueryHandle> persistedQueries =
-          lensServerDao.findFinishedQueries(state, userName, queryName, fromDate, toDate);
+            lensServerDao.findFinishedQueries(state, userName, queryName, fromDate, toDate);
         if (persistedQueries != null && !persistedQueries.isEmpty()) {
           LOG.info("Adding persisted queries " + persistedQueries.size());
           all.addAll(persistedQueries);
@@ -1232,11 +1232,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public List<QueryPrepareHandle> getAllPreparedQueries(LensSessionHandle sessionHandle,
-                                                        String user,
-                                                        String queryName,
-                                                        long fromDate,
-                                                        long toDate)
-      throws LensException {
+      String user,
+      String queryName,
+      long fromDate,
+      long toDate)
+          throws LensException {
     validateTimeRange(fromDate, toDate);
     user = UtilityMethods.removeDomain(user);
     try {
@@ -1343,13 +1343,13 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private QueryContext createAddResourceQuery(LensSessionHandle sessionHandle, String type, String path)
-    throws LensException {
+      throws LensException {
     String command = "add " + type.toLowerCase() + " " + path;
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    QueryContext addQuery = new QueryContext(command, 
-      getSession(sessionHandle).getLoggedInUser(),
-      getLensConf(sessionHandle, conf));
+    QueryContext addQuery = new QueryContext(command,
+        getSession(sessionHandle).getLoggedInUser(),
+        getLensConf(sessionHandle, conf));
     addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     return addQuery;
   }
@@ -1605,7 +1605,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     } catch (Exception e) {
       LOG.warn("Lens session went away! " + lensSession + " driver session: "
-        + ((DriverSessionStarted) event).getDriverSessionID(), e);
+          + ((DriverSessionStarted) event).getDriverSessionID(), e);
     } finally {
       release(sessionHandle);
     }

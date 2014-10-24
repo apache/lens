@@ -9,9 +9,9 @@ package org.apache.lens.cli;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -86,14 +86,14 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
-    LOG.debug("Using Storage spec from file : " + newFile.getAbsolutePath());
-    String storageList = command.getStorages();
-    Assert.assertFalse(storageList.contains(storageName),
-        " Storage list contains "+storageName + " storage list is  "
-            + storageList + " file used is " + newFile.getAbsolutePath());
-    command.createStorage(newFile.getAbsolutePath());
-    storageList = command.getStorages();
-    Assert.assertTrue(storageList.contains(storageName));
+      LOG.debug("Using Storage spec from file : " + newFile.getAbsolutePath());
+      String storageList = command.getStorages();
+      Assert.assertFalse(storageList.contains(storageName),
+          " Storage list contains "+storageName + " storage list is  "
+              + storageList + " file used is " + newFile.getAbsolutePath());
+      command.createStorage(newFile.getAbsolutePath());
+      storageList = command.getStorages();
+      Assert.assertTrue(storageList.contains(storageName));
     } catch (Exception e) {
       Assert.fail("Unable to add storage " + storageName);
     } finally {
@@ -121,7 +121,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
           "name=\""+storageName+"\"");
       xmlContent = xmlContent.replace("<properties name=\"storage.url\" value=\"file:///\"/>\n",
           "<properties name=\"storage.url\" value=\"file:///\"/>" +
-              "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
+          "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
 
       File newFile = new File("/tmp/"+storageName+".xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

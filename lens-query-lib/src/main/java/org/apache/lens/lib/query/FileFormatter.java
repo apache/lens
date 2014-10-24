@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,14 +32,14 @@ public interface FileFormatter {
 
   /**
    * Setup outputs for file formatter
-   * 
+   *
    * @throws IOException
    */
   public void setupOutputs() throws IOException;
 
   /**
    * Write the header passed
-   * 
+   *
    * @param header
    * @throws IOException
    */
@@ -47,7 +47,7 @@ public interface FileFormatter {
 
   /**
    * Write the footer passed
-   * 
+   *
    * @param footer
    * @throws IOException
    */
@@ -55,7 +55,7 @@ public interface FileFormatter {
 
   /**
    * Write the row passed
-   * 
+   *
    * @param row
    * @throws IOException
    */
@@ -63,14 +63,14 @@ public interface FileFormatter {
 
   /**
    * Get the temporary path of the result, if any
-   * 
+   *
    * @return
    */
   public Path getTmpPath();
 
   /**
    * Get the result encoding, if any
-   * 
+   *
    * @return
    */
   public String getEncoding();

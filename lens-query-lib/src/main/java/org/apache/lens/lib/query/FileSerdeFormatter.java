@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,18 +42,18 @@ import org.apache.lens.server.api.query.QueryContext;
 
 /**
  * File format which provides implementation for {@link InMemoryOutputFormatter}
- * 
+ *
  * This is a wrapped formatter, which serializes the rows of the result with
  * configured serde. It would only accept the Serde's whose serialization
  * class is {@link Text}
  *
  */
 @SuppressWarnings("deprecation")
-public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {  
+public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {
   private SerDe outputSerde;
   private ObjectInspector inputOI;
 
-  public FileSerdeFormatter() { 
+  public FileSerdeFormatter() {
   }
 
   public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException {
@@ -72,7 +72,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
       Properties props = new Properties();
       if (columnNames.size() > 0) {
         props.setProperty(serdeConstants.LIST_COLUMNS, StringUtils.join(escapedColumnNames, ","));
-      }   
+      }
       if (types.length() > 0) {
         props.setProperty(serdeConstants.LIST_COLUMN_TYPES, types);
       }

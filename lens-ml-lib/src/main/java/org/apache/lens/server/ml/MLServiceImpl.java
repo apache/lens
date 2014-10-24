@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
     Class<?> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
-      ServiceProviderFactory.class);
+        ServiceProviderFactory.class);
     try {
       return  (ServiceProviderFactory) spfClass.newInstance();
     } catch (InstantiationException e) {
@@ -126,9 +126,9 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   @Override
   public MLTestReport testModel(LensSessionHandle sessionHandle,
-                                String table,
-                                String algorithm,
-                                String modelID) throws LensException {
+      String table,
+      String algorithm,
+      String modelID) throws LensException {
 
     return ml.testModel(sessionHandle, table, algorithm, modelID, new DirectQueryRunner(sessionHandle));
   }
@@ -177,10 +177,10 @@ public class MLServiceImpl extends CompositeService implements MLService {
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false + "");
 
       QueryHandle testQueryHandle = queryService.executeAsync(sessionHandle,
-        testQuery,
-        queryConf,
-        "ml_test_query"
-      );
+          testQuery,
+          queryConf,
+          "ml_test_query"
+          );
 
       // Wait for test query to complete
       LensQuery query = queryService.getQuery(sessionHandle, testQueryHandle);
@@ -197,7 +197,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
       if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
         throw new LensException("Failed to run test query: " + testQueryHandle.getHandleId()
-          + " reason= " + query.getStatus().getErrorMessage());
+            + " reason= " + query.getStatus().getErrorMessage());
       }
 
       return testQueryHandle;

@@ -9,9 +9,9 @@ package org.apache.lens.server.util;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,13 +79,13 @@ public class UtilityMethods {
   public static BasicDataSource getDataSourceFromConf(Configuration conf) {
     BasicDataSource tmp = new BasicDataSource();
     tmp.setDriverClassName(conf.get(LensConfConstants.SERVER_DB_DRIVER_NAME,
-      LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+        LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
     tmp.setUrl(conf.get(LensConfConstants.SERVER_DB_JDBC_URL,
-      LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
+        LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
     tmp.setUsername(conf.get(LensConfConstants.SERVER_DB_JDBC_USER,
-      LensConfConstants.DEFAULT_SERVER_DB_USER));
+        LensConfConstants.DEFAULT_SERVER_DB_USER));
     tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS,
-      LensConfConstants.DEFAULT_SERVER_DB_PASS));
+        LensConfConstants.DEFAULT_SERVER_DB_PASS));
     return tmp;
   }
 

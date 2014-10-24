@@ -13,9 +13,9 @@ import org.apache.lens.client.exceptions.LensClientServerConnectionException;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,14 +53,14 @@ public enum LensClientSingletonWrapper {
   public void explainFailedAttempt(LensClientServerConnectionException e) {
     LOG.error("failed login attempt", e);
     switch(e.getErrorCode()) {
-      case 401:
-        System.console().printf("username/password combination incorrect.\n");
-        break;
-      case 500:
-        System.console().printf("server unresponsive, Returned error code 500\n");
-        break;
-      default:
-        System.console().printf("Unknown error in authenticating with the server. Error code = %d\n", e.getErrorCode());
+    case 401:
+      System.console().printf("username/password combination incorrect.\n");
+      break;
+    case 500:
+      System.console().printf("server unresponsive, Returned error code 500\n");
+      break;
+    default:
+      System.console().printf("Unknown error in authenticating with the server. Error code = %d\n", e.getErrorCode());
     }
   }
 

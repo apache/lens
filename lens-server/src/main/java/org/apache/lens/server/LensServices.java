@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -68,8 +68,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   public enum SERVICE_MODE {
     READ_ONLY, // All requests on sesssion resource and Only GET requests on all other resources
-    METASTORE_READONLY, // Only GET requests on metastore service and 
-                //all other requests on other services are accepted
+    METASTORE_READONLY, // Only GET requests on metastore service and
+    //all other requests on other services are accepted
     METASTORE_NODROP, // DELETE requests on metastore are not accepted
     OPEN // All requests are accepted
   };
@@ -100,7 +100,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       addService(new EventServiceImpl(LensEventService.NAME));
       addService(new MetricsServiceImpl(MetricsService.NAME));
       addService(new StatisticsService(StatisticsService.STATS_SVC_NAME));
-      
+
       // Add configured services, these are instances of LensService which need a CLIService instance
       // for session management
       String[] serviceNames = conf.getStrings(LensConfConstants.SERVICE_NAMES);

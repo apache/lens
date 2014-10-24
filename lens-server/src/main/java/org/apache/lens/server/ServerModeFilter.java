@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) throws IOException {
     switch (LensServices.get().getServiceMode()) {
     case READ_ONLY:
-      // Allows all requests on session and only GET everywhere 
+      // Allows all requests on session and only GET everywhere
       if (!requestContext.getUriInfo().getPath().startsWith("/session")) {
         if (!requestContext.getMethod().equals("GET")) {
           throw new NotAllowedException("Server is in readonly mode", "GET", (String [])null);
@@ -55,7 +55,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
         }
       }
       break;
-      
+
     case OPEN :
       // nothing to do
     }

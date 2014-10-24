@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -82,7 +82,7 @@ public class TestStaticFileResource extends LensJerseyTest {
   @Test
   public void testStaticFileResource()  throws Exception {
     LensServices.get().getHiveConf().set(LensConfConstants.SERVER_UI_STATIC_DIR,
-    "src/main/webapp/static");
+        "src/main/webapp/static");
     LensServices.get().getHiveConf().setBoolean(LensConfConstants.SERVER_UI_ENABLE_CACHING, false);
 
     System.out.println("@@@@ " + target().path("index.html").getUri());

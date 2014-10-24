@@ -3,13 +3,13 @@ package org.apache.lens.server;
 import org.apache.hive.service.AbstractService;
 
 public class MockNonLensService extends AbstractService {
-    public MockNonLensService(String name) {
-      super(name);
-    }
-    
-    public MockNonLensService() {
-      this(NAME);
-    }
+  public MockNonLensService(String name) {
+    super(name);
+  }
 
-    public static final String NAME = "MOCK_SVC";
+  public MockNonLensService() {
+    this(NAME);
+  }
+
+  public static final String NAME = "MOCK_SVC";
 }

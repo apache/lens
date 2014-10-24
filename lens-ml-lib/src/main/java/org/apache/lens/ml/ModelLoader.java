@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,9 +52,9 @@ public class ModelLoader {
   public static final long MODEL_CACHE_SIZE = 10;
   public static final long MODEL_CACHE_TIMEOUT =  3600000L;// one hour
   private static Cache<Path, MLModel> modelCache = CacheBuilder.newBuilder()
-    .maximumSize(MODEL_CACHE_SIZE)
-    .expireAfterAccess(MODEL_CACHE_TIMEOUT, TimeUnit.MILLISECONDS)
-    .build();
+      .maximumSize(MODEL_CACHE_SIZE)
+      .expireAfterAccess(MODEL_CACHE_TIMEOUT, TimeUnit.MILLISECONDS)
+      .build();
 
   public static Path getModelLocation(Configuration conf, String algorithm, String modelID) {
     String modelDataBaseDir = conf.get(MODEL_PATH_BASE_DIR, MODEL_PATH_BASE_DIR_DEFAULT);
@@ -65,7 +65,7 @@ public class ModelLoader {
   public static MLModel loadModel(Configuration conf, String algorithm, String modelID) throws IOException {
     final Path modelPath = getModelLocation(conf, algorithm, modelID);
     LOG.info("Loading model for algorithm: " + algorithm + " modelID: " + modelID
-      + " At path: " + modelPath.toUri().toString());
+        + " At path: " + modelPath.toUri().toString());
     try {
       return modelCache.get(modelPath, new Callable<MLModel>() {
         @Override

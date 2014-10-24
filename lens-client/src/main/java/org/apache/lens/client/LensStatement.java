@@ -9,9 +9,9 @@ package org.apache.lens.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -107,7 +107,7 @@ public class LensStatement {
 
     QueryPlan plan = target.request().post(
         Entity.entity(prepareForm(sql, "EXPLAIN_AND_PREPARE", queryName),
-        MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
+            MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     return plan;
   }
 
@@ -191,7 +191,7 @@ public class LensStatement {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
-       queryName == null ? "" : queryName));
+        queryName == null ? "" : queryName));
 
     WebTarget target = getQueryWebTarget(client);
 
@@ -216,7 +216,7 @@ public class LensStatement {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(),
         "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(),
-      queryName==null? "" : queryName));
+        queryName==null? "" : queryName));
 
     QueryHandle handle = target.request().post(Entity.entity(mp,
         MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
@@ -252,14 +252,14 @@ public class LensStatement {
     WebTarget target = getQueryWebTarget(ClientBuilder
         .newBuilder().register(MultiPartFeature.class).build());
     List<QueryHandle> handles = target.queryParam("sessionid", connection.getSessionHandle())
-      .queryParam("state", state)
-      .queryParam("queryName", queryName)
-      .queryParam("user", user)
-      .queryParam("fromDate", fromDate)
-      .queryParam("toDate", toDate)
-      .request().get(
-        new GenericType<List<QueryHandle>>() {
-    });
+        .queryParam("state", state)
+        .queryParam("queryName", queryName)
+        .queryParam("user", user)
+        .queryParam("fromDate", fromDate)
+        .queryParam("toDate", toDate)
+        .request().get(
+            new GenericType<List<QueryHandle>>() {
+            });
     return handles;
   }
 
@@ -268,13 +268,13 @@ public class LensStatement {
     WebTarget target = getPreparedQueriesWebTarget(client);
     List<QueryPrepareHandle> handles = target.queryParam("sessionid",
         connection.getSessionHandle())
-      .queryParam("user", userName)
-      .queryParam("queryName", queryName)
-      .queryParam("fromDate", fromDate)
-      .queryParam("toDate", toDate)
-      .request().get(
-        new GenericType<List<QueryPrepareHandle>>() {
-        });
+        .queryParam("user", userName)
+        .queryParam("queryName", queryName)
+        .queryParam("fromDate", fromDate)
+        .queryParam("toDate", toDate)
+        .request().get(
+            new GenericType<List<QueryPrepareHandle>>() {
+            });
     return handles;
   }
 
@@ -317,7 +317,7 @@ public class LensStatement {
       return target.path(query.getQueryHandle().toString()).
           path("resultset").queryParam(
               "sessionid", connection.getSessionHandle()).request().get(
-                   QueryResult.class);
+                  QueryResult.class);
     } catch (Exception e) {
       throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
     }

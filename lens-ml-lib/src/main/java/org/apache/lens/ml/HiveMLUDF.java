@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,8 +43,8 @@ import java.io.IOException;
  * argument
  */
 @Description(
-  name = "predict",
-  value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given " +
+    name = "predict",
+    value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given " +
     "algorithm name, model ID and input feature columns")
 public class HiveMLUDF extends GenericUDF {
 
@@ -63,7 +63,7 @@ public class HiveMLUDF extends GenericUDF {
     // We require algo name, model id and at least one feature
     if (objectInspectors.length < 3) {
       throw new UDFArgumentLengthException("Algo name, model ID and at least one feature should be passed to "
-        + UDF_NAME);
+          + UDF_NAME);
     }
     LOG.info(UDF_NAME + " initialized");
     return PrimitiveObjectInspectorFactory.javaDoubleObjectInspector;

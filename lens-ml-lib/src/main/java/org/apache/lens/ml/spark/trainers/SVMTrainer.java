@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,23 +32,23 @@ import org.apache.spark.rdd.RDD;
 import java.util.Map;
 
 @Algorithm(
-  name = "spark_svm",
-  description = "Spark SVML classifier trainer"
-)
+    name = "spark_svm",
+    description = "Spark SVML classifier trainer"
+    )
 public class SVMTrainer extends BaseSparkTrainer {
   @TrainerParam(name = "minBatchFraction", help = "Fraction for batched learning",
-  defaultValue = "1.0d")
+      defaultValue = "1.0d")
   private double minBatchFraction;
 
   @TrainerParam(name = "regParam", help = "regularization parameter for gradient descent",
-  defaultValue = "1.0d")
+      defaultValue = "1.0d")
   private double regParam;
 
   @TrainerParam(name = "stepSize", help = "Iteration step size", defaultValue = "1.0d")
   private double stepSize;
 
   @TrainerParam(name = "iterations", help = "Number of iterations",
-  defaultValue = "100")
+      defaultValue = "100")
   private int iterations;
 
   public SVMTrainer(String name, String description) {

@@ -9,9 +9,9 @@ package org.apache.lens.server.api.driver;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,7 +29,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 public class DriverQueryStatus implements Serializable {
-  
+
   private static final long serialVersionUID = 1L;
 
   public enum DriverQueryState {
@@ -42,7 +42,7 @@ public class DriverQueryStatus implements Serializable {
     CANCELED,
     CLOSED
   }
-  
+
   @Getter @Setter private double progress = 0.0f;
   @Getter @Setter private DriverQueryState state = DriverQueryState.NEW;
   @Getter @Setter private String statusMessage;
@@ -51,7 +51,7 @@ public class DriverQueryStatus implements Serializable {
   @Getter @Setter private String errorMessage;
   @Getter @Setter private Long driverStartTime = 0L;
   @Getter @Setter private Long driverFinishTime = 0L;
-  
+
   public QueryStatus toQueryStatus() {
     QueryStatus.Status qstate = null;
     switch (state) {
@@ -65,7 +65,7 @@ public class DriverQueryStatus implements Serializable {
       break;
     case SUCCESSFUL:
       qstate = QueryStatus.Status.EXECUTED;
-      break;      
+      break;
     case FAILED:
       qstate = QueryStatus.Status.FAILED;
       break;
@@ -76,7 +76,7 @@ public class DriverQueryStatus implements Serializable {
       qstate = QueryStatus.Status.CLOSED;
       break;
     }
-    
+
     return new QueryStatus(progress, qstate, statusMessage, isResultSetAvailable, progressMessage, errorMessage);
   }
 
@@ -90,7 +90,7 @@ public class DriverQueryStatus implements Serializable {
   @Override
   public String toString() {
     StringBuilder str = new StringBuilder(state.toString()).append(':').
-    append(statusMessage);
+        append(statusMessage);
     if (state.equals(DriverQueryState.RUNNING)) {
       str.append(" - Progress:").append(progress).append(":").append(progressMessage);
     }

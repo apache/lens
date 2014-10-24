@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,8 +51,8 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
   @CliCommand(value = "create fact", help = "create a fact table")
   public String createFact(
       @CliOption(key = {"", "table"},
-          mandatory = true,
-          help = "<fact spec path> <storage spec path>")
+      mandatory = true,
+      help = "<fact spec path> <storage spec path>")
       String tableFilePair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
@@ -88,9 +88,9 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "drop fact", help = "drop fact table")
   public String dropFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "table name to be dropped") String fact,
-                         @CliOption(key = {"cascade"}, mandatory = false,
-                             unspecifiedDefaultValue = "false") boolean cascade) {
+  mandatory = true, help = "table name to be dropped") String fact,
+  @CliOption(key = {"cascade"}, mandatory = false,
+  unspecifiedDefaultValue = "false") boolean cascade) {
     APIResult result = getClient().dropFactTable(fact, cascade);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + fact + "!!!";
@@ -101,7 +101,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "update fact", help = "update fact table")
   public String updateFactTable(@CliOption(key = {"", "table"}, mandatory = true,
-      help = "<table-name> <path to table-spec>") String specPair) {
+  help = "<table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -131,7 +131,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "describe fact", help = "describe a fact table")
   public String describeFactTable(@CliOption(key = {"", "table"},
-      mandatory = true, help = "tablename to be described") String fact) {
+  mandatory = true, help = "tablename to be described") String fact) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
           getClient().getFactTable(fact)));
@@ -143,7 +143,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
   @CliCommand(value = "fact list storage",
       help = "display list of storages associated to fact table")
   public String getFactStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "tablename for getting storages") String fact){
+  mandatory = true, help = "tablename for getting storages") String fact){
     List<String> storages = getClient().getFactStorages(fact);
     if(storages == null || storages.isEmpty()) {
       return "No storages found for " + fact;
@@ -154,7 +154,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
   @CliCommand(value = "fact dropall storages",
       help = "drop all storages associated to fact table")
   public String dropAllFactStorages(@CliOption(key = {"", "table"},
-      mandatory = true, help = "tablename for dropping all storages") String table){
+  mandatory = true, help = "tablename for dropping all storages") String table){
     APIResult result = getClient().dropAllStoragesOfFact(table);
     if(result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
@@ -165,7 +165,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "fact add storage", help = "adds a new storage to fact")
   public String addNewFactStorage(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table> <path to storage-spec>") String tablepair){
+  mandatory = true, help = "<table> <path to storage-spec>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -195,7 +195,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "fact drop storage", help = "drop a storage from fact")
   public String dropStorageFromFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> <storage-name>") String tablepair){
+  mandatory = true, help = "<table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -217,7 +217,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "fact get storage", help = "get storage of fact table")
   public String getStorageFromFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> <storage-name>") String tablepair){
+  mandatory = true, help = "<table-name> <storage-name>") String tablepair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -239,7 +239,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
   @CliCommand(value = "fact list partitions",
       help = "get all partitions associated with fact")
   public String getAllPartitionsOfFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<table-name> <storageName> [optional <partition query filter> to get]") String specPair){
+  mandatory = true, help = "<table-name> <storageName> [optional <partition query filter> to get]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -262,13 +262,13 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
       }
     }
     return "Syntax error, please try in following " +
-        "format. fact list partitions <table> <storage> [partition values]";
+    "format. fact list partitions <table> <storage> [partition values]";
   }
 
   @CliCommand(value = "fact drop partitions",
       help = "drop all partitions associated with fact")
   public String dropAllPartitionsOfFact(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<tablename> <storageName> [optional <partition query filter> to drop]") String specPair){
+  mandatory = true, help = "<tablename> <storageName> [optional <partition query filter> to drop]") String specPair){
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -294,7 +294,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "fact add partition", help = "add a partition to fact table")
   public String addPartitionToFact(@CliOption(key = {"","table"},
-      mandatory = true, help = "<table> <storage> <path to partition spec>") String specPair) {
+  mandatory = true, help = "<table> <storage> <path to partition spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()

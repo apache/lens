@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "create cube", help = "Create a new Cube")
   public String createCube(@CliOption(key = {"", "table"},
-      mandatory = true, help = "<path to cube-spec file>") String cubeSpec) {
+  mandatory = true, help = "<path to cube-spec file>") String cubeSpec) {
     File f = new File(cubeSpec);
 
     if (!f.exists()) {
@@ -68,7 +68,7 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "drop cube", help = "drop cube")
   public String dropCube(@CliOption(key = {"", "table"},
-      mandatory = true, help = "cube name to be dropped") String cube) {
+  mandatory = true, help = "cube name to be dropped") String cube) {
     APIResult result = getClient().dropCube(cube);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + cube + "!!!";
@@ -80,7 +80,7 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "update cube", help = "update cube")
   public String updateCube(@CliOption(key = {"", "cube"}, mandatory = true,
-      help = "<cube-name> <path to cube-spec file>") String specPair) {
+  help = "<cube-name> <path to cube-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ')
         .trimResults()
         .omitEmptyStrings()
@@ -109,7 +109,7 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
 
   @CliCommand(value = "describe cube", help = "describe cube")
   public String describeCube(@CliOption(key = {"", "cube"},
-      mandatory = true, help = "<cube-name>") String cubeName) {
+  mandatory = true, help = "<cube-name>") String cubeName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
           getClient().getCube(cubeName)));

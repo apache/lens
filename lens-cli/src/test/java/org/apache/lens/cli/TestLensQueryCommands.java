@@ -9,9 +9,9 @@ package org.apache.lens.cli;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -161,7 +161,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     long submitTime = System.currentTimeMillis();
     String qh = qCom.executeQuery(sql, true, "testQuery1");
     String user =
-      qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
+        qCom.getClient().getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getSubmittedUser();
     String result = qCom.getAllQueries("", "testQuery1", user, -1, Long.MAX_VALUE);
     //this is because previous query has run two query handle will be there
     Assert.assertTrue(result.contains(qh), result);
@@ -194,7 +194,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     }
 
     String queryName =
-      client.getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
+        client.getLensStatement(new QueryHandle(UUID.fromString(qh))).getQuery().getQueryName();
     Assert.assertTrue("testQuery1".equalsIgnoreCase(queryName), queryName);
     result = qCom.getAllQueries("", "", "", submitTime, System.currentTimeMillis());
     Assert.assertTrue(result.contains(qh), result);
@@ -231,7 +231,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     TestLensDimensionCommands.createDimension();
     TestLensDimensionTableCommands.addDim1Table("dim_table",
-      "dim_table.xml", "dim_table_storage.xml", "local");
+        "dim_table.xml", "dim_table_storage.xml", "local");
 
     URL dataFile =
         TestLensQueryCommands.class.getClassLoader().getResource("data.txt");

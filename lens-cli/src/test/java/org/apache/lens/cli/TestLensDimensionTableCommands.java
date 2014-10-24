@@ -8,9 +8,9 @@ package org.apache.lens.cli;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -102,7 +102,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
       xmlContent = xmlContent.replace("<properties name=\"dim2.prop\" value=\"d2\"/>\n",
           "<properties name=\"dim2.prop\" value=\"d1\"/>" +
-              "\n<properties name=\"dim2.prop1\" value=\"d2\"/>\n");
+          "\n<properties name=\"dim2.prop1\" value=\"d2\"/>\n");
 
       File newFile = new File("/tmp/local-dim1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

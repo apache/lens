@@ -9,9 +9,9 @@ package org.apache.lens.driver.impala;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -146,17 +146,17 @@ public class ImpalaDriver implements LensDriver {
     return false;
   }
 
-	@Override
-	public Configuration getConf() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+  @Override
+  public Configuration getConf() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 
-	@Override
-	public void close() throws LensException {
-		// TODO Auto-generated method stub
-		
-	}
+  @Override
+  public void close() throws LensException {
+    // TODO Auto-generated method stub
+
+  }
 
   /**
    * Add a listener for driver events
@@ -172,13 +172,13 @@ public class ImpalaDriver implements LensDriver {
   public void closeQuery(org.apache.lens.api.query.QueryHandle arg0)
       throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -192,7 +192,7 @@ public class ImpalaDriver implements LensDriver {
   public void closePreparedQuery(QueryPrepareHandle handle)
       throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -204,7 +204,7 @@ public class ImpalaDriver implements LensDriver {
   @Override
   public void executeAsync(QueryContext context) throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
@@ -218,26 +218,26 @@ public class ImpalaDriver implements LensDriver {
   public void closeResultSet(org.apache.lens.api.query.QueryHandle handle)
       throws LensException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void registerForCompletionNotification(
       org.apache.lens.api.query.QueryHandle handle, long timeoutMillis,
       QueryCompletionListener listener) throws LensException {
-    throw new LensException("Not implemented");    
+    throw new LensException("Not implemented");
   }
 
   @Override
   public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
     // TODO Auto-generated method stub
-    
+
   }
 
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // TODO Auto-generated method stub
-    
+
   }
 
 }

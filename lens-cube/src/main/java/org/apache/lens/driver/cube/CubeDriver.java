@@ -9,9 +9,9 @@ package org.apache.lens.driver.cube;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -248,7 +248,7 @@ public class CubeDriver implements LensDriver {
       throws LensException {
     QueryContext ctx = queryContexts.get(handle);
     if (ctx == null) {
-      throw new LensException("Query not found " + ctx); 
+      throw new LensException("Query not found " + ctx);
     }
     return ctx;
   }
@@ -265,7 +265,7 @@ public class CubeDriver implements LensDriver {
 
     // 2. select driver to run the query
     LensDriver driver = selectDriver(driverQueries, conf);
-    
+
     ctx.setSelectedDriver(driver);
     ctx.setDriverQuery(driverQueries.get(driver));
   }
@@ -328,7 +328,7 @@ public class CubeDriver implements LensDriver {
   @Override
   public void registerForCompletionNotification(QueryHandle handle,
       long timeoutMillis, QueryCompletionListener listener)
-      throws LensException {
+          throws LensException {
     throw new LensException("Not implemented");
   }
 
@@ -343,7 +343,7 @@ public class CubeDriver implements LensDriver {
         String driverClsName = in.readUTF();
         LensDriver driver;
         try {
-          Class<? extends LensDriver> driverCls = 
+          Class<? extends LensDriver> driverCls =
               (Class<? extends LensDriver>)Class.forName(driverClsName);
           driver = (LensDriver) driverCls.newInstance();
           driver.configure(conf);

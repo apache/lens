@@ -9,9 +9,9 @@ package org.apache.lens.server.api.driver;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -72,21 +72,21 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the query plan
-   * 
+   *
    * @return The string representation of the plan
    */
   public abstract String getPlan();
 
   /**
    * Get the cost associated with the plan
-   * 
+   *
    * @return QueryCost object
    */
   public abstract QueryCost getCost();
 
   /**
    * Get the number of group by expressions on query
-   * 
+   *
    * @return the numGbys
    */
   public int getNumGbys() {
@@ -95,7 +95,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of groupbys
-   * 
+   *
    * @param numGbys the numGbys to set
    */
   protected void setNumGbys(int numGbys) {
@@ -104,7 +104,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the number of select expressions
-   * 
+   *
    * @return the numSels
    */
   public int getNumSels() {
@@ -113,7 +113,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of select expressions
-   * 
+   *
    * @param numSels the numSels to set
    */
   protected void setNumSels(int numSels) {
@@ -122,7 +122,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the number distinct select expressions
-   * 
+   *
    * @return the numSelDi
    */
   public int getNumSelDistincts() {
@@ -131,7 +131,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of distinct select expressions
-   * 
+   *
    * @param numSelDi the numSelDi to set
    */
   protected void setNumSelDistincts(int numSelDi) {
@@ -140,7 +140,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get number of joins in the query
-   * 
+   *
    * @return the numJoins
    */
   public int getNumJoins() {
@@ -149,7 +149,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of join expressions on query
-   * 
+   *
    * @param numJoins the numJoins to set
    */
   protected void setNumJoins(int numJoins) {
@@ -158,7 +158,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the number of having expressions on query
-   * 
+   *
    * @return the numHaving
    */
   public int getNumHaving() {
@@ -167,7 +167,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of having expressions on query
-   * 
+   *
    * @param numHaving the numHaving to set
    */
   protected void setNumHaving(int numHaving) {
@@ -176,7 +176,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the number of order by expressions on query
-   * 
+   *
    * @return the numObys
    */
   public int getNumOrderBys() {
@@ -185,7 +185,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of order by expressions on query
-   * 
+   *
    * @param numObys the numObys to set
    */
   protected void setNumOrderBys(int numObys) {
@@ -194,7 +194,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the list of tables to be queried
-   * 
+   *
    * @return the tablesQueried
    */
   public List<String> getTablesQueried() {
@@ -203,7 +203,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the list of table names to be queried
-   * 
+   *
    * @param tablesQueried the tablesQueried to set
    */
   protected void addTablesQueries(String table) {
@@ -212,7 +212,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the number of filters in query
-   * 
+   *
    * @return the numFilters
    */
   public int getNumFilters() {
@@ -221,7 +221,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the number of filters in query
-   * 
+   *
    * @param numFilters the numFilters to set
    */
   protected void setNumFilters(int numFilters) {
@@ -230,8 +230,8 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get if the query has a subquery or not
-   * 
-   * @return the hasSubQuery true if query has subquery, false otherwise 
+   *
+   * @return the hasSubQuery true if query has subquery, false otherwise
    */
   public boolean hasSubQuery() {
     return hasSubQuery;
@@ -246,7 +246,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the result destination
-   * 
+   *
    * @return the resultDestination The destination can be another table or
    *           filesystem path or inmemory result
    */
@@ -256,7 +256,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set string representation of the destination
-   * 
+   *
    * @param resultDestination the resultDestination to set
    */
   protected void setResultDestination(String resultDestination) {
@@ -265,7 +265,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the table weights
-   * 
+   *
    * @return the tableWeights
    */
   public Map<String, Double> getTableWeights() {
@@ -274,9 +274,9 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the weight of the table.
-   * 
+   *
    * @param tableName
-   * 
+   *
    * @return the weight
    */
   public Double getTableWeight(String tableName) {
@@ -285,9 +285,9 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight of the table
-   * 
+   *
    * @param tableName The name of the table.
-   * 
+   *
    * @param tableWeight Weight of the table being queried. This should reflect
    *  the amount of data being read/scanned from the table, scan cost
    */
@@ -297,7 +297,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the exec mode
-   * 
+   *
    * @return the {@link ExecMode}
    */
   public ExecMode getExecMode() {
@@ -306,7 +306,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the exec mode
-   * 
+   *
    * @param execMode the {@link ExecMode} to set
    */
   protected void setExecMode(ExecMode execMode) {
@@ -315,7 +315,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the scan mode.
-   * 
+   *
    * @return the {@link ScanMode}
    */
   public ScanMode getScanMode() {
@@ -324,7 +324,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the scan mode
-   * 
+   *
    * @param scanMode the {@link ScanMode} to set
    */
   protected void setScanMode(ScanMode scanMode) {
@@ -333,7 +333,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the weight associated with joins
-   * 
+   *
    * @return the joinWeight
    */
   public Double getJoinWeight() {
@@ -342,7 +342,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with joins
-   * 
+   *
    * @param joinWeight the joinWeight to set
    */
   protected void setJoinWeight(Double joinWeight) {
@@ -351,7 +351,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with group by expressions.
-   * 
+   *
    * @return the gbyWeight
    */
   public Double getGbyWeight() {
@@ -360,7 +360,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with group by expressions.
-   * 
+   *
    * @param gbyWeight the gbyWeight to set
    */
   protected void setGbyWeight(Double gbyWeight) {
@@ -369,7 +369,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with filter expressions.
-   * 
+   *
    * @return the filterWeight
    */
   public Double getFilterWeight() {
@@ -378,7 +378,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with filter expressions.
-   * 
+   *
    * @param filterWeight the filterWeight to set
    */
   protected void setFilterWeight(Double filterWeight) {
@@ -387,7 +387,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the weight associated with order by expressions.
-   * 
+   *
    * @return the obyWeight
    */
   public Double getObyWeight() {
@@ -396,7 +396,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with order by expressions.
-   * 
+   *
    * @param obyWeight the obyWeight to set
    */
   protected void setObyWeight(Double obyWeight) {
@@ -405,7 +405,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with having expressions.
-   * 
+   *
    * @return the havingWeight
    */
   public Double getHavingWeight() {
@@ -414,7 +414,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with having expressions.
-   * 
+   *
    * @param havingWeight the havingWeight to set
    */
   protected void setHavingWeight(Double havingWeight) {
@@ -423,7 +423,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Get the weight associated with select expressions.
-   * 
+   *
    * @return the selectWeight
    */
   public Double getSelectWeight() {
@@ -432,7 +432,7 @@ public abstract class DriverQueryPlan {
 
   /**
    * Set the weight associated with select expressions.
-   * 
+   *
    * @param selectWeight the selectWeight to set
    */
   protected void setSelectWeight(Double selectWeight) {
@@ -452,7 +452,7 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * 
+   *
    * @return the prepare handle
    */
   public QueryPrepareHandle getPrepareHandle() {
@@ -460,7 +460,7 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * 
+   *
    * @param handle the handle to set
    */
   public void setPrepareHandle(QueryPrepareHandle handle) {
@@ -479,15 +479,15 @@ public abstract class DriverQueryPlan {
     return null;
   }
 
- 
-  
+
+
 
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(numJoins, numGbys, numSels, numSelDi,
         numHaving, numObys, numAggrExprs, numFilters, tablesQueried, hasSubQuery,
         execMode != null ? execMode.name() : null,
-        scanMode != null ? scanMode.name() : null, tableWeights, joinWeight,
-        gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
-        URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
+            scanMode != null ? scanMode.name() : null, tableWeights, joinWeight,
+                gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
+                URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
   }
 }

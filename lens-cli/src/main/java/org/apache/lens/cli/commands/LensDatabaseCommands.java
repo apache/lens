@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,8 +49,8 @@ public class LensDatabaseCommands extends  BaseLensCommand implements CommandMar
   @CliCommand(value = "use",
       help = "change to new database")
   public String switchDatabase(@CliOption(key = {"", "db"},
-      mandatory = true,
-      help = "Database to change to") String database) {
+  mandatory = true,
+  help = "Database to change to") String database) {
     boolean status = getClient().setDatabase(database);
     if (status) {
       return "Successfully switched to " + database;
@@ -65,7 +65,7 @@ public class LensDatabaseCommands extends  BaseLensCommand implements CommandMar
       @CliOption(key = {"", "db"}, mandatory = true, help = "Database to create")
       String database,
       @CliOption(key = {"ignore"}, mandatory = false,
-          unspecifiedDefaultValue = "false")
+      unspecifiedDefaultValue = "false")
       boolean ignore) {
     APIResult result = getClient().createDatabase(database, ignore);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {

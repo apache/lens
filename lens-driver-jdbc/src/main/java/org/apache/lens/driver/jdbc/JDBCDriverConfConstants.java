@@ -9,9 +9,9 @@ package org.apache.lens.driver.jdbc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,7 +34,7 @@ public interface JDBCDriverConfConstants {
 
   public static final String JDBC_POOL_IDLE_TIME = JDBC_DRIVER_PFX + "pool.idle.time";
   public static final int JDBC_POOL_IDLE_TIME_DEFAULT = 600;
-  public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = JDBC_DRIVER_PFX + 
+  public static final String JDBC_MAX_STATEMENTS_PER_CONNECTION = JDBC_DRIVER_PFX +
       "pool.max.statements";
   public static final int JDBC_MAX_STATEMENTS_PER_CONNECTION_DEFAULT = 20;
 

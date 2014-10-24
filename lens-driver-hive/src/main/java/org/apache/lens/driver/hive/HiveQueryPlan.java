@@ -9,9 +9,9 @@ package org.apache.lens.driver.hive;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -83,82 +83,82 @@ public class HiveQueryPlan extends DriverQueryPlan {
       }
 
       switch (state) {
-        case MOVE:
-          if (tr.startsWith("destination:")) {
-            String outputPath = tr.replace("destination:", "").trim();
-            resultDestination = outputPath;
+      case MOVE:
+        if (tr.startsWith("destination:")) {
+          String outputPath = tr.replace("destination:", "").trim();
+          resultDestination = outputPath;
+        }
+        break;
+      case TABLE_SCAN:
+        if (tr.startsWith("alias:")) {
+          String tableName = tr.replace("alias:", "").trim();
+          tablesQueried.add(tableName);
+          Table tbl = metastore.getTable(tableName);
+          String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
+
+          Double weight = 1d;
+          if (costStr != null) {
+            weight = Double.parseDouble(costStr);
           }
-          break;
-        case TABLE_SCAN:
-          if (tr.startsWith("alias:")) {
-            String tableName = tr.replace("alias:", "").trim();
-            tablesQueried.add(tableName);
-            Table tbl = metastore.getTable(tableName);
-            String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
-            
-            Double weight = 1d;
-            if (costStr != null) {
-              weight = Double.parseDouble(costStr);
+          tableWeights.put(tableName, weight);
+        }
+        break;
+      case JOIN:
+        if (tr.equals("condition map:")) {
+          numJoins++;
+        }
+        break;
+      case SELECT:
+        if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
+          numSels += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case GROUPBY_EXPRS:
+        if (tr.startsWith("aggregations:")) {
+          numAggrExprs += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case GROUPBY_KEYS:
+        if (tr.startsWith("keys:")) {
+          numGbys += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case PARTITION:
+        if (tr.equals("partition values:")) {
+          i++;
+          List<String> partVals = new ArrayList<String>();
+          // Look ahead until we reach partition properties
+          String lineAhead = null;
+          for (; i < explainOutput.size(); i++ ) {
+            if (explainOutput.get(i).trim().equals("properties:")) {
+              break;
             }
-            tableWeights.put(tableName, weight);
+            lineAhead = explainOutput.get(i).trim();
+            partVals.add(lineAhead);
           }
-          break;
-        case JOIN:
-          if (tr.equals("condition map:")) {
-            numJoins++;
-          }
-          break;
-        case SELECT:
-          if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
-            numSels += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case GROUPBY_EXPRS:
-          if (tr.startsWith("aggregations:")) {
-            numAggrExprs += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case GROUPBY_KEYS:
-          if (tr.startsWith("keys:")) {
-            numGbys += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case PARTITION:
-          if (tr.equals("partition values:")) {
-            i++;
-            List<String> partVals = new ArrayList<String>();
-            // Look ahead until we reach partition properties
-            String lineAhead = null;
-            for (; i < explainOutput.size(); i++ ) {
-              if (explainOutput.get(i).trim().equals("properties:")) {
-                break;
+
+          String partConditionStr = StringUtils.join(partVals, ";");
+
+          // Now seek table name
+          for (; i < explainOutput.size(); i++) {
+            if (explainOutput.get(i).trim().startsWith("name:")) {
+              String table = explainOutput.get(i).trim().substring("name:".length()).trim();
+              List<String> tablePartitions = partitions.get(table);
+              if (tablePartitions == null) {
+                tablePartitions = new ArrayList<String>();
+                partitions.put(table, tablePartitions);
               }
-              lineAhead = explainOutput.get(i).trim();
-              partVals.add(lineAhead);
-            }
+              tablePartitions.add(partConditionStr);
 
-            String partConditionStr = StringUtils.join(partVals, ";");
-
-            // Now seek table name
-            for (; i < explainOutput.size(); i++) {
-              if (explainOutput.get(i).trim().startsWith("name:")) {
-                String table = explainOutput.get(i).trim().substring("name:".length()).trim();
-                List<String> tablePartitions = partitions.get(table);
-                if (tablePartitions == null) {
-                  tablePartitions = new ArrayList<String>();
-                  partitions.put(table, tablePartitions);
-                }
-                tablePartitions.add(partConditionStr);
-
-                break;
-              }
+              break;
             }
           }
+        }
 
-          break;
+        break;
       }
     }
-	}
+  }
 
   private ParserState nextState(String tr, ParserState state) {
     if (tr.equals("File Output Operator")) {
@@ -188,18 +188,18 @@ public class HiveQueryPlan extends DriverQueryPlan {
   }
 
   @Override
-	public String getPlan() {
-		return explainOutput;
-	}
+  public String getPlan() {
+    return explainOutput;
+  }
 
-	@Override
-	public QueryCost getCost() {
+  @Override
+  public QueryCost getCost() {
     /*
     Return query cost as 1 so that if JDBC storage and other storage is present,
     JDBC is given preference.
      */
-		return new QueryCost(1,1);
-	}
+    return new QueryCost(1,1);
+  }
 
   @Override
   public Map<String, List<String>> getPartitions() {

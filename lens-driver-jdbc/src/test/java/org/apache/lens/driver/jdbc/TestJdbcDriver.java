@@ -9,9 +9,9 @@ package org.apache.lens.driver.jdbc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -53,7 +53,7 @@ import static org.testng.Assert.*;
 public class TestJdbcDriver {
   Configuration baseConf;
   JDBCDriver driver;
-  
+
   @BeforeTest
   public void testCreateJdbcDriver() throws Exception {
     baseConf = new Configuration();
@@ -62,14 +62,14 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
     baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
-    
+
     driver = new JDBCDriver();
     driver.configure(baseConf);
     assertNotNull(driver);
     assertTrue(driver.configured);
   }
-  
-  
+
+
   @AfterTest
   public void close() throws Exception {
     driver.close();
@@ -82,37 +82,37 @@ public class TestJdbcDriver {
       conn = driver.getConnection();
       stmt = conn.createStatement();
       stmt.execute("CREATE TABLE " + table + " (ID INT)");
-      
+
       conn.commit();
     } finally {
       if (stmt != null) {
         stmt.close();
       }
       if (conn != null) {
-       conn.close();
+        conn.close();
       }
     }
   }
-  
+
   void insertData(String table) throws Exception {
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
       conn = driver.getConnection();
       stmt = conn.prepareStatement("INSERT INTO " + table + " VALUES(?)");
-      
+
       for (int i = 0; i < 10; i ++) {
         stmt.setInt(1, i);
         stmt.executeUpdate();
       }
-      
+
       conn.commit();
     } finally {
       if (stmt != null) {
         stmt.close();
       }
       if (conn != null) {
-       conn.close();
+        conn.close();
       }
     }
   }
@@ -163,7 +163,7 @@ public class TestJdbcDriver {
     }
     Assert.assertNotNull(th);
   }
-  
+
   @Test
   public void testExplain() throws Exception {
     createTable("explain_test"); // Create table
@@ -173,23 +173,23 @@ public class TestJdbcDriver {
     driver.explain(query1,baseConf);
 
     try {
-    driver.explain(query2,baseConf); 
-    Assert.fail("Running explain on a non existing table.");
+      driver.explain(query2,baseConf);
+      Assert.fail("Running explain on a non existing table.");
     } catch(LensException ex) {
       System.out.println("Error : " + ex);
     }
- }
-  
+  }
+
   @Test
   public void testExecute() throws Exception {
     createTable("execute_test");
-    
+
     // Insert some data into table
     insertData("execute_test");
-    
+
     // Query
     String query = "SELECT * FROM execute_test";
-    
+
     QueryContext context = new QueryContext(query, "SA", baseConf);
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
@@ -197,32 +197,32 @@ public class TestJdbcDriver {
       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
       LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
-      
+
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
       assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "ID");
-      
+
       while (rs.hasNext()) {
         ResultRow row = rs.next();
         List<Object> rowObjects = row.getValues();
       }
-      
+
       if (rs instanceof JDBCResultSet) {
         ((JDBCResultSet) rs).close();
       }
     }
   }
-  
+
   @Test
   public void testPrepare() throws Exception {
     createTable("prepare_test");
     insertData("prepare_test");
-    
+
     String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf);
     driver.prepare(pContext);
   }
-  
+
   @Test
   public void testExecuteAsync() throws Exception {
     createTable("execute_async_test");
@@ -230,25 +230,25 @@ public class TestJdbcDriver {
     String query = "SELECT * FROM execute_async_test";
     QueryContext context = new QueryContext(query, "SA", baseConf);
     System.out.println("@@@ Test_execute_async:" + context.getQueryHandle());
-    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1); 
+    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1);
 
     QueryCompletionListener listener = new QueryCompletionListener() {
       @Override
       public void onError(QueryHandle handle, String error) {
         fail("Query failed " + handle + " message" + error);
       }
-      
+
       @Override
       public void onCompletion(QueryHandle handle) {
         System.out.println("@@@@ Query is complete " + handle);
         listenerNotificationLatch.countDown();
       }
     };
-    
+
     driver.executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
-    
+
     while(true) {
       driver.updateStatus(context);
       System.out.println("Query: " + handle + " Status: " + context.getDriverStatus());
@@ -268,45 +268,45 @@ public class TestJdbcDriver {
       fail("query completion listener was not notified - " + e.getMessage());
       e.printStackTrace();
     }
-    
+
     LensResultSet grs = driver.fetchResultSet(context);
-    
+
     // Check multiple fetchResultSet return same object
     for (int i = 0; i < 5; i++) {
       assertTrue(grs == driver.fetchResultSet(context));
     }
-    
+
     assertNotNull(grs);
     if (grs instanceof InMemoryResultSet) {
       InMemoryResultSet rs = (InMemoryResultSet) grs;
       LensResultSetMetadata rsMeta = rs.getMetadata();
       assertEquals(rsMeta.getColumns().size(), 1);
-      
+
       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
       assertEquals(col1.getTypeName().toLowerCase(), "int");
       assertEquals(col1.getName(), "ID");
       System.out.println("Matched metadata");
-      
+
       while (rs.hasNext()) {
         List<Object> vals = rs.next().getValues();
         assertEquals(vals.size(), 1);
         assertEquals(vals.get(0).getClass(), Integer.class);
       }
-      
+
       driver.closeQuery(handle);
       // Close again, should get not found
       try {
         driver.closeQuery(handle);
         fail("Close again should have thrown exception");
       } catch (LensException ex) {
-        assertTrue(ex.getMessage().contains("not found") 
+        assertTrue(ex.getMessage().contains("not found")
             && ex.getMessage().contains(handle.getHandleId().toString()));
         System.out.println("Matched exception");
       }
     } else {
       fail("Only in memory result set is supported as of now");
     }
-    
+
   }
 
   @Test
@@ -327,11 +327,11 @@ public class TestJdbcDriver {
     QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
     System.out.println("@@@ Submitting valid query");
     driver.executeAsync(validCtx);
-    
+
     // Wait for query to finish
     while (true) {
       driver.updateStatus(validCtx);
-      if (validCtx.getDriverStatus().isFinished()) {  
+      if (validCtx.getDriverStatus().isFinished()) {
         break;
       }
       Thread.sleep(1000);
@@ -339,7 +339,7 @@ public class TestJdbcDriver {
 
     driver.closeQuery(validCtx.getQueryHandle());
   }
-  
+
   @Test
   public void testConnectionCloseForSuccessfulQueries() throws Exception {
     createTable("valid_conn_close");
@@ -349,31 +349,31 @@ public class TestJdbcDriver {
     QueryContext ctx = new QueryContext(query, "SA", baseConf);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
-     LensResultSet resultSet = driver.execute(ctx);
-     assertNotNull(resultSet);
-     if (resultSet instanceof InMemoryResultSet) {
-       InMemoryResultSet rs = (InMemoryResultSet) resultSet;
-       LensResultSetMetadata rsMeta = rs.getMetadata();
-       assertEquals(rsMeta.getColumns().size(), 1);
-       
-       ColumnDescriptor col1 = rsMeta.getColumns().get(0);
-       assertEquals(col1.getTypeName().toLowerCase(), "int");
-       assertEquals(col1.getName(), "ID");
-      
-       while (rs.hasNext()) {
-         ResultRow row = rs.next();
-         List<Object> rowObjects = row.getValues();
-       }
-     }
+      LensResultSet resultSet = driver.execute(ctx);
+      assertNotNull(resultSet);
+      if (resultSet instanceof InMemoryResultSet) {
+        InMemoryResultSet rs = (InMemoryResultSet) resultSet;
+        LensResultSetMetadata rsMeta = rs.getMetadata();
+        assertEquals(rsMeta.getColumns().size(), 1);
+
+        ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+        assertEquals(col1.getTypeName().toLowerCase(), "int");
+        assertEquals(col1.getName(), "ID");
+
+        while (rs.hasNext()) {
+          ResultRow row = rs.next();
+          List<Object> rowObjects = row.getValues();
+        }
+      }
       System.out.println("@@@@ QUERY " + (i+1));
-    } 
-    
+    }
+
     String validQuery = "SELECT * FROM valid_conn_close";
     QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
     System.out.println("@@@ Submitting query after pool quota used");
-    driver.execute(validCtx); 
- }
-  
+    driver.execute(validCtx);
+  }
+
   @Test
   public void testCancelQuery() throws Exception {
     createTable("cancel_query_test");
@@ -401,25 +401,25 @@ public class TestJdbcDriver {
     } catch (LensException e) {
       e.printStackTrace();
     }
-    
-    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1); 
+
+    final CountDownLatch listenerNotificationLatch = new CountDownLatch(1);
 
     QueryCompletionListener listener = new QueryCompletionListener() {
       @Override
       public void onError(QueryHandle handle, String error) {
         listenerNotificationLatch.countDown();
       }
-      
+
       @Override
       public void onCompletion(QueryHandle handle) {
         fail("Was expecting this query to fail " + handle);
       }
     };
-    
+
     driver.executeAsync(ctx);
     QueryHandle handle = ctx.getQueryHandle();
     driver.registerForCompletionNotification(handle, 0, listener);
-   
+
     while(true) {
       driver.updateStatus(ctx);
       System.out.println("Query: " + handle + " Status: " + ctx.getDriverStatus());
@@ -432,7 +432,7 @@ public class TestJdbcDriver {
     }
     assertTrue(ctx.getDriverStatus().getDriverStartTime() > 0);
     assertTrue(ctx.getDriverStatus().getDriverFinishTime() > 0);
-    
+
     listenerNotificationLatch.await(1, TimeUnit.SECONDS);
     // fetch result should throw error
     try {

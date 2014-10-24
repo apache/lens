@@ -8,9 +8,9 @@ package org.apache.lens.server.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,7 +87,7 @@ public class LensServerDAO {
         "metadataclass varchar(10000)," +
         "queryname varchar(255)," +
         "submissiontime bigint" +
-      ")";
+        ")";
     try {
       createTable(sql);
       ds.getConnection().commit();
@@ -105,7 +105,7 @@ public class LensServerDAO {
     String sql = "insert into finished_queries (handle, userquery,submitter," +
         "starttime,endtime,result,status,metadata,rows," +
         "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)" +
-      " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     QueryRunner runner = new QueryRunner(ds);
     try {
       runner.update(sql, query.getHandle(),
@@ -146,7 +146,7 @@ public class LensServerDAO {
   }
 
   public List<QueryHandle> findFinishedQueries(String state, String user, String queryName, long fromDate, long toDate)
-    throws LensException {
+      throws LensException {
     boolean addFilter = StringUtils.isNotBlank(state) || StringUtils.isNotBlank(user) || StringUtils.isNotBlank(queryName);
     StringBuilder builder = new StringBuilder("SELECT handle FROM finished_queries");
     List<Object> params = null;

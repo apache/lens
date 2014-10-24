@@ -9,9 +9,9 @@ package org.apache.lens.client;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -411,7 +411,7 @@ public class LensMetadataClient {
   }
 
   public APIResult createFactTable(String factSpec,
-                                   String storageSpecPath) {
+      String storageSpecPath) {
     WebTarget target = getMetastoreWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid")
@@ -560,7 +560,7 @@ public class LensMetadataClient {
   }
 
   public APIResult dropPartitionsOfFactTable(String factName, String storage,
-                                  List<String> partitions) {
+      List<String> partitions) {
     String values = Joiner.on(",").skipNulls().join(partitions);
 
     WebTarget target = getMetastoreWebTarget();
@@ -584,7 +584,7 @@ public class LensMetadataClient {
   }
 
   public APIResult createDimensionTable(DimensionTable table,
-                                        XStorageTables storageTables) {
+      XStorageTables storageTables) {
     WebTarget target = getMetastoreWebTarget();
 
     FormDataMultiPart mp = new FormDataMultiPart();
@@ -604,7 +604,7 @@ public class LensMetadataClient {
   }
 
   public APIResult createDimensionTable(String table,
-                                        String storageTables) {
+      String storageTables) {
     WebTarget target = getMetastoreWebTarget();
 
     FormDataMultiPart mp = new FormDataMultiPart();
@@ -727,7 +727,7 @@ public class LensMetadataClient {
   }
 
   public List<XPartition> getAllPartitionsOfDimensionTable(String dimTblName, String storage,
-                                                   String filter) {
+      String filter) {
     WebTarget target = getMetastoreWebTarget();
     JAXBElement<PartitionList> partList = target.path("dimtables").path(dimTblName)
         .path("storages").path(storage).path("partitions")
@@ -744,7 +744,7 @@ public class LensMetadataClient {
   }
 
   public APIResult dropAllPartitionsOfDimensionTable(String dimTblName, String storage,
-                                                String filter) {
+      String filter) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
         .path("storages").path(storage).path("partitions")
@@ -760,7 +760,7 @@ public class LensMetadataClient {
   }
 
   public APIResult dropAllPartitionsOfDimensionTable(String dimTblName, String storage,
-                                                List<String> vals) {
+      List<String> vals) {
     String values = Joiner.on(",").skipNulls().join(vals);
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
@@ -773,7 +773,7 @@ public class LensMetadataClient {
   }
 
   public APIResult addPartitionToDimensionTable(String dimTblName, String storage,
-                                           XPartition partition) {
+      XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
         .path("storages").path(storage).path("partitions")
@@ -784,7 +784,7 @@ public class LensMetadataClient {
   }
 
   public APIResult addPartitionToDimensionTable(String dimTblName, String storage,
-                                           String partition) {
+      String partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
         .path("storages").path(storage).path("partitions")
@@ -796,7 +796,7 @@ public class LensMetadataClient {
 
 
   public APIResult addPartitionToFactTable(String fact, String storage,
-                                           XPartition partition) {
+      XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("facts").path(fact)
         .path("storages").path(storage).path("partitions")
@@ -807,7 +807,7 @@ public class LensMetadataClient {
   }
 
   public APIResult addPartitionToFactTable(String fact, String storage,
-                                      String partition) {
+      String partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("facts").path(fact)
         .path("storages").path(storage).path("partitions")

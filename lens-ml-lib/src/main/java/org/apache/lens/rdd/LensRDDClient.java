@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -190,7 +190,7 @@ public class LensRDDClient {
     JavaPairRDD<WritableComparable,HCatRecord> rdd = null;
     try {
       rdd = HiveTableRDD.createHiveTableRDD(sparkContext, hiveConf, "default", tempTableName,
-        TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
+          TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
       LOG.info("Created RDD " + rdd.name() + " for table " + tempTableName);
     } catch (IOException e) {
       throw new LensException("Error creating RDD for table " + tempTableName, e);
@@ -201,7 +201,7 @@ public class LensRDDClient {
 
   // Create a temp table with schema of the result set and location
   protected String createTempMetastoreTable(String dataLocation,
-                                          QueryResultSetMetadata metadata) throws HiveException {
+      QueryResultSetMetadata metadata) throws HiveException {
     String tableName = "lens_rdd_" + UUID.randomUUID().toString().replace("-", "_");
 
     Hive hiveClient = Hive.get(hiveConf);
@@ -291,7 +291,7 @@ public class LensRDDClient {
       if (resultRDD == null) {
         try {
           JavaPairRDD<WritableComparable, HCatRecord> javaPairRDD = HiveTableRDD.createHiveTableRDD(sparkContext, hiveConf, "default", tempTableName,
-            TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
+              TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
           LOG.info("Created RDD " + resultRDD.name() + " for table " + tempTableName);
           resultRDD = javaPairRDD.map(new HCatRecordToObjectListMapper()).rdd();
         } catch (IOException e) {

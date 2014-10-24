@@ -9,9 +9,9 @@ package org.apache.lens.driver.jdbc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -217,7 +217,7 @@ public class JDBCDriver implements LensDriver {
     }
 
     public Statement getStatement(Connection conn) throws SQLException {
-      Statement stmt = 
+      Statement stmt =
           queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery())
               : conn.createStatement();
           stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
@@ -267,7 +267,7 @@ public class JDBCDriver implements LensDriver {
       }
     });
 
-    Class<? extends ConnectionProvider> cpClass = conf.getClass(JDBC_CONNECTION_PROVIDER, 
+    Class<? extends ConnectionProvider> cpClass = conf.getClass(JDBC_CONNECTION_PROVIDER,
         DataSourceConnectionProvider.class, ConnectionProvider.class);
     try {
       connectionProvider = cpClass.newInstance();
@@ -278,8 +278,9 @@ public class JDBCDriver implements LensDriver {
   }
 
   protected void checkConfigured() throws IllegalStateException {
-    if (!configured) 
+    if (!configured) {
       throw new IllegalStateException("JDBC Driver is not configured!");
+    }
   }
 
   protected synchronized Connection getConnection() throws LensException {
@@ -294,7 +295,7 @@ public class JDBCDriver implements LensDriver {
 
   protected synchronized QueryRewriter getQueryRewriter(Configuration conf) throws LensException {
     QueryRewriter rewriter;
-    Class<? extends QueryRewriter> queryRewriterClass = 
+    Class<? extends QueryRewriter> queryRewriterClass =
         conf.getClass(JDBC_QUERY_REWRITER_CLASS, DummyQueryRewriter.class, QueryRewriter.class);
     if (rewriterCache.containsKey(queryRewriterClass)) {
       rewriter =  rewriterCache.get(queryRewriterClass);
@@ -379,22 +380,22 @@ public class JDBCDriver implements LensDriver {
     String explainQuery =  explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM, DEFAULT_JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
-    
+
     QueryResult result = null;
     try {
-    	result = executeInternal(explainQueryCtx, explainQuery);
-    	if (result.error != null) {
+      result = executeInternal(explainQueryCtx, explainQuery);
+      if (result.error != null) {
         throw new LensException("Query explain failed!", result.error);
       }
     } finally {
-    	if (result != null) {
-    		result.close();
-    	}
+      if (result != null) {
+        result.close();
+      }
     }
-    
+
     return new JDBCQueryPlan();
-  } 
-    
+  }
+
   /**
    * Prepare the given query
    *
@@ -477,9 +478,9 @@ public class JDBCDriver implements LensDriver {
     LOG.info("Execute " + context.getQueryHandle());
     QueryResult result = executeInternal(context,rewrittenQuery);
     return result.getLensResultSet(true);
-    
+
   }
-  
+
   /**
    * Internally executing query
    *
@@ -488,7 +489,7 @@ public class JDBCDriver implements LensDriver {
    * @return returns the result set
    * @throws org.apache.lens.api.LensException
    */
-  
+
   private QueryResult executeInternal(QueryContext context, String rewrittenQuery) throws LensException {
     JdbcQueryContext queryContext = new JdbcQueryContext(context);
     queryContext.setPrepared(false);
@@ -502,7 +503,7 @@ public class JDBCDriver implements LensDriver {
    * Asynchronously execute the query
    *
    * @param context The query context
-   * 
+   *
    * @throws org.apache.lens.api.LensException
    */
   @Override
@@ -517,9 +518,9 @@ public class JDBCDriver implements LensDriver {
       Future<QueryResult> future = asyncQueryPool.submit(new QueryCallable(jdbcCtx));
       jdbcCtx.setResultFuture(future);
     } catch (RejectedExecutionException e) {
-      LOG.error("Query execution rejected: " + context.getQueryHandle() + " reason:" 
+      LOG.error("Query execution rejected: " + context.getQueryHandle() + " reason:"
           + e.getMessage(), e);
-      throw new LensException("Query execution rejected: " + context.getQueryHandle() + " reason:" 
+      throw new LensException("Query execution rejected: " + context.getQueryHandle() + " reason:"
           + e.getMessage(), e);
     }
     queryContextMap.put(context.getQueryHandle(), jdbcCtx);
@@ -535,7 +536,7 @@ public class JDBCDriver implements LensDriver {
    * @throws org.apache.lens.api.LensException
    */
   @Override
-  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, 
+  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis,
       QueryCompletionListener listener) throws LensException {
     checkConfigured();
     getQueryContext(handle).setListener(listener);
@@ -577,7 +578,7 @@ public class JDBCDriver implements LensDriver {
    * Fetch the results of the query, specified by the handle
    *
    * @param context
-   * 
+   *
    * @return returns the {@link LensResultSet}.
    */
   @Override

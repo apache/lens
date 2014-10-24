@@ -9,9 +9,9 @@ package org.apache.lens.lib.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -146,12 +146,12 @@ public class JSonSerde implements SerDe {
    */
   private Object parseField(Object field, TypeInfo fieldTypeInfo) {
     switch (fieldTypeInfo.getCategory()) {
-      case PRIMITIVE:
-        //Jackson primitive parsing in case of number is not perfect, so we
-        //parse it properly.
-        try {
-          switch (((PrimitiveTypeInfo)
-              fieldTypeInfo).getPrimitiveCategory()) {
+    case PRIMITIVE:
+      //Jackson primitive parsing in case of number is not perfect, so we
+      //parse it properly.
+      try {
+        switch (((PrimitiveTypeInfo)
+            fieldTypeInfo).getPrimitiveCategory()) {
             case DOUBLE:
               if (!(field instanceof Double)) {
                 field = new Double(field.toString());
@@ -175,21 +175,21 @@ public class JSonSerde implements SerDe {
             case STRING:
               field = field.toString().replaceAll("\n", "\\\\n");
               break;
-          }
-        } catch (Exception e) {
-          field = null;
         }
-        return field;
-      case LIST:
-        return parseList(field, (ListTypeInfo) fieldTypeInfo);
-      case MAP:
-        return parseMap(field, (MapTypeInfo) fieldTypeInfo);
-      case STRUCT:
-        return parseStruct(field, (StructTypeInfo) fieldTypeInfo);
-      case UNION:
-        // Unsupported by JSON
-      default:
-        return null;
+      } catch (Exception e) {
+        field = null;
+      }
+      return field;
+    case LIST:
+      return parseList(field, (ListTypeInfo) fieldTypeInfo);
+    case MAP:
+      return parseMap(field, (MapTypeInfo) fieldTypeInfo);
+    case STRUCT:
+      return parseStruct(field, (StructTypeInfo) fieldTypeInfo);
+    case UNION:
+      // Unsupported by JSON
+    default:
+      return null;
     }
   }
 

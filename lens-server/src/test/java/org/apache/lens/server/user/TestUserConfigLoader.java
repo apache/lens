@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -93,7 +93,7 @@ public class TestUserConfigLoader {
     server.start();
     BasicDataSource ds = UtilityMethods.getDataSourceFromConf(conf);
     Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
-      new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
+        new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
     liquibase.dropAll();
     liquibase.update("");
   }
@@ -106,10 +106,10 @@ public class TestUserConfigLoader {
     UserConfigLoaderFactory.init(conf);
     setupHsqlDb(dbName, path, "/user/db_changelog.xml");
     String[][] valuesToVerify = new String[][] {
-      {"user1", "clusteruser1", "queue12"},
-      {"user2", "clusteruser2", "queue12"},
-      {"user3", "clusteruser3", "queue34"},
-      {"user4", "clusteruser4", "queue34"},
+        {"user1", "clusteruser1", "queue12"},
+        {"user2", "clusteruser2", "queue12"},
+        {"user3", "clusteruser3", "queue34"},
+        {"user4", "clusteruser4", "queue34"},
     };
     for(final String[] sa: valuesToVerify) {
       Assert.assertEquals(UserConfigLoaderFactory.getUserConfig(sa[0]), new HashMap<String, String>() {

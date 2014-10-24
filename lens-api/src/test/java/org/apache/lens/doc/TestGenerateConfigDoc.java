@@ -9,9 +9,9 @@ package org.apache.lens.doc;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -52,7 +52,7 @@ public class TestGenerateConfigDoc {
   public static final String JDBC_DRIVER_APT_FILE = "../src/site/apt/admin/jdbcdriver-config.apt";
   public static final String CLIENT_APT_FILE = "../src/site/apt/user/client-config.apt";
   public static final String CUBE_QUERY_CONF_APT_FILE = "../src/site/apt/user/olap-query-conf.apt";
-  
+
   @Test
   public void generateServerConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(SERVER_CONF_FILE, APT_FILE);
@@ -70,13 +70,13 @@ public class TestGenerateConfigDoc {
     ConfigPrinter printer = new ConfigPrinter(HIVE_DRIVER_CONF_FILE, HIVE_DRIVER_APT_FILE);
     printer.generateDoc("Hive driver configuration");
   }
-  
+
   @Test
   public void generateJdbcdriverConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(JDBC_DRIVER_CONF_FILE, JDBC_DRIVER_APT_FILE);
     printer.generateDoc("Jdbc driver configuration");
   }
- 
+
   @Test
   public void generateClientConfigDoc() throws Exception {
     ConfigPrinter printer = new ConfigPrinter(CLIENT_CONF_FILE, CLIENT_APT_FILE);
@@ -93,22 +93,22 @@ public class TestGenerateConfigDoc {
     private String name;
     private String value;
     private String description;
-    
+
     public void validate() throws IllegalArgumentException {
       if (name == null || name.isEmpty()) {
         throw new IllegalArgumentException("Name cannot be empty");
       }
-      
+
       if (description == null || description.isEmpty()) {
         throw new IllegalArgumentException("Description cannot be empty for property: " + name);
       }
     }
-    
+
     public String toString() {
       return name + ":" + value + ":" + description;
     }
   }
-  
+
   class ConfigPrinter extends DefaultHandler {
     private final String configFile;
     private final String outputAPTFile;
@@ -116,19 +116,19 @@ public class TestGenerateConfigDoc {
     private ConfigEntry entry;
     private List<ConfigEntry> entries;
     boolean inProperty;
-    
+
     public ConfigPrinter(String confFile, String outputAPTFile) {
       configFile = confFile;
       this.outputAPTFile = outputAPTFile;
       entries = new ArrayList<ConfigEntry>();
     }
-    
+
     public void readConfigFile() throws IOException, ParserConfigurationException, SAXException {
       SAXParserFactory factory = SAXParserFactory.newInstance();
       SAXParser parser = factory.newSAXParser();
       parser.parse(new File(configFile), this);
     }
-    
+
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
         throws SAXException {
@@ -138,7 +138,7 @@ public class TestGenerateConfigDoc {
       }
       buf = new StringBuilder();
     }
-    
+
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
       if (inProperty && "name".equalsIgnoreCase(qName)) {
@@ -157,12 +157,12 @@ public class TestGenerateConfigDoc {
         inProperty = false;
       }
     }
-    
+
     @Override
     public void characters(char[] ch, int start, int length) throws SAXException {
       buf.append(ch, start, length);
     }
-    
+
     public void printAPT(String heading) throws IOException {
       PrintWriter apt = null;
       try {
@@ -173,7 +173,7 @@ public class TestGenerateConfigDoc {
           public int compare(ConfigEntry e1, ConfigEntry e2) {
             return e1.name.compareTo(e2.name);
           }
-          
+
         });
         // Add license
         apt.println("~~~");
@@ -185,7 +185,7 @@ public class TestGenerateConfigDoc {
         apt.println("~~ Licensed under the Apache License, Version 2.0 (the \"License\");");
         apt.println("~~ you may not use this file except in compliance with the License.");
         apt.println("~~ You may obtain a copy of the License at");
-        apt.println("~~ "); 
+        apt.println("~~ ");
         apt.println("~~      http://www.apache.org/licenses/LICENSE-2.0");
         apt.println("~~ ");
         apt.println("~~ Unless required by applicable law or agreed to in writing, software");
@@ -199,11 +199,11 @@ public class TestGenerateConfigDoc {
         // Print header
         apt.println(heading);
         apt.println();
-        
+
         apt.println("===");
-        
+
         apt.println();
-        
+
         // Print config entries
         int i = 1;
         apt.println("*--+--+---+--+");
@@ -229,13 +229,13 @@ public class TestGenerateConfigDoc {
         }
       }
     }
-    
+
     public void generateDoc(String heading) throws IOException, ParserConfigurationException, SAXException {
       readConfigFile();
       printAPT(heading);
     }
-    
+
   }
-  
+
 }
 

@@ -9,9 +9,9 @@ package org.apache.lens.cli.commands;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -48,7 +48,7 @@ public class LensStorageCommands extends  BaseLensCommand implements CommandMark
 
   @CliCommand(value = "create storage", help = "Create a new Storage")
   public String createStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "<path to storage-spec>") String storageSpec) {
+  mandatory = true, help = "<path to storage-spec>") String storageSpec) {
     File f = new File(storageSpec);
     if (!f.exists()) {
       return "cube spec path"
@@ -61,7 +61,7 @@ public class LensStorageCommands extends  BaseLensCommand implements CommandMark
 
   @CliCommand(value = "drop storage", help = "drop storage")
   public String dropStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "storage name to be dropped") String storage) {
+  mandatory = true, help = "storage name to be dropped") String storage) {
     APIResult result = getClient().dropStorage(storage);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + storage + "!!!";
@@ -100,7 +100,7 @@ public class LensStorageCommands extends  BaseLensCommand implements CommandMark
 
   @CliCommand(value = "describe storage", help = "describe storage schema")
   public String describeStorage(@CliOption(key = {"", "storage"},
-      mandatory = true, help = "<storage-name> to be described") String storage) {
+  mandatory = true, help = "<storage-name> to be described") String storage) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(
           getClient().getStorage(storage)));

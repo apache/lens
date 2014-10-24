@@ -9,9 +9,9 @@ package org.apache.lens.server.api.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -40,7 +40,7 @@ public interface QueryOutputFormatter {
    *
    * @param ctx The {@link QueryContext} object
    * @param metadata {@link LensResultSetMetadata} object
-   * @throws IOException 
+   * @throws IOException
    */
   public void init(QueryContext ctx, LensResultSetMetadata metadata) throws IOException;
 
@@ -59,8 +59,8 @@ public interface QueryOutputFormatter {
   public void writeFooter() throws IOException;
 
   /**
-   * Commit the formatting. 
-   * 
+   * Commit the formatting.
+   *
    * This will make the result consumable by user, will be called after
    * all the writes succeed.
    *
@@ -78,7 +78,7 @@ public interface QueryOutputFormatter {
   /**
    * Get final location where formatted output is available
    *
-   * @return 
+   * @return
    */
   public String getFinalOutputPath();
 

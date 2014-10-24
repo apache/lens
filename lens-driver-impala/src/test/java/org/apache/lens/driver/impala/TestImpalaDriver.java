@@ -9,9 +9,9 @@ package org.apache.lens.driver.impala;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -46,106 +46,106 @@ import com.cloudera.impala.thrift.ImpalaService;
 @PrepareForTest(ImpalaDriver.class)
 public class TestImpalaDriver {
 
-	private ImpalaDriver testInst;
+  private ImpalaDriver testInst;
 
-	@ObjectFactory
-	public IObjectFactory getObjectFactory() {
-		return new org.powermock.modules.testng.PowerMockObjectFactory();
-	}
+  @ObjectFactory
+  public IObjectFactory getObjectFactory() {
+    return new org.powermock.modules.testng.PowerMockObjectFactory();
+  }
 
-	@BeforeTest
-	public void publicSetupTest() {
-		testInst = new ImpalaDriver();
-	}
+  @BeforeTest
+  public void publicSetupTest() {
+    testInst = new ImpalaDriver();
+  }
 
-	@Test
-	public void testConfigure() {
+  @Test
+  public void testConfigure() {
 
-		try {
-			Configuration config = new Configuration();
-			config.set("PORT", "123");
-			config.set("HOST", "test.com");
+    try {
+      Configuration config = new Configuration();
+      config.set("PORT", "123");
+      config.set("HOST", "test.com");
 
-			TSocket mockSocket = PowerMockito.mock(TSocket.class);
-			TBinaryProtocol mockTProtocol = mock(TBinaryProtocol.class);
-			ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
+      TSocket mockSocket = PowerMockito.mock(TSocket.class);
+      TBinaryProtocol mockTProtocol = mock(TBinaryProtocol.class);
+      ImpalaService.Client mockClient = mock(ImpalaService.Client.class);
 
-			whenNew(TSocket.class).withArguments(config.get("HOST"),
-					config.getInt("PORT", 9999)).thenReturn(mockSocket);
-			whenNew(TBinaryProtocol.class).withArguments(mockSocket)
-					.thenReturn(mockTProtocol);
-			whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
-					.thenReturn(mockClient);
+      whenNew(TSocket.class).withArguments(config.get("HOST"),
+          config.getInt("PORT", 9999)).thenReturn(mockSocket);
+      whenNew(TBinaryProtocol.class).withArguments(mockSocket)
+      .thenReturn(mockTProtocol);
+      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
+      .thenReturn(mockClient);
 
-			this.testInst.configure(config);
-			verifyNew(TSocket.class).withArguments("test.com", 123);
-			verifyNew(TBinaryProtocol.class).withArguments(mockSocket);
-			verifyNew(ImpalaService.Client.class).withArguments(mockTProtocol);
-			
-			Mockito.verify(mockSocket ,Mockito.times(1) ).open();
-		} catch (Exception e) {
-			Assert.fail();
-		}
+      this.testInst.configure(config);
+      verifyNew(TSocket.class).withArguments("test.com", 123);
+      verifyNew(TBinaryProtocol.class).withArguments(mockSocket);
+      verifyNew(ImpalaService.Client.class).withArguments(mockTProtocol);
 
-	}
+      Mockito.verify(mockSocket ,Mockito.times(1) ).open();
+    } catch (Exception e) {
+      Assert.fail();
+    }
 
-	@Test
-	public void testExecute() {
-		try {
+  }
 
-			// configure before executing
-			Configuration config = new Configuration();
-			config.set("PORT", "123");
-			config.set("HOST", "test.com");
+  @Test
+  public void testExecute() {
+    try {
+
+      // configure before executing
+      Configuration config = new Configuration();
+      config.set("PORT", "123");
+      config.set("HOST", "test.com");
 
 
-			TSocket mockSocket = PowerMockito.mock(TSocket.class);
-		
-			TBinaryProtocol mockTProtocol = PowerMockito
-					.mock(TBinaryProtocol.class);
-			ImpalaService.Client mockClient = Mockito
-					.mock(ImpalaService.Client.class);
+      TSocket mockSocket = PowerMockito.mock(TSocket.class);
 
-			Query q = mock(Query.class);
-			QueryHandle qh = mock(QueryHandle.class);
-			ImpalaResultSet mockResultSet = mock(ImpalaResultSet.class);
+      TBinaryProtocol mockTProtocol = PowerMockito
+          .mock(TBinaryProtocol.class);
+      ImpalaService.Client mockClient = Mockito
+          .mock(ImpalaService.Client.class);
 
-			when(mockResultSet.hasNext()).thenReturn(true);
-			whenNew(Query.class).withNoArguments().thenReturn(q);
-			when(mockClient.query(q)).thenReturn(qh);
-			when(mockClient.get_state(qh)).thenReturn(QueryState.FINISHED);
+      Query q = mock(Query.class);
+      QueryHandle qh = mock(QueryHandle.class);
+      ImpalaResultSet mockResultSet = mock(ImpalaResultSet.class);
 
-			whenNew(TSocket.class).withArguments(config.get("HOST"),
-					config.getInt("PORT", 9999)).thenReturn(mockSocket);
-			whenNew(TBinaryProtocol.class).withArguments(mockSocket)
-					.thenReturn(mockTProtocol);
-			whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
-					.thenReturn(mockClient);
-			whenNew(ImpalaResultSet.class).withArguments(mockClient, qh)
-					.thenReturn(mockResultSet);
+      when(mockResultSet.hasNext()).thenReturn(true);
+      whenNew(Query.class).withNoArguments().thenReturn(q);
+      when(mockClient.query(q)).thenReturn(qh);
+      when(mockClient.get_state(qh)).thenReturn(QueryState.FINISHED);
 
-			// actual run
-			this.testInst.configure(config);
-			LensResultSet br = this.testInst.execute("query", null);
+      whenNew(TSocket.class).withArguments(config.get("HOST"),
+          config.getInt("PORT", 9999)).thenReturn(mockSocket);
+      whenNew(TBinaryProtocol.class).withArguments(mockSocket)
+      .thenReturn(mockTProtocol);
+      whenNew(ImpalaService.Client.class).withArguments(mockTProtocol)
+      .thenReturn(mockClient);
+      whenNew(ImpalaResultSet.class).withArguments(mockClient, qh)
+      .thenReturn(mockResultSet);
 
-			// test and verify
-			Assert.assertEquals(true, ((ImpalaResultSet) br).hasNext());
-			Mockito.verify(mockClient).query(q);
-			Mockito.verify(mockClient).get_state(qh);
+      // actual run
+      this.testInst.configure(config);
+      LensResultSet br = this.testInst.execute("query", null);
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			Assert.fail();
-		}
+      // test and verify
+      Assert.assertEquals(true, ((ImpalaResultSet) br).hasNext());
+      Mockito.verify(mockClient).query(q);
+      Mockito.verify(mockClient).get_state(qh);
 
-	}
-	@Test
-	public void testExplain() {
+    } catch (Exception e) {
+      e.printStackTrace();
+      Assert.fail();
+    }
 
-		/*QueryCost qs = this.testInst.explain("query");
+  }
+  @Test
+  public void testExplain() {
+
+    /*QueryCost qs = this.testInst.explain("query");
 		Assert.assertEquals(ExecMode.INTERACTIVE, qs.getExecMode());
 		Assert.assertEquals(-1, qs.getScanSize());
 		Assert.assertEquals(ScanMode.FULL_SCAN, qs.getScanMode());
-*/
-	}
+     */
+  }
 }

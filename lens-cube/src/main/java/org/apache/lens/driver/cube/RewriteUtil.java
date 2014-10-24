@@ -9,9 +9,9 @@ package org.apache.lens.driver.cube;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -127,10 +127,10 @@ public class RewriteUtil {
     if (backTrackStr != null) {
       String q = query.substring(0, backTrackIndex).toLowerCase();
       for (int i = 0; i < backTrackStr.length; i++) {
-      if (q.trim().endsWith(backTrackStr[i].toLowerCase())) {
-        backTrackIndex = q.lastIndexOf(backTrackStr[i].toLowerCase());
-        break;
-      }
+        if (q.trim().endsWith(backTrackStr[i].toLowerCase())) {
+          backTrackIndex = q.lastIndexOf(backTrackStr[i].toLowerCase());
+          break;
+        }
       }
     }
     while (Character.isSpaceChar(query.charAt(backTrackIndex - 1))) {
@@ -160,7 +160,7 @@ public class RewriteUtil {
    * Replaces new lines with spaces;
    * '&&' with AND; '||' with OR // these two can be removed once HIVE-5326
    *  gets resolved
-   * 
+   *
    * @return
    */
   static String getReplacedQuery(final String query) {
@@ -182,7 +182,7 @@ public class RewriteUtil {
           lowerCaseQuery.startsWith("set")) {
         for (LensDriver driver : drivers) {
           driverQueries.put(driver, replacedQuery);
-        } 
+        }
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
         for (LensDriver driver : drivers) {

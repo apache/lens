@@ -8,9 +8,9 @@ package org.apache.lens.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -41,11 +41,11 @@ public class PropertyBasedUserConfigLoader extends UserConfigLoader {
     String filename = hiveConf.get(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME, null);
     if(filename == null) {
       throw new UserConfigLoaderException("property file path not provided for property based resolver." +
-        "Please set property " + LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);
+          "Please set property " + LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);
     }
     try {
       properties.load(new InputStreamReader(new FileInputStream(new File(
-        filename))));
+          filename))));
     } catch (IOException e) {
       throw new UserConfigLoaderException("property file not found. Provided path was: " + filename);
     }

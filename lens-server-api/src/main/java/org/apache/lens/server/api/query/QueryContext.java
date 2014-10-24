@@ -9,9 +9,9 @@ package org.apache.lens.server.api.query;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -78,7 +78,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     this(query, user, qconf, conf, query, null, new Date().getTime());
   }
 
-  public QueryContext(PreparedQueryContext prepared, String user, 
+  public QueryContext(PreparedQueryContext prepared, String user,
       Configuration conf) {
     this(prepared, user, new LensConf(), conf);
   }
@@ -160,9 +160,9 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     return new LensQuery(queryHandle, userQuery,
         submittedUser, priority, isPersistent,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null,
-        driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
-        launchTime, driverStatus.getDriverStartTime(),
-        driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
+            driverQuery, status, resultSetPath, driverOpHandle, qconf, submissionTime,
+            launchTime, driverStatus.getDriverStartTime(),
+            driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
   }
 
   public boolean isResultAvailableInDriver() {
@@ -182,7 +182,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
     }
     this.status = newStatus;
   }
-  
+
   public String getResultHeader() {
     return getConf().get(LensConfConstants.QUERY_OUTPUT_HEADER);
   }

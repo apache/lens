@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private Counter totalFinishedQueries;
   private Counter totalFailedQueries;
   private Counter totalCancelledQueries;
-  
+
   private Gauge<Long> queuedQueries;
   private Gauge<Long> runningQueries;
   private Gauge<Long> finishedQueries;
@@ -103,7 +103,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public MetricsServiceImpl(String name) {
     super(METRICS_SVC_NAME);
   }
-  
+
   private QueryExecutionService getQuerySvc() {
     return (QueryExecutionService) LensServices.get().getService(QueryExecutionService.NAME);
   }
@@ -113,7 +113,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public synchronized void init(HiveConf hiveConf) {
     queryStatusListener = new AsyncQueryStatusListener();
-    LensEventService eventService = 
+    LensEventService eventService =
         (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
@@ -154,14 +154,14 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     queuedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-          return getQuerySvc().getQueuedQueriesCount();
+        return getQuerySvc().getQueuedQueriesCount();
       }
     });
-    
+
     runningQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES), new Gauge<Long>() {
       @Override
       public Long getValue() {
-          return getQuerySvc().getRunningQueriesCount();
+        return getQuerySvc().getRunningQueriesCount();
       }
     });
 
@@ -172,19 +172,19 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       }
     });
 
-    totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+    totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-" + ACCEPTED_QUERIES));
-    
-    totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+
+    totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-success-queries"));
 
-    totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+    totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-" + FINISHED_QUERIES));
 
-    totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+    totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-" + FAILED_QUERIES));
 
-    totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, 
+    totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
         "total-" + CANCELLED_QUERIES));
 
     metricRegistry.register("gc", new GarbageCollectorMetricSet());
@@ -204,8 +204,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   @Override
   public synchronized void stop() {
-    // unregister 
-    LensEventService eventService = 
+    // unregister
+    LensEventService eventService =
         (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.removeListener(queryStatusListener);
     queryStatusListener.stop();

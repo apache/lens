@@ -9,9 +9,9 @@ package org.apache.lens.server;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 public class EventServiceImpl extends AbstractService implements LensEventService {
   public static final Log LOG = LogFactory.getLog(EventServiceImpl.class);
   private final Map<Class<? extends LensEvent>, List<LensEventListener>> eventListeners =
-    new HashMap<Class<? extends LensEvent>, List<LensEventListener>>();
+      new HashMap<Class<? extends LensEvent>, List<LensEventListener>>();
   private ExecutorService eventHandlerPool;
 
   public EventServiceImpl(String name) {
@@ -50,7 +50,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
   public synchronized void init(HiveConf hiveConf) {
     int numProcs = Runtime.getRuntime().availableProcessors();
     eventHandlerPool =
-      Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
+        Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE, numProcs));
     super.init(hiveConf);
   }
 

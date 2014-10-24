@@ -9,9 +9,9 @@ package org.apache.lens.server.session;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -57,7 +57,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
  * Session resource api
- * 
+ *
  * This provides api for all things in session.
  */
 @Path("/session")
@@ -67,7 +67,7 @@ public class SessionResource {
 
   /**
    * API to know if session service is up and running
-   * 
+   *
    * @return Simple text saying it up
    */
   @GET
@@ -82,13 +82,13 @@ public class SessionResource {
 
   /**
    * Create a new session with Lens server
-   * 
+   *
    * @param username User name of the Lens server user
    * @param password Password of the Lens server user
    * @param sessionconf Key-value properties which will be used to configure this session
-   * 
+   *
    * @return A Session handle unique to this session
-   * 
+   *
    * @throws WebApplicationException if there was an exception thrown while creating the session
    */
   @POST
@@ -111,15 +111,15 @@ public class SessionResource {
   }
 
   /**
-   * Close a Lens server session 
-   * 
+   * Close a Lens server session
+   *
    * @param sessionid Session handle object of the session to be closed
-   * 
+   *
    * @return APIResult object indicating if the operation was successful (check result.getStatus())
-   * 
-   * @throws WebApplicationException if the underlying CLIService threw an exception 
+   *
+   * @throws WebApplicationException if the underlying CLIService threw an exception
    * while closing the session
-   * 
+   *
    */
   @DELETE
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
@@ -135,12 +135,12 @@ public class SessionResource {
 
   /**
    * Add a resource to the session to all LensServices running in this Lens server
-   * 
+   *
    * <p>
    * The returned @{link APIResult} will have status SUCCEEDED <em>only if</em> the add operation
    * was successful for all services running in this Lens server.
    * </p>
-   * 
+   *
    * @param sessionid session handle object
    * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource
@@ -171,11 +171,11 @@ public class SessionResource {
    * <p>
    * Similar to addResource, this call is successful only if resource was deleted from all services.
    * </p>
-   * 
+   *
    * @param sessionid session handle object
    * @param type The type of resource. Valid types are 'jar', 'file' and 'archive'
    * @param path path of the resource to be deleted
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
    * {@link APIResult} with state {@link Status#PARTIAL}, if delete succeeded only for some services.
    * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
@@ -208,13 +208,13 @@ public class SessionResource {
 
   /**
    * Get a list of key=value parameters set for this session
-   * 
+   *
    * @param sessionid session handle object
    * @param verbose If true, all the parameters will be returned.
    *  If false, configuration parameters will be returned
-   * @param key if this is empty, output will contain all parameters and their values, 
+   * @param key if this is empty, output will contain all parameters and their values,
    * if it is non empty parameters will be filtered by key
-   * 
+   *
    * @return List of Strings, one entry per key-value pair
    */
   @GET
@@ -233,16 +233,16 @@ public class SessionResource {
 
   /**
    * Set value for a parameter specified by key
-   * 
+   *
    * The parameters can be a hive variable or a configuration.
    * To set key as a hive variable, the key should be prefixed with 'hivevar:'.
    * To set key as configuration parameter, the key should be prefixed with 'hiveconf:'
    * If no prefix is attached, the parameter is set as configuration.
-   * 
+   *
    * @param sessionid session handle object
    * @param key parameter key
    * @param value parameter value
-   * 
+   *
    * @return APIResult object indicating if set operation was successful
    */
   @PUT

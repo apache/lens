@@ -9,9 +9,9 @@ package org.apache.lens.server.user;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -67,13 +67,13 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
     searchBase = conf.get(LensConfConstants.USER_RESOLVER_LDAP_SEARCH_BASE);
     searchFilterPattern = conf.get(LensConfConstants.USER_RESOLVER_LDAP_SEARCH_FILTER);
     intermediateCache = CacheBuilder
-      .newBuilder()
-      .expireAfterWrite(expiryHours, TimeUnit.HOURS)
-      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+        .newBuilder()
+        .expireAfterWrite(expiryHours, TimeUnit.HOURS)
+        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
     cache = CacheBuilder
-      .newBuilder()
-      .expireAfterWrite(expiryHours, TimeUnit.HOURS)
-      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+        .newBuilder()
+        .expireAfterWrite(expiryHours, TimeUnit.HOURS)
+        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
 
     Hashtable<String, Object> env = new Hashtable<String, Object>(){
       {
@@ -122,7 +122,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
         @Override
         public String[] call() throws Exception {
           String[] config = UtilityMethods.queryDatabase(ds, intermediateQuerySql, true,
-            loggedInUser, Timestamp.valueOf(DateTime.now().toString(outputFormatter)));
+              loggedInUser, Timestamp.valueOf(DateTime.now().toString(outputFormatter)));
           if(config == null) {
             config = getAttributes(loggedInUser);
             Object[] updateArray = new Object[config.length + 2];
@@ -144,7 +144,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
           final String[] argsAsArray = UtilityMethods.queryDatabase(ds, querySql, false, intermediateKey);
           if(argsAsArray.length != keys.length) {
             throw new UserConfigLoaderException("size of columns retrieved by db query(" + argsAsArray.length + ") " +
-              "is not equal to the number of keys required(" + keys.length + ").");
+                "is not equal to the number of keys required(" + keys.length + ").");
           }
           return new HashMap<String, String>(){
             {
