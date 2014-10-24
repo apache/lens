@@ -22,7 +22,6 @@ package org.apache.lens.server.stats;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.lens.server.stats.event.LensStatistics;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.log.LogStatisticsStore;
 import org.apache.lens.server.stats.store.log.StatisticsLogLayout;

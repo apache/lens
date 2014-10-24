@@ -28,15 +28,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.Type;
 import org.apache.hive.service.cli.TypeDescriptor;
 import org.apache.hive.service.cli.TypeQualifiers;
 import org.apache.lens.api.LensException;
-import org.apache.lens.api.query.ResultColumn;
-import org.apache.lens.api.query.ResultColumnType;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.JDBCDriver.QueryResult;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;

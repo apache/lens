@@ -20,7 +20,6 @@ package org.apache.lens.server.api.query;
  * #L%
  */
 
-import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.core.Response;

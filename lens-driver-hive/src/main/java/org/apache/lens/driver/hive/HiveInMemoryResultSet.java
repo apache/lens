@@ -26,7 +26,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.hive.service.cli.CLIServiceClient;
-import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.FetchOrientation;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;

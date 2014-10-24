@@ -27,7 +27,6 @@ import java.util.Queue;
 import java.util.StringTokenizer;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;

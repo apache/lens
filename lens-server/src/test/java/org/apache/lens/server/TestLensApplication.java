@@ -19,22 +19,14 @@
  */
 package org.apache.lens.server;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensApplication;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Set;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 @Test(alwaysRun=true, groups="unit-test")
 public class TestLensApplication extends LensJerseyTest {
 

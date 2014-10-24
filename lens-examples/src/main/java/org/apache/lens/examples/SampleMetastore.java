@@ -32,7 +32,6 @@ import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensConnection;
-import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.LensMetadataClient;
 
 public class SampleMetastore {

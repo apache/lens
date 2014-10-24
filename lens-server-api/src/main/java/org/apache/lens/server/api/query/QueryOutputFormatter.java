@@ -22,7 +22,6 @@ package org.apache.lens.server.api.query;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configurable;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
 

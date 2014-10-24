@@ -21,7 +21,6 @@ package org.apache.lens.server.api.driver;
  */
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;

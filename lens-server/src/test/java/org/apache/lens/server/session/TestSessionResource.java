@@ -24,7 +24,6 @@ import java.net.URL;
 import java.net.URLClassLoader;
 
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;

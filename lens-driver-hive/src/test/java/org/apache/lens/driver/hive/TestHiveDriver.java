@@ -40,7 +40,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.ResultColumn;
 import org.apache.lens.driver.hive.EmbeddedThriftConnection;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.driver.hive.HiveInMemoryResultSet;

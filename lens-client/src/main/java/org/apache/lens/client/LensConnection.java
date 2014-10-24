@@ -25,7 +25,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.client.exceptions.LensClientException;
 import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;

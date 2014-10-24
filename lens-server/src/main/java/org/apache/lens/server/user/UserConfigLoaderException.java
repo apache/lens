@@ -1,10 +1,5 @@
 package org.apache.lens.server.user;
 
-
-import java.sql.SQLException;
-
-import org.apache.lens.api.LensException;
-
 /*
  * #%L
  * Lens Server
