@@ -1,24 +1,22 @@
-package org.apache.lens.lib.query;
-
-/*
- * #%L
- * Lens Query Library
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.lib.query;
 
 import java.io.IOException;
 
@@ -29,19 +27,25 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.lens.lib.query.LensFileOutputFormat.LensRowWriter;
 
-
 /**
  * A hadoop file formatter
- * 
- * This has capability to create output on Hadoop compatible files systems, with
- * hadoop supported compression codecs.
- * 
+ *
+ * This has capability to create output on Hadoop compatible files systems, with hadoop supported compression codecs.
+ *
  */
 public class HadoopFileFormatter extends AbstractFileFormatter {
 
+  /** The output path. */
   private Path outputPath;
+
+  /** The row writer. */
   protected LensRowWriter rowWriter;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.lib.query.FileFormatter#setupOutputs()
+   */
   public void setupOutputs() throws IOException {
     String pathStr = ctx.getResultSetParentDir();
     if (StringUtils.isBlank(pathStr)) {
@@ -50,23 +54,39 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     outputPath = new Path(pathStr, ctx.getQueryHandle().toString());
     Path tmpWorkPath = new Path(outputPath + ".tmp");
     try {
-      rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath,
-          Reporter.NULL, ctx.getCompressOutput(), ctx.getOuptutFileExtn(),
-          ctx.getResultEncoding());
+      rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath, Reporter.NULL,
+          ctx.getCompressOutput(), ctx.getOuptutFileExtn(), ctx.getResultEncoding());
     } catch (IOException e) {
       throw new IllegalArgumentException("Could not create tmp path");
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.lib.query.FileFormatter#writeHeader(java.lang.String)
+   */
   public void writeHeader(String header) throws IOException {
     rowWriter.write(null, new Text(header));
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.lib.query.FileFormatter#writeFooter(java.lang.String)
+   */
   public void writeFooter(String footer) throws IOException {
     rowWriter.write(null, new Text(footer));
   }
 
+  /** The cached row. */
   private Text cachedRow;
+
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.lib.query.FileFormatter#writeRow(java.lang.String)
+   */
   public void writeRow(String row) throws IOException {
     if (cachedRow == null) {
       cachedRow = new Text();
@@ -76,6 +96,11 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     numRows++;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.query.QueryOutputFormatter#commit()
+   */
   @Override
   public void commit() throws IOException {
     rowWriter.close(Reporter.NULL);
@@ -91,6 +116,11 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     }
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.api.query.QueryOutputFormatter#close()
+   */
   @Override
   public void close() throws IOException {
     rowWriter.close(Reporter.NULL);

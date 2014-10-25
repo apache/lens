@@ -1,24 +1,22 @@
-package org.apache.lens.server.api.metastore;
-
-/*
- * #%L
- * Lens API for server and extensions
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.server.api.metastore;
 
 import org.apache.lens.api.metastore.*;
 
@@ -31,21 +29,21 @@ import org.apache.lens.api.LensSessionHandle;
 public interface CubeMetastoreService {
   /**
    * Get current database used by the CubeMetastoreClient
-   * 
+   *
    * @return the current database name
    */
   public String getCurrentDatabase(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Change the current database used by the CubeMetastoreClient
-   * 
+   *
    * @param database
    */
   public void setCurrentDatabase(LensSessionHandle sessionid, String database) throws LensException;
 
   /**
    * Drop a database from cube metastore
-   * 
+   *
    * @param database database name
    * @param cascade flag indicating if the tables in the database should be dropped as well
    */
@@ -53,7 +51,7 @@ public interface CubeMetastoreService {
 
   /**
    * Create a database in the metastore
-   * 
+   *
    * @param database database name
    * @param ignore ignore if database already exists
    */
@@ -67,7 +65,7 @@ public interface CubeMetastoreService {
 
   /**
    * Create a storage
-   * 
+   *
    * @param sessionid
    * @param storage
    * @throws LensException
@@ -76,7 +74,7 @@ public interface CubeMetastoreService {
 
   /**
    * Drop a storage specified by name
-   * 
+   *
    * @param sessionid
    * @param storageName
    * @throws LensException
@@ -85,7 +83,7 @@ public interface CubeMetastoreService {
 
   /**
    * Alter storage specified by name, with new definition
-   * 
+   *
    * @param sessionid
    * @param storageName
    * @param storage
@@ -95,7 +93,7 @@ public interface CubeMetastoreService {
 
   /**
    * Get Storage specified by name
-   * 
+   *
    * @param sessionid
    * @param storageName
    * @throws LensException
@@ -104,9 +102,9 @@ public interface CubeMetastoreService {
 
   /**
    * Get all storage names in current database
-   * 
+   *
    * @param sessionid
-   * 
+   *
    * @return returns list of the storage names
    * @throws LensException
    */
@@ -114,21 +112,21 @@ public interface CubeMetastoreService {
 
   /**
    * Get names of all cubes in the current database, includes both base cubes and derived cubes
-   * 
+   *
    * @return list of cube names
    */
   public List<String> getAllCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all base cube names in the current database
-   * 
+   *
    * @return list of cube names
    */
   public List<String> getAllBaseCubeNames(LensSessionHandle sessionid) throws LensException;
 
   /**
    * Get names of all derived cubes in the current database
-   * 
+   *
    * @return list of cube names
    */
   public List<String> getAllDerivedCubeNames(LensSessionHandle sessionid) throws LensException;
@@ -173,23 +171,23 @@ public interface CubeMetastoreService {
 
   /**
    * Get a cube from the metastore
-   * 
+   *
    * @param cubeName
-   * 
+   *
    * @return JAXB Cube object
    */
   public XCube getCube(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Drop a cube from the metastore in the currently deleted database.
-   * 
+   *
    * @param cubeName
    */
   public void dropCube(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Update an existing cube
-   * 
+   *
    * @param cube JAXB Cube object
    */
   public void updateCube(LensSessionHandle sessionid, XCube cube) throws LensException;

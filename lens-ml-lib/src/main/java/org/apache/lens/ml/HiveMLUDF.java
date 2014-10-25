@@ -1,24 +1,22 @@
-/*
- * #%L
- * Lens ML Lib
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.lens.ml;
-
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -39,36 +37,56 @@ import org.apache.hadoop.mapred.JobConf;
 import java.io.IOException;
 
 /**
- * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as
- * argument
+ * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as argument.
  */
-@Description(
-  name = "predict",
-  value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given " +
-    "algorithm name, model ID and input feature columns")
+@Description(name = "predict", value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given "
+    + "algorithm name, model ID and input feature columns")
 public class HiveMLUDF extends GenericUDF {
 
+  /** The Constant UDF_NAME. */
   public static final String UDF_NAME = "predict";
+
+  /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(HiveMLUDF.class);
+
+  /** The conf. */
   private JobConf conf;
+
+  /** The soi. */
   private StringObjectInspector soi;
+
+  /** The doi. */
   private LazyDoubleObjectInspector doi;
+
+  /** The model. */
   private MLModel model;
 
   /**
-   * Currently we only support double as the return value
+   * Currently we only support double as the return value.
+   *
+   * @param objectInspectors
+   *          the object inspectors
+   * @return the object inspector
+   * @throws UDFArgumentException
+   *           the UDF argument exception
    */
   @Override
   public ObjectInspector initialize(ObjectInspector[] objectInspectors) throws UDFArgumentException {
     // We require algo name, model id and at least one feature
     if (objectInspectors.length < 3) {
       throw new UDFArgumentLengthException("Algo name, model ID and at least one feature should be passed to "
-        + UDF_NAME);
+          + UDF_NAME);
     }
     LOG.info(UDF_NAME + " initialized");
     return PrimitiveObjectInspectorFactory.javaDoubleObjectInspector;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#evaluate(org.apache.hadoop.hive.ql.udf.generic.GenericUDF.
+   * DeferredObject[])
+   */
   @Override
   public Object evaluate(DeferredObject[] deferredObjects) throws HiveException {
     String algorithm = soi.getPrimitiveJavaObject(deferredObjects[0].get());
@@ -91,11 +109,21 @@ public class HiveMLUDF extends GenericUDF {
     return model.predict(features);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#getDisplayString(java.lang.String[])
+   */
   @Override
   public String getDisplayString(String[] strings) {
     return UDF_NAME;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#configure(org.apache.hadoop.hive.ql.exec.MapredContext)
+   */
   @Override
   public void configure(MapredContext context) {
     super.configure(context);

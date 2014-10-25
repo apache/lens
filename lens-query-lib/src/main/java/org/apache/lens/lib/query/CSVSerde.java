@@ -1,24 +1,22 @@
-package org.apache.lens.lib.query;
-
-/*
- * #%L
- * Lens Query Library
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.lib.query;
 
 import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
 import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
@@ -65,34 +63,75 @@ import org.apache.hadoop.io.Writable;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
-
 /**
- * CSVSerde uses opencsv (http://opencsv.sourceforge.net/)
- * to serialize/deserialize columns as CSV.
+ * CSVSerde uses opencsv (http://opencsv.sourceforge.net/) to serialize/deserialize columns as CSV.
  *
  */
 public final class CSVSerde extends AbstractSerDe {
 
+  /** The default null format. */
   public static String DEFAULT_NULL_FORMAT = "NULL";
+
+  /** The default collection seperator. */
   public static char DEFAULT_COLLECTION_SEPERATOR = ',';
+
+  /** The default struct field seperator. */
   public static char DEFAULT_STRUCT_FIELD_SEPERATOR = ':';
+
+  /** The default union tag field seperator. */
   public static char DEFAULT_UNION_TAG_FIELD_SEPERATOR = ':';
+
+  /** The default map key value seperator. */
   public static char DEFAULT_MAP_KEY_VALUE_SEPERATOR = '=';
+
+  /** The inspector. */
   private ObjectInspector inspector;
+
+  /** The output fields. */
   private String[] outputFields;
+
+  /** The num cols. */
   private int numCols;
+
+  /** The row. */
   private List<Object> row;
+
+  /** The column types. */
   private List<TypeInfo> columnTypes;
+
+  /** The column object inspectors. */
   private List<ObjectInspector> columnObjectInspectors;
+
+  /** The separator char. */
   private char separatorChar;
+
+  /** The quote char. */
   private char quoteChar;
+
+  /** The escape char. */
   private char escapeChar;
+
+  /** The collection seperator. */
   private char collectionSeperator;
+
+  /** The struct field seperator. */
   private char structFieldSeperator;
+
+  /** The union tag field seperator. */
   private char unionTagFieldSeperator;
+
+  /** The map key value seperator. */
   private char mapKeyValueSeperator;
+
+  /** The null string. */
   private String nullString;
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#initialize(org.apache.hadoop.conf.Configuration,
+   * java.util.Properties)
+   */
   @Override
   public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
     List<String> columnNames = new ArrayList<String>();
@@ -101,26 +140,23 @@ public final class CSVSerde extends AbstractSerDe {
       columnNames.add(StringEscapeUtils.unescapeCsv(name));
     }
     String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
-    columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(
-        columnTypeProperty);
+    columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(columnTypeProperty);
     numCols = columnNames.size();
 
     this.outputFields = new String[numCols];
     row = new ArrayList<Object>(numCols);
 
-    for (int i=0; i< numCols; i++) {
+    for (int i = 0; i < numCols; i++) {
       row.add(null);
     }
 
     ObjectInspector colObjectInspector;
     columnObjectInspectors = new ArrayList<ObjectInspector>(numCols);
     for (int col = 0; col < numCols; col++) {
-      colObjectInspector = TypeInfoUtils
-          .getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(col));
+      colObjectInspector = TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(columnTypes.get(col));
       columnObjectInspectors.add(colObjectInspector);
     }
-    this.inspector = ObjectInspectorFactory.getStandardStructObjectInspector(
-        columnNames, columnObjectInspectors);
+    this.inspector = ObjectInspectorFactory.getStandardStructObjectInspector(columnNames, columnObjectInspectors);
 
     separatorChar = getProperty(tbl, "separatorChar", CSVWriter.DEFAULT_SEPARATOR);
     quoteChar = getProperty(tbl, "quoteChar", CSVWriter.DEFAULT_QUOTE_CHARACTER);
@@ -132,6 +168,17 @@ public final class CSVSerde extends AbstractSerDe {
     mapKeyValueSeperator = getProperty(tbl, "mapKeyValueSeperator", DEFAULT_MAP_KEY_VALUE_SEPERATOR);
   }
 
+  /**
+   * Gets the property.
+   *
+   * @param tbl
+   *          the tbl
+   * @param property
+   *          the property
+   * @param def
+   *          the def
+   * @return the property
+   */
   private final char getProperty(final Properties tbl, final String property, final char def) {
     final String val = tbl.getProperty(property);
 
@@ -142,14 +189,20 @@ public final class CSVSerde extends AbstractSerDe {
     return def;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#serialize(java.lang.Object,
+   * org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector)
+   */
   @Override
   public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
     final StructObjectInspector outputRowOI = (StructObjectInspector) objInspector;
     final List<? extends StructField> outputFieldRefs = outputRowOI.getAllStructFieldRefs();
 
     if (outputFieldRefs.size() != numCols) {
-      throw new SerDeException("Cannot serialize the object because there are "
-          + outputFieldRefs.size() + " fields but the table has " + numCols + " columns.");
+      throw new SerDeException("Cannot serialize the object because there are " + outputFieldRefs.size()
+          + " fields but the table has " + numCols + " columns.");
     }
 
     try {
@@ -174,8 +227,20 @@ public final class CSVSerde extends AbstractSerDe {
     }
   }
 
-  private String serializeField(Object field, ObjectInspector fieldOI)
-      throws IOException, SerDeException {
+  /**
+   * Serialize field.
+   *
+   * @param field
+   *          the field
+   * @param fieldOI
+   *          the field oi
+   * @return the string
+   * @throws IOException
+   *           Signals that an I/O exception has occurred.
+   * @throws SerDeException
+   *           the ser de exception
+   */
+  private String serializeField(Object field, ObjectInspector fieldOI) throws IOException, SerDeException {
 
     if (field == null) {
       return nullString;
@@ -262,60 +327,55 @@ public final class CSVSerde extends AbstractSerDe {
       break;
     }
 
-    throw new RuntimeException("Unknown category type: "
-        + fieldOI.getCategory());
+    throw new RuntimeException("Unknown category type: " + fieldOI.getCategory());
   }
-
 
   /**
    * Gets the Java Object corresponding to the type, represented as string.
    *
    * @param colString
+   *          the col string
    * @param type
-   *
-   * @return Standard Java Object for primitive types
-   * List of Objects for Array type
-   * Map<Object,Object> for Map type
-   * List of Objects for Struct type
-   * Object itself contained in Union type
+   *          the type
+   * @return Standard Java Object for primitive types List of Objects for Array type Map<Object,Object> for Map type
+   *         List of Objects for Struct type Object itself contained in Union type
    */
   private Object getColumnObject(String colString, TypeInfo type) {
     if (colString.equals(nullString)) {
       return null;
     }
     switch (type.getCategory()) {
-    case PRIMITIVE :
-      return ObjectInspectorConverters.getConverter(
-          PrimitiveObjectInspectorFactory.javaStringObjectInspector,
+    case PRIMITIVE:
+      return ObjectInspectorConverters.getConverter(PrimitiveObjectInspectorFactory.javaStringObjectInspector,
           TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(type)).convert(colString);
-    case LIST :
-      TypeInfo elementType = ((ListTypeInfo)type).getListElementTypeInfo();
+    case LIST:
+      TypeInfo elementType = ((ListTypeInfo) type).getListElementTypeInfo();
       List<Object> olist = new ArrayList<Object>();
       List<String> inlist = Arrays.asList(StringUtils.split(colString, collectionSeperator));
-      for(String ins : inlist) {
+      for (String ins : inlist) {
         olist.add(getColumnObject(ins, elementType));
       }
       return olist;
-    case MAP :
-      TypeInfo keyType = ((MapTypeInfo)type).getMapKeyTypeInfo();
-      TypeInfo valueType = ((MapTypeInfo)type).getMapValueTypeInfo();
-      Map<Object,Object> omap = new LinkedHashMap<Object, Object>();
+    case MAP:
+      TypeInfo keyType = ((MapTypeInfo) type).getMapKeyTypeInfo();
+      TypeInfo valueType = ((MapTypeInfo) type).getMapValueTypeInfo();
+      Map<Object, Object> omap = new LinkedHashMap<Object, Object>();
       List<String> maplist = Arrays.asList(StringUtils.split(colString, collectionSeperator));
-      for(String ins : maplist) {
+      for (String ins : maplist) {
         String[] entry = StringUtils.split(ins, mapKeyValueSeperator);
         omap.put(getColumnObject(entry[0], keyType), getColumnObject(entry[1], valueType));
       }
       return omap;
-    case STRUCT :
-      List<TypeInfo> elementTypes = ((StructTypeInfo)type).getAllStructFieldTypeInfos();
+    case STRUCT:
+      List<TypeInfo> elementTypes = ((StructTypeInfo) type).getAllStructFieldTypeInfos();
       List<Object> slist = new ArrayList<Object>();
       List<String> instructlist = Arrays.asList(StringUtils.split(colString, structFieldSeperator));
-      for (int i =0; i < elementTypes.size(); i++) {
+      for (int i = 0; i < elementTypes.size(); i++) {
         slist.add(getColumnObject(instructlist.get(i), elementTypes.get(i)));
       }
       return slist;
-    case UNION :
-      List<TypeInfo> unionTypes = ((UnionTypeInfo)type).getAllUnionObjectTypeInfos();
+    case UNION:
+      List<TypeInfo> unionTypes = ((UnionTypeInfo) type).getAllUnionObjectTypeInfos();
       String[] unionElements = StringUtils.split(colString, unionTagFieldSeperator);
       int tag = Integer.parseInt(unionElements[0]);
       return getColumnObject(colString, unionTypes.get(tag));
@@ -323,17 +383,21 @@ public final class CSVSerde extends AbstractSerDe {
     return null;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.hadoop.hive.serde2.AbstractSerDe#deserialize(org.apache.hadoop.io.Writable)
+   */
   @Override
   public Object deserialize(final Writable blob) throws SerDeException {
     Text rowText = (Text) blob;
 
     CSVReader csv = null;
     try {
-      csv = newReader(new CharArrayReader(rowText.toString().toCharArray()),
-          separatorChar, quoteChar, escapeChar);
+      csv = newReader(new CharArrayReader(rowText.toString().toCharArray()), separatorChar, quoteChar, escapeChar);
       final String[] read = csv.readNext();
 
-      for (int i=0; i< numCols; i++) {
+      for (int i = 0; i < numCols; i++) {
         if (read != null && i < read.length && !read[i].equals(nullString)) {
           row.set(i, getColumnObject(read[i], columnTypes.get(i)));
         } else {
@@ -355,6 +419,19 @@ public final class CSVSerde extends AbstractSerDe {
     }
   }
 
+  /**
+   * New reader.
+   *
+   * @param reader
+   *          the reader
+   * @param separator
+   *          the separator
+   * @param quote
+   *          the quote
+   * @param escape
+   *          the escape
+   * @return the CSV reader
+   */
   private CSVReader newReader(final Reader reader, char separator, char quote, char escape) {
     // CSVReader will throw an exception if any of separator, quote, or escape is the same, but
     // the CSV format specifies that the escape character and quote char are the same... very weird
@@ -365,6 +442,19 @@ public final class CSVSerde extends AbstractSerDe {
     }
   }
 
+  /**
+   * New writer.
+   *
+   * @param writer
+   *          the writer
+   * @param separator
+   *          the separator
+   * @param quote
+   *          the quote
+   * @param escape
+   *          the escape
+   * @return the CSV writer
+   */
   private CSVWriter newWriter(final Writer writer, char separator, char quote, char escape) {
     if (CSVWriter.DEFAULT_ESCAPE_CHARACTER == escape) {
       return new CSVWriter(writer, separator, quote, "");

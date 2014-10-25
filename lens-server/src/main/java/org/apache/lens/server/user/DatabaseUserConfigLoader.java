@@ -1,23 +1,22 @@
-package org.apache.lens.server.user;
-/*
- * #%L
- * Lens Server
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.server.user;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
@@ -34,23 +33,46 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The Class DatabaseUserConfigLoader.
+ */
 public class DatabaseUserConfigLoader extends UserConfigLoader {
+
+  /** The query sql. */
   protected final String querySql;
+
+  /** The keys. */
   protected final String[] keys;
+
+  /** The cache. */
   protected final Cache<String, Map<String, String>> cache;
+
+  /** The ds. */
   protected DataSource ds;
 
+  /**
+   * Instantiates a new database user config loader.
+   *
+   * @param conf
+   *          the conf
+   * @throws UserConfigLoaderException
+   *           the user config loader exception
+   */
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
     querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     ds = UtilityMethods.getDataSourceFromConf(conf);
-    cache = CacheBuilder
-      .newBuilder()
-      .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+    cache = CacheBuilder.newBuilder()
+        .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
+   */
   @Override
   public Map<String, String> getUserConfig(final String loggedInUser) throws UserConfigLoaderException {
     try {
@@ -60,13 +82,13 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
           try {
             final String[] config = UtilityMethods.queryDatabase(ds, querySql, false, loggedInUser);
-            if(config.length != keys.length) {
-              throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") " +
-                "is not equal to the number of keys required(" + keys.length + ").");
+            if (config.length != keys.length) {
+              throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") "
+                  + "is not equal to the number of keys required(" + keys.length + ").");
             }
-            return new HashMap<String, String>(){
+            return new HashMap<String, String>() {
               {
-                for(int i = 0; i < keys.length; i++) {
+                for (int i = 0; i < keys.length; i++) {
                   put(keys[i], config[i]);
                 }
               }
@@ -77,7 +99,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
         }
       });
     } catch (ExecutionException e) {
-        throw new UserConfigLoaderException(e);
+      throw new UserConfigLoaderException(e);
     }
   }
 }

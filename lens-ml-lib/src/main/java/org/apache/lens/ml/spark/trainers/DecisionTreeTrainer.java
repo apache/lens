@@ -1,21 +1,20 @@
-/*
- * #%L
- * Lens ML Lib
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.lens.ml.spark.trainers;
 
@@ -39,29 +38,42 @@ import scala.Enumeration;
 
 import java.util.Map;
 
-@Algorithm(
-  name = "spark_decision_tree",
-  description = "Spark Decision Tree classifier trainer"
-)
+/**
+ * The Class DecisionTreeTrainer.
+ */
+@Algorithm(name = "spark_decision_tree", description = "Spark Decision Tree classifier trainer")
 public class DecisionTreeTrainer extends BaseSparkTrainer {
-  @TrainerParam(name = "algo",
-   help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
+
+  /** The algo. */
+  @TrainerParam(name = "algo", help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
   private Enumeration.Value algo;
 
-  @TrainerParam(name = "impurity",
-    help = "Impurity measure used by the decision tree. " +
-      "Allowed values are 'gini', 'entropy' and 'variance'")
+  /** The decision tree impurity. */
+  @TrainerParam(name = "impurity", help = "Impurity measure used by the decision tree. "
+      + "Allowed values are 'gini', 'entropy' and 'variance'")
   private Impurity decisionTreeImpurity;
 
-  @TrainerParam(name = "maxDepth",
-    help = "Max depth of the decision tree. Integer values expected.",
-    defaultValue = "100")
+  /** The max depth. */
+  @TrainerParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.", defaultValue = "100")
   private int maxDepth;
 
+  /**
+   * Instantiates a new decision tree trainer.
+   *
+   * @param name
+   *          the name
+   * @param description
+   *          the description
+   */
   public DecisionTreeTrainer(String name, String description) {
     super(name, description);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
+   */
   @Override
   public void parseTrainerParams(Map<String, String> params) {
     String dtreeAlgoName = params.get("algo");
@@ -83,10 +95,15 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
     maxDepth = getParamValue("maxDepth", 100);
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
+   */
   @Override
-  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD) throws LensException {
-    DecisionTreeModel model = DecisionTree$.MODULE$.train(trainingRDD,
-      algo, decisionTreeImpurity, maxDepth);
+  protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
+      throws LensException {
+    DecisionTreeModel model = DecisionTree$.MODULE$.train(trainingRDD, algo, decisionTreeImpurity, maxDepth);
     return new DecisionTreeClassificationModel(modelId, new SparkDecisionTreeModel(model));
   }
 }

@@ -1,21 +1,20 @@
-/*
- * #%L
- * Lens ML Lib
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.lens.ml.spark.trainers;
 
@@ -45,30 +44,36 @@ import scala.Tuple2;
 
 import java.util.List;
 
-@Algorithm(
-  name = "spark_kmeans_trainer",
-  description = "Spark MLLib KMeans trainer"
-)
+/**
+ * The Class KMeansTrainer.
+ */
+@Algorithm(name = "spark_kmeans_trainer", description = "Spark MLLib KMeans trainer")
 public class KMeansTrainer implements MLTrainer {
+
+  /** The conf. */
   private transient LensConf conf;
+
+  /** The spark context. */
   private JavaSparkContext sparkContext;
 
+  /** The part filter. */
   @TrainerParam(name = "partition", help = "Partition filter to be used while constructing table RDD")
   private String partFilter = null;
 
+  /** The k. */
   @TrainerParam(name = "k", help = "Number of cluster")
   private int k;
 
-  @TrainerParam(name ="maxIterations", help = "Maximum number of iterations",
-  defaultValue = "100")
+  /** The max iterations. */
+  @TrainerParam(name = "maxIterations", help = "Maximum number of iterations", defaultValue = "100")
   private int maxIterations = 100;
 
-  @TrainerParam(name = "runs", help = "Number of parallel run",
-  defaultValue = "1")
+  /** The runs. */
+  @TrainerParam(name = "runs", help = "Number of parallel run", defaultValue = "1")
   private int runs = 1;
 
-  @TrainerParam(name = "initializationMode", help = "initialization model, either \"random\" or \"k-means||\" (default).",
-  defaultValue = "k-means||")
+  /** The initialization mode. */
+  @TrainerParam(name = "initializationMode", help = "initialization model, either \"random\" or \"k-means||\" (default).", defaultValue = "k-means||")
   private String initializationMode = "k-means||";
 
   @Override
@@ -81,6 +86,11 @@ public class KMeansTrainer implements MLTrainer {
     return getClass().getAnnotation(Algorithm.class).description();
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLTrainer#configure(org.apache.lens.api.LensConf)
+   */
   @Override
   public void configure(LensConf configuration) {
     this.conf = configuration;
@@ -91,9 +101,14 @@ public class KMeansTrainer implements MLTrainer {
     return conf;
   }
 
+  /*
+   * (non-Javadoc)
+   * 
+   * @see org.apache.lens.ml.MLTrainer#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
+   * java.lang.String, java.lang.String[])
+   */
   @Override
-  public MLModel train(LensConf conf, String db, String table, String modelId, String... params)
-    throws LensException {
+  public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException {
     List<String> features = TrainerArgParser.parseArgs(this, params);
     final int featurePositions[] = new int[features.size()];
     final int NUM_FEATURES = features.size();
@@ -111,29 +126,34 @@ public class KMeansTrainer implements MLTrainer {
         }
       }
 
-      rdd = HiveTableRDD.createHiveTableRDD(sparkContext,
-        toHiveConf(conf), db, table, partFilter);
+      rdd = HiveTableRDD.createHiveTableRDD(sparkContext, toHiveConf(conf), db, table, partFilter);
       JavaRDD<Vector> trainableRDD = rdd.map(new Function<Tuple2<WritableComparable, HCatRecord>, Vector>() {
         @Override
         public Vector call(Tuple2<WritableComparable, HCatRecord> v1) throws Exception {
           HCatRecord hCatRecord = v1._2();
           double arr[] = new double[NUM_FEATURES];
           for (int i = 0; i < NUM_FEATURES; i++) {
-            Object val =  hCatRecord.get(featurePositions[i]);
+            Object val = hCatRecord.get(featurePositions[i]);
             arr[i] = val == null ? 0d : (Double) val;
           }
           return Vectors.dense(arr);
         }
       });
 
-      KMeansModel model =
-        KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
+      KMeansModel model = KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
       return new KMeansClusteringModel(modelId, model);
     } catch (Exception e) {
       throw new LensException("KMeans trainer failed for " + db + "." + table, e);
     }
   }
 
+  /**
+   * To hive conf.
+   *
+   * @param conf
+   *          the conf
+   * @return the hive conf
+   */
   private HiveConf toHiveConf(LensConf conf) {
     HiveConf hiveConf = new HiveConf();
     for (String key : conf.getProperties().keySet()) {
