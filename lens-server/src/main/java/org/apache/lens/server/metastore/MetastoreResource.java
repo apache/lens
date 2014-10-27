@@ -1,24 +1,22 @@
-package org.apache.lens.server.metastore;
-
-/*
- * #%L
- * Lens Server
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.server.metastore;
 
 import org.apache.lens.api.metastore.*;
 
@@ -65,7 +63,7 @@ public class MetastoreResource {
 
   /**
    * API to know if metastore service is up and running
-   * 
+   *
    * @return Simple text saying it up
    */
   @GET
@@ -76,11 +74,11 @@ public class MetastoreResource {
 
   /**
    * Get all databases in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return StringList consisting of all database names.
-   * 
+   *
    * @throws LensException
    */
   @GET @Path("databases")
@@ -97,9 +95,9 @@ public class MetastoreResource {
 
   /**
    * Get the current database
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return The current db name
    */
   @GET @Path("databases/current")
@@ -114,11 +112,11 @@ public class MetastoreResource {
   }
 
   /**
-   * Set the current db 
-   * 
+   * Set the current db
+   *
    * @param sessionid The sessionid in which user is working
    * @param dbName The db name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if set was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if set has failed
    */
@@ -139,11 +137,11 @@ public class MetastoreResource {
   /**
    * Delete the db specified by name. Deleting underlying tables is optional.
    * If db does not exist, delete is ignored.
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dbName The db name
    * @param cascade if true, all the tables inside the db will also be dropped.
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
    */
@@ -163,12 +161,12 @@ public class MetastoreResource {
 
   /**
    * Create a new database
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param ignoreIfExisting If true, create will be ignored if db already exists,
    *  otherwise it fails.
    * @param dbName The db name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
@@ -200,7 +198,7 @@ public class MetastoreResource {
    * @param dbName The db name. If not empty, the tables in the db will be returned
    *
    * @return StringList consisting of all table names.
-   * 
+   *
    * @throws LensException
    */
   @GET @Path("nativetables")
@@ -229,7 +227,7 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param tableName The native table name
    *
-   * @return JAXB representation of {@link NativeTable} 
+   * @return JAXB representation of {@link NativeTable}
    *
    * @throws LensException
    */
@@ -248,13 +246,13 @@ public class MetastoreResource {
 
   /**
    * Get all cubes in the metastores, of the specified type
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cubeTypes The type of cubes. Accepted values are
    * 'all' or 'base' or 'derived' or 'queryable'
-   * 
+   *
    * @return StringList consisting of all cubes names
-   * 
+   *
    */
   @GET @Path("cubes")
   public StringList getAllCubes(@QueryParam("sessionid") LensSessionHandle sessionid,
@@ -262,16 +260,16 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     try {
       if (cubeTypes.equals("all")) {
-      return new StringList(getSvc().getAllCubeNames(sessionid));
+        return new StringList(getSvc().getAllCubeNames(sessionid));
       } else if (cubeTypes.equals("base")) {
-      return new StringList(getSvc().getAllBaseCubeNames(sessionid));
+        return new StringList(getSvc().getAllBaseCubeNames(sessionid));
       } else if (cubeTypes.equals("derived")) {
-      return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
+        return new StringList(getSvc().getAllDerivedCubeNames(sessionid));
       } else if (cubeTypes.equals("queryable")) {
-      return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
+        return new StringList(getSvc().getAllQueryableCubeNames(sessionid));
       } else {
         throw new BadRequestException("Invalid type " + cubeTypes + " Accepted" +
-          " values are 'all' or 'base' or 'derived' or 'queryable'");
+            " values are 'all' or 'base' or 'derived' or 'queryable'");
       }
     } catch (LensException e) {
       LOG.error("Error getting cube names", e);
@@ -281,9 +279,9 @@ public class MetastoreResource {
 
   /**
    * Delete all cubes
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return
    * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
    * APIResult with state {@link Status#FAILED} in case of delete failure.
@@ -312,20 +310,20 @@ public class MetastoreResource {
       assert (failed);
       if (numDeleted == 0) {
         return new APIResult(Status.FAILED, "Delete of all "
-            + "cubes has failed");        
+            + "cubes has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Delete of all "
-            + "cubes is partial");        
+            + "cubes is partial");
       }
     }
   }
 
   /**
    * Create a new cube
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cube The {@link XCube} representation of the cube definition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
@@ -356,11 +354,11 @@ public class MetastoreResource {
 
   /**
    * Update cube definition
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cubeName The cube name
    * @param cube The {@link XCube} representation of the updated cube definition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
@@ -384,11 +382,11 @@ public class MetastoreResource {
 
   /**
    * Get the cube specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cubeName The cube name
-   * 
-   * @return JAXB representation of {@link XCube} 
+   *
+   * @return JAXB representation of {@link XCube}
    */
   @GET @Path("/cubes/{cubeName}")
   public JAXBElement<XCube> getCube(@QueryParam("sessionid") LensSessionHandle sessionid,
@@ -405,10 +403,10 @@ public class MetastoreResource {
 
   /**
    * Drop the cube, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cubeName The cube name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -427,11 +425,11 @@ public class MetastoreResource {
 
   /**
    * Get all storages in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return StringList consisting of all the storage names
-   * 
+   *
    * @throws LensException
    */
   @GET @Path("storages")
@@ -447,10 +445,10 @@ public class MetastoreResource {
 
   /**
    * Create new storage
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param storage The XStorage representation of storage
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
@@ -468,9 +466,9 @@ public class MetastoreResource {
 
   /**
    * Delete all storages in metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return
    * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
    * APIResult with state {@link Status#FAILED} in case of delete failure.
@@ -499,21 +497,21 @@ public class MetastoreResource {
       assert (failed);
       if (numDeleted == 0) {
         return new APIResult(Status.FAILED, "Delete of all "
-            + "storages has failed");        
+            + "storages has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Delete of all "
-            + "storages is partial");        
+            + "storages is partial");
       }
     }
   }
 
   /**
    * Update storage definition
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param storageName The storage name
    * @param storage The {@link XStorage} representation of the updated storage definition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if update has failed
    */
@@ -532,11 +530,11 @@ public class MetastoreResource {
 
   /**
    * Get the storage specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param storageName The storage name
-   * 
-   * @return JAXB representation of {@link XStorage} 
+   *
+   * @return JAXB representation of {@link XStorage}
    */
   @GET @Path("/storages/{storage}")
   public JAXBElement<XStorage> getStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
@@ -552,10 +550,10 @@ public class MetastoreResource {
 
   /**
    * Drop the storage, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param storageName The storage name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -650,7 +648,7 @@ public class MetastoreResource {
             + "dimensions has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Delete of all "
-            + "dimensions is partial"); 
+            + "dimensions is partial");
       }
     }
   }
@@ -724,17 +722,17 @@ public class MetastoreResource {
 
   /**
    * Get all facts that belong to a cube in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cubeName name of the base cube or derived cube
-   * 
-   * @return List of {@link FactTable} objects 
-   * 
+   *
+   * @return List of {@link FactTable} objects
+   *
    */
   @GET @Path("/cubes/{cubeName}/facts")
   public List<FactTable> getAllFactsOfCube(
       @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("cubeName") String cubeName)
-      throws LensException {
+          throws LensException {
     checkSessionId(sessionid);
     try {
       return getSvc().getAllFactsOfCube(sessionid, cubeName);
@@ -746,11 +744,11 @@ public class MetastoreResource {
 
   /**
    * Get all fact tables in the metastore in the current database
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return StringList consisting of all fact table names
-   * 
+   *
    */
   @GET @Path("/facts")
   public StringList getAllFacts(@QueryParam("sessionid") LensSessionHandle sessionid) throws LensException {
@@ -760,10 +758,10 @@ public class MetastoreResource {
 
   /**
    * Delete all fact tables
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param cascade if set to true, all the underlying tables will be dropped, if set to false, only the fact table will be dropped
-   * 
+   *
    * @return
    * APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
    * APIResult with state {@link Status#FAILED} in case of delete failure.
@@ -793,21 +791,21 @@ public class MetastoreResource {
       assert (failed);
       if (numDeleted == 0) {
         return new APIResult(Status.FAILED, "Delete of all "
-            + "fact tables has failed");        
+            + "fact tables has failed");
       } else {
         return new APIResult(Status.PARTIAL, "Delete of all "
-            + "fact tables is partial");        
+            + "fact tables is partial");
       }
     }
   }
 
   /**
    * Get the fact table specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
-   * 
-   * @return JAXB representation of {@link FactTable} 
+   *
+   * @return JAXB representation of {@link FactTable}
    */
   @GET @Path("/facts/{factName}")
   public JAXBElement<FactTable> getFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName)
@@ -823,11 +821,11 @@ public class MetastoreResource {
 
   /**
    * Create a new fact tabble
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param fact The {@link FactTable} representation of the fact table definition
    * @param storageTables The Storage table description of fact in each storage
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
@@ -850,11 +848,11 @@ public class MetastoreResource {
 
   /**
    * Update fact table definition
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName name of the fact table
    * @param fact The {@link FactTable} representation of the updated fact table definition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
@@ -875,17 +873,17 @@ public class MetastoreResource {
 
   /**
    * Drop the fact table, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param cascade If true, all the storage tables of the fact will also be dropped
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
   @DELETE @Path("/facts/{factName}")
   public APIResult dropFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String  factName,
-      @DefaultValue("false") @QueryParam("cascade") boolean cascade)  
+      @DefaultValue("false") @QueryParam("cascade") boolean cascade)
           throws LensException {
     checkSessionId(sessionid);
     try {
@@ -900,19 +898,19 @@ public class MetastoreResource {
 
   /**
    * Get all storages of the fact table in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
-   * 
+   *
    * @return {@link StringList} consisting of all the storage names
-   * 
+   *
    * @throws LensException
    */
   @GET @Path("/facts/{factName}/storages")
   public StringList getStoragesOfFact(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName) throws LensException {
     checkSessionId(sessionid);
     try {
-    return new StringList(getSvc().getStoragesOfFact(sessionid, factName));
+      return new StringList(getSvc().getStoragesOfFact(sessionid, factName));
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       throw new WebApplicationException(exc);
@@ -921,10 +919,10 @@ public class MetastoreResource {
 
   /**
    * Drop all the storage tables of a fact table
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -943,11 +941,11 @@ public class MetastoreResource {
 
   /**
    * Add storage to fact table
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storageTable The storage table description
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
@@ -968,11 +966,11 @@ public class MetastoreResource {
 
   /**
    * Drop the storage of a fact, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storage The storage name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -993,13 +991,13 @@ public class MetastoreResource {
   }
 
   /**
-   * Get the fact storage table 
-   * 
+   * Get the fact storage table
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storage The storage name
-   * 
-   * @return JAXB representation of {@link XStorageTableElement} 
+   *
+   * @return JAXB representation of {@link XStorageTableElement}
    */
   @GET @Path("/facts/{factName}/storages/{storage}")
   public JAXBElement<XStorageTableElement> getStorageOfFact(@QueryParam("sessionid") LensSessionHandle sessionid,
@@ -1011,13 +1009,13 @@ public class MetastoreResource {
   /**
    * Get all partitions of the fact table in the specified storage;
    *  can be filtered as well.
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
-   * 
+   *
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
   @GET @Path("/facts/{factName}/storages/{storage}/partitions")
@@ -1038,13 +1036,13 @@ public class MetastoreResource {
 
   /**
    * Drop the partitions in the storage of a fact; can specified filter as well
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1065,12 +1063,12 @@ public class MetastoreResource {
 
   /**
    * Add a new partition for a storage of fact
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName fact table name
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
@@ -1092,12 +1090,12 @@ public class MetastoreResource {
 
   /**
    * Drop the partitions in the storage of a fact table, specified by exact values
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param factName The fact table name
    * @param storage The storage name
    * @param values Comma separated values
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1121,11 +1119,11 @@ public class MetastoreResource {
 
   /**
    * Get all dimension tables in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
-   * 
+   *
    * @return StringList consisting of all dimension table names
-   * 
+   *
    */
   @GET @Path("/dimtables")
   public StringList getAllDims(@QueryParam("sessionid") LensSessionHandle sessionid) throws LensException {
@@ -1134,11 +1132,11 @@ public class MetastoreResource {
 
   /**
    * Create a new dimension table
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimensionTable The {@link DimensionTable} representation of the dimension table definition
    * @param storageTables The Storage table description of dimension table in each storage
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
@@ -1158,10 +1156,10 @@ public class MetastoreResource {
 
   /**
    * Update dimension table definition
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimensionTable The {@link DimensionTable} representation of the updated dim table definition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
    */
@@ -1182,11 +1180,11 @@ public class MetastoreResource {
 
   /**
    * Drop the dimension table, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
    * @param cascade if true, all the storage tables of dimension table will also be dropped
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1207,16 +1205,16 @@ public class MetastoreResource {
 
   /**
    * Get the dimension table specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The cube name
-   * 
-   * @return JAXB representation of {@link DimensionTable} 
+   *
+   * @return JAXB representation of {@link DimensionTable}
    */
   @GET @Path("/dimtables/{dimTableName}")
   public JAXBElement<DimensionTable> getDimensionTable(
       @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("dimTableName") String dimTableName)
-      throws LensException {
+          throws LensException {
     checkSessionId(sessionid);
     try {
       return xCubeObjectFactory.createDimensionTable(getSvc().getDimensionTable(sessionid, dimTableName));
@@ -1228,12 +1226,12 @@ public class MetastoreResource {
 
   /**
    * Get all storages of the dimension table in the metastore
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
-   * 
+   *
    * @return StringList consisting of all the storage names
-   * 
+   *
    * @throws LensException
    */
   @GET @Path("/dimtables/{dimTableName}/storages")
@@ -1245,11 +1243,11 @@ public class MetastoreResource {
 
   /**
    * Add storage to dimension table
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storageTbl The Storage table description
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
@@ -1268,13 +1266,13 @@ public class MetastoreResource {
   }
 
   /**
-   * Get the dim storage table 
-   * 
+   * Get the dim storage table
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The fact table name
    * @param storage The storage name
-   * 
-   * @return JAXB representation of {@link XStorageTableElement} 
+   *
+   * @return JAXB representation of {@link XStorageTableElement}
    */
   @GET @Path("/dimtables/{dimTableName}/storages/{storage}")
   public JAXBElement<XStorageTableElement> getStorageOfDim(@QueryParam("sessionid") LensSessionHandle sessionid,
@@ -1286,10 +1284,10 @@ public class MetastoreResource {
 
   /**
    * Drop all the storage tables of a dimension table
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The dimension table name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1308,11 +1306,11 @@ public class MetastoreResource {
 
   /**
    * Drop the storage of a dimension table, specified by name
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage The storage name
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1333,13 +1331,13 @@ public class MetastoreResource {
   /**
    * Get all partition of the dimension table in the specified storage;
    *  can be filtered
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
-   * 
+   *
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
   @GET @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
@@ -1357,13 +1355,13 @@ public class MetastoreResource {
 
   /**
    * Drop the partitions in the storage of a dimension table; can specified filter as well
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
    * for ex: x &lt "XXX" and y &gt "YYY"
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1384,12 +1382,12 @@ public class MetastoreResource {
 
   /**
    * Drop the partitions in the storage of a dimension table, specified by exact values
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage The storage name
    * @param values Comma separated values
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
    */
@@ -1411,12 +1409,12 @@ public class MetastoreResource {
 
   /**
    * Add a new partition for a storage of dimension
-   * 
+   *
    * @param sessionid The sessionid in which user is working
    * @param dimTableName dimension table name
    * @param storage storage name
    * @param partition {@link XPartition} representation of partition
-   * 
+   *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if add has failed
    */
@@ -1444,8 +1442,8 @@ public class MetastoreResource {
   @GET
   @Path("flattened/{tableName}")
   public FlattenedColumns getFlattenedColumns(
-    @QueryParam("sessionid") LensSessionHandle sessionid,
-    @PathParam("tableName") String tableName) {
+      @QueryParam("sessionid") LensSessionHandle sessionid,
+      @PathParam("tableName") String tableName) {
     checkSessionId(sessionid);
     try {
       return getSvc().getFlattenedColumns(sessionid, tableName);

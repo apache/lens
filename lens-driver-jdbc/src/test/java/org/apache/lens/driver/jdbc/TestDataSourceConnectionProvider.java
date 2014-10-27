@@ -1,32 +1,26 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package org.apache.lens.driver.jdbc;
 
-/*
- * #%L
- * Lens Driver for JDBC
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
- */
-
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,9 +34,20 @@ import org.testng.annotations.Test;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.fail;
 
+/**
+ * The Class TestDataSourceConnectionProvider.
+ */
 public class TestDataSourceConnectionProvider {
+
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(TestDataSourceConnectionProvider.class);
 
+  /**
+   * Test get connection hsql.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testGetConnectionHSQL() throws Exception {
     final Configuration conf = new Configuration();
@@ -101,6 +106,12 @@ public class TestDataSourceConnectionProvider {
     Assert.assertEquals(passed.get(), numThreads);
   }
 
+  /**
+   * Test get connection timeout.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testGetConnectionTimeout() throws Exception {
     final Configuration conf = new Configuration();
@@ -128,14 +139,14 @@ public class TestDataSourceConnectionProvider {
         if (i != MAX_CONNECTIONS) {
           LOG.error("Unexpected getConnection error", sqlEx);
         }
-        assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: "
-          + sqlEx.getMessage());
+        assertEquals(i, MAX_CONNECTIONS, "Failed before last getConnection call: " + sqlEx.getMessage());
       }
     }
 
     for (Connection c : connections) {
-      if (c != null)
+      if (c != null) {
         c.close();
+      }
     }
   }
 }

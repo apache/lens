@@ -1,24 +1,22 @@
-package org.apache.lens.server.metastore;
-
-/*
- * #%L
- * Lens Server
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.server.metastore;
 
 import org.apache.lens.api.metastore.*;
 
@@ -52,11 +50,11 @@ public class JAXBUtils {
 
   /**
    * Create a hive ql cube obejct from corresponding JAXB object
-   * 
+   *
    * @param cube JAXB Cube
-   * 
+   *
    * @return {@link Cube}
-   * @throws ParseException 
+   * @throws ParseException
    */
   public static CubeInterface hiveCubeFromXCube(XCube cube, Cube parent) throws ParseException {
     if (cube.isDerived()) {
@@ -95,13 +93,13 @@ public class JAXBUtils {
 
   /**
    * Get XCube from hive.ql.metadata.Cube
-   * 
+   *
    * @param c
-   * 
+   *
    * @return {@link XCube}
    */
   public static XCube xCubeFromHiveCube(CubeInterface c) {
-    
+
     XCube xc = XCF.createXCube();
     xc.setName(c.getName());
     xc.setWeight(((AbstractCubeTable)c).weight());
@@ -141,9 +139,9 @@ public class JAXBUtils {
 
   /**
    * Create a hive ql CubeDimension from JAXB counterpart
-   * 
+   *
    * @param xd
-   * 
+   *
    * @return {@link CubeDimension}
    */
   public static CubeDimAttribute hiveDimAttrFromXDimAttr(XDimAttribute xd) {
@@ -196,7 +194,9 @@ public class JAXBUtils {
   }
 
   public static Date getDateFromXML(XMLGregorianCalendar cal) {
-    if (cal == null) return null;
+    if (cal == null) {
+      return null;
+    }
     return cal.toGregorianCalendar().getTime();
   }
 
@@ -204,7 +204,9 @@ public class JAXBUtils {
    * Create XMeasure from hive ql cube measure
    */
   public static XMeasure xMeasureFromHiveMeasure(CubeMeasure cm) {
-    if (cm == null) return null;
+    if (cm == null) {
+      return null;
+    }
 
     XMeasure xm = XCF.createXMeasure();
     xm.setName(cm.getName());
@@ -224,7 +226,9 @@ public class JAXBUtils {
    * Create XExprColumn from hive ExprColum
    */
   public static XExprColumn xExprColumnFromHiveExprColumn(ExprColumn ec) {
-    if (ec == null) return null;
+    if (ec == null) {
+      return null;
+    }
 
     XExprColumn xe = XCF.createXExprColumn();
     xe.setName(ec.getName());
@@ -273,9 +277,9 @@ public class JAXBUtils {
 
   /**
    * Create hive ql CubeMeasure from JAXB counterpart
-   * 
+   *
    * @param xm
-   * 
+   *
    * @return {@link CubeMeasure}
    */
   public static CubeMeasure hiveMeasureFromXMeasure(XMeasure xm) {
@@ -302,9 +306,9 @@ public class JAXBUtils {
 
   /**
    * Convert JAXB properties to Map<String, String>
-   * 
+   *
    * @param xProperties
-   * 
+   *
    * @return {@link Map}
    */
   public static Map<String, String> mapFromXProperties(XProperties xProperties) {
@@ -498,9 +502,9 @@ public class JAXBUtils {
 
   public static CubeDimensionTable cubeDimTableFromDimTable(DimensionTable dimensionTable) {
 
-    CubeDimensionTable cdim = new CubeDimensionTable(dimensionTable.getDimName(), 
+    CubeDimensionTable cdim = new CubeDimensionTable(dimensionTable.getDimName(),
         dimensionTable.getTableName(),
-        fieldSchemaListFromColumns(dimensionTable.getColumns()), 
+        fieldSchemaListFromColumns(dimensionTable.getColumns()),
         dimensionTable.getWeight(),
         dumpPeriodsFromUpdatePeriods(dimensionTable.getStorageDumpPeriods()),
         mapFromXProperties(dimensionTable.getProperties()));
@@ -514,10 +518,10 @@ public class JAXBUtils {
     Map<String, Set<UpdatePeriod>> storageUpdatePeriods = getFactUpdatePeriodsFromUpdatePeriods(fact.getStorageUpdatePeriods());
 
     return new CubeFactTable(fact.getCubeName(),
-        fact.getName(), 
-        columns, 
-        storageUpdatePeriods, 
-        fact.getWeight(), 
+        fact.getName(),
+        columns,
+        storageUpdatePeriods,
+        fact.getWeight(),
         mapFromXProperties(fact.getProperties()));
   }
 

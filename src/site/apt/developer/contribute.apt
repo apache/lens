@@ -1,0 +1,206 @@
+~~
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+~~
+
+Developer Documentation : How to contribute to Apache Lens?
+
+%{toc}
+
+  Welcome contributors! This page provides necessary guidelines on how to contribute towards furthering the development
+  and evolution of Apache Lens. 
+
+* Dev Environment Setup
+
+** Source Repository
+
+  Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at 
+  {{{https://github.com/InMobi/grill} https://github.com/InMobi/grill}}.
+
+** Build tools
+
+  * A Java Development Kit. You can use any thing about java6.
+
+  * Apache maven
+
+  Ensure all the tools are installed by executing mvn, git and javac respectively.
+
+  As the Lens builds use the external Maven repository to download artifacts, Maven needs to be set up with the proxy
+  settings needed to make external HTTP requests. The first build of every Lens project needs internet connectivity
+  to download Maven dependencies.
+
+  * Be online for that first build, on a good network
+
+  * See {{{http://maven.apache.org/guides/mini/guide-proxies.html} Maven proxy settings}}
+
+** Integrated Development Environment (IDE)
+
+  You are free to use whatever IDE you prefer or your favorite text editor. Note that:
+
+  * Building and testing is often done on the command line or at least via the Maven support in the IDEs.
+
+  * Set up the IDE to follow the source layout rules of the project.
+
+* Contributing
+
+  All changes should be initiated based on an issue in {{{TODO_link}LENS JIRA}}, so that other contributors are aware
+  of the proposed work and have the opportunity to actively participate (through review, suggestions, etc). This also
+  allows scoping the changes in appropriate releases. Code contributions are to be made available as a patch against
+  a specific JIRA created for the task. Once patches are attached to the JIRA, the JIRA issue should be marked
+  as "Patch available". Lens project follows RTC (Review then commit). It is recommended that large changes are
+  broken up into smaller changes, thus making it easy for review. The patches should comply with the requirements
+  below before they are made available for review.
+
+** Code compliance
+
+  All contributions should satisfy the following requirements
+
+  * All public classes and methods should have informative javadoc comments.
+
+    * Do not use @author tags.
+
+  * All existing unit tests and integration tests should pass.
+
+  * New unit tests should be provided to demonstrate bugs and fixes. Lens
+   uses {{{http://testng.org/doc/index.html} TestNG}} test framework. If any code change does not include unit test,
+   the contributor should give the reason why it is not possible to include a unit test.
+
+  * Project documentation corresponding to the change should be updated along with the code change.
+
+  * Code must be formatted according to java standards, which include the following changes:
+
+    * Trailing White spaces: Remove all trailing white spaces. 
+
+    * Indentation: Never use tabs! Always use 2 space indents.
+
+    * Line wrapping: Always use a 120-column line width.
+
+  * All working files (java, xml, others) should have the ASF license header in all versioned files.
+
+** Generating patch
+
+*** Creating patch
+
+  Check to see what files you have modified with:
+
++---+
+
+   git status
+
++---+
+
+  Add any new files with:
+
++---+
+
+  git add src/.../MyNewClass.java
+  git add src/.../TestMyNewClass.java
+
++---+
+
+  In order to create a patch, type the following:
+
++---+
+
+  git diff --no-prefix > LENS-1234.patch
+
++---+
+
+  This will report all modifications done on Lens sources on your local disk and save them into the LENS-1234.patch file.
+  Read the patch file. Make sure it includes ONLY the modifications required to fix a single issue.
+
+  Please do not:
+
+  * reformatting code unrelated to the bug being fixed: formatting changes should be separate patches/commits.
+
+  * comment out code that is now obsolete: just remove it.
+
+  * make things public which are not required by end users. 
+
+
+  Please do:
+
+  * Try to adhere to the coding style of files you edit;
+
+  * Comment code whose function or rationale is not obvious;
+
+  * Update documentation (e.g., package.html files, this wiki, etc.) 
+
+
+  If you need to rename files in your patch:
+
+  * Write a shell script that uses 'git mv' to rename the original files.
+
+  * Edit files as needed (e.g., to change package names).
+
+  * Create a patch file with 'git diff'.
+
+  * Submit both the shell script and the patch file. 
+
+  This way other developers can preview your change by running the script and then applying the patch.
+
+*** Naming your patch
+
+  Patches for master should be named according to the Jira: jira-xyz.patch, eg LENS-1234.patch.
+
+  Patches for a branch should be named jira-xyz-branch.patch, eg LENS-1234-branch-x.patch.
+  The branch name suffix should be the exact name of a git branch.
+
+  It's OK to upload a new patch to Jira with the same name as an existing patch. However many contributors find
+  it convenient to add a numeric suffix to the patch indicating the patch revision. e.g. LENS-1234.01.patch,
+  LENS-1234.02.patch etc.
+
+*** Testing your patch
+
+  Before submitting your patch, make sure all tests pass by running <mvn clean package> .
+  Upon successful completion of the build, you can upload the patch on the JIRA and mark the JIRA as patch available.
+  Once a committer reviews the change, it will be committed to the repo and jira issue will be resolved.
+
+*** Applying a patch
+
+  To apply a patch either you generated or found from JIRA, you can issue
+
+  git apply -p0 lens_patch.patch
+
+** Review request
+  
+  TODO
+
+* Stay involved
+
+  Contributors should join the Lens mailing lists. In particular, the commit list (to see changes as they are made),
+  the dev list (to join discussions of changes) and the user list (to help others). Also refer to
+  {{{http://www.apache.org/dev/contributors.html} Apache contributors guide}} and
+  {{{http://www.apache.org/foundation/voting.html} Apache voting process}}.
+
+* Developer FAQ
+ 
+** How to update documentation?
+
+  The new doc files can added in src/site of parent module. Or doc change can be done in existing files under src/site.
+  Once the changes are done, contributor can run mvn site:run, which will start localhost doc server on port 8080,
+  which can opened through browser and doc can be validated.
+
+** How to add license headers for newly added files?
+
+  Run the command mvn license:format. This is add license headers for all the files automatically. If some files
+  need to excluded they should be put in excludes section in parent project pom's license-maven-plugin.
+
+** How to check all licenses are fine?
+
+  Run the command mvn apache-rat:check. If check needs to be excluded for any file, it should be put in excludes section
+  in parent project pom's apache-rat-plugin.

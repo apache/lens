@@ -1,24 +1,22 @@
-package org.apache.lens.driver.jdbc;
-
-/*
- * #%L
- * Lens Driver for JDBC
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.driver.jdbc;
 
 import java.util.*;
 
@@ -45,8 +43,18 @@ import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+/**
+ * The Class TestColumnarSQLRewriter.
+ */
 public class TestColumnarSQLRewriter {
 
+  /**
+   * Sets the of.
+   *
+   * @param args
+   *          the args
+   * @return the sets the
+   */
   private Set<String> setOf(String... args) {
     Set<String> result = new HashSet<String>();
     for (String s : args) {
@@ -55,6 +63,13 @@ public class TestColumnarSQLRewriter {
     return result;
   }
 
+  /**
+   * Sets the of.
+   *
+   * @param collection
+   *          the collection
+   * @return the sets the
+   */
   private Set<String> setOf(Collection<String> collection) {
     Set<String> result = new HashSet<String>();
     for (String s : collection) {
@@ -63,6 +78,14 @@ public class TestColumnarSQLRewriter {
     return result;
   }
 
+  /**
+   * Compare queries.
+   *
+   * @param expected
+   *          the expected
+   * @param actual
+   *          the actual
+   */
   private void compareQueries(String expected, String actual) {
     if (expected == null && actual == null) {
       return;
@@ -82,8 +105,7 @@ public class TestColumnarSQLRewriter {
         }
       }
 
-      System.err.println("__FAILED__ " + method + "\n\tExpected: " + expected
-          + "\n\t---------\n\tActual: " + actual);
+      System.err.println("__FAILED__ " + method + "\n\tExpected: " + expected + "\n\t---------\n\tActual: " + actual);
     }
     Assert.assertTrue(expectedTrimmed.equalsIgnoreCase(actualTrimmed));
   }
@@ -91,8 +113,8 @@ public class TestColumnarSQLRewriter {
   /*
    * Star schema used for the queries below
    * 
-   * create table sales_fact (time_key integer, item_key integer, branch_key
-   * integer, location_key integer, dollars_sold double, units_sold integer);
+   * create table sales_fact (time_key integer, item_key integer, branch_key integer, location_key integer, dollars_sold
+   * double, units_sold integer);
    * 
    * create table time_dim ( time_key integer, day date);
    * 
@@ -100,12 +122,22 @@ public class TestColumnarSQLRewriter {
    * 
    * create table branch_dim ( branch_key integer, branch_key varchar(100));
    * 
-   * create table location_dim (location_key integer,location_name
-   * varchar(100));
+   * create table location_dim (location_key integer,location_name varchar(100));
    */
 
-  void createHiveTable(String db, String table, List<FieldSchema> columns)
-      throws Exception {
+  /**
+   * Creates the hive table.
+   *
+   * @param db
+   *          the db
+   * @param table
+   *          the table
+   * @param columns
+   *          the columns
+   * @throws Exception
+   *           the exception
+   */
+  void createHiveTable(String db, String table, List<FieldSchema> columns) throws Exception {
     Table tbl1 = new Table(db, table);
     tbl1.setFields(columns);
 
@@ -113,6 +145,12 @@ public class TestColumnarSQLRewriter {
     System.out.println("Created table : " + table);
   }
 
+  /**
+   * Setup.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @BeforeTest
   public void setup() throws Exception {
 
@@ -153,6 +191,12 @@ public class TestColumnarSQLRewriter {
     }
   }
 
+  /**
+   * Clean.
+   *
+   * @throws HiveException
+   *           the hive exception
+   */
   @AfterTest
   public void clean() throws HiveException {
     try {
@@ -166,59 +210,71 @@ public class TestColumnarSQLRewriter {
     }
   }
 
+  /**
+   * Test no rewrite.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  //Testing multiple queries in one instance
-  public void testNoRewrite() throws ParseException, SemanticException,
-      LensException {
-    
+  // Testing multiple queries in one instance
+  public void testNoRewrite() throws ParseException, SemanticException, LensException {
+
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
     HiveConf conf = new HiveConf();
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
-    
-    String query =  "select count(distinct id) from location_dim" ;
+
+    String query = "select count(distinct id) from location_dim";
     String actual = qtest.rewrite(conf, query);
     String expected = "select count( distinct  id ) from location_dim ";
     compareQueries(expected, actual);
- 
-    String query2 =  "select count(distinct id) from location_dim  location_dim" ;
+
+    String query2 = "select count(distinct id) from location_dim  location_dim";
     String actual2 = qtest.rewrite(conf, query2);
     String expected2 = "select count( distinct  id ) from location_dim location_dim";
     compareQueries(expected2, actual2);
- 
-    String query3 = 
-        "select count(distinct location_dim.id) from  global_dw.location_dim location_dim";
+
+    String query3 = "select count(distinct location_dim.id) from  global_dw.location_dim location_dim";
     String actual3 = qtest.rewrite(conf, query3);
     String expected3 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim";
     compareQueries(expected3, actual3);
-    
-    String query4 = 
-        "select count(distinct location_dim.id) from  global_dw.location_dim location_dim " +
-        "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id " +
-        "right outer join time_dim time_dim on location_dim.id = time_dim.id " ;
+
+    String query4 = "select count(distinct location_dim.id) from  global_dw.location_dim location_dim "
+        + "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id "
+        + "right outer join time_dim time_dim on location_dim.id = time_dim.id ";
     String actual4 = qtest.rewrite(conf, query4);
-    String expected4 = 
-        "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim  " +
-        "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  " +
-        "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
+    String expected4 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim  "
+        + "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  "
+        + "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
     compareQueries(expected4, actual4);
   }
 
-  
+  /**
+   * Test join cond.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testJoinCond() throws ParseException, SemanticException,
-      LensException {
+  public void testJoinCond() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -235,21 +291,28 @@ public class TestColumnarSQLRewriter {
     compareQueries(expected, actual);
   }
 
+  /**
+   * Test all filter cond.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testAllFilterCond() throws ParseException, SemanticException,
-      LensException {
+  public void testAllFilterCond() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -258,31 +321,35 @@ public class TestColumnarSQLRewriter {
 
     String rwq = qtest.rewrite(conf, query);
     Set<String> actual = setOf(qtest.rightFilter);
-    Assert
-        .assertEquals(
-            actual,
-            setOf(
-                "(( location_dim  .  location_name ) =  'test123' )",
-                "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'",
-                ""));
+    Assert.assertEquals(
+        actual,
+        setOf("(( location_dim  .  location_name ) =  'test123' )",
+            "( time_dim  .  time_key ) between  '2013-01-01'  and  '2013-01-31'", ""));
   }
 
+  /**
+   * Test all agg column.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testAllAggColumn() throws ParseException, SemanticException,
-      LensException {
+  public void testAllAggColumn() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold desc ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -291,8 +358,7 @@ public class TestColumnarSQLRewriter {
 
     String rwq = qtest.rewrite(conf, query);
     Set<String> aggrActual = setOf(qtest.aggColumn);
-    Set<String> expectedAggr = setOf(
-        "sum(( fact  .  units_sold )) as sum_fact_units_sold",
+    Set<String> expectedAggr = setOf("sum(( fact  .  units_sold )) as sum_fact_units_sold",
         "min(( fact  .  dollars_sold )) as min_fact_dollars_sold",
         "avg(( fact  .  dollars_sold )) as avg_fact_dollars_sold",
         "sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold",
@@ -300,23 +366,30 @@ public class TestColumnarSQLRewriter {
     Assert.assertEquals(aggrActual, expectedAggr);
   }
 
+  /**
+   * Test all fact keys.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testAllFactKeys() throws ParseException, SemanticException,
-      LensException {
+  public void testAllFactKeys() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold desc ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -329,24 +402,30 @@ public class TestColumnarSQLRewriter {
     compareQueries(expected, actual);
   }
 
+  /**
+   * Test fact sub queries.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testFactSubQueries() throws ParseException, SemanticException,
-      LensException {
+  public void testFactSubQueries() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key, "
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "sum(fact.units_sold),avg(fact.dollars_sold),min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
         + "and location_dim.location_name = 'test123' "
-        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
-        + "and item_dim.item_name = 'item_1' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold desc ";
+        + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -363,25 +442,32 @@ public class TestColumnarSQLRewriter {
     compareQueries(expected, actual);
   }
 
+  /**
+   * Test rewritten query.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testRewrittenQuery() throws ParseException, SemanticException,
-      LensException {
+  public void testRewrittenQuery() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,to_date(time_dim.day),item_dim.item_key, "
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold, "
         + "format_number(sum(fact.units_sold),4),format_number(avg(fact.dollars_sold),'##################.###'),"
-        + "min(fact.dollars_sold),max(fact.dollars_sold)"
-        + "from sales_fact fact "
+        + "min(fact.dollars_sold),max(fact.dollars_sold)" + "from sales_fact fact "
         + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "inner join item_dim item_dim on fact.item_key = item_dim.item_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between date_add('2013-01-01', 1) and date_sub('2013-01-31',3) "
         + "and item_dim.item_name = 'item_1' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key "
-        + "order by dollars_sold  ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold  ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -389,7 +475,7 @@ public class TestColumnarSQLRewriter {
     ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
     String actual = qtest.rewrite(conf, query);
-    
+
     String expected = "select ( fact . time_key ), ( time_dim . day_of_week ), date(( time_dim . day )), "
         + "( item_dim . item_key ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
         + "else sum(sum_fact_dollars_sold) end  dollars_sold , format(sum(sum_fact_units_sold),  4 ), "
@@ -410,45 +496,46 @@ public class TestColumnarSQLRewriter {
         + "date_sub( '2013-01-31' , interval 3  day) and (( item_dim . item_name ) =  'item_1' )) "
         + "group by ( fact . time_key ), ( time_dim . day_of_week ), ( time_dim . day ), "
         + "( item_dim . item_key ) order by dollars_sold  asc";
-   
+
     compareQueries(expected, actual);
   }
 
+  /**
+   * Test union query.
+   *
+   * @throws ParseException
+   *           the parse exception
+   * @throws SemanticException
+   *           the semantic exception
+   * @throws LensException
+   *           the lens exception
+   */
   @Test
-  public void testUnionQuery() throws ParseException, SemanticException,
-      LensException {
+  public void testUnionQuery() throws ParseException, SemanticException, LensException {
 
     String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold  "
-        + "union all "
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold  " + "union all "
         + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-02-01' and '2013-02-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold "
-        + "union all "
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold " + "union all "
         + "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
-        + "from sales_fact fact "
-        + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
+        + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "inner join location_dim location_dim on fact.location_key = location_dim.location_key "
         + "and location_dim.location_name = 'test123' "
         + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
-        + "group by fact.time_key,time_dim.day_of_week,time_dim.day "
-        + "order by dollars_sold ";
+        + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold ";
 
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
@@ -489,10 +576,16 @@ public class TestColumnarSQLRewriter {
         + "inner join time_dim  time_dim  on (( fact  .  time_key ) = ( time_dim  .  time_key )) "
         + "where ( time_dim  .  time_key ) between  '2013-03-01'  and  '2013-03-05'  group by ( fact  .  time_key ), "
         + "( time_dim  .  day_of_week ), ( time_dim  .  day ) order by  dollars_sold asc";
-    
+
     compareQueries(expected, actual);
   }
 
+  /**
+   * Test replace db name.
+   *
+   * @throws Exception
+   *           the exception
+   */
   @Test
   public void testReplaceDBName() throws Exception {
     HiveConf conf = new HiveConf(ColumnarSQLRewriter.class);
@@ -523,18 +616,15 @@ public class TestColumnarSQLRewriter {
 
     // Tests
     assertTrue(joinTreeBeforeRewrite.contains("mydb"));
-    assertTrue(joinTreeBeforeRewrite.contains("mytable")
-        && joinTreeBeforeRewrite.contains("mytable_2")
+    assertTrue(joinTreeBeforeRewrite.contains("mytable") && joinTreeBeforeRewrite.contains("mytable_2")
         && joinTreeBeforeRewrite.contains("mytable_3"));
 
     assertFalse(joinTreeAfterRewrite.contains("mydb"));
-    assertFalse(joinTreeAfterRewrite.contains("mytable")
-        && joinTreeAfterRewrite.contains("mytable_2")
+    assertFalse(joinTreeAfterRewrite.contains("mytable") && joinTreeAfterRewrite.contains("mytable_2")
         && joinTreeAfterRewrite.contains("mytable_3"));
 
     assertTrue(joinTreeAfterRewrite.contains("testdb"));
-    assertTrue(joinTreeAfterRewrite.contains("testtable_1")
-        && joinTreeAfterRewrite.contains("testtable_2")
+    assertTrue(joinTreeAfterRewrite.contains("testtable_1") && joinTreeAfterRewrite.contains("testtable_2")
         && joinTreeAfterRewrite.contains("testtable_3"));
 
     // Rewrite one more query where table and db name is not set
@@ -566,11 +656,9 @@ public class TestColumnarSQLRewriter {
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal();
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST,
-        CubeMetastoreClient.getInstance(conf));
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, CubeMetastoreClient.getInstance(conf));
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
-    assertTrue(joinTreeBeforeRewrite.contains("examples"),
-        joinTreeBeforeRewrite);
+    assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
     System.out.println("default case: " + joinTreeAfterRewrite);
 
@@ -580,8 +668,21 @@ public class TestColumnarSQLRewriter {
     Hive.get().dropTable("default", "mytable_4");
   }
 
-  void createTable(String db, String table, String udb, String utable)
-      throws Exception {
+  /**
+   * Creates the table.
+   *
+   * @param db
+   *          the db
+   * @param table
+   *          the table
+   * @param udb
+   *          the udb
+   * @param utable
+   *          the utable
+   * @throws Exception
+   *           the exception
+   */
+  void createTable(String db, String table, String udb, String utable) throws Exception {
     Table tbl1 = new Table(db, table);
 
     if (StringUtils.isNotBlank(udb)) {

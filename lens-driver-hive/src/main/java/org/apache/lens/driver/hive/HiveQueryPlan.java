@@ -1,24 +1,22 @@
-package org.apache.lens.driver.hive;
-
-/*
- * #%L
- * Lens Hive Driver
- * %%
- * Copyright (C) 2014 Apache Software Foundation
- * %%
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- * #L%
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
+package org.apache.lens.driver.hive;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -35,28 +33,73 @@ import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 
-
+/**
+ * The Class HiveQueryPlan.
+ */
 public class HiveQueryPlan extends DriverQueryPlan {
+
+  /** The explain output. */
   private String explainOutput;
+
+  /** The partitions. */
   private Map<String, List<String>> partitions;
 
+  /**
+   * The Enum ParserState.
+   */
   enum ParserState {
+
+    /** The begin. */
     BEGIN,
+
+    /** The file output operator. */
     FILE_OUTPUT_OPERATOR,
+
+    /** The table scan. */
     TABLE_SCAN,
+
+    /** The join. */
     JOIN,
+
+    /** The select. */
     SELECT,
+
+    /** The groupby. */
     GROUPBY,
+
+    /** The groupby keys. */
     GROUPBY_KEYS,
+
+    /** The groupby exprs. */
     GROUPBY_EXPRS,
+
+    /** The move. */
     MOVE,
+
+    /** The map reduce. */
     MAP_REDUCE,
+
+    /** The partition list. */
     PARTITION_LIST,
+
+    /** The partition. */
     PARTITION,
   };
 
-  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared,
-      HiveConf metastoreConf) throws HiveException {
+  /**
+   * Instantiates a new hive query plan.
+   *
+   * @param explainOutput
+   *          the explain output
+   * @param prepared
+   *          the prepared
+   * @param metastoreConf
+   *          the metastore conf
+   * @throws HiveException
+   *           the hive exception
+   */
+  public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared, HiveConf metastoreConf)
+      throws HiveException {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
@@ -65,6 +108,16 @@ public class HiveQueryPlan extends DriverQueryPlan {
     this.explainOutput = StringUtils.join(explainOutput, '\n');
   }
 
+  /**
+   * Extract plan details.
+   *
+   * @param explainOutput
+   *          the explain output
+   * @param metastoreConf
+   *          the metastore conf
+   * @throws HiveException
+   *           the hive exception
+   */
   private void extractPlanDetails(List<String> explainOutput, HiveConf metastoreConf) throws HiveException {
     ParserState state = ParserState.BEGIN;
     ParserState prevState = state;
@@ -83,83 +136,92 @@ public class HiveQueryPlan extends DriverQueryPlan {
       }
 
       switch (state) {
-        case MOVE:
-          if (tr.startsWith("destination:")) {
-            String outputPath = tr.replace("destination:", "").trim();
-            resultDestination = outputPath;
+      case MOVE:
+        if (tr.startsWith("destination:")) {
+          String outputPath = tr.replace("destination:", "").trim();
+          resultDestination = outputPath;
+        }
+        break;
+      case TABLE_SCAN:
+        if (tr.startsWith("alias:")) {
+          String tableName = tr.replace("alias:", "").trim();
+          tablesQueried.add(tableName);
+          Table tbl = metastore.getTable(tableName);
+          String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
+
+          Double weight = 1d;
+          if (costStr != null) {
+            weight = Double.parseDouble(costStr);
           }
-          break;
-        case TABLE_SCAN:
-          if (tr.startsWith("alias:")) {
-            String tableName = tr.replace("alias:", "").trim();
-            tablesQueried.add(tableName);
-            Table tbl = metastore.getTable(tableName);
-            String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
-            
-            Double weight = 1d;
-            if (costStr != null) {
-              weight = Double.parseDouble(costStr);
+          tableWeights.put(tableName, weight);
+        }
+        break;
+      case JOIN:
+        if (tr.equals("condition map:")) {
+          numJoins++;
+        }
+        break;
+      case SELECT:
+        if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
+          numSels += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case GROUPBY_EXPRS:
+        if (tr.startsWith("aggregations:")) {
+          numAggrExprs += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case GROUPBY_KEYS:
+        if (tr.startsWith("keys:")) {
+          numGbys += StringUtils.split(tr, ",").length;
+        }
+        break;
+      case PARTITION:
+        if (tr.equals("partition values:")) {
+          i++;
+          List<String> partVals = new ArrayList<String>();
+          // Look ahead until we reach partition properties
+          String lineAhead = null;
+          for (; i < explainOutput.size(); i++) {
+            if (explainOutput.get(i).trim().equals("properties:")) {
+              break;
             }
-            tableWeights.put(tableName, weight);
+            lineAhead = explainOutput.get(i).trim();
+            partVals.add(lineAhead);
           }
-          break;
-        case JOIN:
-          if (tr.equals("condition map:")) {
-            numJoins++;
-          }
-          break;
-        case SELECT:
-          if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
-            numSels += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case GROUPBY_EXPRS:
-          if (tr.startsWith("aggregations:")) {
-            numAggrExprs += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case GROUPBY_KEYS:
-          if (tr.startsWith("keys:")) {
-            numGbys += StringUtils.split(tr, ",").length;
-          }
-          break;
-        case PARTITION:
-          if (tr.equals("partition values:")) {
-            i++;
-            List<String> partVals = new ArrayList<String>();
-            // Look ahead until we reach partition properties
-            String lineAhead = null;
-            for (; i < explainOutput.size(); i++ ) {
-              if (explainOutput.get(i).trim().equals("properties:")) {
-                break;
+
+          String partConditionStr = StringUtils.join(partVals, ";");
+
+          // Now seek table name
+          for (; i < explainOutput.size(); i++) {
+            if (explainOutput.get(i).trim().startsWith("name:")) {
+              String table = explainOutput.get(i).trim().substring("name:".length()).trim();
+              List<String> tablePartitions = partitions.get(table);
+              if (tablePartitions == null) {
+                tablePartitions = new ArrayList<String>();
+                partitions.put(table, tablePartitions);
               }
-              lineAhead = explainOutput.get(i).trim();
-              partVals.add(lineAhead);
-            }
+              tablePartitions.add(partConditionStr);
 
-            String partConditionStr = StringUtils.join(partVals, ";");
-
-            // Now seek table name
-            for (; i < explainOutput.size(); i++) {
-              if (explainOutput.get(i).trim().startsWith("name:")) {
-                String table = explainOutput.get(i).trim().substring("name:".length()).trim();
-                List<String> tablePartitions = partitions.get(table);
-                if (tablePartitions == null) {
-                  tablePartitions = new ArrayList<String>();
-                  partitions.put(table, tablePartitions);
-                }
-                tablePartitions.add(partConditionStr);
-
-                break;
-              }
+              break;
             }
           }
+        }
 
-          break;
+        break;
       }
     }
-	}
+  }
 
+  /**
+   * Next state.
+   *
+   * @param tr
+   *          the tr
+   * @param state
+   *          the state
+   * @return the parser state
+   */
   private ParserState nextState(String tr, ParserState state) {
     if (tr.equals("File Output Operator")) {
       return ParserState.FILE_OUTPUT_OPERATOR;
@@ -188,18 +250,17 @@ public class HiveQueryPlan extends DriverQueryPlan {
   }
 
   @Override
-	public String getPlan() {
-		return explainOutput;
-	}
+  public String getPlan() {
+    return explainOutput;
+  }
 
-	@Override
-	public QueryCost getCost() {
+  @Override
+  public QueryCost getCost() {
     /*
-    Return query cost as 1 so that if JDBC storage and other storage is present,
-    JDBC is given preference.
+     * Return query cost as 1 so that if JDBC storage and other storage is present, JDBC is given preference.
      */
-		return new QueryCost(1,1);
-	}
+    return new QueryCost(1, 1);
+  }
 
   @Override
   public Map<String, List<String>> getPartitions() {

@@ -1,7 +1,6 @@
 #java specific
 *.class
 query_logs/
-
 ## generic files to ignore
 *~
 *.lock
