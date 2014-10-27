@@ -5,11 +5,11 @@
 "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
-	<!-- Suppress javadoc, line length, visibility checks for test code -->
-	<suppress checks="JavadocStyleCheck" files="Test*.java"	/>
-	<suppress checks="JavadocTypeCheck" files="Test*.java"	/>
-	<suppress checks="LineLength" files="Test*.java"	/>
-	<suppress checks="Indentation" files="Test*.java"	/>
-	<suppress checks="VisibilityModifier" files="Test*.java"	/>
-	<suppress checks="MagicNumberCheck" files="JavadocStyleCheck.java"/>
+  <!-- Suppress javadoc, line length, visibility checks for test code -->
+  <suppress checks="JavadocStyleCheck" files="Test*.java"/>
+  <suppress checks="JavadocTypeCheck" files="Test*.java"/>
+  <suppress checks="LineLength" files="Test*.java"/>
+  <suppress checks="Indentation" files="Test*.java"/>
+  <suppress checks="VisibilityModifier" files="Test*.java"/>
+  <suppress checks="MagicNumberCheck" files="JavadocStyleCheck.java"/>
 </suppressions>
