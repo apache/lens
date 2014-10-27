@@ -49,4 +49,9 @@
   <description>JDBC connect string for a JDBC metastore</description>
 </property>
 
+<property>
+  <name>hive.server2.query.log.dir</name>
+  <value>target/query_logs</value>
+</property>
+
 </configuration>
