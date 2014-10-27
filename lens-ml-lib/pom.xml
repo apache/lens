@@ -96,6 +96,14 @@
         </dependency>
 
     <!--  Dependencies for tests -->
+       <dependency>
+          <groupId>org.apache.lens</groupId>
+          <artifactId>lens-server</artifactId>
+          <version>${project.version}</version>
+          <classifier>classes</classifier>
+          <scope>test</scope>
+       </dependency>
+
       <dependency>
         <groupId>org.apache.lens</groupId>
         <artifactId>lens-server</artifactId>
@@ -104,12 +112,7 @@
         <scope>test</scope>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.lens</groupId>
-        <artifactId>lens-server</artifactId>
-        <version>${project.version}</version>
-        <scope>test</scope>
-      </dependency>
+
 
 
       <dependency>
