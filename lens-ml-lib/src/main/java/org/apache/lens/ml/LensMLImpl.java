@@ -83,7 +83,7 @@ public class LensMLImpl implements LensML {
 
   /**
    * Use an existing Spark context. Useful in case of
-   * 
+   *
    * @param jsc
    *          JavaSparkContext instance
    */
@@ -250,7 +250,7 @@ public class LensMLImpl implements LensML {
     this.conf = hiveConf;
 
     // Get all the drivers
-    String[] driverClasses = hiveConf.getStrings("Lens.ml.drivers");
+    String[] driverClasses = hiveConf.getStrings("lens.ml.drivers");
 
     if (driverClasses == null || driverClasses.length == 0) {
       throw new RuntimeException("No ML Drivers specified in conf");

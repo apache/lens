@@ -56,6 +56,13 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /**
    * Instantiates a new ML service impl.
+   */
+  public MLServiceImpl() {
+    this(NAME);
+  }
+
+  /**
+   * Instantiates a new ML service impl.
    *
    * @param name
    *          the name
