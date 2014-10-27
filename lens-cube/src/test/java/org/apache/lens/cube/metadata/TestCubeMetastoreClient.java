@@ -317,7 +317,7 @@ public class TestCubeMetastoreClient {
 
   }
 
-  @Test
+  @Test(priority = 1)
   public void testStorage() throws Exception {
     Storage hdfsStorage =  new HDFSStorage(c1);
     client.createStorage(hdfsStorage);
@@ -336,7 +336,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(hdfsStorage3, client.getStorage(c3));
   }
 
-  @Test
+  @Test(priority = 1)
   public void testDimension() throws Exception {
     client.createDimension(zipDim);
     client.createDimension(cityDim);
@@ -443,7 +443,7 @@ public class TestCubeMetastoreClient {
         dim.getAllFieldNames().size());
   }
 
-  @Test
+  @Test(priority = 1)
   public void testCube() throws Exception {
     Assert.assertEquals(client.getCurrentDatabase(),
         this.getClass().getSimpleName());
@@ -537,7 +537,7 @@ public class TestCubeMetastoreClient {
     Assert.assertTrue(dcube2.allFieldsQueriable());
   }
 
-  @Test
+  @Test(priority = 1)
   public void testAlterCube() throws Exception {
     String cubeName = "alter_test_cube";
     client.createCube(cubeName, cubeMeasures, cubeDimensions);
@@ -600,7 +600,7 @@ public class TestCubeMetastoreClient {
   }
 
 
-  @Test
+  @Test(priority = 2)
   public void testAlterDerivedCube() throws Exception {
     String name = "alter_derived_cube";
     client.createDerivedCube(cubeName, name, measures, dimensions,
@@ -637,7 +637,7 @@ public class TestCubeMetastoreClient {
     Assert.assertFalse(client.tableExists(name));
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFact() throws Exception {
     String factName = "testMetastoreFact";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
@@ -772,7 +772,7 @@ public class TestCubeMetastoreClient {
   }
 
 
-  @Test
+  @Test(priority = 2)
   public void testAlterCubeFact() throws Exception {
     String factName = "test_alter_fact";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
@@ -893,7 +893,7 @@ public class TestCubeMetastoreClient {
   }
 
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithTwoTimedParts() throws Exception {
     String factName = "testMetastoreFactTimedParts";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
@@ -997,7 +997,7 @@ public class TestCubeMetastoreClient {
   }
 
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithThreeTimedParts() throws Exception {
     String factName = "testMetastoreFact3TimedParts";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
@@ -1355,7 +1355,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithWeight() throws Exception {
     String factName = "testFactWithWeight";
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
@@ -1439,7 +1439,7 @@ public class TestCubeMetastoreClient {
   }
 
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithParts() throws Exception {
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
         cubeMeasures.size());
@@ -1538,7 +1538,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithPartsAndTimedParts() throws Exception {
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
         cubeMeasures.size());
@@ -1657,7 +1657,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeFactWithTwoStorages() throws Exception {
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>(
         cubeMeasures.size());
@@ -1790,7 +1790,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName2).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeDimWithWeight() throws Exception {
     String dimName = "statetable";
 
@@ -1872,7 +1872,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeDim() throws Exception {
     String dimName = "ziptableMeta";
 
@@ -2005,7 +2005,7 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
   }
 
-  @Test
+  @Test(priority = 2)
   public void testAlterDim() throws Exception {
     String dimName = "test_alter_dim";
 
@@ -2092,7 +2092,7 @@ public class TestCubeMetastoreClient {
     Assert.assertFalse(client.tableExists(dimName));
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeDimWithoutDumps() throws Exception {
     String dimName = "countrytableMeta";
 
@@ -2145,7 +2145,7 @@ public class TestCubeMetastoreClient {
     }
   }
 
-  @Test
+  @Test(priority = 2)
   public void testCubeDimWithTwoStorages() throws Exception {
     String dimName = "citytableMeta";
 
@@ -2205,7 +2205,7 @@ public class TestCubeMetastoreClient {
     Assert.assertTrue(!client.getHiveTable(storageTableName2).isPartitioned());
   }
 
-  @Test
+  @Test(priority = 3)
   public void testCaching() throws HiveException, ParseException {
     client = CubeMetastoreClient.getInstance(conf);
     CubeMetastoreClient client2 = CubeMetastoreClient.getInstance(
