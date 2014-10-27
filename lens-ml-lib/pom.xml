@@ -32,7 +32,6 @@
 
     <properties>
         <mvn.classpath.file>${pom.basedir}/target/classpath</mvn.classpath.file>
-        <sparkVervion>1.0.1</sparkVervion>
     </properties>
 
 
@@ -42,7 +41,7 @@
 
     <dependencies>
         <dependency>
-		    <groupId>org.apache.lens</groupId>
+        <groupId>org.apache.lens</groupId>
             <artifactId>lens-server-api</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -94,8 +93,44 @@
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-multipart</artifactId>
-            <version>2.3.1</version>
         </dependency>
+
+    <!--  Dependencies for tests -->
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-server</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-server</artifactId>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-driver-hive</artifactId>
+        <version>${project.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+        <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.glassfish.jersey.test-framework</groupId>
+        <artifactId>jersey-test-framework-core</artifactId>
+        <scope>test</scope>
+      </dependency>
 
     </dependencies>
 
@@ -112,7 +147,6 @@
                     <environmentVariables>
                         <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                     </environmentVariables>
-                    <!--argLine>-Xms256m -Xmx512m</argLine-->
                 </configuration>
             </plugin>
             <plugin>
@@ -136,4 +170,4 @@
     </build>
 
 
-</project>    
+</project>

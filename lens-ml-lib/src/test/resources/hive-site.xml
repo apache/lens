@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<configuration>
+
+<!-- This configuration is for HiveServer in tests -->
+
+<property>
+  <name>hive.metastore.local</name>
+  <value>true</value>
+</property>
+
+<property>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>/tmp/hive/warehouse</value>
+</property>
+
+<property>
+  <name>mapreduce.framework.name</name>
+  <value>local</value>
+</property>
+
+<property>
+  <name>mapred.job.tracker</name>
+  <value>local</value>
+</property>
+
+<property>
+  <name>javax.jdo.option.ConnectionURL</name>
+  <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
+  <description>JDBC connect string for a JDBC metastore</description>
+</property>
+
+<property>
+  <name>hive.lock.manager</name>
+  <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
+</property>
+
+<property>
+  <name>hive.server2.async.exec.threads</name>
+  <value>5</value>
+</property>
+
+</configuration>

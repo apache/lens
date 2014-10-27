@@ -142,19 +142,9 @@ public class SparkMLDriver implements MLDriver {
     sparkConf = new SparkConf();
     registerTrainers();
     for (String key : conf.getProperties().keySet()) {
-      if (key.startsWith("Lens.ml.sparkdriver.")) {
-        sparkConf.set(key.substring("Lens.ml.sparkdriver.".length()), conf.getProperties().get(key));
+      if (key.startsWith("lens.ml.sparkdriver.")) {
+        sparkConf.set(key.substring("lens.ml.sparkdriver.".length()), conf.getProperties().get(key));
       }
-    }
-
-    String sparkHome = System.getenv("SPARK_HOME");
-    if (StringUtils.isNotBlank(sparkHome)) {
-      sparkConf.setSparkHome(sparkHome);
-    }
-
-    // If SPARK_HOME is not set, SparkConf can read from the Lens-site.xml or System properties.
-    if (StringUtils.isBlank(sparkConf.get("spark.home"))) {
-      throw new LensException("Spark home is not set");
     }
 
     String sparkAppMaster = sparkConf.get("spark.master");
@@ -164,9 +154,25 @@ public class SparkMLDriver implements MLDriver {
       clientMode = SparkMasterMode.YARN_CLUSTER;
     } else if ("local".equalsIgnoreCase(sparkAppMaster) || StringUtils.isBlank(sparkAppMaster)) {
       clientMode = SparkMasterMode.EMBEDDED;
+    } else {
+      throw new IllegalArgumentException("Invalid master mode " + sparkAppMaster);
     }
-    sparkConf.setAppName("Lens-ml");
-    LOG.info("Spark home is set to " + sparkConf.get("spark.home"));
+
+    if (clientMode == SparkMasterMode.YARN_CLIENT || clientMode == SparkMasterMode.YARN_CLUSTER) {
+      String sparkHome = System.getenv("SPARK_HOME");
+      if (StringUtils.isNotBlank(sparkHome)) {
+        sparkConf.setSparkHome(sparkHome);
+      }
+
+      // If SPARK_HOME is not set, SparkConf can read from the Lens-site.xml or System properties.
+      if (StringUtils.isBlank(sparkConf.get("spark.home"))) {
+        throw new IllegalArgumentException("Spark home is not set");
+      }
+
+      LOG.info("Spark home is set to " + sparkConf.get("spark.home"));
+    }
+
+    sparkConf.setAppName("lens-ml");
   }
 
   /*
