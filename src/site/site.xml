@@ -48,6 +48,7 @@
 			<item name="FAQ" href="./user/faq.html"/>
 		</menu>
 		<menu name="Developer Documentation">
+      <item name="Contributor Guide" href="./developer/contribute.html" />
       <item name="Lens Design" href="./developer/design.html" />
       <item name="Driver Developer Guide" href="./developer/driver.html" />
     </menu>
