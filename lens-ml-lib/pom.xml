@@ -112,9 +112,6 @@
         <scope>test</scope>
       </dependency>
 
-
-
-
       <dependency>
         <groupId>org.apache.lens</groupId>
         <artifactId>lens-driver-hive</artifactId>
@@ -150,6 +147,8 @@
                     <environmentVariables>
                         <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                     </environmentVariables>
+                    <!-- More memory is required to run Spark in unit tests -->
+                    <argLine>-XX:MaxPermSize=1024m -Xms1024m -Xmx2000m</argLine>
                 </configuration>
             </plugin>
             <plugin>

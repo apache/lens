@@ -37,7 +37,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 
 /**
- * The Class LensJerseyTest.
+ * Extend this class for unit testing Lens Jersey resources
  */
 public abstract class LensJerseyTest extends JerseyTest {
 
