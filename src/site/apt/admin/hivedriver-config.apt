@@ -16,6 +16,7 @@
 ~~ specific language governing permissions and limitations
 ~~ under the License.
 ~~
+
 Hive driver configuration
 
 ===
@@ -23,25 +24,25 @@ Hive driver configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
+|1|hive.server.read.socket.timeout|10|Socket timeout for the client connection|
 *--+--+---+--+
-|2|cube.query.enable.multi.table.select|false|Tells whether multiple tables are allowed in from clause of final HQL query|
+|2|hive.server.tcp.keepalive|true|TCP Keep alive socket option for HiveServer connection|
 *--+--+---+--+
-|3|cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
+|3|hive.server2.thrift.bind.host| |The host on which hive server is running|
 *--+--+---+--+
-|4|hive.server.read.socket.timeout|10|Socket timeout for the client connection|
+|4|hive.server2.thrift.client.connect.retry.limit|1|Number of times to retry a connection to a Thrift hive server|
 *--+--+---+--+
-|5|hive.server.tcp.keepalive|true|TCP Keep alive socket option for HiveServer connection|
+|5|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
 *--+--+---+--+
-|6|hive.server2.thrift.bind.host| |The host on which hive server is running|
+|6|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
 *--+--+---+--+
-|7|hive.server2.thrift.client.connect.retry.limit|1|Number of times to retry a connection to a Thrift hive server|
+|7|hive.server2.thrift.port|10000|The port on which hive server is running|
 *--+--+---+--+
-|8|hive.server2.thrift.client.retry.delay.seconds|1|Number of seconds the client should wait between connection attempts.|
+|8|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|9|hive.server2.thrift.client.retry.limit|1|Number of times to retry a Thrift service call upon failure |
+|9|lens.cube.query.enable.multi.table.select|false|Tells whether multiple tables are allowed in from clause of final HQL query|
 *--+--+---+--+
-|10|hive.server2.thrift.port|10000|The port on which hive server is running|
+|10|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
 |11|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
 *--+--+---+--+

@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.cube.metadata.CubeMetastoreClient;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
@@ -38,6 +37,7 @@ import org.apache.hive.service.cli.session.HiveSessionImpl;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.util.UtilityMethods;
 
