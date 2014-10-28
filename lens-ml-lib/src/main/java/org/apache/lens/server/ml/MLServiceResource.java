@@ -58,7 +58,23 @@ public class MLServiceResource {
   ServiceProvider serviceProvider;
 
   /** The service provider factory. */
-  ServiceProviderFactory serviceProviderFactory = getServiceProviderFactory(new HiveConf());
+  ServiceProviderFactory serviceProviderFactory;
+
+  private static final HiveConf hiveConf;
+
+  static {
+    hiveConf = new HiveConf();
+    // Add default config so that we know the service provider implementation
+    hiveConf.addResource("lensserver-default.xml");
+    hiveConf.addResource("lens-site.xml");
+  }
+
+  /**
+   * Instantiates a new ML service resource.
+   */
+  public MLServiceResource() {
+    serviceProviderFactory = getServiceProviderFactory(hiveConf);
+  }
 
   private ServiceProvider getServiceProvider() {
     if (serviceProvider == null) {
@@ -94,7 +110,7 @@ public class MLServiceResource {
 
   /**
    * Get a list of trainers available
-   * 
+   *
    * @return
    */
   @GET
