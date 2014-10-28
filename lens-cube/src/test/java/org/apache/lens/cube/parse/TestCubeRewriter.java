@@ -1259,27 +1259,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(testConf);
     Cube cube = (Cube) client.getCube(cubeName);
 
-    ReferencedDimAtrribute col = (ReferencedDimAtrribute) cube.getColumnByName("dim2");
+    ReferencedDimAtrribute col = (ReferencedDimAtrribute) cube.getColumnByName("cdim2");
     Assert.assertNotNull(col);
 
-    Date oneWeekBack = DateUtils.addDays(twodaysBack, -7);
-    Date twoWeekBack = DateUtils.addDays(twodaysBack, -14);
-
-    // Alter cube.dim2 with an invalid column life
-    ReferencedDimAtrribute newDim2 =
-        new ReferencedDimAtrribute(new FieldSchema(col.getName(), "string", "invalid col"), col.getDisplayString(),
-            new TableReference("testdim2", "id"), twoWeekBack, oneWeekBack, // create
-                                                                            // column
-                                                                            // out
-                                                                            // of
-                                                                            // time
-                                                                            // range
-            col.getCost());
-    cube.alterDimension(newDim2);
-    client.alterCube(cubeName, cube);
-    System.out.println("@@Altered cube  New Col life " + twoWeekBack + " to " + oneWeekBack);
-
-    final String query = "SELECT testdim2.name, msr2 FROM testCube where " + twoDaysRange;
+    final String query = "SELECT cycledim1.name, msr2 FROM testCube where " + twoDaysRange;
     try {
       CubeQueryRewriter rewriter = new CubeQueryRewriter(testConf);
       CubeQueryContext context = rewriter.rewrite(query);
@@ -1294,6 +1277,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
     }
 
     // Assert same query succeeds with valid column
+    Date oneWeekBack = DateUtils.addDays(twodaysBack, -7);
+
+    // Alter cube.dim2 with an invalid column life
+    ReferencedDimAtrribute newDim2 =
+        new ReferencedDimAtrribute(new FieldSchema(col.getName(), "string", "invalid col"), col.getDisplayString(),
+            col.getReferences(), oneWeekBack, null,
+            col.getCost());
+    cube.alterDimension(newDim2);
+    client.alterCube(cubeName, cube);
     CubeQueryRewriter rewriter = new CubeQueryRewriter(testConf);
     CubeQueryContext context = rewriter.rewrite(query);
     String hql = context.toHQL();

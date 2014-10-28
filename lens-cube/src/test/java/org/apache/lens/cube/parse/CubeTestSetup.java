@@ -486,6 +486,8 @@ public class CubeTestSetup {
     cubeDimensions.add(new BaseDimAttribute(new FieldSchema("ambigdim1", "string", "used in testColumnAmbiguity")));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2", "int", "ref dim"), "Dim2 refer",
         new TableReference("testdim2", "id")));
+    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("cdim2", "int", "ref dim"), "Dim2 refer",
+        new TableReference("cycledim1", "id"), now, null, null));
 
     // denormalized reference
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("dim2big1", "bigint", "ref dim"), "Dim2 refer",
@@ -862,6 +864,7 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
     factColumns.add(new FieldSchema("test_time_dim_day_id", "int", "time id"));
+    factColumns.add(new FieldSchema("cdim2", "int", "cycledim id"));
 
     Map<String, Set<UpdatePeriod>> storageAggregatePeriods = new HashMap<String, Set<UpdatePeriod>>();
     Set<UpdatePeriod> updates = new HashSet<UpdatePeriod>();
