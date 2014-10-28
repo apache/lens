@@ -60,14 +60,19 @@ public class MLServiceResource {
   /** The service provider factory. */
   ServiceProviderFactory serviceProviderFactory;
 
+  private static final HiveConf hiveConf;
+
+  static {
+    hiveConf = new HiveConf();
+    // Add default config so that we know the service provider implementation
+    hiveConf.addResource("lensserver-default.xml");
+    hiveConf.addResource("lens-site.xml");
+  }
+
   /**
    * Instantiates a new ML service resource.
    */
   public MLServiceResource() {
-    HiveConf hiveConf = new HiveConf();
-    // Add default config so that we know the service provider implementation
-    hiveConf.addResource("lensserver-default.xml");
-    hiveConf.addResource("lens-site.xml");
     serviceProviderFactory = getServiceProviderFactory(hiveConf);
   }
 
