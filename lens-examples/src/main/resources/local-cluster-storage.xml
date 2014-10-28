@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+
     Licensed to the Apache Software Foundation (ASF) under one
     or more contributor license agreements.  See the NOTICE file
     distributed with this work for additional information
@@ -16,8 +17,8 @@
     KIND, either express or implied.  See the License for the
     specific language governing permissions and limitations
     under the License.
--->
 
+-->
 <x_storage classname="org.apache.lens.cube.metadata.HDFSStorage" name="cluster1"
 >>>>>>> 9f2ccf6fcb003dc2904bf37c359b60f0103fa541
  xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"

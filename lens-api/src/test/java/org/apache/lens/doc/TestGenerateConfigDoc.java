@@ -333,6 +333,7 @@ public class TestGenerateConfigDoc {
         apt.println("~~ specific language governing permissions and limitations");
         apt.println("~~ under the License.");
         apt.println("~~");
+        apt.println("");
 
         // Print header
         apt.println(heading);
