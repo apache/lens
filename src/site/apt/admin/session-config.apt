@@ -24,27 +24,27 @@ Lens session configuration
 *--+--+---+--+
 |<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|
 *--+--+---+--+
-|1|cube.query.fail.if.data.partial|true|Whether to fail the query of data is partial|
+|1|hive.metastore.batch.retrieve.max|100|Maximum number of objects (tables/partitions) can be retrieved from metastore in one batch. The higher the number, the less the number of round trips is needed to the Hive metastore server, but it may also cause higher memory requirement at the client side.|
 *--+--+---+--+
-|2|cube.query.promote.select.togroupby|true|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
+|2|hive.metastore.batch.retrieve.table.partition.max|500|Maximum number of table partitions that metastore internally retrieves in one batch.|
 *--+--+---+--+
-|3|hive.cube.disable.aggregate.resolver|false|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
+|3|hive.metastore.client.connect.retry.delay|1|Number of seconds for the client to wait between consecutive connection attempts|
 *--+--+---+--+
-|4|hive.cube.disable.auto.join|false|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
+|4|hive.metastore.client.socket.timeout|20|MetaStore Client socket timeout in seconds|
 *--+--+---+--+
-|5|hive.metastore.batch.retrieve.max|100|Maximum number of objects (tables/partitions) can be retrieved from metastore in one batch. The higher the number, the less the number of round trips is needed to the Hive metastore server, but it may also cause higher memory requirement at the client side.|
+|5|hive.metastore.connect.retries|5|Number of retries while opening a connection to metastore|
 *--+--+---+--+
-|6|hive.metastore.batch.retrieve.table.partition.max|500|Maximum number of table partitions that metastore internally retrieves in one batch.|
+|6|hive.metastore.failure.retries|3|Number of call retries when Hive Metastore calls fail with Thrift errros|
 *--+--+---+--+
-|7|hive.metastore.client.connect.retry.delay|1|Number of seconds for the client to wait between consecutive connection attempts|
+|7|hive.metastore.uris| |The hive metastore server URI that the lens server is talking to|
 *--+--+---+--+
-|8|hive.metastore.client.socket.timeout|20|MetaStore Client socket timeout in seconds|
+|8|lens.cube.query.disable.aggregate.resolver|false|Tells whether to disable automatic resolution of aggregations for measures in a cube. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|9|hive.metastore.connect.retries|5|Number of retries while opening a connection to metastore|
+|9|lens.cube.query.disable.auto.join|false|Tells whether to disable automatic resolution of join conditions between tables involved. To enable automatic resolution, this value should be false.|
 *--+--+---+--+
-|10|hive.metastore.failure.retries|3|Number of call retries when Hive Metastore calls fail with Thrift errros|
+|10|lens.cube.query.fail.if.data.partial|true|Whether to fail the query of data is partial|
 *--+--+---+--+
-|11|hive.metastore.uris| |The hive metastore server URI that the lens server is talking to|
+|11|lens.cube.query.promote.select.togroupby|true|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
 |12|lens.query.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself. |
 *--+--+---+--+
