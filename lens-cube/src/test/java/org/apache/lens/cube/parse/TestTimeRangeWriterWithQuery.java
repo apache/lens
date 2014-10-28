@@ -37,7 +37,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.BetweenTimeRangeWriter;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
@@ -45,33 +44,14 @@ import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.TimeRangeWriter;
 import org.testng.Assert;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestTimeRangeWriterWithQuery {
+public class TestTimeRangeWriterWithQuery extends TestQueryRewrite {
 
   private Configuration conf;
   private CubeQueryRewriter driver;
   private final String cubeName = CubeTestSetup.TEST_CUBE_NAME;
-
-  static CubeTestSetup setup;
-  static HiveConf hconf = new HiveConf(TestCubeRewriter.class);
-  static String dbName;
-
-  @BeforeClass
-  public static void setup() throws Exception {
-    SessionState.start(hconf);
-    setup = new CubeTestSetup();
-    String dbName = TestTimeRangeWriterWithQuery.class.getSimpleName();
-    setup.createSources(hconf, dbName);
-  }
-
-  @AfterClass
-  public static void tearDown() throws Exception {
-    setup.dropSources(hconf);
-  }
 
   @BeforeTest
   public void setupDriver() throws Exception {
@@ -82,14 +62,13 @@ public class TestTimeRangeWriterWithQuery {
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
     conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
-        BetweenTimeRangeWriter.class.asSubclass(TimeRangeWriter.class),
-        TimeRangeWriter.class);
+        BetweenTimeRangeWriter.class.asSubclass(TimeRangeWriter.class), TimeRangeWriter.class);
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
   }
 
   private CubeQueryContext rewrittenQuery;
-  private String rewrite(CubeQueryRewriter driver, String query)
-      throws SemanticException, ParseException {
+
+  private String rewrite(CubeQueryRewriter driver, String query) throws SemanticException, ParseException {
     rewrittenQuery = driver.rewrite(query);
     return rewrittenQuery.toHQL();
   }
@@ -107,70 +86,63 @@ public class TestTimeRangeWriterWithQuery {
     cal.set(Calendar.MINUTE, 0);
     cal.set(Calendar.SECOND, 0);
     cal.set(Calendar.MILLISECOND, 0);
-    return cal.getTime(); 
+    return cal.getTime();
   }
 
   @Test
   public void testCubeQuery() throws Exception {
     SemanticException th = null;
     try {
-      rewrite(driver, "cube select" +
-          " SUM(msr2) from testCube where " + twoDaysRange);
+      rewrite(driver, "cube select" + " SUM(msr2) from testCube where " + twoDaysRange);
     } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
     if (!CubeTestSetup.isZerothHour()) {
       Assert.assertNotNull(th);
-      Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(),
-          ErrorMsg.CANNOT_USE_TIMERANGE_WRITER.getErrorCode());
+      Assert
+          .assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.CANNOT_USE_TIMERANGE_WRITER.getErrorCode());
     }
     // hourly partitions for two days
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    String hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" +
-        " where " + twoDaysRange);
+    String hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" + " where " + twoDaysRange);
     Map<String, String> whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact2",
-        TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
-        CubeTestSetup.twodaysBack, getOneLess(CubeTestSetup.now,
-            UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format()));
-    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        null, null, whereClauses);
+    whereClauses.put(
+        CubeTestSetup.getDbName() + "c1_testfact2",
+        TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.twodaysBack,
+            getOneLess(CubeTestSetup.now, UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format()));
+    String expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // multiple range query
-    hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" +
-        " where " + twoDaysRange + " OR " + CubeTestSetup.twoDaysRangeBefore4days);
+    hqlQuery =
+        rewrite(driver, "select SUM(msr2) from testCube" + " where " + twoDaysRange + " OR "
+            + CubeTestSetup.twoDaysRangeBefore4days);
 
     whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact2",
-        TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
-        CubeTestSetup.twodaysBack, getOneLess(CubeTestSetup.now,
-            UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format()) +
-        " OR" + TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
-            CubeTestSetup.before4daysStart, getOneLess(CubeTestSetup.before4daysEnd,
-                UpdatePeriod.HOURLY.calendarField()),
-            UpdatePeriod.HOURLY.format())
-        );
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        null, null, whereClauses);
+    whereClauses.put(
+        CubeTestSetup.getDbName() + "c1_testfact2",
+        TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.twodaysBack,
+            getOneLess(CubeTestSetup.now, UpdatePeriod.HOURLY.calendarField()), UpdatePeriod.HOURLY.format())
+            + " OR"
+            + TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt", CubeTestSetup.before4daysStart,
+                getOneLess(CubeTestSetup.before4daysEnd, UpdatePeriod.HOURLY.calendarField()),
+                UpdatePeriod.HOURLY.format()));
+    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // format option in the query
     conf.set(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT, "yyyy-MM-dd HH:mm:ss");
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" +
-        " where " + twoDaysRange);
+    hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" + " where " + twoDaysRange);
     whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact2",
-        TestBetweenTimeRangeWriter.getBetweenClause(cubeName, "dt",
-            getUptoHour(CubeTestSetup.twodaysBack), getUptoHour(getOneLess(CubeTestSetup.now,
-            UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat));
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        null, null, whereClauses);
+    whereClauses.put(CubeTestSetup.getDbName() + "c1_testfact2", TestBetweenTimeRangeWriter.getBetweenClause(cubeName,
+        "dt", getUptoHour(CubeTestSetup.twodaysBack),
+        getUptoHour(getOneLess(CubeTestSetup.now, UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat));
+    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
   }
@@ -184,76 +156,83 @@ public class TestTimeRangeWriterWithQuery {
     conf.set(CubeQueryConfUtil.PART_WHERE_CLAUSE_DATE_FORMAT, "yyyy-MM-dd HH:mm:ss");
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
 
-    
-    String query = "SELECT test_time_dim, msr2 FROM testCube where "
-        + "time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-        twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')";
+    String query =
+        "SELECT test_time_dim, msr2 FROM testCube where " + "time_range_in(test_time_dim, '"
+            + CubeTestSetup.getDateUptoHours(twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')";
     String hqlQuery = rewrite(driver, query);
     Map<String, String> whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c4_testfact",
-        TestBetweenTimeRangeWriter.getBetweenClause("hourdim", "full_hour",
-            getUptoHour(CubeTestSetup.twodaysBack), getUptoHour(getOneLess(CubeTestSetup.now,
-            UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat));
+    whereClauses.put(CubeTestSetup.getDbName() + "c4_testfact", TestBetweenTimeRangeWriter.getBetweenClause("hourdim",
+        "full_hour", getUptoHour(CubeTestSetup.twodaysBack),
+        getUptoHour(getOneLess(CubeTestSetup.now, UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat));
     System.out.println("HQL:" + hqlQuery);
-    String expected = getExpectedQuery(cubeName, "select hourdim.full_hour, sum(testcube.msr2) FROM ",
-        " join " + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id",
-        null, " GROUP BY hourdim.full_hour", null, whereClauses);
+    String expected =
+        getExpectedQuery(cubeName, "select hourdim.full_hour, sum(testcube.msr2) FROM ", " join " + getDbName()
+            + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id", null,
+            " GROUP BY hourdim.full_hour", null, whereClauses);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    query = "SELECT msr2 FROM testCube where "
-        + "time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-        twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')";
+    query =
+        "SELECT msr2 FROM testCube where " + "time_range_in(test_time_dim, '"
+            + CubeTestSetup.getDateUptoHours(twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')";
     hqlQuery = rewrite(driver, query);
     System.out.println("HQL:" + hqlQuery);
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        " join " + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id",
-        null, null, null, whereClauses);
+    expected =
+        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+            + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id", null, null, null, whereClauses);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    query = "SELECT msr2 FROM testCube where testcube.cityid > 2 and "
-        + "time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-        twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "') and testcube.cityid != 5";
+    query =
+        "SELECT msr2 FROM testCube where testcube.cityid > 2 and " + "time_range_in(test_time_dim, '"
+            + CubeTestSetup.getDateUptoHours(twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now)
+            + "') and testcube.cityid != 5";
     hqlQuery = rewrite(driver, query);
     System.out.println("HQL:" + hqlQuery);
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        " join " + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id",
-        " testcube.cityid > 2 ", " and testcube.cityid != 5", null, whereClauses);
+    expected =
+        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+            + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id", " testcube.cityid > 2 ",
+            " and testcube.cityid != 5", null, whereClauses);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // multiple range query
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    hqlQuery = rewrite(driver, "select SUM(msr2) from testCube" +
-        " where time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-            twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')" +
-        " OR time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-            before4daysStart) + "','" + CubeTestSetup.getDateUptoHours(before4daysEnd) + "')");
+    hqlQuery =
+        rewrite(
+            driver,
+            "select SUM(msr2) from testCube" + " where time_range_in(test_time_dim, '"
+                + CubeTestSetup.getDateUptoHours(twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')"
+                + " OR time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(before4daysStart) + "','"
+                + CubeTestSetup.getDateUptoHours(before4daysEnd) + "')");
 
     whereClauses = new HashMap<String, String>();
-    whereClauses.put(CubeTestSetup.getDbName() + "c4_testfact",
-        TestBetweenTimeRangeWriter.getBetweenClause("hourdim", "full_hour",
-            getUptoHour(CubeTestSetup.twodaysBack), getUptoHour(getOneLess(CubeTestSetup.now,
-            UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat) +
-        " OR " + TestBetweenTimeRangeWriter.getBetweenClause("hourdim", "full_hour",
-            getUptoHour(before4daysStart), getUptoHour(getOneLess(before4daysEnd,
-            UpdatePeriod.HOURLY.calendarField())), TestTimeRangeWriter.dbFormat));
-    expected = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ",
-        " join " + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id",
-        null, null, null, whereClauses);
+    whereClauses.put(
+        CubeTestSetup.getDbName() + "c4_testfact",
+        TestBetweenTimeRangeWriter.getBetweenClause("hourdim", "full_hour", getUptoHour(CubeTestSetup.twodaysBack),
+            getUptoHour(getOneLess(CubeTestSetup.now, UpdatePeriod.HOURLY.calendarField())),
+            TestTimeRangeWriter.dbFormat)
+            + " OR "
+            + TestBetweenTimeRangeWriter.getBetweenClause("hourdim", "full_hour", getUptoHour(before4daysStart),
+                getUptoHour(getOneLess(before4daysEnd, UpdatePeriod.HOURLY.calendarField())),
+                TestTimeRangeWriter.dbFormat));
+    expected =
+        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", " join " + getDbName()
+            + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id", null, null, null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
-    hqlQuery = rewrite(driver, "select to_date(test_time_dim), SUM(msr2) from testCube" +
-        " where time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-            twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')" +
-        " OR time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(
-            before4daysStart) + "','" + CubeTestSetup.getDateUptoHours(before4daysEnd) + "')");
+    hqlQuery =
+        rewrite(driver,
+            "select to_date(test_time_dim), SUM(msr2) from testCube" + " where time_range_in(test_time_dim, '"
+                + CubeTestSetup.getDateUptoHours(twodaysBack) + "','" + CubeTestSetup.getDateUptoHours(now) + "')"
+                + " OR time_range_in(test_time_dim, '" + CubeTestSetup.getDateUptoHours(before4daysStart) + "','"
+                + CubeTestSetup.getDateUptoHours(before4daysEnd) + "')");
 
-    expected = getExpectedQuery(cubeName, "select to_date(hourdim.full_hour), sum(testcube.msr2) FROM ",
-        " join " + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id",
-        null, " group by to_date(hourdim.full_hour)", null, whereClauses);
+    expected =
+        getExpectedQuery(cubeName, "select to_date(hourdim.full_hour), sum(testcube.msr2) FROM ", " join "
+            + getDbName() + "c4_hourDimTbl hourdim on testcube.test_time_dim_hour_id  = hourdim.id", null,
+            " group by to_date(hourdim.full_hour)", null, whereClauses);
     System.out.println("HQL:" + hqlQuery);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
   }

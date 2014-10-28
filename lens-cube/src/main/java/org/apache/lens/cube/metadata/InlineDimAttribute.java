@@ -34,9 +34,8 @@ public class InlineDimAttribute extends BaseDimAttribute {
     this(column, null, null, null, null, values);
   }
 
-  public InlineDimAttribute(FieldSchema column, String displayString,
-      Date startTime, Date endTime,
-      Double cost, List<String> values) {
+  public InlineDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime, Double cost,
+      List<String> values) {
     super(column, displayString, startTime, endTime, cost);
     this.values = values;
   }
@@ -48,22 +47,19 @@ public class InlineDimAttribute extends BaseDimAttribute {
   @Override
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
-    props.put(MetastoreUtil.getInlineDimensionSizeKey(getName()),
-        String.valueOf(values.size()));
-    props.put(MetastoreUtil.getInlineDimensionValuesKey(getName()),
-        MetastoreUtil.getStr(values));
+    props.put(MetastoreUtil.getInlineDimensionSizeKey(getName()), String.valueOf(values.size()));
+    props.put(MetastoreUtil.getInlineDimensionValuesKey(getName()), MetastoreUtil.getStr(values));
   }
 
   /**
    * This is used only for serializing
-   *
+   * 
    * @param name
    * @param props
    */
   public InlineDimAttribute(String name, Map<String, String> props) {
     super(name, props);
-    String valueStr = props.get(MetastoreUtil.getInlineDimensionValuesKey(
-        name));
+    String valueStr = props.get(MetastoreUtil.getInlineDimensionValuesKey(name));
     this.values = Arrays.asList(valueStr.split(","));
   }
 
@@ -71,8 +67,7 @@ public class InlineDimAttribute extends BaseDimAttribute {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getValues() == null) ? 0 :
-        getValues().hashCode());
+    result = prime * result + ((getValues() == null) ? 0 : getValues().hashCode());
     return result;
   }
 

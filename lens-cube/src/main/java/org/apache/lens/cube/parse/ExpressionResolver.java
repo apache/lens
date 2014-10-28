@@ -39,7 +39,7 @@ import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 /**
  * Replaces expression with its AST in all query ASTs
- *
+ * 
  */
 class ExpressionResolver implements ContextRewriter {
 
@@ -71,9 +71,8 @@ class ExpressionResolver implements ContextRewriter {
         ASTNode node = visited.getNode();
         int childcount = node.getChildCount();
         for (int i = 0; i < childcount; i++) {
-          ASTNode current = (ASTNode)node.getChild(i);
-          if (current.getToken().getType() == TOK_TABLE_OR_COL
-              && (node != null && node.getToken().getType() != DOT)) {
+          ASTNode current = (ASTNode) node.getChild(i);
+          if (current.getToken().getType() == TOK_TABLE_OR_COL && (node != null && node.getToken().getType() != DOT)) {
             // Take child ident.totext
             ASTNode ident = (ASTNode) current.getChild(0);
             String column = ident.getText().toLowerCase();
@@ -86,8 +85,7 @@ class ExpressionResolver implements ContextRewriter {
             // or table alias
             // For example 'select fact.id, dim2.id ...'
             // Right child is the column name, left child.ident is table name
-            ASTNode tabident = HQLParser.findNodeByPath(current, TOK_TABLE_OR_COL,
-                Identifier);
+            ASTNode tabident = HQLParser.findNodeByPath(current, TOK_TABLE_OR_COL, Identifier);
             ASTNode colIdent = (ASTNode) current.getChild(1);
 
             String column = colIdent.getText().toLowerCase();
@@ -103,19 +101,18 @@ class ExpressionResolver implements ContextRewriter {
     });
   }
 
-  private ASTNode getExprAST(final CubeQueryContext cubeql, String table,
-      String column) throws SemanticException {
+  private ASTNode getExprAST(final CubeQueryContext cubeql, String table, String column) throws SemanticException {
     if (cubeql.getQueriedTable(table) == null) {
       cubeql.addQueriedTable(table);
     }
     if (!(cubeql.getQueriedTable(table) instanceof AbstractBaseTable)) {
       return null;
     }
-    if (((AbstractBaseTable)cubeql.getQueriedTable(table)).getExpressionByName(column) == null) {
+    if (((AbstractBaseTable) cubeql.getQueriedTable(table)).getExpressionByName(column) == null) {
       return null;
     }
     try {
-      return ((AbstractBaseTable)cubeql.getQueriedTable(table)).getExpressionByName(column).getAst();
+      return ((AbstractBaseTable) cubeql.getQueriedTable(table)).getExpressionByName(column).getAst();
     } catch (ParseException e) {
       throw new SemanticException(e);
     }
@@ -128,7 +125,7 @@ class ExpressionResolver implements ContextRewriter {
       // no expression resolver for derived cubes
       if (cubeql.getCube().getExpressionNames().contains(column.toLowerCase())) {
         expr = cubeql.getCube().getExpressionByName(column);
-        table = (AbstractBaseTable)cubeql.getCube();
+        table = (AbstractBaseTable) cubeql.getCube();
       }
     }
     if (cubeql.getDimensions() != null) {
@@ -163,15 +160,13 @@ class ExpressionResolver implements ContextRewriter {
           parent = visited.getParent().getNode();
         }
 
-        if (node.getToken().getType() == TOK_TABLE_OR_COL
-            && (parent != null && parent.getToken().getType() == DOT)) {
-          ASTNode current = (ASTNode)node.getChild(0);
+        if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() == DOT)) {
+          ASTNode current = (ASTNode) node.getChild(0);
           if (current.getToken().getType() == Identifier) {
             String tableName = current.getToken().getText().toLowerCase();
             String alias = cubeql.getAliasForTabName(tableName);
             if (!alias.equalsIgnoreCase(tableName)) {
-              node.setChild(0, new ASTNode(new CommonToken(
-                  HiveParser.Identifier, alias)));
+              node.setChild(0, new ASTNode(new CommonToken(HiveParser.Identifier, alias)));
             }
           }
         }

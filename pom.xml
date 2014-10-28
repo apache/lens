@@ -42,6 +42,7 @@
     <metrics.version>3.0.2</metrics.version>
     <hadoop.version>2.4.0</hadoop.version>
     <spark.version>1.1.0</spark.version>
+    <test.tmp.dir>${basedir}/target/tmp</test.tmp.dir>
   </properties>
 
   <groupId>org.apache.lens</groupId>

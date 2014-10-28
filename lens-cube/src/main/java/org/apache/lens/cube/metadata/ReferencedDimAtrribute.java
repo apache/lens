@@ -37,32 +37,29 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
     this(column, displayString, reference, null, null, null);
   }
 
-  public ReferencedDimAtrribute(FieldSchema column, String displayString,
-      TableReference reference, Date startTime, Date endTime, Double cost) {
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference, Date startTime,
+      Date endTime, Double cost) {
     this(column, displayString, reference, startTime, endTime, cost, true);
   }
 
-  public ReferencedDimAtrribute(FieldSchema column, String displayString,
-      TableReference reference, Date startTime, Date endTime, Double cost, boolean isJoinKey) {
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference, Date startTime,
+      Date endTime, Double cost, boolean isJoinKey) {
     super(column, displayString, startTime, endTime, cost);
     this.references.add(reference);
     this.isJoinKey = isJoinKey;
   }
 
-  public ReferencedDimAtrribute(FieldSchema column, String displayString,
-      Collection<TableReference> references) {
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references) {
     this(column, displayString, references, null, null, null);
   }
 
-  public ReferencedDimAtrribute(FieldSchema column, String displayString,
-      Collection<TableReference> references, Date startTime, Date endTime,
-      Double cost) {
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references,
+      Date startTime, Date endTime, Double cost) {
     this(column, displayString, references, startTime, endTime, cost, true);
   }
 
-  public ReferencedDimAtrribute(FieldSchema column, String displayString,
-      Collection<TableReference> references, Date startTime, Date endTime,
-      Double cost, boolean isJoinKey) {
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references,
+      Date startTime, Date endTime, Double cost, boolean isJoinKey) {
     super(column, displayString, startTime, endTime, cost);
     this.references.addAll(references);
     this.isJoinKey = isJoinKey;
@@ -87,21 +84,20 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   @Override
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
-    props.put(MetastoreUtil.getDimensionSrcReferenceKey(getName()),
-        MetastoreUtil.getDimensionDestReference(references));
+    props
+        .put(MetastoreUtil.getDimensionSrcReferenceKey(getName()), MetastoreUtil.getDimensionDestReference(references));
     props.put(MetastoreUtil.getDimUseAsJoinKey(getName()), isJoinKey.toString());
   }
 
   /**
    * This is used only for serializing
-   *
+   * 
    * @param name
    * @param props
    */
   public ReferencedDimAtrribute(String name, Map<String, String> props) {
     super(name, props);
-    String refListStr = props.get(MetastoreUtil.getDimensionSrcReferenceKey(
-        getName()));
+    String refListStr = props.get(MetastoreUtil.getDimensionSrcReferenceKey(getName()));
     String refListDims[] = StringUtils.split(refListStr, ",");
     for (String refDimRaw : refListDims) {
       references.add(new TableReference(refDimRaw));
@@ -116,8 +112,7 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getReferences() == null) ? 0 :
-        getReferences().hashCode());
+    result = prime * result + ((getReferences() == null) ? 0 : getReferences().hashCode());
     return result;
   }
 

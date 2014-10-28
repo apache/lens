@@ -43,9 +43,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     columns.add(new FieldSchema("dummy", "string", "dummy column"));
   }
 
-  public AbstractBaseTable(String name, Set<ExprColumn> exprs,
-      Map<String, String> properties,
-      double weight) {
+  public AbstractBaseTable(String name, Set<ExprColumn> exprs, Map<String, String> properties, double weight) {
     super(name, columns, properties, weight);
 
     exprMap = new HashMap<String, ExprColumn>();
@@ -77,20 +75,17 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   @Override
   public void addProperties() {
     super.addProperties();
-    getProperties().put(MetastoreUtil.getExpressionListKey(getName()),
-        MetastoreUtil.getNamedStr(expressions));
+    getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
     setExpressionProperties(getProperties(), expressions);
   }
 
-  private static void setExpressionProperties(Map<String, String> props,
-      Set<ExprColumn> expressions) {
+  private static void setExpressionProperties(Map<String, String> props, Set<ExprColumn> expressions) {
     for (ExprColumn expr : expressions) {
       expr.addProperties(props);
     }
   }
 
-  private static Set<ExprColumn> getExpressions(String name,
-      Map<String, String> props) {
+  private static Set<ExprColumn> getExpressions(String name, Map<String, String> props) {
     Set<ExprColumn> exprs = new HashSet<ExprColumn>();
     String exprStr = props.get(MetastoreUtil.getExpressionListKey(name));
     if (!StringUtils.isBlank(exprStr)) {
@@ -128,8 +123,9 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   }
 
   /**
-   * Alters the expression if already existing or just adds if it is new expression.
-   *
+   * Alters the expression if already existing or just adds if it is new
+   * expression.
+   * 
    * @param expr
    * @throws HiveException
    */
@@ -139,22 +135,20 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     }
 
     // Replace measure if already existing
-    if (exprMap.containsKey(expr.getName().toLowerCase()))  {
+    if (exprMap.containsKey(expr.getName().toLowerCase())) {
       expressions.remove(getExpressionByName(expr.getName()));
-      LOG.info("Replacing expression " + getExpressionByName(expr.getName())
-          + " with " + expr);
+      LOG.info("Replacing expression " + getExpressionByName(expr.getName()) + " with " + expr);
     }
 
     expressions.add(expr);
     exprMap.put(expr.getName().toLowerCase(), expr);
-    getProperties().put(MetastoreUtil.getExpressionListKey(getName()),
-        MetastoreUtil.getNamedStr(expressions));
+    getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
     expr.addProperties(getProperties());
   }
 
   /**
    * Remove the measure with name specified
-   *
+   * 
    * @param msrName
    */
   public void removeExpression(String exprName) {
@@ -162,8 +156,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
       LOG.info("Removing expression " + getExpressionByName(exprName));
       expressions.remove(getExpressionByName(exprName));
       exprMap.remove(exprName.toLowerCase());
-      getProperties().put(MetastoreUtil.getExpressionListKey(getName()),
-          MetastoreUtil.getNamedStr(expressions));
+      getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
     }
   }
 

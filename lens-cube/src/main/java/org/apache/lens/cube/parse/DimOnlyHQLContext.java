@@ -26,11 +26,11 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * HQL context class which passes all query strings from {@link CubeQueryContext}
- * and works with all dimensions to be queried.
- *
+ * HQL context class which passes all query strings from
+ * {@link CubeQueryContext} and works with all dimensions to be queried.
+ * 
  * Updates from string with join clause expanded
- *
+ * 
  */
 class DimOnlyHQLContext extends DimHQLContext {
 
@@ -42,11 +42,9 @@ class DimOnlyHQLContext extends DimHQLContext {
     return query;
   }
 
-  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery,
-      CubeQueryContext query) throws SemanticException {
-    super(dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(),
-        query.getGroupByTree(), query.getOrderByTree(), query.getHavingTree(),
-        query.getLimitValue());
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
+    super(dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
+        .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
     this.query = query;
   }
 
@@ -60,8 +58,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() throws SemanticException {
-    if (query.getAutoJoinCtx() != null &&
-        query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
           query.getAliasForTabName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {
@@ -72,10 +69,9 @@ class DimOnlyHQLContext extends DimHQLContext {
   private String getFromString() throws SemanticException {
     String fromString = null;
     String fromTable = getFromTable();
-    if (query.getAutoJoinCtx() != null &&
-        query.getAutoJoinCtx().isJoinsResolved()) {
-      fromString = query.getAutoJoinCtx().getFromString(fromTable, null,
-          getDimsToQuery().keySet(), getDimsToQuery(), query);
+    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+      fromString =
+          query.getAutoJoinCtx().getFromString(fromTable, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
     } else {
       fromString = fromTable;
     }

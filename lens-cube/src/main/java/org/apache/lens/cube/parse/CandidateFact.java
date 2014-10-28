@@ -49,7 +49,7 @@ import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 /**
  * Holds context of a candidate fact table.
- *
+ * 
  */
 class CandidateFact implements CandidateTable {
   public static Log LOG = LogFactory.getLog(CandidateFact.class.getName());
@@ -94,6 +94,7 @@ class CandidateFact implements CandidateTable {
     ASTNode timenode;
     ASTNode parent;
     int childIndex;
+
     TimeRangeNode(ASTNode timenode, ASTNode parent, int childIndex) {
       this.timenode = timenode;
       this.parent = parent;
@@ -127,14 +128,14 @@ class CandidateFact implements CandidateTable {
     if (cubeql.getHavingAST() != null) {
       this.havingAST = HQLParser.copyAST(cubeql.getHavingAST());
     }
-    //copy timeranges
-    updateTimeRanges(this.whereAST,  null, 0);
+    // copy timeranges
+    updateTimeRanges(this.whereAST, null, 0);
   }
 
   public void updateTimeranges(CubeQueryContext cubeql) throws SemanticException {
     // Update WhereAST with range clause
     // resolve timerange positions and replace it by corresponding where clause
-    for (int i = 0; i <  cubeql.getTimeRanges().size(); i++) {
+    for (int i = 0; i < cubeql.getTimeRanges().size(); i++) {
       TimeRange range = cubeql.getTimeRanges().get(i);
       String rangeWhere = rangeToWhereClause.get(range);
       if (!StringUtils.isBlank(rangeWhere)) {
@@ -151,8 +152,8 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * Update the ASTs to include only the fields queried from this fact,
-   * in all the expressions
+   * Update the ASTs to include only the fields queried from this fact, in all
+   * the expressions
    * 
    * @param cubeql
    * @throws SemanticException
@@ -160,10 +161,10 @@ class CandidateFact implements CandidateTable {
   public void updateASTs(CubeQueryContext cubeql) throws SemanticException {
     Set<String> cubeColsQueried = cubeql.getColumnsQueried(cubeql.getCube().getName());
 
-    //update select AST with selected fields
+    // update select AST with selected fields
     int currentChild = 0;
     for (int i = 0; i < cubeql.getSelectAST().getChildCount(); i++) {
-      ASTNode selectExpr = (ASTNode)this.selectAST.getChild(currentChild);
+      ASTNode selectExpr = (ASTNode) this.selectAST.getChild(currentChild);
       Set<String> exprCols = getColsInExpr(cubeColsQueried, selectExpr);
       if (getColumns().containsAll(exprCols)) {
         selectIndices.add(i);
@@ -176,16 +177,13 @@ class CandidateFact implements CandidateTable {
           String queryAlias = aliasNode.getText();
           if (!queryAlias.equals(alias)) {
             // replace the alias node
-            ASTNode newAliasNode = new ASTNode(new CommonToken(
-                HiveParser.Identifier, alias));
-            this.selectAST.getChild(currentChild).replaceChildren(
-                selectExpr.getChildCount() -1, selectExpr.getChildCount() -1,
-                newAliasNode);
+            ASTNode newAliasNode = new ASTNode(new CommonToken(HiveParser.Identifier, alias));
+            this.selectAST.getChild(currentChild).replaceChildren(selectExpr.getChildCount() - 1,
+                selectExpr.getChildCount() - 1, newAliasNode);
           }
         } else {
           // add column alias
-          ASTNode newAliasNode = new ASTNode(new CommonToken(
-              HiveParser.Identifier, alias));
+          ASTNode newAliasNode = new ASTNode(new CommonToken(HiveParser.Identifier, alias));
           this.selectAST.getChild(currentChild).addChild(newAliasNode);
         }
       } else {
@@ -213,8 +211,7 @@ class CandidateFact implements CandidateTable {
           parent = visited.getParent().getNode();
         }
 
-        if (node.getToken().getType() == TOK_TABLE_OR_COL
-            && (parent != null && parent.getToken().getType() != DOT)) {
+        if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
           // Take child ident.totext
           ASTNode ident = (ASTNode) node.getChild(0);
           String column = ident.getText().toLowerCase();
@@ -253,7 +250,7 @@ class CandidateFact implements CandidateTable {
 
   @Override
   public AbstractCubeTable getBaseTable() {
-    return (AbstractCubeTable)baseTable;
+    return (AbstractCubeTable) baseTable;
   }
 
   @Override
@@ -280,13 +277,12 @@ class CandidateFact implements CandidateTable {
     }
     return true;
   }
-  
+
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getTable() == null) ? 0 :
-      getTable().getName().toLowerCase().hashCode());
+    result = prime * result + ((getTable() == null) ? 0 : getTable().getName().toLowerCase().hashCode());
     return result;
   }
 
@@ -323,7 +319,8 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param selectAST the selectAST to set
+   * @param selectAST
+   *          the selectAST to set
    */
   public void setSelectAST(ASTNode selectAST) {
     this.selectAST = selectAST;
@@ -337,7 +334,8 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param whereAST the whereAST to set
+   * @param whereAST
+   *          the whereAST to set
    */
   public void setWhereAST(ASTNode whereAST) {
     this.whereAST = whereAST;
@@ -351,7 +349,8 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param havingAST the havingAST to set
+   * @param havingAST
+   *          the havingAST to set
    */
   public void setHavingAST(ASTNode havingAST) {
     this.havingAST = havingAST;

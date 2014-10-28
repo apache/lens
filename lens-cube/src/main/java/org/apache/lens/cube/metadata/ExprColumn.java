@@ -31,12 +31,11 @@ public class ExprColumn extends CubeColumn {
   private final String type;
   private ASTNode ast;
 
-  public ExprColumn(FieldSchema column, String displayString, String expr
-      ) throws ParseException {
+  public ExprColumn(FieldSchema column, String displayString, String expr) throws ParseException {
     super(column.getName(), column.getComment(), displayString, null, null, 0.0);
     this.expr = expr;
     this.type = column.getType();
-    assert(getAst() != null);
+    assert (getAst() != null);
   }
 
   public ExprColumn(String name, Map<String, String> props) {
@@ -67,10 +66,8 @@ public class ExprColumn extends CubeColumn {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getType() == null) ? 0 :
-      getType().toLowerCase().hashCode());
-    result = prime * result + ((getExpr() == null) ? 0 :
-      getExpr().toLowerCase().hashCode());
+    result = prime * result + ((getType() == null) ? 0 : getType().toLowerCase().hashCode());
+    result = prime * result + ((getExpr() == null) ? 0 : getExpr().toLowerCase().hashCode());
     return result;
   }
 
@@ -107,9 +104,9 @@ public class ExprColumn extends CubeColumn {
 
   /**
    * Get the AST corresponding to the expression
-   *
+   * 
    * @return the ast
-   * @throws ParseException 
+   * @throws ParseException
    */
   public ASTNode getAst() throws ParseException {
     if (ast == null) {

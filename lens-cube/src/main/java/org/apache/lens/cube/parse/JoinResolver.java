@@ -54,10 +54,11 @@ import org.apache.lens.cube.metadata.SchemaGraph;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
+
 /**
- *
+ * 
  * JoinResolver.
- *
+ * 
  */
 class JoinResolver implements ContextRewriter {
 
@@ -85,11 +86,13 @@ class JoinResolver implements ContextRewriter {
       return cost - joinClause.getCost();
     }
   }
+
   /**
    * Store join chain information resolved by join resolver
    */
   public static class AutoJoinContext {
-    // Map of a joined table to list of all possible paths from that table to the target
+    // Map of a joined table to list of all possible paths from that table to
+    // the target
     private final Map<Dimension, List<SchemaGraph.JoinPath>> allPaths;
     // User supplied partial join conditions
     private final Map<AbstractCubeTable, String> partialJoinConditions;
@@ -105,17 +108,16 @@ class JoinResolver implements ContextRewriter {
     // Configuration string to control join type
     private String joinTypeCfg;
 
-    // Map of a joined table to its columns which are part of any of the join paths. This is used
+    // Map of a joined table to its columns which are part of any of the join
+    // paths. This is used
     // in candidate table resolver
-    Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathColumns = new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
+    Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathColumns =
+        new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
 
     public AutoJoinContext(Map<Dimension, List<SchemaGraph.JoinPath>> allPaths,
-        Map<Dimension, OptionalDimCtx> optionalDimensions,
-        Map<AbstractCubeTable, String> partialJoinConditions,
-        boolean partialJoinChains,
-        Map<AbstractCubeTable, JoinType> tableJoinTypeMap,
-        AbstractCubeTable autoJoinTarget, String joinTypeCfg,
-        boolean joinsResolved) {
+        Map<Dimension, OptionalDimCtx> optionalDimensions, Map<AbstractCubeTable, String> partialJoinConditions,
+        boolean partialJoinChains, Map<AbstractCubeTable, JoinType> tableJoinTypeMap, AbstractCubeTable autoJoinTarget,
+        String joinTypeCfg, boolean joinsResolved) {
       this.allPaths = allPaths;
       initJoinPathColumns();
       this.partialJoinConditions = partialJoinConditions;
@@ -130,7 +132,8 @@ class JoinResolver implements ContextRewriter {
       return autoJoinTarget;
     }
 
-    // Populate map of tables to their columns which are present in any of the join paths
+    // Populate map of tables to their columns which are present in any of the
+    // join paths
     private void initJoinPathColumns() {
       for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
         for (int i = 0; i < paths.size(); i++) {
@@ -140,13 +143,12 @@ class JoinResolver implements ContextRewriter {
       }
       for (Map.Entry<Dimension, List<SchemaGraph.JoinPath>> joinPathEntry : allPaths.entrySet()) {
         List<SchemaGraph.JoinPath> joinPaths = joinPathEntry.getValue();
-          Map<AbstractCubeTable, List<String>> dimReachablePaths = 
-              joinPathColumns.get(joinPathEntry.getKey());
-          if (dimReachablePaths == null) {
-            dimReachablePaths = new HashMap<AbstractCubeTable, List<String>>();
-            joinPathColumns.put(joinPathEntry.getKey(), dimReachablePaths);
-          }
-          populateJoinPathCols(joinPaths, dimReachablePaths);
+        Map<AbstractCubeTable, List<String>> dimReachablePaths = joinPathColumns.get(joinPathEntry.getKey());
+        if (dimReachablePaths == null) {
+          dimReachablePaths = new HashMap<AbstractCubeTable, List<String>>();
+          joinPathColumns.put(joinPathEntry.getKey(), dimReachablePaths);
+        }
+        populateJoinPathCols(joinPaths, dimReachablePaths);
       }
     }
 
@@ -172,7 +174,7 @@ class JoinResolver implements ContextRewriter {
           joinPathColumns.put(toTable, columnsOfToTable);
         }
         columnsOfToTable.add(toColumn);
-      }      
+      }
     }
 
     public void removeJoinedTable(Dimension dim) {
@@ -191,8 +193,7 @@ class JoinResolver implements ContextRewriter {
       if (qdims == null || qdims.isEmpty()) {
         return fromString;
       }
-      Iterator<JoinClause> itr = getJoinClausesForAllPaths(fact,
-          dimsToQuery, qdims, cubeql);
+      Iterator<JoinClause> itr = getJoinClausesForAllPaths(fact, dimsToQuery, qdims, cubeql);
       JoinClause minCostClause = null;
 
       while (itr.hasNext()) {
@@ -204,19 +205,15 @@ class JoinResolver implements ContextRewriter {
       }
 
       if (minCostClause == null || StringUtils.isBlank(minCostClause.getClause())) {
-        throw new SemanticException(ErrorMsg.NO_JOIN_PATH,
-            dimsToQuery.keySet().toString(), autoJoinTarget.getName());
+        throw new SemanticException(ErrorMsg.NO_JOIN_PATH, dimsToQuery.keySet().toString(), autoJoinTarget.getName());
       }
       fromString += minCostClause.getClause();
       return fromString;
     }
 
     // Some refactoring needed to account for multiple join paths
-    public String getMergedJoinClause(
-        Map<Dimension, List<TableRelationship>> joinChain,
-        Map<Dimension, CandidateDim> dimsToQuery,
-        Set<Dimension> qdims,
-        CubeQueryContext cubeql) {
+    public String getMergedJoinClause(Map<Dimension, List<TableRelationship>> joinChain,
+        Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> qdims, CubeQueryContext cubeql) {
 
       Set<String> clauses = new LinkedHashSet<String>();
       String joinTypeStr = "";
@@ -224,7 +221,8 @@ class JoinResolver implements ContextRewriter {
 
       // this flag is set to true if user has specified a partial join chain
       if (!partialJoinChains) {
-        // User has not specified any join conditions. In this case, we rely on configuration for the join type
+        // User has not specified any join conditions. In this case, we rely on
+        // configuration for the join type
         if (StringUtils.isNotBlank(joinTypeCfg)) {
           joinType = JoinType.valueOf(joinTypeCfg.toUpperCase());
           joinTypeStr = getJoinTypeStr(joinType);
@@ -247,20 +245,19 @@ class JoinResolver implements ContextRewriter {
 
         for (int i = chain.size() - 1; i >= 0; i--) {
           TableRelationship rel = chain.get(i);
-          StringBuilder clause = new StringBuilder(joinTypeStr)
-          .append(" join ");
+          StringBuilder clause = new StringBuilder(joinTypeStr).append(" join ");
           // Add storage table name followed by alias
           clause.append(dimsToQuery.get(rel.getToTable()).getStorageString(
               cubeql.getAliasForTabName(rel.getToTable().getName())));
 
-          clause.append(" on ")
-          .append(cubeql.getAliasForTabName(rel.getFromTable().getName())).append(".").append(rel.getFromColumn())
-          .append(" = ")
-          .append(cubeql.getAliasForTabName(rel.getToTable().getName())).append(".").append(rel.getToColumn());
+          clause.append(" on ").append(cubeql.getAliasForTabName(rel.getFromTable().getName())).append(".")
+              .append(rel.getFromColumn()).append(" = ").append(cubeql.getAliasForTabName(rel.getToTable().getName()))
+              .append(".").append(rel.getToColumn());
 
           // We have to push user specified filters for the joined tables
           String userFilter = null;
-          // Partition condition on the tables also needs to be pushed depending on the join
+          // Partition condition on the tables also needs to be pushed depending
+          // on the join
           String storageFilter = null;
 
           if (JoinType.INNER == joinType || JoinType.LEFTOUTER == joinType || JoinType.LEFTSEMI == joinType) {
@@ -290,7 +287,8 @@ class JoinResolver implements ContextRewriter {
               dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded();
             }
           } else if (JoinType.FULLOUTER == joinType) {
-            // For full outer we need to push filters of both left and right tables in the join clause
+            // For full outer we need to push filters of both left and right
+            // tables in the join clause
             String leftFilter = null, rightFilter = null;
             String leftStorageFilter = null, rightStorgeFilter = null;
 
@@ -299,8 +297,7 @@ class JoinResolver implements ContextRewriter {
             }
 
             if (rel.getFromTable() instanceof Dimension) {
-              leftStorageFilter =
-                  getStorageFilter(dimsToQuery, rel.getFromTable());
+              leftStorageFilter = getStorageFilter(dimsToQuery, rel.getFromTable());
               if (StringUtils.isNotBlank((leftStorageFilter))) {
                 dimsToQuery.get(rel.getFromTable()).setWhereClauseAdded();
               }
@@ -310,8 +307,7 @@ class JoinResolver implements ContextRewriter {
               rightFilter = partialJoinConditions.get(rel.getToTable());
             }
 
-            rightStorgeFilter =
-              getStorageFilter(dimsToQuery, rel.getToTable());
+            rightStorgeFilter = getStorageFilter(dimsToQuery, rel.getToTable());
             if (StringUtils.isNotBlank(rightStorgeFilter)) {
               if (StringUtils.isNotBlank((leftStorageFilter))) {
                 leftStorageFilter += " and ";
@@ -320,15 +316,16 @@ class JoinResolver implements ContextRewriter {
             }
 
             userFilter = (leftFilter == null ? "" : leftFilter) + (rightFilter == null ? "" : rightFilter);
-            storageFilter = (leftStorageFilter == null ? "" : leftStorageFilter) +
-              (rightStorgeFilter == null ? "" : rightStorgeFilter);
+            storageFilter =
+                (leftStorageFilter == null ? "" : leftStorageFilter)
+                    + (rightStorgeFilter == null ? "" : rightStorgeFilter);
           }
 
           if (StringUtils.isNotBlank(userFilter)) {
             clause.append(" and ").append(userFilter);
           }
           if (StringUtils.isNotBlank(storageFilter)) {
-            clause.append (" and ").append(storageFilter);
+            clause.append(" and ").append(storageFilter);
           }
           clauses.add(clause.toString());
         }
@@ -336,13 +333,12 @@ class JoinResolver implements ContextRewriter {
       return StringUtils.join(clauses, "");
     }
 
-    private String getStorageFilter(Map<Dimension, CandidateDim> dimsToQuery,
-                                    AbstractCubeTable table) {
+    private String getStorageFilter(Map<Dimension, CandidateDim> dimsToQuery, AbstractCubeTable table) {
       String whereClause = "";
       if (dimsToQuery != null && dimsToQuery.get(table) != null) {
-          if (StringUtils.isNotBlank(dimsToQuery.get(table).whereClause)) {
-            whereClause = dimsToQuery.get(table).whereClause;
-          }
+        if (StringUtils.isNotBlank(dimsToQuery.get(table).whereClause)) {
+          whereClause = dimsToQuery.get(table).whereClause;
+        }
       }
       return whereClause;
     }
@@ -354,17 +350,16 @@ class JoinResolver implements ContextRewriter {
       return joinsResolved;
     }
 
-
     public Map<AbstractCubeTable, List<String>> getJoinPathColumnsOfTable(AbstractCubeTable table) {
       return joinPathColumns.get(table);
     }
 
-    // Includes both queried join paths and optional join paths 
+    // Includes both queried join paths and optional join paths
     public Set<String> getAllJoinPathColumnsOfTable(AbstractCubeTable table) {
       Set<String> allPaths = new HashSet<String>();
-      for (Map<AbstractCubeTable, List<String>> optPaths: joinPathColumns.values()) {
+      for (Map<AbstractCubeTable, List<String>> optPaths : joinPathColumns.values()) {
         if (optPaths.get(table) != null) {
-          allPaths.addAll(optPaths.get(table) );
+          allPaths.addAll(optPaths.get(table));
         }
       }
       return allPaths;
@@ -376,7 +371,8 @@ class JoinResolver implements ContextRewriter {
 
     public void pruneAllPaths(CubeInterface cube, final Set<CandidateFact> cfacts,
         final Map<Dimension, CandidateDim> dimsToQuery) {
-      // Remove join paths which cannot be satisfied by the resolved candidate fact and dimension tables
+      // Remove join paths which cannot be satisfied by the resolved candidate
+      // fact and dimension tables
       if (cfacts != null) {
         // include columns from all picked facts
         Set<String> factColumns = new HashSet<String>();
@@ -389,7 +385,8 @@ class JoinResolver implements ContextRewriter {
             SchemaGraph.JoinPath jp = paths.get(i);
             List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
             if (cubeCols != null && !factColumns.containsAll(cubeCols)) {
-              // This path requires some columns from the cube which are not present in the candidate fact
+              // This path requires some columns from the cube which are not
+              // present in the candidate fact
               // Remove this path
               LOG.info("Removing join path:" + jp + " as columns :" + cubeCols + " dont exist");
               paths.remove(i);
@@ -412,8 +409,7 @@ class JoinResolver implements ContextRewriter {
       }
     }
 
-    private Map<Dimension, List<SchemaGraph.JoinPath>> pruneFactPaths(
-        CubeInterface cube, final CandidateFact cfact) {
+    private Map<Dimension, List<SchemaGraph.JoinPath>> pruneFactPaths(CubeInterface cube, final CandidateFact cfact) {
       Map<Dimension, List<SchemaGraph.JoinPath>> prunedPaths = new HashMap<Dimension, List<SchemaGraph.JoinPath>>();
       // Remove join paths which cannot be satisfied by the candidate fact
       for (Map.Entry<Dimension, List<SchemaGraph.JoinPath>> ppaths : allPaths.entrySet()) {
@@ -423,7 +419,8 @@ class JoinResolver implements ContextRewriter {
           SchemaGraph.JoinPath jp = paths.get(i);
           List<String> cubeCols = jp.getColumnsForTable((AbstractCubeTable) cube);
           if (cubeCols != null && !cfact.getColumns().containsAll(cubeCols)) {
-            // This path requires some columns from the cube which are not present in the candidate fact
+            // This path requires some columns from the cube which are not
+            // present in the candidate fact
             // Remove this path
             LOG.info("Removing join path:" + jp + " as columns :" + cubeCols + " dont exist");
             paths.remove(i);
@@ -436,7 +433,8 @@ class JoinResolver implements ContextRewriter {
     }
 
     private void pruneAllPaths(final Map<Dimension, CandidateDim> dimsToQuery) {
-      // Remove join paths which cannot be satisfied by the resolved dimension tables
+      // Remove join paths which cannot be satisfied by the resolved dimension
+      // tables
       if (dimsToQuery != null && !dimsToQuery.isEmpty()) {
         for (CandidateDim candidateDim : dimsToQuery.values()) {
           Set<String> dimCols = candidateDim.dimtable.getAllFieldNames();
@@ -445,7 +443,8 @@ class JoinResolver implements ContextRewriter {
               SchemaGraph.JoinPath jp = paths.get(i);
               List<String> candidateDimCols = jp.getColumnsForTable(candidateDim.getBaseTable());
               if (candidateDimCols != null && !dimCols.containsAll(candidateDimCols)) {
-                // This path requires some columns from the dimension which are not present in the candidate dim
+                // This path requires some columns from the dimension which are
+                // not present in the candidate dim
                 // Remove this path
                 LOG.info("Removing join path:" + jp + " as columns :" + candidateDimCols + " dont exist");
                 paths.remove(i);
@@ -459,13 +458,12 @@ class JoinResolver implements ContextRewriter {
     }
 
     /**
-     * There can be multiple join paths between a dimension and the target. Set of all possible join clauses
-     * is the cartesian product of join paths of all dimensions
+     * There can be multiple join paths between a dimension and the target. Set
+     * of all possible join clauses is the cartesian product of join paths of
+     * all dimensions
      */
     private Iterator<JoinClause> getJoinClausesForAllPaths(final CandidateFact fact,
-        final Map<Dimension, CandidateDim> dimsToQuery,
-        final Set<Dimension> qdims,
-        final CubeQueryContext cubeql) {
+        final Map<Dimension, CandidateDim> dimsToQuery, final Set<Dimension> qdims, final CubeQueryContext cubeql) {
       Map<Dimension, List<SchemaGraph.JoinPath>> allPaths = this.allPaths;
       // if fact is passed only look at paths possible from fact to dims
       if (fact != null) {
@@ -544,8 +542,7 @@ class JoinResolver implements ContextRewriter {
       };
     }
 
-    public Set<Dimension> pickOptionalTables(
-        final Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) {
+    public Set<Dimension> pickOptionalTables(final Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) {
       pruneAllPaths(dimsToQuery);
 
       Set<Dimension> joiningOptionalTables = new HashSet<Dimension>();
@@ -581,17 +578,23 @@ class JoinResolver implements ContextRewriter {
       return "";
     }
     switch (joinType) {
-      case FULLOUTER: return " full outer";
-      case INNER: return " inner";
-      case LEFTOUTER: return " left outer";
-      case LEFTSEMI: return " left semi";
-      case UNIQUE: return " unique";
-      case RIGHTOUTER: return " right outer";
-      default: return "";
+    case FULLOUTER:
+      return " full outer";
+    case INNER:
+      return " inner";
+    case LEFTOUTER:
+      return " left outer";
+    case LEFTSEMI:
+      return " left semi";
+    case UNIQUE:
+      return " unique";
+    case RIGHTOUTER:
+      return " right outer";
+    default:
+      return "";
     }
   }
 
-  private CubeMetastoreClient metastore;
   private Map<AbstractCubeTable, String> partialJoinConditions;
   private Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
   private boolean partialJoinChain;
@@ -599,14 +602,6 @@ class JoinResolver implements ContextRewriter {
   private HiveConf conf;
 
   public JoinResolver(Configuration conf) {
-  }
-
-  private CubeMetastoreClient getMetastoreClient() throws HiveException {
-    if (metastore == null) {
-      metastore = CubeMetastoreClient.getInstance(new HiveConf(this.getClass()));
-    }
-
-    return metastore;
   }
 
   @Override
@@ -623,8 +618,8 @@ class JoinResolver implements ContextRewriter {
 
   private void resolveJoins(CubeQueryContext cubeql) throws HiveException {
     QB cubeQB = cubeql.getQB();
-    boolean joinResolverDisabled = conf.getBoolean(
-        CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
+    boolean joinResolverDisabled =
+        conf.getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
     if (joinResolverDisabled) {
       if (cubeql.getJoinTree() != null) {
         cubeQB.setQbJoinTree(genJoinTree(cubeQB, cubeql.getJoinTree(), cubeql));
@@ -634,23 +629,16 @@ class JoinResolver implements ContextRewriter {
     }
   }
 
-  private SchemaGraph getSchemaGraph() throws HiveException {
-    SchemaGraph graph = getMetastoreClient().getSchemaGraph();
-    if (graph == null) {
-      graph = new SchemaGraph(getMetastoreClient());
-      graph.buildSchemaGraph();
-      getMetastoreClient().setSchemaGraph(graph);
-    }
-    return graph;
-  }
   /**
    * Resolve joins automatically for the given query.
+   * 
    * @param cubeql
    * @throws SemanticException
    */
   private void autoResolveJoins(CubeQueryContext cubeql) throws HiveException {
     // Check if this query needs a join -
-    // A join is needed if there is a cube and at least one dimension, or, 0 cubes and more than one
+    // A join is needed if there is a cube and at least one dimension, or, 0
+    // cubes and more than one
     // dimensions
     Set<Dimension> dimensions = cubeql.getDimensions();
     // Add dimensions specified in the partial join tree
@@ -658,24 +646,23 @@ class JoinResolver implements ContextRewriter {
     if (joinClause == null) {
       // Only cube in the query
       if (cubeql.hasCubeInQuery()) {
-        target = (AbstractCubeTable)cubeql.getCube();
+        target = (AbstractCubeTable) cubeql.getCube();
       } else {
         String targetDimAlias = cubeql.getQB().getTabAliases().iterator().next();
         String targetDimTable = cubeql.getQB().getTabNameForAlias(targetDimAlias);
         if (targetDimTable == null) {
           LOG.warn("Null table for alias " + targetDimAlias);
         }
-        target = getMetastoreClient().getDimension(targetDimTable);
+        target = cubeql.getMetastoreClient().getDimension(targetDimTable);
       }
     }
-    searchDimensionTables(joinClause);
+    searchDimensionTables(cubeql.getMetastoreClient(), joinClause);
     if (target == null) {
       LOG.warn("Can't resolve joins for null target");
       return;
     }
 
-    Set<Dimension> dimTables =
-        new HashSet<Dimension>(dimensions);
+    Set<Dimension> dimTables = new HashSet<Dimension>(dimensions);
     for (AbstractCubeTable partiallyJoinedTable : partialJoinConditions.keySet()) {
       dimTables.add((Dimension) partiallyJoinedTable);
     }
@@ -690,9 +677,9 @@ class JoinResolver implements ContextRewriter {
       return;
     }
 
-    SchemaGraph graph = getSchemaGraph();
+    SchemaGraph graph = cubeql.getMetastoreClient().getSchemaGraph();
     Map<Dimension, List<SchemaGraph.JoinPath>> multipleJoinPaths =
-      new LinkedHashMap<Dimension, List<SchemaGraph.JoinPath>>();
+        new LinkedHashMap<Dimension, List<SchemaGraph.JoinPath>>();
 
     // Resolve join path for each dimension accessed in the query
     for (Dimension joinee : dimTables) {
@@ -700,7 +687,7 @@ class JoinResolver implements ContextRewriter {
       SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(joinee, target, graph);
       List<SchemaGraph.JoinPath> joinPaths = search.findAllPathsToTarget();
       if (joinPaths != null && !joinPaths.isEmpty()) {
-        multipleJoinPaths.put(joinee, search.findAllPathsToTarget());
+        multipleJoinPaths.put(joinee, new ArrayList<SchemaGraph.JoinPath>(search.findAllPathsToTarget()));
         addOptionalTables(cubeql, multipleJoinPaths.get(joinee), cubeql.getDimensions().contains(joinee));
       } else {
         // No link to cube from this dim, can't proceed with query
@@ -717,67 +704,63 @@ class JoinResolver implements ContextRewriter {
             if (candidate instanceof CandidateFact) {
               LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
               cubeql.getCandidateFactTables().remove(candidate);
-              cubeql.addFactPruningMsgs(((CandidateFact)candidate).fact,
-                  new CandidateTablePruneCause(((CandidateFact)candidate).fact.getName(),
-                      CubeTableCause.COLUMN_NOT_FOUND));
+              cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
+                  ((CandidateFact) candidate).fact.getName(), CubeTableCause.COLUMN_NOT_FOUND));
             } else {
               LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
-              cubeql.getCandidateDimTables().get(((CandidateDim)candidate).dimtable.getDimName()).remove(candidate);
-              cubeql.addDimPruningMsgs((Dimension)candidate.getBaseTable(),
-                  (CubeDimensionTable) candidate.getTable(),
-                  new CandidateTablePruneCause(
-                  candidate.getName(), CubeTableCause.COLUMN_NOT_FOUND));
+              cubeql.getCandidateDimTables().get(((CandidateDim) candidate).dimtable.getDimName()).remove(candidate);
+              cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
+                  new CandidateTablePruneCause(candidate.getName(), CubeTableCause.COLUMN_NOT_FOUND));
             }
           }
         }
       }
     }
 
-    AutoJoinContext joinCtx = new AutoJoinContext(multipleJoinPaths,
-        cubeql.optionalDimensions,
-        partialJoinConditions,
-        partialJoinChain, tableJoinTypeMap, target,
-        conf.get(CubeQueryConfUtil.JOIN_TYPE_KEY), true);
-      cubeql.setAutoJoinCtx(joinCtx);
+    AutoJoinContext joinCtx =
+        new AutoJoinContext(multipleJoinPaths, cubeql.optionalDimensions, partialJoinConditions, partialJoinChain,
+            tableJoinTypeMap, target, conf.get(CubeQueryConfUtil.JOIN_TYPE_KEY), true);
+    cubeql.setAutoJoinCtx(joinCtx);
   }
 
-  private void addOptionalTables(CubeQueryContext cubeql,
-      List<SchemaGraph.JoinPath> joinPathList, boolean required) throws SemanticException {
+  private void addOptionalTables(CubeQueryContext cubeql, List<SchemaGraph.JoinPath> joinPathList, boolean required)
+      throws SemanticException {
     for (SchemaGraph.JoinPath joinPath : joinPathList) {
       for (TableRelationship rel : joinPath.getEdges()) {
-        // Add the joined tables to the queries table sets so that they are resolved in candidate resolver
+        // Add the joined tables to the queries table sets so that they are
+        // resolved in candidate resolver
         cubeql.addOptionalDimTable(rel.getToTable().getName(), null, null, required);
         cubeql.addOptionalDimTable(rel.getFromTable().getName(), null, null, required);
       }
-    }    
+    }
   }
-  private void setTarget(ASTNode node) throws HiveException {
-    String targetTableName =
-        HQLParser.getString(HQLParser.findNodeByPath(node, TOK_TABNAME, Identifier));
-    if (getMetastoreClient().isDimension(targetTableName)) {
-      target = getMetastoreClient().getDimension(targetTableName);
-    } else if (getMetastoreClient().isCube(targetTableName)) {
-      target = (AbstractCubeTable)getMetastoreClient().getCube(targetTableName);
+
+  private void setTarget(CubeMetastoreClient metastore, ASTNode node) throws HiveException {
+    String targetTableName = HQLParser.getString(HQLParser.findNodeByPath(node, TOK_TABNAME, Identifier));
+    if (metastore.isDimension(targetTableName)) {
+      target = metastore.getDimension(targetTableName);
+    } else if (metastore.isCube(targetTableName)) {
+      target = (AbstractCubeTable) metastore.getCube(targetTableName);
     } else {
       throw new SemanticException(ErrorMsg.JOIN_TARGET_NOT_CUBE_TABLE, targetTableName);
     }
   }
 
-  private void searchDimensionTables(ASTNode node) throws HiveException {
+  private void searchDimensionTables(CubeMetastoreClient metastore, ASTNode node) throws HiveException {
     if (node == null) {
       return;
     }
-    // User has specified join conditions partially. We need to store join conditions as well as join types
+    // User has specified join conditions partially. We need to store join
+    // conditions as well as join types
     partialJoinChain = true;
     if (isJoinToken(node)) {
       ASTNode left = (ASTNode) node.getChild(0);
       ASTNode right = (ASTNode) node.getChild(1);
       // Get table name and
 
-      String tableName = HQLParser.getString(HQLParser.findNodeByPath(right,
-          TOK_TABNAME, Identifier));
+      String tableName = HQLParser.getString(HQLParser.findNodeByPath(right, TOK_TABNAME, Identifier));
 
-      Dimension dimension = getMetastoreClient().getDimension(tableName);
+      Dimension dimension = metastore.getDimension(tableName);
       String joinCond = "";
       if (node.getChildCount() > 2) {
         // User has specified a join condition for filter pushdown.
@@ -786,41 +769,39 @@ class JoinResolver implements ContextRewriter {
       partialJoinConditions.put(dimension, joinCond);
       tableJoinTypeMap.put(dimension, getJoinType(node));
       if (isJoinToken(left)) {
-        searchDimensionTables(left);
+        searchDimensionTables(metastore, left);
       } else {
         if (left.getToken().getType() == TOK_TABREF) {
-          setTarget(left);
+          setTarget(metastore, left);
         }
       }
     } else if (node.getToken().getType() == TOK_TABREF) {
-      setTarget(node);
+      setTarget(metastore, node);
     }
 
   }
 
   private JoinType getJoinType(ASTNode node) {
-    switch(node.getToken().getType()) {
-      case TOK_LEFTOUTERJOIN:
-        return JoinType.LEFTOUTER;
-      case TOK_LEFTSEMIJOIN:
-        return JoinType.LEFTSEMI;
-      case TOK_RIGHTOUTERJOIN:
-        return JoinType.RIGHTOUTER;
-      case TOK_FULLOUTERJOIN:
-        return JoinType.FULLOUTER;
-      case TOK_JOIN:
-        return JoinType.INNER;
-      case TOK_UNIQUEJOIN:
-        return JoinType.UNIQUE;
-      default:
-        return JoinType.INNER;
+    switch (node.getToken().getType()) {
+    case TOK_LEFTOUTERJOIN:
+      return JoinType.LEFTOUTER;
+    case TOK_LEFTSEMIJOIN:
+      return JoinType.LEFTSEMI;
+    case TOK_RIGHTOUTERJOIN:
+      return JoinType.RIGHTOUTER;
+    case TOK_FULLOUTERJOIN:
+      return JoinType.FULLOUTER;
+    case TOK_JOIN:
+      return JoinType.INNER;
+    case TOK_UNIQUEJOIN:
+      return JoinType.UNIQUE;
+    default:
+      return JoinType.INNER;
     }
   }
 
   // Recursively find out join conditions
-  private QBJoinTree genJoinTree(QB qb, ASTNode joinParseTree,
-      CubeQueryContext cubeql)
-          throws SemanticException {
+  private QBJoinTree genJoinTree(QB qb, ASTNode joinParseTree, CubeQueryContext cubeql) throws SemanticException {
     QBJoinTree joinTree = new QBJoinTree();
     JoinCond[] condn = new JoinCond[1];
 
@@ -854,13 +835,11 @@ class JoinResolver implements ContextRewriter {
     ASTNode right = (ASTNode) joinParseTree.getChild(1);
 
     // Left subtree is table or a subquery
-    if ((left.getToken().getType() == TOK_TABREF)
-        || (left.getToken().getType() == TOK_SUBQUERY)) {
-      String tableName = SemanticAnalyzer.getUnescapedUnqualifiedTableName(
-          (ASTNode) left.getChild(0)).toLowerCase();
-      String alias = left.getChildCount() == 1 ? tableName
-          : SemanticAnalyzer.unescapeIdentifier(left.getChild(left.getChildCount() - 1)
-              .getText().toLowerCase());
+    if ((left.getToken().getType() == TOK_TABREF) || (left.getToken().getType() == TOK_SUBQUERY)) {
+      String tableName = SemanticAnalyzer.getUnescapedUnqualifiedTableName((ASTNode) left.getChild(0)).toLowerCase();
+      String alias =
+          left.getChildCount() == 1 ? tableName : SemanticAnalyzer.unescapeIdentifier(left
+              .getChild(left.getChildCount() - 1).getText().toLowerCase());
 
       joinTree.setLeftAlias(alias);
 
@@ -890,13 +869,11 @@ class JoinResolver implements ContextRewriter {
       assert (false);
     }
 
-    if ((right.getToken().getType() == TOK_TABREF)
-        || (right.getToken().getType() == TOK_SUBQUERY)) {
-      String tableName = SemanticAnalyzer.getUnescapedUnqualifiedTableName(
-          (ASTNode) right.getChild(0)).toLowerCase();
-      String alias = right.getChildCount() == 1 ? tableName
-          : SemanticAnalyzer.unescapeIdentifier(right.getChild(
-              right.getChildCount() - 1).getText().toLowerCase());
+    if ((right.getToken().getType() == TOK_TABREF) || (right.getToken().getType() == TOK_SUBQUERY)) {
+      String tableName = SemanticAnalyzer.getUnescapedUnqualifiedTableName((ASTNode) right.getChild(0)).toLowerCase();
+      String alias =
+          right.getChildCount() == 1 ? tableName : SemanticAnalyzer.unescapeIdentifier(right
+              .getChild(right.getChildCount() - 1).getText().toLowerCase());
       String[] rightAliases = new String[1];
       rightAliases[0] = alias;
       joinTree.setRightAliases(rightAliases);
@@ -925,12 +902,9 @@ class JoinResolver implements ContextRewriter {
   }
 
   private boolean isJoinToken(ASTNode node) {
-    if ((node.getToken().getType() == TOK_JOIN)
-        || (node.getToken().getType() == TOK_LEFTOUTERJOIN)
-        || (node.getToken().getType() == TOK_RIGHTOUTERJOIN)
-        || (node.getToken().getType() == TOK_FULLOUTERJOIN)
-        || (node.getToken().getType() == TOK_LEFTSEMIJOIN)
-        || (node.getToken().getType() == TOK_UNIQUEJOIN)) {
+    if ((node.getToken().getType() == TOK_JOIN) || (node.getToken().getType() == TOK_LEFTOUTERJOIN)
+        || (node.getToken().getType() == TOK_RIGHTOUTERJOIN) || (node.getToken().getType() == TOK_FULLOUTERJOIN)
+        || (node.getToken().getType() == TOK_LEFTSEMIJOIN) || (node.getToken().getType() == TOK_UNIQUEJOIN)) {
       return true;
     }
     return false;

@@ -32,8 +32,7 @@ public abstract class CubeColumn implements Named {
   private final String displayString;
   static SimpleDateFormat columnTimeFormat = new SimpleDateFormat("yyyy-MM-dd-HH");
 
-  public CubeColumn(String name, String description, String displayString,
-      Date startTime, Date endTime, Double cost) {
+  public CubeColumn(String name, String description, String displayString, Date startTime, Date endTime, Double cost) {
     assert (name != null);
     this.name = name.toLowerCase();
     this.startTime = startTime;
@@ -69,12 +68,9 @@ public abstract class CubeColumn implements Named {
 
   public CubeColumn(String name, Map<String, String> props) {
     this.name = name;
-    this.startTime = getDate(MetastoreUtil.getCubeColStartTimePropertyKey(name),
-        props);
-    this.endTime = getDate(MetastoreUtil.getCubeColEndTimePropertyKey(name),
-        props);
-    this.cost = getDouble(MetastoreUtil.getCubeColCostPropertyKey(name),
-        props);
+    this.startTime = getDate(MetastoreUtil.getCubeColStartTimePropertyKey(name), props);
+    this.endTime = getDate(MetastoreUtil.getCubeColEndTimePropertyKey(name), props);
+    this.cost = getDouble(MetastoreUtil.getCubeColCostPropertyKey(name), props);
     this.description = props.get(MetastoreUtil.getCubeColDescriptionKey(name));
     this.displayString = props.get(MetastoreUtil.getCubeColDisplayKey(name));
   }
@@ -149,20 +145,13 @@ public abstract class CubeColumn implements Named {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((getName() == null) ? 0 :
-        getName().toLowerCase().hashCode());
-    result = prime * result + ((getDescription() == null) ? 0 :
-      getDescription().toLowerCase().hashCode());
-    result = prime * result + ((getDisplayString() == null) ? 0 :
-      getDisplayString().toLowerCase().hashCode());
-    result = prime * result + ((getName() == null) ? 0 :
-      getName().toLowerCase().hashCode());
-    result = prime * result + ((getStartTime() == null) ? 0 :
-      columnTimeFormat.format(getStartTime()).hashCode());
-    result = prime * result + ((getEndTime() == null) ? 0 :
-      columnTimeFormat.format(getEndTime()).hashCode());
-    result = prime * result + ((getCost() == null) ? 0 :
-      getCost().hashCode());
+    result = prime * result + ((getName() == null) ? 0 : getName().toLowerCase().hashCode());
+    result = prime * result + ((getDescription() == null) ? 0 : getDescription().toLowerCase().hashCode());
+    result = prime * result + ((getDisplayString() == null) ? 0 : getDisplayString().toLowerCase().hashCode());
+    result = prime * result + ((getName() == null) ? 0 : getName().toLowerCase().hashCode());
+    result = prime * result + ((getStartTime() == null) ? 0 : columnTimeFormat.format(getStartTime()).hashCode());
+    result = prime * result + ((getEndTime() == null) ? 0 : columnTimeFormat.format(getEndTime()).hashCode());
+    result = prime * result + ((getCost() == null) ? 0 : getCost().hashCode());
     return result;
   }
 
@@ -208,8 +197,7 @@ public abstract class CubeColumn implements Named {
       }
     } else if (other.getStartTime() == null) {
       return false;
-    } else if (!columnTimeFormat.format(this.getStartTime()).equals(
-        columnTimeFormat.format(other.getStartTime()))) {
+    } else if (!columnTimeFormat.format(this.getStartTime()).equals(columnTimeFormat.format(other.getStartTime()))) {
       return false;
     }
 
@@ -219,8 +207,7 @@ public abstract class CubeColumn implements Named {
       }
     } else if (other.getEndTime() == null) {
       return false;
-    } else if (!columnTimeFormat.format(this.getEndTime()).equals(
-        columnTimeFormat.format(other.getEndTime()))) {
+    } else if (!columnTimeFormat.format(this.getEndTime()).equals(columnTimeFormat.format(other.getEndTime()))) {
       return false;
     }
 
@@ -234,27 +221,21 @@ public abstract class CubeColumn implements Named {
     return true;
   }
 
-
   public void addProperties(Map<String, String> props) {
     if (description != null) {
-      props.put(MetastoreUtil.getCubeColDescriptionKey(getName()),
-          description);
+      props.put(MetastoreUtil.getCubeColDescriptionKey(getName()), description);
     }
     if (displayString != null) {
-      props.put(MetastoreUtil.getCubeColDisplayKey(getName()),
-          displayString);
+      props.put(MetastoreUtil.getCubeColDisplayKey(getName()), displayString);
     }
     if (startTime != null) {
-      props.put(MetastoreUtil.getCubeColStartTimePropertyKey(getName()),
-          columnTimeFormat.format(startTime));
+      props.put(MetastoreUtil.getCubeColStartTimePropertyKey(getName()), columnTimeFormat.format(startTime));
     }
     if (endTime != null) {
-      props.put(MetastoreUtil.getCubeColEndTimePropertyKey(getName()),
-          columnTimeFormat.format(endTime));
+      props.put(MetastoreUtil.getCubeColEndTimePropertyKey(getName()), columnTimeFormat.format(endTime));
     }
     if (cost != null) {
-      props.put(MetastoreUtil.getCubeColCostPropertyKey(getName()),
-          cost.toString());
+      props.put(MetastoreUtil.getCubeColCostPropertyKey(getName()), cost.toString());
     }
   }
 }

@@ -35,18 +35,15 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
  * Prune fact tables having more weight than minimum.
  */
 public class LightestFactResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(
-      LightestFactResolver.class.getName());
+  public static final Log LOG = LogFactory.getLog(LightestFactResolver.class.getName());
 
   public LightestFactResolver(Configuration conf) {
   }
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
-    if (cubeql.getCube() != null && !cubeql.getCandidateFactSets()
-        .isEmpty()) {
-      Map<Set<CandidateFact>, Double> factWeightMap =
-          new HashMap<Set<CandidateFact>, Double>();
+    if (cubeql.getCube() != null && !cubeql.getCandidateFactSets().isEmpty()) {
+      Map<Set<CandidateFact>, Double> factWeightMap = new HashMap<Set<CandidateFact>, Double>();
 
       for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
         factWeightMap.put(facts, getWeight(facts));
@@ -54,14 +51,11 @@ public class LightestFactResolver implements ContextRewriter {
 
       double minWeight = Collections.min(factWeightMap.values());
 
-      for (Iterator<Set<CandidateFact>> i =
-          cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
+      for (Iterator<Set<CandidateFact>> i = cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
         Set<CandidateFact> facts = i.next();
         if (factWeightMap.get(facts) > minWeight) {
-          LOG.info("Not considering facts:" + facts +
-              " from candidate fact tables as it has more fact weight:"
-              + factWeightMap.get(facts) + " minimum:"
-              + minWeight);
+          LOG.info("Not considering facts:" + facts + " from candidate fact tables as it has more fact weight:"
+              + factWeightMap.get(facts) + " minimum:" + minWeight);
           i.remove();
         }
       }
@@ -71,7 +65,7 @@ public class LightestFactResolver implements ContextRewriter {
 
   private Double getWeight(Set<CandidateFact> set) {
     Double weight = 0.0;
-    for (CandidateFact f :set) {
+    for (CandidateFact f : set) {
       weight += f.fact.weight();
     }
     return weight;

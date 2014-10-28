@@ -29,8 +29,7 @@ import java.util.Map;
 public class HierarchicalDimAttribute extends CubeDimAttribute {
   private final List<CubeDimAttribute> hierarchy;
 
-  public HierarchicalDimAttribute(String name, String description,
-      List<CubeDimAttribute> hierarchy) {
+  public HierarchicalDimAttribute(String name, String description, List<CubeDimAttribute> hierarchy) {
     super(name, description);
     this.hierarchy = hierarchy;
     assert (name != null);
@@ -46,8 +45,7 @@ public class HierarchicalDimAttribute extends CubeDimAttribute {
     super.addProperties(props);
     for (int i = 0; i < hierarchy.size(); i++) {
       CubeDimAttribute dim = hierarchy.get(i);
-      props.put(MetastoreUtil.getHierachyElementKeyName(getName(), i),
-          getHierarchyElement(dim));
+      props.put(MetastoreUtil.getHierachyElementKeyName(getName(), i), getHierarchyElement(dim));
       dim.addProperties(props);
     }
   }
@@ -61,17 +59,14 @@ public class HierarchicalDimAttribute extends CubeDimAttribute {
     this.hierarchy = getHiearachy(name, props);
   }
 
-  public static List<CubeDimAttribute> getHiearachy(String name,
-      Map<String, String> props) {
+  public static List<CubeDimAttribute> getHiearachy(String name, Map<String, String> props) {
     Map<Integer, String> hierarchyElements = new HashMap<Integer, String>();
     for (String param : props.keySet()) {
       if (param.startsWith(MetastoreUtil.getHierachyElementKeyPFX(name))) {
-        hierarchyElements.put(MetastoreUtil.getHierachyElementIndex(name, param),
-            props.get(param));
+        hierarchyElements.put(MetastoreUtil.getHierachyElementIndex(name, param), props.get(param));
       }
     }
-    List<CubeDimAttribute> hierarchy = new ArrayList<CubeDimAttribute>(
-        hierarchyElements.size());
+    List<CubeDimAttribute> hierarchy = new ArrayList<CubeDimAttribute>(hierarchyElements.size());
     for (int i = 0; i < hierarchyElements.size(); i++) {
       String hierarchyElement = hierarchyElements.get(i);
       String[] elements = hierarchyElement.split(",");
@@ -82,8 +77,7 @@ public class HierarchicalDimAttribute extends CubeDimAttribute {
         Class<?> clazz = Class.forName(className);
         Constructor<?> constructor;
         constructor = clazz.getConstructor(String.class, Map.class);
-        dim = (CubeDimAttribute) constructor.newInstance(new Object[]
-        {dimName, props});
+        dim = (CubeDimAttribute) constructor.newInstance(new Object[] { dimName, props });
       } catch (ClassNotFoundException e) {
         throw new IllegalArgumentException("Invalid Dimension", e);
       } catch (SecurityException e) {
@@ -108,8 +102,7 @@ public class HierarchicalDimAttribute extends CubeDimAttribute {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getHierarchy() == null) ? 0 :
-        getHierarchy().hashCode());
+    result = prime * result + ((getHierarchy() == null) ? 0 : getHierarchy().hashCode());
     return result;
   }
 

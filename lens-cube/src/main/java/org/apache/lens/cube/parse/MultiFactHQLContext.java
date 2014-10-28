@@ -31,8 +31,8 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * Writes a join query with all the facts involved, with where, groupby and having
- * expressions pushed down to the fact queries.
+ * Writes a join query with all the facts involved, with where, groupby and
+ * having expressions pushed down to the fact queries.
  */
 class MultiFactHQLContext extends SimpleHQLContext {
 
@@ -43,10 +43,8 @@ class MultiFactHQLContext extends SimpleHQLContext {
   private CubeQueryContext query;
   private Map<CandidateFact, Set<Dimension>> factDimMap;
 
-  MultiFactHQLContext(Set<CandidateFact> facts,
-      Map<Dimension, CandidateDim> dimsToQuery,
-      Map<CandidateFact, Set<Dimension>> factDimMap,
-      CubeQueryContext query) throws SemanticException {
+  MultiFactHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
+      Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
     super();
     this.query = query;
     this.facts = facts;
@@ -84,11 +82,10 @@ class MultiFactHQLContext extends SimpleHQLContext {
   }
 
   private String getSelectString() throws SemanticException {
-    Map<Integer, Integer> selectToFactIndex = 
-        new HashMap<Integer, Integer>(query.getSelectAST().getChildCount());
+    Map<Integer, Integer> selectToFactIndex = new HashMap<Integer, Integer>(query.getSelectAST().getChildCount());
     int fi = 1;
     for (CandidateFact fact : facts) {
-      for(int ind : fact.getSelectIndices()) {
+      for (int ind : fact.getSelectIndices()) {
         if (!selectToFactIndex.containsKey(ind)) {
           selectToFactIndex.put(ind, fi);
         }
@@ -98,12 +95,12 @@ class MultiFactHQLContext extends SimpleHQLContext {
     StringBuilder select = new StringBuilder();
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
-        throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT,
-            HQLParser.getString((ASTNode) query.getSelectAST().getChild(i)));
+        throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT, HQLParser.getString((ASTNode) query
+            .getSelectAST().getChild(i)));
       }
-      select.append("mq").append(selectToFactIndex.get(i)).append(".")
-      .append(query.getSelectAlias(i)).append(" ").append(query.getSelectFinalAlias(i));
-      if (i != query.getSelectAST().getChildCount() -1) {
+      select.append("mq").append(selectToFactIndex.get(i)).append(".").append(query.getSelectAlias(i)).append(" ")
+          .append(query.getSelectFinalAlias(i));
+      if (i != query.getSelectAST().getChildCount() - 1) {
         select.append(", ");
       }
     }
@@ -120,12 +117,11 @@ class MultiFactHQLContext extends SimpleHQLContext {
 
   private String getFromString() throws SemanticException {
     StringBuilder fromBuilder = new StringBuilder();
-    int aliasCount =1;
+    int aliasCount = 1;
     Iterator<CandidateFact> iter = facts.iterator();
     while (iter.hasNext()) {
       CandidateFact fact = iter.next();
-      FactHQLContext facthql = new FactHQLContext(fact, dimsToQuery,
-          factDimMap.get(fact), query);
+      FactHQLContext facthql = new FactHQLContext(fact, dimsToQuery, factDimMap.get(fact), query);
       fromBuilder.append("(");
       fromBuilder.append(facthql.toHQL());
       fromBuilder.append(")");
@@ -141,14 +137,13 @@ class MultiFactHQLContext extends SimpleHQLContext {
       Iterator<Integer> dimIter = firstFact.getDimFieldIndices().iterator();
       while (dimIter.hasNext()) {
         String dim = query.getSelectAlias(dimIter.next());
-        fromBuilder.append("mq1").append(".").append(dim).
-        append(" = ").append("mq").append(i).append(".").append(dim);
+        fromBuilder.append("mq1").append(".").append(dim).append(" = ").append("mq").append(i).append(".").append(dim);
         if (dimIter.hasNext()) {
           fromBuilder.append(" AND ");
         }
       }
       if (i != facts.size()) {
-        fromBuilder.append(" AND ");        
+        fromBuilder.append(" AND ");
       }
     }
     return fromBuilder.toString();

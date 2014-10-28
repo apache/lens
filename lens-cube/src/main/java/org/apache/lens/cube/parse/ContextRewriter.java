@@ -23,9 +23,10 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 interface ContextRewriter {
   /**
    * Rewrites and updates {@link CubeQueryContext}
-   *
-   * @param cubeql CubeQueryContext
-   *
+   * 
+   * @param cubeql
+   *          CubeQueryContext
+   * 
    * @throws SemanticException
    */
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException;

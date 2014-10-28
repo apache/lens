@@ -34,19 +34,15 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
  * Prune candidate fact sets which require more partitions than minimum parts.
  */
 class LeastPartitionResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(
-      LeastPartitionResolver.class.getName());
+  public static final Log LOG = LogFactory.getLog(LeastPartitionResolver.class.getName());
 
   public LeastPartitionResolver(Configuration conf) {
   }
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql)
-      throws SemanticException {
-    if (cubeql.getCube() != null && !cubeql.getCandidateFactSets()
-        .isEmpty()) {
-      Map<Set<CandidateFact>, Integer> factPartCount =
-          new HashMap<Set<CandidateFact>, Integer>();
+  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+    if (cubeql.getCube() != null && !cubeql.getCandidateFactSets().isEmpty()) {
+      Map<Set<CandidateFact>, Integer> factPartCount = new HashMap<Set<CandidateFact>, Integer>();
 
       for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
         factPartCount.put(facts, getPartCount(facts));
@@ -54,14 +50,11 @@ class LeastPartitionResolver implements ContextRewriter {
 
       double minPartitions = Collections.min(factPartCount.values());
 
-      for (Iterator<Set<CandidateFact>> i =
-          cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
+      for (Iterator<Set<CandidateFact>> i = cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
         Set<CandidateFact> facts = i.next();
         if (factPartCount.get(facts) > minPartitions) {
-          LOG.info("Not considering facts:" + facts +
-              " from candidate fact tables as it requires more partitions to" +
-              " be queried:" + factPartCount.get(facts) + " minimum:"
-              + minPartitions);
+          LOG.info("Not considering facts:" + facts + " from candidate fact tables as it requires more partitions to"
+              + " be queried:" + factPartCount.get(facts) + " minimum:" + minPartitions);
           i.remove();
         }
       }
@@ -71,7 +64,7 @@ class LeastPartitionResolver implements ContextRewriter {
 
   private int getPartCount(Set<CandidateFact> set) {
     int parts = 0;
-    for (CandidateFact f :set) {
+    for (CandidateFact f : set) {
       parts += f.numQueriedParts;
     }
     return parts;

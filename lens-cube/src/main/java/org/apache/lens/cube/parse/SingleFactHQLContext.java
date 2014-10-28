@@ -29,11 +29,11 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * HQL context class which passes down all query strings to come from DimOnlyHQLContext
- * and works with fact being queried.
- *
+ * HQL context class which passes down all query strings to come from
+ * DimOnlyHQLContext and works with fact being queried.
+ * 
  * Updates from string with join clause expanded
- *
+ * 
  */
 class SingleFactHQLContext extends DimOnlyHQLContext {
 
@@ -41,8 +41,8 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
 
   private CandidateFact fact;
 
-  SingleFactHQLContext(CandidateFact fact,
-      Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
+  SingleFactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
+      throws SemanticException {
     super(dimsToQuery, query);
     this.fact = fact;
   }
@@ -53,7 +53,8 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
 
   static void addRangeClauses(CubeQueryContext query, CandidateFact fact) throws SemanticException {
     if (fact != null) {
-      // resolve timerange positions and replace it by corresponding where clause
+      // resolve timerange positions and replace it by corresponding where
+      // clause
       for (TimeRange range : query.getTimeRanges()) {
         String rangeWhere = fact.rangeToWhereClause.get(range);
         if (!StringUtils.isBlank(rangeWhere)) {
@@ -71,6 +72,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   }
 
   private final String unionQueryFormat = "SELECT * FROM %s";
+
   String getUnionQueryFormat() {
     StringBuilder queryFormat = new StringBuilder();
     queryFormat.append(unionQueryFormat);
@@ -90,10 +92,8 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   }
 
   protected String getFromTable() throws SemanticException {
-    if (getQuery().getAutoJoinCtx() != null &&
-        getQuery().getAutoJoinCtx().isJoinsResolved()) {
-      return fact.getStorageString(
-          getQuery().getAliasForTabName(getQuery().getCube().getName()));
+    if (getQuery().getAutoJoinCtx() != null && getQuery().getAutoJoinCtx().isJoinsResolved()) {
+      return fact.getStorageString(getQuery().getAliasForTabName(getQuery().getCube().getName()));
     } else {
       return getQuery().getQBFromString(fact, getDimsToQuery());
     }

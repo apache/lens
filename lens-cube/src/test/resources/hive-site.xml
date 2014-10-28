@@ -29,13 +29,14 @@
 </property>
 
 <property>
-  <name>hive.metastore.local</name>
-  <value>true</value>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>/tmp/hive/warehouse</value>
 </property>
 
 <property>
-  <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
+  <name>hive.querylog.location</name>
+  <value>${test.tmp.dir}/tmp</value>
+  <description>Location of the structured hive logs</description>
 </property>
 
 <property>

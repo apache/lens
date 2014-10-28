@@ -43,14 +43,14 @@ import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * Finds queried column to table alias. Finds queried dim attributes and queried 
+ * Finds queried column to table alias. Finds queried dim attributes and queried
  * measures.
- *
+ * 
  * Does queried field validation wrt derived cubes, if all fields of queried
  * cube cannot be queried together.
- *
+ * 
  * Replaces all the columns in all expressions with tablealias.column
- *
+ * 
  */
 class AliasReplacer implements ContextRewriter {
 
@@ -73,7 +73,7 @@ class AliasReplacer implements ContextRewriter {
     // If tab1 is already aliased say with t1, col1 is changed as t1.col1
     // replace the columns in select, groupby, having, orderby by
     // prepending the table alias to the col
-    //sample select trees
+    // sample select trees
     // 1: (TOK_SELECT (TOK_SELEXPR (TOK_TABLE_OR_COL key))
     // (TOK_SELEXPR (TOK_FUNCTION count (TOK_TABLE_OR_COL value))))
     // 2: (TOK_SELECT (TOK_SELEXPR (. (TOK_TABLE_OR_COL src) key))
@@ -136,12 +136,13 @@ class AliasReplacer implements ContextRewriter {
           throw new SemanticException(e);
         }
         // do validation
-        // Find atleast one derived cube which contains all the dimensions queried.
+        // Find atleast one derived cube which contains all the dimensions
+        // queried.
         boolean derivedCubeFound = false;
         for (DerivedCube dcube : dcubes) {
           if (dcube.getDimAttributeNames().containsAll(queriedDimAttrs)) {
             // remove all the measures that are covered
-            queriedMsrs.removeAll(dcube.getMeasureNames()); 
+            queriedMsrs.removeAll(dcube.getMeasureNames());
             derivedCubeFound = true;
           }
         }
@@ -149,10 +150,11 @@ class AliasReplacer implements ContextRewriter {
           throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedDimAttrs.toString());
         }
         if (!queriedMsrs.isEmpty()) {
-          // Add appropriate message to know which fields are not queryable together
+          // Add appropriate message to know which fields are not queryable
+          // together
           if (!queriedDimAttrs.isEmpty()) {
-            throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE,
-                queriedDimAttrs.toString() + " and " + queriedMsrs.toString());
+            throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedDimAttrs.toString() + " and "
+                + queriedMsrs.toString());
           } else {
             throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedMsrs.toString());
           }
@@ -171,9 +173,8 @@ class AliasReplacer implements ContextRewriter {
       if (cubeql.getCube() != null) {
         Set<String> cols = cubeql.getCube().getAllFieldNames();
         if (cols.contains(col.toLowerCase())) {
-          colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(
-              cubeql.getCube().getName()));
-          cubeql.addColumnsQueried((AbstractCubeTable)cubeql.getCube(), col.toLowerCase());
+          colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(cubeql.getCube().getName()));
+          cubeql.addColumnsQueried((AbstractCubeTable) cubeql.getCube(), col.toLowerCase());
           inCube = true;
         }
       }
@@ -182,16 +183,13 @@ class AliasReplacer implements ContextRewriter {
           if (!inCube) {
             String prevDim = colToTableAlias.get(col.toLowerCase());
             if (prevDim != null && !prevDim.equals(dim.getName())) {
-              throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col,
-                  prevDim, dim.getName());
+              throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col, prevDim, dim.getName());
             }
-            colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(
-                dim.getName()));
+            colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(dim.getName()));
             cubeql.addColumnsQueried(dim, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table
-            throw new SemanticException(ErrorMsg.AMBIGOUS_CUBE_COLUMN, col,
-                cubeql.getCube().getName(), dim.getName());
+            throw new SemanticException(ErrorMsg.AMBIGOUS_CUBE_COLUMN, col, cubeql.getCube().getName(), dim.getName());
           }
         }
       }
@@ -201,8 +199,7 @@ class AliasReplacer implements ContextRewriter {
     }
   }
 
-  private void replaceAliases(ASTNode node, int nodePos,
-      Map<String, String> colToTableAlias) {
+  private void replaceAliases(ASTNode node, int nodePos, Map<String, String> colToTableAlias) {
     if (node == null) {
       return;
     }
@@ -219,26 +216,22 @@ class AliasReplacer implements ContextRewriter {
       if (nodeType == HiveParser.DOT) {
         // No need to create a new node, just replace the table name ident
         ASTNode aliasNode = (ASTNode) node.getChild(0);
-        ASTNode newAliasIdent = new ASTNode(new CommonToken(
-            HiveParser.Identifier, newAlias));
+        ASTNode newAliasIdent = new ASTNode(new CommonToken(HiveParser.Identifier, newAlias));
         aliasNode.setChild(0, newAliasIdent);
         newAliasIdent.setParent(aliasNode);
       } else {
         // Just a column ref, we need to make it alias.col
         // '.' will become the parent node
         ASTNode dot = new ASTNode(new CommonToken(HiveParser.DOT, "."));
-        ASTNode aliasIdentNode = new ASTNode(new CommonToken(
-            HiveParser.Identifier, newAlias));
-        ASTNode tabRefNode = new ASTNode(new CommonToken(
-            HiveParser.TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL"));
+        ASTNode aliasIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, newAlias));
+        ASTNode tabRefNode = new ASTNode(new CommonToken(HiveParser.TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL"));
 
         tabRefNode.addChild(aliasIdentNode);
         aliasIdentNode.setParent(tabRefNode);
         dot.addChild(tabRefNode);
         tabRefNode.setParent(dot);
 
-        ASTNode colIdentNode = new ASTNode(new CommonToken(
-            HiveParser.Identifier, colName));
+        ASTNode colIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, colName));
 
         dot.addChild(colIdentNode);
 
@@ -267,7 +260,7 @@ class AliasReplacer implements ContextRewriter {
       }
     } else {
       for (int i = 0; i < root.getChildCount(); i++) {
-        updateAliasMap((ASTNode)root.getChild(i), cubeql);
+        updateAliasMap((ASTNode) root.getChild(i), cubeql);
       }
     }
   }

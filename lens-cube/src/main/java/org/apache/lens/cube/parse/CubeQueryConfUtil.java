@@ -34,34 +34,22 @@ public class CubeQueryConfUtil {
   public static final String FACT_TABLES_SFX = ".facttables";
   public static final String STORAGE_KEY_PFX = ".storage.";
   public static final String VALID_PFX = "cube.query.valid.";
-  public static final String VALID_FACT_PFX = "cube.query.valid." +
-      "fact.";
+  public static final String VALID_FACT_PFX = "cube.query.valid." + "fact.";
   public static final String TIMEDIM_TO_PART_MAPPING_PFX = "cube.query.timedim.partition.";
 
-  public static final String VALID_STORAGE_DIM_TABLES = "cube.query.valid." +
-      "dim.storgaetables";
-  public static final String DRIVER_SUPPORTED_STORAGES = "cube.query.driver." +
-      "supported.storages";
-  public static final String FAIL_QUERY_ON_PARTIAL_DATA =
-      "cube.query.fail.if.data.partial";
-  public static final String NON_EXISTING_PARTITIONS =
-      "cube.query.nonexisting.partitions";
-  public static final String ADD_NON_EXISTING_PARTITIONS =
-      "cube.query.add.nonexisting.partitions";
-  public static final String ENABLE_MULTI_TABLE_SELECT =
-      "cube.query.enable.multi.table.select";
+  public static final String VALID_STORAGE_DIM_TABLES = "cube.query.valid." + "dim.storgaetables";
+  public static final String DRIVER_SUPPORTED_STORAGES = "cube.query.driver." + "supported.storages";
+  public static final String FAIL_QUERY_ON_PARTIAL_DATA = "cube.query.fail.if.data.partial";
+  public static final String NON_EXISTING_PARTITIONS = "cube.query.nonexisting.partitions";
+  public static final String ADD_NON_EXISTING_PARTITIONS = "cube.query.add.nonexisting.partitions";
+  public static final String ENABLE_MULTI_TABLE_SELECT = "cube.query.enable.multi.table.select";
   public static final String QUERY_MAX_INTERVAL = "cube.query.max.interval";
-  public static final String PROCESS_TIME_PART_COL = "cube.query.process.time" +
-      ".partition.column";
-  public static final String LOOK_AHEAD_PT_PARTS_PFX =
-      "cube.query.lookahead.ptparts.forinterval.";
-  public static final String ENABLE_GROUP_BY_TO_SELECT =
-      "cube.query.promote.groupby.toselect";
-  public static final String ENABLE_SELECT_TO_GROUPBY =
-      "cube.query.promote.select.togroupby";
+  public static final String PROCESS_TIME_PART_COL = "cube.query.process.time" + ".partition.column";
+  public static final String LOOK_AHEAD_PT_PARTS_PFX = "cube.query.lookahead.ptparts.forinterval.";
+  public static final String ENABLE_GROUP_BY_TO_SELECT = "cube.query.promote.groupby.toselect";
+  public static final String ENABLE_SELECT_TO_GROUPBY = "cube.query.promote.select.togroupby";
 
-  public static final String REPLACE_TIMEDIM_WITH_PART_COL =
-    "cube.query.replace.timedim";
+  public static final String REPLACE_TIMEDIM_WITH_PART_COL = "cube.query.replace.timedim";
   public static final boolean DEFAULT_MULTI_TABLE_SELECT = true;
   public static final int DEFAULT_LOOK_AHEAD_PT_PARTS = 1;
   public static final boolean DEFAULT_ENABLE_GROUP_BY_TO_SELECT = false;
@@ -72,6 +60,7 @@ public class CubeQueryConfUtil {
   public static String getLookAheadPTPartsKey(UpdatePeriod interval) {
     return LOOK_AHEAD_PT_PARTS_PFX + interval.name().toLowerCase();
   }
+
   private static String getValidKeyCubePFX(String cubeName) {
     return VALID_PFX + cubeName.toLowerCase();
   }
@@ -80,8 +69,7 @@ public class CubeQueryConfUtil {
     return VALID_FACT_PFX + factName.toLowerCase();
   }
 
-  private static String getValidKeyStoragePFX(String factName,
-      String storage) {
+  private static String getValidKeyStoragePFX(String factName, String storage) {
     return getValidKeyFactPFX(factName) + STORAGE_KEY_PFX + storage.toLowerCase();
   }
 
@@ -93,15 +81,13 @@ public class CubeQueryConfUtil {
     return getValidKeyFactPFX(factName) + STORAGE_TABLES_SFX;
   }
 
-  public static String getValidUpdatePeriodsKey(String fact,
-      String storage) {
+  public static String getValidUpdatePeriodsKey(String fact, String storage) {
     return getValidKeyStoragePFX(fact, storage) + UPDATE_PERIODS_SFX;
   }
 
   public static List<String> getStringList(Configuration conf, String keyName) {
     String str = conf.get(keyName);
-    List<String> list = StringUtils.isBlank(str) ? null :
-      Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
+    List<String> list = StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
     return list;
   }
 
@@ -113,7 +99,7 @@ public class CubeQueryConfUtil {
   public static final String LIGHTEST_FACT_FIRST = "cube.query.pick.lightest.fact.first";
   public static final boolean DEFAULT_LIGHTEST_FACT_FIRST = false;
   public static final String TIME_RANGE_WRITER_CLASS = "cube.query.time.range.writer.class";
-  public static final Class<? extends TimeRangeWriter> DEFAULT_TIME_RANGE_WRITER =
-      ORTimeRangeWriter.class.asSubclass(TimeRangeWriter.class);
+  public static final Class<? extends TimeRangeWriter> DEFAULT_TIME_RANGE_WRITER = ORTimeRangeWriter.class
+      .asSubclass(TimeRangeWriter.class);
   public static final String PART_WHERE_CLAUSE_DATE_FORMAT = "cube.query.partition.where.clause.format";
 }

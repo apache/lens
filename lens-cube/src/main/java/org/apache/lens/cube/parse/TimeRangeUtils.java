@@ -19,14 +19,12 @@
 package org.apache.lens.cube.parse;
 
 class TimeRangeUtils {
-  public static String getTimeRangePartitionFilter(
-    FactPartition partition,
-    CubeQueryContext cubeQueryContext,
-    String tableName) {
+  public static String getTimeRangePartitionFilter(FactPartition partition, CubeQueryContext cubeQueryContext,
+      String tableName) {
     String partCol = partition.getPartCol();
     String partFilter;
 
-    if (cubeQueryContext  != null && !cubeQueryContext.shouldReplaceTimeDimWithPart()) {
+    if (cubeQueryContext != null && !cubeQueryContext.shouldReplaceTimeDimWithPart()) {
       String replacedPartCol = cubeQueryContext.getTimeDimOfPartitionColumn(partCol);
       if (!partCol.equalsIgnoreCase(replacedPartCol)) {
         partFilter = partition.getFormattedFilter(replacedPartCol, tableName);

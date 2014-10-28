@@ -29,16 +29,16 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Accepts strings of all expressions and constructs HQL query.
- *
- * Making this as an abstract class because it provides constructors without
- * all expressions being set.
+ * 
+ * Making this as an abstract class because it provides constructors without all
+ * expressions being set.
  */
 public abstract class SimpleHQLContext implements HQLContextInterface {
 
   public static Log LOG = LogFactory.getLog(SimpleHQLContext.class.getName());
 
   private String select;
-  private String from; 
+  private String from;
   private String where;
   private String groupby;
   private String orderby;
@@ -48,8 +48,8 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   SimpleHQLContext() {
   }
 
-  SimpleHQLContext(String select, String from, String where, String groupby,
-      String orderby, String having, Integer limit) {
+  SimpleHQLContext(String select, String from, String where, String groupby, String orderby, String having,
+      Integer limit) {
     this.select = select;
     this.from = from;
     this.where = where;
@@ -59,8 +59,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
     this.limit = limit;
   }
 
-  SimpleHQLContext(String select, String groupby,
-      String orderby, String having, Integer limit) {
+  SimpleHQLContext(String select, String groupby, String orderby, String having, Integer limit) {
     this.select = select;
     this.groupby = groupby;
     this.orderby = orderby;
@@ -71,9 +70,9 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   /**
    * Set all missing expressions of HQL context.
    * 
-   * Leaving this empty implementation for the case of all expressions
-   * being passed in constructor.
-   * If other constructors are used the missing expressions should be set here
+   * Leaving this empty implementation for the case of all expressions being
+   * passed in constructor. If other constructors are used the missing
+   * expressions should be set here
    */
   protected void setMissingExpressions() throws SemanticException {
   }
@@ -89,8 +88,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
     return baseQuery;
   }
 
-  private String[] getQueryTreeStrings()
-      throws SemanticException {
+  private String[] getQueryTreeStrings() throws SemanticException {
     List<String> qstrs = new ArrayList<String>();
     qstrs.add(select);
     qstrs.add(from);
@@ -174,6 +172,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   protected void setSelect(String select) {
     this.select = select;
   }
+
   protected void setGroupby(String groupby) {
     this.groupby = groupby;
   }

@@ -29,9 +29,9 @@ import org.apache.lens.cube.metadata.Dimension;
 
 /**
  * Dimension HQLContext.
- *
- * Contains all the dimensions queried and their candidate dim tables
- * Update where string with storage filters added dimensions queried.
+ * 
+ * Contains all the dimensions queried and their candidate dim tables Update
+ * where string with storage filters added dimensions queried.
  */
 abstract class DimHQLContext extends SimpleHQLContext {
 
@@ -41,9 +41,8 @@ abstract class DimHQLContext extends SimpleHQLContext {
   private final Set<Dimension> queriedDims;
   private String where;
 
-  DimHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> queriedDims,
-      String select, String where, String groupby,
-      String orderby, String having, Integer limit) throws SemanticException {
+  DimHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> queriedDims, String select, String where,
+      String groupby, String orderby, String having, Integer limit) throws SemanticException {
     super(select, groupby, orderby, having, limit);
     this.dimsToQuery = dimsToQuery;
     this.where = where;
@@ -51,7 +50,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
   }
 
   protected void setMissingExpressions() throws SemanticException {
-    setWhere(genWhereClauseWithDimPartitions(where));    
+    setWhere(genWhereClauseWithDimPartitions(where));
   }
 
   public Map<Dimension, CandidateDim> getDimsToQuery() {
@@ -83,11 +82,10 @@ abstract class DimHQLContext extends SimpleHQLContext {
     return whereBuf.toString();
   }
 
-  static void appendWhereClause(StringBuilder filterCondition,
-      String whereClause, boolean hasMore) {
-    // Make sure we add AND only when there are already some conditions in where clause
-    if (hasMore && !filterCondition.toString().isEmpty()
-        && !StringUtils.isBlank(whereClause)) {
+  static void appendWhereClause(StringBuilder filterCondition, String whereClause, boolean hasMore) {
+    // Make sure we add AND only when there are already some conditions in where
+    // clause
+    if (hasMore && !filterCondition.toString().isEmpty() && !StringUtils.isBlank(whereClause)) {
       filterCondition.append(" AND ");
     }
 

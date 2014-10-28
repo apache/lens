@@ -90,8 +90,7 @@ public class TableReference {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((destColumn == null) ? 0 :
-        destColumn.hashCode());
+    result = prime * result + ((destColumn == null) ? 0 : destColumn.hashCode());
     result = prime * result + ((destTable == null) ? 0 : destTable.hashCode());
     return result;
   }

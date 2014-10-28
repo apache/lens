@@ -29,11 +29,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 class StorageUtil {
-  private static Log LOG = LogFactory.getLog(
-      StorageUtil.class.getName());
+  private static Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
-  public static String getWherePartClause(String timeDimName,
-      String tableName, List<String> parts) {
+  public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
     if (parts.size() == 0) {
       return "";
     }
@@ -64,18 +62,18 @@ class StorageUtil {
 
   /**
    * Get minimal set of storages which cover the queried partitions
-   *
-   * @param answeringParts Map from partition to set of answering storage tables
-   * @param Map from storage to covering parts
-   *
+   * 
+   * @param answeringParts
+   *          Map from partition to set of answering storage tables
+   * @param Map
+   *          from storage to covering parts
+   * 
    * @return true if multi table select is enabled, false otherwise
    */
-  static boolean getMinimalAnsweringTables(
-      List<FactPartition> answeringParts,
+  static boolean getMinimalAnsweringTables(List<FactPartition> answeringParts,
       Map<String, Set<FactPartition>> minimalStorageTables) {
     // map from storage table to the partitions it covers
-    Map<String, Set<FactPartition>> invertedMap =
-        new HashMap<String, Set<FactPartition>>();
+    Map<String, Set<FactPartition>> invertedMap = new HashMap<String, Set<FactPartition>>();
     boolean enableMultiTableSelect = true;
     // invert the answering tables map and put in inverted map
     for (FactPartition part : answeringParts) {
@@ -94,16 +92,12 @@ class StorageUtil {
       remaining.addAll(answeringParts);
       while (!remaining.isEmpty()) {
         // returns a singleton map
-        Map<String, Set<FactPartition>> maxCoveringStorage =
-            getMaxCoveringStorage(invertedMap, remaining);
+        Map<String, Set<FactPartition>> maxCoveringStorage = getMaxCoveringStorage(invertedMap, remaining);
         minimalStorageTables.putAll(maxCoveringStorage);
-        Set<FactPartition> coveringSet =
-            maxCoveringStorage.values().iterator().next();
+        Set<FactPartition> coveringSet = maxCoveringStorage.values().iterator().next();
         if (enableMultiTableSelect) {
-          if (!coveringSet.containsAll(invertedMap.get(
-              maxCoveringStorage.keySet().iterator().next()))) {
-            LOG.info("Disabling multi table select" +
-              " because the partitions are not mutually exclusive");
+          if (!coveringSet.containsAll(invertedMap.get(maxCoveringStorage.keySet().iterator().next()))) {
+            LOG.info("Disabling multi table select" + " because the partitions are not mutually exclusive");
             enableMultiTableSelect = false;
           }
         }
@@ -116,14 +110,12 @@ class StorageUtil {
   }
 
   private static Map<String, Set<FactPartition>> getMaxCoveringStorage(
-      final Map<String, Set<FactPartition>> storageCoveringMap,
-      Set<FactPartition> queriedParts) {
+      final Map<String, Set<FactPartition>> storageCoveringMap, Set<FactPartition> queriedParts) {
     int coveringcount = 0;
     int maxCoveringCount = 0;
     String maxCoveringStorage = null;
     Set<FactPartition> maxCoveringSet = null;
-    for (Map.Entry<String, Set<FactPartition>> entry : storageCoveringMap
-        .entrySet()) {
+    for (Map.Entry<String, Set<FactPartition>> entry : storageCoveringMap.entrySet()) {
       Set<FactPartition> coveringSet = new TreeSet<FactPartition>();
       coveringSet.addAll(entry.getValue());
       coveringSet.retainAll(queriedParts);

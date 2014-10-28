@@ -30,8 +30,8 @@ public abstract class CubeMeasure extends CubeColumn {
   private final String unit;
   private final FieldSchema column;
 
-  protected CubeMeasure(FieldSchema column, String displayString, String formatString,
-      String aggregate, String unit, Date startTime, Date endTime, Double cost){
+  protected CubeMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
+      Date startTime, Date endTime, Double cost) {
     super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
     this.column = column;
     assert (column != null);
@@ -44,8 +44,7 @@ public abstract class CubeMeasure extends CubeColumn {
 
   protected CubeMeasure(String name, Map<String, String> props) {
     super(name, props);
-    this.column = new FieldSchema(name,
-        props.get(MetastoreUtil.getMeasureTypePropertyKey(name)), "");
+    this.column = new FieldSchema(name, props.get(MetastoreUtil.getMeasureTypePropertyKey(name)), "");
     this.formatString = props.get(MetastoreUtil.getMeasureFormatPropertyKey(name));
     this.aggregate = props.get(MetastoreUtil.getMeasureAggrPropertyKey(name));
     this.unit = props.get(MetastoreUtil.getMeasureUnitPropertyKey(name));
@@ -121,8 +120,7 @@ public abstract class CubeMeasure extends CubeColumn {
       if (other.getFormatString() != null) {
         return false;
       }
-    } else if (!this.getFormatString().equalsIgnoreCase(
-        other.getFormatString())) {
+    } else if (!this.getFormatString().equalsIgnoreCase(other.getFormatString())) {
       return false;
     }
 
@@ -133,29 +131,23 @@ public abstract class CubeMeasure extends CubeColumn {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getType() == null) ? 0 :
-        getType().toLowerCase().hashCode());
-    result = prime * result + ((unit == null) ? 0 :
-        unit.toLowerCase().hashCode());
-    result = prime * result + ((aggregate == null) ? 0 :
-        aggregate.toLowerCase().hashCode());
-    result = prime * result + ((formatString == null) ? 0 :
-        formatString.toLowerCase().hashCode());
+    result = prime * result + ((getType() == null) ? 0 : getType().toLowerCase().hashCode());
+    result = prime * result + ((unit == null) ? 0 : unit.toLowerCase().hashCode());
+    result = prime * result + ((aggregate == null) ? 0 : aggregate.toLowerCase().hashCode());
+    result = prime * result + ((formatString == null) ? 0 : formatString.toLowerCase().hashCode());
     return result;
   }
 
   @Override
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
-    props.put(MetastoreUtil.getMeasureClassPropertyKey(getName()),
-        getClass().getName());
+    props.put(MetastoreUtil.getMeasureClassPropertyKey(getName()), getClass().getName());
     props.put(MetastoreUtil.getMeasureTypePropertyKey(getName()), getType());
     if (unit != null) {
       props.put(MetastoreUtil.getMeasureUnitPropertyKey(getName()), unit);
     }
     if (getFormatString() != null) {
-      props.put(MetastoreUtil.getMeasureFormatPropertyKey(getName()),
-          formatString);
+      props.put(MetastoreUtil.getMeasureFormatPropertyKey(getName()), formatString);
     }
     if (aggregate != null) {
       props.put(MetastoreUtil.getMeasureAggrPropertyKey(getName()), aggregate);

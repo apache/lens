@@ -47,25 +47,18 @@ public final class CubeFactTable extends AbstractCubeTable {
     this.cubeName = getCubeName(getName(), getProperties());
   }
 
-  public CubeFactTable(String cubeName, String factName,
-      List<FieldSchema> columns,
+  public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
       Map<String, Set<UpdatePeriod>> storageUpdatePeriods) {
-    this(cubeName, factName, columns, storageUpdatePeriods, 0L,
-        new HashMap<String, String>());
+    this(cubeName, factName, columns, storageUpdatePeriods, 0L, new HashMap<String, String>());
   }
 
-  public CubeFactTable(String cubeName, String factName,
-      List<FieldSchema> columns,
+  public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
       Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight) {
-    this(cubeName, factName, columns, storageUpdatePeriods, weight,
-        new HashMap<String, String>());
+    this(cubeName, factName, columns, storageUpdatePeriods, weight, new HashMap<String, String>());
   }
 
-  public CubeFactTable(String cubeName, String factName,
-      List<FieldSchema> columns,
-      Map<String, Set<UpdatePeriod>> storageUpdatePeriods,
-      double weight,
-      Map<String, String> properties) {
+  public CubeFactTable(String cubeName, String factName, List<FieldSchema> columns,
+      Map<String, Set<UpdatePeriod>> storageUpdatePeriods, double weight, Map<String, String> properties) {
     super(factName, columns, properties, weight);
     this.cubeName = cubeName;
     this.storageUpdatePeriods = storageUpdatePeriods;
@@ -79,12 +72,10 @@ public final class CubeFactTable extends AbstractCubeTable {
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
   }
 
-  private static void addUpdatePeriodProperies(String name,
-      Map<String, String> props,
+  private static void addUpdatePeriodProperies(String name, Map<String, String> props,
       Map<String, Set<UpdatePeriod>> updatePeriods) {
     if (updatePeriods != null) {
-      props.put(MetastoreUtil.getFactStorageListKey(name),
-          MetastoreUtil.getStr(updatePeriods.keySet()));
+      props.put(MetastoreUtil.getFactStorageListKey(name), MetastoreUtil.getStr(updatePeriods.keySet()));
       for (Map.Entry<String, Set<UpdatePeriod>> entry : updatePeriods.entrySet()) {
         props.put(MetastoreUtil.getFactUpdatePeriodKey(name, entry.getKey()),
             MetastoreUtil.getNamedStr(entry.getValue()));
@@ -92,20 +83,16 @@ public final class CubeFactTable extends AbstractCubeTable {
     }
   }
 
-  private static void addCubeNames(String factName, Map<String, String> props,
-      String cubeName) {
+  private static void addCubeNames(String factName, Map<String, String> props, String cubeName) {
     props.put(MetastoreUtil.getFactCubeNameKey(factName), cubeName);
   }
 
-  private static Map<String, Set<UpdatePeriod>> getUpdatePeriods(String name,
-      Map<String, String> props) {
-    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<String,
-        Set<UpdatePeriod>>();
+  private static Map<String, Set<UpdatePeriod>> getUpdatePeriods(String name, Map<String, String> props) {
+    Map<String, Set<UpdatePeriod>> storageUpdatePeriods = new HashMap<String, Set<UpdatePeriod>>();
     String storagesStr = props.get(MetastoreUtil.getFactStorageListKey(name));
     String[] storages = storagesStr.split(",");
     for (String storage : storages) {
-      String updatePeriodStr = props.get(MetastoreUtil.getFactUpdatePeriodKey(
-          name, storage));
+      String updatePeriodStr = props.get(MetastoreUtil.getFactUpdatePeriodKey(name, storage));
       if (StringUtils.isNotBlank(updatePeriodStr)) {
         String[] periods = updatePeriodStr.split(",");
         Set<UpdatePeriod> updatePeriods = new TreeSet<UpdatePeriod>();
@@ -154,15 +141,15 @@ public final class CubeFactTable extends AbstractCubeTable {
   }
 
   /**
-   * Get partition value strings for given range, for the specified updateInterval
-   *
+   * Get partition value strings for given range, for the specified
+   * updateInterval
+   * 
    * @param fromDate
    * @param toDate
    * @param interval
    * @return
    */
-  public List<String> getPartitions(Date fromDate, Date toDate,
-      UpdatePeriod interval) {
+  public List<String> getPartitions(Date fromDate, Date toDate, UpdatePeriod interval) {
     Calendar cal = Calendar.getInstance();
     cal.setTime(fromDate);
     List<String> partitions = new ArrayList<String>();
@@ -178,14 +165,13 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Get the max update period for the given range and available update periods
-   *
+   * 
    * @param from
    * @param to
    * @param updatePeriods
    * @return
    */
-  public static UpdatePeriod maxIntervalInRange(Date from, Date to,
-      Set<UpdatePeriod> updatePeriods) {
+  public static UpdatePeriod maxIntervalInRange(Date from, Date to, Set<UpdatePeriod> updatePeriods) {
     UpdatePeriod max = null;
 
     long diff = to.getTime() - from.getTime();
@@ -198,8 +184,7 @@ public final class CubeFactTable extends AbstractCubeTable {
     // between the dates
     UpdatePeriodComparator cmp = new UpdatePeriodComparator();
     for (UpdatePeriod i : updatePeriods) {
-      if (UpdatePeriod.YEARLY == i || UpdatePeriod.QUARTERLY == i
-          || UpdatePeriod.MONTHLY == i) {
+      if (UpdatePeriod.YEARLY == i || UpdatePeriod.QUARTERLY == i || UpdatePeriod.MONTHLY == i) {
         int intervals = 0;
         switch (i) {
         case YEARLY:
@@ -248,19 +233,17 @@ public final class CubeFactTable extends AbstractCubeTable {
   /**
    * Return valid columns of the fact, which can be specified by the property
    * MetastoreUtil.getValidColumnsKey(getName())
-   *
+   * 
    * @return
    */
   public List<String> getValidColumns() {
-    String validColsStr = getProperties().get(MetastoreUtil.getValidColumnsKey(
-        getName()));
-    return  validColsStr == null ? null : Arrays.asList(StringUtils.split(
-        validColsStr.toLowerCase(), ','));
+    String validColsStr = getProperties().get(MetastoreUtil.getValidColumnsKey(getName()));
+    return validColsStr == null ? null : Arrays.asList(StringUtils.split(validColsStr.toLowerCase(), ','));
   }
 
   /**
    * Add update period to storage
-   *
+   * 
    * @param storage
    * @param period
    */
@@ -275,7 +258,7 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Remove update period from storage
-   *
+   * 
    * @param storage
    * @param period
    */
@@ -288,13 +271,12 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Alter a storage with specified update periods
-   *
+   * 
    * @param storage
    * @param updatePeriods
    * @throws HiveException
    */
-  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods)
-      throws HiveException {
+  public void alterStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
     if (!storageUpdatePeriods.containsKey(storage)) {
       throw new HiveException("Invalid storage" + storage);
     }
@@ -304,20 +286,19 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Add a storage with specified update periods
-   *
+   * 
    * @param storage
    * @param updatePeriods
    * @throws HiveException
    */
-  void addStorage(String storage, Set<UpdatePeriod> updatePeriods)
-      throws HiveException {
+  void addStorage(String storage, Set<UpdatePeriod> updatePeriods) throws HiveException {
     storageUpdatePeriods.put(storage, updatePeriods);
     addUpdatePeriodProperies(getName(), getProperties(), storageUpdatePeriods);
   }
 
   /**
    * Drop a storage from the fact
-   *
+   * 
    * @param storage
    */
   void dropStorage(String storage) {
@@ -339,7 +320,7 @@ public final class CubeFactTable extends AbstractCubeTable {
 
   /**
    * Alter the cubeName to which this fact belongs
-   *
+   * 
    * @param cubeName
    */
   public void alterCubeName(String cubeName) {

@@ -1246,20 +1246,10 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     }
   }
 
-  private SchemaGraph getSchemaGraph(CubeMetastoreClient client) throws HiveException {
-    SchemaGraph graph = client.getSchemaGraph();
-    if (graph == null) {
-      graph = new SchemaGraph(client);
-      graph.buildSchemaGraph();
-      client.setSchemaGraph(graph);
-    }
-    return graph;
-  }
-
   private Map<String, CubeColumn> getFlattenedColumnView(CubeMetastoreClient client,
       AbstractCubeTable table,
       boolean isCube) throws HiveException {
-    SchemaGraph schemaGraph = getSchemaGraph(client);
+    SchemaGraph schemaGraph = client.getSchemaGraph();
     Map<AbstractCubeTable, Set<SchemaGraph.TableRelationship>> graph =
         isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
         Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();

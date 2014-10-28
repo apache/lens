@@ -39,30 +39,30 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Promotes groupby to select and select to groupby.
- *
+ * 
  */
 class GroupbyResolver implements ContextRewriter {
-  private static Log LOG = LogFactory.getLog(
-      GroupbyResolver.class.getName());
+  private static Log LOG = LogFactory.getLog(GroupbyResolver.class.getName());
 
   private final boolean selectPromotionEnabled;
   private final boolean groupbyPromotionEnabled;
+
   public GroupbyResolver(Configuration conf) {
-    selectPromotionEnabled = conf.getBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY,
-        CubeQueryConfUtil.DEFAULT_ENABLE_SELECT_TO_GROUPBY);
-    groupbyPromotionEnabled = conf.getBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT,
-        CubeQueryConfUtil.DEFAULT_ENABLE_GROUP_BY_TO_SELECT);
+    selectPromotionEnabled =
+        conf.getBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, CubeQueryConfUtil.DEFAULT_ENABLE_SELECT_TO_GROUPBY);
+    groupbyPromotionEnabled =
+        conf.getBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT,
+            CubeQueryConfUtil.DEFAULT_ENABLE_GROUP_BY_TO_SELECT);
   }
 
-  private void promoteSelect(CubeQueryContext cubeql, List<String> selectExprs,
-      List<String> groupByExprs) throws SemanticException {
+  private void promoteSelect(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)
+      throws SemanticException {
     if (!selectPromotionEnabled) {
       return;
     }
 
     if (!groupByExprs.isEmpty()) {
-      LOG.info("Not promoting select expression to groupby," +
-      		" since there are already group by expressions");
+      LOG.info("Not promoting select expression to groupby," + " since there are already group by expressions");
       return;
     }
 
@@ -97,8 +97,8 @@ class GroupbyResolver implements ContextRewriter {
     }
   }
 
-  private void promoteGroupby(CubeQueryContext cubeql, List<String> selectExprs,
-      List<String> groupByExprs) throws SemanticException {
+  private void promoteGroupby(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)
+      throws SemanticException {
     if (!groupbyPromotionEnabled) {
       return;
     }
@@ -129,13 +129,13 @@ class GroupbyResolver implements ContextRewriter {
   private void addChildAtIndex(int index, ASTNode parent, ASTNode child) {
     // add the last child
     int count = parent.getChildCount();
-    Tree lastchild = parent.getChild(count-1);
+    Tree lastchild = parent.getChild(count - 1);
     parent.addChild(lastchild);
 
     // move all the children from last upto index
-    for (int i = count-2; i >= index; i--) {
+    for (int i = count - 2; i >= index; i--) {
       Tree child_i = parent.getChild(i);
-      parent.setChild(i+1, child_i);
+      parent.setChild(i + 1, child_i);
     }
     parent.setChild(index, child);
     child.setParent(parent);
@@ -146,13 +146,13 @@ class GroupbyResolver implements ContextRewriter {
     // Process Aggregations by making sure that all group by keys are projected;
     // and all projection fields are added to group by keylist;
     List<String> selectExprs = new ArrayList<String>();
-    String[] sel = getExpressions(cubeql.getSelectAST(), cubeql).toArray(new String[]{});
+    String[] sel = getExpressions(cubeql.getSelectAST(), cubeql).toArray(new String[] {});
     for (String s : sel) {
       selectExprs.add(s.trim());
     }
     List<String> groupByExprs = new ArrayList<String>();
     if (cubeql.getGroupByTree() != null) {
-      String[] gby = getExpressions(cubeql.getGroupByAST(), cubeql).toArray(new String[]{});
+      String[] gby = getExpressions(cubeql.getGroupByAST(), cubeql).toArray(new String[] {});
       for (String g : gby) {
         groupByExprs.add(g.trim());
       }
@@ -161,8 +161,7 @@ class GroupbyResolver implements ContextRewriter {
     promoteGroupby(cubeql, selectExprs, groupByExprs);
   }
 
-  private String getExpressionWithoutAlias(CubeQueryContext cubeql,
-      String sel) {
+  private String getExpressionWithoutAlias(CubeQueryContext cubeql, String sel) {
     String alias = cubeql.getAlias(sel);
     if (alias != null) {
       sel = sel.substring(0, (sel.length() - alias.length())).trim();
@@ -170,8 +169,7 @@ class GroupbyResolver implements ContextRewriter {
     return sel;
   }
 
-  private boolean contains(CubeQueryContext cubeql, List<String> selExprs,
-      String expr) {
+  private boolean contains(CubeQueryContext cubeql, List<String> selExprs, String expr) {
     for (String sel : selExprs) {
       sel = getExpressionWithoutAlias(cubeql, sel);
       if (sel.equals(expr)) {
@@ -197,7 +195,7 @@ class GroupbyResolver implements ContextRewriter {
       if (hasAggregate(child)) {
         continue;
       }
-      list.add(HQLParser.getString((ASTNode)node.getChild(i)));
+      list.add(HQLParser.getString((ASTNode) node.getChild(i)));
     }
 
     return list;
@@ -223,8 +221,7 @@ class GroupbyResolver implements ContextRewriter {
 
   boolean hasMeasure(ASTNode node, CubeQueryContext cubeql) {
     int nodeType = node.getToken().getType();
-    if (nodeType == TOK_TABLE_OR_COL ||
-      nodeType == DOT) {
+    if (nodeType == TOK_TABLE_OR_COL || nodeType == DOT) {
       String colname;
       String tabname = null;
 
@@ -239,8 +236,7 @@ class GroupbyResolver implements ContextRewriter {
         tabname = tabident.getText();
       }
 
-      String msrname = StringUtils.isBlank(tabname) ? colname : tabname + "."
-        + colname;
+      String msrname = StringUtils.isBlank(tabname) ? colname : tabname + "." + colname;
       if (cubeql.hasCubeInQuery() && cubeql.isCubeMeasure(msrname)) {
         return true;
       }

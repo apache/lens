@@ -58,15 +58,13 @@ public class HDFSStorage extends Storage {
   }
 
   @Override
-  public void commitDropPartition(String storageTableName, List<String> partVals)
-      throws HiveException {
+  public void commitDropPartition(String storageTableName, List<String> partVals) throws HiveException {
     // No op
 
   }
 
   @Override
-  public void rollbackDropPartition(String storageTableName, List<String> partVals)
-      throws HiveException {
+  public void rollbackDropPartition(String storageTableName, List<String> partVals) throws HiveException {
     // No op
 
   }

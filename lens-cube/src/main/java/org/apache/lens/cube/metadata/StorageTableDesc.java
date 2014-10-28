@@ -42,8 +42,7 @@ public class StorageTableDesc extends CreateTableDesc {
     if (super.getTblProps() == null) {
       super.setTblProps(new HashMap<String, String>());
     }
-    super.getTblProps().put(MetastoreConstants.TIME_PART_COLUMNS,
-        StringUtils.join(this.timePartCols, ','));
+    super.getTblProps().put(MetastoreConstants.TIME_PART_COLUMNS, StringUtils.join(this.timePartCols, ','));
   }
 
   /**
@@ -57,7 +56,7 @@ public class StorageTableDesc extends CreateTableDesc {
 
   /**
    * This is not honored.
-   *
+   * 
    * @deprecated
    */
   @Override

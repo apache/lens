@@ -27,9 +27,9 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * HQL context class which passes all query strings from the fact
- * and works with required dimensions for the fact.
- *
+ * HQL context class which passes all query strings from the fact and works with
+ * required dimensions for the fact.
+ * 
  */
 public class FactHQLContext extends DimHQLContext {
 
@@ -39,12 +39,10 @@ public class FactHQLContext extends DimHQLContext {
   private final CubeQueryContext query;
   private final Set<Dimension> factDims;
 
-  FactHQLContext(CandidateFact fact,
-      Map<Dimension, CandidateDim> dimsToQuery,
-      Set<Dimension> factDims,
+  FactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> factDims,
       CubeQueryContext query) throws SemanticException {
-    super(dimsToQuery, factDims, fact.getSelectTree(), fact.getWhereTree(),
-        fact.getGroupByTree(), null, fact.getHavingTree(), null);
+    super(dimsToQuery, factDims, fact.getSelectTree(), fact.getWhereTree(), fact.getGroupByTree(), null, fact
+        .getHavingTree(), null);
     this.fact = fact;
     this.query = query;
     this.factDims = factDims;
@@ -58,8 +56,7 @@ public class FactHQLContext extends DimHQLContext {
 
   private String getFromString() throws SemanticException {
     String fromString = null;
-    if (query.getAutoJoinCtx() != null &&
-        query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       String fromTable = getFromTable();
       fromString = query.getAutoJoinCtx().getFromString(fromTable, fact, factDims, getDimsToQuery(), query);
     } else {
@@ -69,8 +66,7 @@ public class FactHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() {
-    return fact.getStorageString(
-        query.getAliasForTabName(query.getCube().getName()));
+    return fact.getStorageString(query.getAliasForTabName(query.getCube().getName()));
   }
 
   public CandidateFact getFactToQuery() {

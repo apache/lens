@@ -45,12 +45,12 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateDisjoint(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.twoMonthsBack)); 
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack)); 
+      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.twoMonthsBack));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack));
       parts.add(UpdatePeriod.HOURLY.format().format(CubeTestSetup.now));
     } else {
-      parts.add(format.format(CubeTestSetup.twoMonthsBack)); 
-      parts.add(format.format(CubeTestSetup.twodaysBack)); 
+      parts.add(format.format(CubeTestSetup.twoMonthsBack));
+      parts.add(format.format(CubeTestSetup.twodaysBack));
       parts.add(format.format(CubeTestSetup.now));
     }
 
@@ -62,12 +62,12 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateConsecutive(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.oneDayBack)); 
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack)); 
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.oneDayBack));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack));
       parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.now));
     } else {
-      parts.add(format.format(CubeTestSetup.oneDayBack)); 
-      parts.add(format.format(CubeTestSetup.twodaysBack)); 
+      parts.add(format.format(CubeTestSetup.oneDayBack));
+      parts.add(format.format(CubeTestSetup.twodaysBack));
       parts.add(format.format(CubeTestSetup.now));
     }
 

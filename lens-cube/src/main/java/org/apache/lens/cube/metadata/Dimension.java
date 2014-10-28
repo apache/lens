@@ -32,21 +32,16 @@ public class Dimension extends AbstractBaseTable {
   private final Set<CubeDimAttribute> attributes;
   private final Map<String, CubeDimAttribute> attributeMap;
 
-  public Dimension(String name,
-      Set<CubeDimAttribute> attributes) {
+  public Dimension(String name, Set<CubeDimAttribute> attributes) {
     this(name, attributes, new HashMap<String, String>(), 0L);
   }
 
-  public Dimension(String name,
-      Set<CubeDimAttribute> attributes, Map<String, String> properties,
-      double weight) {
+  public Dimension(String name, Set<CubeDimAttribute> attributes, Map<String, String> properties, double weight) {
     this(name, attributes, null, properties, weight);
   }
 
-  public Dimension(String name,
-      Set<CubeDimAttribute> attributes, Set<ExprColumn> expressions,
-      Map<String, String> properties,
-      double weight) {
+  public Dimension(String name, Set<CubeDimAttribute> attributes, Set<ExprColumn> expressions,
+      Map<String, String> properties, double weight) {
     super(name, expressions, properties, weight);
     this.attributes = attributes;
 
@@ -71,7 +66,7 @@ public class Dimension extends AbstractBaseTable {
   private void addAllAttributesToMap(CubeDimAttribute attr) {
     attributeMap.put(attr.getName().toLowerCase(), attr);
     if (attr instanceof HierarchicalDimAttribute) {
-      for (CubeDimAttribute d : ((HierarchicalDimAttribute)attr).getHierarchy()) {
+      for (CubeDimAttribute d : ((HierarchicalDimAttribute) attr).getHierarchy()) {
         addAllAttributesToMap(d);
       }
     }
@@ -94,33 +89,28 @@ public class Dimension extends AbstractBaseTable {
   @Override
   public void addProperties() {
     super.addProperties();
-    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()),
-        MetastoreUtil.getNamedStr(attributes));
+    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
     setAttributedProperties(getProperties(), attributes);
   }
 
-  private static void setAttributedProperties(Map<String, String> props,
-                                             Set<CubeDimAttribute> attributes) {
+  private static void setAttributedProperties(Map<String, String> props, Set<CubeDimAttribute> attributes) {
     for (CubeDimAttribute attr : attributes) {
       attr.addProperties(props);
     }
   }
 
-  public static Set<CubeDimAttribute> getAttributes(String name,
-      Map<String, String> props) {
+  public static Set<CubeDimAttribute> getAttributes(String name, Map<String, String> props) {
     Set<CubeDimAttribute> attributes = new HashSet<CubeDimAttribute>();
     String attrStr = props.get(MetastoreUtil.getDimAttributeListKey(name));
     String[] names = attrStr.split(",");
     for (String attrName : names) {
-      String className = props.get(MetastoreUtil.getDimensionClassPropertyKey(
-          attrName));
+      String className = props.get(MetastoreUtil.getDimensionClassPropertyKey(attrName));
       CubeDimAttribute attr;
       try {
         Class<?> clazz = Class.forName(className);
         Constructor<?> constructor;
         constructor = clazz.getConstructor(String.class, Map.class);
-        attr = (CubeDimAttribute) constructor.newInstance(new Object[]
-            {attrName, props});
+        attr = (CubeDimAttribute) constructor.newInstance(new Object[] { attrName, props });
       } catch (Exception e) {
         throw new IllegalArgumentException("Invalid dimension", e);
       }
@@ -154,8 +144,9 @@ public class Dimension extends AbstractBaseTable {
   }
 
   /**
-   * Alters the attribute if already existing or just adds if it is new attribute
-   *
+   * Alters the attribute if already existing or just adds if it is new
+   * attribute
+   * 
    * @param dimension
    * @throws HiveException
    */
@@ -167,20 +158,18 @@ public class Dimension extends AbstractBaseTable {
     // Replace dimension if already existing
     if (attributeMap.containsKey(attribute.getName().toLowerCase())) {
       attributes.remove(getAttributeByName(attribute.getName()));
-      LOG.info("Replacing attribute " + getAttributeByName(attribute.getName())
-        + " with " + attribute);
+      LOG.info("Replacing attribute " + getAttributeByName(attribute.getName()) + " with " + attribute);
     }
 
     attributes.add(attribute);
     attributeMap.put(attribute.getName().toLowerCase(), attribute);
-    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()),
-        MetastoreUtil.getNamedStr(attributes));
+    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
     attribute.addProperties(getProperties());
   }
 
   /**
    * Remove the dimension with name specified
-   *
+   * 
    * @param attrName
    */
   public void removeAttribute(String attrName) {
@@ -188,8 +177,7 @@ public class Dimension extends AbstractBaseTable {
       LOG.info("Removing attribute " + getAttributeByName(attrName));
       attributes.remove(getAttributeByName(attrName));
       attributeMap.remove(attrName.toLowerCase());
-      getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()),
-          MetastoreUtil.getNamedStr(attributes));
+      getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
     }
   }
 

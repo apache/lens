@@ -38,8 +38,7 @@ public abstract class AbstractCubeTable implements Named {
   private final Map<String, String> properties = new HashMap<String, String>();
   private double weight;
 
-  protected AbstractCubeTable(String name, List<FieldSchema> columns,
-      Map<String, String> props, double weight) {
+  protected AbstractCubeTable(String name, List<FieldSchema> columns, Map<String, String> props, double weight) {
     this.name = name.toLowerCase();
     this.columns = columns;
     this.weight = weight;
@@ -65,13 +64,12 @@ public abstract class AbstractCubeTable implements Named {
 
   public static double getWeight(Map<String, String> properties, String name) {
     String wtStr = properties.get(MetastoreUtil.getCubeTableWeightKey(name));
-     return wtStr == null ? 0L : Double.parseDouble(wtStr);
+    return wtStr == null ? 0L : Double.parseDouble(wtStr);
   }
 
   protected void addProperties() {
     properties.put(MetastoreConstants.TABLE_TYPE_KEY, getTableType().name());
-    properties.put(MetastoreUtil.getCubeTableWeightKey(name),
-        String.valueOf(weight));
+    properties.put(MetastoreUtil.getCubeTableWeightKey(name), String.valueOf(weight));
   }
 
   public String getName() {
@@ -88,7 +86,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Alters the weight of table
-   *
+   * 
    * @param weight
    */
   public void alterWeight(double weight) {
@@ -98,7 +96,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Add more table properties
-   *
+   * 
    * @param properties
    */
   public void addProperties(Map<String, String> props) {
@@ -108,7 +106,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Remove property specified by the key
-   *
+   * 
    * @param propKey
    */
   public void removeProperty(String propKey) {
@@ -117,7 +115,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Alters the column if already existing or just adds it if it is new column
-   *
+   * 
    * @param column
    * @throws HiveException
    */
@@ -140,9 +138,8 @@ public abstract class AbstractCubeTable implements Named {
       i++;
     }
     if (alterPos != -1) {
-      LOG.info("In " + getName() + " replacing column " + toReplace.getName()
-        + ":" + toReplace.getType() +
-        " to " + column.getName() + ":" + column.getType());
+      LOG.info("In " + getName() + " replacing column " + toReplace.getName() + ":" + toReplace.getType() + " to "
+          + column.getName() + ":" + column.getType());
       columns.add(alterPos, column);
     } else {
       columns.add(column);
@@ -151,7 +148,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Adds or alters the columns passed
-   *
+   * 
    * @param columns
    * @throws HiveException
    */
@@ -204,8 +201,7 @@ public abstract class AbstractCubeTable implements Named {
   public int hashCode() {
     final int prime = 31;
     int result = 1;
-    result = prime * result + ((getName() == null) ? 0 :
-      getName().hashCode());
+    result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
     return result;
   }
 

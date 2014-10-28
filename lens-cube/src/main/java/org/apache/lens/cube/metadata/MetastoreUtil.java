@@ -30,18 +30,15 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
 public class MetastoreUtil implements MetastoreConstants {
 
-  public static final String getFactStorageTableName(String factName,
-      String storageName) {
+  public static final String getFactStorageTableName(String factName, String storageName) {
     return getStorageTableName(factName, Storage.getPrefix(storageName));
   }
 
-  public static final String getDimStorageTableName(String dimName,
-      String storageName) {
+  public static final String getDimStorageTableName(String dimName, String storageName) {
     return getStorageTableName(dimName, Storage.getPrefix(storageName));
   }
 
-  public static final String getStorageTableName(String cubeTableName,
-      String storagePrefix) {
+  public static final String getStorageTableName(String cubeTableName, String storagePrefix) {
     return storagePrefix + cubeTableName;
   }
 
@@ -100,8 +97,7 @@ public class MetastoreUtil implements MetastoreConstants {
   }
 
   public static Integer getHierachyElementIndex(String dimName, String param) {
-    return Integer.parseInt(param.substring(getHierachyElementKeyPFX(
-        dimName).length()));
+    return Integer.parseInt(param.substring(getHierachyElementKeyPFX(dimName).length()));
   }
 
   public static final String getDimensionSrcReferenceKey(String dimName) {
@@ -112,28 +108,24 @@ public class MetastoreUtil implements MetastoreConstants {
     return getDimensionKeyPrefix(dimName) + IS_JOIN_KEY_SFX;
   }
 
-  public static final String getDimensionDestReference(String tableName,
-      String columnName) {
-    return tableName.toLowerCase() + TABLE_COLUMN_SEPERATOR
-        + columnName.toLowerCase();
+  public static final String getDimensionDestReference(String tableName, String columnName) {
+    return tableName.toLowerCase() + TABLE_COLUMN_SEPERATOR + columnName.toLowerCase();
   }
 
-  public static final String getDimensionDestReference(
-      List<TableReference> references) {
+  public static final String getDimensionDestReference(List<TableReference> references) {
     String toks[] = new String[references.size()];
 
     for (int i = 0; i < references.size(); i++) {
       TableReference reference = references.get(i);
-      toks[i] = reference.getDestTable() + TABLE_COLUMN_SEPERATOR
-          + reference.getDestColumn();
+      toks[i] = reference.getDestTable() + TABLE_COLUMN_SEPERATOR + reference.getDestColumn();
     }
 
     return StringUtils.join(toks, ',');
   }
 
-  //////////////////////////
+  // ////////////////////////
   // Column properties //
-  //////////////////////////
+  // ////////////////////////
   public static String getColumnKeyPrefix(String colName) {
     return COL_PFX + colName.toLowerCase();
   }
@@ -166,16 +158,15 @@ public class MetastoreUtil implements MetastoreConstants {
     return getColumnKeyPrefix(colName) + TYPE_SFX;
   }
 
-  //////////////////////////
+  // ////////////////////////
   // Dimension table properties //
-  //////////////////////////
+  // ////////////////////////
   public static String getDimensionTablePrefix(String dimTblName) {
     return DIM_TBL_PFX + dimTblName.toLowerCase();
   }
 
   public static String getDimensionDumpPeriodKey(String dimTblName, String storage) {
-    return getDimensionTablePrefix(dimTblName) + "." + storage.toLowerCase() +
-        DUMP_PERIOD_SFX;
+    return getDimensionTablePrefix(dimTblName) + "." + storage.toLowerCase() + DUMP_PERIOD_SFX;
   }
 
   public static String getDimensionStorageListKey(String dimTblName) {
@@ -185,7 +176,6 @@ public class MetastoreUtil implements MetastoreConstants {
   public static String getDimNameKey(String dimTblName) {
     return getDimensionTablePrefix(dimTblName) + DIM_NAME_SFX;
   }
-
 
   // //////////////////////////
   // Measure properties ///
@@ -261,8 +251,7 @@ public class MetastoreUtil implements MetastoreConstants {
   }
 
   public static String getFactUpdatePeriodKey(String name, String storage) {
-    return getFactKeyPrefix(name) + "." + storage.toLowerCase()
-        + UPDATE_PERIOD_SFX;
+    return getFactKeyPrefix(name) + "." + storage.toLowerCase() + UPDATE_PERIOD_SFX;
   }
 
   public static String getFactCubeNameKey(String name) {
@@ -278,8 +267,7 @@ public class MetastoreUtil implements MetastoreConstants {
   }
 
   public static String getLatestPartTimestampKey(String partCol) {
-    return MetastoreConstants.STORAGE_PFX + partCol +
-        MetastoreConstants.LATEST_PART_TIMESTAMP_SFX;
+    return MetastoreConstants.STORAGE_PFX + partCol + MetastoreConstants.LATEST_PART_TIMESTAMP_SFX;
   }
 
   // //////////////////////////

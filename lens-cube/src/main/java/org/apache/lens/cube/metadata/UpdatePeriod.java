@@ -28,14 +28,11 @@ import java.util.Date;
 import org.apache.lens.cube.parse.DateUtil;
 
 public enum UpdatePeriod implements Named {
-  SECONDLY(Calendar.SECOND, 1000, "yyyy-MM-dd-HH-mm-ss"),
-  MINUTELY(Calendar.MINUTE, 60 * SECONDLY.weight(), "yyyy-MM-dd-HH-mm"),
-  HOURLY(Calendar.HOUR_OF_DAY, 60 * MINUTELY.weight(), "yyyy-MM-dd-HH"),
-  DAILY(Calendar.DAY_OF_MONTH, 24 * HOURLY.weight(), "yyyy-MM-dd"),
-  WEEKLY(Calendar.WEEK_OF_YEAR, 7 * DAILY.weight(), "YYYY-'W'ww"),
-  MONTHLY(Calendar.MONTH, 30 * DAILY.weight(), "yyyy-MM"),
-  QUARTERLY(Calendar.MONTH, 3 * MONTHLY.weight(), "yyyy-MM"),
-  YEARLY(Calendar.YEAR, 12 * MONTHLY.weight(), "yyyy");
+  SECONDLY(Calendar.SECOND, 1000, "yyyy-MM-dd-HH-mm-ss"), MINUTELY(Calendar.MINUTE, 60 * SECONDLY.weight(),
+      "yyyy-MM-dd-HH-mm"), HOURLY(Calendar.HOUR_OF_DAY, 60 * MINUTELY.weight(), "yyyy-MM-dd-HH"), DAILY(
+      Calendar.DAY_OF_MONTH, 24 * HOURLY.weight(), "yyyy-MM-dd"), WEEKLY(Calendar.WEEK_OF_YEAR, 7 * DAILY.weight(),
+      "YYYY-'W'ww"), MONTHLY(Calendar.MONTH, 30 * DAILY.weight(), "yyyy-MM"), QUARTERLY(Calendar.MONTH, 3 * MONTHLY
+      .weight(), "yyyy-MM"), YEARLY(Calendar.YEAR, 12 * MONTHLY.weight(), "yyyy");
 
   public static final long MIN_INTERVAL = SECONDLY.weight();
   private final int calendarField;
@@ -44,8 +41,7 @@ public enum UpdatePeriod implements Named {
 
   private static DateFormat getSecondlyFormat() {
     if (secondlyFormat == null) {
-      secondlyFormat =
-          new ThreadLocal<DateFormat>() {
+      secondlyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(SECONDLY.formatStr());
@@ -54,10 +50,10 @@ public enum UpdatePeriod implements Named {
     }
     return secondlyFormat.get();
   }
+
   private static DateFormat getMinutelyFormat() {
     if (minutelyFormat == null) {
-      minutelyFormat =
-          new ThreadLocal<DateFormat>() {
+      minutelyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(MINUTELY.formatStr());
@@ -66,10 +62,10 @@ public enum UpdatePeriod implements Named {
     }
     return minutelyFormat.get();
   }
+
   private static DateFormat getHourlyFormat() {
     if (hourlyFormat == null) {
-      hourlyFormat =
-          new ThreadLocal<DateFormat>() {
+      hourlyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(HOURLY.formatStr());
@@ -78,10 +74,10 @@ public enum UpdatePeriod implements Named {
     }
     return hourlyFormat.get();
   }
+
   private static DateFormat getDailyFormat() {
     if (dailyFormat == null) {
-      dailyFormat =
-          new ThreadLocal<DateFormat>() {
+      dailyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(DAILY.formatStr());
@@ -90,10 +86,10 @@ public enum UpdatePeriod implements Named {
     }
     return dailyFormat.get();
   }
+
   private static DateFormat getWeeklyFormat() {
     if (weeklyFormat == null) {
-      weeklyFormat =
-          new ThreadLocal<DateFormat>() {
+      weeklyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(WEEKLY.formatStr());
@@ -105,8 +101,7 @@ public enum UpdatePeriod implements Named {
 
   private static DateFormat getMonthlyFormat() {
     if (monthlyFormat == null) {
-      monthlyFormat =
-          new ThreadLocal<DateFormat>() {
+      monthlyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(MONTHLY.formatStr());
@@ -118,8 +113,7 @@ public enum UpdatePeriod implements Named {
 
   private static DateFormat getQuarterlyFormat() {
     if (quarterlyFormat == null) {
-      quarterlyFormat =
-          new ThreadLocal<DateFormat>() {
+      quarterlyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(QUARTERLY.formatStr());
@@ -128,10 +122,10 @@ public enum UpdatePeriod implements Named {
     }
     return quarterlyFormat.get();
   }
+
   private static DateFormat getYearlyFormat() {
     if (yearlyFormat == null) {
-      yearlyFormat =
-          new ThreadLocal<DateFormat>() {
+      yearlyFormat = new ThreadLocal<DateFormat>() {
         @Override
         protected SimpleDateFormat initialValue() {
           return new SimpleDateFormat(YEARLY.formatStr());
@@ -140,6 +134,7 @@ public enum UpdatePeriod implements Named {
     }
     return yearlyFormat.get();
   }
+
   private static ThreadLocal<DateFormat> secondlyFormat;
   private static ThreadLocal<DateFormat> minutelyFormat;
   private static ThreadLocal<DateFormat> hourlyFormat;
@@ -168,16 +163,25 @@ public enum UpdatePeriod implements Named {
   }
 
   public DateFormat format() {
-    switch(this) {
-    case SECONDLY : return getSecondlyFormat();
-    case MINUTELY : return getMinutelyFormat();
-    case HOURLY : return getHourlyFormat();
-    case DAILY : return getDailyFormat();
-    case WEEKLY : return getWeeklyFormat();
-    case MONTHLY : return getMonthlyFormat();
-    case QUARTERLY : return getQuarterlyFormat();
-    case YEARLY : return getYearlyFormat();
-    default : return null;
+    switch (this) {
+    case SECONDLY:
+      return getSecondlyFormat();
+    case MINUTELY:
+      return getMinutelyFormat();
+    case HOURLY:
+      return getHourlyFormat();
+    case DAILY:
+      return getDailyFormat();
+    case WEEKLY:
+      return getWeeklyFormat();
+    case MONTHLY:
+      return getMonthlyFormat();
+    case QUARTERLY:
+      return getQuarterlyFormat();
+    case YEARLY:
+      return getYearlyFormat();
+    default:
+      return null;
     }
   }
 
@@ -190,8 +194,7 @@ public enum UpdatePeriod implements Named {
     return name();
   }
 
-  public static class UpdatePeriodComparator
-  implements Comparator<UpdatePeriod> {
+  public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {
     @Override
     public int compare(UpdatePeriod o1, UpdatePeriod o2) {
       if (o1 == null && o2 != null) {

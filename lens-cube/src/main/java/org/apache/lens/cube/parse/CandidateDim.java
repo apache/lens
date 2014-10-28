@@ -26,8 +26,8 @@ import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * Holds context of a candidate dim table. 
- *
+ * Holds context of a candidate dim table.
+ * 
  */
 class CandidateDim implements CandidateTable {
   final CubeDimensionTable dimtable;
@@ -101,8 +101,7 @@ class CandidateDim implements CandidateTable {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getTable() == null) ? 0 :
-      getTable().getName().toLowerCase().hashCode());
+    result = prime * result + ((getTable() == null) ? 0 : getTable().getName().toLowerCase().hashCode());
     return result;
   }
 

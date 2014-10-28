@@ -35,8 +35,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
  */
 public class CubeSemanticAnalyzer extends SemanticAnalyzer {
   private final HiveConf conf;
-  private final List<ValidationRule> validationRules =
-      new ArrayList<ValidationRule>();
+  private final List<ValidationRule> validationRules = new ArrayList<ValidationRule>();
   private CubeQueryContext cubeQl;
 
   public CubeSemanticAnalyzer(HiveConf conf) throws SemanticException {
@@ -56,8 +55,7 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
     QB qb = new QB(null, null, false);
     // do not allow create table/view commands
     // TODO Move this to a validation rule
-    if (ast.getToken().getType() == HiveParser.TOK_CREATETABLE ||
-        ast.getToken().getType() == HiveParser.TOK_CREATEVIEW) {
+    if (ast.getToken().getType() == HiveParser.TOK_CREATETABLE || ast.getToken().getType() == HiveParser.TOK_CREATEVIEW) {
       throw new SemanticException(ErrorMsg.CREATE_NOT_ALLOWED);
     }
 

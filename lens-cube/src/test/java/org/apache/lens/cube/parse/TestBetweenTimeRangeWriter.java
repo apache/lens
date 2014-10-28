@@ -51,11 +51,10 @@ public class TestBetweenTimeRangeWriter extends TestTimeRangeWriter {
   public void validateConsecutive(String whereClause, DateFormat format) {
     String expected = null;
     if (format == null) {
-      expected = getBetweenClause("test", "dt", CubeTestSetup.twodaysBack,
-          CubeTestSetup.now, UpdatePeriod.DAILY.format());
+      expected =
+          getBetweenClause("test", "dt", CubeTestSetup.twodaysBack, CubeTestSetup.now, UpdatePeriod.DAILY.format());
     } else {
-      expected = getBetweenClause("test", "dt", CubeTestSetup.twodaysBack,
-          CubeTestSetup.now, format);
+      expected = getBetweenClause("test", "dt", CubeTestSetup.twodaysBack, CubeTestSetup.now, format);
     }
     Assert.assertEquals(expected, whereClause);
   }

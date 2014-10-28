@@ -27,8 +27,8 @@ public abstract class CubeDimAttribute extends CubeColumn {
     this(name, description, null, null, null, null);
   }
 
-  public CubeDimAttribute(String name, String description, String displayString,
-      Date startTime, Date endTime, Double cost) {
+  public CubeDimAttribute(String name, String description, String displayString, Date startTime, Date endTime,
+      Double cost) {
     super(name, description, displayString, startTime, endTime, cost);
   }
 
@@ -39,8 +39,7 @@ public abstract class CubeDimAttribute extends CubeColumn {
   @Override
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
-    props.put(MetastoreUtil.getDimensionClassPropertyKey(getName()),
-        getClass().getName());
+    props.put(MetastoreUtil.getDimensionClassPropertyKey(getName()), getClass().getName());
   }
 
   @Override

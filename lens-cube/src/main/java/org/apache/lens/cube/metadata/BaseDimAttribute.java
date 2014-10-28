@@ -30,8 +30,7 @@ public class BaseDimAttribute extends CubeDimAttribute {
     this(column, null, null, null, null);
   }
 
-  public BaseDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime,
-      Double cost) {
+  public BaseDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime, Double cost) {
     super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
     this.type = column.getType();
     assert (type != null);
@@ -49,7 +48,7 @@ public class BaseDimAttribute extends CubeDimAttribute {
 
   /**
    * This is used only for serializing
-   *
+   * 
    * @param name
    * @param props
    */
@@ -66,8 +65,7 @@ public class BaseDimAttribute extends CubeDimAttribute {
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + ((getType() == null) ? 0 :
-        getType().toLowerCase().hashCode());
+    result = prime * result + ((getType() == null) ? 0 : getType().toLowerCase().hashCode());
     return result;
   }
 

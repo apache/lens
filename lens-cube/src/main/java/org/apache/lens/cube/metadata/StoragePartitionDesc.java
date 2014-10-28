@@ -38,9 +38,8 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
   public StoragePartitionDesc() {
   }
 
-  public StoragePartitionDesc(String cubeTableName,
-      Map<String, Date> timePartSpec, Map<String, String> nonTimePartSpec,
-      UpdatePeriod updatePeriod) {
+  public StoragePartitionDesc(String cubeTableName, Map<String, Date> timePartSpec,
+      Map<String, String> nonTimePartSpec, UpdatePeriod updatePeriod) {
     this.cubeTableName = cubeTableName;
     this.timePartSpec = timePartSpec;
     this.nonTimePartSpec = nonTimePartSpec;
@@ -55,15 +54,16 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
   }
 
   /**
-   * @param cubeTableName the cubeTableName to set
+   * @param cubeTableName
+   *          the cubeTableName to set
    */
   public void setCubeTableName(String cubeTableName) {
     this.cubeTableName = cubeTableName;
   }
 
   /**
-  * @deprecated Use getStoragePartSpec
-  */
+   * @deprecated Use getStoragePartSpec
+   */
   @Override
   @Deprecated
   public Map<String, String> getPartSpec() {
@@ -91,7 +91,8 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
   }
 
   /**
-   * @param timePartSpec the timePartSpec to set
+   * @param timePartSpec
+   *          the timePartSpec to set
    */
   public void setTimePartSpec(Map<String, Date> timePartSpec) {
     this.timePartSpec = timePartSpec;
@@ -105,7 +106,8 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
   }
 
   /**
-   * @param nonTimePartSpec the nonTimePartSpec to set
+   * @param nonTimePartSpec
+   *          the nonTimePartSpec to set
    */
   public void setNonTimePartSpec(Map<String, String> nonTimePartSpec) {
     this.nonTimePartSpec = nonTimePartSpec;
@@ -119,7 +121,8 @@ public class StoragePartitionDesc extends AddPartitionDesc.OnePartitionDesc {
   }
 
   /**
-   * @param updatePeriod the updatePeriod to set
+   * @param updatePeriod
+   *          the updatePeriod to set
    */
   public void setUpdatePeriod(UpdatePeriod updatePeriod) {
     this.updatePeriod = updatePeriod;

@@ -21,7 +21,7 @@ package org.apache.lens.cube.parse;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
- * HQL context holding the ql expressions 
+ * HQL context holding the ql expressions
  */
 public interface HQLContextInterface {
 
@@ -35,49 +35,49 @@ public interface HQLContextInterface {
 
   /**
    * Get select expression.
-   *
+   * 
    * @return select
    */
   public String getSelect();
 
   /**
    * Get from string
-   *
+   * 
    * @return from
    */
   public String getFrom();
 
   /**
    * Get where string
-   *
+   * 
    * @return where
    */
   public String getWhere();
 
   /**
    * Get groupby string
-   *
+   * 
    * @return groupby
    */
   public String getGroupby();
 
   /**
    * Get having string
-   *
+   * 
    * @return having
    */
   public String getHaving();
 
   /**
    * Get orderby string
-   *
+   * 
    * @return orderby
    */
   public String getOrderby();
 
   /**
    * Get limit
-   *
+   * 
    * @return limit
    */
   public Integer getLimit();

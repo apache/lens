@@ -27,7 +27,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Writes partitions queried in timerange as between clause.
- *
+ * 
  */
 public class BetweenTimeRangeWriter implements TimeRangeWriter {
 
@@ -40,8 +40,8 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
     StringBuilder partStr = new StringBuilder();
     if (rangeParts.size() == 1) {
       partStr.append("(");
-      String partFilter = TimeRangeUtils.getTimeRangePartitionFilter(
-        rangeParts.iterator().next(), cubeQueryContext, tableName);
+      String partFilter =
+          TimeRangeUtils.getTimeRangePartitionFilter(rangeParts.iterator().next(), cubeQueryContext, tableName);
       partStr.append(partFilter);
       partStr.append(")");
     } else {
@@ -51,8 +51,7 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
       while (it.hasNext()) {
         FactPartition part = it.next();
         if (part.hasContainingPart()) {
-          throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER,
-              "Partition has containing part");
+          throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER, "Partition has containing part");
         }
         if (first == null) {
           first = part;
@@ -66,10 +65,10 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
             throw new SemanticException(ErrorMsg.CANNOT_USE_TIMERANGE_WRITER,
                 "Partitions are in different update periods");
           }
-        }        
+        }
         parts.add(part);
       }
-      
+
       FactPartition start = parts.first();
       FactPartition end = parts.last();
 
@@ -78,13 +77,8 @@ public class BetweenTimeRangeWriter implements TimeRangeWriter {
         partCol = cubeQueryContext.getTimeDimOfPartitionColumn(partCol);
       }
 
-      partStr.append(" (").append(tableName).append(".")
-             .append(partCol)
-             .append(" BETWEEN '")
-             .append(start.getFormattedPartSpec())
-             .append("' AND '")
-             .append(end.getFormattedPartSpec())
-             .append("') ");
+      partStr.append(" (").append(tableName).append(".").append(partCol).append(" BETWEEN '")
+          .append(start.getFormattedPartSpec()).append("' AND '").append(end.getFormattedPartSpec()).append("') ");
     }
     return partStr.toString();
   }

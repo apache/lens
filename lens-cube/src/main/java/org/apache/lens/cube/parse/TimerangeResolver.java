@@ -44,9 +44,9 @@ import org.apache.lens.cube.metadata.SchemaGraph;
 import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
 
 /**
- * Finds all timeranges in the query and does validation wrt the queried field's life
- * and the range queried
- *
+ * Finds all timeranges in the query and does validation wrt the queried field's
+ * life and the range queried
+ * 
  */
 class TimerangeResolver implements ContextRewriter {
   private static Log LOG = LogFactory.getLog(TimerangeResolver.class.getName());
@@ -74,7 +74,8 @@ class TimerangeResolver implements ContextRewriter {
     searchTimeRanges(cubeql.getWhereAST(), cubeql, null, 0);
   }
 
-  private void searchTimeRanges(ASTNode root, CubeQueryContext cubeql, ASTNode parent, int childIndex) throws SemanticException {
+  private void searchTimeRanges(ASTNode root, CubeQueryContext cubeql, ASTNode parent, int childIndex)
+      throws SemanticException {
     if (root == null) {
       return;
     } else if (root.getToken().getType() == TOK_FUNCTION) {
@@ -95,7 +96,7 @@ class TimerangeResolver implements ContextRewriter {
     if (node.getToken().getType() == DOT) {
       ASTNode colIdent = (ASTNode) node.getChild(1);
       column = colIdent.getText().toLowerCase();
-     } else if (node.getToken().getType() == TOK_TABLE_OR_COL) {
+    } else if (node.getToken().getType() == TOK_TABLE_OR_COL) {
       // Take child ident.totext
       ASTNode ident = (ASTNode) node.getChild(0);
       column = ident.getText().toLowerCase();
@@ -103,19 +104,20 @@ class TimerangeResolver implements ContextRewriter {
     return column;
   }
 
-  private void processTimeRangeFunction(CubeQueryContext cubeql,
-      ASTNode timenode, ASTNode parent, int childIndex) throws SemanticException {
+  private void processTimeRangeFunction(CubeQueryContext cubeql, ASTNode timenode, ASTNode parent, int childIndex)
+      throws SemanticException {
     TimeRange.TimeRangeBuilder builder = TimeRange.getBuilder();
     builder.astNode(timenode);
     builder.parent(parent);
     builder.childIndex(childIndex);
 
-    String timeDimName = getColumnName((ASTNode)timenode.getChild(1));
+    String timeDimName = getColumnName((ASTNode) timenode.getChild(1));
 
     if (!cubeql.getCube().getTimedDimensions().contains(timeDimName)) {
       throw new SemanticException(ErrorMsg.NOT_A_TIMED_DIMENSION, timeDimName);
     }
-    // Replace timeDimName with column which is used for partitioning. Assume the same column
+    // Replace timeDimName with column which is used for partitioning. Assume
+    // the same column
     // is used as a partition column in all storages of the fact
     timeDimName = cubeql.getPartitionColumnOfTimeDim(timeDimName);
     builder.partitionColumn(timeDimName);
@@ -154,11 +156,9 @@ class TimerangeResolver implements ContextRewriter {
           continue;
         }
         if (isColumnLifeInvalid(column, range)) {
-          throw new SemanticException(ErrorMsg.NOT_AVAILABLE_IN_RANGE, col, 
-            range.toString(),  (column.getStartTime() == null ? "" :
-              " from:" + column.getStartTime()),
-             (column.getEndTime() == null ? "" :
-              " upto:" + column.getEndTime()));
+          throw new SemanticException(ErrorMsg.NOT_AVAILABLE_IN_RANGE, col, range.toString(),
+              (column.getStartTime() == null ? "" : " from:" + column.getStartTime()), (column.getEndTime() == null
+                  ? "" : " upto:" + column.getEndTime()));
         }
       }
     }
@@ -196,7 +196,8 @@ class TimerangeResolver implements ContextRewriter {
       CubeColumn column = cubeql.getCube().getColumnByName(col);
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (isColumnLifeInvalid(column, range)) {
-          LOG.info("Timerange queried is not in column life for "+ column + ", Removing join paths containing the column");
+          LOG.info("Timerange queried is not in column life for " + column
+              + ", Removing join paths containing the column");
           // Remove join paths containing this column
           Map<Dimension, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
 
@@ -210,9 +211,8 @@ class TimerangeResolver implements ContextRewriter {
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
-                  throw new SemanticException(ErrorMsg.NO_JOIN_PATH,
-                    "No valid join path available for dimension " + dimension
-                      + " which would satisfy time range " + range.getFromDate() + "-" + range.getToDate());
+                  throw new SemanticException(ErrorMsg.NO_JOIN_PATH, "No valid join path available for dimension "
+                      + dimension + " which would satisfy time range " + range.getFromDate() + "-" + range.getToDate());
                 }
               }
             } // End loop to remove path
@@ -225,9 +225,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   private boolean isColumnLifeInvalid(CubeColumn column, TimeRange range) {
-    return (column.getStartTime() != null &&
-      column.getStartTime().after(range.getFromDate())) ||
-      (column.getEndTime() != null &&
-        column.getEndTime().before(range.getToDate()));
+    return (column.getStartTime() != null && column.getStartTime().after(range.getFromDate()))
+        || (column.getEndTime() != null && column.getEndTime().before(range.getToDate()));
   }
 }

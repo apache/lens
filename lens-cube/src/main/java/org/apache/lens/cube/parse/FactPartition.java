@@ -34,8 +34,7 @@ class FactPartition implements Comparable<FactPartition> {
   private final FactPartition containingPart;
   private final DateFormat partFormat;
 
-  FactPartition(String partCol, Date partSpec, UpdatePeriod period,
-      FactPartition containingPart, DateFormat partFormat) {
+  FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart, DateFormat partFormat) {
     this.partCol = partCol;
     this.partSpec = partSpec;
     this.period = period;
@@ -43,8 +42,8 @@ class FactPartition implements Comparable<FactPartition> {
     this.partFormat = partFormat;
   }
 
-  FactPartition(String partCol, Date partSpec, UpdatePeriod period,
-      FactPartition containingPart, DateFormat partFormat, Set<String> storageTables) {
+  FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart,
+      DateFormat partFormat, Set<String> storageTables) {
     this(partCol, partSpec, period, containingPart, partFormat);
     this.storageTables.addAll(storageTables);
   }
@@ -103,8 +102,8 @@ class FactPartition implements Comparable<FactPartition> {
   public String getFilter() {
     StringBuilder builder = new StringBuilder();
     if (containingPart != null) {
-        builder.append(containingPart.getFilter());
-        builder.append(" AND ");
+      builder.append(containingPart.getFilter());
+      builder.append(" AND ");
     }
     builder.append(partCol);
     builder.append(" = '").append(getPartString()).append("'");
@@ -124,8 +123,7 @@ class FactPartition implements Comparable<FactPartition> {
         if (o.partSpec == null) {
           partComp = 1;
         }
-        partComp = this.partSpec.compareTo(
-                o.partSpec);
+        partComp = this.partSpec.compareTo(o.partSpec);
       } else {
         if (o.partSpec != null) {
           partComp = -1;
@@ -149,8 +147,7 @@ class FactPartition implements Comparable<FactPartition> {
             if (o.containingPart == null) {
               return 1;
             }
-            return this.containingPart.compareTo(
-                    o.containingPart);
+            return this.containingPart.compareTo(o.containingPart);
           } else {
             if (o.containingPart != null) {
               return -1;

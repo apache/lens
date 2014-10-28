@@ -35,8 +35,7 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
  * Prune dimension tables having more weight than minimum
  */
 class LightestDimensionResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(
-      LightestDimensionResolver.class.getName());
+  public static final Log LOG = LogFactory.getLog(LightestDimensionResolver.class.getName());
 
   public LightestDimensionResolver(Configuration conf) {
   }
@@ -48,8 +47,7 @@ class LightestDimensionResolver implements ContextRewriter {
         if (entry.getValue().isEmpty()) {
           continue;
         }
-        Map<CandidateDim, Double> dimWeightMap =
-            new HashMap<CandidateDim, Double>();
+        Map<CandidateDim, Double> dimWeightMap = new HashMap<CandidateDim, Double>();
 
         for (CandidateDim dim : entry.getValue()) {
           dimWeightMap.put(dim, dim.dimtable.weight());
@@ -57,16 +55,13 @@ class LightestDimensionResolver implements ContextRewriter {
 
         double minWeight = Collections.min(dimWeightMap.values());
 
-        for (Iterator<CandidateDim> i =
-            entry.getValue().iterator(); i.hasNext();) {
+        for (Iterator<CandidateDim> i = entry.getValue().iterator(); i.hasNext();) {
           CandidateDim dim = i.next();
           if (dimWeightMap.get(dim) > minWeight) {
-            LOG.info("Not considering dimtable:" + dim +
-                " from candidate dimension tables as it has more weight:"
-                + dimWeightMap.get(dim) + " minimum:"
-                + minWeight);
-            cubeql.addDimPruningMsgs(entry.getKey(), dim.dimtable, new CandidateTablePruneCause(
-                dim.dimtable.getName(), CubeTableCause.MORE_WEIGHT));
+            LOG.info("Not considering dimtable:" + dim + " from candidate dimension tables as it has more weight:"
+                + dimWeightMap.get(dim) + " minimum:" + minWeight);
+            cubeql.addDimPruningMsgs(entry.getKey(), dim.dimtable, new CandidateTablePruneCause(dim.dimtable.getName(),
+                CubeTableCause.MORE_WEIGHT));
             i.remove();
           }
         }
