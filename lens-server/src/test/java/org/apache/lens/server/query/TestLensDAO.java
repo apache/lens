@@ -40,6 +40,7 @@ import java.util.List;
 /**
  * The Class TestLensDAO.
  */
+@Test(groups = "unit-test")
 public class TestLensDAO extends LensJerseyTest {
 
   /**

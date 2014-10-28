@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 /**
  * The Class TestServiceProvider.
  */
+@Test(groups = "unit-test")
 public class TestServiceProvider extends LensAllApplicationJerseyTest {
 
   /**

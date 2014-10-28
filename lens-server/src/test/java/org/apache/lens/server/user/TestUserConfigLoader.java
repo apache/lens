@@ -41,6 +41,7 @@ import java.util.HashMap;
 /**
  * The Class TestUserConfigLoader.
  */
+@Test(groups = "unit-test")
 public class TestUserConfigLoader {
 
   /** The conf. */
