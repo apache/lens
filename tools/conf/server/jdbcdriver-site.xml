@@ -35,7 +35,7 @@
     <value>SA</value>
   </property>
   <property>
-    <name>cube.query.driver.supported.storages</name>
+    <name>lens.cube.query.driver.supported.storages</name>
     <value>mydb</value>
   </property>
   <property>

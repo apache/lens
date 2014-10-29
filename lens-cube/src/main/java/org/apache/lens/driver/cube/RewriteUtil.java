@@ -32,6 +32,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -195,8 +196,8 @@ public class RewriteUtil {
   public static Configuration getFinalQueryConf(LensDriver driver, Configuration queryConf) {
     Configuration conf = new Configuration(driver.getConf());
     for (Map.Entry<String, String> entry : queryConf) {
-      if (entry.getKey().equals("cube.query.driver.supported.storages")) {
-        CubeDriver.LOG.warn("cube.query.driver.supported.storages value : " + entry.getValue()
+      if (entry.getKey().equals(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES)) {
+        CubeDriver.LOG.warn(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES + " value : " + entry.getValue()
             + " from query conf ignored/");
         continue;
       }
