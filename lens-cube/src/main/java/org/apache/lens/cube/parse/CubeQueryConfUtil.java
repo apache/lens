@@ -35,8 +35,6 @@ public class CubeQueryConfUtil {
   public static final String STORAGE_KEY_PFX = ".storage.";
   public static final String VALID_PFX = "lens.cube.query.valid.";
   public static final String VALID_FACT_PFX = VALID_PFX + "fact.";
-  public static final String TIMEDIM_TO_PART_MAPPING_PFX = "lens.cube.query.timedim.partition.";
-
   public static final String VALID_STORAGE_DIM_TABLES = "lens.cube.query.valid." + "dim.storgaetables";
   public static final String DRIVER_SUPPORTED_STORAGES = "lens.cube.query.driver." + "supported.storages";
   public static final String FAIL_QUERY_ON_PARTIAL_DATA = "lens.cube.query.fail.if.data.partial";

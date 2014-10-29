@@ -29,7 +29,6 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
 
 public class Cube extends AbstractBaseTable implements CubeInterface {
   private final Set<CubeMeasure> measures;
@@ -377,16 +376,16 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {
-    String partCol = getProperties().get(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + timeDimName);
+    String partCol = getProperties().get(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + timeDimName);
     return StringUtils.isNotBlank(partCol) ? partCol : timeDimName;
   }
 
   public String getTimeDimOfPartitionColumn(String partCol) {
     Map<String, String> properties = getProperties();
     for (Map.Entry<String, String> entry : properties.entrySet()) {
-      if (entry.getKey().startsWith(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX)
+      if (entry.getKey().startsWith(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX)
           && entry.getValue().equalsIgnoreCase(partCol)) {
-        String timeDim = entry.getKey().replace(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX, "");
+        String timeDim = entry.getKey().replace(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX, "");
         return timeDim;
       }
     }
