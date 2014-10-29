@@ -86,4 +86,5 @@ public interface MetastoreConstants {
   public static final String LATEST_PART_TIMESTAMP_SFX = ".latest.part.timestamp";
   public static final String PARTITION_UPDATE_PERIOD_SFX = ".partition.update.period";
   public static final String PARTITION_UPDATE_PERIOD = "cube.storagetable.partition.update.period";
+  public static final String TIMEDIM_TO_PART_MAPPING_PFX = "cube.timedim.partition.";
 }

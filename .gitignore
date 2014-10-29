@@ -7,7 +7,7 @@ query_logs/
 *.swp
 *.out
 *.log
-
+.checkstyle
 # Eclipse
 .classpath
 .project
