@@ -75,7 +75,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   @Override
   public void addProperties() {
     super.addProperties();
-    getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getExpressionListKey(getName()), expressions);
     setExpressionProperties(getProperties(), expressions);
   }
 
@@ -87,7 +87,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
   private static Set<ExprColumn> getExpressions(String name, Map<String, String> props) {
     Set<ExprColumn> exprs = new HashSet<ExprColumn>();
-    String exprStr = props.get(MetastoreUtil.getExpressionListKey(name));
+    String exprStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getExpressionListKey(name));
     if (!StringUtils.isBlank(exprStr)) {
       String[] names = exprStr.split(",");
       for (String exprName : names) {
@@ -142,7 +142,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
     expressions.add(expr);
     exprMap.put(expr.getName().toLowerCase(), expr);
-    getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getExpressionListKey(getName()), expressions);
     expr.addProperties(getProperties());
   }
 
@@ -156,7 +156,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
       LOG.info("Removing expression " + getExpressionByName(exprName));
       expressions.remove(getExpressionByName(exprName));
       exprMap.remove(exprName.toLowerCase());
-      getProperties().put(MetastoreUtil.getExpressionListKey(getName()), MetastoreUtil.getNamedStr(expressions));
+      MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getExpressionListKey(getName()), expressions);
     }
   }
 

@@ -117,9 +117,9 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   @Override
   public void addProperties() {
     super.addProperties();
-    getProperties().put(MetastoreUtil.getCubeMeasureListKey(getName()), MetastoreUtil.getNamedStr(measures));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeMeasureListKey(getName()), measures);
     setMeasureProperties(getProperties(), measures);
-    getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()), MetastoreUtil.getNamedStr(dimensions));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeDimensionListKey(getName()), dimensions);
     setDimensionProperties(getProperties(), dimensions);
   }
 
@@ -137,7 +137,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
 
   public static Set<CubeMeasure> getMeasures(String name, Map<String, String> props) {
     Set<CubeMeasure> measures = new HashSet<CubeMeasure>();
-    String measureStr = props.get(MetastoreUtil.getCubeMeasureListKey(name));
+    String measureStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getCubeMeasureListKey(name));
     String[] names = measureStr.split(",");
     for (String measureName : names) {
       String className = props.get(MetastoreUtil.getMeasureClassPropertyKey(measureName));
@@ -157,7 +157,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
 
   public static Set<CubeDimAttribute> getDimensions(String name, Map<String, String> props) {
     Set<CubeDimAttribute> dimensions = new HashSet<CubeDimAttribute>();
-    String dimStr = props.get(MetastoreUtil.getCubeDimensionListKey(name));
+    String dimStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getCubeDimensionListKey(name));
     String[] names = dimStr.split(",");
     for (String dimName : names) {
       String className = props.get(MetastoreUtil.getDimensionClassPropertyKey(dimName));
@@ -236,7 +236,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
 
     measures.add(measure);
     measureMap.put(measure.getName().toLowerCase(), measure);
-    getProperties().put(MetastoreUtil.getCubeMeasureListKey(getName()), MetastoreUtil.getNamedStr(measures));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeMeasureListKey(getName()), measures);
     measure.addProperties(getProperties());
   }
 
@@ -260,7 +260,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
 
     dimensions.add(dimension);
     dimMap.put(dimension.getName().toLowerCase(), dimension);
-    getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()), MetastoreUtil.getNamedStr(dimensions));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeDimensionListKey(getName()), dimensions);
     dimension.addProperties(getProperties());
   }
 
@@ -274,7 +274,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
       LOG.info("Removing dimension " + getDimAttributeByName(dimName));
       dimensions.remove(getDimAttributeByName(dimName));
       dimMap.remove(dimName.toLowerCase());
-      getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()), MetastoreUtil.getNamedStr(dimensions));
+      MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeDimensionListKey(getName()), dimensions);
     }
   }
 
@@ -288,7 +288,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
       LOG.info("Removing measure " + getMeasureByName(msrName));
       measures.remove(getMeasureByName(msrName));
       measureMap.remove(msrName.toLowerCase());
-      getProperties().put(MetastoreUtil.getCubeMeasureListKey(getName()), MetastoreUtil.getNamedStr(measures));
+      MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeMeasureListKey(getName()), measures);
     }
   }
 

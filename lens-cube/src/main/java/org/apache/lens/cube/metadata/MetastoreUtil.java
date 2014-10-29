@@ -19,10 +19,12 @@
 
 package org.apache.lens.cube.metadata;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -284,6 +286,55 @@ public class MetastoreUtil implements MetastoreConstants {
       valueStr.append(",");
     }
     valueStr.append(it.next().getName());
+    return valueStr.toString();
+  }
+
+  static <E extends Named> List<String> getNamedStrs(Collection<E> set, int maxLength) {
+    List<String> namedStrings = new ArrayList<String>();
+    if (set == null || set.isEmpty()) {
+      return namedStrings;
+    }
+    StringBuilder valueStr = new StringBuilder();
+    Iterator<E> it = set.iterator();
+    for (int i = 0; i < (set.size() - 1); i++) {
+      E next = it.next();
+      if (valueStr.length() + next.getName().length() >= maxLength) {
+        namedStrings.add(valueStr.toString());
+        valueStr.setLength(0);
+      }
+      valueStr.append(next.getName());
+      valueStr.append(",");
+    }
+    E next = it.next();
+    if (valueStr.length() + next.getName().length() >= maxLength) {
+      namedStrings.add(valueStr.toString());
+      valueStr.setLength(0);
+    }
+    valueStr.append(next.getName());
+    namedStrings.add(valueStr.toString());
+    return namedStrings;
+  }
+
+  private static int maxParamLength = 3999;
+
+  public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
+    addNameStrings(props, key, set, maxParamLength);
+  }
+
+  static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set, int maxLength) {
+    List<String> namedStrings = getNamedStrs(set, maxLength);
+    props.put(key + ".size", String.valueOf(namedStrings.size()));
+    for (int i = 0; i < namedStrings.size(); i++) {
+      props.put(key + i, namedStrings.get(i));
+    }
+  }
+
+  public static String getNamedStringValue(Map<String, String> props, String key) {
+    int size = Integer.parseInt(props.get(key + ".size"));
+    StringBuilder valueStr = new StringBuilder();
+    for (int i = 0; i < size; i++) {
+      valueStr.append(props.get(key + i));
+    }
     return valueStr.toString();
   }
 
