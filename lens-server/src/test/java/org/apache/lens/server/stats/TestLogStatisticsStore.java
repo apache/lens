@@ -34,6 +34,7 @@ import java.io.StringWriter;
 /**
  * The Class TestLogStatisticsStore.
  */
+@Test(groups = "unit-test")
 public class TestLogStatisticsStore {
 
   /**

@@ -41,6 +41,7 @@ import java.util.HashMap;
 /**
  * The Class TestUserConfigLoader.
  */
+@Test(groups = "unit-test")
 public class TestUserConfigLoader {
 
   /** The conf. */
@@ -122,7 +123,7 @@ public class TestUserConfigLoader {
    * @throws LiquibaseException
    *           the liquibase exception
    */
-  public void setupHsqlDb(String dbName, String path, String changeLogPath) throws SQLException, LiquibaseException {
+  private void setupHsqlDb(String dbName, String path, String changeLogPath) throws SQLException, LiquibaseException {
     Server server = new Server();
     server.setLogWriter(new PrintWriter(System.out));
     server.setErrWriter(new PrintWriter(System.out));

@@ -38,6 +38,7 @@ import java.util.List;
 /**
  * The Class TestStatisticsLogFileScannerTask.
  */
+@Test(groups = "unit-test")
 public class TestStatisticsLogFileScannerTask {
 
   /** The f. */

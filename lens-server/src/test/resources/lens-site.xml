@@ -65,8 +65,8 @@
 
 
 <property>
-  <name>lens.query.whether.mail.notify</name>
-  <value>true</value>
+  <name>lens.query.enable.mail.notify</name>
+  <value>false</value>
   <description>When a query ends, whether to notify the submitter by mail or not.</description>
 </property>
 

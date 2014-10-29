@@ -235,7 +235,7 @@
         <property name="checkFormat" value="ParameterNumberCheck|VisibilityModifierCheck|HiddenFieldCheck|MethodName"/>
     </module>
 
-    <module name="SuppressionFilter">
+    <!--module name="SuppressionFilter">
       <property name="file" value="checkstyle/src/main/resources/suppressions.xml"/>
-    </module>
+    </module-->
 </module>

@@ -35,7 +35,7 @@
 
 <property>
   <name>lens.server.enable.console.metrics</name>
-  <value>true</value>
+  <value>false</value>
   <description>Enable metrics to be reported on console</description>
 </property>
 
