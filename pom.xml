@@ -253,6 +253,7 @@
              <exclude>**/logs/**</exclude>
              <exclude>**/.classpath</exclude>
              <exclude>**/.project</exclude>
+             <exclude>**/.checkstyle</exclude>
              <exclude>**/.settings/**</exclude>
              <exclude>**/test-output/**</exclude>
              <exclude>**/maven-eclipse.xml</exclude>
