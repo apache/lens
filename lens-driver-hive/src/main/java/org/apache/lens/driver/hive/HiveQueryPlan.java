@@ -104,8 +104,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
     partitions = new LinkedHashMap<String, List<String>>();
-    extractPlanDetails(explainOutput, metastoreConf);
     this.explainOutput = StringUtils.join(explainOutput, '\n');
+    extractPlanDetails(explainOutput, metastoreConf);
   }
 
   /**
@@ -143,8 +143,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
         }
         break;
       case TABLE_SCAN:
-        if (tr.startsWith("alias:")) {
-          String tableName = tr.replace("alias:", "").trim();
+        if (tr.startsWith("name:")) {
+          String tableName = tr.replace("name:", "").trim();
           tablesQueried.add(tableName);
           Table tbl = metastore.getTable(tableName);
           String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);

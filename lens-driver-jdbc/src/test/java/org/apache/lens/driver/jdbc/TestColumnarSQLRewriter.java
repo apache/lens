@@ -610,7 +610,7 @@ public class TestColumnarSQLRewriter {
 
     // Rewrite
     CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -639,7 +639,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -656,7 +656,7 @@ public class TestColumnarSQLRewriter {
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal();
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, CubeMetastoreClient.getInstance(conf));
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
