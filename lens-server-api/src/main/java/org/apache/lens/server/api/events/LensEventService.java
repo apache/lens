@@ -35,6 +35,8 @@ public interface LensEventService {
    *
    * @param listener
    *          the listener
+   *
+   * @deprecated
    */
   public void addListener(LensEventListener listener);
 

@@ -208,7 +208,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    */
   private void initializeQueryAcceptorsAndListeners() {
     if (conf.getBoolean(LensConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
-      getEventService().addListener(new QueryStatusLogger());
+      getEventService().addListenerForType(new QueryStatusLogger(), StatusChange.class);
       LOG.info("Registered query state logger");
     }
     // Add result formatter
