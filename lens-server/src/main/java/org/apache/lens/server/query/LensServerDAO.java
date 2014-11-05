@@ -96,7 +96,7 @@ public class LensServerDAO {
    */
   public void createFinishedQueriesTable() throws Exception {
     String sql = "CREATE TABLE if not exists finished_queries (handle varchar(255) not null unique,"
-        + "userquery varchar(255) not null," + "submitter varchar(255) not null," + "starttime bigint, "
+        + "userquery varchar(10000) not null," + "submitter varchar(255) not null," + "starttime bigint, "
         + "endtime bigint," + "result varchar(255)," + "status varchar(255), " + "metadata varchar(100000), "
         + "rows int, " + "errormessage varchar(10000), " + "driverstarttime bigint, " + "driverendtime bigint, "
         + "metadataclass varchar(10000)," + "queryname varchar(255)," + "submissiontime bigint" + ")";
