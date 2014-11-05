@@ -31,16 +31,6 @@ public interface LensEventService {
   public static final String NAME = "event";
 
   /**
-   * Add a listener interested in a specific type of event. The type is deduced from the argument type of handler method
-   *
-   * @param listener
-   *          the listener
-   *
-   * @deprecated
-   */
-  public void addListener(LensEventListener listener);
-
-  /**
    * Add a listener for the given event type. Use this method to register if the same class is expected to receive
    * events of different types
    *
