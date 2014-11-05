@@ -201,13 +201,13 @@ public class TestEventService {
   public void testAddListener() {
     int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
     genericEventListener = new GenericEventListener();
-    service.addListener(genericEventListener);
+    service.addListenerForType(genericEventListener, LensEvent.class);
     endedListener = new MockEndedListener();
-    service.addListener(endedListener);
+    service.addListenerForType(endedListener, QueryEnded.class);
     failedListener = new MockFailedListener();
-    service.addListener(failedListener);
+    service.addListenerForType(failedListener, QueryFailed.class);
     queuePositionChangeListener = new MockQueuePositionChange();
-    service.addListener(queuePositionChangeListener);
+    service.addListenerForType(queuePositionChangeListener, QueuePositionChange.class);
 
     assertTrue(service.getListeners(LensEvent.class).contains(genericEventListener));
     assertTrue(service.getListeners(QueryFailed.class).contains(failedListener));
@@ -221,7 +221,7 @@ public class TestEventService {
   @Test
   public void testRemoveListener() {
     MockFailedListener toRemove = new MockFailedListener();
-    service.addListener(toRemove);
+    service.addListenerForType(toRemove, QueryFailed.class);
     assertEquals(service.getListeners(QueryFailed.class).size(), 2);
     service.removeListener(toRemove);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
