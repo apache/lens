@@ -30,8 +30,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.Database;
-import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
 import org.apache.lens.api.LensException;
@@ -46,9 +44,7 @@ import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 /**
@@ -80,14 +76,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @BeforeClass
   public static void setupTest() throws Exception {
     createHS2Service();
-
-    SessionState ss = new SessionState(remoteConf, "testuser");
-    SessionState.start(ss);
-    Hive client = Hive.get(remoteConf);
-    Database database = new Database();
-    database.setName(TestRemoteHiveDriver.class.getSimpleName());
-    client.createDatabase(database, true);
-    SessionState.get().setCurrentDatabase(TestRemoteHiveDriver.class.getSimpleName());
   }
 
   /**
@@ -123,7 +111,6 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @AfterClass
   public static void cleanupTest() throws Exception {
     stopHS2Service();
-    Hive.get(remoteConf).dropDatabase(TestRemoteHiveDriver.class.getSimpleName(), true, true, true);
   }
 
   /**
@@ -140,39 +127,13 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.driver.hive.TestHiveDriver#beforeTest()
-   */
-  @BeforeMethod
-  @Override
-  public void beforeTest() throws Exception {
+  protected void createDriver() throws LensException {
+    DATA_BASE = TestRemoteHiveDriver.class.getSimpleName().toLowerCase();
     conf = new HiveConf(remoteConf);
     conf.addResource("hivedriver-site.xml");
-    // Check if hadoop property set
-    System.out.println("###HADOOP_PATH " + System.getProperty("hadoop.bin.path"));
-    Assert.assertNotNull(System.getProperty("hadoop.bin.path"));
     driver = new HiveDriver();
     driver.configure(conf);
-    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    driver.execute(new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf));
-    conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
-    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    Assert.assertEquals(0, driver.getHiveHandleSize());
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.driver.hive.TestHiveDriver#afterTest()
-   */
-  @AfterMethod
-  @Override
-  public void afterTest() throws Exception {
-    LOG.info("Test finished, closing driver");
-    driver.close();
+    System.out.println("TestRemoteHiveDriver created");
   }
 
   /**
@@ -190,7 +151,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     thConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
-    QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, conf);
+    QueryContext ctx = createContext("USE " + DATA_BASE, conf);
     thrDriver.execute(ctx);
 
     // Launch a select query
@@ -203,7 +164,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     for (int q = 0; q < QUERIES; q++) {
       final QueryContext qctx;
       try {
-        qctx = new QueryContext("SELECT * FROM test_multithreads", null, conf);
+        qctx = createContext("SELECT * FROM test_multithreads", conf);
         thrDriver.executeAsync(qctx);
       } catch (LensException e) {
         errCount.incrementAndGet();
@@ -270,7 +231,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   @Test
   public void testHiveDriverPersistence() throws Exception {
     System.out.println("@@@@ start_persistence_test");
-    HiveConf driverConf = new HiveConf(conf, TestRemoteHiveDriver.class);
+    HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
+    driverConf.addResource("hivedriver-site.xml");
     driverConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
 
     final HiveDriver oldDriver = new HiveDriver();
@@ -278,7 +240,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    QueryContext ctx = new QueryContext("USE " + TestRemoteHiveDriver.class.getSimpleName(), null, driverConf);
+    QueryContext ctx = createContext("USE " + DATA_BASE, driverConf);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
 
@@ -286,20 +248,20 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Create some ops with a driver
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + "(ID STRING)";
-    ctx = new QueryContext(createTable, null, driverConf);
+    ctx = createContext(createTable, driverConf);
     oldDriver.execute(ctx);
 
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '" + TEST_DATA_FILE + "' OVERWRITE INTO TABLE " + tableName;
-    ctx = new QueryContext(dataLoad, null, driverConf);
+    ctx = createContext(dataLoad, driverConf);
     oldDriver.execute(ctx);
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     // Fire two queries
-    QueryContext ctx1 = new QueryContext("SELECT * FROM " + tableName, null, driverConf);
+    QueryContext ctx1 = createContext("SELECT * FROM " + tableName, driverConf);
     oldDriver.executeAsync(ctx1);
-    QueryContext ctx2 = new QueryContext("SELECT ID FROM " + tableName, null, driverConf);
+    QueryContext ctx2 = createContext("SELECT ID FROM " + tableName, driverConf);
     oldDriver.executeAsync(ctx2);
     Assert.assertEquals(2, oldDriver.getHiveHandleSize());
 
@@ -404,8 +366,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
 
-    QueryContext ctx = new QueryContext("CREATE EXTERNAL TABLE IF NOT EXISTS " + tableName
-        + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", null, conf);
+    QueryContext ctx = createContext("CREATE EXTERNAL TABLE IF NOT EXISTS " + tableName
+        + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", conf);
 
     driver.execute(ctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -426,8 +388,8 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       FileUtils.writeLines(data, Arrays.asList("one", "two", "three", "four", "five"));
 
       System.out.println("@@ Adding partition " + i);
-      QueryContext partCtx = new QueryContext("ALTER TABLE " + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i
-          + "', ET='1') LOCATION '" + partDir.getPath() + "'", null, conf);
+      QueryContext partCtx = createContext("ALTER TABLE " + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i
+          + "', ET='1') LOCATION '" + partDir.getPath() + "'", conf);
       driver.execute(partCtx);
     }
   }
@@ -450,6 +412,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
         + "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' "
         + "AND table_1.ET='1'";
 
+    SessionState.setCurrentSessionState(ss);
     DriverQueryPlan plan = driver.explain(explainQuery, conf);
 
     Assert.assertEquals(0, driver.getHiveHandleSize());

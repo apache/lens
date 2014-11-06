@@ -94,7 +94,8 @@ public class HiveDriver implements LensDriver {
 
   // connections need to be separate for each user and each thread
   /** The thread connections. */
-  private final Map<String, Map<Long, ExpirableConnection>> threadConnections = new HashMap<String, Map<Long, ExpirableConnection>>();
+  private final Map<String, Map<Long, ExpirableConnection>> threadConnections =
+      new HashMap<String, Map<Long, ExpirableConnection>>();
 
   /** The thrift conn expiry queue. */
   private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = new DelayQueue<ExpirableConnection>();
@@ -274,7 +275,6 @@ public class HiveDriver implements LensDriver {
   @Override
   public void configure(Configuration conf) throws LensException {
     this.driverConf = new HiveConf(conf, HiveDriver.class);
-    ;
     this.driverConf.addResource("hivedriver-default.xml");
     this.driverConf.addResource("hivedriver-site.xml");
     connectionClass = this.driverConf.getClass(HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class,
@@ -294,7 +294,7 @@ public class HiveDriver implements LensDriver {
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     String explainQuery = "EXPLAIN EXTENDED " + query;
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, SessionState.get().getUserName(), explainConf);
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();

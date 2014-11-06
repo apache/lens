@@ -143,18 +143,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
         }
         break;
       case TABLE_SCAN:
-        if (tr.startsWith("name:")) {
-          String tableName = tr.replace("name:", "").trim();
-          tablesQueried.add(tableName);
-          Table tbl = metastore.getTable(tableName);
-          String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
-
-          Double weight = 1d;
-          if (costStr != null) {
-            weight = Double.parseDouble(costStr);
-          }
-          tableWeights.put(tableName, weight);
-        }
+        // no op
         break;
       case JOIN:
         if (tr.equals("condition map:")) {
@@ -177,37 +166,49 @@ public class HiveQueryPlan extends DriverQueryPlan {
         }
         break;
       case PARTITION:
-        if (tr.equals("partition values:")) {
-          i++;
-          List<String> partVals = new ArrayList<String>();
-          // Look ahead until we reach partition properties
-          String lineAhead = null;
-          for (; i < explainOutput.size(); i++) {
-            if (explainOutput.get(i).trim().equals("properties:")) {
-              break;
+        String partConditionStr = null;
+        for (; i < explainOutput.size(); i++) {
+          if (explainOutput.get(i).trim().equals("partition values:")) {
+            List<String> partVals = new ArrayList<String>();
+            // Look ahead until we reach partition properties
+            String lineAhead = null;
+            for (; i < explainOutput.size(); i++) {
+              if (explainOutput.get(i).trim().equals("properties:")) {
+                break;
+              }
+              lineAhead = explainOutput.get(i).trim();
+              partVals.add(lineAhead);
             }
-            lineAhead = explainOutput.get(i).trim();
-            partVals.add(lineAhead);
+
+            partConditionStr = StringUtils.join(partVals, ";");
           }
-
-          String partConditionStr = StringUtils.join(partVals, ";");
-
           // Now seek table name
-          for (; i < explainOutput.size(); i++) {
-            if (explainOutput.get(i).trim().startsWith("name:")) {
-              String table = explainOutput.get(i).trim().substring("name:".length()).trim();
+          if (explainOutput.get(i).trim().startsWith("name:")) {
+            String table = explainOutput.get(i).trim().substring("name:".length()).trim();
+            // update tables queried and weights
+            if (!tablesQueried.contains(table)) {
+              tablesQueried.add(table);
+              Table tbl = metastore.getTable(table);
+              String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
+
+              Double weight = 1d;
+              if (costStr != null) {
+                weight = Double.parseDouble(costStr);
+              }
+              tableWeights.put(table, weight);
+            }
+
+            if (partConditionStr != null) {
               List<String> tablePartitions = partitions.get(table);
               if (tablePartitions == null) {
                 tablePartitions = new ArrayList<String>();
                 partitions.put(table, tablePartitions);
               }
               tablePartitions.add(partConditionStr);
-
-              break;
             }
+            break;
           }
         }
-
         break;
       }
     }
