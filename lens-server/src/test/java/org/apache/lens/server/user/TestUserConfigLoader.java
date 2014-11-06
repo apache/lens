@@ -18,11 +18,18 @@
  */
 package org.apache.lens.server.user;
 
+import java.io.PrintWriter;
+import java.sql.SQLException;
+import java.util.HashMap;
+
 import liquibase.Liquibase;
 import liquibase.database.jvm.HsqlConnection;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.FileSystemResourceAccessor;
+
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.LensServerConf;
@@ -34,15 +41,12 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import java.io.PrintWriter;
-import java.sql.SQLException;
-import java.util.HashMap;
-
 /**
  * The Class TestUserConfigLoader.
  */
 @Test(groups = "unit-test")
 public class TestUserConfigLoader {
+  public static final Log LOG = LogFactory.getLog(TestUserConfigLoader.class);
 
   /** The conf. */
   private HiveConf conf;
@@ -53,7 +57,7 @@ public class TestUserConfigLoader {
   @BeforeTest(alwaysRun = true)
   public void init() {
     LensServerConf.conf = null;
-    conf = LensServerConf.get();
+    conf = new HiveConf(LensServerConf.get());
   }
 
   /**
@@ -132,9 +136,9 @@ public class TestUserConfigLoader {
     server.setDatabasePath(0, "file:" + path);
     server.start();
     BasicDataSource ds = UtilityMethods.getDataSourceFromConf(conf);
+
     Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
         new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
-    liquibase.dropAll();
     liquibase.update("");
   }
 

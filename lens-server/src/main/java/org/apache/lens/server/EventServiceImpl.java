@@ -18,6 +18,15 @@
  */
 package org.apache.lens.server;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -28,13 +37,8 @@ import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 /**
- * The Class EventServiceImpl.
+ * Implementation of LensEventService
  */
 public class EventServiceImpl extends AbstractService implements LensEventService {
 
@@ -68,44 +72,6 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
     eventHandlerPool = Executors.newFixedThreadPool(hiveConf.getInt(LensConfConstants.EVENT_SERVICE_THREAD_POOL_SIZE,
         numProcs));
     super.init(hiveConf);
-  }
-
-  /**
-   * Gets the listener type.
-   *
-   * @param listener
-   *          the listener
-   * @return the listener type
-   */
-  @SuppressWarnings("unchecked")
-  protected final Class<? extends LensEvent> getListenerType(LensEventListener listener) {
-    for (Method m : listener.getClass().getMethods()) {
-      if (LensEventListener.HANDLER_METHOD_NAME.equals(m.getName())) {
-        // Found handler method
-        return (Class<? extends LensEvent>) m.getParameterTypes()[0];
-      }
-    }
-    return null;
-  }
-
-  /*
-   * (non-Javadoc)
-   * 
-   * @see
-   * org.apache.lens.server.api.events.LensEventService#addListener(org.apache.lens.server.api.events.LensEventListener)
-   */
-  @Override
-  public void addListener(LensEventListener listener) {
-    Class<? extends LensEvent> listenerEventType = getListenerType(listener);
-    synchronized (eventListeners) {
-      List<LensEventListener> listeners = eventListeners.get(listenerEventType);
-      if (listeners == null) {
-        listeners = new ArrayList<LensEventListener>();
-        eventListeners.put(listenerEventType, listeners);
-      }
-      listeners.add(listener);
-    }
-    LOG.info("Added listener " + listener);
   }
 
   /*

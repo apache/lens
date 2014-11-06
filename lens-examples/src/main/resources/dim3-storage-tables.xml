@@ -30,7 +30,7 @@
         table_location="/tmp/db-storage.db"
         storage_handler_name="org.apache.lens.storage.db.DBStorageHandler">
       <table_parameters>
-          <properties name="lens.native.db.name" value="default" />
+          <properties name="lens.metastore.native.db.name" value="default" />
       </table_parameters>
       <serde_parameters/>
       <part_cols>

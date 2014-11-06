@@ -18,26 +18,37 @@
  */
 package org.apache.lens.server.query;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
+
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.events.*;
+import org.apache.lens.server.api.events.AsyncEventListener;
+import org.apache.lens.server.api.events.LensEvent;
+import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.query.QueryAccepted;
 import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.api.query.QueryFailed;
 import org.apache.lens.server.api.query.QuerySuccess;
 import org.apache.lens.server.api.query.QueuePositionChange;
+import org.apache.lens.server.api.query.StatusChange;
+import org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger;
+import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 import org.apache.log4j.Logger;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
-import static org.testng.Assert.*;
 
 /**
  * The Class TestEventService.
@@ -190,13 +201,13 @@ public class TestEventService {
   public void testAddListener() {
     int listenersBefore = ((EventServiceImpl) service).getEventListeners().keySet().size();
     genericEventListener = new GenericEventListener();
-    service.addListener(genericEventListener);
+    service.addListenerForType(genericEventListener, LensEvent.class);
     endedListener = new MockEndedListener();
-    service.addListener(endedListener);
+    service.addListenerForType(endedListener, QueryEnded.class);
     failedListener = new MockFailedListener();
-    service.addListener(failedListener);
+    service.addListenerForType(failedListener, QueryFailed.class);
     queuePositionChangeListener = new MockQueuePositionChange();
-    service.addListener(queuePositionChangeListener);
+    service.addListenerForType(queuePositionChangeListener, QueuePositionChange.class);
 
     assertTrue(service.getListeners(LensEvent.class).contains(genericEventListener));
     assertTrue(service.getListeners(QueryFailed.class).contains(failedListener));
@@ -210,7 +221,7 @@ public class TestEventService {
   @Test
   public void testRemoveListener() {
     MockFailedListener toRemove = new MockFailedListener();
-    service.addListener(toRemove);
+    service.addListenerForType(toRemove, QueryFailed.class);
     assertEquals(service.getListeners(QueryFailed.class).size(), 2);
     service.removeListener(toRemove);
     assertEquals(service.getListeners(QueryFailed.class).size(), 1);
@@ -291,4 +302,35 @@ public class TestEventService {
       fail(e.getMessage());
     }
   }
+
+  @Test
+  public void testQueryStausLogger() throws Exception {
+    System.out.println("@@@ testQueryStatusLogger");
+    QueryStatusLogger logger = new QueryStatusLogger();
+    service.addListenerForType(logger, StatusChange.class);
+
+    // Catch all listener just to make sure that the query accepted and
+    // query exec stat events get through
+    final CountDownLatch latch = new CountDownLatch(2);
+    service.addListenerForType(new LensEventListener<LensEvent>() {
+      @Override
+      public void onEvent(LensEvent event) throws LensException {
+        System.out.println("@@@@ Got Event: Type= " + event.getClass().getName() + " obj = " + event);
+        latch.countDown();
+      }
+    }, LensEvent.class);
+
+    QueryHandle queryHandle = new QueryHandle(UUID.randomUUID());
+    QueryAccepted queryAccepted = new QueryAccepted(System.currentTimeMillis(), "beforeAccept", "afterAccept",
+        queryHandle);
+
+    QueryExecutionStatistics queryExecStats = new QueryExecutionStatistics(System.currentTimeMillis());
+
+    service.notifyEvent(queryAccepted);
+    service.notifyEvent(queryExecStats);
+
+    latch.await();
+
+  }
+
 }
