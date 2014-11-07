@@ -104,7 +104,6 @@ public class TestCubeMetastoreClient {
   @BeforeClass
   public static void setup() throws HiveException, AlreadyExistsException, ParseException {
     SessionState.start(conf);
-    client = CubeMetastoreClient.getInstance(conf);
     now = new Date();
     Calendar cal = Calendar.getInstance();
     cal.add(Calendar.HOUR_OF_DAY, 1);
@@ -112,7 +111,8 @@ public class TestCubeMetastoreClient {
     Database database = new Database();
     database.setName(TestCubeMetastoreClient.class.getSimpleName());
     Hive.get(conf).createDatabase(database);
-    client.setCurrentDatabase(TestCubeMetastoreClient.class.getSimpleName());
+    SessionState.get().setCurrentDatabase(TestCubeMetastoreClient.class.getSimpleName());
+    client = CubeMetastoreClient.getInstance(conf);
     defineCube(cubeName, cubeNameWithProps, derivedCubeName, derivedCubeNameWithProps);
     defineUberDims();
   }
@@ -395,7 +395,6 @@ public class TestCubeMetastoreClient {
 
   @Test(priority = 1)
   public void testCube() throws Exception {
-    Assert.assertEquals(client.getCurrentDatabase(), this.getClass().getSimpleName());
     client.createCube(cubeName, cubeMeasures, cubeDimensions, cubeExpressions, new HashMap<String, String>());
     Assert.assertTrue(client.tableExists(cubeName));
     Table cubeTbl = client.getHiveTable(cubeName);

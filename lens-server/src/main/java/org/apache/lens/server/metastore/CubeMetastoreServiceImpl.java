@@ -677,7 +677,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public void addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName, XPartition partition) throws LensException {
+  public void addPartitionToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+      XPartition partition) throws LensException {
     try {
       acquire(sessionid);
       CubeFactTable factTable = checkFactStorage(sessionid, fact, storageName);
