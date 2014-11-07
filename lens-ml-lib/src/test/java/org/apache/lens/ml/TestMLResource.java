@@ -20,9 +20,12 @@ package org.apache.lens.ml;
 
 import java.io.File;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -30,7 +33,10 @@ import javax.ws.rs.core.Application;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hive.service.Service;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.client.LensConnectionParams;
@@ -54,7 +60,6 @@ import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.SessionResource;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
@@ -201,6 +206,44 @@ public class TestMLResource extends LensJerseyTest {
     LOG.info("Created task " + task.toString());
     task.run();
     Assert.assertEquals(task.getTaskState(), MLTask.State.SUCCESSFUL);
+
+    String firstModelID = task.getModelID();
+    String firstReportID = task.getReportID();
+    Assert.assertNotNull(firstReportID);
+    Assert.assertNotNull(firstModelID);
+
+    taskBuilder = new MLTask.Builder();
+    taskBuilder.algorithm(algoName).hiveConf(conf).labelColumn(labelColumn).outputTable(outputTable)
+        .serverLocation(getBaseUri().toString()).sessionHandle(mlClient.getSessionHandle()).trainingTable(tableName)
+        .userName("foo@localhost").password("bar");
+    taskBuilder.addFeatureColumn("feature_1").addFeatureColumn("feature_2").addFeatureColumn("feature_3");
+
+    MLTask anotherTask = taskBuilder.build();
+
+    LOG.info("Created second task " + anotherTask.toString());
+    anotherTask.run();
+
+    String secondModelID = anotherTask.getModelID();
+    String secondReportID = anotherTask.getReportID();
+    Assert.assertNotNull(secondModelID);
+    Assert.assertNotNull(secondReportID);
+
+    Hive metastoreClient = Hive.get(conf);
+    Table outputHiveTable = metastoreClient.getTable(outputTable);
+    List<Partition> partitions = metastoreClient.getPartitions(outputHiveTable);
+
+    Assert.assertNotNull(partitions);
+
+    int i = 0;
+    Set<String> partReports = new HashSet<String>();
+    for (Partition part : partitions) {
+      LOG.info("@@PART#" + i + " " + part.getSpec().toString());
+      partReports.add(part.getSpec().get("part_testid"));
+    }
+
+    // Verify partitions created for each run
+    Assert.assertTrue(partReports.contains(firstReportID), firstReportID + "  first partition not there");
+    Assert.assertTrue(partReports.contains(secondReportID), secondReportID + " second partition not there");
 
     LOG.info("Completed task run");
 

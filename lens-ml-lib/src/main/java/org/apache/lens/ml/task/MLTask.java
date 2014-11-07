@@ -127,6 +127,12 @@ public class MLTask implements Runnable {
   @Getter
   public String password;
 
+  @Getter
+  private String modelID;
+
+  @Getter
+  private String reportID;
+
   /**
    * Use ExampleTask.Builder to create an instance
    */
@@ -254,11 +260,12 @@ public class MLTask implements Runnable {
     String trainerArgs[] = buildTrainingArgs();
     LOG.info("Starting task " + taskID + " trainer args: " + Arrays.toString(trainerArgs));
 
-    String modelID = ml.train(trainingTable, algorithm, trainerArgs);
+    modelID = ml.train(trainingTable, algorithm, trainerArgs);
     printModelMetadata(taskID, modelID);
 
     LOG.info("Starting test " + taskID);
     MLTestReport testReport = ml.testModel(sessionHandle, trainingTable, algorithm, modelID, outputTable);
+    reportID = testReport.getReportID();
     printTestReport(taskID, testReport);
     saveTask();
   }
