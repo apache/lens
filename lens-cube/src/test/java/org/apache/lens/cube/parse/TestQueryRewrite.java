@@ -42,7 +42,7 @@ public abstract class TestQueryRewrite {
 
   @AfterSuite
   public static void tearDown() throws Exception {
-    setup.dropSources(hconf);
+    setup.dropSources(hconf, TestQueryRewrite.class.getSimpleName());
   }
 
   @BeforeClass

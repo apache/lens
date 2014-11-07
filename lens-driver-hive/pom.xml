@@ -50,6 +50,9 @@
                     <environmentVariables>
                         <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
                     </environmentVariables>
+                    <suiteXmlFiles>
+                       <suiteXmlFile>testng.xml</suiteXmlFile>
+                     </suiteXmlFiles>
                 </configuration>
             </plugin>
             <plugin>

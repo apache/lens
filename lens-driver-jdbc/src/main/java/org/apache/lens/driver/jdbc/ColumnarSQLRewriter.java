@@ -21,6 +21,7 @@ package org.apache.lens.driver.jdbc;
 import java.util.*;
 import org.antlr.runtime.CommonToken;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.commons.logging.Log;
@@ -33,7 +34,6 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.QB;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
@@ -637,8 +637,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
   public void buildQuery() throws SemanticException, HiveException {
     analyzeInternal();
-    CubeMetastoreClient client = CubeMetastoreClient.getInstance(new HiveConf(conf, ColumnarSQLRewriter.class));
-    replaceWithUnderlyingStorage(fromAST, client);
+    replaceWithUnderlyingStorage(fromAST);
     fromTree = HQLParser.getString(fromAST);
 
     getFilterInJoinCond(fromAST);
@@ -843,7 +842,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @param metastoreClient
    *          the metastore client
    */
-  protected void replaceWithUnderlyingStorage(ASTNode tree, CubeMetastoreClient metastoreClient) {
+  protected void replaceWithUnderlyingStorage(ASTNode tree) {
     if (tree == null) {
       return;
     }
@@ -856,9 +855,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         if (tree.getChildCount() == 2) {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
-          String lensTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(metastoreClient, lensTable);
-          String db = getUnderlyingDBName(metastoreClient, lensTable);
+          String lensTable = dbIdentifier.getText() + "." +tableIdentifier.getText();
+          String table = getUnderlyingTableName(lensTable);
+          String db = getUnderlyingDBName(lensTable);
 
           // Replace both table and db names
           if ("default".equalsIgnoreCase(db)) {
@@ -874,14 +873,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
           String lensTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(metastoreClient, lensTable);
+          String table = getUnderlyingTableName(lensTable);
           // Replace table name
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
           }
 
           // Add db name as a new child
-          String dbName = getUnderlyingDBName(metastoreClient, lensTable);
+          String dbName = getUnderlyingDBName(lensTable);
           if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
             dbIdentifier.setParent(tree);
@@ -893,7 +892,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
-        replaceWithUnderlyingStorage((ASTNode) tree.getChild(i), metastoreClient);
+        replaceWithUnderlyingStorage((ASTNode) tree.getChild(i));
       }
     }
   }
@@ -909,8 +908,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @throws HiveException
    *           the hive exception
    */
-  String getUnderlyingDBName(CubeMetastoreClient client, String table) throws HiveException {
-    Table tbl = client.getHiveTable(table);
+  String getUnderlyingDBName(String table) throws HiveException {
+    Table tbl = Hive.get().getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
@@ -925,8 +924,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @throws HiveException
    *           the hive exception
    */
-  String getUnderlyingTableName(CubeMetastoreClient client, String table) throws HiveException {
-    Table tbl = client.getHiveTable(table);
+  String getUnderlyingTableName(String table) throws HiveException {
+    Table tbl = Hive.get().getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 

@@ -1506,9 +1506,9 @@ public class CubeTestSetup {
     }
   }
 
-  public void dropSources(HiveConf conf) throws Exception {
+  public void dropSources(HiveConf conf, String dbName) throws Exception {
     Hive metastore = Hive.get(conf);
-    metastore.dropDatabase(SessionState.get().getCurrentDatabase(), true, true, true);
+    metastore.dropDatabase(dbName, true, true, true);
   }
 
   private void createCubeFactsWithValidColumns(CubeMetastoreClient client) throws HiveException {

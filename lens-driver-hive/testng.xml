@@ -22,11 +22,15 @@
 
 <suite name="lens-driver-hive" verbose="1" >
 
+    <test name="TestHiveDriver">
+        <classes>
+            <class name="org.apache.lens.driver.hive.TestHiveDriver"/>
+        </classes>
+    </test>
+
     <test name="TestRemoteHiveDriver">
         <classes>
             <class name="org.apache.lens.driver.hive.TestRemoteHiveDriver"/>
         </classes>
     </test>
-
-
 </suite>
