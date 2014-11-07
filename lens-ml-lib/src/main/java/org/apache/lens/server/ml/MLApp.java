@@ -29,13 +29,32 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 @ApplicationPath("/ml")
 public class MLApp extends Application {
-  @Override
-  public Set<Class<?>> getClasses() {
-    final Set<Class<?>> classes = new HashSet<Class<?>>();
+
+  private final Set<Class<?>> classes;
+
+  /**
+   * Pass additional classes when running in test mode
+   *
+   * @param additionalClasses
+   */
+  public MLApp(Class<?>... additionalClasses) {
+    classes = new HashSet<Class<?>>();
+
     // register root resource
     classes.add(MLServiceResource.class);
     classes.add(MultiPartFeature.class);
     classes.add(LoggingFilter.class);
+    for (Class<?> cls : additionalClasses) {
+      classes.add(cls);
+    }
+
+  }
+
+  /**
+   * Get classes for this resource
+   */
+  @Override
+  public Set<Class<?>> getClasses() {
     return classes;
   }
 }

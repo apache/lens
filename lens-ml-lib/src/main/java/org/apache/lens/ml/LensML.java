@@ -34,7 +34,7 @@ public interface LensML {
 
   /**
    * Get list of available machine learning algorithms
-   * 
+   *
    * @return
    */
   public List<String> getAlgorithms();
@@ -125,8 +125,8 @@ public interface LensML {
    * @throws LensException
    *           the lens exception
    */
-  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID)
-      throws LensException;
+  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
+      String outputTable) throws LensException;
 
   /**
    * Get test reports for an algorithm.

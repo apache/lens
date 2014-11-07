@@ -18,9 +18,13 @@
  */
 package org.apache.lens.ml.spark;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -31,6 +35,7 @@ import java.io.IOException;
  * Create a JavaRDD based on a Hive table using HCatInputFormat.
  */
 public class HiveTableRDD {
+  public static final Log LOG = LogFactory.getLog(HiveTableRDD.class);
 
   /**
    * Creates the hive table rdd.
@@ -53,12 +58,10 @@ public class HiveTableRDD {
       Configuration conf, String db, String table, String partitionFilter) throws IOException {
 
     HCatInputFormat.setInput(conf, db, table, partitionFilter);
+
     JavaPairRDD<WritableComparable, HCatRecord> rdd = javaSparkContext.newAPIHadoopRDD(conf, HCatInputFormat.class, // Input
-                                                                                                                    // format
-                                                                                                                    // class
         WritableComparable.class, // input key class
         HCatRecord.class); // input value class
-
     return rdd;
   }
 }

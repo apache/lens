@@ -21,6 +21,7 @@ package org.apache.lens.ml;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.List;
  * Instantiates a new ML test report.
  */
 @NoArgsConstructor
+@ToString
 public class MLTestReport implements Serializable {
 
   /** The test table. */

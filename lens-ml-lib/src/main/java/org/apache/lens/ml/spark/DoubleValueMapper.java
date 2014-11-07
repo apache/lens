@@ -32,6 +32,10 @@ public class DoubleValueMapper extends FeatureValueMapper {
    */
   @Override
   public final Double call(Object input) {
-    return input == null ? 0d : (Double) input;
+    if (input instanceof Double || input == null) {
+      return input == null ? Double.valueOf(0d) : (Double) input;
+    }
+
+    throw new IllegalArgumentException("Invalid input expecting only doubles, but got " + input);
   }
 }

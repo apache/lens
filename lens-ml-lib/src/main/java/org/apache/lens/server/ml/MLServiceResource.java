@@ -37,6 +37,7 @@ import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
+
 import java.util.*;
 
 import static org.apache.commons.lang.StringUtils.isBlank;
@@ -61,6 +62,11 @@ public class MLServiceResource {
   ServiceProviderFactory serviceProviderFactory;
 
   private static final HiveConf hiveConf;
+
+  /**
+   * Message indicating if ML service is up
+   */
+  public static final String ML_UP_MESSAGE = "ML service is up";
 
   static {
     hiveConf = new HiveConf();
@@ -109,6 +115,16 @@ public class MLServiceResource {
   }
 
   /**
+   * Indicates if ML resource is up
+   *
+   * @return
+   */
+  @GET
+  public String mlResourceUp() {
+    return ML_UP_MESSAGE;
+  }
+
+  /**
    * Get a list of trainers available
    *
    * @return
@@ -122,7 +138,7 @@ public class MLServiceResource {
   }
 
   /**
-   * Gets the param description.
+   * Gets the human readable param description of an algorithm
    *
    * @param algorithm
    *          the algorithm
@@ -277,10 +293,9 @@ public class MLServiceResource {
         trainerArgs.add(values.get(0));
       }
     }
-
+    LOG.info("Training table " + table + " with algo " + algorithm + " params=" + trainerArgs.toString());
     String modelId = getMlService().train(table, algorithm, trainerArgs.toArray(new String[] {}));
-    LOG.info("Trained table " + table + " with algo " + algorithm + " params=" + trainerArgs.toString() + ", modelID="
-        + modelId);
+    LOG.info("Done training " + table + " modelid = " + modelId);
     return modelId;
   }
 
@@ -317,8 +332,9 @@ public class MLServiceResource {
   @Path("test/{table}/{algorithm}/{modelID}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   public String test(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID,
-      @PathParam("table") String table, @FormDataParam("sessionid") LensSessionHandle session) throws LensException {
-    MLTestReport testReport = getMlService().testModel(session, table, algorithm, modelID);
+      @PathParam("table") String table, @FormDataParam("sessionid") LensSessionHandle session,
+      @FormDataParam("outputTable") String outputTable) throws LensException {
+    MLTestReport testReport = getMlService().testModel(session, table, algorithm, modelID, outputTable);
     return testReport.getReportID();
   }
 

@@ -55,7 +55,7 @@ public class ColumnFeatureFunction extends FeatureFunction {
   /**
    * Feature positions and value mappers are parallel arrays. featurePositions[i] gives the position of ith feature in
    * the HCatRecord, and valueMappers[i] gives the value mapper used to map that feature to a Double value
-   * 
+   *
    * @param featurePositions
    *          position number of feature column in the HCatRecord
    * @param valueMappers

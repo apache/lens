@@ -36,9 +36,13 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import java.net.ConnectException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Top level client connection class which is used to connect to a lens server.
@@ -55,6 +59,8 @@ public class LensConnection {
   private AtomicBoolean open = new AtomicBoolean(false);
 
   /** The session handle. */
+  @Getter
+  @Setter
   private LensSessionHandle sessionHandle;
 
   /**
@@ -164,10 +170,6 @@ public class LensConnection {
         .request(MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()), APIResult.class);
     return result;
 
-  }
-
-  public LensSessionHandle getSessionHandle() {
-    return this.sessionHandle;
   }
 
   /**

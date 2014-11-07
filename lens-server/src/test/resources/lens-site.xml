@@ -137,4 +137,16 @@
   <description>Implementation class for session service</description>
 </property>
 
+<property>
+    <name>lens.server.ws.resourcenames</name>
+    <value>session,metastore,query,quota,scheduler,index,ml</value>
+    <description>These JAX-RS resources would be started in the specified order when lens-server starts up</description>
+</property>
+
+<property>
+    <name>lens.server.ml.ws.resource.impl</name>
+    <value>org.apache.lens.server.ml.MLServiceResource</value>
+    <description>Implementation class for Session Resource</description>
+</property>
+
 </configuration>

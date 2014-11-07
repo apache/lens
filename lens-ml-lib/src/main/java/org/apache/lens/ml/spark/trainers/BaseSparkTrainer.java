@@ -117,9 +117,10 @@ public abstract class BaseSparkTrainer implements MLTrainer {
    * java.lang.String, java.lang.String[])
    */
   @Override
-  public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException {
+  public MLModel<?> train(LensConf conf, String db, String table, String modelId, String... params)
+      throws LensException {
     parseParams(params);
-    LOG.info("Training " + " with " + features.size() + " features");
+
     TableTrainingSpec.TableTrainingSpecBuilder builder = TableTrainingSpec.newBuilder().hiveConf(toHiveConf(conf))
         .database(db).table(table).partitionFilter(partitionFilter).featureColumns(features).labelColumn(label);
 
@@ -128,10 +129,12 @@ public abstract class BaseSparkTrainer implements MLTrainer {
     }
 
     TableTrainingSpec spec = builder.build();
+    LOG.info("Training " + " with " + features.size() + " features");
+
     spec.createRDDs(sparkContext);
 
     RDD<LabeledPoint> trainingRDD = spec.getTrainingRDD();
-    BaseSparkClassificationModel model = trainInternal(modelId, trainingRDD);
+    BaseSparkClassificationModel<?> model = trainInternal(modelId, trainingRDD);
     model.setTable(table);
     model.setParams(Arrays.asList(params));
     model.setLabelColumn(label);
