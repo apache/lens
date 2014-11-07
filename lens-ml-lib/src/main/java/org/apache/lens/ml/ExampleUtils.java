@@ -92,7 +92,7 @@ public class ExampleUtils {
     partCols.add(new FieldSchema("dummy_partition_col", "string", ""));
     tbl.setPartCols(partCols);
 
-    Hive.get(conf).createTable(tbl);
+    Hive.get(conf).createTable(tbl, false);
     LOG.info("Created table " + tableName);
 
     // Add partition for the data file

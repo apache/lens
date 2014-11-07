@@ -30,6 +30,7 @@ import javax.ws.rs.core.Application;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hive.service.Service;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.client.LensConnectionParams;
@@ -180,8 +181,12 @@ public class TestMLResource extends LensJerseyTest {
     LOG.info("Creating training table from file " + sampleDataFileURI.toString());
 
     Map<String, String> tableParams = new HashMap<String, String>();
-    ExampleUtils.createTable(conf, database, tableName, sampleDataFileURI.toString(), labelColumn, tableParams,
-        features);
+    try {
+      ExampleUtils.createTable(conf, database, tableName, sampleDataFileURI.toString(), labelColumn, tableParams,
+          features);
+    } catch (HiveException exc) {
+      exc.printStackTrace();
+    }
     MLTask.Builder taskBuilder = new MLTask.Builder();
 
     taskBuilder.algorithm(algoName).hiveConf(conf).labelColumn(labelColumn).outputTable(outputTable)
