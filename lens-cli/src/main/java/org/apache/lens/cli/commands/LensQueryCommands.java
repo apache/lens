@@ -94,7 +94,7 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
         }
       } else {
         PersistentQueryResult temp = (PersistentQueryResult) r;
-        b.append("Results of query stored at : " + temp.getPersistedURI());
+        b.append("Results of query stored at : ").append(temp.getPersistedURI()).append(" ");
       }
     }
 

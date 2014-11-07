@@ -22,6 +22,7 @@ import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -30,7 +31,6 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
@@ -593,8 +593,11 @@ public class TestColumnarSQLRewriter {
     SessionState.start(conf);
 
     // Create test table
-    createTable("default", "mytable", "testDB", "testTable_1");
-    createTable("default", "mytable_2", "testDB", "testTable_2");
+    Database database = new Database();
+    database.setName("mydb");
+    Hive.get().createDatabase(database);
+    createTable("mydb", "mytable", "testDB", "testTable_1");
+    createTable("mydb", "mytable_2", "testDB", "testTable_2");
     createTable("default", "mytable_3", "testDB", "testTable_3");
 
     String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id "
@@ -609,8 +612,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -628,7 +630,7 @@ public class TestColumnarSQLRewriter {
         && joinTreeAfterRewrite.contains("testtable_3"));
 
     // Rewrite one more query where table and db name is not set
-    createTable("default", "mytable_4", null, null);
+    createTable("mydb", "mytable_4", null, null);
     String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
     rewriter = new ColumnarSQLRewriter();
     rewriter.ast = HQLParser.parseHQL(query2);
@@ -639,7 +641,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, client);
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -647,8 +649,11 @@ public class TestColumnarSQLRewriter {
     assertEquals(joinTreeAfterRewrite, joinTreeBeforeRewrite);
 
     // Test a query with default db
-    Hive.get().dropTable("default", "mytable");
-    createTable("default", "mytable", "default", null);
+    Hive.get().dropTable("mydb", "mytable");
+    database = new Database();
+    database.setName("examples");
+    Hive.get().createDatabase(database);
+    createTable("examples", "mytable", "default", null);
 
     String defaultQuery = "SELECT * FROM examples.mytable t1 WHERE A = 100";
     rewriter = new ColumnarSQLRewriter();
@@ -656,16 +661,16 @@ public class TestColumnarSQLRewriter {
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal();
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST, CubeMetastoreClient.getInstance(conf));
+    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
     System.out.println("default case: " + joinTreeAfterRewrite);
 
-    Hive.get().dropTable("default", "mytable");
-    Hive.get().dropTable("default", "mytable_2");
+    Hive.get().dropTable("examples", "mytable");
+    Hive.get().dropTable("mydb", "mytable_2");
     Hive.get().dropTable("default", "mytable_3");
-    Hive.get().dropTable("default", "mytable_4");
+    Hive.get().dropTable("mydb", "mytable_4");
   }
 
   /**

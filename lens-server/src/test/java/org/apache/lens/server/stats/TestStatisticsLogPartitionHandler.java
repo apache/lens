@@ -44,6 +44,7 @@ import static org.testng.Assert.assertNotNull;
 /**
  * The Class TestStatisticsLogPartitionHandler.
  */
+@Test(groups = "unit-test")
 public class TestStatisticsLogPartitionHandler {
 
   /** The Constant EVENT_NAME. */

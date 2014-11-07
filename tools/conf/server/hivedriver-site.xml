@@ -34,7 +34,7 @@
 
 <!-- Adding in supported storages by hive driver -->
 <property>
-  <name>cube.query.driver.supported.storages</name>
+  <name>lens.cube.query.driver.supported.storages</name>
   <value>local,cluster</value>
 </property>
 </configuration>

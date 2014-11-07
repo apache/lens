@@ -92,7 +92,7 @@ public class DBStorage extends Storage {
   /*
    * (non-Javadoc)
    * 
-   * @see org.apache.hadoop.hive.ql.cube.metadata.Storage#addProperties()
+   * @see org.apache.lens.cube.metadata.Storage#addProperties()
    */
   protected void addProperties() {
     super.addProperties();
@@ -109,7 +109,7 @@ public class DBStorage extends Storage {
    * (non-Javadoc)
    * 
    * @see
-   * org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#commitAddPartition(org.apache.hadoop.hive.ql.cube.metadata
+   * org.apache.lens.cube.metadata.PartitionMetahook#commitAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
    */
   @Override
@@ -120,7 +120,7 @@ public class DBStorage extends Storage {
   /*
    * (non-Javadoc)
    * 
-   * @see org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#commitDropPartition(java.lang.String,
+   * @see org.apache.lens.cube.metadata.PartitionMetahook#commitDropPartition(java.lang.String,
    * java.util.List)
    */
   @Override
@@ -132,7 +132,7 @@ public class DBStorage extends Storage {
    * (non-Javadoc)
    * 
    * @see
-   * org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#preAddPartition(org.apache.hadoop.hive.ql.cube.metadata
+   * org.apache.lens.cube.metadata.PartitionMetahook#preAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
    */
   @Override
@@ -143,7 +143,7 @@ public class DBStorage extends Storage {
   /*
    * (non-Javadoc)
    * 
-   * @see org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#preDropPartition(java.lang.String, java.util.List)
+   * @see org.apache.lens.cube.metadata.PartitionMetahook#preDropPartition(java.lang.String, java.util.List)
    */
   @Override
   public void preDropPartition(String arg0, List<String> arg1) throws HiveException {
@@ -153,7 +153,7 @@ public class DBStorage extends Storage {
    * (non-Javadoc)
    * 
    * @see
-   * org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#rollbackAddPartition(org.apache.hadoop.hive.ql.cube.metadata
+   * org.apache.lens.cube.metadata.PartitionMetahook#rollbackAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
    */
   @Override
@@ -163,7 +163,7 @@ public class DBStorage extends Storage {
   /*
    * (non-Javadoc)
    * 
-   * @see org.apache.hadoop.hive.ql.cube.metadata.PartitionMetahook#rollbackDropPartition(java.lang.String,
+   * @see org.apache.lens.cube.metadata.PartitionMetahook#rollbackDropPartition(java.lang.String,
    * java.util.List)
    */
   @Override

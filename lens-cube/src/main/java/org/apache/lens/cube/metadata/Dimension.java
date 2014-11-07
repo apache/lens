@@ -89,7 +89,7 @@ public class Dimension extends AbstractBaseTable {
   @Override
   public void addProperties() {
     super.addProperties();
-    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getDimAttributeListKey(getName()), attributes);
     setAttributedProperties(getProperties(), attributes);
   }
 
@@ -101,7 +101,7 @@ public class Dimension extends AbstractBaseTable {
 
   public static Set<CubeDimAttribute> getAttributes(String name, Map<String, String> props) {
     Set<CubeDimAttribute> attributes = new HashSet<CubeDimAttribute>();
-    String attrStr = props.get(MetastoreUtil.getDimAttributeListKey(name));
+    String attrStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getDimAttributeListKey(name));
     String[] names = attrStr.split(",");
     for (String attrName : names) {
       String className = props.get(MetastoreUtil.getDimensionClassPropertyKey(attrName));
@@ -163,7 +163,7 @@ public class Dimension extends AbstractBaseTable {
 
     attributes.add(attribute);
     attributeMap.put(attribute.getName().toLowerCase(), attribute);
-    getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
+    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getDimAttributeListKey(getName()), attributes);
     attribute.addProperties(getProperties());
   }
 
@@ -177,7 +177,7 @@ public class Dimension extends AbstractBaseTable {
       LOG.info("Removing attribute " + getAttributeByName(attrName));
       attributes.remove(getAttributeByName(attrName));
       attributeMap.remove(attrName.toLowerCase());
-      getProperties().put(MetastoreUtil.getDimAttributeListKey(getName()), MetastoreUtil.getNamedStr(attributes));
+      MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getDimAttributeListKey(getName()), attributes);
     }
   }
 

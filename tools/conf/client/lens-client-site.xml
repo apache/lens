@@ -28,34 +28,34 @@
     <description>Whether to enable persistent resultset on the driver for queries</description>
   </property>
   <property>
-    <name>hive.cube.disable.auto.join</name>
+    <name>lens.cube.query.disable.auto.join</name>
     <value>false</value>
     <description>Tells whether to disable automatic resolution of join conditions between tables involved.
  To enable automatic resolution, this value should be false.</description>
   </property>
   <property>
-    <name>hive.cube.disable.aggregate.resolver</name>
+    <name>lens.cube.query.disable.aggregate.resolver</name>
     <value>false</value>
     <description>Tells whether to disable automatic resolution of aggregations for measures in a cube.
  To enable automatic resolution, this value should be false.</description>
   </property>
 
   <property>
-    <name>cube.query.promote.groupby.toselect</name>
+    <name>lens.cube.query.promote.groupby.toselect</name>
     <value>true</value>
     <description>Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected.
  To enable automatic promotion, this value should be true.</description>
   </property>
 
   <property>
-    <name>cube.query.promote.select.togroupby</name>
+    <name>lens.cube.query.promote.select.togroupby</name>
     <value>true</value>
     <description>Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses.
  To enable automatic promotion, this value should be true.</description>
   </property>
 
   <property>
-    <name>cube.query.fail.if.data.partial</name>
+    <name>lens.cube.query.fail.if.data.partial</name>
     <value>true</value>
     <description>Whether to fail the query of data is partial</description>
   </property>

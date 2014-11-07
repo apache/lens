@@ -417,7 +417,7 @@ public class TestQueryService extends LensJerseyTest {
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan.getTablesQueried().get(0).equalsIgnoreCase(testTable));
+    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
     Assert.assertNull(plan.getPrepareHandle());
 
     // Test explain and prepare
@@ -435,7 +435,7 @@ public class TestQueryService extends LensJerseyTest {
         QueryPlan.class);
     Assert.assertEquals(plan2.getNumSels(), 1);
     Assert.assertEquals(plan2.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan2.getTablesQueried().get(0).equalsIgnoreCase(testTable));
+    Assert.assertTrue(plan2.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
     Assert.assertNotNull(plan2.getPrepareHandle());
   }
 
@@ -611,7 +611,7 @@ public class TestQueryService extends LensJerseyTest {
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan.getTablesQueried().get(0).equalsIgnoreCase(testTable));
+    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
     Assert.assertNotNull(plan.getPrepareHandle());
 
     LensPreparedQuery ctx = target.path(plan.getPrepareHandle().toString()).queryParam("sessionid", lensSessionId)

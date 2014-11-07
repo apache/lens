@@ -67,7 +67,6 @@ import org.apache.lens.cube.metadata.StorageTableDesc;
 import org.apache.lens.cube.metadata.TableReference;
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
 import org.apache.lens.cube.metadata.UpdatePeriod;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.DateUtil;
@@ -529,11 +528,11 @@ public class CubeTestSetup {
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME), "dt,pt,it,et,test_time_dim");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
 
     client.createCube(TEST_CUBE_NAME, cubeMeasures, cubeDimensions, exprs, cubeProperties);
 
@@ -565,11 +564,11 @@ public class CubeTestSetup {
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME), "dt,pt,it,et,test_time_dim");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
-    cubeProperties.put(CubeQueryConfUtil.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
     cubeProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "false");
     client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, cubeProperties);
 
@@ -1507,9 +1506,9 @@ public class CubeTestSetup {
     }
   }
 
-  public void dropSources(HiveConf conf) throws Exception {
+  public void dropSources(HiveConf conf, String dbName) throws Exception {
     Hive metastore = Hive.get(conf);
-    metastore.dropDatabase(SessionState.get().getCurrentDatabase(), true, true, true);
+    metastore.dropDatabase(dbName, true, true, true);
   }
 
   private void createCubeFactsWithValidColumns(CubeMetastoreClient client) throws HiveException {
