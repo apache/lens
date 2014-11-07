@@ -861,12 +861,18 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       List<Partition> partitions = getClient(sessionid).getPartitionsByFilter(
           tableName, filter);
       for (Partition part : partitions) {
-        Map<String, Date> timeSpec = new HashMap<String, Date>();
-        Map<String, String> nonTimeSpec = new HashMap<String, String>();
-        UpdatePeriod updatePeriod = populatePartSpec(part, timeSpec, nonTimeSpec);
-        getClient(sessionid).dropPartition(cubeTableName,
-            storageName, timeSpec, nonTimeSpec,
-            updatePeriod);
+        try {
+          Map<String, Date> timeSpec = new HashMap<String, Date>();
+          Map<String, String> nonTimeSpec = new HashMap<String, String>();
+          UpdatePeriod updatePeriod = populatePartSpec(part, timeSpec, nonTimeSpec);
+          getClient(sessionid).dropPartition(cubeTableName, storageName, timeSpec, nonTimeSpec, updatePeriod);
+        } catch (HiveException e) {
+          if (e.getCause() instanceof NoSuchObjectException) {
+            continue;
+          } else {
+            throw new LensException(e);
+          }
+        }
       }
       LOG.info("Dropped partition  for cube table: " + cubeTableName +
           " storage: " + storageName + " by filter:" + filter);
@@ -1308,5 +1314,47 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         } // end bfs
         // columnMap now contains flattened view
         return columnMap;
+  }
+  
+  @Override
+  public Date getLatestDateOfCube(LensSessionHandle sessionid, String cubeName, String timeDimension)
+      throws LensException, HiveException {
+    // get the partitionColumn corresponding to timeDimension passed
+    CubeInterface ci = getClient(sessionid).getCube(cubeName);
+    if (!(ci instanceof Cube)) {
+      throw new BadRequestException("cubeName : " +  cubeName + " is not a base cube.");
+    }
+    Cube c = (Cube) ci;
+    String partitionColumn = c.getPartitionColumnOfTimeDim(timeDimension);
+
+    // getting all facts->storages->partitions and iterating over them to get
+    // latest date
+    List<FactTable> factTables = getAllFactsOfCube(sessionid, cubeName);
+    
+    Date latestDate = null;
+    if (factTables != null && !factTables.isEmpty()) {
+      for (FactTable factTable : factTables) {
+        List<String> storages = getStoragesOfFact(sessionid, factTable.getName());
+
+        if (storages != null && !storages.isEmpty()) {
+          for (String storage : storages) {
+            String storageTableName = MetastoreUtil.getFactStorageTableName(factTable.getName(), storage);
+            List<Partition> parts =
+                getClient(sessionid).getPartitionsByFilter(storageTableName, StorageConstants.getLatestPartFilter(partitionColumn));
+
+            if (parts.size() == 1) {
+              Date tmpDate = getClient(sessionid).getLatestTimeStamp(parts.get(0), partitionColumn);
+              if (latestDate == null || latestDate.before(tmpDate)) {
+                latestDate = tmpDate;
+              }
+            } else if (parts.size() > 1) {
+              throw new LensException("CubeMetastoreClient return more than 1 partitions for filter "
+                  + partitionColumn + "='latest'");
+            }
+          }
+        }
+      }
+    }
+    return latestDate;
   }
 }

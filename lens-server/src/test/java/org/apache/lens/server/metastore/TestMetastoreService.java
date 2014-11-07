@@ -32,10 +32,13 @@ import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.APIResult.Status;
+import org.apache.lens.api.DateTime;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
@@ -810,6 +813,7 @@ public class TestMetastoreService extends LensJerseyTest {
     dt.setType("string");
     dt.setComment("default partition column");
     partCols.getColumns().add(dt);
+    xs1.getTimePartCols().add("dt");
     xs1.setPartCols(partCols);
     return xs1;
   }
@@ -1578,6 +1582,12 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("S2");
 
     try {
+      
+      final XCube cube = createTestCube("testCube");
+      APIResult result1 =
+          target().path("metastore").path("cubes").queryParam("sessionid", lensSessionId).request(mediaType)
+              .post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+
       String [] storages = {"S1", "S2"};
       String [] updatePeriods = {"HOURLY", "DAILY"};
       FactTable f = createFactTable(table, storages, updatePeriods);
@@ -1614,7 +1624,16 @@ public class TestMetastoreService extends LensJerseyTest {
 
       PartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 1);
+      assertEquals(partitions.getXPartition().size(), 2);
+      
+      DateTime date =
+          target().path("metastore/cubes").path("testCube").path("latestdate").queryParam("timeDimension", "dt")
+              .queryParam("sessionid", lensSessionId).request(mediaType).get(DateTime.class);
+      
+      partDate.setMinutes(0);
+      partDate.setSeconds(0);
+      partDate.setTime(partDate.getTime() - partDate.getTime() % 1000);
+      assertEquals(date.getDate(), partDate);
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/facts").path(table).path("storages/S2/partitions")
@@ -1645,7 +1664,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 1);
+      assertEquals(partitions.getXPartition().size(), 2);
 
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
@@ -1696,7 +1715,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       PartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 1);
+      assertEquals(partitions.getXPartition().size(), 2);
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
@@ -1727,7 +1746,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 1);
+      assertEquals(partitions.getXPartition().size(), 2);
 
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};

@@ -440,7 +440,7 @@ public class CubeMetastoreClient {
         }
         boolean makeLatest = true;
         Partition part = getLatestPart(storageTableName, partCol);
-        Date latestTimestamp = getLatestTimeStamp(part, storageTableName, partCol);
+        Date latestTimestamp = getLatestTimeStamp(part, partCol);
         if (latestTimestamp != null && pTimestamp.before(latestTimestamp)) {
           makeLatest = false;
         }
@@ -461,7 +461,7 @@ public class CubeMetastoreClient {
     return part.getValues().contains(StorageConstants.LATEST_PARTITION_VALUE);
   }
 
-  private Date getLatestTimeStamp(Partition part, String storageTableName, String partCol) throws HiveException {
+  public Date getLatestTimeStamp(Partition part, String partCol) throws HiveException {
     if (part != null) {
       String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));
       String latestPartUpdatePeriod = part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
@@ -587,7 +587,7 @@ public class CubeMetastoreClient {
           }
         }
         if (isLatest) {
-          Date latestTimestamp = getLatestTimeStamp(part, storageTableName, timeCol);
+          Date latestTimestamp = getLatestTimeStamp(part, timeCol);
           Date dropTimestamp;
           try {
             dropTimestamp = updatePeriod.format().parse(updatePeriod.format().format(timePartSpec.get(timeCol)));

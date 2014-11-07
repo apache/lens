@@ -20,8 +20,10 @@ package org.apache.lens.server.api.metastore;
 
 import org.apache.lens.api.metastore.*;
 
+import java.util.Date;
 import java.util.List;
 
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 
@@ -304,4 +306,16 @@ public interface CubeMetastoreService {
 
   public FlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName) throws LensException;
 
+  /**
+   * Get the latest available date upto which data is available for the base cubes, for the time dimension
+   *
+   * @param sessionid The session id
+   * @param timeDimension time dimension name
+   * @param cubeName The base cube name
+   *
+   * @return Date
+   *
+   * @throws LensException,HiveExeception
+   */
+  public Date getLatestDateOfCube(LensSessionHandle sessionid, String cubeName, String timeDimension) throws LensException,HiveException;
 }
