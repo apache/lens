@@ -66,7 +66,6 @@ import org.apache.lens.api.query.QueryResultSetMetadata;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.SubmitOp;
 import org.apache.lens.api.query.QueryStatus.Status;
-import org.apache.lens.driver.cube.CubeDriver;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensService;
@@ -249,7 +248,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     } else {
       throw new LensException("No drivers specified");
     }
-    driverSelector = new CubeDriver.MinQueryCostSelector();
+    driverSelector = new MinQueryCostSelector();
   }
 
   protected LensEventService getEventService() {
