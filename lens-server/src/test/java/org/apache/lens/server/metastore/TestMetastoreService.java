@@ -1678,6 +1678,7 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB);
     createStorage("S1");
     createStorage("S2");
+    createStorage("test");
 
     try {
       createDimTable(table);
