@@ -74,9 +74,9 @@ public class CubeMetastoreClient {
   // map from storage name to storage
   private final Map<String, Storage> allStorages = new HashMap<String, Storage>();
 
-  // HiveConf to client mapping
-  private static final Map<HiveConf, CubeMetastoreClient> clientMapping =
-      new HashMap<HiveConf, CubeMetastoreClient>();
+  // dbname to client mapping
+  private static final Map<String, CubeMetastoreClient> clientMapping =
+      new HashMap<String, CubeMetastoreClient>();
 
   private SchemaGraph schemaGraph;
 
@@ -89,10 +89,11 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public static CubeMetastoreClient getInstance(HiveConf conf) throws HiveException {
-    if (clientMapping.get(conf) == null) {
-      clientMapping.put(conf, new CubeMetastoreClient(conf));
+    String currentdb = SessionState.get().getCurrentDatabase();
+    if (clientMapping.get(currentdb) == null) {
+      clientMapping.put(currentdb, new CubeMetastoreClient(conf));
     }
-    return clientMapping.get(conf);
+    return clientMapping.get(currentdb);
   }
 
   private Hive getClient() throws HiveException {
@@ -104,14 +105,6 @@ public class CubeMetastoreClient {
    */
   public static void close() {
     Hive.closeCurrent();
-  }
-
-  public void setCurrentDatabase(String currentDatabase) {
-    SessionState.get().setCurrentDatabase(currentDatabase);
-  }
-
-  public String getCurrentDatabase() {
-    return SessionState.get().getCurrentDatabase();
   }
 
   private void createStorageHiveTable(Table parent, String storage, StorageTableDesc crtTblDesc) throws HiveException {

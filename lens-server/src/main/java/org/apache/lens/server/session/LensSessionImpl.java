@@ -49,9 +49,6 @@ public class LensSessionImpl extends HiveSessionImpl {
   /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(LensSessionImpl.class);
 
-  /** The cube client. */
-  private CubeMetastoreClient cubeClient;
-
   /** The persist info. */
   private LensSessionPersistInfo persistInfo = new LensSessionPersistInfo();
 
@@ -166,14 +163,11 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   public CubeMetastoreClient getCubeMetastoreClient() throws LensException {
-    if (cubeClient == null) {
-      try {
-        cubeClient = CubeMetastoreClient.getInstance(getHiveConf());
-      } catch (HiveException e) {
-        throw new LensException(e);
-      }
+    try {
+      return CubeMetastoreClient.getInstance(getHiveConf());
+    } catch (HiveException e) {
+      throw new LensException(e);
     }
-    return cubeClient;
   }
 
   /*
