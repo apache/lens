@@ -25,9 +25,9 @@ import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
-import org.apache.lens.driver.cube.CubeDriver.MinQueryCostSelector;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.driver.MinQueryCostSelector;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
