@@ -185,18 +185,6 @@ public class LensConfConstants {
   /** The Constant USER_RESOLVER_PROPERTYBASED_FILENAME. */
   public static final String USER_RESOLVER_PROPERTYBASED_FILENAME = SERVER_PFX + "user.resolver.propertybased.filename";
 
-  /** The Constant USER_RESOLVER_DB_DRIVER_NAME. */
-  public static final String USER_RESOLVER_DB_DRIVER_NAME = SERVER_PFX + "user.resolver.db.driver.name";
-
-  /** The Constant USER_RESOLVER_DB_JDBC_URL. */
-  public static final String USER_RESOLVER_DB_JDBC_URL = SERVER_PFX + "user.resolver.db.jdbc.url";
-
-  /** The Constant USER_RESOLVER_DB_JDBC_USERNAME. */
-  public static final String USER_RESOLVER_DB_JDBC_USERNAME = SERVER_PFX + "user.resolver.db.jdbc.username";
-
-  /** The Constant USER_RESOLVER_DB_JDBC_PASSWORD. */
-  public static final String USER_RESOLVER_DB_JDBC_PASSWORD = SERVER_PFX + "user.resolver.db.jdbc.password";
-
   /** The Constant USER_RESOLVER_DB_KEYS. */
   public static final String USER_RESOLVER_DB_KEYS = SERVER_PFX + "user.resolver.db.keys";
 
