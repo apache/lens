@@ -46,7 +46,7 @@ import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 
 /**
- * The Class LensServices.
+ * Manage lifecycle of all Lens services
  */
 public class LensServices extends CompositeService implements ServiceProvider {
 
@@ -313,7 +313,11 @@ public class LensServices extends CompositeService implements ServiceProvider {
       for (LensService service : lensServices) {
         service.prepareStopping();
       }
-      timer.cancel();
+
+      if (timer != null) {
+        timer.cancel();
+      }
+
       try {
         // persist all the services
         persistLensServiceState();
