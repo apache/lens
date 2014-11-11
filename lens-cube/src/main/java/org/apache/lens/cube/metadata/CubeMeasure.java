@@ -29,9 +29,11 @@ public abstract class CubeMeasure extends CubeColumn {
   private final String aggregate;
   private final String unit;
   private final FieldSchema column;
+  private final Double min;
+  private final Double max;
 
   protected CubeMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
-      Date startTime, Date endTime, Double cost) {
+      Date startTime, Date endTime, Double cost, Double min, Double max) {
     super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
     this.column = column;
     assert (column != null);
@@ -40,6 +42,8 @@ public abstract class CubeMeasure extends CubeColumn {
     this.formatString = formatString;
     this.aggregate = aggregate;
     this.unit = unit;
+    this.min = min;
+    this.max = max;
   }
 
   protected CubeMeasure(String name, Map<String, String> props) {
@@ -48,6 +52,16 @@ public abstract class CubeMeasure extends CubeColumn {
     this.formatString = props.get(MetastoreUtil.getMeasureFormatPropertyKey(name));
     this.aggregate = props.get(MetastoreUtil.getMeasureAggrPropertyKey(name));
     this.unit = props.get(MetastoreUtil.getMeasureUnitPropertyKey(name));
+    String minStr = props.get(MetastoreUtil.getMeasureMinPropertyKey(name));
+    String maxStr = props.get(MetastoreUtil.getMeasureMaxPropertyKey(name));
+    if(minStr != null && maxStr != null && !minStr.isEmpty() && !maxStr.isEmpty()) {
+      this.min = Double.parseDouble(minStr);
+      this.max = Double.parseDouble(maxStr);
+    }
+    else{
+      this.min = null;
+      this.max = null;
+    }
   }
 
   public String getFormatString() {
@@ -151,6 +165,12 @@ public abstract class CubeMeasure extends CubeColumn {
     }
     if (aggregate != null) {
       props.put(MetastoreUtil.getMeasureAggrPropertyKey(getName()), aggregate);
+    }
+    if (min != null) {
+      props.put(MetastoreUtil.getMeasureMinPropertyKey(getName()), min.toString());
+    }
+    if (max != null) {
+      props.put(MetastoreUtil.getMeasureMaxPropertyKey(getName()), max.toString());
     }
   }
 }

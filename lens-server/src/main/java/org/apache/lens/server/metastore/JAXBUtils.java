@@ -292,7 +292,9 @@ public class JAXBUtils {
         "unit",
         startDate,
         endDate,
-        xm.getCost()
+        xm.getCost(),
+        xm.getMin(),
+        xm.getMax()
         );
     return cm;
   }

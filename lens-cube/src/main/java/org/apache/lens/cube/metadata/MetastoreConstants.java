@@ -65,6 +65,8 @@ public interface MetastoreConstants {
   public static final String MEASURE_KEY_PFX = "cube.measure.";
   public static final String UNIT_SFX = ".unit";
   public static final String AGGR_SFX = ".aggregate";
+  public static final String MIN_SFX = ".min";
+  public static final String MAX_SFX = ".max";
   public static final String EXPR_SFX = ".expr";
   public static final String FORMATSTRING_SFX = ".format";
 

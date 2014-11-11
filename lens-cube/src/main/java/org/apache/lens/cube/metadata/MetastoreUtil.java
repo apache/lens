@@ -206,6 +206,14 @@ public class MetastoreUtil implements MetastoreConstants {
     return getMeasurePrefix(measureName) + AGGR_SFX;
   }
 
+  public static final String getMeasureMinPropertyKey(String measureName) {
+    return getMeasurePrefix(measureName) + MIN_SFX;
+  }
+
+  public static final String getMeasureMaxPropertyKey(String measureName) {
+    return getMeasurePrefix(measureName) + MAX_SFX;
+  }
+
   public static final String getExpressionListKey(String name) {
     return getBasePrefix(name) + EXPRESSIONS_LIST_SFX;
   }

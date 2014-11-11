@@ -113,6 +113,8 @@
         <xs:attribute type="xs:double" name="cost" />
         <xs:attribute type="xs:string" name="unit" />
         <xs:attribute type="xs:string" name="cube_table"/>
+        <xs:attribute type="xs:double" name="min" />
+        <xs:attribute type="xs:double" name="max" />
     </xs:complexType>
 
     <xs:complexType name="x_measures">
