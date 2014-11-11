@@ -68,6 +68,7 @@ import org.apache.lens.api.query.SubmitOp;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
@@ -332,6 +333,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
     /** The finish time. */
     private final Date finishTime;
+    private long startTime;
 
     /**
      * Instantiates a new finished query.
@@ -361,13 +363,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
      * @see java.util.concurrent.Delayed#getDelay(java.util.concurrent.TimeUnit)
      */
     @Override
-    public long getDelay(TimeUnit units) {
-      int size = finishedQueries.size();
-      if (size > maxFinishedQueries) {
-        return 0;
-      } else {
-        return Integer.MAX_VALUE;
-      }
+    public long getDelay(TimeUnit unit) {
+      return unit.convert(purgeDelay * 1000 - (System.currentTimeMillis() - startTime), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -391,6 +388,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     public void exponentialBackoffForPurgeDelay() {
       purgeDelay += 5;
       purgeDelay *= 2;
+      startTime = System.currentTimeMillis();
     }
   }
 
@@ -733,6 +731,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             finished.exponentialBackoffForPurgeDelay();
             if(finished.getPurgeDelay() <= FinishedQuery.PURGE_MAX_TIMEOUT) {
               finishedQueries.offer(finished, finished.getPurgeDelay(), TimeUnit.SECONDS);
+            } else {
+              getEventService().notifyEvent(new QueryPurgeFailed(finished.getCtx(), e));
             }
             continue;
           }
