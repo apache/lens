@@ -266,24 +266,26 @@ public class LensServices extends CompositeService implements ServiceProvider {
    */
   private synchronized void persistLensServiceState() throws IOException {
     if (conf.getBoolean(LensConfConstants.SERVER_RESTART_ENABLED, LensConfConstants.DEFAULT_SERVER_RESTART_ENABLED)) {
-      FileSystem fs = persistDir.getFileSystem(conf);
-      LOG.info("Persisting server state in " + persistDir);
+      if (persistDir != null) {
+        FileSystem fs = persistDir.getFileSystem(conf);
+        LOG.info("Persisting server state in " + persistDir);
 
-      for (LensService service : lensServices) {
-        LOG.info("Persisting state of service:" + service.getName());
-        Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
-        ObjectOutputStream out = null;
-        try {
-          out = new ObjectOutputStream(fs.create(serviceWritePath));
-          service.writeExternal(out);
-        } finally {
-          if (out != null) {
-            out.close();
+        for (LensService service : lensServices) {
+          LOG.info("Persisting state of service:" + service.getName());
+          Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
+          ObjectOutputStream out = null;
+          try {
+            out = new ObjectOutputStream(fs.create(serviceWritePath));
+            service.writeExternal(out);
+          } finally {
+            if (out != null) {
+              out.close();
+            }
           }
+          Path servicePath = getServicePersistPath(service);
+          fs.rename(serviceWritePath, servicePath);
+          LOG.info("Persisted service " + service.getName() + " to " + servicePath);
         }
-        Path servicePath = getServicePersistPath(service);
-        fs.rename(serviceWritePath, servicePath);
-        LOG.info("Persisted service " + service.getName() + " to " + servicePath);
       }
     } else {
       LOG.info("Server restart is not enabled. Not persisting the server state");
