@@ -166,5 +166,11 @@ public abstract class CubeMeasure extends CubeColumn {
     if (aggregate != null) {
       props.put(MetastoreUtil.getMeasureAggrPropertyKey(getName()), aggregate);
     }
+    if (min != null) {
+      props.put(MetastoreUtil.getMeasureMinPropertyKey(getName()), min.toString());
+    }
+    if (max != null) {
+      props.put(MetastoreUtil.getMeasureMaxPropertyKey(getName()), max.toString());
+    }
   }
 }
