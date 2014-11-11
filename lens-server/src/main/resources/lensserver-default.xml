@@ -439,10 +439,13 @@
   <value>/path/to/propertyfile</value>
   <description>Required for PROPERTYBASED user resolver.
       when lens.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to
-      determine cluster user. example schema of the file is:
-      user1, user2, user3 = clusteruser1
-      user4, user5 = clusteruser2
-      * = clusteruser3
+      determine cluster user. Each line should contain username followed by DOT followed by property full name
+      followed by equal-to sign and followed by value.
+      example schema of the file is:
+      user1.lens.server.cluster.user=clusteruser1
+      user1.mapred.job.queue.name=queue1
+      *.lens.server.cluster.user=defaultclusteruser
+      *.mapred.job.queue.name=default
   </description>
 </property>
 <property>
