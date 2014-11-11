@@ -279,11 +279,20 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   public synchronized void stop() {
     // unregister
     LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
-    eventService.removeListener(queryStatusListener);
-    queryStatusListener.stop();
-    for (ScheduledReporter reporter : reporters) {
-      reporter.stop();
+    if (eventService != null) {
+      eventService.removeListener(queryStatusListener);
     }
+
+    if (queryStatusListener != null) {
+      queryStatusListener.stop();
+    }
+
+    if (reporters != null) {
+      for (ScheduledReporter reporter : reporters) {
+        reporter.stop();
+      }
+    }
+
     LOG.info("Stopped metrics service");
     super.stop();
   }

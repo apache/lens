@@ -197,19 +197,21 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
    */
   @Override
   public void stop() {
-    List<Runnable> pending = eventHandlerPool.shutdownNow();
-    if (pending != null && !pending.isEmpty()) {
-      StringBuilder pendingMsg = new StringBuilder("Pending Events:");
-      for (Runnable handler : pending) {
-        if (handler instanceof EventHandler) {
-          pendingMsg.append(((EventHandler) handler).event.getEventId()).append(",");
+    if (eventHandlerPool != null) {
+      List<Runnable> pending = eventHandlerPool.shutdownNow();
+      if (pending != null && !pending.isEmpty()) {
+        StringBuilder pendingMsg = new StringBuilder("Pending Events:");
+        for (Runnable handler : pending) {
+          if (handler instanceof EventHandler) {
+            pendingMsg.append(((EventHandler) handler).event.getEventId()).append(",");
+          }
         }
+        LOG.info("Event listener service stopped while " + pending.size() + " events still pending");
+        LOG.info(pendingMsg.toString());
       }
-      LOG.info("Event listener service stopped while " + pending.size() + " events still pending");
-      LOG.info(pendingMsg.toString());
     }
-    super.stop();
     LOG.info("Event service stopped");
+    super.stop();
   }
 
   public Map<Class<? extends LensEvent>, List<LensEventListener>> getEventListeners() {
