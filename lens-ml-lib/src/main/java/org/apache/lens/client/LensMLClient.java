@@ -71,7 +71,7 @@ public class LensMLClient implements LensML, Closeable {
    *          the client conf
    */
   public LensMLClient(LensConnectionParams clientConf, LensSessionHandle sessionHandle) {
-    client = new LensMLJerseyClient(new LensConnection(clientConf), sessionHandle);
+    client = new LensMLJerseyClient(new LensConnection(clientConf, sessionHandle), sessionHandle);
     LOG.info("Client created with existing session");
   }
 

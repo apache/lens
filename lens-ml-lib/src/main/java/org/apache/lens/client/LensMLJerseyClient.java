@@ -80,7 +80,6 @@ public class LensMLJerseyClient {
   public LensMLJerseyClient(LensConnection connection, LensSessionHandle sessionHandle) {
     this.connection = connection;
     this.sessionHandle = sessionHandle;
-    connection.setSessionHandle(sessionHandle);
   }
 
   protected WebTarget getMLWebTarget() {

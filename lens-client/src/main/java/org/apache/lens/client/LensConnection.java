@@ -60,7 +60,6 @@ public class LensConnection {
 
   /** The session handle. */
   @Getter
-  @Setter
   private LensSessionHandle sessionHandle;
 
   /**
@@ -71,6 +70,17 @@ public class LensConnection {
    */
   public LensConnection(LensConnectionParams params) {
     this.params = params;
+  }
+
+  /**
+   * Construct a connection to lens server specified by connection parameters with an already established session
+   *
+   * @param params
+   *          parameters to be used for creating a connection
+   */
+  public LensConnection(LensConnectionParams params, LensSessionHandle sessionHandle) {
+    this.params = params;
+    this.sessionHandle = sessionHandle;
   }
 
   /**
