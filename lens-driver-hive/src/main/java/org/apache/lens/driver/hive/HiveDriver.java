@@ -74,21 +74,21 @@ public class HiveDriver implements LensDriver {
   public static final Logger LOG = Logger.getLogger(HiveDriver.class);
 
   /** The Constant HIVE_CONNECTION_CLASS. */
-  static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
+  public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
 
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
-  private static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hs2.connection.expiry.delay";
+  public  static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.connection.expiry.delay";
 
-  static final String HS2_CALCULATE_PRIORITY = "lens.driver.hs2.calculate.priority";
-  private static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hs2.priority.partition.weight.monthly";
-  private static final String HS2_PARTITION_WEIGHT_DAILY = "lens.driver.hs2.priority.partition.weight.daily";
-  private static final String HS2_PARTITION_WEIGHT_HOURLY = "lens.driver.hs2.priority.partition.weight.hourly";
+  public static final String HS2_CALCULATE_PRIORITY = "lens.driver.hive.calculate.priority";
+  public static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hive.priority.partition.weight.monthly";
+  public static final String HS2_PARTITION_WEIGHT_DAILY = "lens.driver.hive.priority.partition.weight.daily";
+  public static final String HS2_PARTITION_WEIGHT_HOURLY = "lens.driver.hive.priority.partition.weight.hourly";
   // Default expiry is 10 minutes
   /** The Constant DEFAULT_EXPIRY_DELAY. */
-  private static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
-  private static final float MONTHLY_PARTITION_WEIGHT_DEFAULT = 0.5f;
-  private static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
-  private static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
+  public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
+  public static final float MONTHLY_PARTITION_WEIGHT_DEFAULT = 0.5f;
+  public static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
+  public static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
 
   /** The driver conf. */
   private HiveConf driverConf;
@@ -374,7 +374,7 @@ public class HiveDriver implements LensDriver {
    * 
    * @see org.apache.lens.server.api.driver.LensDriver#execute(org.apache.lens.server.api.query.QueryContext)
    */
-  //TODO: I'm assuming this is only called for executing explain/insert/... queries which don't ask to fetch data.
+  // assuming this is only called for executing explain/insert/set/delete/etc... queries which don't ask to fetch data.
   public LensResultSet execute(QueryContext ctx) throws LensException {
     try {
       addPersistentPath(ctx);
