@@ -19,6 +19,8 @@
 package org.apache.lens.client;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.lens.api.LensException;
@@ -30,6 +32,7 @@ import org.apache.lens.ml.MLModel;
 import org.apache.lens.ml.MLTestReport;
 import org.apache.lens.ml.MLTrainer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.URI;
@@ -39,10 +42,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.ws.rs.core.Form;
+
 /**
- * The Class LensMLClient.
+ * Client side implementation of LensML
  */
-public class LensMLClient implements LensML {
+public class LensMLClient implements LensML, Closeable {
+  private static final Log LOG = LogFactory.getLog(LensMLClient.class);
 
   /** The client. */
   private LensMLJerseyClient client;
@@ -53,8 +59,20 @@ public class LensMLClient implements LensML {
    * @param clientConf
    *          the client conf
    */
-  public LensMLClient(LensConnectionParams clientConf) {
-    client = new LensMLJerseyClient(new LensConnection(clientConf));
+  public LensMLClient(LensConnectionParams clientConf, String password) {
+    client = new LensMLJerseyClient(new LensConnection(clientConf), password);
+    LOG.info("Client created with new session");
+  }
+
+  /**
+   * Instantiates a new lens ml client.
+   *
+   * @param clientConf
+   *          the client conf
+   */
+  public LensMLClient(LensConnectionParams clientConf, LensSessionHandle sessionHandle) {
+    client = new LensMLJerseyClient(new LensConnection(clientConf, sessionHandle), sessionHandle);
+    LOG.info("Client created with existing session");
   }
 
   /**
@@ -116,10 +134,10 @@ public class LensMLClient implements LensML {
    */
   @Override
   public String train(String table, String algorithm, String[] args) throws LensException {
-    Map<String, String> trainParams = new LinkedHashMap<String, String>();
-    trainParams.put("table", table);
+    Form trainParams = new Form();
+    trainParams.param("table", table);
     for (int i = 0; i < args.length; i += 2) {
-      trainParams.put(args[i], args[i + 1]);
+      trainParams.param(args[i], args[i + 1]);
     }
     return client.trainModel(algorithm, trainParams);
   }
@@ -211,9 +229,9 @@ public class LensMLClient implements LensML {
    *           the lens exception
    */
   @Override
-  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID)
-      throws LensException {
-    String reportID = client.testModel(table, algorithm, modelID);
+  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
+      String outputTable) throws LensException {
+    String reportID = client.testModel(table, algorithm, modelID, outputTable);
     return getTestReport(algorithm, reportID);
   }
 
@@ -305,5 +323,17 @@ public class LensMLClient implements LensML {
   @Override
   public void deleteTestReport(String algorithm, String reportID) throws LensException {
     client.deleteTestReport(algorithm, reportID);
+  }
+
+  /**
+   * Close connection
+   */
+  @Override
+  public void close() throws IOException {
+    client.close();
+  }
+
+  public LensSessionHandle getSessionHandle() {
+    return client.getSessionHandle();
   }
 }

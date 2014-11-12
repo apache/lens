@@ -18,6 +18,7 @@
  */
 package org.apache.lens.client;
 
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.ml.ModelMetadata;
 import org.apache.lens.api.ml.TestReport;
@@ -33,6 +34,7 @@ import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.Form;
 import javax.ws.rs.core.MediaType;
+
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +45,6 @@ import java.util.Map;
  * The Class LensMLJerseyClient.
  */
 public class LensMLJerseyClient {
-
   /** The Constant LENS_ML_RESOURCE_PATH. */
   public static final String LENS_ML_RESOURCE_PATH = "lens.ml.resource.path";
 
@@ -56,14 +57,29 @@ public class LensMLJerseyClient {
   /** The connection. */
   private final LensConnection connection;
 
+  private final LensSessionHandle sessionHandle;
+
   /**
    * Instantiates a new lens ml jersey client.
    *
    * @param connection
    *          the connection
    */
-  public LensMLJerseyClient(LensConnection connection) {
+  public LensMLJerseyClient(LensConnection connection, String password) {
     this.connection = connection;
+    connection.open(password);
+    this.sessionHandle = null;
+  }
+
+  /**
+   * Instantiates a new lens ml jersey client.
+   *
+   * @param connection
+   *          the connection
+   */
+  public LensMLJerseyClient(LensConnection connection, LensSessionHandle sessionHandle) {
+    this.connection = connection;
+    this.sessionHandle = sessionHandle;
   }
 
   protected WebTarget getMLWebTarget() {
@@ -133,15 +149,9 @@ public class LensMLJerseyClient {
    *          the params
    * @return the string
    */
-  public String trainModel(String algorithm, Map<String, String> params) {
-    Form form = new Form();
-
-    for (Map.Entry<String, String> entry : params.entrySet()) {
-      form.param(entry.getKey(), entry.getValue());
-    }
-
+  public String trainModel(String algorithm, Form params) {
     return getMLWebTarget().path(algorithm).path("train").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
+        .post(Entity.entity(params, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
   }
 
   /**
@@ -153,15 +163,21 @@ public class LensMLJerseyClient {
    *          the algorithm
    * @param modelID
    *          the model id
+   * @param outputTable
+   *          the output table name
    * @return the string
    */
-  public String testModel(String table, String algorithm, String modelID) {
+  public String testModel(String table, String algorithm, String modelID, String outputTable) {
     WebTarget modelTestTarget = getMLWebTarget().path("test").path(table).path(algorithm).path(modelID);
 
     FormDataMultiPart mp = new FormDataMultiPart();
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
-        .getSessionHandle(), MediaType.APPLICATION_XML_TYPE));
 
+    LensSessionHandle sessionHandle = this.sessionHandle == null ? connection.getSessionHandle() : this.sessionHandle;
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionHandle,
+        MediaType.APPLICATION_XML_TYPE));
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("outputTable").build(), outputTable));
     return modelTestTarget.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
   }
 
@@ -251,5 +267,20 @@ public class LensMLJerseyClient {
 
   public Configuration getConf() {
     return connection.getLensConnectionParams().getConf();
+  }
+
+  public void close() {
+    try {
+      connection.close();
+    } catch (Exception exc) {
+      LOG.error("Error closing connection", exc);
+    }
+  }
+
+  public LensSessionHandle getSessionHandle() {
+    if (sessionHandle != null) {
+      return sessionHandle;
+    }
+    return connection.getSessionHandle();
   }
 }

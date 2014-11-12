@@ -21,6 +21,7 @@ package org.apache.lens.ml;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -30,6 +31,7 @@ import java.util.List;
  * Instantiates a new ML model.
  */
 @NoArgsConstructor
+@ToString
 public abstract class MLModel<PREDICTION> implements Serializable {
 
   /** The id. */

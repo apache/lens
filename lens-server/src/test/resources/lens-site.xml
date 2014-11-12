@@ -136,5 +136,4 @@
   <value>org.apache.lens.server.MockNonLensService</value>
   <description>Implementation class for session service</description>
 </property>
-
 </configuration>

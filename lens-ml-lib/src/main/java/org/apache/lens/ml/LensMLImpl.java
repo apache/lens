@@ -349,8 +349,8 @@ public class LensMLImpl implements LensML {
    * java.lang.String)
    */
   @Override
-  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID)
-      throws LensException {
+  public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
+      String outputTable) throws LensException {
     return null;
   }
 
@@ -372,12 +372,20 @@ public class LensMLImpl implements LensML {
    *           the lens exception
    */
   public MLTestReport testModelRemote(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
-      String queryApiUrl) throws LensException {
-    return testModel(sessionHandle, table, algorithm, modelID, new RemoteQueryRunner(sessionHandle, queryApiUrl));
+      String queryApiUrl, String outputTable) throws LensException {
+    return testModel(sessionHandle, table, algorithm, modelID, new RemoteQueryRunner(sessionHandle, queryApiUrl),
+        outputTable);
   }
 
   /**
-   * Test model.
+   * Evaluate a model. Evaluation is done on data selected table from an input table. The model is run as a UDF and its
+   * output is inserted into a table with a partition. Each evaluation is given a unique ID. The partition label is
+   * associated with this unique ID.
+   *
+   * <p>
+   * This call also required a query runner. Query runner is responsible for executing the evaluation query against Lens
+   * server.
+   * </p>
    *
    * @param sessionHandle
    *          the session handle
@@ -389,18 +397,20 @@ public class LensMLImpl implements LensML {
    *          the model id
    * @param queryRunner
    *          the query runner
+   * @param outputTable
+   *          table where test output will be written
    * @return the ML test report
    * @throws LensException
    *           the lens exception
    */
   public MLTestReport testModel(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
-      TestQueryRunner queryRunner) throws LensException {
+      TestQueryRunner queryRunner, String outputTable) throws LensException {
     // check if algorithm exists
     if (!getAlgorithms().contains(algorithm)) {
       throw new LensException("No such algorithm " + algorithm);
     }
 
-    MLModel model;
+    MLModel<?> model;
     try {
       model = ModelLoader.loadModel(conf, algorithm, modelID);
     } catch (IOException e) {
@@ -418,22 +428,31 @@ public class LensMLImpl implements LensML {
     }
 
     String testID = UUID.randomUUID().toString().replace("-", "_");
-    final String testTable = "ml_test_" + testID;
+    final String testTable = outputTable;
     final String testResultColumn = "prediction_result";
 
     // TODO support error metric UDAFs
     TableTestingSpec spec = TableTestingSpec.newBuilder().hiveConf(conf)
-        .database(database == null ? "default" : database).table(table).featureColumns(model.getFeatureColumns())
+        .database(database == null ? "default" : database).inputTable(table).featureColumns(model.getFeatureColumns())
         .outputColumn(testResultColumn).labeColumn(model.getLabelColumn()).algorithm(algorithm).modelID(modelID)
-        .outputTable(testTable).build();
-    String testQuery = spec.getTestQuery();
+        .outputTable(testTable).testID(testID).build();
 
+    String testQuery = spec.getTestQuery();
     if (testQuery == null) {
       throw new LensException("Invalid test spec. " + "table=" + table + " algorithm=" + algorithm + " modelID="
           + modelID);
     }
 
-    LOG.info("Running test query " + testQuery);
+    if (!spec.isOutputTableExists()) {
+      LOG.info("Output table '" + testTable + "' does not exist for test algorithm = " + algorithm + " modelid="
+          + modelID + ", Creating table using query: " + spec.getCreateOutputTableQuery());
+      // create the output table
+      String createOutputTableQuery = spec.getCreateOutputTableQuery();
+      queryRunner.runQuery(createOutputTableQuery);
+      LOG.info("Table created " + testTable);
+    }
+
+    LOG.info("Running evaluation query " + testQuery);
     QueryHandle testQueryHandle = queryRunner.runQuery(testQuery);
 
     MLTestReport testReport = new MLTestReport();

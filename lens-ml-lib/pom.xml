@@ -142,10 +142,12 @@
                 <version>2.15</version>
                 <configuration>
                     <systemPropertyVariables>
-                        <hadoop.bin.path>${pom.basedir}/../lens-driver-hive/testutils/hadoop</hadoop.bin.path>
+                        <hadoop.bin.path>${pom.basedir}/testutils/hadoop</hadoop.bin.path>
                     </systemPropertyVariables>
                     <environmentVariables>
                         <MVN_CLASSPATH_FILE>${mvn.classpath.file}</MVN_CLASSPATH_FILE>
+                        <!-- We have to include the test classes so that UDF class is available -->
+                        <TEST_CLASSPATH>${pom.basedir}/target/classes</TEST_CLASSPATH>
                     </environmentVariables>
                     <!-- More memory is required to run Spark in unit tests -->
                     <argLine>-XX:MaxPermSize=1024m -Xms1024m -Xmx2000m</argLine>
@@ -158,7 +160,7 @@
                 <executions>
                     <execution>
                         <id>build-classpath</id>
-                        <phase>compile</phase>
+                        <phase>test-compile</phase>
                         <goals>
                             <goal>build-classpath</goal>
                         </goals>

@@ -18,19 +18,23 @@
  */
 package org.apache.lens.ml.spark;
 
-import com.google.common.base.Preconditions;
-import org.apache.lens.api.LensException;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Getter;
-import org.apache.commons.lang.StringUtils;
+import lombok.ToString;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
+import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
+import org.apache.hive.hcatalog.data.schema.HCatSchema;
+import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
+import org.apache.lens.api.LensException;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -38,14 +42,12 @@ import org.apache.spark.api.java.function.Function;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.base.Preconditions;
 
 /**
  * The Class TableTrainingSpec.
  */
+@ToString
 public class TableTrainingSpec implements Serializable {
 
   /** The Constant LOG. */
@@ -326,21 +328,23 @@ public class TableTrainingSpec implements Serializable {
    * @return true, if successful
    */
   boolean validate() {
-    List<FieldSchema> columns;
+    List<HCatFieldSchema> columns;
     try {
-      Hive metastoreClient = Hive.get(conf);
-      Table tbl = (database == null) ? metastoreClient.getTable(table) : metastoreClient.getTable(database, table);
-      columns = tbl.getAllCols();
-    } catch (HiveException exc) {
+      HCatInputFormat.setInput(conf, database == null ? "default" : database, table, partitionFilter);
+      HCatSchema tableSchema = HCatInputFormat.getTableSchema(conf);
+      columns = tableSchema.getFields();
+    } catch (IOException exc) {
       LOG.error("Error getting table info " + toString(), exc);
       return false;
     }
+
+    LOG.info(table + " columns " + columns.toString());
 
     boolean valid = false;
     if (columns != null && !columns.isEmpty()) {
       // Check labeled column
       List<String> columnNames = new ArrayList<String>();
-      for (FieldSchema col : columns) {
+      for (HCatFieldSchema col : columns) {
         columnNames.add(col.getName());
       }
 
@@ -396,6 +400,8 @@ public class TableTrainingSpec implements Serializable {
       throw new LensException("Table spec not valid: " + toString());
     }
 
+    LOG.info("Creating RDDs with spec " + toString());
+
     // Get the RDD for table
     JavaPairRDD<WritableComparable, HCatRecord> tableRDD;
     try {
@@ -435,13 +441,4 @@ public class TableTrainingSpec implements Serializable {
     LOG.info("Generated RDDs");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see java.lang.Object#toString()
-   */
-  @Override
-  public String toString() {
-    return StringUtils.join(new String[] { database, table, partitionFilter, labelColumn }, ",");
-  }
 }

@@ -18,12 +18,39 @@
  */
 package org.apache.lens.ml;
 
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.ServiceProvider;
+import org.apache.lens.server.api.ServiceProviderFactory;
+import org.apache.lens.server.ml.MLService;
+import org.apache.lens.server.ml.MLServiceImpl;
+
 public class MLUtils {
+
+  private static final HiveConf hiveConf;
+  static {
+    hiveConf = new HiveConf();
+    // Add default config so that we know the service provider implementation
+    hiveConf.addResource("lensserver-default.xml");
+    hiveConf.addResource("lens-site.xml");
+  }
+
   public static String getTrainerName(Class<? extends MLTrainer> trainerClass) {
     Algorithm annotation = trainerClass.getAnnotation(Algorithm.class);
     if (annotation != null) {
       return annotation.name();
     }
     throw new IllegalArgumentException("Trainer should be decorated with annotation - " + Algorithm.class.getName());
+  }
+
+  public static MLServiceImpl getMLService() throws Exception {
+    return getServiceProvider().getService(MLService.NAME);
+  }
+
+  public static ServiceProvider getServiceProvider() throws Exception {
+    Class<? extends ServiceProviderFactory> spfClass = hiveConf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
+        null, ServiceProviderFactory.class);
+    ServiceProviderFactory spf = spfClass.newInstance();
+    return spf.getServiceProvider();
   }
 }
