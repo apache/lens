@@ -16,27 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.query;
 
-import java.util.Collection;
-import java.util.Map;
+import lombok.Getter;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.lens.api.LensConf;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.query.AbstractQueryContext;
+import java.io.Serializable;
 
-/**
- * The Interface DriverSelector.
- */
-public interface DriverSelector {
+public abstract class AbstractQueryContext extends DriverSelectorQueryContext implements Serializable {
+  public static final Log LOG = LogFactory.getLog(AbstractQueryContext.class);
 
-  /**
-   * Select.
-   *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
-   * @return the lens driver
-   */
-  public LensDriver select(AbstractQueryContext ctx, Configuration conf);
+  /** The user query. */
+  @Getter
+  protected String userQuery;
+
+  /** The qconf. */
+  @Getter
+  protected LensConf qconf;
 }

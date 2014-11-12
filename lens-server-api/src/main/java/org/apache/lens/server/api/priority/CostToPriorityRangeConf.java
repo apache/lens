@@ -16,27 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.priority;
 
-import java.util.Collection;
-import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.lens.api.Priority;
 
-/**
- * The Interface DriverSelector.
- */
-public interface DriverSelector {
+public class CostToPriorityRangeConf extends RangeConf<Float, Priority>{
+  public CostToPriorityRangeConf(String confValue) {
+    super(confValue);
+  }
+  @Override
+  protected Float parseKey(String s) {
+    return Float.parseFloat(s);
+  }
 
-  /**
-   * Select.
-   *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
-   * @return the lens driver
-   */
-  public LensDriver select(AbstractQueryContext ctx, Configuration conf);
+  @Override
+  protected Priority parseValue(String s) {
+    return Priority.valueOf(s);
+  }
+
+  @Override
+  protected String getDefaultConf() {
+    return Priority.NORMAL.toString();
+  }
 }

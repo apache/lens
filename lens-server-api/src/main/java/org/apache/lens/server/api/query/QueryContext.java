@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server.api.query;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +41,7 @@ import lombok.Setter;
 /**
  * The Class QueryContext.
  */
-public class QueryContext implements Comparable<QueryContext>, Serializable {
+public class QueryContext extends AbstractQueryContext implements Comparable<QueryContext> {
 
   /** The Constant serialVersionUID. */
   private static final long serialVersionUID = 1L;
@@ -52,20 +51,9 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   @Setter
   private QueryHandle queryHandle;
 
-  /** The user query. */
-  @Getter
-  final private String userQuery;
-
   /** The submitted user. */
   @Getter
   final private String submittedUser; // Logged in user.
-
-  /** The conf. */
-  transient @Getter @Setter private Configuration conf;
-
-  /** The qconf. */
-  @Getter
-  private LensConf qconf;
 
   /** The priority. */
   @Getter
@@ -78,14 +66,6 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   /** The is driver persistent. */
   @Getter
   final private boolean isDriverPersistent;
-
-  /** The selected driver. */
-  transient @Getter @Setter private LensDriver selectedDriver;
-
-  /** The driver query. */
-  @Getter
-  @Setter
-  private String driverQuery;
 
   /** The status. */
   @Getter
@@ -206,6 +186,8 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
   public QueryContext(PreparedQueryContext prepared, String user, LensConf qconf, Configuration conf) {
     this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf), prepared.getDriverQuery(), prepared
         .getSelectedDriver(), new Date().getTime());
+    driverQueries = prepared.getDriverQueries();
+    driverQueryPlans = prepared.getDriverQueryPlans();
   }
 
   /**
@@ -325,7 +307,7 @@ public class QueryContext implements Comparable<QueryContext>, Serializable {
    */
   public LensQuery toLensQuery() {
     return new LensQuery(queryHandle, userQuery, submittedUser, priority, isPersistent,
-        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null, driverQuery, status,
+        getSelectedDriver() != null ? getSelectedDriver().getClass().getCanonicalName() : null, getDriverQuery(), status,
         resultSetPath, driverOpHandle, qconf, submissionTime, launchTime, driverStatus.getDriverStartTime(),
         driverStatus.getDriverFinishTime(), endTime, closedTime, queryName);
   }

@@ -28,7 +28,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.LensPreparedQuery;
 import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.driver.LensDriver;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,15 +35,11 @@ import lombok.Setter;
 /**
  * The Class PreparedQueryContext.
  */
-public class PreparedQueryContext implements Delayed {
+public class PreparedQueryContext extends AbstractQueryContext implements Delayed {
 
   /** The prepare handle. */
   @Getter
   private final QueryPrepareHandle prepareHandle;
-
-  /** The user query. */
-  @Getter
-  private final String userQuery;
 
   /** The prepared time. */
   @Getter
@@ -53,23 +48,6 @@ public class PreparedQueryContext implements Delayed {
   /** The prepared user. */
   @Getter
   private final String preparedUser;
-
-  /** The conf. */
-  transient @Getter private final Configuration conf;
-
-  /** The qconf. */
-  @Getter
-  final LensConf qconf;
-
-  /** The selected driver. */
-  @Getter
-  @Setter
-  private LensDriver selectedDriver;
-
-  /** The driver query. */
-  @Getter
-  @Setter
-  private String driverQuery;
 
   /** The query name. */
   @Getter
@@ -165,5 +143,4 @@ public class PreparedQueryContext implements Delayed {
     return new LensPreparedQuery(prepareHandle, userQuery, preparedTime, preparedUser,
         selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null, driverQuery, qconf);
   }
-
 }

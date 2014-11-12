@@ -16,27 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
-
-import java.util.Collection;
-import java.util.Map;
+package org.apache.lens.server.api.query;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.query.AbstractQueryContext;
 
-/**
- * The Interface DriverSelector.
- */
-public interface DriverSelector {
-
-  /**
-   * Select.
-   *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
-   * @return the lens driver
-   */
-  public LensDriver select(AbstractQueryContext ctx, Configuration conf);
+public class ExplainQueryContext extends AbstractQueryContext{
+  public ExplainQueryContext(String query, Configuration qconf) {
+    userQuery = query;
+    conf = qconf;
+  }
 }

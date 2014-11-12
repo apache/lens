@@ -34,9 +34,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.server.HiveServer2;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.driver.hive.RemoteThriftConnection;
-import org.apache.lens.driver.hive.ThriftConnection;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -132,6 +129,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf = new HiveConf(remoteConf);
     conf.addResource("hivedriver-site.xml");
     driver = new HiveDriver();
+    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
     driver.configure(conf);
     System.out.println("TestRemoteHiveDriver created");
   }
@@ -234,6 +232,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     HiveConf driverConf = new HiveConf(remoteConf, TestRemoteHiveDriver.class);
     driverConf.addResource("hivedriver-site.xml");
     driverConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
+    driverConf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
 
     final HiveDriver oldDriver = new HiveDriver();
     oldDriver.configure(driverConf);
