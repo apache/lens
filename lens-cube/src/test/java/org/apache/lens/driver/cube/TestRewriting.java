@@ -31,10 +31,11 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
-import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.server.api.driver.LensDriver;
 
 import static org.mockito.Matchers.any;
+
+import org.apache.lens.server.api.driver.MockDriver;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;

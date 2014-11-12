@@ -20,6 +20,7 @@ package org.apache.lens.server.api.driver;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.log4j.Logger;
 
 import java.util.Collection;
@@ -29,55 +30,33 @@ import java.util.Map;
 
 public class MinQueryCostSelector implements DriverSelector {
   public static final Logger LOG = Logger.getLogger(MinQueryCostSelector.class);
-
   /**
    * Returns the driver that has the minimum query cost.
    *
-   * @param drivers
-   *          the drivers
-   * @param driverQueries
-   *          the driver queries
+   * @param ctx
+   *          the context
    * @param conf
    *          the conf
    * @return the lens driver
    */
   @Override
-  public LensDriver select(Collection<LensDriver> drivers, final Map<LensDriver, String> driverQueries,
+  public LensDriver select(final AbstractQueryContext ctx,
     final Configuration conf) {
-    return Collections.min(drivers, new Comparator<LensDriver>() {
+    return Collections.min(ctx.getDriverQueries().keySet(), new Comparator<LensDriver>() {
       @Override
       public int compare(LensDriver d1, LensDriver d2) {
-        DriverQueryPlan c1 = null;
-        DriverQueryPlan c2 = null;
-        // Handle cases where the queries can be null because the storages are not
-        // supported.
-        if (driverQueries.get(d1) == null) {
-          return 1;
-        }
-        if (driverQueries.get(d2) == null) {
-          return -1;
-        }
-        try {
-          c1 = d1.explain(driverQueries.get(d1), conf);
-        } catch (LensException e) {
-          LOG.warn("Explain query:" + driverQueries.get(d1) + " on Driver:" + d1.getClass().getSimpleName()
-            + " failed", e);
-        }
-        try {
-          c2 = d2.explain(driverQueries.get(d2), conf);
-        } catch (LensException e) {
-          LOG.warn("Explain query:" + driverQueries.get(d2) + " on Driver:" + d2.getClass().getSimpleName()
-            + " failed", e);
-        }
-        if (c1 == null && c2 == null) {
-          return 0;
-        } else if (c1 == null && c2 != null) {
-          return 1;
-        } else if (c1 != null && c2 == null) {
-          return -1;
-        }
-        return c1.getCost().compareTo(c2.getCost());
+        return comparePlans(ctx.getDriverQueryPlans().get(d1), ctx.getDriverQueryPlans().get(d2));
       }
     });
+  }
+  int comparePlans(DriverQueryPlan c1, DriverQueryPlan c2) {
+    if (c1 == null && c2 == null) {
+      return 0;
+    } else if (c1 == null && c2 != null) {
+      return 1;
+    } else if (c1 != null && c2 == null) {
+      return -1;
+    }
+    return c1.getCost().compareTo(c2.getCost());
   }
 }

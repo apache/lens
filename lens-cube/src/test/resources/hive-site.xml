@@ -25,7 +25,7 @@
 
 <property>
   <name>lens.server.drivers</name>
-  <value>org.apache.lens.driver.cube.MockDriver</value>
+  <value>org.apache.lens.server.api.driver.MockDriver</value>
 </property>
 
 <property>
