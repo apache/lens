@@ -23,6 +23,7 @@ import org.apache.lens.api.metastore.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.DateTime;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
@@ -1055,6 +1056,7 @@ public class MetastoreResource {
     try {
       getSvc().dropPartitionFromStorageByFilter(sessionid, factName, storage, filter);
     } catch (LensException exc) {
+      LOG.warn("Got exception while dropping partition.", exc);
       checkTableNotFound(exc, factName);
       return new APIResult(Status.PARTIAL, exc.getMessage());
     }
@@ -1435,6 +1437,7 @@ public class MetastoreResource {
 
   /**
    * Get flattened list of columns reachable from a cube or a dimension
+   * 
    * @param sessionid session id
    * @param tableName name of the table
    * @return list of measures, expressions or dimension attributes
@@ -1447,6 +1450,29 @@ public class MetastoreResource {
     checkSessionId(sessionid);
     try {
       return getSvc().getFlattenedColumns(sessionid, tableName);
+    } catch (LensException exc) {
+      throw new WebApplicationException(exc);
+    }
+  }
+  
+  /**
+   * Get the latest available date upto which data is available for the base cubes, for the time dimension.
+   * 
+   * @param sessionid The sessionid in which user is working
+   * @param timeDimension time dimension name
+   * @param cubeName name of the base cube
+   * 
+   * @return DateTime object which has Date in it.
+   * 
+   */
+  @GET
+  @Path("/cubes/{cubeName}/latestdate")
+  public DateTime getLatestDateOfCube(@QueryParam("sessionid") LensSessionHandle sessionid,
+      @PathParam("cubeName") String cubeName, @QueryParam("timeDimension") String timeDimension) throws LensException,
+      HiveException {
+    checkSessionId(sessionid);
+    try {
+      return new DateTime(getSvc().getLatestDateOfCube(sessionid, cubeName, timeDimension));
     } catch (LensException exc) {
       throw new WebApplicationException(exc);
     }
