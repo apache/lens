@@ -20,7 +20,15 @@ package org.apache.lens.server.api.query;
 
 import org.apache.hadoop.conf.Configuration;
 
+/**
+ * The class ExplainQueryContext
+ */
 public class ExplainQueryContext extends AbstractQueryContext{
+  /**
+   * Constructor. Only needs user query and conf.
+   * @param query
+   * @param qconf
+   */
   public ExplainQueryContext(String query, Configuration qconf) {
     userQuery = query;
     conf = qconf;

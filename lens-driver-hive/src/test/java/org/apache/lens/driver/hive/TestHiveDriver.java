@@ -768,6 +768,12 @@ public class TestHiveDriver {
     assertEquals(ctx.getHdfsoutPath(), path);
     driver.closeQuery(plan2.getHandle());
   }
+
+  /**
+   * Testing Duration Based Priority Logic by mocking everything except partitions.
+   * @throws IOException
+   * @throws LensException
+   */
   @Test
   public void testPriority() throws IOException, LensException {
     final MockDriver mockDriver = new MockDriver();

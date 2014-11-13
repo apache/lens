@@ -31,6 +31,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class DriverSelectorQueryContext {
+
+  /** The constant LOG */
   public static final Log LOG = LogFactory.getLog(DriverSelectorQueryContext.class);
 
   /** The conf. */
@@ -46,15 +48,24 @@ public abstract class DriverSelectorQueryContext {
   @Getter
   @Setter
   protected String driverQuery;
-
+  /** Map of driver to driver query */
   @Getter
   protected Map<LensDriver, String> driverQueries;
 
+  /** Map of driver to query plan */
   @Getter
   protected Map<LensDriver, DriverQueryPlan> driverQueryPlans;
 
+  /** Map of exceptions occurred while trying to generate plans by explain call */
   protected Map<LensDriver, Exception> driverQueryPlanGenerationErrors;
 
+  /**
+   * Sets driver queries, generates plans for each driver by calling explain with respective queries,
+   * Sets driverQueryPlans
+   * @param driverQueries
+   * @throws LensException
+   * @see #driverQueryPlans
+   */
   public void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries) throws LensException {
     driverQueryPlanGenerationErrors = new HashMap<LensDriver, Exception>();
     this.driverQueries = driverQueries;
@@ -71,6 +82,11 @@ public abstract class DriverSelectorQueryContext {
     }
   }
 
+  /**
+   * Return selected driver's query plan, but check for null conditions first.
+   * @return DriverQueryPlan of Selected Driver
+   * @throws LensException
+   */
   public DriverQueryPlan getSelectedDriverQueryPlan() throws LensException {
     if(getDriverQueryPlans() == null) {
       throw new LensException("No Driver query plans. Check if re-write happened or not");

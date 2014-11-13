@@ -919,7 +919,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     LensDriver driver = driverSelector.select(ctx, conf);
 
     ctx.setSelectedDriver(driver);
-    //TODO: remove this. Note the Redundancy. 
     ctx.setDriverQuery(ctx.getDriverQueries().get(ctx.getSelectedDriver()));
   }
 

@@ -101,13 +101,6 @@ public class MockDriver implements LensDriver {
     @Getter @Setter
     private Map<String, List<String>> partitions;
 
-//    public Map<String, List<String>> getPartitions() {
-//      return partitions;
-//    }
-//    public void setPartitions(Map<String, List<String>> partitions) {
-//      this.partitions = partitions;
-//    }
-
     @Override
     public String getPlan() {
       return query;

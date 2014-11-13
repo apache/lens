@@ -77,7 +77,7 @@ public class HiveDriver implements LensDriver {
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
 
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
-  public  static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.connection.expiry.delay";
+  public  static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
 
   public static final String HS2_CALCULATE_PRIORITY = "lens.driver.hive.calculate.priority";
   public static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hive.priority.partition.weight.monthly";

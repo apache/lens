@@ -24,7 +24,14 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.log4j.Logger;
 
 public interface QueryPriorityDecider {
-
+  /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(QueryPriorityDecider.class);
+
+  /**
+   *
+   * @param queryContext
+   * @return calculated Priority based on the explained plans for each driver
+   * @throws LensException when can't decide priority.
+   */
   public Priority decidePriority(AbstractQueryContext queryContext) throws LensException;
 }

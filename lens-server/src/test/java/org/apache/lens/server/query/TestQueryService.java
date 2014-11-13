@@ -344,9 +344,9 @@ public class TestQueryService extends LensJerseyTest {
       Thread.sleep(1000);
     }
     assertTrue(ctx.getSubmissionTime() > 0);
-//    assertTrue(ctx.getLaunchTime() > 0);
-//    assertTrue(ctx.getDriverStartTime() > 0);
-//    assertTrue(ctx.getDriverFinishTime() > 0);
+    assertTrue(ctx.getLaunchTime() > 0);
+    assertTrue(ctx.getDriverStartTime() > 0);
+    assertTrue(ctx.getDriverFinishTime() > 0);
     assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
 

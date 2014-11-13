@@ -26,6 +26,7 @@ import org.apache.lens.api.LensConf;
 import java.io.Serializable;
 
 public abstract class AbstractQueryContext extends DriverSelectorQueryContext implements Serializable {
+  /** The Constant LOG */
   public static final Log LOG = LogFactory.getLog(AbstractQueryContext.class);
 
   /** The user query. */
