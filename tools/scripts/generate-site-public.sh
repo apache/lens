@@ -24,7 +24,7 @@ die() {
     exit 1
 }
 
-REPO=git@github.com:InMobi/grill.git
+REPO=https://git-wip-us.apache.org/repos/asf?p=incubator-lens.git
 TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/lens-server/target/site/wsdocs

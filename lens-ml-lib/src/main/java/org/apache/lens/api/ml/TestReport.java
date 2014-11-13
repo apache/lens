@@ -115,7 +115,7 @@ public class TestReport {
     builder.append("Algorithm: ").append(algorithm).append('\n');
     builder.append("Report id: ").append(reportID).append('\n');
     builder.append("Model id: ").append(modelID).append('\n');
-    builder.append("Grill Query id: ").append(queryID).append('\n');
+    builder.append("Lens Query id: ").append(queryID).append('\n');
     builder.append("Feature columns: ").append(featureColumns).append('\n');
     builder.append("Labelled column: ").append(labelColumn).append('\n');
     builder.append("Predicted column: ").append(outputColumn).append('\n');

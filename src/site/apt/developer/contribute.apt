@@ -29,7 +29,7 @@ Developer Documentation : How to contribute to Apache Lens?
 ** Source Repository
 
   Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at 
-  {{{https://github.com/InMobi/grill} https://github.com/InMobi/grill}}.
+  {{{https://git-wip-us.apache.org/repos/asf?p=incubator-lens.git} https://git-wip-us.apache.org/repos/asf?p=incubator-lens.git}}.
 
 ** Build tools
 

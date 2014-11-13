@@ -25,10 +25,9 @@
 	<publishDate position="right"/>
 	<version position="right"/>
 	<bannerLeft>
-    <name>Lens Analytics Platform for InMobi</name>
+    <name>Lens Analytics Platform</name>
 		<title>Lens Analytics Platform</title>
-		<src>http://inmobi.github.io/grill/grill-logo.png</src>
-		<href>http://inmobi.github.io/grill</href>
+		<href>http://lens.incubator.apache.org</href>
   </bannerLeft>
 	
  <body>
@@ -60,8 +59,8 @@
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>
-      <item name="InMobi" href="https://github.com/InMobi" />
-			<item name="Lens" href="https://github.com/InMobi/grill" />
+      <item name="ASF" href="http://www.apache.org" />
+			<item name="Lens" href="http://lens.incubator.apache.org" />
     </breadcrumbs>
   </body>
   <skin>
@@ -70,7 +69,6 @@
     <version>1.1</version>
   </skin>
   <poweredBy>
-    <logo name="inmobi" href="http://www.inmobi.com/"
-          img="../images/inmobi-logo.jpg"/>
+    <logo name="ASF" href="http://www.apache.org/"/>
   </poweredBy>
 </project>

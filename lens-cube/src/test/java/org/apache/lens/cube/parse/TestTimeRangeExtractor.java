@@ -75,7 +75,6 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
 
   @Test
   public void testNoNPE() throws Exception {
-    // GRILL-38 NPE in extracting time range
     String timeRange = " time_range_in(dt, '" + dateTwoDaysBack + "','" + dateNow + "')";
     String q1 = "SELECT cityid, testCube.msr2 from testCube where " + timeRange + " AND cityid IS NULL";
     rewrite(driver, q1);

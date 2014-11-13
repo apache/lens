@@ -24,7 +24,7 @@ JDBC Client
 
   <<Using JDBC driver.>>
 
-    The main driver class for accessing lens server is <<<com.inmobi.lens.client.jdbc.LensJdbcDriver.java>>>
+    The main driver class for accessing lens server is <<<org.apache.lens.client.jdbc.LensJdbcDriver.java>>>
 
     Add <<<lens-client-site.xml>>> in the class path and configure following parameters as described in {{{./client-config.html}here}}
 

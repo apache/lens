@@ -27,7 +27,7 @@ Installing and running lens
 
 +---+
 
-   git clone https://github.com/InMobi/grill
+   git clone https://git-wip-us.apache.org/repos/asf?p=incubator-lens.git
 
    cd lens
 

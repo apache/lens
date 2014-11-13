@@ -34,9 +34,10 @@ Configuring lens server
   The supported drivers are configured through classnames in this release. The configuration 
   for each driver can be specified in their site.xml file. For example, HiveDriver's
   configuration should be specified in hive-site.xml. Supported drivers in this version
-  are com.inmobi.lens.driver.hive.HiveDriver and com.inmobi.lens.driver.jdbc.JDBCDriver.
+  are org.apache.lens.driver.hive.HiveDriver and org.apache.lens.driver.jdbc.JDBCDriver.
   The configuration parameters and
-  their detailed description and default values for HiveDriver are available {{{./hivedriver-config.html} here}}
+  their detailed description and default values for HiveDriver
+  are available {{{./hivedriver-config.html} here}}
   and for JDBCDriver available {{{./jdbcdriver-config.html} here}}. 
   The overridden configuration for HiveDriver and JDBCDriver can be part of hivedriver-site.xml 
   and jdbc-driver-site.xml respectively.
