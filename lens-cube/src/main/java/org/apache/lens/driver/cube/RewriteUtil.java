@@ -205,6 +205,7 @@ public class RewriteUtil {
       }
       conf.set(entry.getKey(), entry.getValue());
     }
+    conf.setClassLoader(queryConf.getClassLoader());
     return conf;
   }
 
