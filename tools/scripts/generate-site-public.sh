@@ -24,7 +24,7 @@ die() {
     exit 1
 }
 
-REPO=https://git-wip-us.apache.org/repos/asf?p=incubator-lens.git
+REPO=https://git-wip-us.apache.org/repos/asf/incubator-lens.git
 TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/lens-server/target/site/wsdocs
