@@ -51,7 +51,7 @@
   <name>Lens</name>
   <packaging>pom</packaging>
   <description>Unified Analytics Platform</description>
-  <url>https://github.com/InMobi/grill</url>
+  <url>http://lens.incubator.apache.org</url>
   <inceptionYear>2014</inceptionYear>
   <licenses>
     <license>
@@ -65,27 +65,44 @@
     <url>http://www.apache.org</url>
   </organization>
 
+  <issueManagement>
+     <system>JIRA</system>
+     <url>https://issues.apache.org/jira/browse/LENS</url>
+  </issueManagement>
+
+  <ciManagement>
+     <system>Jenkins</system>
+     <url>https://builds.apache.org/view/H-L/view/Lens/</url>
+  </ciManagement>
+
   <mailingLists>
     <mailingList>
-      <name>grill-users@googlegroups.com</name>
-      <subscribe>grill-users+subscribe@googlegroups.com</subscribe>
-      <unsubscribe>grill-users+unsubscribe@googlegroups.com</unsubscribe>
-      <post>grill-users@googlegroups.com</post>
-      <archive>https://groups.google.com/forum/?hl=en#!forum/grill-users</archive>
+      <name>lens-user</name>
+      <subscribe>user-subscribe@lens.incubator.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@lens.incubator.apache.org</unsubscribe>
+      <post>user@lens.incubator.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/lens-user/</archive>
     </mailingList>
     <mailingList>
-      <name>grill-dev@googlegroups.com</name>
-      <subscribe>grill-dev+subscribe@googlegroups.com</subscribe>
-      <unsubscribe>grill-dev+unsubscribe@googlegroups.com</unsubscribe>
-      <post>grill-dev@googlegroups.com</post>
-      <archive>https://groups.google.com/forum/?hl=en#!forum/grill-dev</archive>
+      <name>lens-dev</name>
+      <subscribe>dev-subscribe@lens.incubator.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@lens.incubator.apache.org</unsubscribe>
+      <post>dev@lens.incubator.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/lens-dev/</archive>
+    </mailingList>
+    <mailingList>
+      <name>lens-commits</name>
+      <subscribe>commits-subscribe@lens.incubator.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@lens.incubator.apache.org</unsubscribe>
+      <post>commits@lens.incubator.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/lens-commits/</archive>
     </mailingList>
   </mailingLists>
 
   <scm>
-    <connection>scm:git:https://github.com/InMobi/grill.git</connection>
-    <url>https://github.com/InMobi/grill</url>
-    <developerConnection>scm:git:https://github.com/InMobi/grill.git</developerConnection>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</developerConnection>
+    <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -844,26 +861,8 @@
 
   </dependencyManagement>
 
-  <distributionManagement>
-    <repository>
-      <id>InMobiReleases</id>
-      <name>InMobi release Repository</name>
-      <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>InMobiSnapshots</id>
-      <name>InMobi snapshot Repository</name>
-      <url>https://github.com/InMobi/mvn-repo/raw/master/snapshots</url>
-    </snapshotRepository>
-    <site>
-      <id>lens-site</id>
-      <url>https://inmobi.github.io/grill/</url>
-    </site>
-  </distributionManagement>
-
-
   <modules>
-  <module>checkstyle</module>
+    <module>checkstyle</module>
     <module>lens-api</module>
     <module>lens-server-api</module>
     <module>lens-cube</module>
