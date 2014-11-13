@@ -44,8 +44,16 @@ Hive driver configuration
 *--+--+---+--+
 |10|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|11|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
+|11|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
 *--+--+---+--+
-|12|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+|12|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
+*--+--+---+--+
+|13|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
+*--+--+---+--+
+|14|lens.driver.hive.priority.partition.weight.daily|0.75|Weight of monthly partition in cost calculation|
+*--+--+---+--+
+|15|lens.driver.hive.priority.partition.weight.hourly|1.0|Weight of monthly partition in cost calculation|
+*--+--+---+--+
+|16|lens.driver.hive.priority.partition.weight.monthly|0.5|Weight of monthly partition in cost calculation|
 *--+--+---+--+
 The configuration parameters and their default values

@@ -16,14 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.cube;
+package org.apache.lens.server.api.driver;
 
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.lens.api.LensException;
@@ -76,7 +79,7 @@ public class MockDriver implements LensDriver {
   /**
    * The Class MockQueryPlan.
    */
-  static class MockQueryPlan extends DriverQueryPlan {
+  public static class MockQueryPlan extends DriverQueryPlan {
 
     /** The query. */
     String query;
@@ -90,7 +93,13 @@ public class MockDriver implements LensDriver {
     MockQueryPlan(String query) {
       this.query = query;
       setPrepareHandle(new QueryPrepareHandle(UUID.randomUUID()));
+      tableWeights.put("table1", 1.0);
+      tableWeights.put("table2", 2.0);
+      tableWeights.put("table3", 3.0);
     }
+
+    @Getter @Setter
+    private Map<String, List<String>> partitions;
 
     @Override
     public String getPlan() {

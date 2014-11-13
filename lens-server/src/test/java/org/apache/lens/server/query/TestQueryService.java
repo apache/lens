@@ -40,7 +40,10 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.HiveDriverRunHook;
+import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.io.IOUtils;
+import org.apache.lens.driver.hive.TestHiveDriver;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -64,15 +67,12 @@ import org.apache.lens.api.query.QueryResultSetMetadata;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.driver.hive.TestHiveDriver.FailHook;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.query.QueryApp;
-import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.subethamail.wiser.Wiser;
 import org.subethamail.wiser.WiserMessage;
 import org.testng.Assert;
@@ -275,7 +275,7 @@ public class TestQueryService extends LensJerseyTest {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
     LensConf conf = new LensConf();
-    conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
+    conf.addProperty("hive.exec.driver.run.hooks", TestHiveDriver.FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
@@ -374,7 +374,7 @@ public class TestQueryService extends LensJerseyTest {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
     LensConf conf = new LensConf();
-    conf.addProperty("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
+    conf.addProperty("hive.exec.driver.run.hooks", TestHiveDriver.FailHook.class.getCanonicalName());
     final FormDataMultiPart mp = new FormDataMultiPart();
 
     /**

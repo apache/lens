@@ -57,6 +57,8 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
+import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -75,10 +77,18 @@ public class HiveDriver implements LensDriver {
   public static final String HIVE_CONNECTION_CLASS = "lens.driver.hive.connection.class";
 
   /** The Constant HS2_CONNECTION_EXPIRY_DELAY. */
-  public static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hs2.connection.expiry.delay";
+  public  static final String HS2_CONNECTION_EXPIRY_DELAY = "lens.driver.hive.hs2.connection.expiry.delay";
+
+  public static final String HS2_CALCULATE_PRIORITY = "lens.driver.hive.calculate.priority";
+  public static final String HS2_PARTITION_WEIGHT_MONTHLY = "lens.driver.hive.priority.partition.weight.monthly";
+  public static final String HS2_PARTITION_WEIGHT_DAILY = "lens.driver.hive.priority.partition.weight.daily";
+  public static final String HS2_PARTITION_WEIGHT_HOURLY = "lens.driver.hive.priority.partition.weight.hourly";
   // Default expiry is 10 minutes
   /** The Constant DEFAULT_EXPIRY_DELAY. */
   public static final long DEFAULT_EXPIRY_DELAY = 600 * 1000;
+  public static final float MONTHLY_PARTITION_WEIGHT_DEFAULT = 0.5f;
+  public static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
+  public static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
 
   /** The driver conf. */
   private HiveConf driverConf;
@@ -112,6 +122,10 @@ public class HiveDriver implements LensDriver {
 
   /** The driver listeners. */
   private List<LensEventListener<DriverEvent>> driverListeners;
+  QueryPriorityDecider queryPriorityDecider;
+
+  // package-local. Test case can change.
+  boolean whetherCalculatePriority;
 
   /**
    * The Class ConnectionExpiryRunnable.
@@ -281,6 +295,12 @@ public class HiveDriver implements LensDriver {
         ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
     connectionExpiryTimeout = this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
+    whetherCalculatePriority = this.driverConf.getBoolean(HS2_CALCULATE_PRIORITY, true);
+    queryPriorityDecider = new DurationBasedQueryPriorityDecider(
+      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_MONTHLY, MONTHLY_PARTITION_WEIGHT_DEFAULT),
+      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_DAILY, DAILY_PARTITION_WEIGHT_DEFAULT),
+      this.driverConf.getFloat(HS2_PARTITION_WEIGHT_HOURLY, HOURLY_PARTITION_WEIGHT_DEFAULT)
+      );
   }
 
   /*
@@ -289,7 +309,7 @@ public class HiveDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public DriverQueryPlan explain(final String query, final Configuration conf) throws LensException {
+  public HiveQueryPlan explain(final String query, final Configuration conf) throws LensException {
     LOG.info("Explain: " + query);
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
@@ -354,12 +374,13 @@ public class HiveDriver implements LensDriver {
    * 
    * @see org.apache.lens.server.api.driver.LensDriver#execute(org.apache.lens.server.api.query.QueryContext)
    */
+  // assuming this is only called for executing explain/insert/set/delete/etc... queries which don't ask to fetch data.
   public LensResultSet execute(QueryContext ctx) throws LensException {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
       OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getDriverQuery(),
-          ctx.getConf().getValByRegex(".*"));
+        ctx.getConf().getValByRegex(".*"));
       LOG.info("The hive operation handle: " + op);
       ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);
@@ -395,8 +416,17 @@ public class HiveDriver implements LensDriver {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
+      //Query is already explained.
+      if(whetherCalculatePriority) {
+        try{
+          // Inside try since non-data fetching queries can also be executed by async method.
+          ctx.getConf().set("mapred.job.priority", queryPriorityDecider.decidePriority(ctx).toString());
+        } catch(LensException e) {
+          LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier(), e);
+        }
+      }
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getDriverQuery(),
-          ctx.getConf().getValByRegex(".*"));
+        ctx.getConf().getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
       LOG.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
       hiveHandles.put(ctx.getQueryHandle(), op);

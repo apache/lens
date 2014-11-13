@@ -16,27 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.priority;
 
-import java.util.Collection;
-import java.util.Map;
-
-import org.apache.hadoop.conf.Configuration;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.Priority;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.log4j.Logger;
 
-/**
- * The Interface DriverSelector.
- */
-public interface DriverSelector {
+public interface QueryPriorityDecider {
+  /** The Constant LOG. */
+  public static final Logger LOG = Logger.getLogger(QueryPriorityDecider.class);
 
   /**
-   * Select.
    *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
-   * @return the lens driver
+   * @param queryContext
+   * @return calculated Priority based on the explained plans for each driver
+   * @throws LensException when can't decide priority.
    */
-  public LensDriver select(AbstractQueryContext ctx, Configuration conf);
+  public Priority decidePriority(AbstractQueryContext queryContext) throws LensException;
 }

@@ -101,5 +101,29 @@
     <name>lens.cube.query.replace.timedim</name>
     <value>true</value>
     <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
-  </property>  
+  </property>
+
+  <property>
+    <name>lens.driver.hive.calculate.priority</name>
+    <value>true</value>
+    <description>Whether priority should be calculated for hive mr jobs or not</description>
+  </property>
+
+  <property>
+    <name>lens.driver.hive.priority.partition.weight.monthly</name>
+    <value>0.5</value>
+    <description>Weight of monthly partition in cost calculation</description>
+  </property>
+
+  <property>
+    <name>lens.driver.hive.priority.partition.weight.daily</name>
+    <value>0.75</value>
+    <description>Weight of monthly partition in cost calculation</description>
+  </property>
+
+  <property>
+    <name>lens.driver.hive.priority.partition.weight.hourly</name>
+    <value>1.0</value>
+    <description>Weight of monthly partition in cost calculation</description>
+  </property>
 </configuration>

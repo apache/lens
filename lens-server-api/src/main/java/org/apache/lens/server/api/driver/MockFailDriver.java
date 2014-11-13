@@ -18,25 +18,20 @@
  */
 package org.apache.lens.server.api.driver;
 
-import java.util.Collection;
-import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.driver.MockDriver;
 
-/**
- * The Interface DriverSelector.
- */
-public interface DriverSelector {
 
-  /**
-   * Select.
+public class MockFailDriver extends MockDriver {
+
+  /*
+   * (non-Javadoc)
    *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
-   * @return the lens driver
+   * @see org.apache.lens.server.api.driver.MockDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
-  public LensDriver select(AbstractQueryContext ctx, Configuration conf);
+  public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
+    throw new LensException("failing!");
+  }
 }

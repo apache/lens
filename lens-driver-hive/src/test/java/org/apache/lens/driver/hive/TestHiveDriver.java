@@ -38,18 +38,12 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.lens.api.LensException;
+import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.driver.hive.EmbeddedThriftConnection;
-import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.driver.hive.HiveInMemoryResultSet;
-import org.apache.lens.driver.hive.HivePersistentResultSet;
-import org.apache.lens.driver.hive.HiveQueryPlan;
-import org.apache.lens.driver.hive.ThriftConnection;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.LensResultSet;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.annotations.AfterTest;
@@ -115,6 +109,7 @@ public class TestHiveDriver {
     conf.addResource("hivedriver-site.xml");
     conf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
+    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
     driver = new HiveDriver();
     driver.configure(conf);
     System.out.println("TestHiveDriver created");
@@ -772,5 +767,34 @@ public class TestHiveDriver {
     String path = persistentResultSet.getOutputPath();
     assertEquals(ctx.getHdfsoutPath(), path);
     driver.closeQuery(plan2.getHandle());
+  }
+
+  /**
+   * Testing Duration Based Priority Logic by mocking everything except partitions.
+   * @throws IOException
+   * @throws LensException
+   */
+  @Test
+  public void testPriority() throws IOException, LensException {
+    final MockDriver mockDriver = new MockDriver();
+    BufferedReader br = new BufferedReader(new InputStreamReader(TestHiveDriver.class.getResourceAsStream("/priority_tests.txt")));
+    String line;
+    while((line = br.readLine()) != null) {
+      String[] kv = line.split("\\s*:\\s*");
+
+      final List<String> partitions = Arrays.asList(kv[0].trim().split("\\s*,\\s*"));
+      final Priority expected = Priority.valueOf(kv[1]);
+      AbstractQueryContext ctx = new MockQueryContext(new HashMap<LensDriver, String>(){
+        {
+          put(mockDriver, "driverQuery1");
+        }
+      });
+      ctx.setSelectedDriver(mockDriver);
+      ((MockDriver.MockQueryPlan)ctx.getDriverQueryPlans().get(mockDriver)).setPartitions(new HashMap<String, List<String>>() {
+        {
+          put("table1", partitions);
+        }});
+      Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
+    }
   }
 }
