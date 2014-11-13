@@ -366,6 +366,7 @@ public abstract class LensService extends CompositeService implements Externaliz
         qconf.set(entry.getKey(), entry.getValue());
       }
     }
+    qconf.setClassLoader(getSession(sessionHandle).getHiveConf().getClassLoader());
     return qconf;
   }
 
