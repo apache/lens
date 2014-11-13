@@ -48,6 +48,9 @@ import static org.testng.Assert.assertTrue;
  */
 public class TestColumnarSQLRewriter {
 
+  HiveConf conf = new HiveConf();
+  ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+
   /**
    * Sets the of.
    *
@@ -153,6 +156,7 @@ public class TestColumnarSQLRewriter {
    */
   @BeforeTest
   public void setup() throws Exception {
+    qtest.setConf(conf);
 
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>();
     factColumns.add(new FieldSchema("item_key", "int", ""));
@@ -224,9 +228,7 @@ public class TestColumnarSQLRewriter {
   // Testing multiple queries in one instance
   public void testNoRewrite() throws ParseException, SemanticException, LensException {
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String query = "select count(distinct id) from location_dim";
     String actual = qtest.rewrite(conf, query);
@@ -276,10 +278,8 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
+    SessionState.start(conf);
 
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
     String rwq = qtest.rewrite(conf, query);
     String expected = "inner join location_dim  location_dim  on "
@@ -314,10 +314,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String rwq = qtest.rewrite(conf, query);
     Set<String> actual = setOf(qtest.rightFilter);
@@ -351,10 +348,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String rwq = qtest.rewrite(conf, query);
     Set<String> aggrActual = setOf(qtest.aggColumn);
@@ -391,10 +385,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String rwq = qtest.rewrite(conf, query);
     String expected = "fact.time_key,fact.location_key,fact.item_key,";
@@ -427,10 +418,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String rwq = qtest.rewrite(conf, query);
     String expected = "fact.time_key in  (  select time_dim.time_key from time_dim where ( time_dim  .  time_key ) "
@@ -469,10 +457,7 @@ public class TestColumnarSQLRewriter {
         + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold  ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String actual = qtest.rewrite(conf, query);
 
@@ -537,10 +522,7 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold ";
 
-    SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
-
-    HiveConf conf = new HiveConf();
-    ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
+    SessionState.start(conf);
 
     String actual = qtest.rewrite(conf, query);
     String expected = "select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ),  "
@@ -588,7 +570,6 @@ public class TestColumnarSQLRewriter {
    */
   @Test
   public void testReplaceDBName() throws Exception {
-    HiveConf conf = new HiveConf(ColumnarSQLRewriter.class);
     conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
     SessionState.start(conf);
 
@@ -604,6 +585,7 @@ public class TestColumnarSQLRewriter {
         + " left outer join mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
 
     ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
+    rewriter.setConf(conf);
     rewriter.ast = HQLParser.parseHQL(query);
     rewriter.query = query;
     rewriter.analyzeInternal();
@@ -632,7 +614,6 @@ public class TestColumnarSQLRewriter {
     // Rewrite one more query where table and db name is not set
     createTable("mydb", "mytable_4", null, null);
     String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
-    rewriter = new ColumnarSQLRewriter();
     rewriter.ast = HQLParser.parseHQL(query2);
     rewriter.query = query2;
     rewriter.analyzeInternal();
@@ -656,7 +637,6 @@ public class TestColumnarSQLRewriter {
     createTable("examples", "mytable", "default", null);
 
     String defaultQuery = "SELECT * FROM examples.mytable t1 WHERE A = 100";
-    rewriter = new ColumnarSQLRewriter();
     rewriter.ast = HQLParser.parseHQL(defaultQuery);
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal();
@@ -671,6 +651,8 @@ public class TestColumnarSQLRewriter {
     Hive.get().dropTable("mydb", "mytable_2");
     Hive.get().dropTable("default", "mytable_3");
     Hive.get().dropTable("mydb", "mytable_4");
+    Hive.get().dropDatabase("mydb", true, true, true);
+    Hive.get().dropDatabase("examples", true, true, true);
   }
 
   /**
