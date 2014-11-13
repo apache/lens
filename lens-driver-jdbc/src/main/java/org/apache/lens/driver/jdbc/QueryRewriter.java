@@ -38,4 +38,11 @@ public interface QueryRewriter {
    *           the lens exception
    */
   public String rewrite(Configuration conf, String query) throws LensException;
+
+  /**
+   * Set conf for the rewriter
+   * 
+   * @param conf
+   */
+  public void setConf(Configuration conf);
 }

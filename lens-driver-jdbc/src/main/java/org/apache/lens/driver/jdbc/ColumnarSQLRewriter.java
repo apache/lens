@@ -45,7 +45,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The conf. */
-  private Configuration conf;
+  private HiveConf conf;
 
   /** The clause name. */
   private String clauseName = null;
@@ -151,23 +151,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /**
    * Instantiates a new columnar sql rewriter.
-   *
-   * @param conf
-   *          the conf
-   * @param query
-   *          the query
-   */
-  public ColumnarSQLRewriter(HiveConf conf, String query) {
-    // super(conf);
-    this.conf = conf;
-    this.query = query;
-  }
-
-  /**
-   * Instantiates a new columnar sql rewriter.
    */
   public ColumnarSQLRewriter() {
-    // super(conf);
+  }
+
+  public void setConf(Configuration conf) {
+    this.conf = new HiveConf(conf, ColumnarSQLRewriter.class);
   }
 
   public String getClause() {
@@ -794,7 +783,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   @Override
   public synchronized String rewrite(Configuration conf, String query) throws LensException {
     this.query = query;
-    this.conf = conf;
     StringBuilder mergedQuery = new StringBuilder();
     rewrittenQuery.setLength(0);
     String queryReplacedUdf = "";
@@ -909,7 +897,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *           the hive exception
    */
   String getUnderlyingDBName(String table) throws HiveException {
-    Table tbl = Hive.get().getTable(table);
+    Table tbl = Hive.get(this.conf).getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
@@ -925,7 +913,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *           the hive exception
    */
   String getUnderlyingTableName(String table) throws HiveException {
-    Table tbl = Hive.get().getTable(table);
+    Table tbl = Hive.get(this.conf).getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 
