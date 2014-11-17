@@ -155,7 +155,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   public ColumnarSQLRewriter() {
   }
 
-  public void setConf(Configuration conf) {
+  public void init(Configuration conf) {
     this.conf = new HiveConf(conf, ColumnarSQLRewriter.class);
   }
 
@@ -781,7 +781,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @see org.apache.lens.driver.jdbc.QueryRewriter#rewrite(org.apache.hadoop.conf.Configuration, java.lang.String)
    */
   @Override
-  public synchronized String rewrite(Configuration conf, String query) throws LensException {
+  public synchronized String rewrite(String query, Configuration conf) throws LensException {
     this.query = query;
     StringBuilder mergedQuery = new StringBuilder();
     rewrittenQuery.setLength(0);
@@ -826,9 +826,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * Replace with underlying storage.
    *
    * @param tree
-   *          the tree
-   * @param metastoreClient
-   *          the metastore client
+   *          the AST tree
    */
   protected void replaceWithUnderlyingStorage(ASTNode tree) {
     if (tree == null) {
@@ -888,8 +886,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /**
    * Gets the underlying db name.
    *
-   * @param client
-   *          the client
    * @param table
    *          the table
    * @return the underlying db name
@@ -904,8 +900,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /**
    * Gets the underlying table name.
    *
-   * @param client
-   *          the client
    * @param table
    *          the table
    * @return the underlying table name
