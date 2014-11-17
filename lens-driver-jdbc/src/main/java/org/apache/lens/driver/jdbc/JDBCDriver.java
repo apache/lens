@@ -34,6 +34,7 @@ import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.query.QueryRewriter;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
@@ -346,7 +347,7 @@ public class JDBCDriver implements LensDriver {
     /*
      * (non-Javadoc)
      * 
-     * @see org.apache.lens.driver.jdbc.QueryRewriter#rewrite(java.lang.String, org.apache.hadoop.conf.Configuration)
+     * @see org.apache.lens.server.api.query.QueryRewriter#rewrite(java.lang.String, org.apache.hadoop.conf.Configuration)
      */
     @Override
     public String rewrite(String query, Configuration queryConf) throws LensException {

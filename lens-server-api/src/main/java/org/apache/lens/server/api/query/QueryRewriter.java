@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.jdbc;
+package org.apache.lens.server.api.query;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
