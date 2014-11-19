@@ -91,6 +91,8 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * All working files (java, xml, others) should have the ASF license header in all versioned files.
 
+  * If new features require illustrative examples, they should be added in lens-examples.
+
 ** Generating patch
 
 *** Creating patch
