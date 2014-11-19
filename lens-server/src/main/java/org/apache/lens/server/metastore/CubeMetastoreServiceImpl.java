@@ -1319,6 +1319,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   @Override
   public Date getLatestDateOfCube(LensSessionHandle sessionid, String cubeName, String timeDimension)
       throws LensException, HiveException {
+    acquire(sessionid);
     // get the partitionColumn corresponding to timeDimension passed
     CubeInterface ci = getClient(sessionid).getCube(cubeName);
     if (!(ci instanceof Cube)) {
@@ -1355,6 +1356,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         }
       }
     }
+    release(sessionid);
     return latestDate;
   }
 }
