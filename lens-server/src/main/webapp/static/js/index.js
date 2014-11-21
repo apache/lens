@@ -396,6 +396,17 @@ $("#query-form").submit(function(event) {
     }
 });
 
+$("#log-out").click(function(event) {
+	event.preventDefault();
+	session.logOut(function() {
+		console.log("clearing cookies");
+		util.clearCookies();
+		$("#loginui").show();
+		$("#queryui, #historyui").hide();
+		$("#query-ui-content").hide();
+	});
+});
+
 //Login form submit logic
 $("#login-form").submit(function(event) {
     event.preventDefault();
@@ -405,12 +416,14 @@ $("#login-form").submit(function(event) {
 
     if (!email) {
         $("#email").addClass("error");
+        alert("Enter your email address.");
         return;
     }
     $("#email").removeClass("error");
 
     if (!password) {
         $("#password").addClass("error");
+        alert("Enter your password.");
         return;
     }
     $("#password").removeClass("error");
