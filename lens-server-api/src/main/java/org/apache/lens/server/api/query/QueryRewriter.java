@@ -1,3 +1,4 @@
+
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,7 +17,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.driver.jdbc;
+package org.apache.lens.server.api.query;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
@@ -29,20 +30,21 @@ public interface QueryRewriter {
   /**
    * Rewrite.
    *
-   * @param conf
-   *          the conf
+   * @param queryConf
+   *          the query configuration
    * @param query
    *          the query
    * @return the string
    * @throws LensException
    *           the lens exception
    */
-  public String rewrite(Configuration conf, String query) throws LensException;
+  public String rewrite(String query, Configuration queryConf) throws LensException;
 
   /**
    * Set conf for the rewriter
-   * 
-   * @param conf
+   *
+   * @param rewriteConf
+   *        Configuration required for rewriter init
    */
-  public void setConf(Configuration conf);
+  public void init(Configuration rewriteConf);
 }
