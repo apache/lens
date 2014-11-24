@@ -27,16 +27,19 @@ import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lens.cube.metadata.StorageConstants;
 
 class StorageUtil {
-  private static Log LOG = LogFactory.getLog(StorageUtil.class.getName());
+  private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
   public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
     if (parts.size() == 0) {
       return "";
     }
     StringBuilder partStr = new StringBuilder();
-    for (int i = 0; i < parts.size() - 1; i++) {
+    String sep = "";
+    for (int i = 0; i < parts.size(); i++) {
+      partStr.append(sep);
       partStr.append("(");
       partStr.append(tableName);
       partStr.append(".");
@@ -45,19 +48,30 @@ class StorageUtil {
       partStr.append(parts.get(i));
       partStr.append("'");
       partStr.append(")");
-      partStr.append(" OR ");
+      sep = " OR ";
     }
-
-    // add the last partition
-    partStr.append("(");
-    partStr.append(tableName);
-    partStr.append(".");
-    partStr.append(timeDimName);
-    partStr.append(" = '");
-    partStr.append(parts.get(parts.size() - 1));
-    partStr.append("'");
-    partStr.append(")");
     return partStr.toString();
+  }
+
+  public static String getNotLatestClauseForDimensions(String cubeName, Set<String> timedDimensions) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "";
+    for(String timePartCol: timedDimensions) {
+        sb.append(sep).append(cubeName).append(".").append(timePartCol).
+          append("!=").append(StorageConstants.LATEST_PARTITION_VALUE);
+        sep = " AND ";
+    }
+    return sb.toString();
+  }
+
+  public static String joinWithAnd(String clause1, String clause2) {
+    return new StringBuilder()
+      .append("((")
+      .append(clause1)
+      .append(") AND (")
+      .append(clause2)
+      .append("))")
+      .toString();
   }
 
   /**
@@ -65,7 +79,7 @@ class StorageUtil {
    * 
    * @param answeringParts
    *          Map from partition to set of answering storage tables
-   * @param Map
+   * @param minimalStorageTables
    *          from storage to covering parts
    * 
    * @return true if multi table select is enabled, false otherwise

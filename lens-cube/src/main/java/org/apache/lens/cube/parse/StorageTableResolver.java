@@ -371,8 +371,14 @@ class StorageTableResolver implements ContextRewriter {
         }
         cfact.numQueriedParts += rangeParts.size();
         answeringParts.addAll(rangeParts);
-        cfact.rangeToWhereClause.put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
-          cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts));
+        Set<String> timedDimensions = cubeql.getCube().getTimedDimensions();
+        timedDimensions.remove(rangeParts.iterator().next().getPartCol());
+
+        cfact.rangeToWhereClause.put(range, StorageUtil.joinWithAnd(
+          StorageUtil.getNotLatestClauseForDimensions(cubeql.getCube().getName(), timedDimensions),
+          rangeWriter.getTimeRangeWhereClause(
+            cubeql,cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts)
+        ));
       }
       if (!nonExistingParts.isEmpty()) {
         addNonExistingParts(cfact.fact.getName(), nonExistingParts);
