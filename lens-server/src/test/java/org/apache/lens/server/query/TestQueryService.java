@@ -782,6 +782,7 @@ public class TestQueryService extends LensJerseyTest {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     conf.addProperty(LensConfConstants.QUERY_MAIL_NOTIFY, "true");
+    conf.addProperty(LensConfConstants.QUERY_RESULT_EMAIL_CC, "foo1@localhost,foo2@localhost,foo3@localhost");
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
@@ -816,7 +817,8 @@ public class TestQueryService extends LensJerseyTest {
       }
       Thread.sleep(10000);
     }
-    Assert.assertEquals(messages.size(), 1);
+
+    Assert.assertEquals(messages.size(), 4);
     Assert.assertTrue(messages.get(0).toString().contains(handle.toString()));
     wiser.stop();
   }
@@ -1073,8 +1075,41 @@ public class TestQueryService extends LensJerseyTest {
     // test post execute op
     final WebTarget target = target().path("queryapi/queries");
 
-    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    final FormDataMultiPart drop = new FormDataMultiPart();
     LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    drop.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    drop.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+      "drop table if exists temp_output"));
+    drop.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    drop.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+      MediaType.APPLICATION_XML_TYPE));
+    final QueryHandle dropHandle = target.request().post(Entity.entity(drop, MediaType.MULTIPART_FORM_DATA_TYPE),
+      QueryHandle.class);
+
+    Assert.assertNotNull(dropHandle);
+
+    // Get query
+    LensQuery ctx = target.path(dropHandle.toString()).queryParam("sessionid", lensSessionId).request()
+      .get(LensQuery.class);
+    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED)
+      || ctx.getStatus().getStatus().equals(Status.LAUNCHED) || ctx.getStatus().getStatus().equals(Status.RUNNING)
+      || ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
+
+    // wait till the query finishes
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.isFinished()) {
+      ctx = target.path(dropHandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
@@ -1089,14 +1124,14 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertNotNull(handle);
 
     // Get query
-    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
+    ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
         .get(LensQuery.class);
     Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED)
         || ctx.getStatus().getStatus().equals(Status.LAUNCHED) || ctx.getStatus().getStatus().equals(Status.RUNNING)
         || ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
 
     // wait till the query finishes
-    QueryStatus stat = ctx.getStatus();
+    stat = ctx.getStatus();
     while (!stat.isFinished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();

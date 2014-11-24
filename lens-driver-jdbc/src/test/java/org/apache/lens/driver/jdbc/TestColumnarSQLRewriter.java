@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.parse.HQLParser;
-import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
 import org.apache.lens.server.api.LensConfConstants;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
@@ -156,7 +155,7 @@ public class TestColumnarSQLRewriter {
    */
   @BeforeTest
   public void setup() throws Exception {
-    qtest.setConf(conf);
+    qtest.init(conf);
 
     List<FieldSchema> factColumns = new ArrayList<FieldSchema>();
     factColumns.add(new FieldSchema("item_key", "int", ""));
@@ -231,24 +230,24 @@ public class TestColumnarSQLRewriter {
     SessionState.start(conf);
 
     String query = "select count(distinct id) from location_dim";
-    String actual = qtest.rewrite(conf, query);
+    String actual = qtest.rewrite(query, conf);
     String expected = "select count( distinct  id ) from location_dim ";
     compareQueries(expected, actual);
 
     String query2 = "select count(distinct id) from location_dim  location_dim";
-    String actual2 = qtest.rewrite(conf, query2);
+    String actual2 = qtest.rewrite(query2, conf);
     String expected2 = "select count( distinct  id ) from location_dim location_dim";
     compareQueries(expected2, actual2);
 
     String query3 = "select count(distinct location_dim.id) from  global_dw.location_dim location_dim";
-    String actual3 = qtest.rewrite(conf, query3);
+    String actual3 = qtest.rewrite(query3, conf);
     String expected3 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim";
     compareQueries(expected3, actual3);
 
     String query4 = "select count(distinct location_dim.id) from  global_dw.location_dim location_dim "
         + "left outer join global_dw.item_dim item_dim on location_dim.id = item_dim.id "
         + "right outer join time_dim time_dim on location_dim.id = time_dim.id ";
-    String actual4 = qtest.rewrite(conf, query4);
+    String actual4 = qtest.rewrite(query4, conf);
     String expected4 = "select count( distinct ( location_dim . id )) from global_dw.location_dim location_dim  "
         + "right outer join time_dim time_dim on (( location_dim . id ) = ( time_dim . id ))  "
         + "left outer join global_dw.item_dim item_dim on (( location_dim . id ) = ( item_dim . id ))";
@@ -281,7 +280,7 @@ public class TestColumnarSQLRewriter {
     SessionState.start(conf);
 
 
-    String rwq = qtest.rewrite(conf, query);
+    String rwq = qtest.rewrite(query, conf);
     String expected = "inner join location_dim  location_dim  on "
         + "((( fact  .  location_key ) = ( location_dim  .  location_key )) "
         + "and (( location_dim  .  location_name ) =  'test123' )) "
@@ -316,7 +315,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String rwq = qtest.rewrite(conf, query);
+    String rwq = qtest.rewrite(query, conf);
     Set<String> actual = setOf(qtest.rightFilter);
     Assert.assertEquals(
         actual,
@@ -350,7 +349,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String rwq = qtest.rewrite(conf, query);
+    String rwq = qtest.rewrite(query, conf);
     Set<String> aggrActual = setOf(qtest.aggColumn);
     Set<String> expectedAggr = setOf("sum(( fact  .  units_sold )) as sum_fact_units_sold",
         "min(( fact  .  dollars_sold )) as min_fact_dollars_sold",
@@ -387,7 +386,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String rwq = qtest.rewrite(conf, query);
+    String rwq = qtest.rewrite(query, conf);
     String expected = "fact.time_key,fact.location_key,fact.item_key,";
     String actual = qtest.factKeys.toString();
     compareQueries(expected, actual);
@@ -420,7 +419,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String rwq = qtest.rewrite(conf, query);
+    String rwq = qtest.rewrite(query, conf);
     String expected = "fact.time_key in  (  select time_dim.time_key from time_dim where ( time_dim  .  time_key ) "
         + "between  '2013-01-01'  and  '2013-01-31'  ) and fact.location_key in  (  select location_dim.location_key "
         + "from location_dim where (( location_dim  .  location_name ) =  'test123' ) ) and "
@@ -459,7 +458,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String actual = qtest.rewrite(conf, query);
+    String actual = qtest.rewrite(query, conf);
 
     String expected = "select ( fact . time_key ), ( time_dim . day_of_week ), date(( time_dim . day )), "
         + "( item_dim . item_key ),  case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  "
@@ -524,7 +523,7 @@ public class TestColumnarSQLRewriter {
 
     SessionState.start(conf);
 
-    String actual = qtest.rewrite(conf, query);
+    String actual = qtest.rewrite(query, conf);
     String expected = "select ( fact  .  time_key ), ( time_dim  .  day_of_week ), ( time_dim  .  day ),  "
         + "case  when (sum(sum_fact_dollars_sold) =  0 ) then  0.0  else sum(sum_fact_dollars_sold) end dollars_sold "
         + "from  (select fact.time_key,fact.location_key,sum(( fact  .  dollars_sold )) as sum_fact_dollars_sold "
@@ -585,7 +584,7 @@ public class TestColumnarSQLRewriter {
         + " left outer join mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
 
     ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
-    rewriter.setConf(conf);
+    rewriter.init(conf);
     rewriter.ast = HQLParser.parseHQL(query);
     rewriter.query = query;
     rewriter.analyzeInternal();

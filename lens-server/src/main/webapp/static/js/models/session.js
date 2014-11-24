@@ -66,12 +66,15 @@ var Session = function() {
                     document.cookie="publicId=" + docCookies["publicId"];
                     document.cookie="secretId=" + docCookies["secretId"];
                     document.cookie="userName=" + docCookies["userName"];
-                } else
+                } else {
+                    alert("The email or password you entered is incorrect.");
                     console.log("Error authenticating user: " + data);
+                }
                 if (util.isFunction(callback))
                     callback();
             },
             error: function(jqXHR, textStatus, errorThrown) {
+                alert("The email or password you entered is incorrect.");
                 console.log("Error authenticating user: " + textStatus);
                 if (util.isFunction(callback))
                     callback();
@@ -214,6 +217,23 @@ var Session = function() {
     this.getSessionHandle = function() {
         return sessionHandle;
     }
+
+    this.logOut = function(callback) {
+        var sessionVal = session.getSessionHandle()["publicId"];
+        $.ajax({
+                url: util.SESSION_URL + '/' + sessionVal,
+                type: 'DELETE',
+                contentType: "application/json; charset=utf-8",
+                processData: false,
+                success: function(data) {
+                    console.log("successfully logged out");
+                    callback();
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.log("Error in logout : " + textStatus);
+                }
+       });
+    };
 
     /*
      * Submits the query to the server

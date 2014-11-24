@@ -81,7 +81,7 @@ shift
 case $type in
   client)
     # set the client class path
-    LENSCPPATH="$LENS_CONF:${BASEDIR}/lib/*"
+    LENSCPPATH=$LENS_CONF:`ls ${BASEDIR}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
     LENS_OPTS="$LENS_OPTS $LENS_CLIENT_OPTS $LENS_CLIENT_HEAP"
     LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
     export LENS_LOG_DIR    
@@ -101,9 +101,10 @@ case $type in
       cd -
     fi
     LENSCPPATH="${LENSCPPATH}:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/classes"
-    LENSCPPATH="${LENSCPPATH}:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/*:${BASEDIR}/lib/*"
+    LENSCPPATH=${LENSCPPATH}:`ls ${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    LENSCPPATH=${LENSCPPATH}:`ls ${BASEDIR}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
 
-    HADOOP_CLASSPATH="$HADOOP_CLASSPATH:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/*"
+    HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${LENSCPPATH}
     export HADOOP_CLASSPATH
     
     # log and pid dirs for applications

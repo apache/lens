@@ -45,7 +45,7 @@ import java.util.UUID;
 public class SessionUIResource {
 
   /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(SessionResource.class);
+  public static final Log LOG = LogFactory.getLog(SessionUIResource.class);
 
   /** The open sessions. */
   public static HashMap<UUID, LensSessionHandle> openSessions = new HashMap<UUID, LensSessionHandle>();
@@ -124,9 +124,10 @@ public class SessionUIResource {
    *          Session's public id of the session to be closed
    * @return APIResult object indicating if the operation was successful (check result.getStatus())
    */
-  @DELETE
+  @DELETE @Path("{publicId}")
   @Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
-  public APIResult closeSession(@QueryParam("publicId") UUID publicId) {
+  public APIResult closeSession(@PathParam("publicId") UUID publicId) {
+    LOG.info("Closing session with id: " + publicId);
     LensSessionHandle sessionHandle = openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     openSessions.remove(publicId);

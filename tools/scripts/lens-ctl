@@ -120,7 +120,7 @@ start() {
 
   if [ "$HIVE_HOME" != "" ]; then    
     echo "HIVE_HOME is set, adding ${HIVE_HOME}/lib/* into lens classpath"
-    LENSCPPATH="${LENSCPPATH}:${HIVE_HOME}/lib/*"
+    LENSCPPATH=${LENSCPPATH}:`ls ${HIVE_HOME}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
   else
     echo "HIVE_HOME is not set. Set HIVE_HOME and try again"
     exit 1

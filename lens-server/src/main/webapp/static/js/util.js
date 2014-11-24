@@ -51,4 +51,14 @@ var Util = function() {
 
 		return cookieObj;
 	};
+
+	this.clearCookies = function() {
+		var cookies = document.cookie.split(";");
+		for(var i = 0; i < cookies.length; i++) {
+			var eqPos = cookies[i].indexOf("=");
+			var name = eqPos > -1 ? cookies[i].substr(0, eqPos) : cookies[i];
+			// set the expires parameter to a passed date
+			document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+		}
+	};
 };

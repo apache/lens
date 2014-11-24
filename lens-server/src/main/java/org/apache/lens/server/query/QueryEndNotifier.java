@@ -192,9 +192,13 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
     try {
       MimeMessage message = new MimeMessage(session);
       message.setFrom(new InternetAddress(from));
-      message.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
+      for(String recipient: to.trim().split("\\s*,\\s*")) {
+        message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
+      }
       if (cc != null && cc.length() > 0) {
-        message.setRecipient(Message.RecipientType.CC, new InternetAddress(cc));
+        for(String recipient: cc.trim().split("\\s*,\\s*")) {
+          message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
+        }
       }
       message.setSubject(subject);
       message.setSentDate(new Date());
