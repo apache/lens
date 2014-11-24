@@ -45,26 +45,7 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.lens.cube.metadata.BaseDimAttribute;
-import org.apache.lens.cube.metadata.ColumnMeasure;
-import org.apache.lens.cube.metadata.CubeDimAttribute;
-import org.apache.lens.cube.metadata.CubeFactTable;
-import org.apache.lens.cube.metadata.CubeMeasure;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.ExprColumn;
-import org.apache.lens.cube.metadata.HDFSStorage;
-import org.apache.lens.cube.metadata.HierarchicalDimAttribute;
-import org.apache.lens.cube.metadata.InlineDimAttribute;
-import org.apache.lens.cube.metadata.MetastoreConstants;
-import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
-import org.apache.lens.cube.metadata.StorageConstants;
-import org.apache.lens.cube.metadata.StoragePartitionDesc;
-import org.apache.lens.cube.metadata.StorageTableDesc;
-import org.apache.lens.cube.metadata.TableReference;
-import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
-import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.cube.metadata.*;
 import org.testng.Assert;
 
 /*
@@ -125,6 +106,7 @@ public class CubeTestSetup {
   private static String c3 = "C3";
   private static String c4 = "C4";
   private static String c99 = "C99";
+  private static CubeMetastoreClient client;
 
   public static void init() {
     if (inited) {
@@ -317,7 +299,16 @@ public class CubeTestSetup {
     parts.addAll(hourlyparts);
     parts.addAll(dailyparts);
     Collections.sort(parts);
-    return StorageUtil.getWherePartClause(timedDimension, cubeName, parts);
+    Set<String> timedDimensions = null;
+    try {
+      timedDimensions = client.getCube(cubeName).getTimedDimensions();
+    } catch (HiveException e) {
+      e.printStackTrace();
+      throw new RuntimeException(e);
+    }
+    timedDimensions.remove(timedDimension);
+    return StorageUtil.joinWithAnd(StorageUtil.getNotLatestClauseForDimensions(cubeName, timedDimensions),
+      StorageUtil.getWherePartClause(timedDimension, cubeName, parts));
   }
 
   // storageTables[0] is hourly
@@ -390,7 +381,17 @@ public class CubeTestSetup {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
     List<String> parts = new ArrayList<String>();
     addParts(parts, UpdatePeriod.HOURLY, twodaysBack, DateUtil.getFloorDate(now, UpdatePeriod.HOURLY));
-    storageTableToWhereClause.put(getDbName() + hourlyTable, StorageUtil.getWherePartClause("dt", alias, parts));
+    Set<String> timedDimensions = null;
+    try {
+      timedDimensions = client.getCube(TEST_CUBE_NAME).getTimedDimensions();
+    } catch (HiveException e) {
+      e.printStackTrace();
+    }
+    timedDimensions.remove("dt");
+    storageTableToWhereClause.put(getDbName() + hourlyTable, StorageUtil.joinWithAnd(
+      StorageUtil.getNotLatestClauseForDimensions(TEST_CUBE_NAME, timedDimensions),
+      StorageUtil.getWherePartClause("dt", alias, parts)
+    ));
     return storageTableToWhereClause;
   }
 
@@ -1540,9 +1541,14 @@ public class CubeTestSetup {
     try {
       Database database = new Database();
       database.setName(dbName);
+      try{
+        dropSources(conf, dbName);
+      } catch(Exception e) {
+
+      }
       Hive.get(conf).createDatabase(database);
       SessionState.get().setCurrentDatabase(dbName);
-      CubeMetastoreClient client = CubeMetastoreClient.getInstance(conf);
+      client = CubeMetastoreClient.getInstance(conf);
       client.createStorage(new HDFSStorage(c1));
       client.createStorage(new HDFSStorage(c2));
       client.createStorage(new HDFSStorage(c3));
