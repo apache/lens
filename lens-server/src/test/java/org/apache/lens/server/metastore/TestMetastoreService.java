@@ -30,9 +30,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
-
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -41,7 +39,6 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.DateTime;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
@@ -509,6 +506,18 @@ public class TestMetastoreService extends LensJerseyTest {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
     }
+  }
+
+  @Test
+  public void testMeasureJaxBConversion() throws Exception {
+    CubeMeasure cubeMeasure =
+        new ColumnMeasure(new FieldSchema("msr1", "int", "first measure"), null, null, null, null, null, null, null,
+            0.0, 9999.0);
+    XMeasure measure = JAXBUtils.xMeasureFromHiveMeasure(cubeMeasure);
+    CubeMeasure actualMeasure = JAXBUtils.hiveMeasureFromXMeasure(measure);
+    assertEquals(actualMeasure, cubeMeasure);
+    assertEquals(actualMeasure.getMin(), measure.getMin());
+    assertEquals(actualMeasure.getMax(), measure.getMax());
   }
 
   @Test

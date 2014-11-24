@@ -80,6 +80,14 @@ public abstract class CubeMeasure extends CubeColumn {
     return column;
   }
 
+  public Double getMin() {
+    return min;
+  }
+
+  public Double getMax() {
+    return max;
+  }
+
   @Override
   public String getName() {
     return column.getName();
@@ -135,6 +143,20 @@ public abstract class CubeMeasure extends CubeColumn {
         return false;
       }
     } else if (!this.getFormatString().equalsIgnoreCase(other.getFormatString())) {
+      return false;
+    }
+    if (this.getMin() == null) {
+      if (other.getMin() != null) {
+        return false;
+      }
+    } else if (!this.getMin().equals(other.getMin())) {
+      return false;
+    }
+    if (this.getMax() == null) {
+      if (other.getMax() != null) {
+        return false;
+      }
+    } else if (!this.getMax().equals(other.getMax())) {
       return false;
     }
 

@@ -219,6 +219,8 @@ public class JAXBUtils {
     xm.setCost(cm.getCost());
     xm.setStartTime(getXMLGregorianCalendar(cm.getStartTime()));
     xm.setEndTime(getXMLGregorianCalendar(cm.getEndTime()));
+    xm.setMin(cm.getMin());
+    xm.setMax(cm.getMax());
     return xm;
   }
 
@@ -289,7 +291,7 @@ public class JAXBUtils {
         xm.getDisplayString(),
         xm.getFormatString(),
         xm.getDefaultAggr(),
-        "unit",
+        xm.getUnit(),
         startDate,
         endDate,
         xm.getCost(),
