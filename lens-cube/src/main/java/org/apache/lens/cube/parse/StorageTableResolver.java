@@ -39,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -372,12 +373,14 @@ class StorageTableResolver implements ContextRewriter {
         cfact.numQueriedParts += rangeParts.size();
         answeringParts.addAll(rangeParts);
         Set<String> timedDimensions = cubeql.getCube().getTimedDimensions();
+
         timedDimensions.remove(rangeParts.iterator().next().getPartCol());
 
         cfact.rangeToWhereClause.put(range, StorageUtil.joinWithAnd(
-          StorageUtil.getNotLatestClauseForDimensions(cubeql.getCube().getName(), timedDimensions),
+          StorageUtil.getNotLatestClauseForDimensions(cubeql.getAliasForTabName(cubeql.getCube().getName()),
+            timedDimensions),
           rangeWriter.getTimeRangeWhereClause(
-            cubeql,cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts)
+            cubeql, cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts)
         ));
       }
       if (!nonExistingParts.isEmpty()) {

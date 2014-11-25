@@ -149,7 +149,6 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     if (crtTbl.getTblProps() != null) {
       tbl.getTTable().getParameters().putAll(crtTbl.getTblProps());
     }
-
     if (crtTbl.getPartCols() != null) {
       tbl.setPartCols(crtTbl.getPartCols());
     }

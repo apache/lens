@@ -109,6 +109,7 @@ public class CubeMetastoreClient {
 
   private void createStorageHiveTable(Table parent, String storage, StorageTableDesc crtTblDesc) throws HiveException {
     try {
+
       Table tbl = getStorage(storage).getStorageTable(getClient(), parent, crtTblDesc);
       getClient().createTable(tbl);
     } catch (Exception e) {

@@ -19,19 +19,6 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
-import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2daysWithTimeDim;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForMonthly2months;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForMonthlyDailyAndHourly2months;
-import static org.apache.lens.cube.parse.CubeTestSetup.now;
-import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
-import static org.apache.lens.cube.parse.CubeTestSetup.twoMonthsRangeUptoHours;
-import static org.apache.lens.cube.parse.CubeTestSetup.twoMonthsRangeUptoMonth;
-import static org.apache.lens.cube.parse.CubeTestSetup.twodaysBack;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -51,6 +38,8 @@ import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.cube.parse.StorageUtil;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 public class TestCubeRewriter extends TestQueryRewrite {
 
@@ -506,7 +495,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
             + "c1_citytable ct ON" + " tc.cityid = ct.id LEFT OUTER JOIN " + getDbName() + "c1_statetable st"
             + " ON st.id = ct.stateid and (st.dt = 'latest') " + "RIGHT OUTER JOIN " + getDbName() + "c1_ziptable"
             + " zt ON ct.zipcode = zt.code", null, " group by" + " st.name ", joinWhereConds,
-            getWhereForDailyAndHourly2days("tc", "C2_testfact"));
+            getWhereForDailyAndHourly2days(new String[]{TEST_CUBE_NAME, "tc"}, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     // q4
@@ -757,7 +746,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     hqlQuery = rewrite("select SUM(msr2) from testCube mycube" + " where " + twoDaysRange, getConf());
     expected =
         getExpectedQuery("mycube", "select sum(mycube.msr2) FROM ", null, null,
-            getWhereForDailyAndHourly2days("mycube", "C2_testfact"));
+            getWhereForDailyAndHourly2days(new String[]{TEST_CUBE_NAME, "mycube"}, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select SUM(testCube.msr2) from testCube" + " where " + twoDaysRange, getConf());
@@ -769,7 +758,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     hqlQuery = rewrite("select mycube.msr2 m2 from testCube" + " mycube where " + twoDaysRange, getConf());
     expected =
         getExpectedQuery("mycube", "select sum(mycube.msr2) m2 FROM ", null, null,
-            getWhereForDailyAndHourly2days("mycube", "C2_testfact"));
+            getWhereForDailyAndHourly2days(new String[]{TEST_CUBE_NAME, "mycube"}, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select testCube.msr2 m2 from testCube" + " where " + twoDaysRange, getConf());
@@ -996,7 +985,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String expectedQueries[] =
         {
             getExpectedQuery("t", "SELECT t.cityid, sum(t.msr2) FROM ", null, " group by t.cityid",
-                getWhereForDailyAndHourly2days("t", "C2_testfact")),
+                getWhereForDailyAndHourly2days(new String[]{TEST_CUBE_NAME, "t"}, "C2_testfact")),
             getExpectedQuery(cubeName, "SELECT testCube.cityid, sum(testCube.msr2)" + " FROM ",
                 " testcube.cityid > 100 ", " group by testcube.cityid having" + " sum(testCube.msr2 < 1000)",
                 getWhereForDailyAndHourly2days(cubeName, "C2_testfact")),
@@ -1010,6 +999,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       compareQueries(expectedQueries[i], hql);
     }
   }
+
 
   @Test
   public void testFactsWithInvalidColumns() throws Exception {

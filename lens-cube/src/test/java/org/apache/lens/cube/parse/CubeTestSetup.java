@@ -245,7 +245,11 @@ public class CubeTestSetup {
   }
 
   public static Map<String, String> getWhereForDailyAndHourly2days(String cubeName, String... storageTables) {
-    return getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", storageTables);
+    return getWhereForDailyAndHourly2days(new String[]{cubeName, cubeName}, storageTables);
+  }
+
+  public static Map<String, String> getWhereForDailyAndHourly2days(String[] cubeNameAndAlias, String... storageTables) {
+    return getWhereForDailyAndHourly2daysWithTimeDim(cubeNameAndAlias, "dt", storageTables);
   }
 
   public static String getDbName() {
@@ -258,13 +262,23 @@ public class CubeTestSetup {
 
   public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDim(String cubeName, String timedDimension,
       String... storageTables) {
-    return getWhereForDailyAndHourly2daysWithTimeDim(cubeName, timedDimension, twodaysBack, now, storageTables);
+    return getWhereForDailyAndHourly2daysWithTimeDim(new String[]{cubeName, cubeName}, timedDimension,
+      storageTables);
+  }
+  public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDim(String[] cubeNameAndAlias, String timedDimension,
+    String... storageTables) {
+    return getWhereForDailyAndHourly2daysWithTimeDim(cubeNameAndAlias, timedDimension, twodaysBack, now, storageTables);
   }
 
   public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDim(String cubeName, String timedDimension,
       Date from, Date to, String... storageTables) {
+    return getWhereForDailyAndHourly2daysWithTimeDim(new String[]{cubeName, cubeName}, timedDimension,
+      from, to, storageTables);
+  }
+  public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDim(String[] cubeNameAndAlias, String timedDimension,
+    Date from, Date to, String... storageTables) {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
-    String whereClause = getWhereForDailyAndHourly2daysWithTimeDim(cubeName, timedDimension, from, to);
+    String whereClause = getWhereForDailyAndHourly2daysWithTimeDim(cubeNameAndAlias, timedDimension, from, to);
     storageTableToWhereClause.put(getStorageTableString(storageTables), whereClause);
     return storageTableToWhereClause;
   }
@@ -280,9 +294,12 @@ public class CubeTestSetup {
     }
     return StringUtils.join(storageTables, ",");
   }
-
   public static String getWhereForDailyAndHourly2daysWithTimeDim(String cubeName, String timedDimension, Date from,
-      Date to) {
+    Date to) {
+    return getWhereForDailyAndHourly2daysWithTimeDim(new String[]{cubeName, cubeName}, timedDimension, from, to);
+  }
+  public static String getWhereForDailyAndHourly2daysWithTimeDim(String[] cubeNameAndAlias, String timedDimension,
+    Date from, Date to) {
     List<String> hourlyparts = new ArrayList<String>();
     List<String> dailyparts = new ArrayList<String>();
     Date dayStart;
@@ -301,14 +318,14 @@ public class CubeTestSetup {
     Collections.sort(parts);
     Set<String> timedDimensions = null;
     try {
-      timedDimensions = client.getCube(cubeName).getTimedDimensions();
+      timedDimensions = client.getCube(cubeNameAndAlias[0]).getTimedDimensions();
     } catch (HiveException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
     }
     timedDimensions.remove(timedDimension);
-    return StorageUtil.joinWithAnd(StorageUtil.getNotLatestClauseForDimensions(cubeName, timedDimensions),
-      StorageUtil.getWherePartClause(timedDimension, cubeName, parts));
+    return StorageUtil.joinWithAnd(StorageUtil.getNotLatestClauseForDimensions(cubeNameAndAlias[1], timedDimensions),
+      StorageUtil.getWherePartClause(timedDimension, cubeNameAndAlias[1], parts));
   }
 
   // storageTables[0] is hourly
@@ -360,7 +377,10 @@ public class CubeTestSetup {
       tables.append(storageTables[0]);
     }
     Collections.sort(parts);
-    storageTableToWhereClause.put(tables.toString(), StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
+    storageTableToWhereClause.put(tables.toString(), StorageUtil.joinWithAnd(
+      StorageUtil.getNotLatestClauseForDimensions(TEST_CUBE_NAME, getRemainingTimedDimensions(TEST_CUBE_NAME, "dt")),
+      StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts)
+    ));
     return storageTableToWhereClause;
   }
 
@@ -368,29 +388,40 @@ public class CubeTestSetup {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
     List<String> parts = new ArrayList<String>();
     addParts(parts, UpdatePeriod.MONTHLY, twoMonthsBack, DateUtil.getFloorDate(now, UpdatePeriod.MONTHLY));
+
     storageTableToWhereClause.put(getDbName() + monthlyTable,
-        StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
+      StorageUtil.joinWithAnd(
+        StorageUtil.getNotLatestClauseForDimensions(TEST_CUBE_NAME, getRemainingTimedDimensions(TEST_CUBE_NAME, "dt")),
+        StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts)
+      ));
     return storageTableToWhereClause;
+  }
+
+  public static Set<String> getRemainingTimedDimensions(String cubeName, String timedDimension) {
+    Set<String> timedDimensions = null;
+    try {
+      timedDimensions = client.getCube(cubeName).getTimedDimensions();
+    } catch (HiveException e) {
+      e.printStackTrace();
+    }
+    timedDimensions.remove(timedDimension);
+    return timedDimensions;
   }
 
   public static Map<String, String> getWhereForHourly2days(String hourlyTable) {
     return getWhereForHourly2days(TEST_CUBE_NAME, hourlyTable);
   }
-
   public static Map<String, String> getWhereForHourly2days(String alias, String hourlyTable) {
+    return getWhereForHourly2days(new String[] {alias, alias}, hourlyTable);
+  }
+  public static Map<String, String> getWhereForHourly2days(String[] cubeNameAndalias, String hourlyTable) {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
     List<String> parts = new ArrayList<String>();
     addParts(parts, UpdatePeriod.HOURLY, twodaysBack, DateUtil.getFloorDate(now, UpdatePeriod.HOURLY));
-    Set<String> timedDimensions = null;
-    try {
-      timedDimensions = client.getCube(TEST_CUBE_NAME).getTimedDimensions();
-    } catch (HiveException e) {
-      e.printStackTrace();
-    }
-    timedDimensions.remove("dt");
     storageTableToWhereClause.put(getDbName() + hourlyTable, StorageUtil.joinWithAnd(
-      StorageUtil.getNotLatestClauseForDimensions(TEST_CUBE_NAME, timedDimensions),
-      StorageUtil.getWherePartClause("dt", alias, parts)
+      StorageUtil.getNotLatestClauseForDimensions(
+        cubeNameAndalias[1], getRemainingTimedDimensions(cubeNameAndalias[0], "dt")),
+      StorageUtil.getWherePartClause("dt", cubeNameAndalias[1], parts)
     ));
     return storageTableToWhereClause;
   }
@@ -782,6 +813,7 @@ public class CubeTestSetup {
     storageAggregatePeriods.put(c2, updates);
     storageAggregatePeriods.put(c3, updates);
     storageAggregatePeriods.put(c4, updates);
+
 
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
