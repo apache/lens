@@ -75,6 +75,20 @@ class StorageTableResolver implements ContextRewriter {
   private final Map<String, List<String>> nonExistingPartitions = new HashMap<String, List<String>>();
   private TimeRangeWriter rangeWriter;
   private DateFormat partWhereClauseFormat = null;
+  private PHASE phase;
+
+  static enum PHASE {
+    FACT_TABLES, FACT_PARTITIONS, DIM_TABLE_AND_PARTITIONS;
+    static PHASE first() {
+      return values()[0];
+    }
+    static PHASE last() {
+      return values()[values().length - 1];
+    }
+    PHASE next() {
+      return values()[(this.ordinal() + 1) % values().length];
+    }
+  }
 
   public StorageTableResolver(Configuration conf) {
     this.conf = conf;
@@ -104,6 +118,7 @@ class StorageTableResolver implements ContextRewriter {
     if (formatStr != null) {
       partWhereClauseFormat = new SimpleDateFormat(formatStr);
     }
+    this.phase = PHASE.first();
   }
 
   private List<String> getSupportedStorages(Configuration conf) {
@@ -115,10 +130,8 @@ class StorageTableResolver implements ContextRewriter {
   }
 
   public boolean isStorageSupported(String storage) {
-    if (!allStoragesSupported) {
-      return supportedStorages.contains(storage);
-    }
-    return true;
+    return allStoragesSupported ||
+      supportedStorages.contains(storage);
   }
 
   Map<String, List<String>> storagePartMap = new HashMap<String, List<String>>();
@@ -127,16 +140,28 @@ class StorageTableResolver implements ContextRewriter {
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     client = cubeql.getMetastoreClient();
 
-    if (!cubeql.getCandidateFactTables().isEmpty()) {
-      // resolve storage table names
-      resolveFactStorageTableNames(cubeql);
-      // resolve storage partitions
-      resolveFactStoragePartitions(cubeql);
+    switch(phase) {
+      case FACT_TABLES:
+        if (!cubeql.getCandidateFactTables().isEmpty()) {
+          // resolve storage table names
+          resolveFactStorageTableNames(cubeql);
+        }
+        cubeql.pruneCandidateFactSet(CubeTableCause.NO_CANDIDATE_STORAGES);
+        break;
+      case FACT_PARTITIONS:
+        if (!cubeql.getCandidateFactTables().isEmpty()) {
+          // resolve storage partitions
+          resolveFactStoragePartitions(cubeql);
+        }
+        cubeql.pruneCandidateFactSet(CubeTableCause.NO_CANDIDATE_STORAGES);
+        break;
+      case DIM_TABLE_AND_PARTITIONS:
+        resolveDimStorageTablesAndPartitions(cubeql);
+        break;
     }
-    // resolve dimension tables
-    resolveDimStorageTablesAndPartitions(cubeql);
+    //Doing this on all three phases. Keep updating cubeql with the current identified missing partitions.
     cubeql.setNonexistingParts(nonExistingPartitions);
-    cubeql.pruneCandidateFactSet(CubeTableCause.NO_CANDIDATE_STORAGES);
+    phase = phase.next();
   }
 
   private void resolveDimStorageTablesAndPartitions(CubeQueryContext cubeql) throws SemanticException {
@@ -195,11 +220,11 @@ class StorageTableResolver implements ContextRewriter {
               } else {
                 LOG.info("Partition " + StorageConstants.LATEST_PARTITION_VALUE + " does not exist on " + tableName);
               }
-              if (!failOnPartialData || (failOnPartialData && numParts > 0)) {
+              if (!failOnPartialData || numParts > 0) {
                 storageTables.add(tableName);
                 String whereClause =
-                    StorageUtil.getWherePartClause(dim.getTimedDimension(), cubeql.getAliasForTabName(dim.getName()),
-                        StorageConstants.getPartitionsForLatest());
+                  StorageUtil.getWherePartClause(dim.getTimedDimension(), cubeql.getAliasForTabName(dim.getName()),
+                    StorageConstants.getPartitionsForLatest());
                 whereClauses.put(tableName, whereClause);
               } else {
                 LOG.info("Not considering dim storage table:" + tableName + " as no dim partitions exist");
@@ -347,7 +372,7 @@ class StorageTableResolver implements ContextRewriter {
         cfact.numQueriedParts += rangeParts.size();
         answeringParts.addAll(rangeParts);
         cfact.rangeToWhereClause.put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
-            cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts));
+          cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts));
       }
       if (!nonExistingParts.isEmpty()) {
         addNonExistingParts(cfact.fact.getName(), nonExistingParts);

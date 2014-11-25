@@ -127,6 +127,7 @@ public class CubeQueryRewriter {
     rewriters.add(new AliasReplacer(conf));
     DenormalizationResolver denormResolver = new DenormalizationResolver(conf);
     CandidateTableResolver candidateTblResolver = new CandidateTableResolver(conf);
+    StorageTableResolver storageTableResolver = new StorageTableResolver(conf);
     // De-normalized columns resolved
     rewriters.add(denormResolver);
     // Resolve candidate fact tables and dimension tables for columns queried
@@ -141,11 +142,18 @@ public class CubeQueryRewriter {
     // Resolve aggregations and generate base select tree
     rewriters.add(new AggregateResolver(conf));
     rewriters.add(new GroupbyResolver(conf));
+    // Phase 1: resolve fact tables.
+    rewriters.add(storageTableResolver);
     if (lightFactFirst) {
       rewriters.add(new LightestFactResolver(conf));
     }
-    // Resolve storage partitions and table names
-    rewriters.add(new StorageTableResolver(conf));
+    // Phase 2: resolve fact table partitions.
+    rewriters.add(storageTableResolver);
+    if (!lightFactFirst) {
+      rewriters.add(new LightestFactResolver(conf));
+    }
+    // Phase 3: resolve dimension tables and partitions.
+    rewriters.add(storageTableResolver);
     // Check for candidate tables using de-normalized columns
     rewriters.add(denormResolver);
     rewriters.add(new LeastPartitionResolver(conf));
