@@ -21,13 +21,13 @@
  */
 package org.apache.lens.api.query;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
 /**
  * The Class ResultColumn.
@@ -48,12 +48,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ResultColumn {
 
-  /** The name. */
+  /**
+   * The name.
+   */
   @XmlElement
   @Getter
   private String name;
 
-  /** The type. */
+  /**
+   * The type.
+   */
   @XmlElement
   @Getter
   private ResultColumnType type;
@@ -61,10 +65,8 @@ public class ResultColumn {
   /**
    * Instantiates a new result column.
    *
-   * @param name
-   *          the name
-   * @param type
-   *          the type
+   * @param name the name
+   * @param type the type
    */
   public ResultColumn(String name, String type) {
     this(name, ResultColumnType.valueOf(type.toUpperCase()));

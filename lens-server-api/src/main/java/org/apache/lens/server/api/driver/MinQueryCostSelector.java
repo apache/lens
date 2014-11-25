@@ -19,24 +19,20 @@
 package org.apache.lens.server.api.driver;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.log4j.Logger;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Map;
 
 public class MinQueryCostSelector implements DriverSelector {
   public static final Logger LOG = Logger.getLogger(MinQueryCostSelector.class);
+
   /**
    * Returns the driver that has the minimum query cost.
    *
-   * @param ctx
-   *          the context
-   * @param conf
-   *          the conf
+   * @param ctx  the context
+   * @param conf the conf
    * @return the lens driver
    */
   @Override
@@ -49,6 +45,7 @@ public class MinQueryCostSelector implements DriverSelector {
       }
     });
   }
+
   int comparePlans(DriverQueryPlan c1, DriverQueryPlan c2) {
     if (c1 == null && c2 == null) {
       return 0;

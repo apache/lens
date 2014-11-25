@@ -21,15 +21,10 @@
  */
 package org.apache.lens.api;
 
-import java.util.Date;
+import lombok.*;
 
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.util.Date;
 
 /**
  * The Class DateTime.
@@ -48,7 +43,9 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DateTime {
 
-  /** The Date. */
+  /**
+   * The Date.
+   */
   @Getter
   @Setter
   private Date date;

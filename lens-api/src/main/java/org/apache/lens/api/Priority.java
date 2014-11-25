@@ -26,18 +26,28 @@ package org.apache.lens.api;
  */
 public enum Priority {
 
-  /** The very high. */
+  /**
+   * The very high.
+   */
   VERY_HIGH,
 
-  /** The high. */
+  /**
+   * The high.
+   */
   HIGH,
 
-  /** The normal. */
+  /**
+   * The normal.
+   */
   NORMAL,
 
-  /** The low. */
+  /**
+   * The low.
+   */
   LOW,
 
-  /** The very low. */
+  /**
+   * The very low.
+   */
   VERY_LOW
 }

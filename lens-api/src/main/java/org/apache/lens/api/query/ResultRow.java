@@ -21,15 +21,14 @@
  */
 package org.apache.lens.api.query;
 
-import java.util.List;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.util.List;
 
 /**
  * The Class ResultRow.
@@ -48,7 +47,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ResultRow {
 
-  /** The values. */
+  /**
+   * The values.
+   */
   @XmlElementWrapper
   @Getter
   List<Object> values;

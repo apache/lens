@@ -21,6 +21,14 @@
  */
 package org.apache.lens.doc;
 
+import org.testng.annotations.Test;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -30,61 +38,75 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-
-import org.testng.annotations.Test;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
 /**
  * The Class TestGenerateConfigDoc.
  */
 public class TestGenerateConfigDoc {
 
-  /** The Constant SERVER_CONF_FILE. */
+  /**
+   * The Constant SERVER_CONF_FILE.
+   */
   public static final String SERVER_CONF_FILE = "../lens-server/src/main/resources/lensserver-default.xml";
 
-  /** The Constant SESSION_CONF_FILE. */
+  /**
+   * The Constant SESSION_CONF_FILE.
+   */
   public static final String SESSION_CONF_FILE = "../lens-server/src/main/resources/lenssession-default.xml";
 
-  /** The Constant HIVE_DRIVER_CONF_FILE. */
+  /**
+   * The Constant HIVE_DRIVER_CONF_FILE.
+   */
   public static final String HIVE_DRIVER_CONF_FILE = "../lens-driver-hive/src/main/resources/hivedriver-default.xml";
 
-  /** The Constant JDBC_DRIVER_CONF_FILE. */
+  /**
+   * The Constant JDBC_DRIVER_CONF_FILE.
+   */
   public static final String JDBC_DRIVER_CONF_FILE = "../lens-driver-jdbc/src/main/resources/jdbcdriver-default.xml";
 
-  /** The Constant CLIENT_CONF_FILE. */
+  /**
+   * The Constant CLIENT_CONF_FILE.
+   */
   public static final String CLIENT_CONF_FILE = "../lens-client/src/main/resources/lens-client-default.xml";
 
-  /** The Constant CUBE_QUERY_CONF_FILE. */
+  /**
+   * The Constant CUBE_QUERY_CONF_FILE.
+   */
   public static final String CUBE_QUERY_CONF_FILE = "../lens-cube/src/main/resources/olap-query-conf.xml";
 
-  /** The Constant APT_FILE. */
+  /**
+   * The Constant APT_FILE.
+   */
   public static final String APT_FILE = "../src/site/apt/admin/config.apt";
 
-  /** The Constant SESSION_APT_FILE. */
+  /**
+   * The Constant SESSION_APT_FILE.
+   */
   public static final String SESSION_APT_FILE = "../src/site/apt/admin/session-config.apt";
 
-  /** The Constant HIVE_DRIVER_APT_FILE. */
+  /**
+   * The Constant HIVE_DRIVER_APT_FILE.
+   */
   public static final String HIVE_DRIVER_APT_FILE = "../src/site/apt/admin/hivedriver-config.apt";
 
-  /** The Constant JDBC_DRIVER_APT_FILE. */
+  /**
+   * The Constant JDBC_DRIVER_APT_FILE.
+   */
   public static final String JDBC_DRIVER_APT_FILE = "../src/site/apt/admin/jdbcdriver-config.apt";
 
-  /** The Constant CLIENT_APT_FILE. */
+  /**
+   * The Constant CLIENT_APT_FILE.
+   */
   public static final String CLIENT_APT_FILE = "../src/site/apt/user/client-config.apt";
 
-  /** The Constant CUBE_QUERY_CONF_APT_FILE. */
+  /**
+   * The Constant CUBE_QUERY_CONF_APT_FILE.
+   */
   public static final String CUBE_QUERY_CONF_APT_FILE = "../src/site/apt/user/olap-query-conf.apt";
 
   /**
    * Generate server config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateServerConfigDoc() throws Exception {
@@ -95,8 +117,7 @@ public class TestGenerateConfigDoc {
   /**
    * Generate session config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateSessionConfigDoc() throws Exception {
@@ -107,8 +128,7 @@ public class TestGenerateConfigDoc {
   /**
    * Generate hivedriver config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateHivedriverConfigDoc() throws Exception {
@@ -119,8 +139,7 @@ public class TestGenerateConfigDoc {
   /**
    * Generate jdbcdriver config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateJdbcdriverConfigDoc() throws Exception {
@@ -131,8 +150,7 @@ public class TestGenerateConfigDoc {
   /**
    * Generate client config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateClientConfigDoc() throws Exception {
@@ -143,8 +161,7 @@ public class TestGenerateConfigDoc {
   /**
    * Generate olap query config doc.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void generateOLAPQueryConfigDoc() throws Exception {
@@ -157,20 +174,25 @@ public class TestGenerateConfigDoc {
    */
   class ConfigEntry {
 
-    /** The name. */
+    /**
+     * The name.
+     */
     private String name;
 
-    /** The value. */
+    /**
+     * The value.
+     */
     private String value;
 
-    /** The description. */
+    /**
+     * The description.
+     */
     private String description;
 
     /**
      * Validate.
      *
-     * @throws IllegalArgumentException
-     *           the illegal argument exception
+     * @throws IllegalArgumentException the illegal argument exception
      */
     public void validate() throws IllegalArgumentException {
       if (name == null || name.isEmpty()) {
@@ -197,31 +219,41 @@ public class TestGenerateConfigDoc {
    */
   class ConfigPrinter extends DefaultHandler {
 
-    /** The config file. */
+    /**
+     * The config file.
+     */
     private final String configFile;
 
-    /** The output apt file. */
+    /**
+     * The output apt file.
+     */
     private final String outputAPTFile;
 
-    /** The buf. */
+    /**
+     * The buf.
+     */
     private StringBuilder buf;
 
-    /** The entry. */
+    /**
+     * The entry.
+     */
     private ConfigEntry entry;
 
-    /** The entries. */
+    /**
+     * The entries.
+     */
     private List<ConfigEntry> entries;
 
-    /** The in property. */
+    /**
+     * The in property.
+     */
     boolean inProperty;
 
     /**
      * Instantiates a new config printer.
      *
-     * @param confFile
-     *          the conf file
-     * @param outputAPTFile
-     *          the output apt file
+     * @param confFile      the conf file
+     * @param outputAPTFile the output apt file
      */
     public ConfigPrinter(String confFile, String outputAPTFile) {
       configFile = confFile;
@@ -232,12 +264,9 @@ public class TestGenerateConfigDoc {
     /**
      * Read config file.
      *
-     * @throws IOException
-     *           Signals that an I/O exception has occurred.
-     * @throws ParserConfigurationException
-     *           the parser configuration exception
-     * @throws SAXException
-     *           the SAX exception
+     * @throws IOException                  Signals that an I/O exception has occurred.
+     * @throws ParserConfigurationException the parser configuration exception
+     * @throws SAXException                 the SAX exception
      */
     public void readConfigFile() throws IOException, ParserConfigurationException, SAXException {
       SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -297,10 +326,8 @@ public class TestGenerateConfigDoc {
     /**
      * Prints the apt.
      *
-     * @param heading
-     *          the heading
-     * @throws IOException
-     *           Signals that an I/O exception has occurred.
+     * @param heading the heading
+     * @throws IOException Signals that an I/O exception has occurred.
      */
     public void printAPT(String heading) throws IOException {
       PrintWriter apt = null;
@@ -372,14 +399,10 @@ public class TestGenerateConfigDoc {
     /**
      * Generate doc.
      *
-     * @param heading
-     *          the heading
-     * @throws IOException
-     *           Signals that an I/O exception has occurred.
-     * @throws ParserConfigurationException
-     *           the parser configuration exception
-     * @throws SAXException
-     *           the SAX exception
+     * @param heading the heading
+     * @throws IOException                  Signals that an I/O exception has occurred.
+     * @throws ParserConfigurationException the parser configuration exception
+     * @throws SAXException                 the SAX exception
      */
     public void generateDoc(String heading) throws IOException, ParserConfigurationException, SAXException {
       readConfigFile();
