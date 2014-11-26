@@ -643,7 +643,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     // Construct the final fact in-line query with keys,
     // measures and individual sub queries built.
 
-    if (whereTree == null || joinTree == null || allSubQueries.length() == 0) {
+    if (whereTree == null || joinTree == null || allSubQueries.length() == 0 || aggColumn.isEmpty()) {
       LOG.info("@@@Query not eligible for inner subquery rewrite");
       // construct query without fact sub query
       constructQuery(selectTree, fromTree, whereTree, groupByTree, havingTree, orderByTree, limit, joinTree);
@@ -674,6 +674,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     for (Map.Entry<String, String> entry : mapAggTabAlias.entrySet()) {
       selectTree = selectTree.replace(entry.getKey(), entry.getValue());
+      
       if (orderByTree != null) {
         orderByTree = orderByTree.replace(entry.getKey(), entry.getValue());
       }
@@ -681,6 +682,11 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         havingTree = havingTree.replace(entry.getKey(), entry.getValue());
       }
     }
+    //for subquery with count function should be replaced with sum in outer query
+    if (selectTree.toLowerCase().matches("(.*)count\\((.*)")) {
+      System.out.println(selectTree);
+      selectTree = selectTree.replaceAll("count\\(", "sum\\(");
+    }  
     // construct query with fact sub query
     constructQuery(selectTree, fromTree, whereTree, groupByTree, havingTree, orderByTree, limit, joinTree);
 
@@ -821,7 +827,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     return queryReplacedUdf;
   }
-
+  
   // Replace Lens database names with storage's proper DB and table name based
   // on table properties.
   /**
