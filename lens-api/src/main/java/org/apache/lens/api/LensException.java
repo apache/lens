@@ -30,8 +30,7 @@ public class LensException extends Exception {
   /**
    * Instantiates a new lens exception.
    *
-   * @param msg
-   *          the msg
+   * @param msg the msg
    */
   public LensException(String msg) {
     super(msg);
@@ -40,10 +39,8 @@ public class LensException extends Exception {
   /**
    * Instantiates a new lens exception.
    *
-   * @param msg
-   *          the msg
-   * @param th
-   *          the th
+   * @param msg the msg
+   * @param th  the th
    */
   public LensException(String msg, Throwable th) {
     super(msg, th);
@@ -59,8 +56,7 @@ public class LensException extends Exception {
   /**
    * Instantiates a new lens exception.
    *
-   * @param th
-   *          the th
+   * @param th the th
    */
   public LensException(Throwable th) {
     super(th);

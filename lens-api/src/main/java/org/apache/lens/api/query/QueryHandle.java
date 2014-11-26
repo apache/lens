@@ -21,17 +21,12 @@
  */
 package org.apache.lens.api.query;
 
-import java.io.Serializable;
-import java.util.UUID;
+import lombok.*;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.io.Serializable;
+import java.util.UUID;
 
 /**
  * The Class QueryHandle.
@@ -56,10 +51,14 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 public class QueryHandle extends QuerySubmitResult implements Serializable {
 
-  /** The Constant serialVersionUID. */
+  /**
+   * The Constant serialVersionUID.
+   */
   private static final long serialVersionUID = 1L;
 
-  /** The handle id. */
+  /**
+   * The handle id.
+   */
   @XmlElement
   @Getter
   private UUID handleId;
@@ -67,8 +66,7 @@ public class QueryHandle extends QuerySubmitResult implements Serializable {
   /**
    * From string.
    *
-   * @param handle
-   *          the handle
+   * @param handle the handle
    * @return the query handle
    */
   public static QueryHandle fromString(String handle) {

@@ -21,13 +21,13 @@
  */
 package org.apache.lens.api.query;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * The Class QueryHandleWithResultSet.
@@ -39,12 +39,16 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryHandleWithResultSet extends QuerySubmitResult {
 
-  /** The query handle. */
+  /**
+   * The query handle.
+   */
   @XmlElement
   @Getter
   private QueryHandle queryHandle;
 
-  /** The result. */
+  /**
+   * The result.
+   */
   @Getter
   @Setter
   private QueryResult result;
@@ -52,8 +56,7 @@ public class QueryHandleWithResultSet extends QuerySubmitResult {
   /**
    * Instantiates a new query handle with result set.
    *
-   * @param handle
-   *          the handle
+   * @param handle the handle
    */
   public QueryHandleWithResultSet(QueryHandle handle) {
     this.queryHandle = handle;
