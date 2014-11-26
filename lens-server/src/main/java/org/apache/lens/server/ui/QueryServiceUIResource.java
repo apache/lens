@@ -127,7 +127,7 @@ public class QueryServiceUIResource {
     LensSessionHandle sessionHandle = SessionUIResource.openSessions.get(publicId);
     checkSessionHandle(sessionHandle);
     try {
-      return queryServer.getAllQueries(sessionHandle, state, queryName, user, fromDate, toDate == -1L ? Long.MAX_VALUE
+      return queryServer.getAllQueries(sessionHandle, state, user, queryName, fromDate, toDate == -1L ? Long.MAX_VALUE
           : toDate);
     } catch (LensException e) {
       throw new WebApplicationException(e);
