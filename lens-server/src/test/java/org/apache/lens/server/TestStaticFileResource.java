@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.ui.UIApp;
@@ -29,6 +31,9 @@ import org.testng.annotations.Test;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.util.Set;
 
@@ -39,6 +44,8 @@ import static org.testng.Assert.assertEquals;
  */
 @Test(groups = "unit-test")
 public class TestStaticFileResource extends LensJerseyTest {
+
+  public static final Log LOG = LogFactory.getLog(TestStaticFileResource.class);
 
   /*
    * (non-Javadoc)
@@ -62,7 +69,24 @@ public class TestStaticFileResource extends LensJerseyTest {
 
   @Override
   protected int getTestPort() {
-    return 19999;
+    int port = 20000;
+    ServerSocket socket = null;
+    try {
+      socket = new ServerSocket(0);
+      port = socket.getLocalPort();
+    } catch (IOException e) {
+      LOG.info("Exception occured while creating socket."
+          + " Use a default port number " +  port);
+    } finally {
+      try {
+        if (socket != null) {
+          socket.close();
+        }
+      } catch (IOException e) {
+        LOG.info("Exception occured while closing the socket ", e);
+      }
+    }
+    return port;
   }
 
   /*
