@@ -25,6 +25,7 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hive.service.cli.ColumnDescriptor;
@@ -201,7 +202,10 @@ public class JDBCResultSet extends InMemoryResultSet {
     case Types.DECIMAL:
       hiveType = new TypeDescriptor(Type.DECIMAL_TYPE);
       qualifiers = new TypeQualifiers();
-      qualifiers.setPrecision(rsmeta.getPrecision(index));
+      int colPrecision = rsmeta.getPrecision(index);
+      if ( colPrecision > HiveDecimal.MAX_PRECISION ) {
+        qualifiers.setPrecision(HiveDecimal.MAX_PRECISION);
+      }
       qualifiers.setScale(rsmeta.getScale(index));
       hiveType.setTypeQualifiers(qualifiers);
       break;
