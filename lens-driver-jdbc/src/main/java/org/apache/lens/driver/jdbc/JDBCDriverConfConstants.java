@@ -73,4 +73,12 @@ public interface JDBCDriverConfConstants {
 
   /** The Constant DEFAULT_JDBC_EXPLAIN_KEYWORD. */
   public static final String DEFAULT_JDBC_EXPLAIN_KEYWORD = "explain ";
+ 
+  /** The Constant JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT. */
+  public static final String JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT = JDBC_DRIVER_PFX + "explain.before.select";
+  
+  /** The Constant DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT. */
+  public static final boolean DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT = true;
+  
+  
 }
