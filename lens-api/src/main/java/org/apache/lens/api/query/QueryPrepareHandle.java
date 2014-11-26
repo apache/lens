@@ -21,16 +21,11 @@
  */
 package org.apache.lens.api.query;
 
-import java.util.UUID;
+import lombok.*;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.util.UUID;
 
 /**
  * The Class QueryPrepareHandle.
@@ -55,7 +50,9 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 public class QueryPrepareHandle extends QuerySubmitResult {
 
-  /** The prepare handle id. */
+  /**
+   * The prepare handle id.
+   */
   @XmlElement
   @Getter
   private UUID prepareHandleId;
@@ -63,8 +60,7 @@ public class QueryPrepareHandle extends QuerySubmitResult {
   /**
    * From string.
    *
-   * @param handle
-   *          the handle
+   * @param handle the handle
    * @return the query prepare handle
    */
   public static QueryPrepareHandle fromString(String handle) {

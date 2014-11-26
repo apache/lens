@@ -21,13 +21,13 @@
  */
 package org.apache.lens.api.query;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
 /**
  * The Class QueryCost.
@@ -48,12 +48,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryCost implements Comparable<QueryCost> {
 
-  /** The estimated exec time millis. */
+  /**
+   * The estimated exec time millis.
+   */
   @XmlElement
   @Getter
   private long estimatedExecTimeMillis;
 
-  /** The estimated resource usage. */
+  /**
+   * The estimated resource usage.
+   */
   @XmlElement
   @Getter
   private double estimatedResourceUsage;

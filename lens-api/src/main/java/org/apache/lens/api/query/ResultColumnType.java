@@ -29,51 +29,91 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 public enum ResultColumnType {
 
-  /** The boolean. */
+  /**
+   * The boolean.
+   */
   BOOLEAN, // boolean
-  /** The tinyint. */
+  /**
+   * The tinyint.
+   */
   TINYINT, // short
-  /** The smallint. */
+  /**
+   * The smallint.
+   */
   SMALLINT, // short
-  /** The int. */
+  /**
+   * The int.
+   */
   INT, // int
-  /** The bigint. */
+  /**
+   * The bigint.
+   */
   BIGINT, // long
-  /** The float. */
+  /**
+   * The float.
+   */
   FLOAT, // float
-  /** The double. */
+  /**
+   * The double.
+   */
   DOUBLE, // double
-  /** The string. */
+  /**
+   * The string.
+   */
   STRING, // string
-  /** The timestamp. */
+  /**
+   * The timestamp.
+   */
   TIMESTAMP, // Date
-  /** The binary. */
+  /**
+   * The binary.
+   */
   BINARY, // byte[]
-  /** The array. */
+  /**
+   * The array.
+   */
   ARRAY, // List
-  /** The map. */
+  /**
+   * The map.
+   */
   MAP, // Map
-  /** The struct. */
+  /**
+   * The struct.
+   */
   STRUCT,
 
-  /** The uniontype. */
+  /**
+   * The uniontype.
+   */
   UNIONTYPE,
 
-  /** The user defined. */
+  /**
+   * The user defined.
+   */
   USER_DEFINED,
 
-  /** The decimal. */
+  /**
+   * The decimal.
+   */
   DECIMAL,
 
-  /** The null. */
+  /**
+   * The null.
+   */
   NULL,
 
-  /** The date. */
+  /**
+   * The date.
+   */
   DATE,
 
-  /** The varchar. */
+  /**
+   * The varchar.
+   */
   VARCHAR,
 
-  /** The char. */
+  /**
+   * The char.
+   */
   CHAR;
 }

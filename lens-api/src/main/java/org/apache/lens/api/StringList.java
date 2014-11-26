@@ -21,14 +21,10 @@
  */
 package org.apache.lens.api;
 
+import lombok.*;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.List;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * The Class StringList.
@@ -47,7 +43,9 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class StringList {
 
-  /** The elements. */
+  /**
+   * The elements.
+   */
   @Getter
   @Setter
   private List<String> elements;

@@ -18,6 +18,10 @@
  */
 package org.apache.lens.api;
 
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
@@ -26,9 +30,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.StringWriter;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 /**
  * APIResult is the output returned by all the APIs; status-SUCCEEDED or FAILED message- detailed message.
@@ -41,18 +42,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class APIResult {
 
-  /** The status. */
+  /**
+   * The status.
+   */
   @XmlElement
   @Getter
   private Status status;
 
-  /** The message. */
+  /**
+   * The message.
+   */
   @XmlElement
   @Getter
   private String message;
 
-  /** The Constant JAXB_CONTEXT. */
+  /**
+   * The Constant JAXB_CONTEXT.
+   */
   private static final JAXBContext JAXB_CONTEXT;
+
   static {
     try {
       JAXB_CONTEXT = JAXBContext.newInstance(APIResult.class);
@@ -66,21 +74,25 @@ public class APIResult {
    */
   public static enum Status {
 
-    /** The succeeded. */
+    /**
+     * The succeeded.
+     */
     SUCCEEDED,
-    /** The partial. */
+    /**
+     * The partial.
+     */
     PARTIAL,
-    /** The failed. */
+    /**
+     * The failed.
+     */
     FAILED
   }
 
   /**
    * Instantiates a new API result.
    *
-   * @param status
-   *          the status
-   * @param message
-   *          the message
+   * @param status  the status
+   * @param message the message
    */
   public APIResult(Status status, String message) {
     super();
