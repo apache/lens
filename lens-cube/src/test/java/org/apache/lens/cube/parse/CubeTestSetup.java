@@ -45,7 +45,26 @@ import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.BaseDimAttribute;
+import org.apache.lens.cube.metadata.ColumnMeasure;
+import org.apache.lens.cube.metadata.CubeDimAttribute;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeMeasure;
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.ExprColumn;
+import org.apache.lens.cube.metadata.HDFSStorage;
+import org.apache.lens.cube.metadata.HierarchicalDimAttribute;
+import org.apache.lens.cube.metadata.InlineDimAttribute;
+import org.apache.lens.cube.metadata.MetastoreConstants;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
+import org.apache.lens.cube.metadata.StorageConstants;
+import org.apache.lens.cube.metadata.StoragePartitionDesc;
+import org.apache.lens.cube.metadata.StorageTableDesc;
+import org.apache.lens.cube.metadata.TableReference;
+import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.testng.Assert;
 
 /*
@@ -295,7 +314,7 @@ public class CubeTestSetup {
     return StringUtils.join(storageTables, ",");
   }
   public static String getWhereForDailyAndHourly2daysWithTimeDim(String cubeName, String timedDimension, Date from,
-    Date to) {
+      Date to) {
     return getWhereForDailyAndHourly2daysWithTimeDim(new String[]{cubeName, cubeName}, timedDimension, from, to);
   }
   public static String getWhereForDailyAndHourly2daysWithTimeDim(String[] cubeNameAndAlias, String timedDimension,
@@ -322,7 +341,7 @@ public class CubeTestSetup {
     } catch (HiveException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
-    }
+  }
     timedDimensions.remove(timedDimension);
     return StorageUtil.joinWithAnd(StorageUtil.getNotLatestClauseForDimensions(cubeNameAndAlias[1], timedDimensions),
       StorageUtil.getWherePartClause(timedDimension, cubeNameAndAlias[1], parts));

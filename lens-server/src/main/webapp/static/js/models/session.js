@@ -227,10 +227,12 @@ var Session = function() {
                 processData: false,
                 success: function(data) {
                     console.log("successfully logged out");
-                    callback();
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log("Error in logout : " + textStatus);
+                },
+                complete: function() {
+                    callback();
                 }
        });
     };

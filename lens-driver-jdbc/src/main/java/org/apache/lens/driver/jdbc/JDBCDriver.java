@@ -545,15 +545,28 @@ public class JDBCDriver implements LensDriver {
    *           the lens exception
    */
   @Override
-  public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
+  public DriverQueryPlan explain(String query, Configuration conf)
+      throws LensException {
     checkConfigured();
+    String explainQuery;
     conf = RewriteUtil.getFinalQueryConf(this, conf);
     String rewrittenQuery = rewriteQuery(query, conf);
     Configuration explainConf = new Configuration(conf);
-    explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    String explainQuery = explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM, DEFAULT_JDBC_EXPLAIN_KEYWORD) + rewrittenQuery;
+    explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
+        false);
+    String explainKeyword = explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM,
+        DEFAULT_JDBC_EXPLAIN_KEYWORD);
+    boolean explainBeforeSelect = explainConf.getBoolean(JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT,
+        DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT);
+    
+    if (explainBeforeSelect)
+      explainQuery = explainKeyword + " " + rewrittenQuery;
+    else
+      explainQuery = rewrittenQuery.replaceAll("select ", "select "
+          + explainKeyword + " ");
     LOG.info("Explain Query : " + explainQuery);
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, null, explainConf);
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, null,
+        explainConf);
 
     QueryResult result = null;
     try {

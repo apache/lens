@@ -26,18 +26,28 @@ package org.apache.lens.api.query;
  */
 public enum SubmitOp {
 
-  /** The execute. */
+  /**
+   * The execute.
+   */
   EXECUTE,
 
-  /** The explain. */
+  /**
+   * The explain.
+   */
   EXPLAIN,
 
-  /** The prepare. */
+  /**
+   * The prepare.
+   */
   PREPARE,
 
-  /** The explain and prepare. */
+  /**
+   * The explain and prepare.
+   */
   EXPLAIN_AND_PREPARE,
 
-  /** The execute with timeout. */
+  /**
+   * The execute with timeout.
+   */
   EXECUTE_WITH_TIMEOUT
 }

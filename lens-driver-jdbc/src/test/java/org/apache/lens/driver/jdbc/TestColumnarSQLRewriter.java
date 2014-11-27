@@ -560,6 +560,42 @@ public class TestColumnarSQLRewriter {
 
     compareQueries(expected, actual);
   }
+  
+@Test  
+  public void testNoAggCol() throws ParseException, SemanticException, LensException {
+   
+    String query = "SELECT  distinct ( location_dim . id ) FROM location_dim " +
+    		"location_dim join time_dim time_dim on location_dim.time_id = time_dim.id " +
+    		"WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
+    
+    SessionState.start(conf);
+    
+    String actual = qtest.rewrite(query, conf);
+    String expected = "select  distinct ( location_dim . id ) from location_dim location_dim  " +
+    		"inner join time_dim time_dim on (( location_dim . time_id ) = ( time_dim . id ))  " +
+    		"where ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  limit 10";
+    compareQueries(expected, actual);
+ 
+  }
+
+@Test
+public void testCountReplace() throws ParseException, SemanticException, LensException {
+
+  String query = "SELECT  count(location_dim.name) FROM location_dim " +
+      "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id " +
+      "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
+  
+  SessionState.start(conf);
+  
+  String actual = qtest.rewrite(query, conf);
+  String expected = "select sum(count_location_dim_name) from  (select location_dim.time_id,count(( location_dim . name )) " +
+  		"as count_location_dim_name from location_dim location_dim where location_dim.time_id in  " +
+  		"(  select time_dim.id from time_dim where ( time_dim . full_date ) between  " +
+  		"'2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  )  group by location_dim.time_id) " +
+  		"location_dim  inner join time_dim time_dim on (( location_dim . time_id ) = ( time_dim . id ))  " +
+  		"where ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  limit 10";
+  compareQueries(expected, actual);
+}
 
   /**
    * Test replace db name.

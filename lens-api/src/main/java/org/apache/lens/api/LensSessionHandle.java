@@ -21,9 +21,10 @@
  */
 package org.apache.lens.api;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -31,11 +32,9 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.UUID;
 
 /**
  * The Class LensSessionHandle.
@@ -56,18 +55,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LensSessionHandle {
 
-  /** The public id. */
+  /**
+   * The public id.
+   */
   @XmlElement
   @Getter
   private UUID publicId;
 
-  /** The secret id. */
+  /**
+   * The secret id.
+   */
   @XmlElement
   @Getter
   private UUID secretId;
 
-  /** The Constant JAXB_CONTEXT. */
+  /**
+   * The Constant JAXB_CONTEXT.
+   */
   private static final JAXBContext JAXB_CONTEXT;
+
   static {
     try {
       JAXB_CONTEXT = JAXBContext.newInstance(LensSessionHandle.class);
@@ -79,8 +85,7 @@ public class LensSessionHandle {
   /**
    * Value of.
    *
-   * @param sessionStr
-   *          the session str
+   * @param sessionStr the session str
    * @return the lens session handle
    */
   public static LensSessionHandle valueOf(String sessionStr) {

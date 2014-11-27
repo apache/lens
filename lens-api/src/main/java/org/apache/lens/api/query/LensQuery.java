@@ -21,13 +21,15 @@
  */
 package org.apache.lens.api.query;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.Priority;
 
-import lombok.*;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * The Class LensQuery.
@@ -80,92 +82,128 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LensQuery {
 
-  /** The query handle. */
+  /**
+   * The query handle.
+   */
   @XmlElement
   @Getter
   private QueryHandle queryHandle;
 
-  /** The user query. */
+  /**
+   * The user query.
+   */
   @XmlElement
   @Getter
   private String userQuery;
 
-  /** The submitted user. */
+  /**
+   * The submitted user.
+   */
   @XmlElement
   @Getter
   private String submittedUser;
 
-  /** The priority. */
+  /**
+   * The priority.
+   */
   @XmlElement
   @Getter
   private Priority priority;
 
-  /** The is persistent. */
+  /**
+   * The is persistent.
+   */
   @XmlElement
   @Getter
   private boolean isPersistent;
 
-  /** The selected driver class name. */
+  /**
+   * The selected driver class name.
+   */
   @XmlElement
   @Getter
   private String selectedDriverClassName;
 
-  /** The driver query. */
+  /**
+   * The driver query.
+   */
   @XmlElement
   @Getter
   private String driverQuery;
 
-  /** The status. */
+  /**
+   * The status.
+   */
   @XmlElement
   @Getter
   private QueryStatus status;
 
-  /** The result set path. */
+  /**
+   * The result set path.
+   */
   @XmlElement
   @Getter
   private String resultSetPath;
 
-  /** The driver op handle. */
+  /**
+   * The driver op handle.
+   */
   @XmlElement
   @Getter
   private String driverOpHandle;
 
-  /** The query conf. */
+  /**
+   * The query conf.
+   */
   @XmlElement
   @Getter
   private LensConf queryConf;
 
-  /** The submission time. */
+  /**
+   * The submission time.
+   */
   @XmlElement
   @Getter
   private long submissionTime;
 
-  /** The launch time. */
+  /**
+   * The launch time.
+   */
   @XmlElement
   @Getter
   private long launchTime;
 
-  /** The driver start time. */
+  /**
+   * The driver start time.
+   */
   @XmlElement
   @Getter
   private long driverStartTime;
 
-  /** The driver finish time. */
+  /**
+   * The driver finish time.
+   */
   @XmlElement
   @Getter
   private long driverFinishTime;
 
-  /** The finish time. */
+  /**
+   * The finish time.
+   */
   @XmlElement
   @Getter
   private long finishTime;
 
-  /** The closed time. */
+  /**
+   * The closed time.
+   */
   @XmlElement
   @Getter
   private long closedTime;
 
-  /** The query name. */
+  /**
+   * The query name.
+   */
   @XmlElement
   @Getter
   private String queryName;

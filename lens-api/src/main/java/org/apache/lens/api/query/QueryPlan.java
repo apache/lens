@@ -21,20 +21,15 @@
  */
 package org.apache.lens.api.query;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
-import java.util.List;
-import java.util.Map;
+import lombok.*;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Class QueryPlan.
@@ -99,121 +94,169 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QueryPlan extends QuerySubmitResult {
 
-  /** The num joins. */
+  /**
+   * The num joins.
+   */
   @XmlElement
   @Getter
   private int numJoins = 0;
 
-  /** The num gbys. */
+  /**
+   * The num gbys.
+   */
   @XmlElement
   @Getter
   private int numGbys = 0;
 
-  /** The num sels. */
+  /**
+   * The num sels.
+   */
   @XmlElement
   @Getter
   private int numSels = 0;
 
-  /** The num sel di. */
+  /**
+   * The num sel di.
+   */
   @XmlElement
   @Getter
   private int numSelDi = 0;
 
-  /** The num having. */
+  /**
+   * The num having.
+   */
   @XmlElement
   @Getter
   private int numHaving = 0;
 
-  /** The num obys. */
+  /**
+   * The num obys.
+   */
   @XmlElement
   @Getter
   private int numObys = 0;
 
-  /** The num aggr exprs. */
+  /**
+   * The num aggr exprs.
+   */
   @XmlElement
   @Getter
   private int numAggrExprs = 0;
 
-  /** The num filters. */
+  /**
+   * The num filters.
+   */
   @XmlElement
   @Getter
   private int numFilters = 0;
 
-  /** The tables queried. */
+  /**
+   * The tables queried.
+   */
   @XmlElementWrapper
   @Getter
   private List<String> tablesQueried;
 
-  /** The has sub query. */
+  /**
+   * The has sub query.
+   */
   @XmlElement
   @Getter
   private boolean hasSubQuery = false;
 
-  /** The exec mode. */
+  /**
+   * The exec mode.
+   */
   @XmlElement
   @Getter
   private String execMode;
 
-  /** The scan mode. */
+  /**
+   * The scan mode.
+   */
   @XmlElement
   @Getter
   private String scanMode;
 
-  /** The table weights. */
+  /**
+   * The table weights.
+   */
   @XmlElementWrapper
   @Getter
   private Map<String, Double> tableWeights;
 
-  /** The join weight. */
+  /**
+   * The join weight.
+   */
   @XmlElement
   @Getter
   private Double joinWeight;
 
-  /** The gby weight. */
+  /**
+   * The gby weight.
+   */
   @XmlElement
   @Getter
   private Double gbyWeight;
 
-  /** The filter weight. */
+  /**
+   * The filter weight.
+   */
   @XmlElement
   @Getter
   private Double filterWeight;
 
-  /** The having weight. */
+  /**
+   * The having weight.
+   */
   @XmlElement
   @Getter
   private Double havingWeight;
 
-  /** The oby weight. */
+  /**
+   * The oby weight.
+   */
   @XmlElement
   @Getter
   private Double obyWeight;
 
-  /** The select weight. */
+  /**
+   * The select weight.
+   */
   @XmlElement
   @Getter
   private Double selectWeight;
 
-  /** The prepare handle. */
+  /**
+   * The prepare handle.
+   */
   @Getter
   @Setter
   private QueryPrepareHandle prepareHandle;
 
-  /** The plan string. */
+  /**
+   * The plan string.
+   */
   @XmlElement
   private String planString;
 
-  /** The query cost. */
+  /**
+   * The query cost.
+   */
   @XmlElement
   @Getter
   private QueryCost queryCost;
 
-  /** The error. */
+  /**
+   * The error.
+   */
   @XmlElement
   @Getter
   private boolean error = false;
 
-  /** The error msg. */
+  /**
+   * The error msg.
+   */
   @XmlElement
   @Getter
   private String errorMsg;
@@ -225,10 +268,8 @@ public class QueryPlan extends QuerySubmitResult {
   /**
    * Instantiates a new query plan.
    *
-   * @param hasError
-   *          the has error
-   * @param errorMsg
-   *          the error msg
+   * @param hasError the has error
+   * @param errorMsg the error msg
    */
   public QueryPlan(boolean hasError, String errorMsg) {
     this.error = hasError;

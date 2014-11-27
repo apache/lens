@@ -21,13 +21,13 @@
  */
 package org.apache.lens.api.query;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 
 /**
  * The Class PersistentQueryResult.
@@ -48,12 +48,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PersistentQueryResult extends QueryResult {
 
-  /** The persisted uri. */
+  /**
+   * The persisted uri.
+   */
   @XmlElement
   @Getter
   private String persistedURI;
 
-  /** The num rows. */
+  /**
+   * The num rows.
+   */
   @XmlElement
   @Getter
   private int numRows;

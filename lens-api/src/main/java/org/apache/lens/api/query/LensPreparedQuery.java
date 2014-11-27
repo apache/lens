@@ -21,17 +21,15 @@
  */
 package org.apache.lens.api.query;
 
-import java.util.Date;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.apache.lens.api.LensConf;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import org.apache.lens.api.LensConf;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import java.util.Date;
 
 /**
  * The Class LensPreparedQuery.
@@ -62,37 +60,51 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class LensPreparedQuery {
 
-  /** The prepare handle. */
+  /**
+   * The prepare handle.
+   */
   @XmlElement
   @Getter
   private QueryPrepareHandle prepareHandle;
 
-  /** The user query. */
+  /**
+   * The user query.
+   */
   @XmlElement
   @Getter
   private String userQuery;
 
-  /** The prepared time. */
+  /**
+   * The prepared time.
+   */
   @XmlElement
   @Getter
   private Date preparedTime;
 
-  /** The prepared user. */
+  /**
+   * The prepared user.
+   */
   @XmlElement
   @Getter
   private String preparedUser;
 
-  /** The selected driver class name. */
+  /**
+   * The selected driver class name.
+   */
   @XmlElement
   @Getter
   private String selectedDriverClassName;
 
-  /** The driver query. */
+  /**
+   * The driver query.
+   */
   @XmlElement
   @Getter
   private String driverQuery;
 
-  /** The conf. */
+  /**
+   * The conf.
+   */
   @XmlElement
   @Getter
   private LensConf conf;
