@@ -28,4 +28,6 @@ Lens client configuration
 *--+--+---+--+
 |2|lens.client.user.name|anonymous|Lens client user name|
 *--+--+---+--+
+|3|lens.server.base.url|http://localhost:9999/lensapi|The base url for the lens server|
+*--+--+---+--+
 The configuration parameters and their default values

@@ -31,4 +31,9 @@
     <value>anonymous</value>
     <description>Lens client user name</description>
   </property>
+  <property>
+    <name>lens.server.base.url</name>
+    <value>http://localhost:9999/lensapi</value>
+    <description>The base url for the lens server</description>
+  </property>
 </configuration>
