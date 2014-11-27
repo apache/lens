@@ -69,6 +69,8 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     // Let's do some lookups
     Set<TableRelationship> dim4Edges = graph.get(metastore.getDimension("testdim4"));
+    Assert.assertNull(dim4Edges);
+    dim4Edges = graph.get(metastore.getDimension("testdim3"));
     Assert.assertNotNull(dim4Edges);
     Assert.assertEquals(1, dim4Edges.size());
 
@@ -82,7 +84,6 @@ public class TestJoinResolver extends TestQueryRewrite {
 
   private void searchPaths(AbstractCubeTable source, AbstractCubeTable target, SchemaGraph graph) {
     SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(source, target, graph);
-    search.setTrimLongerPaths(false);
     List<SchemaGraph.JoinPath> joinPaths = search.findAllPathsToTarget();
 
     System.out.println("@@ " + source + " ==> " + target + " paths =");
@@ -116,21 +117,16 @@ public class TestJoinResolver extends TestQueryRewrite {
     }
 
     // Assert for testcube
+    CubeInterface testCube = metastore.getCube("testcube");
     Dimension zipDim = metastore.getDimension("zipdim");
     Dimension cityDim = metastore.getDimension("citydim");
-    Dimension stateDim = metastore.getDimension("statedim");
-    Dimension countryDim = metastore.getDimension("countrydim");
-    CubeInterface testCube = metastore.getCube("testcube");
 
     SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(zipDim, (AbstractCubeTable) testCube, schemaGraph);
-    search.setTrimLongerPaths(false);
 
     List<SchemaGraph.JoinPath> paths = search.findAllPathsToTarget();
-    Assert.assertEquals(4, paths.size());
+    Assert.assertEquals(2, paths.size());
     validatePath(paths.get(0), zipDim, (AbstractCubeTable) testCube);
     validatePath(paths.get(1), zipDim, cityDim, (AbstractCubeTable) testCube);
-    validatePath(paths.get(2), zipDim, cityDim, stateDim, (AbstractCubeTable) testCube);
-    validatePath(paths.get(3), zipDim, cityDim, stateDim, countryDim, (AbstractCubeTable) testCube);
   }
 
   private void validatePath(SchemaGraph.JoinPath jp, AbstractCubeTable... tables) {

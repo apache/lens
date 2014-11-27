@@ -155,6 +155,7 @@ class JoinResolver implements ContextRewriter {
     private void populateJoinPathCols(List<SchemaGraph.JoinPath> joinPaths,
         Map<AbstractCubeTable, List<String>> joinPathColumns) {
       for (SchemaGraph.JoinPath path : joinPaths) {
+        // TODO why is only first edge?
         TableRelationship edge = path.getEdges().get(0);
         AbstractCubeTable fromTable = edge.getFromTable();
         String fromColumn = edge.getFromColumn();
@@ -503,8 +504,10 @@ class JoinResolver implements ContextRewriter {
 
         @Override
         public JoinClause next() {
-          getNextSelection(selection, sample);
-
+          //generate next permutation.
+          for(int i = groupSizes.length - 1, base=sample; i >= 0; base /= groupSizes[i], i--) {
+            selection[i] = base % groupSizes[i];
+          }
           for (int i = 0; i < selection.length; i++) {
             int selectedPath = selection[i];
             List<TableRelationship> path = pathSets.get(i).get(selectedPath).getEdges();
@@ -522,22 +525,6 @@ class JoinResolver implements ContextRewriter {
         @Override
         public void remove() {
           throw new UnsupportedOperationException("Cannot remove elements!");
-        }
-
-        // Generate the next selection in the cartesian product of join paths
-        public void getNextSelection(int[] selection, int sample) {
-          // Populate next selection array
-          boolean changed = false;
-
-          for (int i = selection.length - 1; !changed && i >= 0; i--) {
-            if (selection[i] < groupSizes[i] - 1) {
-              selection[i]++;
-              changed = true;
-            } else {
-              // Roll over
-              selection[i] = 0;
-            }
-          }
         }
       };
     }
@@ -730,7 +717,6 @@ class JoinResolver implements ContextRewriter {
         // Add the joined tables to the queries table sets so that they are
         // resolved in candidate resolver
         cubeql.addOptionalDimTable(rel.getToTable().getName(), null, null, required);
-        cubeql.addOptionalDimTable(rel.getFromTable().getName(), null, null, required);
       }
     }
   }
