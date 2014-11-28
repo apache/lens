@@ -18,11 +18,7 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -39,52 +35,78 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryOutputFormatter;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
 
 /**
  * Provides abstract implementation of the query output formatter.
- *
+ * <p/>
  * In this it initializes column names, types column object inspectors Also provides methods to construct header from
  * serde
- *
  */
 @SuppressWarnings("deprecation")
 public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
 
-  /** The Constant HEADER_TYPE. */
+  /**
+   * The Constant HEADER_TYPE.
+   */
   public static final String HEADER_TYPE = "string";
 
-  /** The ctx. */
+  /**
+   * The ctx.
+   */
   protected QueryContext ctx;
 
-  /** The metadata. */
+  /**
+   * The metadata.
+   */
   protected LensResultSetMetadata metadata;
 
-  /** The column names. */
+  /**
+   * The column names.
+   */
   protected List<String> columnNames = new ArrayList<String>();
 
-  /** The escaped column names. */
+  /**
+   * The escaped column names.
+   */
   protected List<String> escapedColumnNames = new ArrayList<String>();
 
-  /** The column types. */
+  /**
+   * The column types.
+   */
   protected List<TypeInfo> columnTypes = new ArrayList<TypeInfo>();
 
-  /** The column o is. */
+  /**
+   * The column o is.
+   */
   protected List<ObjectInspector> columnOIs = new ArrayList<ObjectInspector>();
 
-  /** The column header o is. */
+  /**
+   * The column header o is.
+   */
   protected List<ObjectInspector> columnHeaderOIs = new ArrayList<ObjectInspector>();
 
-  /** The htypes. */
+  /**
+   * The htypes.
+   */
   protected String htypes;
 
-  /** The types. */
+  /**
+   * The types.
+   */
   protected String types;
 
-  /** The header oi. */
+  /**
+   * The header oi.
+   */
   protected ObjectInspector headerOI;
 
-  /** The header serde. */
+  /**
+   * The header serde.
+   */
   protected SerDe headerSerde;
 
   /*
@@ -108,8 +130,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   /**
    * Inits the column fields.
    *
-   * @param metadata
-   *          the metadata
+   * @param metadata the metadata
    */
   private void initColumnFields(LensResultSetMetadata metadata) {
     StringBuilder typesSb = new StringBuilder();
@@ -130,7 +151,7 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
         columnTypes.add(typeInfo);
         columnOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(typeInfo));
         columnHeaderOIs.add(TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(TypeInfoUtils
-            .getTypeInfoFromTypeString(HEADER_TYPE)));
+          .getTypeInfoFromTypeString(HEADER_TYPE)));
         headerTypes.append(HEADER_TYPE);
       }
     }
@@ -142,18 +163,16 @@ public abstract class AbstractOutputFormatter implements QueryOutputFormatter {
   /**
    * Inits the header serde.
    *
-   * @throws ClassNotFoundException
-   *           the class not found exception
-   * @throws SerDeException
-   *           the ser de exception
+   * @throws ClassNotFoundException the class not found exception
+   * @throws SerDeException         the ser de exception
    */
   @SuppressWarnings("unchecked")
   private void initHeaderSerde() throws ClassNotFoundException, SerDeException {
     if (headerSerde == null) {
       headerSerde = ReflectionUtils.newInstance(
-          ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
-              (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
-          ctx.getConf());
+        ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
+          (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
+        ctx.getConf());
 
       Properties hprops = new Properties();
       if (columnNames.size() > 0) {

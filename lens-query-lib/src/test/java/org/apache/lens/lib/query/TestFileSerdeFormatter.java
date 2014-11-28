@@ -18,25 +18,19 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 import org.apache.hadoop.io.Text;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.lib.query.FileSerdeFormatter;
-import org.apache.lens.lib.query.WrappedFileFormatter;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * The Class TestFileSerdeFormatter.
@@ -57,8 +51,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   /**
    * Test serde.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testSerde() throws IOException {
@@ -66,19 +59,18 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
     conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(), Text.class.getCanonicalName());
 
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedTextRowsWithoutComma());
+      getExpectedTextRowsWithoutComma());
   }
 
   /**
    * Test compression with custom serde.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCompressionWithCustomSerde() throws IOException {
@@ -87,18 +79,17 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     validateSerde(LazySimpleSerDe.class.getCanonicalName(), Text.class.getCanonicalName());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedTextRowsWithoutComma());
+      getExpectedTextRowsWithoutComma());
   }
 
   /**
    * Test text file with zip formatter.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testTextFileWithZipFormatter() throws IOException {
@@ -109,7 +100,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     conf.setBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
     conf.setLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     // validate rows
     List<String> actual = readZipOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
     Assert.assertEquals(actual, getExpectedTextRowsWithMultipleWithoutComma());
@@ -118,8 +109,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   /**
    * Test csv with zip formatter.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCSVWithZipFormatter() throws IOException {
@@ -136,10 +126,8 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
   /**
    * Validate serde.
    *
-   * @param serdeClassName
-   *          the serde class name
-   * @param serializedClassName
-   *          the serialized class name
+   * @param serdeClassName      the serde class name
+   * @param serializedClassName the serialized class name
    */
   private void validateSerde(String serdeClassName, String serializedClassName) {
     // check serde

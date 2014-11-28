@@ -18,6 +18,20 @@
  */
 package org.apache.lens.lib.query;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.query.QueryContext;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -26,34 +40,20 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.lib.query.WrappedFileFormatter;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
-import org.apache.lens.server.api.query.QueryContext;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
-
 /**
  * The Class TestAbstractFileFormatter.
  */
 public abstract class TestAbstractFileFormatter {
 
-  /** The formatter. */
+  /**
+   * The formatter.
+   */
   protected WrappedFileFormatter formatter;
 
   /**
    * Cleanup.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @AfterMethod
   public void cleanup() throws IOException {
@@ -66,8 +66,7 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Test formatter.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testFormatter() throws IOException {
@@ -76,14 +75,13 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test compression.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCompression() throws IOException {
@@ -93,33 +91,31 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test custom compression.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCustomCompression() throws IOException {
     Configuration conf = new Configuration();
     conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     conf.set(LensConfConstants.QUERY_OUTPUT_COMPRESSION_CODEC,
-        org.apache.hadoop.io.compress.DefaultCodec.class.getCanonicalName());
+      org.apache.hadoop.io.compress.DefaultCodec.class.getCanonicalName());
     setConf(conf);
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.deflate", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test encoding.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testEncoding() throws IOException {
@@ -127,17 +123,16 @@ public abstract class TestAbstractFileFormatter {
     conf.set(LensConfConstants.QUERY_OUTPUT_CHARSET_ENCODING, "UTF-16LE");
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv",
-        getMockedResultSet());
+      getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test compression and encoding.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCompressionAndEncoding() throws IOException {
@@ -146,17 +141,16 @@ public abstract class TestAbstractFileFormatter {
     conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     setConf(conf);
     testFormatter(conf, "UnicodeLittleUnmarked", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv.gz",
-        getMockedResultSet());
+      getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-16LE"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test output path.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testOutputPath() throws IOException {
@@ -167,14 +161,13 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8", outputParent, ".csv", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test compression with custom output path.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCompressionWithCustomOutputPath() throws IOException {
@@ -186,7 +179,7 @@ public abstract class TestAbstractFileFormatter {
     testFormatter(conf, "UTF8", outputParent, ".csv.gz", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
@@ -199,10 +192,8 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Write all rows.
    *
-   * @param conf
-   *          the conf
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf the conf
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected abstract void writeAllRows(Configuration conf) throws IOException;
 
@@ -212,21 +203,15 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Test formatter.
    *
-   * @param conf
-   *          the conf
-   * @param charsetEncoding
-   *          the charset encoding
-   * @param outputParentDir
-   *          the output parent dir
-   * @param fileExtn
-   *          the file extn
-   * @param columnNames
-   *          the column names
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf            the conf
+   * @param charsetEncoding the charset encoding
+   * @param outputParentDir the output parent dir
+   * @param fileExtn        the file extn
+   * @param columnNames     the column names
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
-      LensResultSetMetadata columnNames) throws IOException {
+    LensResultSetMetadata columnNames) throws IOException {
     QueryContext ctx = new QueryContext("test writer query", "testuser", null, conf);
     formatter = createFormatter();
 
@@ -258,15 +243,11 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Read final output file.
    *
-   * @param finalPath
-   *          the final path
-   * @param conf
-   *          the conf
-   * @param encoding
-   *          the encoding
+   * @param finalPath the final path
+   * @param conf      the conf
+   * @param encoding  the encoding
    * @return the list
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected List<String> readFinalOutputFile(Path finalPath, Configuration conf, String encoding) throws IOException {
     FileSystem fs = finalPath.getFileSystem(conf);
@@ -276,15 +257,11 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Read compressed file.
    *
-   * @param finalPath
-   *          the final path
-   * @param conf
-   *          the conf
-   * @param encoding
-   *          the encoding
+   * @param finalPath the final path
+   * @param conf      the conf
+   * @param encoding  the encoding
    * @return the list
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected List<String> readCompressedFile(Path finalPath, Configuration conf, String encoding) throws IOException {
     CompressionCodecFactory compressionCodecs = new CompressionCodecFactory(conf);
@@ -297,11 +274,9 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Read from stream.
    *
-   * @param ir
-   *          the ir
+   * @param ir the ir
    * @return the list
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected List<String> readFromStream(InputStreamReader ir) throws IOException {
     List<String> result = new ArrayList<String>();
@@ -355,13 +330,14 @@ public abstract class TestAbstractFileFormatter {
   protected List<String> getExpectedCSVRows() {
     List<String> csvRows = new ArrayList<String>();
     csvRows
-        .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
     csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
     csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows
-        .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -386,7 +362,8 @@ public abstract class TestAbstractFileFormatter {
     csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows
-        .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -406,15 +383,11 @@ public abstract class TestAbstractFileFormatter {
   /**
    * Read zip output file.
    *
-   * @param finalPath
-   *          the final path
-   * @param conf
-   *          the conf
-   * @param encoding
-   *          the encoding
+   * @param finalPath the final path
+   * @param conf      the conf
+   * @param encoding  the encoding
    * @return the list
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected List<String> readZipOutputFile(Path finalPath, Configuration conf, String encoding) throws IOException {
     FileSystem fs = finalPath.getFileSystem(conf);
@@ -437,17 +410,18 @@ public abstract class TestAbstractFileFormatter {
   protected List<String> getExpectedCSVRowsWithMultiple() {
     List<String> csvRows = new ArrayList<String>();
     csvRows
-        .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
     csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
     csvRows
-        .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows
-        .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows
-        .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -476,7 +450,8 @@ public abstract class TestAbstractFileFormatter {
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows
-        .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }

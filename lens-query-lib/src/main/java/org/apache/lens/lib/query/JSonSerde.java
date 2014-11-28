@@ -23,7 +23,7 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
-import org.apache.hadoop.hive.serde2.objectinspector.*;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.*;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
@@ -57,16 +57,24 @@ import java.util.*;
  */
 public class JSonSerde implements SerDe {
 
-  /** The row type info. */
+  /**
+   * The row type info.
+   */
   private StructTypeInfo rowTypeInfo;
 
-  /** The row oi. */
+  /**
+   * The row oi.
+   */
   private ObjectInspector rowOI;
 
-  /** The col names. */
+  /**
+   * The col names.
+   */
   private List<String> colNames;
 
-  /** The row. */
+  /**
+   * The row.
+   */
   private List<Object> row = new ArrayList<Object>();
 
   /**
@@ -74,12 +82,9 @@ public class JSonSerde implements SerDe {
    * interested in the list of column names and their types. That information will be used to help perform actual
    * serialization and deserialization of data.
    *
-   * @param conf
-   *          the conf
-   * @param tbl
-   *          the tbl
-   * @throws SerDeException
-   *           the ser de exception
+   * @param conf the conf
+   * @param tbl  the tbl
+   * @throws SerDeException the ser de exception
    */
   @Override
   public void initialize(Configuration conf, Properties tbl) throws SerDeException {
@@ -104,11 +109,9 @@ public class JSonSerde implements SerDe {
    * The JSON deserialization works by taking the column names in the Hive table, and looking up those fields in the
    * parsed JSON object. If the value of the field is not a primitive, the object is parsed further.
    *
-   * @param blob
-   *          the blob
+   * @param blob the blob
    * @return the object
-   * @throws SerDeException
-   *           the ser de exception
+   * @throws SerDeException the ser de exception
    */
   @Override
   public Object deserialize(Writable blob) throws SerDeException {
@@ -147,10 +150,8 @@ public class JSonSerde implements SerDe {
   /**
    * Parses a JSON object according to the Hive column's type.
    *
-   * @param field
-   *          - The JSON object to parse
-   * @param fieldTypeInfo
-   *          - Metadata about the Hive column
+   * @param field         - The JSON object to parse
+   * @param fieldTypeInfo - Metadata about the Hive column
    * @return - The parsed value of the field
    */
   private Object parseField(Object field, TypeInfo fieldTypeInfo) {
@@ -204,10 +205,8 @@ public class JSonSerde implements SerDe {
   /**
    * Parses a JSON object and its fields. The Hive metadata is used to determine how to parse the object fields.
    *
-   * @param field
-   *          - The JSON object to parse
-   * @param fieldTypeInfo
-   *          - Metadata about the Hive column
+   * @param field         - The JSON object to parse
+   * @param fieldTypeInfo - Metadata about the Hive column
    * @return - A map representing the object and its fields
    */
   private Object parseStruct(Object field, StructTypeInfo fieldTypeInfo) {
@@ -229,10 +228,8 @@ public class JSonSerde implements SerDe {
    * Parse a JSON list and its elements. This uses the Hive metadata for the list elements to determine how to parse the
    * elements.
    *
-   * @param field
-   *          - The JSON list to parse
-   * @param fieldTypeInfo
-   *          - Metadata about the Hive column
+   * @param field         - The JSON list to parse
+   * @param fieldTypeInfo - Metadata about the Hive column
    * @return - A list of the parsed elements
    */
   private Object parseList(Object field, ListTypeInfo fieldTypeInfo) {
@@ -250,10 +247,8 @@ public class JSonSerde implements SerDe {
    * Parse a JSON object as a map. This uses the Hive metadata for the map values to determine how to parse the values.
    * The map is assumed to have a string for a key.
    *
-   * @param field
-   *          - The JSON list to parse
-   * @param fieldTypeInfo
-   *          - Metadata about the Hive column
+   * @param field         - The JSON list to parse
+   * @param fieldTypeInfo - Metadata about the Hive column
    * @return the object
    */
   private Object parseMap(Object field, MapTypeInfo fieldTypeInfo) {

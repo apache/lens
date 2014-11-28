@@ -20,7 +20,6 @@ package org.apache.lens.lib.query;
 
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.Text;
-import org.apache.lens.lib.query.JSonSerde;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -35,17 +34,20 @@ import java.util.Properties;
 @SuppressWarnings("unchecked")
 public class TestJSONSerde {
 
-  /** The json serde. */
+  /**
+   * The json serde.
+   */
   private final JSonSerde jsonSerde = new JSonSerde();
 
-  /** The props. */
+  /**
+   * The props.
+   */
   private final Properties props = new Properties();
 
   /**
    * Setup.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @BeforeTest
   public void setup() throws Exception {
@@ -56,8 +58,7 @@ public class TestJSONSerde {
   /**
    * Test deseralize.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testDeseralize() throws Exception {
@@ -65,7 +66,7 @@ public class TestJSONSerde {
     jsonSerde.initialize(null, props);
 
     Text in = new Text("{\n" + "  \"a\":\"hello\",\n" + "  \"b\":\"yes\",\n" + "  \"c\":1,\n" + "  \"d\":\"char\"\n"
-        + "}");
+      + "}");
 
     List<Object> row = (List<Object>) jsonSerde.deserialize(in);
 
@@ -97,8 +98,8 @@ public class TestJSONSerde {
     jsonSerde.initialize(null, props);
 
     in = new Text("{\n" + "  \"a\": [\n" + "    1,\n" + "    2,\n" + "    3\n" + "  ],\n" + "  \"b\": {\n"
-        + "    \"a\": \"b\",\n" + "    \"c\": \"d\",\n" + "    \"e\": \"f\"\n" + "  },\n" + "  \"c\": {\n"
-        + "    \"a\":1,\n" + "    \"b\":2\n" + "  }\n" + "}");
+      + "    \"a\": \"b\",\n" + "    \"c\": \"d\",\n" + "    \"e\": \"f\"\n" + "  },\n" + "  \"c\": {\n"
+      + "    \"a\":1,\n" + "    \"b\":2\n" + "  }\n" + "}");
 
     row = (List<Object>) jsonSerde.deserialize(in);
     Object[] objs = (Object[]) row.get(0);

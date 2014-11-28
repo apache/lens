@@ -18,18 +18,13 @@
  */
 package org.apache.lens.lib.query;
 
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.Text;
-import org.apache.lens.lib.query.CSVSerde;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import java.util.*;
 
 /**
  * The Class TestCSVSerde.
@@ -37,17 +32,20 @@ import org.testng.annotations.Test;
 @SuppressWarnings("unchecked")
 public class TestCSVSerde {
 
-  /** The csv. */
+  /**
+   * The csv.
+   */
   private final CSVSerde csv = new CSVSerde();
 
-  /** The props. */
+  /**
+   * The props.
+   */
   final Properties props = new Properties();
 
   /**
    * Setup.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @BeforeTest
   public void setup() throws Exception {
@@ -58,8 +56,7 @@ public class TestCSVSerde {
   /**
    * Test deserialize.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testDeserialize() throws Exception {
@@ -93,11 +90,11 @@ public class TestCSVSerde {
 
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d,e,f,g");
     props.put(serdeConstants.LIST_COLUMN_TYPES,
-        "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
+      "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
     csv.initialize(null, props);
 
     in = new Text("\"hello\",\"yes, okay\",\"1\","
-        + "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
+      + "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
     row = (List<Object>) csv.deserialize(in);
     Assert.assertEquals(row.size(), 7);
     Assert.assertEquals(row.get(0), "hello");
@@ -125,8 +122,7 @@ public class TestCSVSerde {
   /**
    * Test serialize.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testSerialize() throws Exception {
@@ -148,7 +144,7 @@ public class TestCSVSerde {
 
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d,e,f,g");
     props.put(serdeConstants.LIST_COLUMN_TYPES,
-        "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
+      "string,varchar(20),int,char(10),array<int>,map<int,string>,struct<a:int,b:map<int,string>>");
     csv.initialize(null, props);
 
     Map<Integer, String> map = new LinkedHashMap<Integer, String>();
@@ -159,7 +155,7 @@ public class TestCSVSerde {
 
     ser = csv.serialize(row, csv.getObjectInspector());
     Assert.assertEquals(((Text) ser).toString(), "\"hello\",\"yes, okay\",\"1\","
-        + "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
+      + "\"char\",\"1,NULL,3\",\"5=five,NULL=six,7=NULL\",\"8:5=five,NULL=six,7=NULL\"");
     props.put(serdeConstants.LIST_COLUMNS, "a,b,c,d");
     props.put(serdeConstants.LIST_COLUMN_TYPES, "string,varchar(20),int,char(10)");
   }
@@ -167,8 +163,7 @@ public class TestCSVSerde {
   /**
    * Test deserialize custom separators.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testDeserializeCustomSeparators() throws Exception {
@@ -189,8 +184,7 @@ public class TestCSVSerde {
   /**
    * Test deserialize custom escape.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testDeserializeCustomEscape() throws Exception {

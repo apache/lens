@@ -18,17 +18,10 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.List;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
-import org.apache.lens.lib.query.FilePersistentFormatter;
-import org.apache.lens.lib.query.WrappedFileFormatter;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.testng.Assert;
@@ -36,22 +29,30 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.List;
+
 /**
  * The Class TestFilePersistentFormatter.
  */
 public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
 
-  /** The part file dir. */
+  /**
+   * The part file dir.
+   */
   private Path partFileDir = new Path("file:///tmp/partcsvfiles");
 
-  /** The part file text dir. */
+  /**
+   * The part file text dir.
+   */
   private Path partFileTextDir = new Path("file:///tmp/parttextfiles");
 
   /**
    * Creates the part files.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @BeforeTest
   public void createPartFiles() throws IOException {
@@ -68,7 +69,8 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "000010_1"))));
     writer.write("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"\n");
     writer
-        .write("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\",\"1=one,2=two,NULL=three,4=NULL,5=NULL\"\n");
+      .write("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"\n");
     writer.close();
     writer = new BufferedWriter(new OutputStreamWriter(fs.create(new Path(partFileDir, "_SUCCESS"))));
     writer.close();
@@ -93,8 +95,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   /**
    * Cleanup part files.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @AfterTest
   public void cleanupPartFiles() throws IOException {
@@ -126,15 +127,14 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   protected void setConf(Configuration conf) {
     conf.set("test.partfile.dir", partFileDir.toString());
     conf.set(LensConfConstants.QUERY_OUTPUT_HEADER,
-        "\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+      "\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     conf.set(LensConfConstants.QUERY_OUTPUT_FOOTER, "Total rows:5");
   }
 
   /**
    * Test csv with serde header.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCSVWithSerdeHeader() throws IOException {
@@ -144,14 +144,13 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".csv", getMockedResultSet());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedCSVRows());
+      getExpectedCSVRows());
   }
 
   /**
    * Test text files.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testTextFiles() throws IOException {
@@ -160,19 +159,18 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     conf.set("test.partfile.dir", partFileTextDir.toString());
     conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
     conf.set(LensConfConstants.QUERY_OUTPUT_HEADER,
-        "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+      "firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedTextRowsWithoutComma());
+      getExpectedTextRowsWithoutComma());
   }
 
   /**
    * Test text file with serde header.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testTextFileWithSerdeHeader() throws IOException {
@@ -183,17 +181,16 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     conf.set(LensConfConstants.QUERY_OUTPUT_HEADER, "");
     conf.set(LensConfConstants.QUERY_OUTPUT_SERDE, LazySimpleSerDe.class.getCanonicalName());
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     // validate rows
     Assert.assertEquals(readFinalOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedTextRowsWithoutComma());
+      getExpectedTextRowsWithoutComma());
   }
 
   /**
    * Test text files with compression.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testTextFilesWithCompression() throws IOException {
@@ -203,19 +200,18 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     conf.set(LensConfConstants.QUERY_OUTPUT_FILE_EXTN, ".txt");
     conf.setBoolean(LensConfConstants.QUERY_OUTPUT_ENABLE_COMPRESSION, true);
     conf.set(LensConfConstants.QUERY_OUTPUT_HEADER,
-        "firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+      "firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".txt.gz",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     // validate rows
     Assert.assertEquals(readCompressedFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8"),
-        getExpectedTextRows());
+      getExpectedTextRows());
   }
 
   /**
    * Test text file with zip formatter.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testTextFileWithZipFormatter() throws IOException {
@@ -228,7 +224,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     conf.setBoolean(LensConfConstants.RESULT_SPLIT_INTO_MULTIPLE, true);
     conf.setLong(LensConfConstants.RESULT_SPLIT_MULTIPLE_MAX_ROWS, 2L);
     testFormatter(conf, "UTF8", LensConfConstants.RESULT_SET_PARENT_DIR_DEFAULT, ".zip",
-        getMockedResultSetWithoutComma());
+      getMockedResultSetWithoutComma());
     // validate rows
     List<String> actual = readZipOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
     System.out.println("Actual rows:" + actual);
@@ -238,8 +234,7 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
   /**
    * Test csv with zip formatter.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   @Test
   public void testCSVWithZipFormatter() throws IOException {

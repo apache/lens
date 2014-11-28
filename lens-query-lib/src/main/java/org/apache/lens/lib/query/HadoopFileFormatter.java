@@ -18,8 +18,6 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,18 +25,23 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.lens.lib.query.LensFileOutputFormat.LensRowWriter;
 
+import java.io.IOException;
+
 /**
  * A hadoop file formatter
- *
+ * <p/>
  * This has capability to create output on Hadoop compatible files systems, with hadoop supported compression codecs.
- *
  */
 public class HadoopFileFormatter extends AbstractFileFormatter {
 
-  /** The output path. */
+  /**
+   * The output path.
+   */
   private Path outputPath;
 
-  /** The row writer. */
+  /**
+   * The row writer.
+   */
   protected LensRowWriter rowWriter;
 
   /*
@@ -55,7 +58,7 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     Path tmpWorkPath = new Path(outputPath + ".tmp");
     try {
       rowWriter = LensFileOutputFormat.createRecordWriter(ctx.getConf(), tmpWorkPath, Reporter.NULL,
-          ctx.getCompressOutput(), ctx.getOuptutFileExtn(), ctx.getResultEncoding());
+        ctx.getCompressOutput(), ctx.getOuptutFileExtn(), ctx.getResultEncoding());
     } catch (IOException e) {
       throw new IllegalArgumentException("Could not create tmp path");
     }
@@ -79,7 +82,9 @@ public class HadoopFileFormatter extends AbstractFileFormatter {
     rowWriter.write(null, new Text(footer));
   }
 
-  /** The cached row. */
+  /**
+   * The cached row.
+   */
   private Text cachedRow;
 
   /*
