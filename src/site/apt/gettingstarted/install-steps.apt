@@ -79,6 +79,26 @@ Installing and running lens
 
   The server logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
 
+  Lens server dependes on hive which is forked from {{{http://github.com/apache/hive}Apache Hive}} into {{{http://github.com/inmobi/hive} InMobi Hive}}. See {{{https://github.com/InMobi/hive/releases}here}} for all the latest releases.
+
+  Build it from source and set HIVE_HOME.
+
++---+
+
+   git clone https://github.com/inmobi/hive.git
+
+   cd hive
+
+   git checkout <release-tag>
+
+   mvn clean package -DskipTests -Phadoop-2,dist
+
++---+
+
+  Once above package command completes successfully, packaging/target will have apache-hive-$project.version-bin. This build also produces source, binary tar.gz files and deb package for hive.
+
+  <<Ex:>> export <<HIVE_HOME>>=$\{hive-source-location\}/packaging/target/apache-hive-$project.version-bin/apache-hive-$project.version-bin/
+
 *** Driver configuration
 
   If server has HiveDriver as one of the drivers, the configuration for hive driver should be set up in hive-site.xml.
