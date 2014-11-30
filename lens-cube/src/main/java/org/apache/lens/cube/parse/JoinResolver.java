@@ -109,8 +109,7 @@ class JoinResolver implements ContextRewriter {
     private String joinTypeCfg;
 
     // Map of a joined table to its columns which are part of any of the join
-    // paths. This is used
-    // in candidate table resolver
+    // paths. This is used in candidate table resolver
     Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathColumns =
         new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
 
@@ -141,6 +140,11 @@ class JoinResolver implements ContextRewriter {
           jp.initColumnsForTable();
         }
       }
+      refreshJoinPathColumns();
+    }
+
+    public void refreshJoinPathColumns() {
+      joinPathColumns.clear();
       for (Map.Entry<Dimension, List<SchemaGraph.JoinPath>> joinPathEntry : allPaths.entrySet()) {
         List<SchemaGraph.JoinPath> joinPaths = joinPathEntry.getValue();
         Map<AbstractCubeTable, List<String>> dimReachablePaths = joinPathColumns.get(joinPathEntry.getKey());
@@ -398,6 +402,42 @@ class JoinResolver implements ContextRewriter {
         pruneEmptyPaths(allPaths);
       }
       pruneAllPaths(dimsToQuery);
+    }
+
+    /**
+     * Prunes allPaths by removing paths which contain columns that are not present in any candidate dims.
+     *
+     * @param candidateDims
+     */
+    public void pruneAllPathsForCandidateDims(Map<Dimension, Set<CandidateDim>> candidateDims) {
+      Map<Dimension, Set<String>> dimColumns = new HashMap<Dimension, Set<String>>();
+      // populate all columns present in candidate dims for each dimension
+      for (Map.Entry<Dimension, Set<CandidateDim>> entry : candidateDims.entrySet()) {
+        Dimension dim = entry.getKey();
+        Set<String> allColumns = new HashSet<String>();
+        for (CandidateDim cdim : entry.getValue()) {
+          allColumns.addAll(cdim.getColumns());
+        }
+        dimColumns.put(dim, allColumns);
+      }
+      for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
+        for (int i = 0; i < paths.size(); i++) {
+          SchemaGraph.JoinPath jp = paths.get(i);
+          for (AbstractCubeTable refTable : jp.getAllTables()) {
+            List<String> cols = jp.getColumnsForTable(refTable);
+            if (refTable instanceof Dimension) {
+              if (cols != null && !dimColumns.get(refTable).containsAll(cols)) {
+                // This path requires some columns from the cube which are not present in any candidate dim
+                // Remove this path
+                LOG.info("Removing join path:" + jp + " as columns :" + cols + " dont exist");
+                paths.remove(i);
+                i--;
+              }
+            }
+          }
+        }
+        pruneEmptyPaths(allPaths);
+      }
     }
 
     private void pruneEmptyPaths(Map<Dimension, List<SchemaGraph.JoinPath>> allPaths) {

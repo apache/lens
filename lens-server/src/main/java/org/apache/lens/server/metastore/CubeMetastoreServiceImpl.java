@@ -1300,8 +1300,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       // Add referenced tables to visited list
       if (graph.get(node) != null) {
         for (SchemaGraph.TableRelationship edge : graph.get(node)) {
-          if (!visited.contains(edge.getFromTable())) {
-            toVisit.addLast(edge.getFromTable());
+          if (!visited.contains(edge.getToTable())) {
+            toVisit.addLast(edge.getToTable());
           }
         }
       }

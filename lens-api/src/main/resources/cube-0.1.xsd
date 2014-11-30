@@ -48,6 +48,7 @@
             <xs:element type="x_measures" name="measures"/>
             <xs:element type="x_dim_attributes" name="dim_attributes"/>
             <xs:element type="x_expressions" name="expressions"/>
+            <xs:element type="x_joinchains" name="joinchains"/>
             <xs:element type="x_properties" name="properties" minOccurs="0"/>
             <xs:element type="x_measure_names" name="measure_names"/>
             <xs:element type="x_dim_attr_names" name="dim_attr_names"/>
@@ -172,6 +173,7 @@
         </xs:annotation>
         <xs:sequence>
             <xs:element type="x_tablereferences" name="references"/>
+            <xs:element type="x_chaincolumn" name="chainrefcolumn" maxOccurs="1" minOccurs="1"/>
         </xs:sequence>
         <xs:attribute type="xs:string" name="name" use="required"/>
         <xs:attribute type="xs:string" name="type" use="required"/>
@@ -183,6 +185,10 @@
         <xs:attribute type="xs:string" name="expr"/>
         <xs:attribute type="xs:string" name="cube_table"/>
     </xs:complexType>
+    <xs:complexType name="x_chaincolumn">
+        <xs:attribute type="xs:string" name="chainName" use="required"/>
+        <xs:attribute type="xs:string" name="refcol" use="required"/>
+    </xs:complexType>
     <xs:complexType name="x_tablereference">
         <xs:attribute type="xs:string" name="dest_table" use="required"/>
         <xs:attribute type="xs:string" name="dest_column" use="required"/>
@@ -192,7 +198,24 @@
             <xs:element type="x_tablereference" name="table_references" maxOccurs="unbounded" minOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
-
+    <xs:complexType name="x_joinchain">
+        <xs:sequence>
+            <xs:element type="x_tablereferences" name="paths" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="name" use="required"/>
+        <xs:attribute type="xs:string" name="description" />
+        <xs:attribute type="xs:string" name="display_string" />
+    </xs:complexType>
+    <xs:complexType name="x_joinchains">
+        <xs:annotation>
+            <xs:documentation>
+                Set of join chains.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element type="x_joinchain" name="chains" maxOccurs="unbounded" minOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
     <xs:complexType name="x_dim_attributes">
         <xs:annotation>
             <xs:documentation>
@@ -435,4 +458,3 @@
     </xs:element>
 
 </xs:schema>
-           

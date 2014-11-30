@@ -279,4 +279,22 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
     // TODO Auto-generated method stub
     return null;
   }
+
+  @Override
+  public Set<JoinChain> getJoinChains() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public JoinChain getChainByName(String chainName) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Set<String> getJoinChainNames() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

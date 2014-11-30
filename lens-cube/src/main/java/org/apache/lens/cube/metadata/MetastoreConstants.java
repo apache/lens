@@ -30,6 +30,7 @@ public interface MetastoreConstants {
   public static final String CUBE_KEY_PFX = "cube.";
   public static final String MEASURES_LIST_SFX = ".measures.list";
   public static final String DIMENSIONS_LIST_SFX = ".dimensions.list";
+  public static final String JOIN_CHAIN_LIST_SFX = ".joinchains.list";
   public static final String TIMED_DIMENSIONS_LIST_SFX = ".timed.dimensions.list";
   public static final String PARENT_CUBE_SFX = ".parent.cube";
   public static final String CUBE_ALL_FIELDS_QUERIABLE = "cube.allfields.queriable";
@@ -73,6 +74,8 @@ public interface MetastoreConstants {
   // dimension constants
   public static final String DIM_KEY_PFX = "cube.dimension.";
   public static final String DIM_REFERS_SFX = ".refers";
+  public static final String CHAIN_NAME_SFX = ".chain.name";
+  public static final String CHAIN_REF_COLUMN_SFX = ".chain.column.name";
   public static final String IS_JOIN_KEY_SFX = ".isjoinkey";
   public static final String TABLE_COLUMN_SEPERATOR = ".";
   public static final String INLINE_SIZE_SFX = ".inline.size";
@@ -80,6 +83,11 @@ public interface MetastoreConstants {
   public static final String HIERARCHY_SFX = ".hierarchy.";
   public static final String CLASS_SFX = ".class";
   public static final String METASTORE_ENABLE_CACHING = "cube.metastore.enable.cache";
+
+  // join chain constants
+  public static final String JOIN_CHAIN_KEY = "cube.joinchain.";
+  public static final String NUM_CHAINS_SFX = ".numchains";
+  public static final String FULL_CHAIN_KEY = ".fullchain.";
 
   // storage constants
   public static final String STORAGE_ENTITY_PFX = "storage.";
