@@ -196,6 +196,7 @@ class CandidateTableResolver implements ContextRewriter {
         // the candidate facts should have all the dimensions queried and
         // atleast
         // one measure
+        boolean toRemove = false;
         for (String col : queriedDimAttrs) {
           if (!cfact.getColumns().contains(col.toLowerCase())) {
             // check if it available as reference, if not remove the candidate
@@ -203,7 +204,7 @@ class CandidateTableResolver implements ContextRewriter {
               LOG.info("Not considering fact table:" + cfact + " as column " + col + " is not available");
               cubeql.addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(cfact.getName(),
                   CubeTableCause.COLUMN_NOT_FOUND));
-              i.remove();
+              toRemove = true;
               break;
             }
           }
@@ -214,6 +215,9 @@ class CandidateTableResolver implements ContextRewriter {
           LOG.info("Not considering fact table:" + cfact + " as columns " + queriedMsrs + " is not available");
           cubeql.addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(cfact.getName(),
               CubeTableCause.COLUMN_NOT_FOUND));
+          toRemove = true;
+        }
+        if(toRemove) {
           i.remove();
         }
       }
@@ -336,6 +340,7 @@ class CandidateTableResolver implements ContextRewriter {
     if (cubeql.getAutoJoinCtx() == null) {
       return;
     }
+    Collection<String> colSet = null;
     if (cubeql.getCube() != null && !cubeql.getCandidateFactTables().isEmpty()) {
       for (Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator(); i.hasNext();) {
         CandidateFact cfact = i.next();
@@ -346,7 +351,7 @@ class CandidateTableResolver implements ContextRewriter {
             .getAlljoinPathColumns().entrySet()) {
           Dimension reachableDim = joincolumnsEntry.getKey();
           OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(reachableDim);
-          Collection<String> colSet = joincolumnsEntry.getValue().get((AbstractCubeTable) cubeql.getCube());
+          colSet = joincolumnsEntry.getValue().get((AbstractCubeTable) cubeql.getCube());
 
           if (!checkForColumnExists(cfact, colSet)) {
             if (optdim == null || optdim.isRequiredInJoinChain
@@ -362,8 +367,7 @@ class CandidateTableResolver implements ContextRewriter {
         }
       }
       if (cubeql.getCandidateFactTables().size() == 0) {
-        throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, cubeql.getAutoJoinCtx()
-            .getJoinPathColumnsOfTable((AbstractCubeTable) cubeql.getCube()).toString());
+        throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, colSet == null? "NULL" : colSet.toString());
       }
     }
   }
