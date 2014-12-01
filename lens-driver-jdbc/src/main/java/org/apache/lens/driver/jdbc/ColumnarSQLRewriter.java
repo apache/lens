@@ -106,6 +106,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /** The map agg tab alias. */
   private Map<String, String> mapAggTabAlias = new HashMap<String, String>();
 
+  /** The map aliases. */
+  private Map<String, String> mapAliases = new HashMap<String, String>();
+
   /** The Constant LOG. */
   private static final Log LOG = LogFactory.getLog(ColumnarSQLRewriter.class);
 
@@ -587,6 +590,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     joinCondition.setLength(0);
     selectTree = fromTree = joinTree = whereTree = groupByTree = havingTree = orderByTree = null;
     selectAST = fromAST = joinAST = whereAST = groupByAST = havingAST = orderByAST = null;
+    mapAliases.clear();
     limit = null;
   }
 
@@ -614,6 +618,40 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     return query;
   }
 
+  /**
+   * Replace alias in AST trees
+   *
+   * @throws HiveException
+   */
+
+  public void replaceAliasInAST() throws HiveException {
+    updateAliasFromAST(fromAST);
+    if (fromTree != null) {
+      replaceAlias(fromAST);
+      fromTree = HQLParser.getString(fromAST);
+    }
+    if (selectTree != null) {
+      replaceAlias(selectAST);
+      selectTree = HQLParser.getString(selectAST);
+    }
+    if (whereTree != null) {
+      replaceAlias(whereAST);
+      whereTree = HQLParser.getString(whereAST);
+    }
+    if (groupByTree != null) {
+      replaceAlias(groupByAST);
+      groupByTree = HQLParser.getString(groupByAST);
+    }
+    if (orderByTree != null) {
+      replaceAlias(orderByAST);
+      groupByTree = HQLParser.getString(orderByAST);
+    }
+    if (havingTree != null) {
+      replaceAlias(havingAST);
+      havingTree = HQLParser.getString(havingAST);
+    }
+  }
+
   /*
    * Construct the rewritten query using trees
    */
@@ -629,8 +667,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   public void buildQuery() throws SemanticException, HiveException {
     analyzeInternal();
     replaceWithUnderlyingStorage(fromAST);
-    fromTree = HQLParser.getString(fromAST);
 
+    replaceAliasInAST();
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST);
     getJoinCond(fromAST);
@@ -684,7 +722,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     //for subquery with count function should be replaced with sum in outer query
     if (selectTree.toLowerCase().matches("(.*)count\\((.*)")) {
-      System.out.println(selectTree);
       selectTree = selectTree.replaceAll("count\\(", "sum\\(");
     }  
     // construct query with fact sub query
@@ -722,6 +759,50 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     for (int i = 0; i < from.getChildCount(); i++) {
       ASTNode child = (ASTNode) from.getChild(i);
       getAllTablesfromFromAST(child, fromTables);
+    }
+  }
+
+  /**
+   * Update alias and map old alias with new one
+   *
+   * @param from
+   */
+  private void updateAliasFromAST(ASTNode from) {
+
+    String newAlias = "";
+    String table = "";
+    if (TOK_TABREF == from.getToken().getType()) {
+      ASTNode tabName = (ASTNode) from.getChild(0);
+      if (tabName.getChildCount() == 2) {
+        table = tabName.getChild(0).getText() + "_" + tabName.getChild(1).getText();
+      } else {
+        table = tabName.getChild(0).getText();
+      }
+      if (from.getChildCount() > 1) {
+        ASTNode alias = (ASTNode) from.getChild(1);
+        newAlias = table + "_" + from.getChild(1).getText();
+        mapAliases.put(alias.getText(), newAlias);
+        alias.getToken().setText(newAlias);
+      }
+    }
+    for (int i = 0; i < from.getChildCount(); i++) {
+      updateAliasFromAST((ASTNode) from.getChild(i));
+
+    }
+  }
+
+  /**
+   * Update alias in all AST trees
+   *
+   * @param tree
+   */
+  private void replaceAlias(ASTNode tree) {
+    if (TOK_TABLE_OR_COL == tree.getToken().getType()) {
+      ASTNode alias = (ASTNode) tree.getChild(0);
+      alias.getToken().setText(mapAliases.get(tree.getChild(0).toString()));
+    }
+    for (int i = 0; i < tree.getChildCount(); i++) {
+      replaceAlias((ASTNode) tree.getChild(i));
     }
   }
 
