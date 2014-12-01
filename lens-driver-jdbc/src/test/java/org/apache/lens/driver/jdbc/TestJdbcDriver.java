@@ -21,7 +21,11 @@ package org.apache.lens.driver.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +37,7 @@ import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
@@ -58,6 +63,8 @@ public class TestJdbcDriver {
   /** The driver. */
   JDBCDriver driver;
 
+  Collection<LensDriver> drivers;
+
   /**
    * Test create jdbc driver.
    *
@@ -77,6 +84,9 @@ public class TestJdbcDriver {
     driver.configure(baseConf);
     assertNotNull(driver);
     assertTrue(driver.configured);
+
+    drivers = new ArrayList<LensDriver>() {{
+      add(driver); }};
   }
 
   /**
@@ -88,6 +98,14 @@ public class TestJdbcDriver {
   @AfterTest
   public void close() throws Exception {
     driver.close();
+  }
+
+
+  private QueryContext createQueryContext(final String query) throws LensException {
+    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.setSelectedDriver(driver);
+    return context;
   }
 
   /**
@@ -234,9 +252,9 @@ public class TestJdbcDriver {
     insertData("execute_test");
 
     // Query
-    String query = "SELECT * FROM execute_test";
+    final String query = "SELECT * FROM execute_test";
 
-    QueryContext context = new QueryContext(query, "SA", baseConf);
+    QueryContext context = createQueryContext(query);
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
     if (resultSet instanceof InMemoryResultSet) {
@@ -270,8 +288,10 @@ public class TestJdbcDriver {
     createTable("prepare_test");
     insertData("prepare_test");
 
-    String query = "SELECT * from prepare_test";
-    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf);
+    final String query = "SELECT * from prepare_test";
+    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers );
+    pContext.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }});
+    pContext.setSelectedDriver(driver);
     driver.prepare(pContext);
   }
 
@@ -285,8 +305,8 @@ public class TestJdbcDriver {
   public void testExecuteAsync() throws Exception {
     createTable("execute_async_test");
     insertData("execute_async_test");
-    String query = "SELECT * FROM execute_async_test";
-    QueryContext context = new QueryContext(query, "SA", baseConf);
+    final String query = "SELECT * FROM execute_async_test";
+    QueryContext context = createQueryContext(query);
     System.out.println("@@@ Test_execute_async:" + context.getQueryHandle());
     final CountDownLatch listenerNotificationLatch = new CountDownLatch(1);
 
@@ -377,8 +397,8 @@ public class TestJdbcDriver {
     createTable("invalid_conn_close");
     insertData("invalid_conn_close");
 
-    String query = "SELECT * from invalid_conn_close2";
-    QueryContext ctx = new QueryContext(query, "SA", baseConf);
+    final String query = "SELECT * from invalid_conn_close2";
+    QueryContext ctx = createQueryContext(query);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
       driver.executeAsync(ctx);
@@ -387,7 +407,7 @@ public class TestJdbcDriver {
     }
 
     String validQuery = "SELECT * FROM invalid_conn_close";
-    QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
+    QueryContext validCtx = createQueryContext(validQuery);
     System.out.println("@@@ Submitting valid query");
     driver.executeAsync(validCtx);
 
@@ -414,8 +434,8 @@ public class TestJdbcDriver {
     createTable("valid_conn_close");
     insertData("valid_conn_close");
 
-    String query = "SELECT * from valid_conn_close";
-    QueryContext ctx = new QueryContext(query, "SA", baseConf);
+    final String query = "SELECT * from valid_conn_close";
+    QueryContext ctx = createQueryContext(query);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
       LensResultSet resultSet = driver.execute(ctx);
@@ -438,7 +458,7 @@ public class TestJdbcDriver {
     }
 
     String validQuery = "SELECT * FROM valid_conn_close";
-    QueryContext validCtx = new QueryContext(validQuery, "SA", baseConf);
+    QueryContext validCtx = createQueryContext(validQuery);
     System.out.println("@@@ Submitting query after pool quota used");
     driver.execute(validCtx);
   }
@@ -453,8 +473,8 @@ public class TestJdbcDriver {
   public void testCancelQuery() throws Exception {
     createTable("cancel_query_test");
     insertData("cancel_query_test");
-    String query = "SELECT * FROM cancel_query_test";
-    QueryContext context = new QueryContext(query, "SA", baseConf);
+    final String query = "SELECT * FROM cancel_query_test";
+    QueryContext context = createQueryContext(query);
     System.out.println("@@@ test_cancel:" + context.getQueryHandle());
     driver.executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
@@ -474,8 +494,8 @@ public class TestJdbcDriver {
    */
   @Test
   public void testInvalidQuery() throws Exception {
-    String query = "SELECT * FROM invalid_table";
-    QueryContext ctx = new QueryContext(query, "SA", baseConf);
+    final String query = "SELECT * FROM invalid_table";
+    QueryContext ctx = createQueryContext(query);
     try {
       LensResultSet rs = driver.execute(ctx);
       fail("Should have thrown exception");

@@ -25,8 +25,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.io.compress.CompressionCodec;
 import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.driver.MockDriver;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
@@ -212,7 +215,17 @@ public abstract class TestAbstractFileFormatter {
    */
   protected void testFormatter(Configuration conf, String charsetEncoding, String outputParentDir, String fileExtn,
     LensResultSetMetadata columnNames) throws IOException {
-    QueryContext ctx = new QueryContext("test writer query", "testuser", null, conf);
+
+    final LensDriver mockDriver = new MockDriver();
+    try {
+      mockDriver.configure(conf);
+    } catch (LensException e) {
+      Assert.fail(e.getMessage());
+    }
+    QueryContext ctx = new QueryContext("test writer query", "testuser", conf, new ArrayList<LensDriver>() {{
+      add(mockDriver); }} );
+
+    ctx.setSelectedDriver(mockDriver);
     formatter = createFormatter();
 
     formatter.init(ctx, columnNames);
@@ -337,7 +350,7 @@ public abstract class TestAbstractFileFormatter {
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows
       .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -363,7 +376,7 @@ public abstract class TestAbstractFileFormatter {
     csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
     csvRows
       .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -421,7 +434,7 @@ public abstract class TestAbstractFileFormatter {
       .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows
       .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }
@@ -451,7 +464,7 @@ public abstract class TestAbstractFileFormatter {
     csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
     csvRows
       .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
     csvRows.add("Total rows:5");
     return csvRows;
   }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -49,6 +51,7 @@ import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.apache.hive.service.cli.thrift.TOperationHandle;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
@@ -313,9 +316,11 @@ public class HiveDriver implements LensDriver {
     LOG.info("Explain: " + query);
     Configuration explainConf = new Configuration(conf);
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    String explainQuery = "EXPLAIN EXTENDED " + query;
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, SessionState.get().getUserName(), explainConf);
-    // Get result set of explain
+    final String explainQuery = "EXPLAIN EXTENDED " + query;
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, SessionState.get().getUserName(), new LensConf(),
+                                                    explainConf,
+                                                    Lists.newArrayList((LensDriver) this), (LensDriver) this, new Date().getTime());
+     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
     while (inMemoryResultSet.hasNext()) {
@@ -343,7 +348,7 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
-    DriverQueryPlan plan = explain(pContext.getDriverQuery(), pContext.getConf());
+    DriverQueryPlan plan = explain(pContext.getSelectedDriverQuery(), pContext.getSelectedDriverConf());
     plan.setPrepareHandle(pContext.getPrepareHandle());
     return plan;
   }
@@ -379,7 +384,7 @@ public class HiveDriver implements LensDriver {
     try {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
-      OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getDriverQuery(),
+      OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getSelectedDriverQuery(),
         ctx.getConf().getValByRegex(".*"));
       LOG.info("The hive operation handle: " + op);
       ctx.setDriverOpHandle(op.toString());
@@ -425,7 +430,8 @@ public class HiveDriver implements LensDriver {
           LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier(), e);
         }
       }
-      OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getDriverQuery(),
+      OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.
+                                                               getSelectedDriverQuery(),
         ctx.getConf().getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
       LOG.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
@@ -767,13 +773,13 @@ public class HiveDriver implements LensDriver {
       if (outputDirFormat != null) {
         builder.append(outputDirFormat);
       }
-      builder.append(' ').append(context.getDriverQuery()).append(' ');
+      builder.append(' ').append(context.getSelectedDriverQuery()).append(' ');
       hiveQuery = builder.toString();
     } else {
-      hiveQuery = context.getDriverQuery();
+      hiveQuery = context.getSelectedDriverQuery();
     }
     LOG.info("Hive driver query:" + hiveQuery);
-    context.setDriverQuery(hiveQuery);
+    context.setSelectedDriverQuery(hiveQuery);
   }
 
   /**

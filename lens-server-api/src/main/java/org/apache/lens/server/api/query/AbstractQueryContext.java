@@ -19,13 +19,19 @@
 package org.apache.lens.server.api.query;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.driver.LensDriver;
 
 import java.io.Serializable;
+import java.util.Collection;
 
-public abstract class AbstractQueryContext extends DriverSelectorQueryContext implements Serializable {
+public abstract class AbstractQueryContext implements Serializable {
   /** The Constant LOG */
   public static final Log LOG = LogFactory.getLog(AbstractQueryContext.class);
 
@@ -33,7 +39,97 @@ public abstract class AbstractQueryContext extends DriverSelectorQueryContext im
   @Getter
   protected String userQuery;
 
-  /** The qconf. */
+  /** The merged Query conf. */
+  @Getter @Setter
+  transient protected Configuration conf;
+
+  /** The query conf. */
   @Getter
-  protected LensConf qconf;
+  protected LensConf lensConf;
+
+  /** The driver ctx */
+  @Getter
+  @Setter
+  transient protected DriverSelectorQueryContext driverContext;
+
+  /** The selected Driver query. */
+  @Getter
+  protected String driverQuery;
+
+  protected AbstractQueryContext(final String query, final LensConf qconf, final Configuration conf, final
+    Collection<LensDriver> drivers) {
+    driverContext = new DriverSelectorQueryContext(query, conf, drivers);
+    userQuery = query;
+    this.lensConf = qconf;
+    this.conf = conf;
+    this.driverQuery = query;
+  }
+
+  /** Wrapper method for convenience on driver context
+   *
+   * @return the selected driver's query
+   */
+  public String getSelectedDriverQuery() {
+    if(driverQuery != null) {
+      return driverQuery;
+    } else if(driverContext != null) {
+      return driverContext.getSelectedDriverQuery();
+    }
+    return null;
+  }
+
+  /** Wrapper method for convenience on driver context
+   *
+   * @return the selected driver's conf
+   */
+  public Configuration getSelectedDriverConf() {
+    if(driverContext != null) {
+      return driverContext.getSelectedDriverConf();
+    }
+    return null;
+  }
+
+  /**
+   * Sets the selected driver query for persistence and also in the driver context
+   * @param driverQuery
+   */
+  public void setSelectedDriverQuery(String driverQuery) {
+    this.driverQuery = driverQuery;
+    if(driverContext != null) {
+      driverContext.setSelectedDriverQuery(driverQuery);
+    }
+  }
+
+  /** Wrapper method for convenience on driver context
+   * @param driver  Lens driver
+   */
+
+  public void setSelectedDriver(LensDriver driver) {
+    if(driverContext != null) {
+      driverContext.setSelectedDriver(driver);
+      driverQuery = driverContext.getSelectedDriverQuery();
+    }
+  }
+
+  /** Wrapper method for convenience on driver context
+   *
+   * @return the selected driver
+   */
+  public LensDriver getSelectedDriver() {
+    if(driverContext != null) {
+      return driverContext.getSelectedDriver();
+    }
+    return null;
+  }
+
+  /** Wrapper method for convenience on driver context
+   *
+   * @return the selected driver
+   */
+  public DriverQueryPlan getSelectedDriverQueryPlan() throws LensException {
+    if(driverContext != null) {
+      return driverContext.getSelectedDriverQueryPlan();
+    }
+    return null;
+  }
 }

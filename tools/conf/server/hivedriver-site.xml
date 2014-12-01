@@ -36,5 +36,6 @@
 <property>
   <name>lens.cube.query.driver.supported.storages</name>
   <value>local,cluster</value>
+  <final>true</final>
 </property>
 </configuration>

@@ -38,10 +38,11 @@ public class MinQueryCostSelector implements DriverSelector {
   @Override
   public LensDriver select(final AbstractQueryContext ctx,
     final Configuration conf) {
-    return Collections.min(ctx.getDriverQueries().keySet(), new Comparator<LensDriver>() {
+    return Collections.min(ctx.getDriverContext().getDrivers(), new Comparator<LensDriver>() {
       @Override
       public int compare(LensDriver d1, LensDriver d2) {
-        return comparePlans(ctx.getDriverQueryPlans().get(d1), ctx.getDriverQueryPlans().get(d2));
+        return comparePlans(ctx.getDriverContext().getDriverQueryPlan(d1), ctx
+          .getDriverContext().getDriverQueryPlan(d2));
       }
     });
   }

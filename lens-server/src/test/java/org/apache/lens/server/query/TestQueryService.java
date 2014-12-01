@@ -44,6 +44,7 @@ import org.apache.hadoop.hive.ql.HiveDriverRunHook;
 import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.lens.driver.hive.TestHiveDriver;
+import org.apache.lens.server.api.query.QueryContext;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -1317,6 +1318,18 @@ public class TestQueryService extends LensJerseyTest {
     // Test server config. Hive configs overriden should be set
     Assert.assertFalse(Boolean.parseBoolean(queryService.getHiveConf().get("hive.server2.log.redirection.enabled")));
     Assert.assertEquals(queryService.getHiveConf().get("hive.server2.query.log.dir"), "target/query-logs");
+
+    final String query = "test query";
+    QueryContext ctx = new QueryContext(query, null, queryConf, conf, queryService.getDrivers());
+    Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>() {{ put(queryService.getDrivers
+      ().iterator().next(), query); }};
+    ctx.getDriverContext().setDriverQueriesAndPlans(driverQueries);
+
+    Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader() ,  ctx.getConf()
+      .getClassLoader());
+    Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(), ctx.getDriverContext().getDriverConf(queryService.getDrivers
+      ().iterator().next()).getClassLoader());
+
   }
 
   @Override

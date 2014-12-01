@@ -27,6 +27,7 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
@@ -36,6 +37,7 @@ import org.apache.lens.server.api.driver.LensDriver;
 import static org.mockito.Matchers.any;
 
 import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.query.QueryContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -146,80 +148,91 @@ public class TestRewriting {
   public void testCubeQuery() throws ParseException, SemanticException, LensException {
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     MockDriver driver = new MockDriver();
+    LensConf lensConf = new LensConf();
     Configuration conf = new Configuration();
     driver.configure(conf);
     drivers.add(driver);
 
     CubeQueryRewriter mockWriter = getMockedRewriter();
-    PowerMockito.stub(PowerMockito.method(RewriteUtil.class, "getRewriter")).toReturn(mockWriter);
+    PowerMockito.stub(PowerMockito.method(RewriteUtil.class, "getCubeRewriter")).toReturn(mockWriter);
     String q1 = "select name from table";
     Assert.assertFalse(RewriteUtil.isCubeQuery(q1));
     List<RewriteUtil.CubeQueryInfo> cubeQueries = RewriteUtil.findCubePositions(q1);
     Assert.assertEquals(cubeQueries.size(), 0);
-    RewriteUtil.rewriteQuery(q1, drivers, conf);
+    QueryContext ctx = new QueryContext(q1, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     String q2 = "cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "insert overwrite directory '/tmp/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "insert overwrite local directory '/tmp/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "insert overwrite local directory '/tmp/example-output' cube select id,name from dim_table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select id,name from dim_table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "explain cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table) a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "insert overwrite directory '/tmp/rewrite' select * from (cube select name from table) a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table)a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from  (  cube select name from table   )     a";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (      cube select name from table where"
         + " (name = 'ABC'||name = 'XYZ')&&(key=100)   )       a";
@@ -228,7 +241,8 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from"
         + " table where (name = 'ABC' OR name = 'XYZ') AND (key=100)");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table) a join (cube select" + " name2 from table2) b";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
@@ -236,7 +250,8 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table) a full outer join"
         + " (cube select name2 from table2) b on a.name=b.name2";
@@ -245,68 +260,80 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table) a join (select name2 from table2) b";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table union all cube select name2 from table2) u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "insert overwrite directory '/tmp/rewrite' select * from (cube select name from table union all cube select name2 from table2) u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select u.* from (select name from table    union all       cube select name2 from table2)   u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select u.* from (select name from table union all cube select name2 from table2)u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table union all cube select name2"
         + " from table2 union all cube select name3 from table3) u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 3);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
     Assert.assertEquals(cubeQueries.get(2).query, "cube select name3 from table3");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from   (     cube select name from table    union all   cube"
         + " select name2 from table2   union all  cube select name3 from table3 )  u";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 3);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
     Assert.assertEquals(cubeQueries.get(2).query, "cube select name3 from table3");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table union all cube select" + " name2 from table2) u group by u.name";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
@@ -314,43 +341,52 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "select * from (cube select name from table union all cube select" + " name2 from table2)  u group by u.name";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "create table temp1 as cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "create table temp1 as select * from (cube select name from table union all cube select"
         + " name2 from table2)  u group by u.name";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 2);
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
     q2 = "create table temp1 as cube select name from table where time_range_in('dt', '2014-06-24-23', '2014-06-25-00')";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
     Assert.assertEquals(cubeQueries.size(), 1);
     Assert.assertEquals(cubeQueries.get(0).query,
         "cube select name from table where time_range_in('dt', '2014-06-24-23', '2014-06-25-00')");
-    RewriteUtil.rewriteQuery(q2, drivers, conf);
+    ctx = new QueryContext(q2, null, lensConf, conf, drivers);
+    RewriteUtil.rewriteQuery(ctx);
 
   }
 }

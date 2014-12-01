@@ -19,11 +19,13 @@
 package org.apache.lens.driver.cube;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.*;
 import org.testng.Assert;
@@ -33,36 +35,60 @@ import org.testng.annotations.Test;
  * The Class TestMinCostSelector.
  */
 public class TestMinCostSelector {
+
+  private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
+                                             Map<LensDriver, String> driverQueries) throws LensException {
+    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf,  driverQueries.keySet());
+    ctx.getDriverContext().setDriverQueriesAndPlans(driverQueries);
+    return ctx;
+  }
+
   @Test
   public void testMinCostSelector() throws LensException {
     MinQueryCostSelector selector = new MinQueryCostSelector();
     List<LensDriver> drivers = new ArrayList<LensDriver>();
     Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
     Configuration conf = new Configuration();
+    LensConf qconf = new LensConf();
 
     MockDriver d1 = new MockDriver();
+    d1.configure(conf);
     MockDriver d2 = new MockDriver();
+    d2.configure(conf);
     MockFailDriver fd1 = new MockFailDriver();
+    fd1.configure(conf);
     MockFailDriver fd2 = new MockFailDriver();
+    fd2.configure(conf);
 
     drivers.add(d1);
     drivers.add(d2);
-    driverQueries.put(d1, "test query");
-    LensDriver selected = selector.select(new MockQueryContext(driverQueries), conf);
+    String query = "test query";
+    driverQueries.put(d1, query);
+
+    MockQueryContext ctx = createMockContext(query, conf, qconf, driverQueries);
+    LensDriver selected = selector.select(ctx, conf);
+
     Assert.assertEquals(d1, selected);
-    driverQueries.put(d2, "test query");
+    driverQueries.put(d2, query);
     driverQueries.remove(d1);
-    selected = selector.select(new MockQueryContext(driverQueries), conf);
+    ctx = createMockContext(query, conf, qconf, driverQueries);
+
+    selected = selector.select(ctx, conf);
     Assert.assertEquals(d2, selected);
 
     drivers.add(fd1);
-    driverQueries.put(fd1, "test query");
-    selected = selector.select(new MockQueryContext(driverQueries), conf);
+    driverQueries.put(fd1, query);
+
+    ctx = createMockContext(query, conf, qconf, driverQueries);
+    selected = selector.select(ctx, conf);
     Assert.assertEquals(d2, selected);
 
+
     drivers.add(fd2);
-    driverQueries.put(fd2, "test query");
-    selected = selector.select(new MockQueryContext(driverQueries), conf);
+    driverQueries.put(fd2, query);
+    ctx = createMockContext(query, conf, qconf, driverQueries);
+
+    selected = selector.select(ctx, conf);
     Assert.assertEquals(d2, selected);
   }
 }
