@@ -18,21 +18,25 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-
 import org.apache.hadoop.fs.Path;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
+
+import java.io.IOException;
 
 /**
  * Abstract implementation of {@link FileFormatter}, which gets column details from {@link AbstractOutputFormatter}.
  */
 public abstract class AbstractFileFormatter extends AbstractOutputFormatter implements FileFormatter {
 
-  /** The num rows. */
+  /**
+   * The num rows.
+   */
   protected int numRows = 0;
 
-  /** The final path. */
+  /**
+   * The final path.
+   */
   protected Path finalPath;
 
   /*

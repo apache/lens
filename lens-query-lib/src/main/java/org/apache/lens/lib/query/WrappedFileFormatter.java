@@ -18,8 +18,6 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -27,16 +25,22 @@ import org.apache.hadoop.fs.Path;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 
+import java.io.IOException;
+
 /**
  * Wraps the formatter {@link FileFormatter}, which can have implementations like {@link HadoopFileFormatter} or
  * {@link ZipFileFormatter}.
  */
 public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
 
-  /** The formatter. */
+  /**
+   * The formatter.
+   */
   private AbstractFileFormatter formatter;
 
-  /** The Constant LOG. */
+  /**
+   * The Constant LOG.
+   */
   public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
   /*
@@ -88,10 +92,8 @@ public abstract class WrappedFileFormatter extends AbstractOutputFormatter {
   /**
    * Write row.
    *
-   * @param row
-   *          the row
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param row the row
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   protected void writeRow(String row) throws IOException {
     formatter.writeRow(row);

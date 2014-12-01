@@ -259,6 +259,7 @@
           <excludes>
              <exclude>**/*.txt</exclude>
              <exclude>.git/**</exclude>
+             <exclude>.reviewboardrc</exclude>
              <exclude>.idea/**</exclude>
              <exclude>**/*.twiki</exclude>
              <exclude>**/*.iml</exclude>
@@ -283,6 +284,7 @@
              <exclude>**/*.jar</exclude>
              <exclude>**/*.data</exclude>
              <exclude>**/control</exclude>
+             <exclude>**/query_logs/**</exclude>
           </excludes>
         </configuration>
         <executions>

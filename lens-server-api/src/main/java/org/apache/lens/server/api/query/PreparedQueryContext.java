@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -31,6 +32,7 @@ import org.apache.lens.api.query.QueryPrepareHandle;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.lens.server.api.driver.LensDriver;
 
 /**
  * The Class PreparedQueryContext.
@@ -67,8 +69,8 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    * @param conf
    *          the conf
    */
-  public PreparedQueryContext(String query, String user, Configuration conf) {
-    this(query, user, conf, new LensConf());
+  public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers) {
+    this(query, user, conf, new LensConf(), drivers);
   }
 
   /**
@@ -83,14 +85,14 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    * @param qconf
    *          the qconf
    */
-  public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf) {
-    this.userQuery = query;
+  public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
+    drivers) {
+    super(query, qconf, conf, drivers);
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());
     this.conf = conf;
-    this.qconf = qconf;
-    this.driverQuery = query;
+    this.lensConf = qconf;
   }
 
   /*
@@ -128,7 +130,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    *          the conf to set
    */
   public void updateConf(Map<String, String> confoverlay) {
-    qconf.getProperties().putAll(confoverlay);
+    lensConf.getProperties().putAll(confoverlay);
     for (Map.Entry<String, String> prop : confoverlay.entrySet()) {
       this.conf.set(prop.getKey(), prop.getValue());
     }
@@ -141,6 +143,8 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public LensPreparedQuery toPreparedQuery() {
     return new LensPreparedQuery(prepareHandle, userQuery, preparedTime, preparedUser,
-        selectedDriver != null ? selectedDriver.getClass().getCanonicalName() : null, driverQuery, qconf);
+        getDriverContext().getSelectedDriver() != null ? getDriverContext().getSelectedDriver().getClass()
+          .getCanonicalName() : null, getDriverContext().getSelectedDriverQuery(),
+        lensConf);
   }
 }

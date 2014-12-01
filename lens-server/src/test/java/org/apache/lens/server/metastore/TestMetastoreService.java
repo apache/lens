@@ -56,6 +56,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import static org.testng.Assert.*;
 
+import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -256,7 +257,6 @@ public class TestMetastoreService extends LensJerseyTest {
     c.add(GregorianCalendar.DAY_OF_MONTH, 7);
     final XMLGregorianCalendar endDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
 
-
     XCube cube = cubeObjectFactory.createXCube();
     cube.setName(cubeName);
     cube.setWeight(100.0);
@@ -280,10 +280,20 @@ public class TestMetastoreService extends LensJerseyTest {
     xd2.setEndTime(endDate);
     xd2.setCost(5.0);
 
+    XDimAttribute xd3 = cubeObjectFactory.createXDimAttribute();
+    xd3.setName("testdim2col2");
+    xd3.setType("string");
+    xd3.setDescription("ref chained dimension");
+    xd3.setDisplayString("Chained Dimension");
+    XChaincolumn xcc = new XChaincolumn();
+    xcc.setChainName("chain1");
+    xcc.setRefcol("col2");
+    xd3.setChainrefcolumn(xcc);
+
     xdims.getDimAttributes().add(xd1);
     xdims.getDimAttributes().add(xd2);
+    xdims.getDimAttributes().add(xd3);
     cube.setDimAttributes(xdims);
-
 
     XMeasures measures = cubeObjectFactory.createXMeasures();
 
@@ -311,6 +321,25 @@ public class TestMetastoreService extends LensJerseyTest {
     measures.getMeasures().add(xm1);
     measures.getMeasures().add(xm2);
     cube.setMeasures(measures);
+
+    XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
+
+    XJoinchain xj1 = new XJoinchain();
+    xj1.setName("chain1");
+    xj1.setDescription("first chain");
+    xj1.setDisplayString("Chain-1");
+    XTablereferences path1 = cubeObjectFactory.createXTablereferences();
+    XTablereference link1 = new XTablereference();
+    link1.setDestTable(cubeName);
+    link1.setDestColumn("col1");
+    XTablereference link2 = new XTablereference();
+    link2.setDestTable("testdim");
+    link2.setDestColumn("col1");
+    path1.getTableReferences().add(link1);
+    path1.getTableReferences().add(link2);
+    xj1.getPaths().add(path1);
+    joinchains.getChains().add(xj1);
+    cube.setJoinchains(joinchains);
 
     XExpressions expressions = cubeObjectFactory.createXExpressions();
 
@@ -552,15 +581,31 @@ public class TestMetastoreService extends LensJerseyTest {
       assertFalse(actual.isDerived());
       assertNull(actual.getParent());
       Cube hcube = (Cube) JAXBUtils.hiveCubeFromXCube(actual, null);
-      assertNotNull(hcube.getDimAttributeByName("dim1"));
       assertEquals(hcube.getDimAttributeByName("dim1").getDescription(), "first dimension");
       assertEquals(hcube.getDimAttributeByName("dim1").getDisplayString(), "Dimension1");
+      assertNotNull(hcube.getDimAttributeByName("testdim2col2"));
+      assertEquals(hcube.getDimAttributeByName("testdim2col2").getDisplayString(), "Chained Dimension");
+      assertEquals(hcube.getDimAttributeByName("testdim2col2").getDescription(), "ref chained dimension");
+      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getType(), "string");
+      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
+      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
       assertNotNull(hcube.getMeasureByName("msr1"));
       assertEquals(hcube.getMeasureByName("msr1").getDescription(), "first measure");
       assertEquals(hcube.getMeasureByName("msr1").getDisplayString(), "Measure1");
       assertNotNull(hcube.getExpressionByName("expr1"));
       assertEquals(hcube.getExpressionByName("expr1").getDescription(), "first expression");
       assertEquals(hcube.getExpressionByName("expr1").getDisplayString(), "Expression1");
+      Assert.assertFalse(hcube.getJoinChains().isEmpty());
+      Assert.assertEquals(hcube.getJoinChains().size(), 1);
+      Assert.assertTrue(hcube.getJoinChainNames().contains("chain1"));
+      JoinChain chain1 = hcube.getChainByName("chain1");
+      Assert.assertEquals(chain1.getDisplayString(), "Chain-1");
+      Assert.assertEquals(chain1.getDescription(), "first chain");
+      Assert.assertEquals(chain1.getPaths().size(), 1);
+      List<TableReference> links = chain1.getPaths().get(0);
+      Assert.assertEquals(links.size(), 2);
+      Assert.assertEquals(links.get(0).toString(), "testgetcube.col1");
+      Assert.assertEquals(links.get(1).toString(), "testdim.col1");
 
       final XCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
       target = target().path("metastore").path("cubes");
@@ -693,7 +738,7 @@ public class TestMetastoreService extends LensJerseyTest {
           .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
       XCube actual = got.getValue();
       assertEquals(actual.getWeight(), 200.0);
-      assertEquals(actual.getDimAttributes().getDimAttributes().size(), 3);
+      assertEquals(actual.getDimAttributes().getDimAttributes().size(), 4);
       assertEquals(actual.getMeasures().getMeasures().size(), 3);
 
       CubeInterface hcube = JAXBUtils.hiveCubeFromXCube(actual, null);
@@ -1994,6 +2039,7 @@ public class TestMetastoreService extends LensJerseyTest {
           "flattestcube.msr2",
           "flattestcube.dim1",
           "flattestcube.dim2",
+          "flattestcube.testdim2col2",
           "flattestcube.cubetodim1ref",
           "flattestcube.expr1",
           "flattestdim1.dim1todim2ref",

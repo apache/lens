@@ -24,14 +24,22 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
+@EqualsAndHashCode(callSuper=true)
+@ToString
 public class ReferencedDimAtrribute extends BaseDimAttribute {
-  private final List<TableReference> references = new ArrayList<TableReference>();
+  @Getter private final List<TableReference> references = new ArrayList<TableReference>();
   // boolean whether to say the key is only a denormalized variable kept or can
   // be used in join resolution as well
   private Boolean isJoinKey = true;
+  @Getter private String chainName = null;
+  @Getter private String refColumn = null;
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference) {
     this(column, displayString, reference, null, null, null);
@@ -65,12 +73,16 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
     this.isJoinKey = isJoinKey;
   }
 
-  public void addReference(TableReference reference) {
-    references.add(reference);
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, String chainName, String refColumn,
+      Date startTime, Date endTime, Double cost) {
+    super(column, displayString, startTime, endTime, cost);
+    this.chainName = chainName.toLowerCase();
+    this.refColumn = refColumn.toLowerCase();
+    this.isJoinKey = false;
   }
 
-  public List<TableReference> getReferences() {
-    return references;
+  public void addReference(TableReference reference) {
+    references.add(reference);
   }
 
   public boolean removeReference(TableReference ref) {
@@ -84,9 +96,14 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   @Override
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
-    props
-        .put(MetastoreUtil.getDimensionSrcReferenceKey(getName()), MetastoreUtil.getDimensionDestReference(references));
-    props.put(MetastoreUtil.getDimUseAsJoinKey(getName()), isJoinKey.toString());
+    if (chainName != null) {
+      props.put(MetastoreUtil.getDimRefChainNameKey(getName()), chainName);
+      props.put(MetastoreUtil.getDimRefChainColumnKey(getName()), refColumn);
+    } else {
+      props.put(MetastoreUtil.getDimensionSrcReferenceKey(getName()),
+          MetastoreUtil.getReferencesString(references));
+      props.put(MetastoreUtil.getDimUseAsJoinKey(getName()), isJoinKey.toString());
+    }
   }
 
   /**
@@ -97,45 +114,21 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
    */
   public ReferencedDimAtrribute(String name, Map<String, String> props) {
     super(name, props);
-    String refListStr = props.get(MetastoreUtil.getDimensionSrcReferenceKey(getName()));
-    String refListDims[] = StringUtils.split(refListStr, ",");
-    for (String refDimRaw : refListDims) {
-      references.add(new TableReference(refDimRaw));
-    }
-    String isJoinKeyStr = props.get(MetastoreUtil.getDimUseAsJoinKey(name));
-    if (isJoinKeyStr != null) {
-      isJoinKey = Boolean.parseBoolean(isJoinKeyStr);
-    }
-  }
-
-  @Override
-  public int hashCode() {
-    final int prime = 31;
-    int result = super.hashCode();
-    result = prime * result + ((getReferences() == null) ? 0 : getReferences().hashCode());
-    return result;
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (!super.equals(obj)) {
-      return false;
-    }
-    ReferencedDimAtrribute other = (ReferencedDimAtrribute) obj;
-    if (this.getReferences() == null) {
-      if (other.getReferences() != null) {
-        return false;
+    String chName = props.get(MetastoreUtil.getDimRefChainNameKey(getName()));
+    if (!StringUtils.isBlank(chName)) {
+      this.chainName = chName;
+      this.refColumn = props.get(MetastoreUtil.getDimRefChainColumnKey(getName()));
+      this.isJoinKey = false;
+    } else {
+      String refListStr = props.get(MetastoreUtil.getDimensionSrcReferenceKey(getName()));
+      String refListDims[] = StringUtils.split(refListStr, ",");
+      for (String refDimRaw : refListDims) {
+        references.add(new TableReference(refDimRaw));
       }
-    } else if (!this.getReferences().equals(other.getReferences())) {
-      return false;
+      String isJoinKeyStr = props.get(MetastoreUtil.getDimUseAsJoinKey(name));
+      if (isJoinKeyStr != null) {
+        isJoinKey = Boolean.parseBoolean(isJoinKeyStr);
+      }
     }
-    return true;
-  }
-
-  @Override
-  public String toString() {
-    String str = super.toString();
-    str += "references:" + getReferences();
-    return str;
   }
 }

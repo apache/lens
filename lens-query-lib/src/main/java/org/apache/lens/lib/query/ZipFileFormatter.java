@@ -18,52 +18,71 @@
  */
 package org.apache.lens.lib.query;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
 /**
  * Zip file formatter.
- *
+ * <p/>
  * Creates a zip on hadoop compatible file system, with ability to split output across multiple part files and provide a
  * final zip output file.
- *
  */
 public class ZipFileFormatter extends AbstractFileFormatter {
 
-  /** The part suffix. */
-  public static String PART_SUFFIX = "_part-";
+  /**
+   * The part suffix.
+   */
+  public static final String PART_SUFFIX = "_part-";
 
-  /** The tmp path. */
+  /**
+   * The tmp path.
+   */
   private Path tmpPath;
 
-  /** The zip out. */
+  /**
+   * The zip out.
+   */
   private ZipOutputStream zipOut;
 
-  /** The fs. */
+  /**
+   * The fs.
+   */
   private FileSystem fs;
 
-  /** The result file extn. */
+  /**
+   * The result file extn.
+   */
   private String resultFileExtn;
 
-  /** The current part. */
+  /**
+   * The current part.
+   */
   private int currentPart = 0;
 
-  /** The out. */
+  /**
+   * The out.
+   */
   private OutputStreamWriter out;
 
-  /** The max split rows. */
+  /**
+   * The max split rows.
+   */
   private long maxSplitRows;
 
-  /** The encoding. */
+  /**
+   * The encoding.
+   */
   private String encoding;
 
-  /** The closed. */
+  /**
+   * The closed.
+   */
   boolean closed = false;
 
   /*
@@ -132,7 +151,9 @@ public class ZipFileFormatter extends AbstractFileFormatter {
     }
   }
 
-  /** The cached header. */
+  /**
+   * The cached header.
+   */
   private String cachedHeader = null;
 
   /*

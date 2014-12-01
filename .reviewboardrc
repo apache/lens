@@ -1,0 +1,3 @@
+REVIEWBOARD_URL = "https://reviews.apache.org/"
+REPOSITORY = "lens"
+BRANCH = "master"

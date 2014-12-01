@@ -32,10 +32,11 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.LensDriver;
+
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.log4j.Logger;
 
 /**
@@ -187,41 +188,16 @@ public class RewriteUtil {
   }
 
   /**
-   * Gets the final query conf.
-   *
-   * @param driver
-   *          the driver
-   * @param queryConf
-   *          the query conf
-   * @return the final query conf
-   */
-  public static Configuration getFinalQueryConf(LensDriver driver, Configuration queryConf) {
-    Configuration conf = new Configuration(driver.getConf());
-    for (Map.Entry<String, String> entry : queryConf) {
-      if (entry.getKey().equals(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES)) {
-        LOG.warn(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES + " value : " + entry.getValue()
-            + " from query conf ignored/");
-        continue;
-      }
-      conf.set(entry.getKey(), entry.getValue());
-    }
-    conf.setClassLoader(queryConf.getClassLoader());
-    return conf;
-  }
-
-  /**
    * Gets the rewriter.
    *
-   * @param driver
-   *          the driver
    * @param queryConf
    *          the query conf
    * @return the rewriter
    * @throws SemanticException
    *           the semantic exception
    */
-  static CubeQueryRewriter getRewriter(LensDriver driver, Configuration queryConf) throws SemanticException {
-    return new CubeQueryRewriter(getFinalQueryConf(driver, queryConf));
+  static CubeQueryRewriter getCubeRewriter(Configuration queryConf) throws SemanticException {
+    return new CubeQueryRewriter(queryConf);
   }
 
   /**
@@ -240,33 +216,28 @@ public class RewriteUtil {
   /**
    * Rewrite query.
    *
-   * @param query
-   *          the query
-   * @param drivers
-   *          the drivers
-   * @param queryconf
-   *          the queryconf
+   * @param ctx
+   *          the query context
    * @return the map
    * @throws LensException
    *           the lens exception
    */
-  public static Map<LensDriver, String> rewriteQuery(final String query, Collection<LensDriver> drivers,
-      Configuration queryconf) throws LensException {
+  public static Map<LensDriver, String> rewriteQuery(AbstractQueryContext ctx) throws LensException {
     try {
-      String replacedQuery = getReplacedQuery(query);
+      String replacedQuery = getReplacedQuery(ctx.getUserQuery());
       String lowerCaseQuery = replacedQuery.toLowerCase();
       Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
       StringBuilder rewriteFailure = new StringBuilder();
       String failureCause = null;
       boolean useBuilder = false;
       if (lowerCaseQuery.startsWith("add") || lowerCaseQuery.startsWith("set")) {
-        for (LensDriver driver : drivers) {
+        for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
           driverQueries.put(driver, replacedQuery);
         }
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
-        for (LensDriver driver : drivers) {
-          CubeQueryRewriter rewriter = getRewriter(driver, queryconf);
+        for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
+          CubeQueryRewriter rewriter = getCubeRewriter(ctx.getDriverContext().getDriverConf(driver));
           StringBuilder builder = new StringBuilder();
           int start = 0;
           try {

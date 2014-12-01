@@ -37,6 +37,7 @@ import org.apache.hadoop.hive.ql.HiveDriverRunHookContext;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
@@ -67,6 +68,9 @@ public class TestHiveDriver {
 
   /** The driver. */
   protected HiveDriver driver;
+
+  /** Driver list **/
+  protected Collection<LensDriver> drivers;
 
   /** The data base. */
   public String DATA_BASE = this.getClass().getSimpleName().toLowerCase();
@@ -112,6 +116,8 @@ public class TestHiveDriver {
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
     driver = new HiveDriver();
     driver.configure(conf);
+    drivers = new ArrayList<LensDriver>() {{ add
+      (driver);}};
     System.out.println("TestHiveDriver created");
   }
 
@@ -120,8 +126,10 @@ public class TestHiveDriver {
     SessionState.get().setCurrentDatabase(DATA_BASE);
   }
 
-  protected QueryContext createContext(String query, Configuration conf) {
-    QueryContext context = new QueryContext(query, "testuser", conf);
+  protected QueryContext createContext(final String query, Configuration conf) throws LensException {
+    QueryContext context = new QueryContext(query, "testuser", conf, drivers);
+    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.setSelectedDriver(driver);
     context.setLensSessionIdentifier(sessionid);
     return context;
   }
@@ -212,8 +220,8 @@ public class TestHiveDriver {
     QueryContext context = createContext(query, conf);
     driver.addPersistentPath(context);
     assertEquals(context.getUserQuery(), query);
-    assertNotNull(context.getDriverQuery());
-    assertEquals(context.getDriverQuery(), context.getUserQuery());
+    assertNotNull(context.getDriverContext().getDriverQuery(driver));
+    assertEquals(context.getDriverContext().getDriverQuery(driver), context.getUserQuery());
   }
 
   /**
@@ -651,7 +659,9 @@ public class TestHiveDriver {
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
     // test execute prepare
-    PreparedQueryContext pctx = new PreparedQueryContext("SELECT ID FROM test_explain", null, conf);
+    PreparedQueryContext pctx = new PreparedQueryContext("SELECT ID FROM test_explain", null, conf, drivers);
+    pctx.setSelectedDriver(driver);
+
     SessionState.setCurrentSessionState(ss);
     plan = driver.explainAndPrepare(pctx);
     QueryContext qctx = createContext(pctx, conf);
@@ -752,7 +762,8 @@ public class TestHiveDriver {
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     SessionState.setCurrentSessionState(ss);
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
-    PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf);
+    PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf, drivers);
+    pctx.setSelectedDriver(driver);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
     // assertNotNull(plan2.getResultDestination());
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -776,7 +787,10 @@ public class TestHiveDriver {
    */
   @Test
   public void testPriority() throws IOException, LensException {
+    Configuration conf = new Configuration();
     final MockDriver mockDriver = new MockDriver();
+    mockDriver.configure(conf);
+
     BufferedReader br = new BufferedReader(new InputStreamReader(TestHiveDriver.class.getResourceAsStream("/priority_tests.txt")));
     String line;
     while((line = br.readLine()) != null) {
@@ -784,15 +798,22 @@ public class TestHiveDriver {
 
       final List<String> partitions = Arrays.asList(kv[0].trim().split("\\s*,\\s*"));
       final Priority expected = Priority.valueOf(kv[1]);
-      AbstractQueryContext ctx = new MockQueryContext(new HashMap<LensDriver, String>(){
+      final HashMap<LensDriver, String> driverQuery1 = new HashMap<LensDriver, String>() {
         {
           put(mockDriver, "driverQuery1");
         }
-      });
+      };
+      AbstractQueryContext ctx = new MockQueryContext("driverQuery1", new LensConf(), conf,
+                                                      driverQuery1.keySet());
+      ctx.getDriverContext().setDriverQueriesAndPlans(driverQuery1);
       ctx.setSelectedDriver(mockDriver);
-      ((MockDriver.MockQueryPlan)ctx.getDriverQueryPlans().get(mockDriver)).setPartitions(new HashMap<String, List<String>>() {
-        {
-          put("table1", partitions);
+
+      ((MockDriver.MockQueryPlan)ctx.getDriverContext().getDriverQueryPlan(mockDriver)).setPartitions
+        (new HashMap<String,
+          List<String>>
+          () {
+          {
+            put("table1", partitions);
         }});
       Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
     }

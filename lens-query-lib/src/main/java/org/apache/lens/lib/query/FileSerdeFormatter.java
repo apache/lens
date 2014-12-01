@@ -18,9 +18,6 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.IOException;
-import java.util.Properties;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -28,7 +25,6 @@ import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.lens.api.query.ResultRow;
@@ -37,20 +33,26 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
+import java.io.IOException;
+import java.util.Properties;
+
 /**
  * File format which provides implementation for {@link InMemoryOutputFormatter}
- *
+ * <p/>
  * This is a wrapped formatter, which serializes the rows of the result with configured serde. It would only accept the
  * Serde's whose serialization class is {@link Text}
- *
  */
 @SuppressWarnings("deprecation")
 public class FileSerdeFormatter extends WrappedFileFormatter implements InMemoryOutputFormatter {
 
-  /** The output serde. */
+  /**
+   * The output serde.
+   */
   private SerDe outputSerde;
 
-  /** The input oi. */
+  /**
+   * The input oi.
+   */
   private ObjectInspector inputOI;
 
   /**
@@ -77,9 +79,9 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
   private void initOutputSerde() {
     try {
       outputSerde = ReflectionUtils.newInstance(
-          ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
-              (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
-          ctx.getConf());
+        ctx.getConf().getClass(LensConfConstants.QUERY_OUTPUT_SERDE,
+          (Class<? extends AbstractSerDe>) Class.forName(LensConfConstants.DEFAULT_OUTPUT_SERDE), SerDe.class),
+        ctx.getConf());
 
       Properties props = new Properties();
       if (columnNames.size() > 0) {

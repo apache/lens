@@ -81,6 +81,13 @@ class CandidateTableResolver implements ContextRewriter {
         LOG.info("Populating optional dim:" + dim);
         populateDimTables(dim, cubeql, true);
       }
+      if (cubeql.getAutoJoinCtx() != null) {
+        // Before checking for candidate table columns, prune join paths containing non existing columns
+        // in populated candidate tables
+        cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(), cubeql.getCandidateFactTables(), null);
+        cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
+        cubeql.getAutoJoinCtx().refreshJoinPathColumns();
+      }
       checkForSourceReachabilityForDenormCandidates(cubeql);
       // check for joined columns and denorm columns on refered tables
       resolveCandidateFactTablesForJoins(cubeql);

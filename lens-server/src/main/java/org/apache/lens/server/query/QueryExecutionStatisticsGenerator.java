@@ -87,7 +87,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     event.setClusterUser(ctx.getClusterUser());
     event.setSubmissionTime(ctx.getSubmissionTime());
     QueryDriverStatistics driverStats = new QueryDriverStatistics();
-    driverStats.setDriverQuery(ctx.getDriverQuery());
+    driverStats.setDriverQuery(ctx.getSelectedDriverQuery());
     driverStats.setStartTime(ctx.getDriverStatus().getDriverStartTime());
     driverStats.setEndTime(ctx.getDriverStatus().getDriverStartTime());
     event.setDriverStats(driverStats);

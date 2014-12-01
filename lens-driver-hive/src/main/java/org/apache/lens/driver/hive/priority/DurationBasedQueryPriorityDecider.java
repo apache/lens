@@ -85,7 +85,9 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
    */
   protected Map<String,List<String>> extractPartitions(AbstractQueryContext queryContext) throws LensException{
     Map<String, List<String>> partitions = new HashMap<String, List<String>>();
-    for(Map.Entry<String, List<String>> entry: queryContext.getSelectedDriverQueryPlan().getPartitions().entrySet()) {
+    for(Map.Entry<String, List<String>> entry: queryContext.getDriverContext().getSelectedDriverQueryPlan()
+      .getPartitions().entrySet
+      ()) {
       partitions.put(entry.getKey(), new ArrayList<String>());
       for(String s: entry.getValue()) {
         String[] splits = s.split("\\s+");
@@ -109,7 +111,9 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
       for(String partition: partitions.get(table)) {
         if(!partition.equals("latest")) {
           cost +=
-            queryContext.getSelectedDriverQueryPlan().getTableWeight(table) * getNormalizedPartitionCost(partition);
+            queryContext.getDriverContext().getSelectedDriverQueryPlan().getTableWeight(table) *
+              getNormalizedPartitionCost
+              (partition);
         }
       }
     }

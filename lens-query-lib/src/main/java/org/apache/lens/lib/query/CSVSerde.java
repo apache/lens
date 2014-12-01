@@ -18,21 +18,8 @@
  */
 package org.apache.lens.lib.query;
 
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
-
-import java.io.CharArrayReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -41,89 +28,117 @@ import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.lazy.LazyInteger;
-import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorConverters;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
-import org.apache.hadoop.hive.serde2.objectinspector.UnionObjectInspector;
-import org.apache.hadoop.hive.serde2.objectinspector.StructField;
-import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.*;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory;
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
-import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
-import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.*;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
+import java.io.*;
+import java.util.*;
+
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
 
 /**
  * CSVSerde uses opencsv (http://opencsv.sourceforge.net/) to serialize/deserialize columns as CSV.
- *
  */
 public final class CSVSerde extends AbstractSerDe {
 
-  /** The default null format. */
-  public static String DEFAULT_NULL_FORMAT = "NULL";
+  /**
+   * The default null format.
+   */
+  public static final String DEFAULT_NULL_FORMAT = "NULL";
 
-  /** The default collection seperator. */
-  public static char DEFAULT_COLLECTION_SEPERATOR = ',';
+  /**
+   * The default collection seperator.
+   */
+  public static final char DEFAULT_COLLECTION_SEPERATOR = ',';
 
-  /** The default struct field seperator. */
-  public static char DEFAULT_STRUCT_FIELD_SEPERATOR = ':';
+  /**
+   * The default struct field seperator.
+   */
+  public static final char DEFAULT_STRUCT_FIELD_SEPERATOR = ':';
 
-  /** The default union tag field seperator. */
-  public static char DEFAULT_UNION_TAG_FIELD_SEPERATOR = ':';
+  /**
+   * The default union tag field seperator.
+   */
+  public static final char DEFAULT_UNION_TAG_FIELD_SEPERATOR = ':';
 
-  /** The default map key value seperator. */
-  public static char DEFAULT_MAP_KEY_VALUE_SEPERATOR = '=';
+  /**
+   * The default map key value seperator.
+   */
+  public static final char DEFAULT_MAP_KEY_VALUE_SEPERATOR = '=';
 
-  /** The inspector. */
+  /**
+   * The inspector.
+   */
   private ObjectInspector inspector;
 
-  /** The output fields. */
+  /**
+   * The output fields.
+   */
   private String[] outputFields;
 
-  /** The num cols. */
+  /**
+   * The num cols.
+   */
   private int numCols;
 
-  /** The row. */
+  /**
+   * The row.
+   */
   private List<Object> row;
 
-  /** The column types. */
+  /**
+   * The column types.
+   */
   private List<TypeInfo> columnTypes;
 
-  /** The column object inspectors. */
+  /**
+   * The column object inspectors.
+   */
   private List<ObjectInspector> columnObjectInspectors;
 
-  /** The separator char. */
+  /**
+   * The separator char.
+   */
   private char separatorChar;
 
-  /** The quote char. */
+  /**
+   * The quote char.
+   */
   private char quoteChar;
 
-  /** The escape char. */
+  /**
+   * The escape char.
+   */
   private char escapeChar;
 
-  /** The collection seperator. */
+  /**
+   * The collection seperator.
+   */
   private char collectionSeperator;
 
-  /** The struct field seperator. */
+  /**
+   * The struct field seperator.
+   */
   private char structFieldSeperator;
 
-  /** The union tag field seperator. */
+  /**
+   * The union tag field seperator.
+   */
   private char unionTagFieldSeperator;
 
-  /** The map key value seperator. */
+  /**
+   * The map key value seperator.
+   */
   private char mapKeyValueSeperator;
 
-  /** The null string. */
+  /**
+   * The null string.
+   */
   private String nullString;
 
   /*
@@ -171,15 +186,12 @@ public final class CSVSerde extends AbstractSerDe {
   /**
    * Gets the property.
    *
-   * @param tbl
-   *          the tbl
-   * @param property
-   *          the property
-   * @param def
-   *          the def
+   * @param tbl      the tbl
+   * @param property the property
+   * @param def      the def
    * @return the property
    */
-  private final char getProperty(final Properties tbl, final String property, final char def) {
+  private char getProperty(final Properties tbl, final String property, final char def) {
     final String val = tbl.getProperty(property);
 
     if (val != null) {
@@ -202,7 +214,7 @@ public final class CSVSerde extends AbstractSerDe {
 
     if (outputFieldRefs.size() != numCols) {
       throw new SerDeException("Cannot serialize the object because there are " + outputFieldRefs.size()
-          + " fields but the table has " + numCols + " columns.");
+        + " fields but the table has " + numCols + " columns.");
     }
 
     try {
@@ -230,15 +242,11 @@ public final class CSVSerde extends AbstractSerDe {
   /**
    * Serialize field.
    *
-   * @param field
-   *          the field
-   * @param fieldOI
-   *          the field oi
+   * @param field   the field
+   * @param fieldOI the field oi
    * @return the string
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   * @throws SerDeException
-   *           the ser de exception
+   * @throws IOException    Signals that an I/O exception has occurred.
+   * @throws SerDeException the ser de exception
    */
   private String serializeField(Object field, ObjectInspector fieldOI) throws IOException, SerDeException {
 
@@ -333,12 +341,10 @@ public final class CSVSerde extends AbstractSerDe {
   /**
    * Gets the Java Object corresponding to the type, represented as string.
    *
-   * @param colString
-   *          the col string
-   * @param type
-   *          the type
+   * @param colString the col string
+   * @param type      the type
    * @return Standard Java Object for primitive types List of Objects for Array type Map<Object,Object> for Map type
-   *         List of Objects for Struct type Object itself contained in Union type
+   * List of Objects for Struct type Object itself contained in Union type
    */
   private Object getColumnObject(String colString, TypeInfo type) {
     if (colString.equals(nullString)) {
@@ -347,7 +353,7 @@ public final class CSVSerde extends AbstractSerDe {
     switch (type.getCategory()) {
     case PRIMITIVE:
       return ObjectInspectorConverters.getConverter(PrimitiveObjectInspectorFactory.javaStringObjectInspector,
-          TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(type)).convert(colString);
+        TypeInfoUtils.getStandardJavaObjectInspectorFromTypeInfo(type)).convert(colString);
     case LIST:
       TypeInfo elementType = ((ListTypeInfo) type).getListElementTypeInfo();
       List<Object> olist = new ArrayList<Object>();
@@ -422,14 +428,10 @@ public final class CSVSerde extends AbstractSerDe {
   /**
    * New reader.
    *
-   * @param reader
-   *          the reader
-   * @param separator
-   *          the separator
-   * @param quote
-   *          the quote
-   * @param escape
-   *          the escape
+   * @param reader    the reader
+   * @param separator the separator
+   * @param quote     the quote
+   * @param escape    the escape
    * @return the CSV reader
    */
   private CSVReader newReader(final Reader reader, char separator, char quote, char escape) {
@@ -445,14 +447,10 @@ public final class CSVSerde extends AbstractSerDe {
   /**
    * New writer.
    *
-   * @param writer
-   *          the writer
-   * @param separator
-   *          the separator
-   * @param quote
-   *          the quote
-   * @param escape
-   *          the escape
+   * @param writer    the writer
+   * @param separator the separator
+   * @param quote     the quote
+   * @param escape    the escape
    * @return the CSV writer
    */
   private CSVWriter newWriter(final Writer writer, char separator, char quote, char escape) {

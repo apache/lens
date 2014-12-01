@@ -24,6 +24,9 @@ import static org.testng.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -35,6 +38,7 @@ import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
 import org.apache.lens.driver.jdbc.JDBCDriver;
 import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.lens.driver.jdbc.JDBCResultSet;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
@@ -53,6 +57,11 @@ public class TestJDBCFinal {
 
   /** The driver. */
   JDBCDriver driver;
+
+  /**
+   * Collection of drivers
+   */
+  Collection<LensDriver> drivers;
 
   /**
    * Test create jdbc driver.
@@ -76,6 +85,8 @@ public class TestJDBCFinal {
     System.out.println("Driver configured!");
     SessionState.start(new HiveConf(ColumnarSQLRewriter.class));
 
+    drivers = new ArrayList<LensDriver>() {{
+      add(driver); }};
   }
 
   /**
@@ -170,14 +181,17 @@ public class TestJDBCFinal {
   @Test
   public void testExecute1() throws Exception {
     testCreateJdbcDriver();
-    String query =
+    final String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day," + "sum(fact.dollars_sold) dollars_sold "
         + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
         + "where time_dim.day between '1900-01-01' and '1900-01-03' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc";
 
-    QueryContext context = new QueryContext(query, "SA", baseConf);
+    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.setSelectedDriver(driver);
+
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 
@@ -223,7 +237,7 @@ public class TestJDBCFinal {
   @Test
   public void testExecute2() throws Exception {
     testCreateJdbcDriver();
-    String query =
+    final String query =
 
     "select fact.time_key,time_dim.day_of_week,time_dim.day, " + "sum(fact.dollars_sold) dollars_sold "
         + "from sales_fact fact " + "inner join time_dim time_dim on fact.time_key = time_dim.time_key "
@@ -233,7 +247,9 @@ public class TestJDBCFinal {
         + "where time_dim.day between '1900-01-01' and '1900-01-04' " + "and location_dim.location_name = 'loc2' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold  desc ";
 
-    QueryContext context = new QueryContext(query, "SA", baseConf);
+    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.setSelectedDriver(driver);
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 

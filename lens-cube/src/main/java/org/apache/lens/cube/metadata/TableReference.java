@@ -26,8 +26,8 @@ public class TableReference {
   }
 
   public TableReference(String destTable, String destColumn) {
-    this.destTable = destTable;
-    this.destColumn = destColumn;
+    this.destTable = destTable.toLowerCase();
+    this.destColumn = destColumn.toLowerCase();
   }
 
   public TableReference(String reference) {

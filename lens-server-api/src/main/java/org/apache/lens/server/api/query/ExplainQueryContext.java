@@ -19,6 +19,10 @@
 package org.apache.lens.server.api.query;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.server.api.driver.LensDriver;
+
+import java.util.Collection;
 
 /**
  * The class ExplainQueryContext
@@ -29,8 +33,7 @@ public class ExplainQueryContext extends AbstractQueryContext{
    * @param query
    * @param qconf
    */
-  public ExplainQueryContext(String query, Configuration qconf) {
-    userQuery = query;
-    conf = qconf;
+  public ExplainQueryContext(String query, LensConf conf, Configuration qconf, Collection<LensDriver> drivers) {
+    super(query, conf, qconf, drivers);
   }
 }

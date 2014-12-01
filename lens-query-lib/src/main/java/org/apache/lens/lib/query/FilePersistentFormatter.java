@@ -18,13 +18,6 @@
  */
 package org.apache.lens.lib.query;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.ParseException;
-import java.util.Map;
-import java.util.TreeMap;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -35,14 +28,23 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.util.Map;
+import java.util.TreeMap;
+
 /**
  * File formatter for {@link PersistedOutputFormatter}
- *
+ * <p/>
  * This is a {@link WrappedFileFormatter} which can wrap any {@link FileFormatter}.
  */
 public class FilePersistentFormatter extends WrappedFileFormatter implements PersistedOutputFormatter {
 
-  /** The Constant LOG. */
+  /**
+   * The Constant LOG.
+   */
   public static final Log LOG = LogFactory.getLog(FilePersistentFormatter.class);
 
   /*
@@ -56,21 +58,22 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
   }
 
   // File names are of the form 000000_0
+
   /**
    * The Class PartFile.
    */
   class PartFile implements Comparable<PartFile> {
 
-    /** The id. */
+    /**
+     * The id.
+     */
     int id;
 
     /**
      * Instantiates a new part file.
      *
-     * @param fileName
-     *          the file name
-     * @throws ParseException
-     *           the parse exception
+     * @param fileName the file name
+     * @throws ParseException the parse exception
      */
     PartFile(String fileName) throws ParseException {
       String idStr = fileName.substring(0, fileName.lastIndexOf('_'));
