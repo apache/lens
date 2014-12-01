@@ -51,6 +51,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   protected void setMissingExpressions() throws SemanticException {
     setFrom(getFromString());
     super.setMissingExpressions();
+    System.out.println(getQuery().getCubeAliasToStorageTablesMap());
   }
 
   public String toHQL() throws SemanticException {
@@ -58,7 +59,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() throws SemanticException {
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.isAutoJoinResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
           query.getAliasForTabName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {
@@ -69,7 +70,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   private String getFromString() throws SemanticException {
     String fromString = null;
     String fromTable = getFromTable();
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.isAutoJoinResolved()) {
       fromString =
           query.getAutoJoinCtx().getFromString(fromTable, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
     } else {

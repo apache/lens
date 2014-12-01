@@ -30,12 +30,12 @@
 
 <property>
   <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
+  <value>/tmp/hive/warehouse2</value>
 </property>
 
 <property>
   <name>hive.querylog.location</name>
-  <value>${test.tmp.dir}/tmp</value>
+  <value>${test.tmp.dir}/tmp2</value>
   <description>Location of the structured hive logs</description>
 </property>
 

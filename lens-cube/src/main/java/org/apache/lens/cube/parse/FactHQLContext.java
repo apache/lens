@@ -56,7 +56,7 @@ public class FactHQLContext extends DimHQLContext {
 
   private String getFromString() throws SemanticException {
     String fromString = null;
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.isAutoJoinResolved()) {
       String fromTable = getFromTable();
       fromString = query.getAutoJoinCtx().getFromString(fromTable, fact, factDims, getDimsToQuery(), query);
     } else {

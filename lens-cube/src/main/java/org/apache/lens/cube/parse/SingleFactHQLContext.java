@@ -92,10 +92,6 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   }
 
   protected String getFromTable() throws SemanticException {
-    if (getQuery().getAutoJoinCtx() != null && getQuery().getAutoJoinCtx().isJoinsResolved()) {
-      return fact.getStorageString(getQuery().getAliasForTabName(getQuery().getCube().getName()));
-    } else {
-      return getQuery().getQBFromString(fact, getDimsToQuery());
-    }
+    return getQuery().getQBFromString(fact, getQuery().isAutoJoinResolved() ? null : getDimsToQuery());
   }
 }

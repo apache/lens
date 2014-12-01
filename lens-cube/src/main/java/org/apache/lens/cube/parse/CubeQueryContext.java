@@ -23,14 +23,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -64,6 +57,13 @@ public class CubeQueryContext {
   private final HiveConf conf;
 
   private final List<TimeRange> timeRanges;
+  /**
+   * suppose test cube is being joined twice, on lhs we have alias, on rhs we have
+   * all used tables of that fact
+   * testcube -> {c1_testcube, c2_testcube}
+   * testcube2 -> {c1_testcube, c2_testcube}
+  */
+  private final Map<String, List<String>> cubeAliasToStorageTablesMap = new HashMap<String, List<String>>();
 
   // metadata
   private CubeInterface cube;
@@ -189,6 +189,10 @@ public class CubeQueryContext {
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
+  }
+
+  public Map<String, List<String>> getCubeAliasToStorageTablesMap() {
+    return cubeAliasToStorageTablesMap;
   }
 
   // Holds the context of optional dimension
@@ -496,6 +500,8 @@ public class CubeQueryContext {
     if (getJoinTree() == null) {
       if (cube != null) {
         fromString = fact.getStorageString(getAliasForTabName(cube.getName()));
+        String[] tablesAndAlias = fromString.split(" ");
+        cubeAliasToStorageTablesMap.put(tablesAndAlias[1], Arrays.asList(tablesAndAlias[0].split(",")));
       } else {
         if (dimensions.size() != 1) {
           throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
@@ -921,6 +927,10 @@ public class CubeQueryContext {
 
   public JoinResolver.AutoJoinContext getAutoJoinCtx() {
     return autoJoinCtx;
+  }
+
+  public boolean isAutoJoinResolved() {
+    return autoJoinCtx != null && autoJoinCtx.isJoinsResolved();
   }
 
   public void setDenormCtx(DenormalizationResolver.DenormalizationContext deNormCtx) {
