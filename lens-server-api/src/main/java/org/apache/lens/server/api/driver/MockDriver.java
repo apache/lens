@@ -18,13 +18,6 @@
  */
 package org.apache.lens.server.api.driver;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.hadoop.conf.Configuration;
@@ -34,24 +27,36 @@ import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The Class MockDriver.
  */
 public class MockDriver implements LensDriver {
 
-  /** The conf. */
+  /**
+   * The conf.
+   */
   Configuration conf;
 
-  /** The query. */
+  /**
+   * The query.
+   */
   String query;
 
-  /** The io test val. */
+  /**
+   * The io test val.
+   */
   private int ioTestVal = -1;
 
   /**
@@ -81,14 +86,15 @@ public class MockDriver implements LensDriver {
    */
   public static class MockQueryPlan extends DriverQueryPlan {
 
-    /** The query. */
+    /**
+     * The query.
+     */
     String query;
 
     /**
      * Instantiates a new mock query plan.
      *
-     * @param query
-     *          the query
+     * @param query the query
      */
     MockQueryPlan(String query) {
       this.query = query;
@@ -98,7 +104,8 @@ public class MockDriver implements LensDriver {
       tableWeights.put("table3", 3.0);
     }
 
-    @Getter @Setter
+    @Getter
+    @Setter
     private Map<String, List<String>> partitions;
 
     @Override
@@ -115,7 +122,8 @@ public class MockDriver implements LensDriver {
   /*
    * (non-Javadoc)
    * 
-   * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
+   * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String,
+   * org.apache.hadoop.conf.Configuration)
    */
   @Override
   public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
@@ -165,8 +173,7 @@ public class MockDriver implements LensDriver {
   /**
    * Add a listener for driver events.
    *
-   * @param driverEventListener
-   *          the driver event listener
+   * @param driverEventListener the driver event listener
    */
   @Override
   public void registerDriverEventListener(LensEventListener<DriverEvent> driverEventListener) {
@@ -188,8 +195,8 @@ public class MockDriver implements LensDriver {
    * (non-Javadoc)
    * 
    * @see
-   * org.apache.lens.server.api.driver.LensDriver#explainAndPrepare(org.apache.lens.server.api.query.PreparedQueryContext
-   * )
+   * org.apache.lens.server.api.driver.LensDriver
+   * #explainAndPrepare(org.apache.lens.server.api.query.PreparedQueryContext)
    */
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
@@ -317,12 +324,13 @@ public class MockDriver implements LensDriver {
    * (non-Javadoc)
    * 
    * @see
-   * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification(org.apache.lens.api.query.QueryHandle
-   * , long, org.apache.lens.server.api.driver.QueryCompletionListener)
+   * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification
+   * (org.apache.lens.api.query.QueryHandle, long, org.apache.lens.server.api.driver.QueryCompletionListener)
    */
   @Override
-  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
-      throws LensException {
+  public void registerForCompletionNotification(QueryHandle handle,
+    long timeoutMillis, QueryCompletionListener listener)
+    throws LensException {
     // TODO Auto-generated method stub
 
   }

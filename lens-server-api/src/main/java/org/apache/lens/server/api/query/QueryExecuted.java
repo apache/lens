@@ -29,14 +29,10 @@ public class QueryExecuted extends StatusChange {
   /**
    * Instantiates a new query executed.
    *
-   * @param eventTime
-   *          the event time
-   * @param prev
-   *          the prev
-   * @param current
-   *          the current
-   * @param handle
-   *          the handle
+   * @param eventTime the event time
+   * @param prev      the prev
+   * @param current   the current
+   * @param handle    the handle
    */
   public QueryExecuted(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
     super(eventTime, prev, current, handle);

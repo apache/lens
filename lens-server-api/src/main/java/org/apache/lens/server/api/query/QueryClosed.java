@@ -29,21 +29,15 @@ public class QueryClosed extends QueryEnded {
   /**
    * Instantiates a new query closed.
    *
-   * @param eventTime
-   *          the event time
-   * @param prev
-   *          the prev
-   * @param current
-   *          the current
-   * @param handle
-   *          the handle
-   * @param user
-   *          the user
-   * @param cause
-   *          the cause
+   * @param eventTime the event time
+   * @param prev      the prev
+   * @param current   the current
+   * @param handle    the handle
+   * @param user      the user
+   * @param cause     the cause
    */
   public QueryClosed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
-      String user, String cause) {
+    String user, String cause) {
     super(eventTime, prev, current, handle, user, cause);
     checkCurrentState(QueryStatus.Status.CLOSED);
   }

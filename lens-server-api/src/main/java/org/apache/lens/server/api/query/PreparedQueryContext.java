@@ -18,6 +18,14 @@
  */
 package org.apache.lens.server.api.query;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.query.LensPreparedQuery;
+import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.server.api.driver.LensDriver;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -25,49 +33,47 @@ import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.LensPreparedQuery;
-import org.apache.lens.api.query.QueryPrepareHandle;
-
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.lens.server.api.driver.LensDriver;
-
 /**
  * The Class PreparedQueryContext.
  */
 public class PreparedQueryContext extends AbstractQueryContext implements Delayed {
 
-  /** The prepare handle. */
+  /**
+   * The prepare handle.
+   */
   @Getter
   private final QueryPrepareHandle prepareHandle;
 
-  /** The prepared time. */
+  /**
+   * The prepared time.
+   */
   @Getter
   private final Date preparedTime;
 
-  /** The prepared user. */
+  /**
+   * The prepared user.
+   */
   @Getter
   private final String preparedUser;
 
-  /** The query name. */
+  /**
+   * The query name.
+   */
   @Getter
   @Setter
   private String queryName;
 
-  /** The millis in week. */
+  /**
+   * The millis in week.
+   */
   private static long millisInWeek = 7 * 24 * 60 * 60 * 1000;
 
   /**
    * Instantiates a new prepared query context.
    *
-   * @param query
-   *          the query
-   * @param user
-   *          the user
-   * @param conf
-   *          the conf
+   * @param query the query
+   * @param user  the user
+   * @param conf  the conf
    */
   public PreparedQueryContext(String query, String user, Configuration conf, Collection<LensDriver> drivers) {
     this(query, user, conf, new LensConf(), drivers);
@@ -76,14 +82,10 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   /**
    * Instantiates a new prepared query context.
    *
-   * @param query
-   *          the query
-   * @param user
-   *          the user
-   * @param conf
-   *          the conf
-   * @param qconf
-   *          the qconf
+   * @param query the query
+   * @param user  the user
+   * @param conf  the conf
+   * @param qconf the qconf
    */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
@@ -126,8 +128,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
   /**
    * Update conf.
    *
-   * @param confoverlay
-   *          the conf to set
+   * @param confoverlay the conf to set
    */
   public void updateConf(Map<String, String> confoverlay) {
     lensConf.getProperties().putAll(confoverlay);
@@ -143,8 +144,8 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public LensPreparedQuery toPreparedQuery() {
     return new LensPreparedQuery(prepareHandle, userQuery, preparedTime, preparedUser,
-        getDriverContext().getSelectedDriver() != null ? getDriverContext().getSelectedDriver().getClass()
-          .getCanonicalName() : null, getDriverContext().getSelectedDriverQuery(),
-        lensConf);
+      getDriverContext().getSelectedDriver() != null ? getDriverContext().getSelectedDriver().getClass()
+        .getCanonicalName() : null, getDriverContext().getSelectedDriverQuery(),
+      lensConf);
   }
 }

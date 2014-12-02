@@ -27,32 +27,34 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DriverSelectorQueryContext {
 
-  /** The constant LOG */
+  /**
+   * The constant LOG
+   */
   public static final Log LOG = LogFactory.getLog(DriverSelectorQueryContext.class);
 
 
-  /** The selected driver. */
+  /**
+   * The selected driver.
+   */
   @Getter
   @Setter
   protected LensDriver selectedDriver;
 
-  /** Map of driver to driver specific query context */
+  /**
+   * Map of driver to driver specific query context
+   */
   @Getter
   @Setter
   protected Map<LensDriver, DriverQueryContext> driverQueryContextMap = new HashMap<LensDriver,
     DriverQueryContext>();
 
-  public DriverSelectorQueryContext(final String userQuery, final Configuration queryConf, final Collection<LensDriver>
-    drivers) {
-    for(LensDriver driver : drivers) {
+  public DriverSelectorQueryContext(final String userQuery, final Configuration queryConf,
+    final Collection<LensDriver> drivers) {
+    for (LensDriver driver : drivers) {
       DriverQueryContext ctx = new DriverQueryContext(driver);
       ctx.setDriverSpecificConf(mergeConf(driver, queryConf));
       ctx.setQuery(userQuery);
@@ -69,12 +71,16 @@ public class DriverSelectorQueryContext {
       this.driver = driver;
     }
 
-    /** Map of driver to query plan */
+    /**
+     * Map of driver to query plan
+     */
     @Getter
     @Setter
     protected DriverQueryPlan driverQueryPlan;
 
-    /** driver specific query conf */
+    /**
+     * driver specific query conf
+     */
     @Getter
     @Setter
     protected Configuration driverSpecificConf;
@@ -94,10 +100,8 @@ public class DriverSelectorQueryContext {
   /**
    * Gets the driver query conf.
    *
-   * @param driver
-   *          the driver
-   * @param queryConf
-   *          the query conf
+   * @param driver    the driver
+   * @param queryConf the query conf
    * @return the final query conf
    */
   private Configuration mergeConf(LensDriver driver, Configuration queryConf) {
@@ -112,15 +116,17 @@ public class DriverSelectorQueryContext {
   /**
    * Sets driver queries, generates plans for each driver by calling explain with respective queries,
    * Sets driverQueryPlans
+   *
    * @param driverQueries
    * @throws LensException
    */
   public void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries) throws LensException {
-    for(LensDriver driver : driverQueries.keySet()) {
+    for (LensDriver driver : driverQueries.keySet()) {
       final DriverQueryContext driverQueryContext = driverQueryContextMap.get(driver);
       driverQueryContext.setQuery(driverQueries.get(driver));
       try {
-        driverQueryContext.setDriverQueryPlan(driver.explain(driverQueries.get(driver), driverQueryContext.getDriverSpecificConf()));
+        driverQueryContext.setDriverQueryPlan(driver.explain(driverQueries.get(driver),
+          driverQueryContext.getDriverSpecificConf()));
       } catch (Exception e) {
         LOG.error(e.getStackTrace());
         driverQueryContext.setDriverQueryPlanGenerationError(e);
@@ -130,25 +136,26 @@ public class DriverSelectorQueryContext {
 
   /**
    * Return selected driver's query plan, but check for null conditions first.
+   *
    * @return DriverQueryPlan of Selected Driver
    * @throws LensException
    */
   public DriverQueryPlan getSelectedDriverQueryPlan() throws LensException {
     final Map<LensDriver, DriverQueryContext> driverQueryCtxs = getDriverQueryContextMap();
-    if(driverQueryCtxs == null) {
+    if (driverQueryCtxs == null) {
       throw new LensException("No Driver query ctx. Check if re-write happened or not");
     }
-    if(getSelectedDriver() == null) {
+    if (getSelectedDriver() == null) {
       throw new LensException("Selected Driver is NULL.");
     }
 
-    if(driverQueryCtxs.get(getSelectedDriver()) == null) {
+    if (driverQueryCtxs.get(getSelectedDriver()) == null) {
       throw new LensException("Could not find Driver Context for selected driver " + getSelectedDriver());
     }
 
-    if(driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlanGenerationError() != null) {
+    if (driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlanGenerationError() != null) {
       throw new LensException("Driver Query Plan of the selected driver is null",
-                              driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlanGenerationError());
+        driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlanGenerationError());
     }
     return driverQueryCtxs.get(getSelectedDriver()).getDriverQueryPlan();
   }
@@ -166,7 +173,7 @@ public class DriverSelectorQueryContext {
   }
 
   public void setSelectedDriverQuery(String driverQuery) {
-    if(driverQueryContextMap != null && driverQueryContextMap.get(getSelectedDriver()) != null) {
+    if (driverQueryContextMap != null && driverQueryContextMap.get(getSelectedDriver()) != null) {
       driverQueryContextMap.get(getSelectedDriver()).setQuery(driverQuery);
     }
   }
@@ -178,26 +185,26 @@ public class DriverSelectorQueryContext {
   public Collection<String> getDriverQueries() {
     List<String> queries = new ArrayList<String>();
     final Collection<DriverQueryContext> values = driverQueryContextMap.values();
-    for(DriverQueryContext ctx : values) {
-        if(ctx.getQuery() != null) {
-            queries.add(ctx.getQuery());
-        }
+    for (DriverQueryContext ctx : values) {
+      if (ctx.getQuery() != null) {
+        queries.add(ctx.getQuery());
+      }
     }
     return queries;
   }
 
   public DriverQueryPlan getDriverQueryPlan(LensDriver driver) {
-    return driverQueryContextMap.get(driver) != null ?
-      driverQueryContextMap.get(driver).getDriverQueryPlan() : null;
+    return driverQueryContextMap.get(driver) != null
+      ? driverQueryContextMap.get(driver).getDriverQueryPlan() : null;
   }
 
   public Configuration getDriverConf(LensDriver driver) {
-    return driverQueryContextMap.get(driver) != null ?
-      driverQueryContextMap.get(driver).getDriverSpecificConf() : null;
+    return driverQueryContextMap.get(driver) != null
+      ? driverQueryContextMap.get(driver).getDriverSpecificConf() : null;
   }
 
   public String getDriverQuery(LensDriver driver) {
-    return driverQueryContextMap.get(driver) != null ?
-      driverQueryContextMap.get(driver).getQuery() : null;
+    return driverQueryContextMap.get(driver) != null
+      ? driverQueryContextMap.get(driver).getQuery() : null;
   }
 }

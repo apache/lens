@@ -29,14 +29,10 @@ public class QueryRunning extends StatusChange {
   /**
    * Instantiates a new query running.
    *
-   * @param eventTime
-   *          the event time
-   * @param prev
-   *          the prev
-   * @param current
-   *          the current
-   * @param handle
-   *          the handle
+   * @param eventTime the event time
+   * @param prev      the prev
+   * @param current   the current
+   * @param handle    the handle
    */
   public QueryRunning(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
     super(eventTime, prev, current, handle);

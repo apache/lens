@@ -30,21 +30,17 @@ public interface QueryRewriter {
   /**
    * Rewrite.
    *
-   * @param queryConf
-   *          the query configuration
-   * @param query
-   *          the query
+   * @param queryConf the query configuration
+   * @param query     the query
    * @return the string
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
-  public String rewrite(String query, Configuration queryConf) throws LensException;
+  String rewrite(String query, Configuration queryConf) throws LensException;
 
   /**
    * Set conf for the rewriter
    *
-   * @param rewriteConf
-   *        Configuration required for rewriter init
+   * @param rewriteConf Configuration required for rewriter init
    */
-  public void init(Configuration rewriteConf);
+  void init(Configuration rewriteConf);
 }

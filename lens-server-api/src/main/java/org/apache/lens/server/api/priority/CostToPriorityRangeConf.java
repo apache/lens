@@ -19,20 +19,20 @@
 package org.apache.lens.server.api.priority;
 
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.Priority;
 
 /**
  * Cost to priority range conf class.
+ *
  * @see RangeConf
  */
 
-public class CostToPriorityRangeConf extends RangeConf<Float, Priority>{
+public class CostToPriorityRangeConf extends RangeConf<Float, Priority> {
   /**
    * Super constructor
-   * @see RangeConf#RangeConf(String)
+   *
    * @param confValue
+   * @see RangeConf#RangeConf(String)
    */
   public CostToPriorityRangeConf(String confValue) {
     super(confValue);
@@ -40,6 +40,7 @@ public class CostToPriorityRangeConf extends RangeConf<Float, Priority>{
 
   /**
    * Parse key method
+   *
    * @param s
    * @return parsed float from string s
    * @see RangeConf#parseKey(String)
@@ -51,6 +52,7 @@ public class CostToPriorityRangeConf extends RangeConf<Float, Priority>{
 
   /**
    * Parse value method
+   *
    * @param s
    * @return parsed Priority from String s
    * @see RangeConf#parseValue(String)
@@ -62,6 +64,7 @@ public class CostToPriorityRangeConf extends RangeConf<Float, Priority>{
 
   /**
    * Default value is "NORMAL". Which implies {@link #get(Comparable)} will always return Priotity.NORMAL
+   *
    * @return "NORMAL"
    */
   @Override
