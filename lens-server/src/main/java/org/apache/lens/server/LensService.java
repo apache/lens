@@ -254,8 +254,10 @@ public abstract class LensService extends CompositeService implements Externaliz
    *          the session handle
    */
   public void acquire(LensSessionHandle sessionHandle) {
-    LOG.debug("Acquiring lens session:" + sessionHandle.getPublicId());
-    getSession(sessionHandle).acquire();
+    if (sessionHandle != null) {
+      LOG.debug("Acquiring lens session:" + sessionHandle.getPublicId());
+      getSession(sessionHandle).acquire();
+    }
   }
 
   /**
@@ -275,8 +277,10 @@ public abstract class LensService extends CompositeService implements Externaliz
    *          the session handle
    */
   public void release(LensSessionHandle sessionHandle) {
-    getSession(sessionHandle).release();
-    LOG.debug("Released lens session:" + sessionHandle.getPublicId());
+    if (sessionHandle != null) {
+      getSession(sessionHandle).release();
+      LOG.debug("Released lens session:" + sessionHandle.getPublicId());
+    }
   }
 
   /**

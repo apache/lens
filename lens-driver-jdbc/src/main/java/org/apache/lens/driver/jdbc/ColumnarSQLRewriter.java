@@ -377,14 +377,15 @@ public class ColumnarSQLRewriter implements QueryRewriter {
             .replaceAll("[(,)]", "");
         String dimJoinKeys = HQLParser.getString((ASTNode) right).toString().replaceAll("\\s+", "")
             .replaceAll("[(,)]", "");
-
-        String dimTableName = dimJoinKeys.substring(0, dimJoinKeys.indexOf("."));
+        String dimTableName = dimJoinKeys.substring(0, dimJoinKeys.indexOf("__"));
         factKeys.append(factJoinKeys).append(",");
 
         // Construct part of subquery by referring join condition
         // fact.fact_key = dim_table.dim_key
         // eg. "fact_key in ( select dim_key from dim_table where "
-        String queryphase1 = factJoinKeys.concat(" in ").concat(" ( ").concat(" select ").concat(dimJoinKeys)
+        String queryphase1 = factJoinKeys.concat(" in ").concat(" ( ").concat(" select ")
+            .concat(dimTableName).concat(" ")
+            .concat(dimJoinKeys.substring(dimJoinKeys.lastIndexOf(".")))
             .concat(" from ").concat(dimTableName).concat(" where ");
 
         getAllFilters(whereAST);
@@ -403,7 +404,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           for (int i = 0; i < setAllFilters.toArray().length; i++) {
             if (setAllFilters.toArray() != null) {
               if (setAllFilters.toArray()[i].toString().matches("(.*)".toString().concat(dimTableName).concat("(.*)"))) {
-                String filters2 = setAllFilters.toArray()[i].toString().concat(" and ");
+                String filters2 = setAllFilters.toArray()[i].toString() ;
+                filters2 = filters2.replaceAll(getTableOrAlias(filters2,"alias"),getTableOrAlias(filters2,"table")).concat(" and ");
                 factFilters.append(filters2);
               }
             }
@@ -421,6 +423,23 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       ASTNode child = (ASTNode) node.getChild(i);
       buildSubqueries(child);
     }
+  }
+  
+  /**
+   * Get the table or alias from the given key string
+   *
+   * @param keyString
+   * @param type
+   * @return
+   */
+
+  public String getTableOrAlias(String keyString, String type) {
+    String ref = "";
+    if (type.equals("table"))
+      ref = keyString.substring(0, keyString.indexOf("__")).replaceAll("[(,)]", "");
+    if (type.equals("alias"))
+      ref = keyString.substring(0, keyString.lastIndexOf(".")).replaceAll("[(,)]", "");
+    return ref;
   }
 
   /*
@@ -644,7 +663,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     if (orderByTree != null) {
       replaceAlias(orderByAST);
-      groupByTree = HQLParser.getString(orderByAST);
+      orderByTree = HQLParser.getString(orderByAST);
     }
     if (havingTree != null) {
       replaceAlias(havingAST);
@@ -723,7 +742,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     //for subquery with count function should be replaced with sum in outer query
     if (selectTree.toLowerCase().matches("(.*)count\\((.*)")) {
       selectTree = selectTree.replaceAll("count\\(", "sum\\(");
-    }  
+    }
     // construct query with fact sub query
     constructQuery(selectTree, fromTree, whereTree, groupByTree, havingTree, orderByTree, limit, joinTree);
 
@@ -771,18 +790,20 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     String newAlias = "";
     String table = "";
+    String dbAndTable = "";
     if (TOK_TABREF == from.getToken().getType()) {
       ASTNode tabName = (ASTNode) from.getChild(0);
       if (tabName.getChildCount() == 2) {
-        table = tabName.getChild(0).getText() + "_" + tabName.getChild(1).getText();
+        dbAndTable = tabName.getChild(0).getText() + "_" + tabName.getChild(1).getText();
+        table = tabName.getChild(1).getText();
       } else {
         table = tabName.getChild(0).getText();
       }
       if (from.getChildCount() > 1) {
         ASTNode alias = (ASTNode) from.getChild(1);
-        newAlias = table + "_" + from.getChild(1).getText();
-        mapAliases.put(alias.getText(), newAlias);
-        alias.getToken().setText(newAlias);
+        newAlias = dbAndTable + "_" + from.getChild(1).getText();
+        mapAliases.put(alias.getText(), table + "__" + newAlias);
+        alias.getToken().setText(table + "__" + newAlias);
       }
     }
     for (int i = 0; i < from.getChildCount(); i++) {
