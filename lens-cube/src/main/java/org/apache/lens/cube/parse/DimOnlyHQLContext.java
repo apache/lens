@@ -36,21 +36,9 @@ class DimOnlyHQLContext extends DimHQLContext {
 
   public static Log LOG = LogFactory.getLog(DimOnlyHQLContext.class.getName());
 
-  private final CubeQueryContext query;
-
-  public CubeQueryContext getQuery() {
-    return query;
-  }
-
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
-    super(dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
+    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
-    this.query = query;
-  }
-
-  protected void setMissingExpressions() throws SemanticException {
-    setFrom(getFromString());
-    super.setMissingExpressions();
   }
 
   public String toHQL() throws SemanticException {
@@ -66,14 +54,11 @@ class DimOnlyHQLContext extends DimHQLContext {
     }
   }
 
-  private String getFromString() throws SemanticException {
-    String fromString = null;
-    String fromTable = getFromTable();
+  protected String getFromString() throws SemanticException {
+    String fromString = getFromTable();
     if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       fromString =
-          query.getAutoJoinCtx().getFromString(fromTable, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
-    } else {
-      fromString = fromTable;
+          query.getAutoJoinCtx().getFromString(fromString, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
     }
     return fromString;
   }
