@@ -758,7 +758,6 @@ public class QueryServiceResource {
   @Produces({ MediaType.APPLICATION_OCTET_STREAM })
   public Response getHttpResultSet(@QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("queryHandle") String queryHandle) {
-    checkSessionId(sessionid);
     try {
       return queryServer.getHttpResultSet(sessionid, getQueryHandle(queryHandle));
     } catch (LensException e) {
