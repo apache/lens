@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,10 +57,20 @@ class DimOnlyHQLContext extends DimHQLContext {
 
   protected String getFromString() throws SemanticException {
     String fromString = getFromTable();
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+    if (query.isAutoJoinResolved()) {
       fromString =
           query.getAutoJoinCtx().getFromString(fromString, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
     }
     return fromString;
+  }
+
+  @Override
+  protected Set<Dimension> getQueriedDimSet() {
+    return getDimsToQuery().keySet();
+  }
+
+  @Override
+  protected CandidateFact getQueriedFact() {
+    return null;
   }
 }

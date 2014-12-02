@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -60,7 +61,20 @@ abstract class DimHQLContext extends SimpleHQLContext {
     setWhere(genWhereClauseWithDimPartitions(where));
   }
 
-  protected abstract String getFromString() throws SemanticException;
+  protected String getFromString() throws SemanticException {
+    String fromString = getFromTable();
+    if (query.isAutoJoinResolved()) {
+      fromString =
+        query.getAutoJoinCtx().getFromString(fromString, getQueriedFact(), getQueriedDimSet(), getDimsToQuery(), query);
+    }
+    return fromString;
+  }
+
+  protected abstract Set<Dimension> getQueriedDimSet();
+
+  protected abstract CandidateFact getQueriedFact();
+
+  protected abstract String getFromTable() throws SemanticException;
 
   public Map<Dimension, CandidateDim> getDimsToQuery() {
     return dimsToQuery;

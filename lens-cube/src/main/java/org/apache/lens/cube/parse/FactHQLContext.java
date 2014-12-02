@@ -47,12 +47,14 @@ public class FactHQLContext extends DimHQLContext {
     LOG.info("factDims:" + factDims + " for fact:" + fact);
   }
 
-  protected String getFromString() throws SemanticException {
-    String fromString = getFromTable();
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
-      fromString = query.getAutoJoinCtx().getFromString(fromString, fact, factDims, getDimsToQuery(), query);
-    }
-    return fromString;
+  @Override
+  protected Set<Dimension> getQueriedDimSet() {
+    return factDims;
+  }
+
+  @Override
+  protected CandidateFact getQueriedFact() {
+    return fact;
   }
 
   protected String getFromTable() throws SemanticException {
