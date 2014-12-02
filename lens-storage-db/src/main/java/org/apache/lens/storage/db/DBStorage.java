@@ -18,34 +18,35 @@
  */
 package org.apache.lens.storage.db;
 
-import java.util.List;
-import java.util.Map;
-
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.lens.cube.metadata.Storage;
 import org.apache.lens.cube.metadata.StoragePartitionDesc;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Class DBStorage.
  */
 public class DBStorage extends Storage {
 
-  /** The Constant DB_URL. */
+  /**
+   * The Constant DB_URL.
+   */
   public static final String DB_URL = "lens.storage.db.url";
 
-  /** The db url. */
+  /**
+   * The db url.
+   */
   private String dbUrl = null;
 
   /**
    * Instantiates a new DB storage.
    *
-   * @param dbUrl
-   *          the db url
-   * @param name
-   *          the name
-   * @param properties
-   *          the properties
+   * @param dbUrl      the db url
+   * @param name       the name
+   * @param properties the properties
    */
   protected DBStorage(String dbUrl, String name, Map<String, String> properties) {
     super(name, properties);
@@ -56,8 +57,7 @@ public class DBStorage extends Storage {
   /**
    * Instantiates a new DB storage.
    *
-   * @param name
-   *          the name
+   * @param name the name
    */
   public DBStorage(String name) {
     this(name, null);
@@ -66,10 +66,8 @@ public class DBStorage extends Storage {
   /**
    * Instantiates a new DB storage.
    *
-   * @param name
-   *          the name
-   * @param properties
-   *          the properties
+   * @param name       the name
+   * @param properties the properties
    */
   protected DBStorage(String name, Map<String, String> properties) {
     super(name, properties);
@@ -81,8 +79,7 @@ public class DBStorage extends Storage {
   /**
    * Instantiates a new DB storage.
    *
-   * @param hiveTable
-   *          the hive table
+   * @param hiveTable the hive table
    */
   public DBStorage(Table hiveTable) {
     super(hiveTable);

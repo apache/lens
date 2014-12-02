@@ -18,12 +18,6 @@
  */
 package org.apache.lens.storage.db;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.AlreadyExistsException;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -32,47 +26,54 @@ import org.apache.hadoop.hive.metastore.api.NoSuchObjectException;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
-import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.Storage;
-import org.apache.lens.cube.metadata.StorageTableDesc;
-import org.apache.lens.cube.metadata.UpdatePeriod;
-import org.apache.lens.storage.db.DBStorage;
-import org.apache.lens.storage.db.DBStorageHandler;
+import org.apache.lens.cube.metadata.*;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * The Class TestDBStorage.
  */
 public class TestDBStorage {
 
-  /** The D b_ storag e1. */
-  public static String DB_STORAGE1 = "db1";
+  /**
+   * The D b_ storag e1.
+   */
+  public static final String DB_STORAGE1 = "db1";
 
-  /** The D b_ storag e2. */
-  public static String DB_STORAGE2 = "db2";
+  /**
+   * The D b_ storag e2.
+   */
+  public static final String DB_STORAGE2 = "db2";
 
-  /** The conf. */
+  /**
+   * The conf.
+   */
   HiveConf conf = new HiveConf(this.getClass());
 
-  /** The db1. */
+  /**
+   * The db1.
+   */
   Storage db1 = new DBStorage(DB_STORAGE1, DB_STORAGE1, null);
 
-  /** The db2. */
+  /**
+   * The db2.
+   */
   Storage db2 = new DBStorage(DB_STORAGE2, DB_STORAGE2, null);
 
   /**
    * Setup.
    *
-   * @throws AlreadyExistsException
-   *           the already exists exception
-   * @throws HiveException
-   *           the hive exception
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws AlreadyExistsException the already exists exception
+   * @throws HiveException          the hive exception
+   * @throws IOException            Signals that an I/O exception has occurred.
    */
   @BeforeTest
   public void setup() throws AlreadyExistsException, HiveException, IOException {
@@ -87,10 +88,8 @@ public class TestDBStorage {
   /**
    * Tear down.
    *
-   * @throws HiveException
-   *           the hive exception
-   * @throws NoSuchObjectException
-   *           the no such object exception
+   * @throws HiveException         the hive exception
+   * @throws NoSuchObjectException the no such object exception
    */
   @AfterTest
   public void tearDown() throws HiveException, NoSuchObjectException {
@@ -101,8 +100,7 @@ public class TestDBStorage {
   /**
    * Test db storage.
    *
-   * @throws HiveException
-   *           the hive exception
+   * @throws HiveException the hive exception
    */
   @Test(groups = "first")
   public void testDBStorage() throws HiveException {
@@ -118,8 +116,7 @@ public class TestDBStorage {
   /**
    * Test cube dim.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test(dependsOnGroups = "first")
   public void testCubeDim() throws Exception {

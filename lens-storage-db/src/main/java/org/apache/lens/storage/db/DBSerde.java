@@ -18,14 +18,6 @@
  */
 package org.apache.lens.storage.db;
 
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -37,12 +29,22 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
+
 /**
  * The Class DBSerde.
  */
 public class DBSerde extends AbstractSerDe {
 
-  /** The cached object inspector. */
+  /**
+   * The cached object inspector.
+   */
   private ObjectInspector cachedObjectInspector;
 
   /*
@@ -86,7 +88,7 @@ public class DBSerde extends AbstractSerDe {
     }
 
     cachedObjectInspector = ObjectInspectorFactory
-        .getColumnarStructObjectInspector(columnNames, columnObjectInspectors);
+      .getColumnarStructObjectInspector(columnNames, columnObjectInspectors);
   }
 
   @Override

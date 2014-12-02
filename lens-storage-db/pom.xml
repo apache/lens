@@ -19,50 +19,51 @@
     under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-	<name>Lens DB storage</name>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <name>Lens DB storage</name>
 
-  <parent>
-    <artifactId>lens-parent</artifactId>
-    <groupId>org.apache.lens</groupId>
-    <version>2.0.0-SNAPSHOT</version>
-  </parent>
+    <parent>
+        <artifactId>lens-parent</artifactId>
+        <groupId>org.apache.lens</groupId>
+        <version>2.0.0-SNAPSHOT</version>
+    </parent>
 
-  <artifactId>lens-storage-db</artifactId>
-  <packaging>jar</packaging>
-  <description> DB storage implementation</description>
+    <artifactId>lens-storage-db</artifactId>
+    <packaging>jar</packaging>
+    <description>DB storage implementation</description>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.apache.lens</groupId>
-      <artifactId>lens-api</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.lens</groupId>
-      <artifactId>lens-cube</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-       <groupId>org.apache.hive</groupId>
-       <artifactId>hive-exec</artifactId>
-    </dependency>
-    <dependency>
-       <groupId>org.testng</groupId>
-       <artifactId>testng</artifactId>
-    </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-client</artifactId>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-mapreduce-client-core</artifactId>
-      </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.lens</groupId>
+            <artifactId>lens-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.lens</groupId>
+            <artifactId>lens-cube</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-exec</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+        </dependency>
+    </dependencies>
 </project>    

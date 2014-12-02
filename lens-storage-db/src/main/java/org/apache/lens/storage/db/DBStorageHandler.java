@@ -18,8 +18,6 @@
  */
 package org.apache.lens.storage.db;
 
-import java.util.Map;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -33,13 +31,17 @@ import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
 
+import java.util.Map;
+
 /**
  * The Class DBStorageHandler.
  */
 @SuppressWarnings("deprecation")
 public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
-  /** The conf. */
+  /**
+   * The conf.
+   */
   private Configuration conf;
 
   /*
