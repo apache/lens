@@ -19,6 +19,12 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
+import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
+import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
+import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
+import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,8 +38,6 @@ import org.apache.lens.cube.parse.StorageUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-
-import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 public class TestExpressionResolver extends TestQueryRewrite {
 
@@ -132,7 +136,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
         rewrite("select TC.avgmsr from testCube TC" + " where " + twoDaysRange + " and TC.substrexpr != 'XYZ'", conf);
     expected =
         getExpectedQuery("tc", "select avg(tc.msr1 + tc.msr2) FROM ", null, " and substr(tc.dim1, 3) != 'XYZ'",
-            getWhereForHourly2days(new String[]{TEST_CUBE_NAME, "tc"}, "C1_testfact2_raw"));
+            getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // expression with column alias
@@ -141,8 +145,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
             + " and subdim1 != 'XYZ'", conf);
     expected =
         getExpectedQuery("tc", "select substr(tc.dim1, 3) subdim1, avg(tc.msr1 + tc.msr2) FROM ", null,
-            " and subdim1 != 'XYZ' group by substr(tc.dim1, 3)",
-          getWhereForHourly2days(new String[]{TEST_CUBE_NAME, "tc"}, "C1_testfact2_raw"));
+            " and subdim1 != 'XYZ' group by substr(tc.dim1, 3)", getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // expression with groupby
@@ -188,7 +191,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
     expected =
         getExpectedQuery("tc", "select concat(cd.name, \":\", sd.name)," + " avg(tc.msr1 + tc.msr2) FROM ", joinExpr,
             null, " and substr(tc.dim1, 3) != 'XYZ'" + " group by concat(cd.name, \":\", sd.name)", null,
-            getWhereForHourly2days(new String[]{TEST_CUBE_NAME, "tc"}, "C1_testfact2_raw"));
+            getWhereForHourly2days("tc", "C1_testfact2_raw"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // expression in join clause
