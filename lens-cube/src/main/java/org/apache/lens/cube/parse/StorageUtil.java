@@ -18,20 +18,11 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.StorageConstants;
+
+import java.util.*;
 
 class StorageUtil {
   private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
@@ -60,10 +51,10 @@ class StorageUtil {
   public static String getNotLatestClauseForDimensions(String alias, Set<String> timedDimensions) {
     StringBuilder sb = new StringBuilder();
     String sep = "";
-    for(String timePartCol: timedDimensions) {
-        sb.append(sep).append(alias).append(".").append(timePartCol).
-          append("!=").append(StorageConstants.LATEST_PARTITION_VALUE);
-        sep = " AND ";
+    for (String timePartCol : timedDimensions) {
+      sb.append(sep).append(alias).append(".").append(timePartCol).
+        append("!=").append(StorageConstants.LATEST_PARTITION_VALUE);
+      sep = " AND ";
     }
     return sb.toString();
   }
@@ -71,11 +62,11 @@ class StorageUtil {
   public static String joinWithAnd(String... clauses) {
     StringBuilder sb = new StringBuilder();
     String sep = "((";
-    for(String clause: clauses) {
-      if(clause != null && !clause.isEmpty()) {
+    for (String clause : clauses) {
+      if (clause != null && !clause.isEmpty()) {
         sb
-        .append(sep)
-        .append(clause);
+          .append(sep)
+          .append(clause);
         sep = ") AND (";
       }
     }
@@ -86,16 +77,13 @@ class StorageUtil {
 
   /**
    * Get minimal set of storages which cover the queried partitions
-   * 
-   * @param answeringParts
-   *          Map from partition to set of answering storage tables
-   * @param minimalStorageTables
-   *          from storage to covering parts
-   * 
+   *
+   * @param answeringParts       Map from partition to set of answering storage tables
+   * @param minimalStorageTables from storage to covering parts
    * @return true if multi table select is enabled, false otherwise
    */
   static boolean getMinimalAnsweringTables(List<FactPartition> answeringParts,
-      Map<String, Set<FactPartition>> minimalStorageTables) {
+    Map<String, Set<FactPartition>> minimalStorageTables) {
     // map from storage table to the partitions it covers
     Map<String, Set<FactPartition>> invertedMap = new HashMap<String, Set<FactPartition>>();
     boolean enableMultiTableSelect = true;
@@ -134,7 +122,7 @@ class StorageUtil {
   }
 
   private static Map<String, Set<FactPartition>> getMaxCoveringStorage(
-      final Map<String, Set<FactPartition>> storageCoveringMap, Set<FactPartition> queriedParts) {
+    final Map<String, Set<FactPartition>> storageCoveringMap, Set<FactPartition> queriedParts) {
     int coveringcount = 0;
     int maxCoveringCount = 0;
     String maxCoveringStorage = null;

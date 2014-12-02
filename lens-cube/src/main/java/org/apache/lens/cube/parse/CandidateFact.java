@@ -44,9 +44,7 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeFactTable;
-import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
@@ -386,16 +384,22 @@ class CandidateFact implements CandidateTable {
 
   public Set<String> getTimePartCols() throws HiveException {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
-    Set<String> timePartCols = new HashSet<String>();
+    Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
     if(!dbResolved) {
       singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
     }
     for(FieldSchema fs: Hive.get().getTable(singleStorageTable).getPartitionKeys()) {
-      if(cubeTimeDimensions.contains(fs.getName())) {
-        timePartCols.add(fs.getName());
+      String timeDimOfPartitionKey = null;
+      if(baseTable instanceof Cube) {
+        timeDimOfPartitionKey = ((Cube) baseTable).getTimeDimOfPartitionColumn(fs.getName());
+      } else if (baseTable instanceof DerivedCube) {
+        timeDimOfPartitionKey = ((DerivedCube) baseTable).getParent().getTimeDimOfPartitionColumn(fs.getName());
+      }
+      if(cubeTimeDimensions.contains(timeDimOfPartitionKey)) {
+        timePartDimensions.add(fs.getName());
       }
     }
-    return timePartCols;
+    return timePartDimensions;
   }
 }
