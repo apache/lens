@@ -28,6 +28,7 @@ import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
 import static org.apache.lens.cube.parse.CubeTestSetup.twodaysBack;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.parse.CubeQueryConfUtil;
@@ -51,7 +52,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDenormsAsDirectFields() throws SemanticException, ParseException {
+  public void testDenormsAsDirectFields() throws HiveException, ParseException {
     // denorm fields directly available
     String twoDaysITRange =
         "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(twodaysBack) + "','"
@@ -70,7 +71,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     try {
       hqlQuery = rewrite("select dim2bignew, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
       Assert.fail();
-    } catch (SemanticException e) {
+    } catch (HiveException e) {
       e.printStackTrace();
       th = e;
     }
@@ -97,7 +98,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDenormsWithJoins() throws SemanticException, ParseException {
+  public void testDenormsWithJoins() throws HiveException, ParseException {
     // all following queries use joins to get denorm fields
     Configuration tconf = new Configuration(this.conf);
     tconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1");
@@ -150,7 +151,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     try {
       hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysRange, tconf);
       Assert.fail();
-    } catch (SemanticException e) {
+    } catch (HiveException e) {
       th = e;
     }
     Assert.assertNotNull(th);

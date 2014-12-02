@@ -665,7 +665,7 @@ public class CubeQueryContext {
 
   private HQLContextInterface hqlContext;
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws HiveException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
     if (autoJoinCtx != null) {
@@ -751,7 +751,7 @@ public class CubeQueryContext {
     }
   }
 
-  public ASTNode toAST(Context ctx) throws SemanticException {
+  public ASTNode toAST(Context ctx) throws HiveException {
     String hql = toHQL();
     ParseDriver pd = new ParseDriver();
     ASTNode tree;

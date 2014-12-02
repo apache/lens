@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
@@ -42,7 +43,7 @@ class DimOnlyHQLContext extends DimHQLContext {
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws HiveException {
     return query.getInsertClause() + super.toHQL();
   }
 

@@ -26,6 +26,7 @@ import static org.apache.lens.cube.parse.CubeTestSetup.twodaysBack;
 import java.util.List;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
@@ -54,7 +55,7 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
   public void closeInstance() throws Exception {
   }
 
-  public static String rewrite(CubeQueryRewriter driver, String query) throws SemanticException, ParseException {
+  public static String rewrite(CubeQueryRewriter driver, String query) throws HiveException, ParseException {
     CubeQueryContext rewrittenQuery = driver.rewrite(query);
     return rewrittenQuery.toHQL();
   }

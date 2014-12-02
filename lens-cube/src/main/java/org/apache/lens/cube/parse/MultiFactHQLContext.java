@@ -26,6 +26,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
@@ -52,7 +53,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     this.factDimMap = factDimMap;
   }
 
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws HiveException {
     setSelect(getSelectString());
     setFrom(getFromString());
     setWhere(getWhereString());
@@ -77,7 +78,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return null;
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws HiveException {
     return query.getInsertClause() + super.toHQL();
   }
 
@@ -115,7 +116,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return facts;
   }
 
-  private String getFromString() throws SemanticException {
+  private String getFromString() throws HiveException {
     StringBuilder fromBuilder = new StringBuilder();
     int aliasCount = 1;
     Iterator<CandidateFact> iter = facts.iterator();

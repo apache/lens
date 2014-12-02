@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.Context;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -98,7 +99,7 @@ public class TestRewriting {
    * @throws ParseException
    *           the parse exception
    */
-  private CubeQueryContext getMockedCubeContext(String query) throws SemanticException, ParseException {
+  private CubeQueryContext getMockedCubeContext(String query) throws HiveException, ParseException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
     Mockito.when(context.toAST(any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4)));
@@ -116,7 +117,7 @@ public class TestRewriting {
    * @throws ParseException
    *           the parse exception
    */
-  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws SemanticException, ParseException {
+  private CubeQueryContext getMockedCubeContext(ASTNode ast) throws HiveException, ParseException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     if (ast.getToken().getType() == HiveParser.TOK_QUERY) {
       if (((ASTNode) ast.getChild(0)).getToken().getType() == HiveParser.KW_CUBE) {

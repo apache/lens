@@ -78,7 +78,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
   protected void setMissingExpressions() throws HiveException {
   }
 
-  public String toHQL() throws SemanticException {
+  public String toHQL() throws HiveException {
     setMissingExpressions();
     String qfmt = getQueryFormat();
     Object[] queryTreeStrings = getQueryTreeStrings();

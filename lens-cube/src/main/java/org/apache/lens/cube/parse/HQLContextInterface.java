@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
@@ -31,7 +32,7 @@ public interface HQLContextInterface {
    * @return query string
    * @throws SemanticException
    */
-  public String toHQL() throws SemanticException;
+  public String toHQL() throws HiveException;
 
   /**
    * Get select expression.
