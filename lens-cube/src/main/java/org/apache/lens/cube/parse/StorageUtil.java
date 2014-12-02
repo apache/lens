@@ -88,10 +88,12 @@ class StorageUtil {
     StringBuilder sb = new StringBuilder();
     String sep = "((";
     for(String clause: clauses) {
-      sb
+      if(clause != null && !clause.isEmpty()) {
+        sb
         .append(sep)
         .append(clause);
-      sep = ") AND (";
+        sep = ") AND (";
+      }
     }
     return sb
       .append("))")

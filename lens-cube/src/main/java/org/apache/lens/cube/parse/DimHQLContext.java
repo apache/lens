@@ -63,10 +63,12 @@ abstract class DimHQLContext extends SimpleHQLContext {
   protected void setMissingExpressions() throws HiveException {
     setFrom(getFromString());
     setWhere(joinWithAnd(
-      getNotLatestClauseForDimensions(query),
+      getPostSelectionWhereClause(),
       genWhereClauseWithDimPartitions(where)
     ));
   }
+
+  protected abstract String getPostSelectionWhereClause() throws HiveException;
 
   protected String getFromString() throws SemanticException {
     String fromString = getFromTable();

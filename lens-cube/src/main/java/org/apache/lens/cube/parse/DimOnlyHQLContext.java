@@ -56,6 +56,11 @@ class DimOnlyHQLContext extends DimHQLContext {
     }
   }
 
+  @Override
+  protected String getPostSelectionWhereClause() throws HiveException {
+    return null;
+  }
+
   protected String getFromString() throws SemanticException {
     String fromString = getFromTable();
     if (query.isAutoJoinResolved()) {

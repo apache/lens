@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
@@ -45,6 +46,14 @@ public class FactHQLContext extends DimHQLContext {
     this.fact = fact;
     this.factDims = factDims;
     LOG.info("factDims:" + factDims + " for fact:" + fact);
+  }
+
+  @Override
+  protected String getPostSelectionWhereClause() throws HiveException {
+    return StorageUtil.getNotLatestClauseForDimensions(
+      query.getAliasForTabName(query.getCube().getName()),
+      fact.getTimePartCols()
+    );
   }
 
   @Override

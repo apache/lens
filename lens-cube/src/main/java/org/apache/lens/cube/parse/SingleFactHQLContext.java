@@ -23,6 +23,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -97,5 +98,13 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
     } else {
       return getQuery().getQBFromString(fact, getDimsToQuery());
     }
+  }
+
+  @Override
+  protected String getPostSelectionWhereClause() throws HiveException {
+    return StorageUtil.getNotLatestClauseForDimensions(
+      query.getAliasForTabName(query.getCube().getName()),
+      fact.getTimePartCols()
+      );
   }
 }

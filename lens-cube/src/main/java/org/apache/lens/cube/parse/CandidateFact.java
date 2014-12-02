@@ -36,6 +36,9 @@ import org.antlr.runtime.CommonToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -379,5 +382,20 @@ class CandidateFact implements CandidateTable {
       return HQLParser.getString(groupbyAST);
     }
     return null;
+  }
+
+  public Set<String> getTimePartCols() throws HiveException {
+    Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
+    Set<String> timePartCols = new HashSet<String>();
+    String singleStorageTable = storageTables.iterator().next();
+    if(!dbResolved) {
+      singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
+    }
+    for(FieldSchema fs: Hive.get().getTable(singleStorageTable).getPartitionKeys()) {
+      if(cubeTimeDimensions.contains(fs.getName())) {
+        timePartCols.add(fs.getName());
+      }
+    }
+    return timePartCols;
   }
 }

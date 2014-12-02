@@ -98,7 +98,6 @@ public class CubeQueryContext {
       new HashMap<CubeFactTable, List<CandidateTablePruneCause>>();
   private Map<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>> dimPruningMsgs =
       new HashMap<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>>();
-  private String queriedFactStorageTables;
 
   public CubeQueryContext(ASTNode ast, QB qb, HiveConf conf) throws SemanticException {
     this.ast = ast;
@@ -182,10 +181,6 @@ public class CubeQueryContext {
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
-  }
-
-  public String getQueriedFactStorageTablesString() {
-    return queriedFactStorageTables;
   }
 
   // Holds the context of optional dimension
@@ -493,8 +488,6 @@ public class CubeQueryContext {
     if (getJoinTree() == null) {
       if (cube != null) {
         fromString = fact.getStorageString(getAliasForTabName(cube.getName()));
-        // assume all have same schema, but still keeping all here.
-        this.queriedFactStorageTables = fromString.trim().split(" ")[0];
       } else {
         if (dimensions.size() != 1) {
           throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
