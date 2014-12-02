@@ -29,7 +29,6 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
-import static org.apache.lens.cube.parse.StorageUtil.getNotLatestClauseForDimensions;
 import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
 /**

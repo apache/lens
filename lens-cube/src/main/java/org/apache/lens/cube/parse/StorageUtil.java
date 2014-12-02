@@ -56,23 +56,7 @@ class StorageUtil {
     }
     return partStr.toString();
   }
-  public static String getNotLatestClauseForDimensions(CubeQueryContext query) throws HiveException {
-    StringBuilder sb = new StringBuilder();
-    String sep = "";
-    Set<String> cubeTimedDimensions = query.getCube().getTimedDimensions();
-    String oneTable = query.getQueriedFactStorageTablesString().split(",")[0];
-    for(FieldSchema fs: Hive.get().getTable(oneTable).getPartitionKeys()) {
-      if(cubeTimedDimensions.contains(fs.getName())) {
-        sb
-          .append(sep)
-          .append(query.getAliasForTabName(query.getCube().getName()))
-          .append(".").append(fs.getName()).append("!=")
-          .append(StorageConstants.LATEST_PARTITION_VALUE);
-        sep = " AND ";
-      }
-    }
-    return sb.toString();
-  }
+
   public static String getNotLatestClauseForDimensions(String alias, Set<String> timedDimensions) {
     StringBuilder sb = new StringBuilder();
     String sep = "";
