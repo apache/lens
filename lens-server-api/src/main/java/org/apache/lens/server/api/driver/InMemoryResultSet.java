@@ -18,13 +18,13 @@
  */
 package org.apache.lens.server.api.driver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.InMemoryQueryResult;
 import org.apache.lens.api.query.QueryResult;
 import org.apache.lens.api.query.ResultRow;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The Class InMemoryResultSet.
@@ -35,8 +35,7 @@ public abstract class InMemoryResultSet extends LensResultSet {
    * Whether there is another result row available.
    *
    * @return true if next row if available, false otherwise
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public abstract boolean hasNext() throws LensException;
 
@@ -44,8 +43,7 @@ public abstract class InMemoryResultSet extends LensResultSet {
    * Read the next result row.
    *
    * @return The row as list of object
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public abstract ResultRow next() throws LensException;
 

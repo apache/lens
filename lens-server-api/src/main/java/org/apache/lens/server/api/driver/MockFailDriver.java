@@ -20,8 +20,6 @@ package org.apache.lens.server.api.driver;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
-import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.MockDriver;
 
 
 public class MockFailDriver extends MockDriver {

@@ -18,8 +18,6 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.lens.server.api.query.QueryContext;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -43,77 +41,107 @@ import lombok.ToString;
 @ToString
 public class FinishedLensQuery {
 
-  /** The handle. */
+  /**
+   * The handle.
+   */
   @Getter
   @Setter
   private String handle;
 
-  /** The user query. */
+  /**
+   * The user query.
+   */
   @Getter
   @Setter
   private String userQuery;
 
-  /** The submitter. */
+  /**
+   * The submitter.
+   */
   @Getter
   @Setter
   private String submitter;
 
-  /** The submission time. */
+  /**
+   * The submission time.
+   */
   @Getter
   @Setter
   private long submissionTime;
 
-  /** The start time. */
+  /**
+   * The start time.
+   */
   @Getter
   @Setter
   private long startTime;
 
-  /** The end time. */
+  /**
+   * The end time.
+   */
   @Getter
   @Setter
   private long endTime;
 
-  /** The result. */
+  /**
+   * The result.
+   */
   @Getter
   @Setter
   private String result;
 
-  /** The status. */
+  /**
+   * The status.
+   */
   @Getter
   @Setter
   private String status;
 
-  /** The metadata. */
+  /**
+   * The metadata.
+   */
   @Getter
   @Setter
   private String metadata;
 
-  /** The rows. */
+  /**
+   * The rows.
+   */
   @Getter
   @Setter
   private int rows;
 
-  /** The error message. */
+  /**
+   * The error message.
+   */
   @Getter
   @Setter
   private String errorMessage;
 
-  /** The driver start time. */
+  /**
+   * The driver start time.
+   */
   @Getter
   @Setter
   private long driverStartTime;
 
-  /** The driver end time. */
+  /**
+   * The driver end time.
+   */
   @Getter
   @Setter
   private long driverEndTime;
 
-  /** The metadata class. */
+  /**
+   * The metadata class.
+   */
   @Getter
   @Setter
   private String metadataClass;
 
-  /** The query name. */
+  /**
+   * The query name.
+   */
   @Getter
   @Setter
   private String queryName;
@@ -128,8 +156,7 @@ public class FinishedLensQuery {
   /**
    * Instantiates a new finished lens query.
    *
-   * @param ctx
-   *          the ctx
+   * @param ctx the ctx
    */
   public FinishedLensQuery(QueryContext ctx) {
     this.handle = ctx.getQueryHandle().toString();

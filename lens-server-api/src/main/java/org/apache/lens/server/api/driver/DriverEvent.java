@@ -25,16 +25,16 @@ import org.apache.lens.server.api.events.LensEvent;
  */
 public abstract class DriverEvent extends LensEvent {
 
-  /** The driver. */
+  /**
+   * The driver.
+   */
   private final LensDriver driver;
 
   /**
    * Instantiates a new driver event.
    *
-   * @param eventTime
-   *          the event time
-   * @param driver
-   *          the driver
+   * @param eventTime the event time
+   * @param driver    the driver
    */
   public DriverEvent(long eventTime, LensDriver driver) {
     super(eventTime);

@@ -32,32 +32,45 @@ import java.io.Serializable;
 import java.util.Collection;
 
 public abstract class AbstractQueryContext implements Serializable {
-  /** The Constant LOG */
+  /**
+   * The Constant LOG
+   */
   public static final Log LOG = LogFactory.getLog(AbstractQueryContext.class);
 
-  /** The user query. */
+  /**
+   * The user query.
+   */
   @Getter
   protected String userQuery;
 
-  /** The merged Query conf. */
-  @Getter @Setter
-  transient protected Configuration conf;
+  /**
+   * The merged Query conf.
+   */
+  @Getter
+  @Setter
+  protected transient Configuration conf;
 
-  /** The query conf. */
+  /**
+   * The query conf.
+   */
   @Getter
   protected LensConf lensConf;
 
-  /** The driver ctx */
+  /**
+   * The driver ctx
+   */
   @Getter
   @Setter
-  transient protected DriverSelectorQueryContext driverContext;
+  protected transient DriverSelectorQueryContext driverContext;
 
-  /** The selected Driver query. */
+  /**
+   * The selected Driver query.
+   */
   @Getter
   protected String driverQuery;
 
   protected AbstractQueryContext(final String query, final LensConf qconf, final Configuration conf, final
-    Collection<LensDriver> drivers) {
+  Collection<LensDriver> drivers) {
     driverContext = new DriverSelectorQueryContext(query, conf, drivers);
     userQuery = query;
     this.lensConf = qconf;
@@ -65,25 +78,27 @@ public abstract class AbstractQueryContext implements Serializable {
     this.driverQuery = query;
   }
 
-  /** Wrapper method for convenience on driver context
+  /**
+   * Wrapper method for convenience on driver context
    *
    * @return the selected driver's query
    */
   public String getSelectedDriverQuery() {
-    if(driverQuery != null) {
+    if (driverQuery != null) {
       return driverQuery;
-    } else if(driverContext != null) {
+    } else if (driverContext != null) {
       return driverContext.getSelectedDriverQuery();
     }
     return null;
   }
 
-  /** Wrapper method for convenience on driver context
+  /**
+   * Wrapper method for convenience on driver context
    *
    * @return the selected driver's conf
    */
   public Configuration getSelectedDriverConf() {
-    if(driverContext != null) {
+    if (driverContext != null) {
       return driverContext.getSelectedDriverConf();
     }
     return null;
@@ -91,43 +106,48 @@ public abstract class AbstractQueryContext implements Serializable {
 
   /**
    * Sets the selected driver query for persistence and also in the driver context
+   *
    * @param driverQuery
    */
   public void setSelectedDriverQuery(String driverQuery) {
     this.driverQuery = driverQuery;
-    if(driverContext != null) {
+    if (driverContext != null) {
       driverContext.setSelectedDriverQuery(driverQuery);
     }
   }
 
-  /** Wrapper method for convenience on driver context
-   * @param driver  Lens driver
+  /**
+   * Wrapper method for convenience on driver context
+   *
+   * @param driver Lens driver
    */
 
   public void setSelectedDriver(LensDriver driver) {
-    if(driverContext != null) {
+    if (driverContext != null) {
       driverContext.setSelectedDriver(driver);
       driverQuery = driverContext.getSelectedDriverQuery();
     }
   }
 
-  /** Wrapper method for convenience on driver context
+  /**
+   * Wrapper method for convenience on driver context
    *
    * @return the selected driver
    */
   public LensDriver getSelectedDriver() {
-    if(driverContext != null) {
+    if (driverContext != null) {
       return driverContext.getSelectedDriver();
     }
     return null;
   }
 
-  /** Wrapper method for convenience on driver context
+  /**
+   * Wrapper method for convenience on driver context
    *
    * @return the selected driver
    */
   public DriverQueryPlan getSelectedDriverQueryPlan() throws LensException {
-    if(driverContext != null) {
+    if (driverContext != null) {
       return driverContext.getSelectedDriverQueryPlan();
     }
     return null;

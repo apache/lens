@@ -18,19 +18,20 @@
  */
 package org.apache.lens.server.api.driver;
 
-import java.io.Serializable;
-
-import org.apache.lens.api.query.QueryStatus;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.lens.api.query.QueryStatus;
+
+import java.io.Serializable;
 
 /**
  * The Class DriverQueryStatus.
  */
 public class DriverQueryStatus implements Serializable {
 
-  /** The Constant serialVersionUID. */
+  /**
+   * The Constant serialVersionUID.
+   */
   private static final long serialVersionUID = 1L;
 
   /**
@@ -38,67 +39,99 @@ public class DriverQueryStatus implements Serializable {
    */
   public enum DriverQueryState {
 
-    /** The new. */
+    /**
+     * The new.
+     */
     NEW,
 
-    /** The initialized. */
+    /**
+     * The initialized.
+     */
     INITIALIZED,
 
-    /** The pending. */
+    /**
+     * The pending.
+     */
     PENDING,
 
-    /** The running. */
+    /**
+     * The running.
+     */
     RUNNING,
 
-    /** The successful. */
+    /**
+     * The successful.
+     */
     SUCCESSFUL,
 
-    /** The failed. */
+    /**
+     * The failed.
+     */
     FAILED,
 
-    /** The canceled. */
+    /**
+     * The canceled.
+     */
     CANCELED,
 
-    /** The closed. */
+    /**
+     * The closed.
+     */
     CLOSED
   }
 
-  /** The progress. */
+  /**
+   * The progress.
+   */
   @Getter
   @Setter
   private double progress = 0.0f;
 
-  /** The state. */
+  /**
+   * The state.
+   */
   @Getter
   @Setter
   private DriverQueryState state = DriverQueryState.NEW;
 
-  /** The status message. */
+  /**
+   * The status message.
+   */
   @Getter
   @Setter
   private String statusMessage;
 
-  /** The is result set available. */
+  /**
+   * The is result set available.
+   */
   @Getter
   @Setter
   private boolean isResultSetAvailable = false;
 
-  /** The progress message. */
+  /**
+   * The progress message.
+   */
   @Getter
   @Setter
   private String progressMessage;
 
-  /** The error message. */
+  /**
+   * The error message.
+   */
   @Getter
   @Setter
   private String errorMessage;
 
-  /** The driver start time. */
+  /**
+   * The driver start time.
+   */
   @Getter
   @Setter
   private Long driverStartTime = 0L;
 
-  /** The driver finish time. */
+  /**
+   * The driver finish time.
+   */
   @Getter
   @Setter
   private Long driverFinishTime = 0L;
@@ -139,15 +172,13 @@ public class DriverQueryStatus implements Serializable {
   /**
    * Creates the query status.
    *
-   * @param state
-   *          the state
-   * @param dstatus
-   *          the dstatus
+   * @param state   the state
+   * @param dstatus the dstatus
    * @return the query status
    */
   public static QueryStatus createQueryStatus(QueryStatus.Status state, DriverQueryStatus dstatus) {
     return new QueryStatus(dstatus.progress, state, dstatus.statusMessage, dstatus.isResultSetAvailable,
-        dstatus.progressMessage, dstatus.errorMessage);
+      dstatus.progressMessage, dstatus.errorMessage);
   }
 
   /*
@@ -176,7 +207,7 @@ public class DriverQueryStatus implements Serializable {
 
   public boolean isFinished() {
     return state.equals(DriverQueryState.SUCCESSFUL) || state.equals(DriverQueryState.FAILED)
-        || state.equals(DriverQueryState.CANCELED) || state.equals(DriverQueryState.CLOSED);
+      || state.equals(DriverQueryState.CANCELED) || state.equals(DriverQueryState.CLOSED);
   }
 
 }

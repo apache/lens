@@ -28,14 +28,10 @@ public class QueuePositionChange extends QueryEvent<Integer> {
   /**
    * Instantiates a new queue position change.
    *
-   * @param eventTime
-   *          the event time
-   * @param prev
-   *          the prev
-   * @param current
-   *          the current
-   * @param handle
-   *          the handle
+   * @param eventTime the event time
+   * @param prev      the prev
+   * @param current   the current
+   * @param handle    the handle
    */
   public QueuePositionChange(long eventTime, Integer prev, Integer current, QueryHandle handle) {
     super(eventTime, prev, current, handle);

@@ -27,9 +27,10 @@ import java.util.Collection;
 /**
  * The class ExplainQueryContext
  */
-public class ExplainQueryContext extends AbstractQueryContext{
+public class ExplainQueryContext extends AbstractQueryContext {
   /**
    * Constructor. Only needs user query and conf.
+   *
    * @param query
    * @param qconf
    */

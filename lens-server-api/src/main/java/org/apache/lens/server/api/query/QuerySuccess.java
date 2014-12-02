@@ -29,14 +29,10 @@ public class QuerySuccess extends QueryEnded {
   /**
    * Instantiates a new query success.
    *
-   * @param eventTime
-   *          the event time
-   * @param prev
-   *          the prev
-   * @param current
-   *          the current
-   * @param handle
-   *          the handle
+   * @param eventTime the event time
+   * @param prev      the prev
+   * @param current   the current
+   * @param handle    the handle
    */
   public QuerySuccess(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
     super(eventTime, prev, current, handle, null, null);

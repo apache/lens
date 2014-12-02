@@ -19,24 +19,21 @@
 
 package org.apache.lens.server.api.priority;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.LensConfConstants;
-
 import java.util.TreeMap;
 
 /**
  * Class for storing range configurations. An Example would be grading system.
  * The value F,30,D,40,C,60,B,80,A corresponds to a system where
- *    - inf < marks <= 30         : F
- *    30 < marks <= 40            : D
- *    40 < marks <= 60            : C
- *    60 < marks <= 80            : B
- *    80 < marks <= + Inf         : A
- *
+ * - inf < marks <= 30         : F
+ * 30 < marks <= 40            : D
+ * 40 < marks <= 60            : C
+ * 60 < marks <= 80            : B
+ * 80 < marks <= + Inf         : A
+ * <p/>
  * rangeConfInstance.get(marks) would give you the grade depending on the range.
- *
+ * <p/>
  * The utility is for easily storing range configs in config xml files.
- *
+ * <p/>
  * Implementation is done by storing the least value(floor) and keeping a treemap on rest of values
  *
  * @param <K> Key type. Integer in the grade range example
@@ -50,37 +47,51 @@ public abstract class RangeConf<K extends Comparable<K>, V> {
    *
    */
 
-  /** Treemap of lower boundary value and next grade */
+  /**
+   * Treemap of lower boundary value and next grade
+   */
   TreeMap<K, V> map = new TreeMap<K, V>();
 
-  /** Lowest boundary value. */
+  /**
+   * Lowest boundary value.
+   */
   V floor;
 
   /**
    * Constructor. parses the string to form the data structure.
+   *
    * @param confValue
    */
   RangeConf(String confValue) {
-    if(confValue == null || confValue.isEmpty()) {
+    if (confValue == null || confValue.isEmpty()) {
       confValue = getDefaultConf();
     }
     String[] split = confValue.split("\\s*,\\s*");
     assert split.length % 2 == 1;
     floor = parseValue(split[0]);
-    for(int i = 1; i < split.length; i += 2) {
+    for (int i = 1; i < split.length; i += 2) {
       map.put(parseKey(split[i]), parseValue(split[i + 1]));
     }
   }
-  /** parse key type from its string representation */
+
+  /**
+   * parse key type from its string representation
+   */
   protected abstract K parseKey(String s);
-  /** parse value type from its string representation */
+
+  /**
+   * parse value type from its string representation
+   */
   protected abstract V parseValue(String s);
 
-  /** When null/blank conf string passed, this would be the value from which data structure will be formed */
+  /**
+   * When null/blank conf string passed, this would be the value from which data structure will be formed
+   */
   protected abstract String getDefaultConf();
 
   /**
    * Get method.
+   *
    * @param key
    * @return the value depending on which range the key lies in
    */
@@ -90,6 +101,7 @@ public abstract class RangeConf<K extends Comparable<K>, V> {
 
   /**
    * toString representation
+   *
    * @return string representation
    */
   @Override
