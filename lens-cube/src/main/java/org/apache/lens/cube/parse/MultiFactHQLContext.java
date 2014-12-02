@@ -53,7 +53,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     this.factDimMap = factDimMap;
   }
 
-  protected void setMissingExpressions() throws HiveException {
+  protected void setMissingExpressions() throws SemanticException {
     setSelect(getSelectString());
     setFrom(getFromString());
     setWhere(getWhereString());
@@ -78,7 +78,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return null;
   }
 
-  public String toHQL() throws HiveException {
+  public String toHQL() throws SemanticException {
     return query.getInsertClause() + super.toHQL();
   }
 
@@ -116,7 +116,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
     return facts;
   }
 
-  private String getFromString() throws HiveException {
+  private String getFromString() throws SemanticException {
     StringBuilder fromBuilder = new StringBuilder();
     int aliasCount = 1;
     Iterator<CandidateFact> iter = facts.iterator();

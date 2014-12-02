@@ -43,7 +43,7 @@ class DimOnlyHQLContext extends DimHQLContext {
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
   }
 
-  public String toHQL() throws HiveException {
+  public String toHQL() throws SemanticException {
     return query.getInsertClause() + super.toHQL();
   }
 
@@ -57,7 +57,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   @Override
-  protected String getPostSelectionWhereClause() throws HiveException {
+  protected String getPostSelectionWhereClause() throws SemanticException {
     return null;
   }
 

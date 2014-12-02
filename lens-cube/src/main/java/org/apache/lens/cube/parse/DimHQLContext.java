@@ -59,7 +59,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
     this.queriedDims = queriedDims;
   }
 
-  protected void setMissingExpressions() throws HiveException {
+  protected void setMissingExpressions() throws SemanticException {
     setFrom(getFromString());
     setWhere(joinWithAnd(
       getPostSelectionWhereClause(),
@@ -67,7 +67,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
     ));
   }
 
-  protected abstract String getPostSelectionWhereClause() throws HiveException;
+  protected abstract String getPostSelectionWhereClause() throws SemanticException;
 
   protected String getFromString() throws SemanticException {
     String fromString = getFromTable();

@@ -21,7 +21,6 @@ package org.apache.lens.cube.parse;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
@@ -52,7 +51,7 @@ public abstract class TestQueryRewrite {
     SessionState.get().setCurrentDatabase(TestQueryRewrite.class.getSimpleName());
   }
 
-  protected String rewrite(String query, Configuration conf) throws HiveException, ParseException {
+  protected String rewrite(String query, Configuration conf) throws SemanticException, ParseException {
     System.out.println("User query:" + query);
     CubeQueryRewriter driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
     CubeQueryContext rewrittenQuery = rewriteCtx(query, conf);

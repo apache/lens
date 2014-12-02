@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.StorageConstants;
@@ -251,10 +250,10 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
   @Test
   public void testDerivedCube() throws SemanticException, ParseException {
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("select avgmsr from derivedCube" + " where " + twoDaysRange, conf);
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }

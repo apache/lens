@@ -49,7 +49,7 @@ public class FactHQLContext extends DimHQLContext {
   }
 
   @Override
-  protected String getPostSelectionWhereClause() throws HiveException {
+  protected String getPostSelectionWhereClause() throws SemanticException {
     return StorageUtil.getNotLatestClauseForDimensions(
       query.getAliasForTabName(query.getCube().getName()),
       fact.getTimePartCols()

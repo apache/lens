@@ -382,14 +382,20 @@ class CandidateFact implements CandidateTable {
     return null;
   }
 
-  public Set<String> getTimePartCols() throws HiveException {
+  public Set<String> getTimePartCols() throws SemanticException {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
     if(!dbResolved) {
       singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
     }
-    for(FieldSchema fs: Hive.get().getTable(singleStorageTable).getPartitionKeys()) {
+    List<FieldSchema> partitionKeys = null;
+    try {
+      partitionKeys = Hive.get().getTable(singleStorageTable).getPartitionKeys();
+    } catch (HiveException e) {
+      throw new SemanticException(e);
+    }
+    for(FieldSchema fs: partitionKeys) {
       String timeDimOfPartitionKey = null;
       if(baseTable instanceof Cube) {
         timeDimOfPartitionKey = ((Cube) baseTable).getTimeDimOfPartitionColumn(fs.getName());

@@ -41,7 +41,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.*;
@@ -69,10 +68,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testQueryWithNow() throws Exception {
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("select SUM(msr2) from testCube where" + " time_range_in(dt, 'NOW - 2DAYS', 'NOW')", getConf());
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -82,10 +81,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testCandidateTables() throws Exception {
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("select dim12, SUM(msr2) from testCube" + " where " + twoDaysRange, getConf());
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -117,10 +116,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
 
     // Query with column life not in the range
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("cube select SUM(newmeasure) from testCube" + " where " + twoDaysRange, getConf());
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -147,10 +146,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     conf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
     conf.setBoolean(CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS, true);
-    HiveException th = null;
+    SemanticException th = null;
     try {
       hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -160,7 +159,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
-  public void testDerivedCube() throws HiveException, ParseException {
+  public void testDerivedCube() throws SemanticException, ParseException {
     CubeQueryContext rewrittenQuery =
         rewriteCtx("cube select" + " SUM(msr2) from derivedCube where " + twoDaysRange, getConf());
     String expected =
@@ -170,10 +169,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     System.out.println("Non existing parts:" + rewrittenQuery.getNonExistingParts());
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
 
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("select SUM(msr4) from derivedCube" + " where " + twoDaysRange, getConf());
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -532,13 +531,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
             getWhereForMonthly2months("c2_testfactmonthly"));
     compareQueries(expected, hqlQuery);
 
-    HiveException th = null;
+    SemanticException th = null;
     try {
       hqlQuery =
           rewrite("select name, SUM(msr2) from testCube" + " join citydim" + " where " + twoDaysRange
               + " group by name", getConf());
       Assert.fail("Expected to throw exception");
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       e.printStackTrace();
       th = e;
     }
@@ -793,11 +792,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testCubeWhereQueryForMonthWithNoPartialData() throws Exception {
     Configuration conf = getConf();
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    HiveException th = null;
+    SemanticException th = null;
     try {
       rewrite("select SUM(msr2) from testCube" + " where " + twoMonthsRangeUptoHours, conf);
       Assert.assertTrue(false);
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       e.printStackTrace();
       th = e;
     }
@@ -831,10 +830,10 @@ public class TestCubeRewriter extends TestQueryRewrite {
     compareQueries(expected, hqlQuery);
 
     // state table is present on c1 with partition dumps and partitions added
-    HiveException th = null;
+    SemanticException th = null;
     try {
       hqlQuery = rewrite("select name, capital from statedim ", conf);
-    } catch (HiveException e) {
+    } catch (SemanticException e) {
       th = e;
       e.printStackTrace();
     }
@@ -959,7 +958,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         "SELECT ambigdim1, sum(testCube.msr1) FROM testCube join" + " citydim on testcube.cityid = citydim.id where "
             + twoDaysRange;
 
-    HiveException th = null;
+    SemanticException th = null;
     try {
       String hql = rewrite(query, getConf());
       Assert.assertTrue(false, "Should not reach here:" + hql);

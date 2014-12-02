@@ -19,12 +19,6 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.*;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,19 +26,16 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.JoinCond;
-import org.apache.hadoop.hive.ql.parse.JoinType;
-import org.apache.hadoop.hive.ql.parse.ParseDriver;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.ParseUtils;
-import org.apache.hadoop.hive.ql.parse.QB;
-import org.apache.hadoop.hive.ql.parse.QBJoinTree;
-import org.apache.hadoop.hive.ql.parse.QBParseInfo;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.parse.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
 import org.codehaus.jackson.map.ObjectMapper;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.*;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TMP_FILE;
 
 public class CubeQueryContext {
   public static final String TIME_RANGE_FUNC = "time_range_in";
@@ -95,9 +86,9 @@ public class CubeQueryContext {
   private JoinResolver.AutoJoinContext autoJoinCtx;
   private DenormalizationResolver.DenormalizationContext deNormCtx;
   private Map<CubeFactTable, List<CandidateTablePruneCause>> factPruningMsgs =
-      new HashMap<CubeFactTable, List<CandidateTablePruneCause>>();
+    new HashMap<CubeFactTable, List<CandidateTablePruneCause>>();
   private Map<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>> dimPruningMsgs =
-      new HashMap<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>>();
+    new HashMap<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>>();
 
   public CubeQueryContext(ASTNode ast, QB qb, HiveConf conf) throws SemanticException {
     this.ast = ast;
@@ -197,7 +188,7 @@ public class CubeQueryContext {
   }
 
   public void addOptionalDimTable(String alias, String col, CandidateTable candidate, boolean isRequiredInJoin)
-      throws SemanticException {
+    throws SemanticException {
     alias = alias.toLowerCase();
     String tblName = qb.getTabNameForAlias(alias);
     if (tblName == null) {
@@ -416,7 +407,7 @@ public class CubeQueryContext {
       builder.append("\n joinConds:");
       for (JoinCond cond : joinTree.getJoinCond()) {
         builder.append("\n\t left: " + cond.getLeft() + " right: " + cond.getRight() + " type:" + cond.getJoinType()
-            + " preserved:" + cond.getPreserved());
+          + " preserved:" + cond.getPreserved());
       }
     }
   }
@@ -504,7 +495,7 @@ public class CubeQueryContext {
   }
 
   private void getQLString(QBJoinTree joinTree, StringBuilder builder, CandidateFact fact,
-      Map<Dimension, CandidateDim> dimsToQuery) throws SemanticException {
+    Map<Dimension, CandidateDim> dimsToQuery) throws SemanticException {
     String joiningTable = null;
     if (joinTree.getBaseSrc()[0] == null) {
       if (joinTree.getJoinSrc() != null) {
@@ -584,7 +575,7 @@ public class CubeQueryContext {
         if (candidateDims.get(dim) != null && candidateDims.get(dim).size() > 0) {
           CandidateDim cdim = candidateDims.get(dim).iterator().next();
           LOG.info("Available candidate dims are:" + candidateDims.get(dim) + ", picking up " + cdim.dimtable
-              + " for querying");
+            + " for querying");
           dimsToQuery.put(dim, cdim);
         } else {
           String reason = "";
@@ -651,7 +642,7 @@ public class CubeQueryContext {
 
   private HQLContextInterface hqlContext;
 
-  public String toHQL() throws HiveException {
+  public String toHQL() throws SemanticException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
     Map<Dimension, CandidateDim> dimsToQuery = pickCandidateDimsToQuery(dimensions);
     if (autoJoinCtx != null) {
@@ -726,7 +717,7 @@ public class CubeQueryContext {
   }
 
   private HQLContextInterface createHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-      Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
+    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
     if (facts == null || facts.size() == 0) {
       return new DimOnlyHQLContext(dimsToQuery, query);
     } else if (facts.size() == 1) {
@@ -737,7 +728,7 @@ public class CubeQueryContext {
     }
   }
 
-  public ASTNode toAST(Context ctx) throws HiveException {
+  public ASTNode toAST(Context ctx) throws SemanticException {
     String hql = toHQL();
     ParseDriver pd = new ParseDriver();
     ASTNode tree;
@@ -944,7 +935,7 @@ public class CubeQueryContext {
 
   public boolean shouldReplaceTimeDimWithPart() {
     return getHiveConf().getBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL,
-        CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
+      CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {
@@ -1004,18 +995,18 @@ public class CubeQueryContext {
 
   /**
    * Prune candidate fact sets with respect to available candidate facts.
-   * 
+   * <p/>
    * Prune a candidate set, if any of the fact is missing.
-   * 
+   *
    * @param pruneCause
    */
   public void pruneCandidateFactSet(CubeTableCause pruneCause) {
     // remove candidate fact sets that have missing facts
-    for (Iterator<Set<CandidateFact>> i = candidateFactSets.iterator(); i.hasNext();) {
+    for (Iterator<Set<CandidateFact>> i = candidateFactSets.iterator(); i.hasNext(); ) {
       Set<CandidateFact> cfacts = i.next();
       if (!candidateFacts.containsAll(cfacts)) {
         LOG.info("Not considering fact table set:" + cfacts
-            + " as they have non candidate tables and facts missing because of" + pruneCause);
+          + " as they have non candidate tables and facts missing because of" + pruneCause);
         i.remove();
       }
     }
@@ -1023,10 +1014,10 @@ public class CubeQueryContext {
 
   /**
    * Prune candidate fact with respect to available candidate fact sets.
-   * 
+   * <p/>
    * If candidate fact is not present in any of the candidate fact sets, remove
    * it.
-   * 
+   *
    * @param pruneCause
    */
   public void pruneCandidateFactWithCandidateSet(CubeTableCause pruneCause) {
@@ -1035,7 +1026,7 @@ public class CubeQueryContext {
     for (Set<CandidateFact> set : candidateFactSets) {
       allCoveringFacts.addAll(set);
     }
-    for (Iterator<CandidateFact> i = candidateFacts.iterator(); i.hasNext();) {
+    for (Iterator<CandidateFact> i = candidateFacts.iterator(); i.hasNext(); ) {
       CandidateFact cfact = i.next();
       if (!allCoveringFacts.contains(cfact)) {
         LOG.info("Not considering fact table:" + cfact + " as " + pruneCause);

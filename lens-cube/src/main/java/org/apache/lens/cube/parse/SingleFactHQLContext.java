@@ -18,23 +18,21 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
+import java.util.Map;
+
 /**
  * HQL context class which passes down all query strings to come from
  * DimOnlyHQLContext and works with fact being queried.
- * 
+ * <p/>
  * Updates from string with join clause expanded
- * 
  */
 class SingleFactHQLContext extends DimOnlyHQLContext {
 
@@ -43,7 +41,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   private CandidateFact fact;
 
   SingleFactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query)
-      throws SemanticException {
+    throws SemanticException {
     super(dimsToQuery, query);
     this.fact = fact;
   }
@@ -101,10 +99,10 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
   }
 
   @Override
-  protected String getPostSelectionWhereClause() throws HiveException {
+  protected String getPostSelectionWhereClause() throws SemanticException {
     return StorageUtil.getNotLatestClauseForDimensions(
       query.getAliasForTabName(query.getCube().getName()),
       fact.getTimePartCols()
-      );
+    );
   }
 }

@@ -27,7 +27,6 @@ import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.parse.CandidateFact;
@@ -146,7 +145,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testAggregateResolverOff() throws HiveException, ParseException {
+  public void testAggregateResolverOff() throws SemanticException, ParseException {
     Configuration conf2 = new Configuration(this.conf);
     conf2.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, true);
 
@@ -167,7 +166,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     rawFactSelectionTests(conf2);
   }
 
-  private void aggregateFactSelectionTests(Configuration conf) throws HiveException, ParseException {
+  private void aggregateFactSelectionTests(Configuration conf) throws SemanticException, ParseException {
     String query = "SELECT count(distinct cityid) from testcube where " + twoDaysRange;
     CubeQueryContext cubeql = rewriteCtx(query, conf);
     String hQL = cubeql.toHQL();
@@ -211,7 +210,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     compareQueries(expectedQL, hQL);
   }
 
-  private void rawFactSelectionTests(Configuration conf) throws HiveException, ParseException {
+  private void rawFactSelectionTests(Configuration conf) throws SemanticException, ParseException {
     // Check a query with non default aggregate function
     String query = "SELECT cityid, avg(testCube.msr2) FROM testCube WHERE " + twoDaysRange;
     CubeQueryContext cubeql = rewriteCtx(query, conf);
