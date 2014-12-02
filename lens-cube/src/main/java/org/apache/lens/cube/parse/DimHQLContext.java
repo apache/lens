@@ -18,8 +18,6 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -41,39 +39,19 @@ abstract class DimHQLContext extends SimpleHQLContext {
 
   private final Map<Dimension, CandidateDim> dimsToQuery;
   private final Set<Dimension> queriedDims;
-  protected final CubeQueryContext query;
   private String where;
 
-  DimHQLContext(CubeQueryContext query, Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> queriedDims, String select, String where,
+  DimHQLContext(Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> queriedDims, String select, String where,
       String groupby, String orderby, String having, Integer limit) throws SemanticException {
     super(select, groupby, orderby, having, limit);
-    this.query = query;
     this.dimsToQuery = dimsToQuery;
     this.where = where;
     this.queriedDims = queriedDims;
   }
 
-  public CubeQueryContext getQuery() {
-    return query;
-  }
-
   protected void setMissingExpressions() throws SemanticException {
-    setFrom(getFromString());
-//    setWhere(new StringBuilder()
-//      .append("((")
-//      .append(getNotLatestWhereClauseForFacts())
-//      .append(") AND (")
-//      .append(genWhereClauseWithDimPartitions(where))
-//      .append("))")
-//      .toString());
     setWhere(genWhereClauseWithDimPartitions(where));
   }
-
-  private String getNotLatestWhereClauseForFacts() {
-    return "cond1";
-  }
-
-  protected abstract String getFromString() throws SemanticException;
 
   public Map<Dimension, CandidateDim> getDimsToQuery() {
     return dimsToQuery;

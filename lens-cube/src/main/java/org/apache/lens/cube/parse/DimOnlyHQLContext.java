@@ -36,9 +36,21 @@ class DimOnlyHQLContext extends DimHQLContext {
 
   public static Log LOG = LogFactory.getLog(DimOnlyHQLContext.class.getName());
 
+  private final CubeQueryContext query;
+
+  public CubeQueryContext getQuery() {
+    return query;
+  }
+
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
-    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
+    super(dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
+    this.query = query;
+  }
+
+  protected void setMissingExpressions() throws SemanticException {
+    setFrom(getFromString());
+    super.setMissingExpressions();
   }
 
   public String toHQL() throws SemanticException {
@@ -46,7 +58,7 @@ class DimOnlyHQLContext extends DimHQLContext {
   }
 
   protected String getFromTable() throws SemanticException {
-    if (query.isAutoJoinResolved()) {
+    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
           query.getAliasForTabName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {
@@ -54,11 +66,14 @@ class DimOnlyHQLContext extends DimHQLContext {
     }
   }
 
-  protected String getFromString() throws SemanticException {
-    String fromString = getFromTable();
-    if (query.isAutoJoinResolved()) {
+  private String getFromString() throws SemanticException {
+    String fromString = null;
+    String fromTable = getFromTable();
+    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       fromString =
-          query.getAutoJoinCtx().getFromString(fromString, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
+          query.getAutoJoinCtx().getFromString(fromTable, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
+    } else {
+      fromString = fromTable;
     }
     return fromString;
   }
