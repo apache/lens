@@ -25,8 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.collect.Sets;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.lens.cube.metadata.StorageConstants;
 
 class StorageUtil {
@@ -52,24 +56,46 @@ class StorageUtil {
     }
     return partStr.toString();
   }
-
-  public static String getNotLatestClauseForDimensions(String cubeName, Set<String> timedDimensions) {
+  public static String getNotLatestClauseForDimensions(CubeQueryContext query) throws HiveException {
+    StringBuilder sb = new StringBuilder();
+    String innerSep = "";
+    Set<String> cubeTimedDimensions = query.getCube().getTimedDimensions();
+    for(Map.Entry<String, List<String>> entry: query.getCubeAliasToStorageTablesMap().entrySet()) {
+      String alias = entry.getKey();
+      String oneTable = entry.getValue().iterator().next();
+      for(FieldSchema fs: Hive.get().getTable(oneTable).getPartitionKeys()) {
+        if(cubeTimedDimensions.contains(fs.getName())) {
+          sb
+            .append(innerSep)
+            .append(alias).append(".").append(fs.getName()).append("!=")
+            .append(StorageConstants.LATEST_PARTITION_VALUE);
+          innerSep = " AND ";
+        }
+      }
+    }
+    return sb.toString();
+  }
+  public static String getNotLatestClauseForDimensions(String alias, Set<String> timedDimensions) {
     StringBuilder sb = new StringBuilder();
     String sep = "";
     for(String timePartCol: timedDimensions) {
-        sb.append(sep).append(cubeName).append(".").append(timePartCol).
+        sb.append(sep).append(alias).append(".").append(timePartCol).
           append("!=").append(StorageConstants.LATEST_PARTITION_VALUE);
         sep = " AND ";
     }
     return sb.toString();
   }
 
-  public static String joinWithAnd(String clause1, String clause2) {
-    return new StringBuilder()
-      .append("((")
-      .append(clause1)
-      .append(") AND (")
-      .append(clause2)
+  public static String joinWithAnd(String... clauses) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "((";
+    for(String clause: clauses) {
+      sb
+        .append(sep)
+        .append(clause);
+      sep = ") AND (";
+    }
+    return sb
       .append("))")
       .toString();
   }

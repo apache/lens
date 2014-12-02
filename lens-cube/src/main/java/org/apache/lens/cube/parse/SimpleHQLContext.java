@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
@@ -74,7 +75,7 @@ public abstract class SimpleHQLContext implements HQLContextInterface {
    * passed in constructor. If other constructors are used the missing
    * expressions should be set here
    */
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws HiveException {
   }
 
   public String toHQL() throws SemanticException {

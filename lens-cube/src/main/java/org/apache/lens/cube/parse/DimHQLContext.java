@@ -25,8 +25,12 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
+
+import static org.apache.lens.cube.parse.StorageUtil.getNotLatestClauseForDimensions;
+import static org.apache.lens.cube.parse.StorageUtil.joinWithAnd;
 
 /**
  * Dimension HQLContext.
@@ -56,9 +60,12 @@ abstract class DimHQLContext extends SimpleHQLContext {
     this.queriedDims = queriedDims;
   }
 
-  protected void setMissingExpressions() throws SemanticException {
+  protected void setMissingExpressions() throws HiveException {
     setFrom(getFromString());
-    setWhere(genWhereClauseWithDimPartitions(where));
+    setWhere(joinWithAnd(
+      getNotLatestClauseForDimensions(query),
+      genWhereClauseWithDimPartitions(where)
+    ));
   }
 
   protected String getFromString() throws SemanticException {
