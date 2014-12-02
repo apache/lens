@@ -57,14 +57,6 @@ public class CubeQueryContext {
   private final HiveConf conf;
 
   private final List<TimeRange> timeRanges;
-  /**
-   * suppose test cube is being joined twice, on lhs we have alias, on rhs we have
-   * all used tables of that fact
-   * testcube -> {c1_testcube, c2_testcube}
-   * testcube2 -> {c1_testcube, c2_testcube}
-  */
-  private final Map<String, List<String>> cubeAliasToStorageTablesMap = new HashMap<String, List<String>>();
-
   // metadata
   private CubeInterface cube;
   // Dimensions accessed in the query
@@ -106,6 +98,7 @@ public class CubeQueryContext {
       new HashMap<CubeFactTable, List<CandidateTablePruneCause>>();
   private Map<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>> dimPruningMsgs =
       new HashMap<Dimension, Map<CubeDimensionTable, List<CandidateTablePruneCause>>>();
+  private String queriedFactStorageTables;
 
   public CubeQueryContext(ASTNode ast, QB qb, HiveConf conf) throws SemanticException {
     this.ast = ast;
@@ -191,8 +184,8 @@ public class CubeQueryContext {
     }
   }
 
-  public Map<String, List<String>> getCubeAliasToStorageTablesMap() {
-    return cubeAliasToStorageTablesMap;
+  public String getQueriedFactStorageTablesString() {
+    return queriedFactStorageTables;
   }
 
   // Holds the context of optional dimension
@@ -500,8 +493,8 @@ public class CubeQueryContext {
     if (getJoinTree() == null) {
       if (cube != null) {
         fromString = fact.getStorageString(getAliasForTabName(cube.getName()));
-        String[] tablesAndAlias = fromString.split(" ");
-        cubeAliasToStorageTablesMap.put(tablesAndAlias[1], Arrays.asList(tablesAndAlias[0].split(",")));
+        // assume all have same schema, but still keeping all here.
+        this.queriedFactStorageTables = fromString.trim().split(" ")[0];
       } else {
         if (dimensions.size() != 1) {
           throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);

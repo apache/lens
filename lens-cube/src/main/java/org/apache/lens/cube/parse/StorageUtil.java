@@ -25,12 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.google.common.collect.Sets;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.StorageConstants;
 
 class StorageUtil {
@@ -58,19 +58,17 @@ class StorageUtil {
   }
   public static String getNotLatestClauseForDimensions(CubeQueryContext query) throws HiveException {
     StringBuilder sb = new StringBuilder();
-    String innerSep = "";
+    String sep = "";
     Set<String> cubeTimedDimensions = query.getCube().getTimedDimensions();
-    for(Map.Entry<String, List<String>> entry: query.getCubeAliasToStorageTablesMap().entrySet()) {
-      String alias = entry.getKey();
-      String oneTable = entry.getValue().iterator().next();
-      for(FieldSchema fs: Hive.get().getTable(oneTable).getPartitionKeys()) {
-        if(cubeTimedDimensions.contains(fs.getName())) {
-          sb
-            .append(innerSep)
-            .append(alias).append(".").append(fs.getName()).append("!=")
-            .append(StorageConstants.LATEST_PARTITION_VALUE);
-          innerSep = " AND ";
-        }
+    String oneTable = query.getQueriedFactStorageTablesString().split(",")[0];
+    for(FieldSchema fs: Hive.get().getTable(oneTable).getPartitionKeys()) {
+      if(cubeTimedDimensions.contains(fs.getName())) {
+        sb
+          .append(sep)
+          .append(query.getAliasForTabName(query.getCube().getName()))
+          .append(".").append(fs.getName()).append("!=")
+          .append(StorageConstants.LATEST_PARTITION_VALUE);
+        sep = " AND ";
       }
     }
     return sb.toString();
