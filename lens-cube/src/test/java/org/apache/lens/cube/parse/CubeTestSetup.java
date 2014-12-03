@@ -56,6 +56,7 @@ import org.apache.lens.cube.metadata.ExprColumn;
 import org.apache.lens.cube.metadata.HDFSStorage;
 import org.apache.lens.cube.metadata.HierarchicalDimAttribute;
 import org.apache.lens.cube.metadata.InlineDimAttribute;
+import org.apache.lens.cube.metadata.JoinChain;
 import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
@@ -566,7 +567,35 @@ public class CubeTestSetup {
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
     cubeProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "false");
-    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, cubeProperties);
+
+    Set<JoinChain> joinchains = new HashSet<JoinChain>();
+    JoinChain cityState = new JoinChain("cityState", "city-state", "state thru city");
+    List<TableReference> statePaths1 = new ArrayList<TableReference>();
+    statePaths1.add(new TableReference("basecube", "cityid"));
+    statePaths1.add(new TableReference("citydim", "id"));
+    statePaths1.add(new TableReference("citydim", "stateid"));
+    statePaths1.add(new TableReference("statedim", "id"));
+    cityState.addPath(statePaths1);
+    List<TableReference> statePaths2 = new ArrayList<TableReference>();
+    statePaths2.add(new TableReference("basecube", "cityid"));
+    statePaths2.add(new TableReference("citydim", "id"));
+    statePaths2.add(new TableReference("citydim", "statename"));
+    statePaths2.add(new TableReference("statedim", "name"));
+    cityState.addPath(statePaths2);
+    joinchains.add(cityState);
+
+    JoinChain cubeState = new JoinChain("cubeState", "cube-state", "state thru cube");
+    List<TableReference> statePaths3 = new ArrayList<TableReference>();
+    statePaths3.add(new TableReference("basecube", "stateid"));
+    statePaths3.add(new TableReference("statedim", "id"));
+    cubeState.addPath(statePaths3);
+    joinchains.add(cubeState);
+
+    // add ref dim through chain
+    cubeDimensions2.add(new ReferencedDimAtrribute(
+        new FieldSchema("cityStateCapital", "string", "State's capital thru city"), "State's capital thru city",
+        "cityState", "capital", null, null, null));
+    client.createCube(BASE_CUBE_NAME, cubeMeasures2, cubeDimensions2, exprs, joinchains, cubeProperties);
 
     Map<String, String> derivedProperties = new HashMap<String, String>();
     derivedProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "true");

@@ -304,8 +304,8 @@ public class JAXBUtils {
     xjc.setDescription(jc.getDescription());
     xjc.setDisplayString(jc.getDisplayString());
 
-    for (List<TableReference> path : jc.getPaths()) {
-      xjc.getPaths().add(xTabReferenceFromHiveTabReference(path));
+    for (JoinChain.Path path : jc.getPaths()) {
+      xjc.getPaths().add(xTabReferenceFromHiveTabReference(path.getReferences()));
     }
     return xjc;
   }

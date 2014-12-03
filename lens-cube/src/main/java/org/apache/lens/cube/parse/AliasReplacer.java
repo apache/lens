@@ -23,6 +23,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,6 +42,7 @@ import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
 
 /**
  * Finds queried column to table alias. Finds queried dim attributes and queried
@@ -66,6 +68,9 @@ class AliasReplacer implements ContextRewriter {
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     colToTableAlias = new HashMap<String, String>();
     extractTabAliasForCol(cubeql);
+    // finds out if any of the queried cube columns are chained columns
+    // if so replace aliases with chainName instead of cube alias
+    replaceChainedColumns(cubeql);
     doFieldValidation(cubeql);
 
     // Rewrite the all the columns in the query with table alias prefixed.
@@ -83,30 +88,56 @@ class AliasReplacer implements ContextRewriter {
       return;
     }
 
-    ASTNode selectAST = cubeql.getSelectAST();
-    replaceAliases(selectAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getSelectAST(), 0, colToTableAlias);
 
-    ASTNode havingAST = cubeql.getHavingAST();
-    replaceAliases(havingAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getHavingAST(), 0, colToTableAlias);
 
-    ASTNode orderByAST = cubeql.getOrderByAST();
-    replaceAliases(orderByAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getOrderByAST(), 0, colToTableAlias);
 
-    ASTNode groupByAST = cubeql.getGroupByAST();
-    replaceAliases(groupByAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getGroupByAST(), 0, colToTableAlias);
 
-    ASTNode whereAST = cubeql.getWhereAST();
-    replaceAliases(whereAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getWhereAST(), 0, colToTableAlias);
 
-    ASTNode joinAST = cubeql.getJoinTree();
-    replaceAliases(joinAST, 0, colToTableAlias);
+    replaceAliases(cubeql.getJoinTree(), 0, colToTableAlias);
+
 
     // Update the aggregate expression set
-    AggregateResolver.updateAggregates(selectAST, cubeql);
-    AggregateResolver.updateAggregates(havingAST, cubeql);
+    AggregateResolver.updateAggregates(cubeql.getSelectAST(), cubeql);
+    AggregateResolver.updateAggregates(cubeql.getHavingAST(), cubeql);
     // Update alias map as well
-    updateAliasMap(selectAST, cubeql);
+    updateAliasMap(cubeql.getSelectAST(), cubeql);
 
+  }
+
+  private void replaceChainedColumns(CubeQueryContext cubeql) throws SemanticException {
+    CubeInterface cube = cubeql.getCube();
+    if (cube != null) {
+      Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
+      Iterator<String> iter = cubeColsQueried.iterator();
+      Map<String, ReferencedDimAtrribute> chainedCols = new HashMap<String, ReferencedDimAtrribute>();
+      while (iter.hasNext()) {
+        String col = iter.next();
+        if (cube.getDimAttributeNames().contains(col)) {
+          if (cube.getDimAttributeByName(col) instanceof ReferencedDimAtrribute
+              && ((ReferencedDimAtrribute)cube.getDimAttributeByName(col)).isChainedColumn()) {
+            // add this to tables queried and columns queried
+            ReferencedDimAtrribute chainedAttr = (ReferencedDimAtrribute)cube.getDimAttributeByName(col);
+            cubeql.addQueriedTable(chainedAttr.getChainName());
+            cubeql.addColumnsQueried(chainedAttr.getChainName(), chainedAttr.getRefColumn());
+            chainedCols.put(col, chainedAttr);
+            colToTableAlias.remove(col);
+            // no more a cube column
+            iter.remove();
+          }
+        }
+      }
+      // replace the cubecol.refdimattr with chainName.refcolumn in all trees
+      replaceChainedNames(cubeql.getSelectAST(), 0, chainedCols);
+      replaceChainedNames(cubeql.getWhereAST(), 0, chainedCols);
+      replaceChainedNames(cubeql.getGroupByAST(), 0, chainedCols);
+      replaceChainedNames(cubeql.getHavingAST(), 0, chainedCols);
+      replaceChainedNames(cubeql.getOrderByAST(), 0, chainedCols);
+    }
   }
 
   // Finds all queried dim-attributes and measures from cube
@@ -244,6 +275,59 @@ class AliasReplacer implements ContextRewriter {
       for (int i = 0; i < node.getChildCount(); i++) {
         ASTNode child = (ASTNode) node.getChild(i);
         replaceAliases(child, i, colToTableAlias);
+      }
+    }
+  }
+
+  private void replaceChainedNames(ASTNode node, int nodePos, Map<String, ReferencedDimAtrribute> chainedColumns) {
+    if (node == null) {
+      return;
+    }
+
+    int nodeType = node.getToken().getType();
+    if (nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT) {
+      String colName = HQLParser.getColName(node);
+      ReferencedDimAtrribute chainedAttr = chainedColumns.get(colName.toLowerCase());
+
+      if (chainedAttr == null) {
+        return;
+      }
+
+      if (nodeType == HiveParser.DOT) {
+        // No need to create a new node, just replace the table name ident
+        ASTNode aliasNode = (ASTNode) node.getChild(0);
+        ASTNode newAliasIdent = new ASTNode(new CommonToken(HiveParser.Identifier, chainedAttr.getChainName()));
+        aliasNode.setChild(0, newAliasIdent);
+        newAliasIdent.setParent(aliasNode);
+        // replace column name
+        ASTNode newColumnNode = new ASTNode(new CommonToken(HiveParser.Identifier, chainedAttr.getRefColumn()));
+        node.setChild(1, newColumnNode);
+        newColumnNode.setParent(node);
+      } else {
+        // Just a column ref, we need to make it alias.col
+        // '.' will become the parent node
+        ASTNode dot = new ASTNode(new CommonToken(HiveParser.DOT, "."));
+        ASTNode aliasIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, chainedAttr.getChainName()));
+        ASTNode tabRefNode = new ASTNode(new CommonToken(HiveParser.TOK_TABLE_OR_COL, "TOK_TABLE_OR_COL"));
+
+        tabRefNode.addChild(aliasIdentNode);
+        aliasIdentNode.setParent(tabRefNode);
+        dot.addChild(tabRefNode);
+        tabRefNode.setParent(dot);
+
+        ASTNode colIdentNode = new ASTNode(new CommonToken(HiveParser.Identifier, chainedAttr.getRefColumn()));
+
+        dot.addChild(colIdentNode);
+
+        ASTNode parent = (ASTNode) node.getParent();
+
+        parent.setChild(nodePos, dot);
+      }
+    } else {
+      // recurse down
+      for (int i = 0; i < node.getChildCount(); i++) {
+        ASTNode child = (ASTNode) node.getChild(i);
+        replaceChainedNames(child, i, chainedColumns);
       }
     }
   }

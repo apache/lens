@@ -602,7 +602,7 @@ public class TestMetastoreService extends LensJerseyTest {
       Assert.assertEquals(chain1.getDisplayString(), "Chain-1");
       Assert.assertEquals(chain1.getDescription(), "first chain");
       Assert.assertEquals(chain1.getPaths().size(), 1);
-      List<TableReference> links = chain1.getPaths().get(0);
+      List<TableReference> links = chain1.getPaths().get(0).getReferences();
       Assert.assertEquals(links.size(), 2);
       Assert.assertEquals(links.get(0).toString(), "testgetcube.col1");
       Assert.assertEquals(links.get(1).toString(), "testdim.col1");

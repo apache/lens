@@ -136,6 +136,8 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
             + " sum(basecube.msr2) FROM ", null, " and substr(basecube.dim1, 3) != 'XYZ' "
             + "group by basecube.dim1 != 'x' AND basecube.dim2 != 10",
             getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
+    //System.out.println("HQL:" + hqlQuery);
+    //System.out.println("Expected:" + expected);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select dim1, msr12 from basecube" + " where " + twoDaysRange, conf);

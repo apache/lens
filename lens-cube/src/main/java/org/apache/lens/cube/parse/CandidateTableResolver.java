@@ -39,6 +39,8 @@ import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.JoinChain;
+import org.apache.lens.cube.metadata.TableReference;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 
@@ -210,6 +212,17 @@ class CandidateTableResolver implements ContextRewriter {
           }
         }
 
+        // go over join chains and prune facts that dont have any of the columns in each chain
+        for (JoinChain chain : cubeql.getJoinchains().values()) {
+          if (!checkForColumnExists(cfact, chain.getSourceColumns())) {
+            LOG.info("Not considering fact table:" + cfact + " as columns " + chain.getSourceColumns()
+                + " are not available");
+            cubeql.addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(cfact.getName(),
+                CubeTableCause.COLUMN_NOT_FOUND));
+            toRemove = true;
+            break;
+          }
+        }
         // check if the candidate fact has atleast one measure queried
         if (!checkForColumnExists(cfact, queriedMsrs)) {
           LOG.info("Not considering fact table:" + cfact + " as columns " + queriedMsrs + " is not available");
@@ -217,7 +230,7 @@ class CandidateTableResolver implements ContextRewriter {
               CubeTableCause.COLUMN_NOT_FOUND));
           toRemove = true;
         }
-        if(toRemove) {
+        if (toRemove) {
           i.remove();
         }
       }

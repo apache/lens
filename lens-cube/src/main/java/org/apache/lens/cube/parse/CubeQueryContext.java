@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import lombok.Getter;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -69,6 +71,8 @@ public class CubeQueryContext {
   private CubeInterface cube;
   // Dimensions accessed in the query
   protected Set<Dimension> dimensions = new HashSet<Dimension>();
+  // Joinchains accessed in the query
+  @Getter protected Map<String, JoinChain> joinchains = new HashMap<String, JoinChain>();
   private final Set<String> queriedDimAttrs = new HashSet<String>();
   private final Set<String> queriedMsrs = new HashSet<String>();
   private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<Set<CandidateFact>>();
@@ -77,7 +81,7 @@ public class CubeQueryContext {
   protected Map<Dimension, OptionalDimCtx> optionalDimensions = new HashMap<Dimension, OptionalDimCtx>();
 
   // Alias to table object mapping of tables accessed in this query
-  private final Map<String, AbstractCubeTable> cubeTbls = new HashMap<String, AbstractCubeTable>();
+  @Getter private final Map<String, AbstractCubeTable> cubeTbls = new HashMap<String, AbstractCubeTable>();
   // Alias name to fields queried
   private final Map<String, Set<String>> tblAliasToColumns = new HashMap<String, Set<String>>();
   // Mapping of an expression to its column alias in the query
@@ -151,24 +155,59 @@ public class CubeQueryContext {
   }
 
   private void extractMetaTables() throws SemanticException {
-    try {
-      List<String> tabAliases = new ArrayList<String>(qb.getTabAliases());
-      for (String alias : tabAliases) {
-        addQueriedTable(alias);
+    List<String> tabAliases = new ArrayList<String>(qb.getTabAliases());
+    Set<String> missing = new HashSet<String>();
+    for (String alias : tabAliases) {
+      boolean added = addQueriedTable(alias);
+      if (!added) {
+        missing.add(alias);
       }
-    } catch (HiveException e) {
-      throw new SemanticException(e);
+    }
+    for (String alias : missing) {
+      // try adding them as joinchains
+      boolean added = addJoinChain(alias);
+      if (!added) {
+        LOG.info("Queried tables do not exist. Missing table:" + alias);
+        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+      }
     }
   }
 
-  public void addQueriedTable(String alias) throws SemanticException {
-    alias = alias.toLowerCase();
-    if (cubeTbls.containsKey(alias)) {
-      return;
+  private boolean addJoinChain(String alias) throws SemanticException {
+    if (getCube() != null) {
+      Set<String> cubechains = getCube().getJoinChainNames();
+      if (cubechains.contains(alias.toLowerCase())) {
+        JoinChain joinchain = getCube().getChainByName(alias);
+        joinchains.put(alias.toLowerCase(), new JoinChain(joinchain));
+        String destTable = joinchain.getDestTable();
+        boolean added = addQueriedTable(alias, destTable);
+        if (!added) {
+          LOG.info("Queried tables do not exist. Missing tables:" + destTable);
+          throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+        }
+        return true;
+      }
     }
+    return false;
+  }
+
+  public boolean addQueriedTable(String alias) throws SemanticException {
     String tblName = qb.getTabNameForAlias(alias);
     if (tblName == null) {
       tblName = alias;
+    }
+    boolean added = addQueriedTable(alias, tblName);
+    if (!added) {
+      // try adding as joinchain
+      added = addJoinChain(alias);
+    }
+    return added;
+  }
+
+  private boolean addQueriedTable(String alias, String tblName) throws SemanticException {
+    alias = alias.toLowerCase();
+    if (cubeTbls.containsKey(alias)) {
+      return true;
     }
     try {
       if (client.isCube(tblName)) {
@@ -184,11 +223,12 @@ public class CubeQueryContext {
         dimensions.add(dim);
         cubeTbls.put(alias, dim);
       } else {
-        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+        return false;
       }
     } catch (HiveException e) {
-      throw new SemanticException(e);
+      return false;
     }
+    return true;
   }
 
   // Holds the context of optional dimension
@@ -303,6 +343,12 @@ public class CubeQueryContext {
       String table = qb.getTabNameForAlias(alias);
       if (table != null && table.equalsIgnoreCase(tabName)) {
         return alias;
+      }
+    }
+    // get alias from cubeTbls
+    for (Map.Entry<String, AbstractCubeTable> cubeTblEntry : cubeTbls.entrySet()) {
+      if (cubeTblEntry.getValue().getName().equalsIgnoreCase(tabName)) {
+        return cubeTblEntry.getKey();
       }
     }
     return tabName;

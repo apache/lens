@@ -50,6 +50,7 @@ import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.JoinChain;
 import org.apache.lens.cube.metadata.SchemaGraph;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
@@ -420,6 +421,8 @@ class JoinResolver implements ContextRewriter {
         }
         dimColumns.put(dim, allColumns);
       }
+      System.out.println("All paths:" + allPaths);
+      System.out.println("dimColumns" + dimColumns);
       for (List<SchemaGraph.JoinPath> paths : allPaths.values()) {
         for (int i = 0; i < paths.size(); i++) {
           SchemaGraph.JoinPath jp = paths.get(i);
@@ -693,6 +696,14 @@ class JoinResolver implements ContextRewriter {
     for (AbstractCubeTable partiallyJoinedTable : partialJoinConditions.keySet()) {
       dimTables.add((Dimension) partiallyJoinedTable);
     }
+    Set<String> joinChainDims = new HashSet<String>();
+    // Add dimensions from joinchains
+    for (JoinChain chain : cubeql.getJoinchains().values()) {
+      for (String dimName : chain.getIntermediateDimensions()) {
+        joinChainDims.add(dimName);
+        cubeql.addOptionalDimTable(dimName, null, null, true);
+      }
+    }
     // add optional dimensions
     dimTables.addAll(cubeql.getOptionalDimensions());
 
@@ -710,6 +721,12 @@ class JoinResolver implements ContextRewriter {
 
     // Resolve join path for each dimension accessed in the query
     for (Dimension joinee : dimTables) {
+      if (joinChainDims.contains(joinee.getName()) || isJoinchainDestination(cubeql, joinee.getName())) {
+        // this dimension is part of a path of the join chain
+        // we should skip adding all paths
+        LOG.info("Not adding allpaths to target for " + joinee);
+        continue;
+      }
       // Find all possible join paths
       SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(joinee, target, graph);
       List<SchemaGraph.JoinPath> joinPaths = search.findAllPathsToTarget();
@@ -744,12 +761,25 @@ class JoinResolver implements ContextRewriter {
       }
     }
 
+    // populate paths from joinchains
+    for (JoinChain chain : cubeql.getJoinchains().values()) {
+      multipleJoinPaths.put(cubeql.getMetastoreClient().getDimension(chain.getDestTable()),
+          chain.getRelationEdges(cubeql.getMetastoreClient()));
+    }
     AutoJoinContext joinCtx =
         new AutoJoinContext(multipleJoinPaths, cubeql.optionalDimensions, partialJoinConditions, partialJoinChain,
             tableJoinTypeMap, target, conf.get(CubeQueryConfUtil.JOIN_TYPE_KEY), true);
     cubeql.setAutoJoinCtx(joinCtx);
   }
 
+  private boolean isJoinchainDestination(CubeQueryContext cubeql, String dimName) {
+    for (JoinChain chain : cubeql.getJoinchains().values()) {
+      if (chain.getDestTable().equalsIgnoreCase(dimName)) {
+        return true;
+      }
+    }
+    return false;
+  }
   private void addOptionalTables(CubeQueryContext cubeql, List<SchemaGraph.JoinPath> joinPathList, boolean required)
       throws SemanticException {
     for (SchemaGraph.JoinPath joinPath : joinPathList) {

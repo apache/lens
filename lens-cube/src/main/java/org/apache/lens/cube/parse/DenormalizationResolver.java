@@ -316,6 +316,10 @@ public class DenormalizationResolver implements ContextRewriter {
         if (entry.getKey() == CubeQueryContext.DEFAULT_TABLE) {
           continue;
         }
+        // skip join chain aliases
+        if (cubeql.getJoinchains().keySet().contains(entry.getKey().toLowerCase())) {
+          continue;
+        }
         AbstractCubeTable tbl = cubeql.getCubeTableForAlias(entry.getKey());
         Set<String> columns = entry.getValue();
         for (String column : columns) {

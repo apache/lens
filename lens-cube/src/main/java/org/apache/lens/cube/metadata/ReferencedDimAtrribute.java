@@ -131,4 +131,13 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
       }
     }
   }
+
+  /**
+   * Tells whether the attribute is retrieved from chain
+   *
+   * @return true/false
+   */
+  public boolean isChainedColumn() {
+    return chainName != null;
+  }
 }
