@@ -22,13 +22,13 @@ Developer Documentation : How to contribute to Apache Lens?
 %{toc}
 
   Welcome contributors! This page provides necessary guidelines on how to contribute towards furthering the development
-  and evolution of Apache Lens. 
+  and evolution of Apache Lens.
 
 * Dev Environment Setup
 
 ** Source Repository
 
-  Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at 
+  Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at
   {{{https://git-wip-us.apache.org/repos/asf/incubator-lens.git} https://git-wip-us.apache.org/repos/asf/incubator-lens.git}}.
 
 ** Build tools
@@ -83,7 +83,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * Code must be formatted according to java standards, which include the following changes:
 
-    * Trailing White spaces: Remove all trailing white spaces. 
+    * Trailing White spaces: Remove all trailing white spaces.
 
     * Indentation: Never use tabs! Always use 2 space indents.
 
@@ -131,7 +131,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * comment out code that is now obsolete: just remove it.
 
-  * make things public which are not required by end users. 
+  * make things public which are not required by end users.
 
 
   Please do:
@@ -140,7 +140,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * Comment code whose function or rationale is not obvious;
 
-  * Update documentation (e.g., package.html files, this wiki, etc.) 
+  * Update documentation (e.g., package.html files, this wiki, etc.)
 
 
   If you need to rename files in your patch:
@@ -151,7 +151,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * Create a patch file with 'git diff'.
 
-  * Submit both the shell script and the patch file. 
+  * Submit both the shell script and the patch file.
 
   This way other developers can preview your change by running the script and then applying the patch.
 
@@ -179,8 +179,55 @@ Developer Documentation : How to contribute to Apache Lens?
   git apply -p0 lens_patch.patch
 
 ** Review request
-  
-  TODO
+
+  Install reviewboard command line tool:
+
+  * Make sure you have python installed and easy_install is available.
+
+  * $ easy_install -U setuptools
+
+  * More help available at {{{https://www.reviewboard.org/docs/rbtools/dev/}Reviewboard Documentation}}.
+
+
+*** Posting a review request
+
+  Whenever you want to publish a new review request, commit all the changes you want to send to the request and do:
+
++---+
+
+  rbt post --parent=master
+
++---+
+  Reviewboard is not foolproof. Sometimes this will create a review request but wouldn't attach the patch. In that case,
+  you have to manually create the patch and upload it to the url of the request. To create the patch:
+
++---+
+
+  git diff master..HEAD > ~/LENS-##.patch
+
++---+
+
+  For updating an existing review request:
+
++---+
+
+  rbt post -u --parent=master
+
++---+
+
+  Any changes you make from the command line to the review request are not published. They are only submitted as a draft. So the second step
+  would be to open the review request url and update the necessary info like Title, Reviewer, Bug number etc.
+
+
+*** After the patch is merged
+
+  After merge, make sure you close the review request by either clicking close on the request's URL or by command line:
+
++---+
+
+  rbt close --close-type={submitted/discarded} #####(request id)
+
++---+
 
 * Stay involved
 
@@ -190,7 +237,7 @@ Developer Documentation : How to contribute to Apache Lens?
   {{{http://www.apache.org/foundation/voting.html} Apache voting process}}.
 
 * Developer FAQ
- 
+
 ** How to update documentation?
 
   The new doc files can added in src/site of parent module. Or doc change can be done in existing files under src/site.
