@@ -422,16 +422,18 @@ public class HiveDriver implements LensDriver {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
       //Query is already explained.
+      LOG.info("whetherCalculatePriority: " + whetherCalculatePriority);
       if(whetherCalculatePriority) {
         try{
           // Inside try since non-data fetching queries can also be executed by async method.
-          ctx.getConf().set("mapred.job.priority", queryPriorityDecider.decidePriority(ctx).toString());
+          String priority = queryPriorityDecider.decidePriority(ctx).toString();
+          ctx.getConf().set("mapred.job.priority", priority);
+          LOG.info("set priority to " + priority);
         } catch(LensException e) {
           LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier(), e);
         }
       }
-      OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.
-                                                               getSelectedDriverQuery(),
+      OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getSelectedDriverQuery(),
         ctx.getConf().getValByRegex(".*"));
       ctx.setDriverOpHandle(op.toString());
       LOG.info("QueryHandle: " + ctx.getQueryHandle() + " HiveHandle:" + op);
