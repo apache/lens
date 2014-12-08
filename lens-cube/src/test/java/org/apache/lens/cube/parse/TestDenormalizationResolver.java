@@ -164,5 +164,23 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null, "c1_citytable",
             true);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    hqlQuery = rewrite("select citydim.statename, citydim.name  from" + " citydim", conf);
+
+    expected =
+        getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null, "c1_citytable",
+            true);
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    // Query would fail because citydim.nocandidatecol does not exist in any candidate
+    Throwable th = null;
+    try {
+      hqlQuery = rewrite("select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
+      Assert.fail();
+    } catch (SemanticException e) {
+      e.printStackTrace();
+      th = e;
+    }
+    Assert.assertNotNull(th);
   }
 }

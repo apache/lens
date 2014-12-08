@@ -746,13 +746,15 @@ class JoinResolver implements ContextRewriter {
           Set<CandidateTable> candidates = cubeql.getOptionalDimensionMap().get(joinee).requiredForCandidates;
           for (CandidateTable candidate : candidates) {
             if (candidate instanceof CandidateFact) {
-              LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
-              cubeql.getCandidateFactTables().remove(candidate);
-              cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-                  ((CandidateFact) candidate).fact.getName(), CubeTableCause.COLUMN_NOT_FOUND));
-            } else {
+              if (cubeql.getCandidateFactTables().contains(candidate)) {
+                LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
+                cubeql.getCandidateFactTables().remove(candidate);
+                cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
+                    ((CandidateFact) candidate).fact.getName(), CubeTableCause.COLUMN_NOT_FOUND));
+              }
+            } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
               LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
-              cubeql.getCandidateDimTables().get(((CandidateDim) candidate).dimtable.getDimName()).remove(candidate);
+              cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
               cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
                   new CandidateTablePruneCause(candidate.getName(), CubeTableCause.COLUMN_NOT_FOUND));
             }

@@ -1154,6 +1154,8 @@ public class CubeTestSetup {
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "city name")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("ambigdim1", "string", "used in testColumnAmbiguity")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("ambigdim2", "string", "used in testColumnAmbiguity")));
+    cityAttrs.add(new BaseDimAttribute(new FieldSchema("nocandidatecol", "string", "used in testing no" +
+        " candidate available")));
     cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer",
         new TableReference("statedim", "id")));
     cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("statename", "string", "state name"), "State name",
@@ -1200,6 +1202,25 @@ public class CubeTestSetup {
     storageTables.put(c2, s2);
 
     client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+
+    dimName = "citytable2";
+
+    dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "code"));
+    dimColumns.add(new FieldSchema("stateid", "int", "state id"));
+
+    storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c4, s2);
+
+    client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+
+    dimName = "citytable3";
+
+    dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "code"));
+
+    client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+
   }
 
   private void createTestDim2(CubeMetastoreClient client) throws HiveException {
