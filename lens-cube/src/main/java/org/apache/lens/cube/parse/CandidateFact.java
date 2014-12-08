@@ -36,14 +36,15 @@ import org.antlr.runtime.CommonToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeFactTable;
-import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
@@ -379,5 +380,26 @@ class CandidateFact implements CandidateTable {
       return HQLParser.getString(groupbyAST);
     }
     return null;
+  }
+
+  public Set<String> getTimePartCols() throws SemanticException {
+    Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
+    Set<String> timePartDimensions = new HashSet<String>();
+    String singleStorageTable = storageTables.iterator().next();
+    if(!dbResolved) {
+      singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
+    }
+    List<FieldSchema> partitionKeys = null;
+    try {
+      partitionKeys = Hive.get().getTable(singleStorageTable).getPartitionKeys();
+    } catch (HiveException e) {
+      throw new SemanticException(e);
+    }
+    for(FieldSchema fs: partitionKeys) {
+      if(cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(baseTable, fs.getName()))) {
+        timePartDimensions.add(fs.getName());
+      }
+    }
+    return timePartDimensions;
   }
 }

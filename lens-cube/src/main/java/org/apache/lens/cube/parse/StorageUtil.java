@@ -18,25 +18,23 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.lens.cube.metadata.StorageConstants;
+
+import java.util.*;
 
 class StorageUtil {
-  private static Log LOG = LogFactory.getLog(StorageUtil.class.getName());
+  private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
   public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
     if (parts.size() == 0) {
       return "";
     }
     StringBuilder partStr = new StringBuilder();
-    for (int i = 0; i < parts.size() - 1; i++) {
+    String sep = "";
+    for (int i = 0; i < parts.size(); i++) {
+      partStr.append(sep);
       partStr.append("(");
       partStr.append(tableName);
       partStr.append(".");
@@ -45,33 +43,49 @@ class StorageUtil {
       partStr.append(parts.get(i));
       partStr.append("'");
       partStr.append(")");
-      partStr.append(" OR ");
+      sep = " OR ";
     }
-
-    // add the last partition
-    partStr.append("(");
-    partStr.append(tableName);
-    partStr.append(".");
-    partStr.append(timeDimName);
-    partStr.append(" = '");
-    partStr.append(parts.get(parts.size() - 1));
-    partStr.append("'");
-    partStr.append(")");
     return partStr.toString();
+  }
+
+  public static String getNotLatestClauseForDimensions(String alias, Set<String> timedDimensions, String partCol) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "";
+    for (String timePartCol : timedDimensions) {
+      if(!timePartCol.equals(partCol)) {
+        sb.append(sep).append(alias).append(".").append(timePartCol)
+          .append(" != '").append(StorageConstants.LATEST_PARTITION_VALUE).append("'");
+        sep = " AND ";
+      }
+    }
+    return sb.toString();
+  }
+
+  public static String joinWithAnd(String... clauses) {
+    StringBuilder sb = new StringBuilder();
+    String sep = "((";
+    for (String clause : clauses) {
+      if (clause != null && !clause.isEmpty()) {
+        sb
+          .append(sep)
+          .append(clause);
+        sep = ") AND (";
+      }
+    }
+    return sb
+      .append(sep.equals("((") ? "" : "))")
+      .toString();
   }
 
   /**
    * Get minimal set of storages which cover the queried partitions
-   * 
-   * @param answeringParts
-   *          Map from partition to set of answering storage tables
-   * @param Map
-   *          from storage to covering parts
-   * 
+   *
+   * @param answeringParts       Map from partition to set of answering storage tables
+   * @param minimalStorageTables from storage to covering parts
    * @return true if multi table select is enabled, false otherwise
    */
   static boolean getMinimalAnsweringTables(List<FactPartition> answeringParts,
-      Map<String, Set<FactPartition>> minimalStorageTables) {
+    Map<String, Set<FactPartition>> minimalStorageTables) {
     // map from storage table to the partitions it covers
     Map<String, Set<FactPartition>> invertedMap = new HashMap<String, Set<FactPartition>>();
     boolean enableMultiTableSelect = true;
@@ -110,7 +124,7 @@ class StorageUtil {
   }
 
   private static Map<String, Set<FactPartition>> getMaxCoveringStorage(
-      final Map<String, Set<FactPartition>> storageCoveringMap, Set<FactPartition> queriedParts) {
+    final Map<String, Set<FactPartition>> storageCoveringMap, Set<FactPartition> queriedParts) {
     int coveringcount = 0;
     int maxCoveringCount = 0;
     String maxCoveringStorage = null;

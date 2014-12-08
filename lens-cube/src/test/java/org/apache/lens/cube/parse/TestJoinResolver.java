@@ -322,7 +322,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hql = ctx.toHQL();
     System.out.println("testDimOnlyQuery@@@HQL:" + hql);
     System.out.println("testDimOnlyQuery@@@Resolved join clause: " + getAutoResolvedFromString(ctx));
-    Assert.assertTrue(hql.contains("WHERE ((citydim.dt = 'latest')) LIMIT 10"));
+    Assert.assertTrue(hql.matches(".*?WHERE\\W+citydim.dt = 'latest'\\W+LIMIT 10.*?"));
     Assert.assertEquals(getDbName() + "c1_citytable citydim inner join " + getDbName()
         + "c1_statetable statedim on citydim.stateid = statedim.id and (statedim.dt = 'latest')",
         getAutoResolvedFromString(ctx).trim());
@@ -350,7 +350,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     Assert.assertEquals(getDbName() + "c1_citytable citydim left outer join " + getDbName()
         + "c1_statetable statedim on citydim.stateid = statedim.id" + " and (statedim.dt = 'latest')",
         getAutoResolvedFromString(context).trim());
-    Assert.assertTrue(hql.contains("WHERE ((citydim.dt = 'latest'))"));
+    Assert.assertTrue(hql.matches(".*?WHERE\\W+citydim.dt = 'latest'\\W+.*?"));
 
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "RIGHTOUTER");
     rewriter = new CubeQueryRewriter(conf);
@@ -361,7 +361,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     Assert.assertEquals(getDbName() + "c1_citytable citydim right outer join " + getDbName()
         + "c1_statetable statedim on citydim.stateid = statedim.id " + "and (citydim.dt = 'latest')",
         getAutoResolvedFromString(context).trim());
-    Assert.assertTrue(hql.contains("WHERE ((statedim.dt = 'latest'))"));
+    Assert.assertTrue(hql.matches(".*?WHERE\\W+statedim.dt = 'latest'\\W+.*?"));
 
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "FULLOUTER");
     rewriter = new CubeQueryRewriter(conf);

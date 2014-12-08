@@ -42,6 +42,7 @@ import org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
@@ -184,7 +185,12 @@ public class CubeTestSetup {
   }
 
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
-      Map<String, String> storageTableToWhereClause) {
+    Map<String, String> storageTableToWhereClause) {
+    return getExpectedQuery(cubeName, selExpr, whereExpr, postWhereExpr, storageTableToWhereClause, null);
+  }
+
+  public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
+      Map<String, String> storageTableToWhereClause, List<String> notLatestConditions) {
     StringBuilder expected = new StringBuilder();
     int numTabs = storageTableToWhereClause.size();
     Assert.assertEquals(1, numTabs);
@@ -196,6 +202,11 @@ public class CubeTestSetup {
       expected.append(cubeName);
       expected.append(" WHERE ");
       expected.append("(");
+      if(notLatestConditions!= null) {
+        for(String cond: notLatestConditions) {
+          expected.append(cond).append(" AND ");
+        }
+      }
       if (whereExpr != null) {
         expected.append(whereExpr);
         expected.append(" AND ");
@@ -208,9 +219,12 @@ public class CubeTestSetup {
     }
     return expected.toString();
   }
-
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
-      String rangeWhere, String storageTable) {
+    String rangeWhere, String storageTable) {
+    return getExpectedQuery(cubeName, selExpr, whereExpr, postWhereExpr, rangeWhere, storageTable, null);
+  }
+  public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
+    String rangeWhere, String storageTable, List<String> notLatestConditions) {
     StringBuilder expected = new StringBuilder();
     expected.append(selExpr);
     expected.append(getDbName() + storageTable);
@@ -218,6 +232,11 @@ public class CubeTestSetup {
     expected.append(cubeName);
     expected.append(" WHERE ");
     expected.append("(");
+    if(notLatestConditions!= null) {
+      for(String cond: notLatestConditions) {
+        expected.append(cond).append(" AND ");
+      }
+    }
     if (whereExpr != null) {
       expected.append(whereExpr);
       expected.append(" AND ");
@@ -229,9 +248,14 @@ public class CubeTestSetup {
     }
     return expected.toString();
   }
-
   public static String getExpectedQuery(String cubeName, String selExpr, String joinExpr, String whereExpr,
-      String postWhereExpr, List<String> joinWhereConds, Map<String, String> storageTableToWhereClause) {
+    String postWhereExpr, List<String> joinWhereConds, Map<String, String> storageTableToWhereClause) {
+    return getExpectedQuery(cubeName, selExpr, joinExpr, whereExpr, postWhereExpr,
+      joinWhereConds, storageTableToWhereClause, null);
+  }
+  public static String getExpectedQuery(String cubeName, String selExpr, String joinExpr, String whereExpr,
+      String postWhereExpr, List<String> joinWhereConds, Map<String, String> storageTableToWhereClause,
+    List<String> notLatestConditions) {
     StringBuilder expected = new StringBuilder();
     int numTabs = storageTableToWhereClause.size();
     Assert.assertEquals(1, numTabs);
@@ -244,6 +268,11 @@ public class CubeTestSetup {
       expected.append(joinExpr);
       expected.append(" WHERE ");
       expected.append("(");
+      if(notLatestConditions!= null) {
+        for(String cond: notLatestConditions) {
+          expected.append(cond).append(" AND ");
+        }
+      }
       if (whereExpr != null) {
         expected.append(whereExpr);
         expected.append(" AND ");
@@ -411,6 +440,23 @@ public class CubeTestSetup {
   public static String getExpectedQuery(String dimName, String selExpr, String postWhereExpr, String storageTable,
       boolean hasPart) {
     return getExpectedQuery(dimName, selExpr, null, null, postWhereExpr, storageTable, hasPart);
+  }
+
+  public static List<String> getNotLatestConditions(final String cubeName, final String timePart,
+    final String storageTableName) throws SemanticException {
+    return new ArrayList<String>() {
+      {
+        try {
+          for(FieldSchema fs: Hive.get().getTable(storageTableName).getPartitionKeys()) {
+            if(!fs.getName().equals(timePart)) {
+              add(cubeName + "." + fs.getName() + " != '" + StorageConstants.LATEST_PARTITION_VALUE + "'");
+            }
+          }
+        } catch (HiveException e) {
+          throw new SemanticException(e);
+        }
+      }
+    };
   }
 
   public static String getExpectedQuery(String dimName, String selExpr, String joinExpr, String whereExpr,

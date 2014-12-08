@@ -19,14 +19,6 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.lens.cube.parse.CubeTestSetup.getDbName;
-import static org.apache.lens.cube.parse.CubeTestSetup.getExpectedQuery;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2days;
-import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly2daysWithTimeDim;
-import static org.apache.lens.cube.parse.CubeTestSetup.now;
-import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
-import static org.apache.lens.cube.parse.CubeTestSetup.twodaysBack;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -34,6 +26,8 @@ import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
 public class TestDenormalizationResolver extends TestQueryRewrite {
 
@@ -59,12 +53,14 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     String hqlQuery = rewrite("select dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
     String expecteddim2big1 =
         getExpectedQuery(cubeName, "select testcube.dim2big1," + " max(testcube.msr3), sum(testcube.msr2) FROM ", null,
-            " group by testcube.dim2big1", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"));
+            " group by testcube.dim2big1", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
+          getNotLatestConditions(cubeName, "it", "C2_summary4"));
     TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
     hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
     String expecteddim2big2 =
         getExpectedQuery(cubeName, "select testcube.dim2big2, max(testcube.msr3), sum(testcube.msr2) FROM ", null,
-            " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"));
+            " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
+          getNotLatestConditions(cubeName, "it", "C2_summary4"));
     TestCubeRewriter.compareQueries(expecteddim2big2, hqlQuery);
     Throwable th = null;
     try {
@@ -85,7 +81,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
                 + getDbName() + "c2_testdim2tbl3 testdim2 " + "on testcube.dim2big1 = testdim2.bigid1" + " join "
                 + getDbName() + "c2_testdim3tbl testdim3 on " + "testdim2.testdim3id = testdim3.id", null,
             " group by testdim3.name, (testcube.dim2big1)", null,
-            getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"));
+            getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
+          getNotLatestConditions(cubeName, "it", "C2_summary4"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     Configuration conf2 = new Configuration(conf);

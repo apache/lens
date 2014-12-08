@@ -19,9 +19,11 @@
 package org.apache.lens.cube.parse;
 
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
@@ -36,21 +38,9 @@ class DimOnlyHQLContext extends DimHQLContext {
 
   public static Log LOG = LogFactory.getLog(DimOnlyHQLContext.class.getName());
 
-  private final CubeQueryContext query;
-
-  public CubeQueryContext getQuery() {
-    return query;
-  }
-
   DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query) throws SemanticException {
-    super(dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
+    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), query.getWhereTree(), query.getGroupByTree(), query
         .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
-    this.query = query;
-  }
-
-  protected void setMissingExpressions() throws SemanticException {
-    setFrom(getFromString());
-    super.setMissingExpressions();
   }
 
   public String toHQL() throws SemanticException {
@@ -66,15 +56,27 @@ class DimOnlyHQLContext extends DimHQLContext {
     }
   }
 
-  private String getFromString() throws SemanticException {
-    String fromString = null;
-    String fromTable = getFromTable();
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
+  @Override
+  protected String getPostSelectionWhereClause() throws SemanticException {
+    return null;
+  }
+
+  protected String getFromString() throws SemanticException {
+    String fromString = getFromTable();
+    if (query.isAutoJoinResolved()) {
       fromString =
-          query.getAutoJoinCtx().getFromString(fromTable, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
-    } else {
-      fromString = fromTable;
+          query.getAutoJoinCtx().getFromString(fromString, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
     }
     return fromString;
+  }
+
+  @Override
+  protected Set<Dimension> getQueriedDimSet() {
+    return getDimsToQuery().keySet();
+  }
+
+  @Override
+  protected CandidateFact getQueriedFact() {
+    return null;
   }
 }

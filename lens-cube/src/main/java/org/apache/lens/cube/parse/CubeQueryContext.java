@@ -231,6 +231,10 @@ public class CubeQueryContext {
     return true;
   }
 
+  public boolean isAutoJoinResolved() {
+    return autoJoinCtx != null && autoJoinCtx.isJoinsResolved();
+  }
+
   // Holds the context of optional dimension
   // A dimension is optional if it is not queried directly by the user, but is
   // required by a candidate table to get a denormalized field from reference
@@ -998,11 +1002,12 @@ public class CubeQueryContext {
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {
-    if (!hasCubeInQuery()) {
+    return getPartitionColumnOfTimeDim(cube, timeDimName);
+  }
+  public static String getPartitionColumnOfTimeDim(CubeInterface cube, String timeDimName) {
+    if (cube == null) {
       return timeDimName;
     }
-
-    CubeInterface cube = getCube();
     if (cube instanceof DerivedCube) {
       return ((DerivedCube) cube).getParent().getPartitionColumnOfTimeDim(timeDimName);
     } else {
@@ -1011,11 +1016,12 @@ public class CubeQueryContext {
   }
 
   public String getTimeDimOfPartitionColumn(String partCol) {
-    if (!hasCubeInQuery()) {
+    return getTimeDimOfPartitionColumn(cube, partCol);
+  }
+  public static String getTimeDimOfPartitionColumn(CubeInterface cube, String partCol) {
+    if (cube == null) {
       return partCol;
     }
-
-    CubeInterface cube = getCube();
     if (cube instanceof DerivedCube) {
       return ((DerivedCube) cube).getParent().getTimeDimOfPartitionColumn(partCol);
     } else {

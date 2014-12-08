@@ -23,50 +23,51 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.Dimension;
 
 /**
  * HQL context class which passes all query strings from the fact and works with
  * required dimensions for the fact.
- * 
+ *
  */
 public class FactHQLContext extends DimHQLContext {
 
   public static Log LOG = LogFactory.getLog(FactHQLContext.class.getName());
 
   private final CandidateFact fact;
-  private final CubeQueryContext query;
   private final Set<Dimension> factDims;
 
   FactHQLContext(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> factDims,
       CubeQueryContext query) throws SemanticException {
-    super(dimsToQuery, factDims, fact.getSelectTree(), fact.getWhereTree(), fact.getGroupByTree(), null, fact
+    super(query, dimsToQuery, factDims, fact.getSelectTree(), fact.getWhereTree(), fact.getGroupByTree(), null, fact
         .getHavingTree(), null);
     this.fact = fact;
-    this.query = query;
     this.factDims = factDims;
     LOG.info("factDims:" + factDims + " for fact:" + fact);
   }
 
-  protected void setMissingExpressions() throws SemanticException {
-    setFrom(getFromString());
-    super.setMissingExpressions();
+  @Override
+  protected String getPostSelectionWhereClause() throws SemanticException {
+    return StorageUtil.getNotLatestClauseForDimensions(
+      query.getAliasForTabName(query.getCube().getName()),
+      fact.getTimePartCols(),
+      query.getTimeRanges().iterator().next().getPartitionColumn());
   }
 
-  private String getFromString() throws SemanticException {
-    String fromString = null;
-    if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
-      String fromTable = getFromTable();
-      fromString = query.getAutoJoinCtx().getFromString(fromTable, fact, factDims, getDimsToQuery(), query);
-    } else {
-      fromString = query.getQBFromString(fact, getDimsToQuery());
-    }
-    return fromString;
+  @Override
+  protected Set<Dimension> getQueriedDimSet() {
+    return factDims;
   }
 
-  protected String getFromTable() {
-    return fact.getStorageString(query.getAliasForTabName(query.getCube().getName()));
+  @Override
+  protected CandidateFact getQueriedFact() {
+    return fact;
+  }
+
+  protected String getFromTable() throws SemanticException {
+    return query.getQBFromString(fact, getDimsToQuery());
   }
 
   public CandidateFact getFactToQuery() {
