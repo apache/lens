@@ -41,9 +41,12 @@ Installing and running lens
 
 * Installing and running lens-server
 
-  Use can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/lens> and </usr/local/lens-client> respectively.
+  Users can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/lens> and </usr/local/lens-client> respectively.
 
   Let us go over how the install looks, in the subsections below.
+  
+  Users can also use the docker container to mount the src base directory into the container.
+  
 
 ** Server install and configuration
 
@@ -188,3 +191,40 @@ Installing and running lens
   
   Examples folder contains sample resource files, data files and query files which will be used by <<run-examples.sh>> script.
   
+* Running Lens in Docker
+
+  Lens docker files are located in 
+
++---+
+  incubator-lens/lens-docker/lens-test
++---+
+
+  The above directory contains the lens docker images that can be used for development and testing.
+
+  To build the image
+
++---+
+  cd tools/scripts
+  ./build-docker.sh
++---+
+
+  Before running the build docker must be installed in the system. The above script will build the lens docker image and download the dependent images of hive and hadoop.
+
+  To run the image
+
++---+
+  cd tools/scripts
+  ./run-docker.sh
++---+
+
+  This will start the docker container and the container will have its Lens directories mounted to your actual checked out code, allowing you to modify and recompile your Lens source and have them immediately usable in the docker images (without rebuilding the image).
+
+
+
+
+
+
+
+
+
+
