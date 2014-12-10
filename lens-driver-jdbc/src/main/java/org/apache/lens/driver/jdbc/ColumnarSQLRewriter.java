@@ -84,6 +84,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The merged query. */
   protected StringBuilder mergedQuery = new StringBuilder();
+  
+  /** The join list. */
+  protected ArrayList<String> joinList = new ArrayList<String>();
 
   /** The join condition. */
   protected StringBuilder joinCondition = new StringBuilder();
@@ -307,10 +310,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         // User has specified a join condition for filter pushdown.
         joinFilter = HQLParser.getString((ASTNode) node.getChild(2));
       }
-
-      joinCondition.append(" ").append(joinType).append(" ").append(rightTable).append(" on ").append(joinFilter)
-          .append(" ");
-
+      joinList.add(joinType + (" ") + (rightTable) + (" on ")+ (joinFilter) + (" "));
     }
 
     for (int i = 0; i < node.getChildCount(); i++) {
@@ -319,6 +319,21 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
   }
 
+  /**
+   * Construct join chain
+   * 
+   * @return
+   */
+  public StringBuilder constructJoinChain() {
+    getJoinCond(fromAST);
+    Collections.reverse(joinList);
+
+    for (String key : joinList) {
+      joinCondition.append(" ").append(key);
+    }
+    return joinCondition;
+  }
+  
   /*
    * Get filter conditions if user has specified a join condition for filter pushdown.
    */
@@ -621,6 +636,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     selectTree = fromTree = joinTree = whereTree = groupByTree = havingTree = orderByTree = null;
     selectAST = fromAST = joinAST = whereAST = groupByAST = havingAST = orderByAST = null;
     mapAliases.clear();
+    joinList.clear();
     limit = null;
   }
 
@@ -701,7 +717,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST);
-    getJoinCond(fromAST);
+    constructJoinChain();
     getAllFilters(whereAST);
     buildSubqueries(fromAST);
 

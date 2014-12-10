@@ -250,10 +250,10 @@ public class TestColumnarSQLRewriter {
         + "right outer join time_dim time_dim on location_dim.id = time_dim.id ";
     String actual4 = qtest.rewrite(query4, conf);
     String expected4 = "select count( distinct ( location_dim__db_location_dim_location_dim . id )) "
-        + "from db.location_dim location_dim__db_location_dim_location_dim  right outer join "
-        + "time_dim time_dim___time_dim on (( location_dim__db_location_dim_location_dim . id ) = "
-        + "( time_dim___time_dim . id ))  left outer join db.item_dim item_dim__db_item_dim_item_dim "
-        + "on (( location_dim__db_location_dim_location_dim . id ) = ( item_dim__db_item_dim_item_dim . id ))";
+        + "from db.location_dim location_dim__db_location_dim_location_dim  left outer join db.item_dim "
+        + "item_dim__db_item_dim_item_dim on (( location_dim__db_location_dim_location_dim . id ) = "
+        + "( item_dim__db_item_dim_item_dim . id ))  right outer join time_dim time_dim___time_dim on "
+        + "(( location_dim__db_location_dim_location_dim . id ) = ( time_dim___time_dim . id ))";
     compareQueries(expected4, actual4);
 
   }
@@ -282,12 +282,12 @@ public class TestColumnarSQLRewriter {
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
     SessionState.start(conf);
-    
+
     String rwq = qtest.rewrite(query, conf);
-    String expected = "inner join location_dim location_dim___location_dim on ((( sales_fact___fact . location_key ) "
-        + "= ( location_dim___location_dim . location_key )) and (( location_dim___location_dim . location_name ) "
-        + "=  'test123' ))  inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) "
-        + "= ( time_dim___time_dim . time_key ))";
+    String expected = "inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
+        + "( time_dim___time_dim . time_key ))  inner join location_dim location_dim___location_dim on "
+        + "((( sales_fact___fact . location_key ) = ( location_dim___location_dim . location_key )) "
+        + "and (( location_dim___location_dim . location_name ) =  'test123' ))";
     String actual = qtest.joinCondition.toString();
 
     compareQueries(expected, actual);
@@ -468,9 +468,8 @@ public class TestColumnarSQLRewriter {
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
         + "date(( time_dim___time_dim . day )), ( item_dim___item_dim . item_key ),  case  when "
         + "(sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  0.0  else sum(sum_sales_fact___fact_dollars_sold) "
-        + "end  dollars_sold , format(sum(sum_sales_fact___fact_units_sold),  4 ), "
-        + "format(avg(avg_sales_fact___fact_dollars_sold),  '##################.###' ), "
-        + "min(min_sales_fact___fact_dollars_sold), max(max_sales_fact___fact_dollars_sold) "
+        + "end  dollars_sold , format(sum(sum_sales_fact___fact_units_sold),  4 ), format(avg(avg_sales_fact___fact_dollars_sold),  "
+        + "'##################.###' ), min(min_sales_fact___fact_dollars_sold), max(max_sales_fact___fact_dollars_sold) "
         + "from  (select sales_fact___fact.time_key,sales_fact___fact.location_key,sales_fact___fact.item_key,"
         + "sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold, "
         + "sum(( sales_fact___fact . units_sold )) as sum_sales_fact___fact_units_sold, "
@@ -478,22 +477,21 @@ public class TestColumnarSQLRewriter {
         + "min(( sales_fact___fact . dollars_sold )) as min_sales_fact___fact_dollars_sold, "
         + "max(( sales_fact___fact . dollars_sold )) as max_sales_fact___fact_dollars_sold "
         + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  (  select time_dim .time_key "
-        + "from time_dim where ( time_dim. time_key ) between date_add( '2013-01-01' , interval 1  day) and "
-        + "date_sub( '2013-01-31' , interval 3  day) ) and sales_fact___fact.location_key in  "
-        + "(  select location_dim .location_key from location_dim where (( location_dim. location_name ) "
-        + "=  'test123' ) ) and sales_fact___fact.item_key in  (  select item_dim .item_key from item_dim "
-        + "where (( item_dim. item_name ) =  'item_1' ) )  group by sales_fact___fact.time_key,"
+        + "from time_dim where ( time_dim. time_key ) between date_add( '2013-01-01' , interval 1  day) "
+        + "and date_sub( '2013-01-31' , interval 3  day) ) and sales_fact___fact.location_key in  "
+        + "(  select location_dim .location_key from location_dim where (( location_dim. location_name ) =  'test123' ) ) "
+        + "and sales_fact___fact.item_key in  (  select item_dim .item_key from item_dim where "
+        + "(( item_dim. item_name ) =  'item_1' ) )  group by sales_fact___fact.time_key,"
         + "sales_fact___fact.location_key,sales_fact___fact.item_key) sales_fact___fact  "
+        + "inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
+        + "( time_dim___time_dim . time_key ))  inner join location_dim location_dim___location_dim "
+        + "on (( sales_fact___fact . location_key ) = ( location_dim___location_dim . location_key ))  "
         + "inner join item_dim item_dim___item_dim on ((( sales_fact___fact . item_key ) = "
-        + "( item_dim___item_dim . item_key )) and (( location_dim___location_dim . location_name ) =  'test123' ))  "
-        + "inner join location_dim location_dim___location_dim on (( sales_fact___fact . "
-        + "location_key ) = ( location_dim___location_dim . location_key ))  inner join "
-        + "time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
-        + "( time_dim___time_dim . time_key ))  where (( time_dim___time_dim . time_key ) "
-        + "between date_add( '2013-01-01' , interval 1  day) and date_sub( '2013-01-31' , interval 3  day) "
-        + "and (( item_dim___item_dim . item_name ) =  'item_1' )) group by ( sales_fact___fact . time_key ), "
-        + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ), "
-        + "( item_dim___item_dim . item_key ) order by dollars_sold  asc";
+        + "( item_dim___item_dim . item_key )) and (( location_dim___location_dim . location_name ) = "
+        + " 'test123' ))  where (( time_dim___time_dim . time_key ) between date_add( '2013-01-01' , interval 1  day) "
+        + "and date_sub( '2013-01-31' , interval 3  day) and (( item_dim___item_dim . item_name ) =  'item_1' )) "
+        + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
+        + "( time_dim___time_dim . day ), ( item_dim___item_dim . item_key ) order by dollars_sold  asc";
 
     compareQueries(expected, actual);
   }
@@ -539,52 +537,44 @@ public class TestColumnarSQLRewriter {
 
     String actual = qtest.rewrite(query, conf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  0.0  "
-        + "else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from  (select sales_fact___fact.time_key,"
+        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  "
+        + "0.0  else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from  (select sales_fact___fact.time_key,"
         + "sales_fact___fact.location_key,sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold "
-        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  (  select time_dim .time_key "
-        + "from time_dim where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-05'  ) and "
-        + "sales_fact___fact.location_key in  (  select location_dim .location_key from location_dim where"
-        + " (( location_dim. location_name ) =  'test123' ) )  group by sales_fact___fact.time_key,"
-        + "sales_fact___fact.location_key) sales_fact___fact  inner join location_dim location_dim___location_dim "
-        + "on ((( sales_fact___fact . location_key ) = ( location_dim___location_dim . location_key )) "
-        + "and (( location_dim___location_dim . location_name ) =  'test123' ))  inner join time_dim "
+        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim "
+        + "where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-05'  ) and sales_fact___fact.location_key in  "
+        + "(  select location_dim .location_key from location_dim where (( location_dim. location_name ) =  'test123' ) )  "
+        + "group by sales_fact___fact.time_key,sales_fact___fact.location_key) sales_fact___fact  inner join time_dim "
         + "time_dim___time_dim on (( sales_fact___fact . time_key ) = ( time_dim___time_dim . time_key ))  "
-        + "where ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-05'  "
-        + "group by ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ) order by dollars_sold  asc  "
-        + "union all select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) "
-        + "then  0.0  else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from "
-        + " (select sales_fact___fact.time_key,sales_fact___fact.location_key,"
-        + "sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold "
-        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in "
-        + " (  select time_dim .time_key from time_dim where ( time_dim. time_key ) "
-        + "between  '2013-02-01'  and  '2013-02-05'  ) and sales_fact___fact.location_key in  "
-        + "(  select location_dim .location_key from location_dim where (( location_dim. location_name ) =  "
-        + "'test123' ) )  group by sales_fact___fact.time_key,sales_fact___fact.location_key) sales_fact___fact  "
-        + "inner join location_dim location_dim___location_dim on ((( sales_fact___fact . location_key ) = "
-        + "( location_dim___location_dim . location_key )) and (( location_dim___location_dim . location_name ) =  "
-        + "'test123' ))  inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
-        + "( time_dim___time_dim . time_key ))  where ( time_dim___time_dim . time_key ) "
-        + "between  '2013-02-01'  and  '2013-02-05'  group by ( sales_fact___fact . time_key ), "
-        + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) order by "
-        + "dollars_sold  asc  union all select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  0.0  "
-        + "else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from  "
-        + "(select sales_fact___fact.time_key,sales_fact___fact.location_key,"
-        + "sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold "
-        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  "
-        + "(  select time_dim .time_key from time_dim where ( time_dim. time_key ) "
-        + "between  '2013-03-01'  and  '2013-03-05'  ) and sales_fact___fact.location_key in "
-        + " (  select location_dim .location_key from location_dim where (( location_dim. location_name ) =  "
-        + "'test123' ) )  group by sales_fact___fact.time_key,sales_fact___fact.location_key) sales_fact___fact  "
         + "inner join location_dim location_dim___location_dim on ((( sales_fact___fact . location_key ) = "
         + "( location_dim___location_dim . location_key )) and (( location_dim___location_dim . location_name ) =  'test123' )) "
-        + " inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = ( time_dim___time_dim . time_key ))  "
-        + "where ( time_dim___time_dim . time_key ) between  '2013-03-01'  and  '2013-03-05'  group by "
-        + "( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ) order by dollars_sold  asc";
+        + " where ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-05'  group by "
+        + "( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) "
+        + "order by dollars_sold  asc  union all select ( sales_fact___fact . time_key ), ( time_dim___time_dim . "
+        + "day_of_week ), ( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) "
+        + "then  0.0  else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from  (select sales_fact___fact.time_key,"
+        + "sales_fact___fact.location_key,sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold "
+        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  (  select time_dim .time_key "
+        + "from time_dim where ( time_dim. time_key ) between  '2013-02-01'  and  '2013-02-05'  ) and "
+        + "sales_fact___fact.location_key in  (  select location_dim .location_key from location_dim where "
+        + "(( location_dim. location_name ) =  'test123' ) )  group by sales_fact___fact.time_key,sales_fact___fact.location_key) "
+        + "sales_fact___fact  inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
+        + "( time_dim___time_dim . time_key ))  inner join location_dim location_dim___location_dim on ((( sales_fact___fact . "
+        + "location_key ) = ( location_dim___location_dim . location_key )) and (( location_dim___location_dim . location_name ) =  "
+        + "'test123' ))  where ( time_dim___time_dim . time_key ) between  '2013-02-01'  and  '2013-02-05'  group by "
+        + "( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) "
+        + "order by dollars_sold  asc  union all select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
+        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  0.0  else "
+        + "sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  from  (select sales_fact___fact.time_key,"
+        + "sales_fact___fact.location_key,sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold "
+        + "from sales_fact sales_fact___fact where sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim "
+        + "where ( time_dim. time_key ) between  '2013-03-01'  and  '2013-03-05'  ) and sales_fact___fact.location_key in  "
+        + "(  select location_dim .location_key from location_dim where (( location_dim. location_name ) =  'test123' ) ) "
+        + " group by sales_fact___fact.time_key,sales_fact___fact.location_key) sales_fact___fact  "
+        + "inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = ( time_dim___time_dim . time_key ))  "
+        + "inner join location_dim location_dim___location_dim on ((( sales_fact___fact . location_key ) = "
+        + "( location_dim___location_dim . location_key )) and (( location_dim___location_dim . location_name ) =  'test123' ))  "
+        + "where ( time_dim___time_dim . time_key ) between  '2013-03-01'  and  '2013-03-05'  group by ( sales_fact___fact . time_key ), "
+        + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) order by dollars_sold  asc";
     compareQueries(expected, actual);
   }
   
@@ -630,34 +620,33 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
   @Test
   public void testReplaceAlias() throws ParseException, SemanticException, LensException {
 
-   String query = "select fact.time_key,time_dim.day_of_week,time_dim.day,"
+    String query = "select fact.time_key,time_dim.day_of_week,time_dim.day,"
         + "case when sum(fact.dollars_sold) = 0 then 0.0 else sum(fact.dollars_sold) end dollars_sold "
         + "from db.sales_fact as fact " + "inner join time_dim as time_dim on fact.time_key = time_dim.time_key "
-        + "inner join db.location_dim ld on fact.location_key = ld.location_key "
-        + "and ld.location_name = 'test123' "
+        + "inner join db.location_dim ld on fact.location_key = ld.location_key " + "and ld.location_name = 'test123' "
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-   SessionState.start(conf);
+    SessionState.start(conf);
 
     String actual = qtest.rewrite(query, conf);
-    String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ),"
-        + " ( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) =  0 ) "
-        + "then  0.0  else sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) end  dollars_sold  from  "
+    String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
+        + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) =  0 ) then  0.0  "
+        + "else sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) end  dollars_sold  from  "
         + "(select sales_fact__db_sales_fact_fact.time_key,sales_fact__db_sales_fact_fact.location_key,"
         + "sum(( sales_fact__db_sales_fact_fact . dollars_sold )) as sum_sales_fact__db_sales_fact_fact_dollars_sold "
-        + "from db.sales_fact sales_fact__db_sales_fact_fact where sales_fact__db_sales_fact_fact.time_key in "
-        + " (  select time_dim .time_key from time_dim where ( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  ) "
-        + "and sales_fact__db_sales_fact_fact.location_key in  (  select location_dim .location_key from "
-        + "location_dim where (( location_dim. location_name ) =  'test123' ) )  group by "
+        + "from db.sales_fact sales_fact__db_sales_fact_fact where sales_fact__db_sales_fact_fact.time_key in  "
+        + "(  select time_dim .time_key from time_dim where ( time_dim. time_key ) between  '2013-01-01' "
+        + " and  '2013-01-31'  ) and sales_fact__db_sales_fact_fact.location_key in  (  select location_dim .location_key "
+        + "from location_dim where (( location_dim. location_name ) =  'test123' ) )  group by "
         + "sales_fact__db_sales_fact_fact.time_key,sales_fact__db_sales_fact_fact.location_key) "
-        + "sales_fact__db_sales_fact_fact  inner join db.location_dim location_dim__db_location_dim_ld "
-        + "on ((( sales_fact__db_sales_fact_fact . location_key ) = ( location_dim__db_location_dim_ld . location_key )) "
-        + "and (( location_dim__db_location_dim_ld . location_name ) =  'test123' ))  inner join time_dim "
-        + "time_dim___time_dim on (( sales_fact__db_sales_fact_fact . time_key ) = ( time_dim___time_dim . time_key ))  "
-        + "where ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31'  "
-        + "group by ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
-        + "( time_dim___time_dim . day ) order by dollars_sold  desc";
+        + "sales_fact__db_sales_fact_fact  inner join time_dim time_dim___time_dim on "
+        + "(( sales_fact__db_sales_fact_fact . time_key ) = ( time_dim___time_dim . time_key ))  "
+        + "inner join db.location_dim location_dim__db_location_dim_ld on ((( sales_fact__db_sales_fact_fact . location_key )"
+        + " = ( location_dim__db_location_dim_ld . location_key )) and (( location_dim__db_location_dim_ld . "
+        + "location_name ) =  'test123' ))  where ( time_dim___time_dim . time_key ) between  '2013-01-01'  "
+        + "and  '2013-01-31'  group by ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ),"
+        + " ( time_dim___time_dim . day ) order by dollars_sold  desc";
 
     compareQueries(expected, actual);
   }
@@ -676,16 +665,18 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
     SessionState.start(conf);
 
     String actual = qtest.rewrite(query, conf);
-    String expected = "select ( dim1___dim1 . date ) date , sum(sum_fact___f_msr1) msr1 , ( dim2___dim2 . name ) dim2_name , "
-        + "( dim3___dim3 . name ) dim3_name , ( dim4___dim4 . name ) dim4_name  from  "
-        + "(select fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id,sum(( fact___f . msr1 )) as sum_fact___f_msr1 "
-        + "from fact fact___f where fact___f.dim1_id in  (  select dim1 .id from dim1 where (( dim1. date ) =  '2014-11-25 00:00:00' ) )  "
-        + "group by fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id) fact___f  inner join dim4 dim4___dim4 "
-        + "on (( dim2___dim2 . id_2 ) = ( dim4___dim4 . id_2 ))  inner join dim3 dim3___dim3 "
-        + "on (( fact___f . dim3_id ) = ( dim3___dim3 . id ))  inner join dim2 dim2___dim2 on (( fact___f . dim2_id ) = "
-        + "( dim2___dim2 . id ))  inner join dim1 dim1___dim1 on (( fact___f . dim1_id ) = ( dim1___dim1 . id ))  "
-        + "where (( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) group by ( dim1___dim1 . date ), "
-        + "( dim2___dim2 . name ), ( dim3___dim3 . name ), ( dim4___dim4 . name )";
+    String expected = "select ( dim1___dim1 . date ) date , sum(sum_fact___f_msr1) msr1 , ( dim2___dim2 . name ) "
+        + "dim2_name , ( dim3___dim3 . name ) dim3_name , ( dim4___dim4 . name ) dim4_name  from  "
+        + "(select fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id,sum(( fact___f . msr1 )) "
+        + "as sum_fact___f_msr1 from fact fact___f where fact___f.dim1_id in  (  select dim1 .id "
+        + "from dim1 where (( dim1. date ) =  '2014-11-25 00:00:00' ) )  group by "
+        + "fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id) fact___f  inner join dim1 "
+        + "dim1___dim1 on (( fact___f . dim1_id ) = ( dim1___dim1 . id ))  inner join dim2 "
+        + "dim2___dim2 on (( fact___f . dim2_id ) = ( dim2___dim2 . id ))  inner join dim3 dim3___dim3 on "
+        + "(( fact___f . dim3_id ) = ( dim3___dim3 . id ))  inner join dim4 dim4___dim4 on "
+        + "(( dim2___dim2 . id_2 ) = ( dim4___dim4 . id_2 ))  where (( dim1___dim1 . date ) ="
+        + "  '2014-11-25 00:00:00' ) group by ( dim1___dim1 . date ), ( dim2___dim2 . name ), "
+        + "( dim3___dim3 . name ), ( dim4___dim4 . name )";
 
     compareQueries(expected, actual);
   }
