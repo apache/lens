@@ -372,13 +372,24 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ASTNode left = (ASTNode) node.getChild(0);
         ASTNode right = (ASTNode) node.getChild(1);
 
+        // Get fact table and alias and match with join keys
+        String factTable = "";
+        String factAlias = "";
+        String factNameAndAlis = getFactNameAlias(fromAST);
+        String[] keys = factNameAndAlis.split(" +");
+        if (keys.length == 2) {
+          factTable = keys[0];
+          factAlias = keys[1];
+        }
+
         // Get the fact and dimension columns in table_name.column_name format
         String factJoinKeys = HQLParser.getString((ASTNode) left).toString().replaceAll("\\s+", "")
             .replaceAll("[(,)]", "");
         String dimJoinKeys = HQLParser.getString((ASTNode) right).toString().replaceAll("\\s+", "")
             .replaceAll("[(,)]", "");
         String dimTableName = dimJoinKeys.substring(0, dimJoinKeys.indexOf("__"));
-        factKeys.append(factJoinKeys).append(",");
+        if (factJoinKeys.matches("(.*)".concat(factAlias).concat("(.*)")))
+          factKeys.append(factJoinKeys).append(",");
 
         // Construct part of subquery by referring join condition
         // fact.fact_key = dim_table.dim_key

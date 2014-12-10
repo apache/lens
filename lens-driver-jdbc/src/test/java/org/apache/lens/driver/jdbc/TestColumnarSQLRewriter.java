@@ -661,6 +661,34 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
 
     compareQueries(expected, actual);
   }
+  
+
+  @Test
+  public void testSkipSnowflakeJoinFact() throws ParseException, SemanticException, LensException {
+
+    String query = "SELECT (dim1 . date) date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name, "
+        + "(dim3 . name) dim3_name , (dim4 . name) dim4_name " + "FROM fact f "
+        + "INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id " + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id "
+        + "INNER JOIN dim3 dim3 ON f.dim3_id = dim3.id " + "INNER JOIN dim4 dim4 ON  dim2.id_2 = dim4.id_2 "
+        + "WHERE ((dim1 . date) = '2014-11-25 00:00:00') "
+        + "GROUP BY (dim1 . date),  (dim2 . name), (dim3 . name) , (dim4 . name) ";
+
+    SessionState.start(conf);
+
+    String actual = qtest.rewrite(query, conf);
+    String expected = "select ( dim1___dim1 . date ) date , sum(sum_fact___f_msr1) msr1 , ( dim2___dim2 . name ) dim2_name , "
+        + "( dim3___dim3 . name ) dim3_name , ( dim4___dim4 . name ) dim4_name  from  "
+        + "(select fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id,sum(( fact___f . msr1 )) as sum_fact___f_msr1 "
+        + "from fact fact___f where fact___f.dim1_id in  (  select dim1 .id from dim1 where (( dim1. date ) =  '2014-11-25 00:00:00' ) )  "
+        + "group by fact___f.dim1_id,fact___f.dim2_id,fact___f.dim3_id) fact___f  inner join dim4 dim4___dim4 "
+        + "on (( dim2___dim2 . id_2 ) = ( dim4___dim4 . id_2 ))  inner join dim3 dim3___dim3 "
+        + "on (( fact___f . dim3_id ) = ( dim3___dim3 . id ))  inner join dim2 dim2___dim2 on (( fact___f . dim2_id ) = "
+        + "( dim2___dim2 . id ))  inner join dim1 dim1___dim1 on (( fact___f . dim1_id ) = ( dim1___dim1 . id ))  "
+        + "where (( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) group by ( dim1___dim1 . date ), "
+        + "( dim2___dim2 . name ), ( dim3___dim3 . name ), ( dim4___dim4 . name )";
+
+    compareQueries(expected, actual);
+  }
 
   /**
    * Test replace db name.
