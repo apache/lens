@@ -31,6 +31,8 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_UNIQUEJOIN;
 
 import java.util.*;
 
+import lombok.Getter;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -111,7 +113,10 @@ class JoinResolver implements ContextRewriter {
 
     // Map of a joined table to its columns which are part of any of the join
     // paths. This is used in candidate table resolver
-    Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathColumns =
+    @Getter private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathFromColumns =
+        new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
+
+    @Getter private Map<Dimension, Map<AbstractCubeTable, List<String>>> joinPathToColumns =
         new HashMap<Dimension, Map<AbstractCubeTable, List<String>>>();
 
     public AutoJoinContext(Map<Dimension, List<SchemaGraph.JoinPath>> allPaths,
@@ -126,6 +131,9 @@ class JoinResolver implements ContextRewriter {
       this.autoJoinTarget = autoJoinTarget;
       this.joinTypeCfg = joinTypeCfg;
       this.joinsResolved = joinsResolved;
+      LOG.debug("All join paths:" + allPaths);
+      LOG.debug("Join path from columns:" + joinPathFromColumns);
+      LOG.debug("Join path to columns:" + joinPathToColumns);
     }
 
     public AbstractCubeTable getAutoJoinTarget() {
@@ -145,47 +153,57 @@ class JoinResolver implements ContextRewriter {
     }
 
     public void refreshJoinPathColumns() {
-      joinPathColumns.clear();
+      joinPathFromColumns.clear();
+      joinPathToColumns.clear();
       for (Map.Entry<Dimension, List<SchemaGraph.JoinPath>> joinPathEntry : allPaths.entrySet()) {
         List<SchemaGraph.JoinPath> joinPaths = joinPathEntry.getValue();
-        Map<AbstractCubeTable, List<String>> dimReachablePaths = joinPathColumns.get(joinPathEntry.getKey());
-        if (dimReachablePaths == null) {
-          dimReachablePaths = new HashMap<AbstractCubeTable, List<String>>();
-          joinPathColumns.put(joinPathEntry.getKey(), dimReachablePaths);
+        Map<AbstractCubeTable, List<String>> fromColPaths = joinPathFromColumns.get(joinPathEntry.getKey());
+        Map<AbstractCubeTable, List<String>> toColPaths = joinPathToColumns.get(joinPathEntry.getKey());
+        if (fromColPaths == null) {
+          fromColPaths = new HashMap<AbstractCubeTable, List<String>>();
+          joinPathFromColumns.put(joinPathEntry.getKey(), fromColPaths);
         }
-        populateJoinPathCols(joinPaths, dimReachablePaths);
+
+        if (toColPaths == null) {
+          toColPaths = new HashMap<AbstractCubeTable, List<String>>();
+          joinPathToColumns.put(joinPathEntry.getKey(), toColPaths);
+        }
+        populateJoinPathCols(joinPaths, fromColPaths, toColPaths);
       }
     }
 
     private void populateJoinPathCols(List<SchemaGraph.JoinPath> joinPaths,
-        Map<AbstractCubeTable, List<String>> joinPathColumns) {
+        Map<AbstractCubeTable, List<String>> fromPathColumns, Map<AbstractCubeTable, List<String>> toPathColumns) {
       for (SchemaGraph.JoinPath path : joinPaths) {
-        // TODO why is only first edge?
-        TableRelationship edge = path.getEdges().get(0);
-        AbstractCubeTable fromTable = edge.getFromTable();
-        String fromColumn = edge.getFromColumn();
-        List<String> columnsOfFromTable = joinPathColumns.get(fromTable);
-        if (columnsOfFromTable == null) {
-          columnsOfFromTable = new ArrayList<String>();
-          joinPathColumns.put(fromTable, columnsOfFromTable);
-        }
-        columnsOfFromTable.add(fromColumn);
+        for (TableRelationship edge : path.getEdges()) {
+          AbstractCubeTable fromTable = edge.getFromTable();
+          String fromColumn = edge.getFromColumn();
+          List<String> columnsOfFromTable = fromPathColumns.get(fromTable);
+          if (columnsOfFromTable == null) {
+            columnsOfFromTable = new ArrayList<String>();
+            fromPathColumns.put(fromTable, columnsOfFromTable);
+          }
+          columnsOfFromTable.add(fromColumn);
 
-        // Similarly populate for the 'to' table
-        AbstractCubeTable toTable = edge.getToTable();
-        String toColumn = edge.getToColumn();
-        List<String> columnsOfToTable = joinPathColumns.get(toTable);
-        if (columnsOfToTable == null) {
-          columnsOfToTable = new ArrayList<String>();
-          joinPathColumns.put(toTable, columnsOfToTable);
+          // Similarly populate for the 'to' table
+          AbstractCubeTable toTable = edge.getToTable();
+          String toColumn = edge.getToColumn();
+          List<String> columnsOfToTable = toPathColumns.get(toTable);
+          if (columnsOfToTable == null) {
+            columnsOfToTable = new ArrayList<String>();
+            toPathColumns.put(toTable, columnsOfToTable);
+          }
+          columnsOfToTable.add(toColumn);
         }
-        columnsOfToTable.add(toColumn);
       }
     }
 
+    public void printAllPaths(String src) {
+      LOG.info(src + " All paths" + allPaths);
+    }
     public void removeJoinedTable(Dimension dim) {
       allPaths.remove(dim);
-      joinPathColumns.remove(dim);
+      joinPathFromColumns.remove(dim);
     }
 
     public Map<AbstractCubeTable, String> getPartialJoinConditions() {
@@ -195,7 +213,7 @@ class JoinResolver implements ContextRewriter {
     public String getFromString(String fromTable, CandidateFact fact, Set<Dimension> qdims,
         Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext cubeql) throws SemanticException {
       String fromString = fromTable;
-      LOG.debug("All paths dump:" + cubeql.getAutoJoinCtx().getAllPaths());
+      LOG.info("All paths dump:" + cubeql.getAutoJoinCtx().getAllPaths());
       if (qdims == null || qdims.isEmpty()) {
         return fromString;
       }
@@ -257,8 +275,8 @@ class JoinResolver implements ContextRewriter {
               cubeql.getAliasForTabName(rel.getToTable().getName())));
 
           clause.append(" on ").append(cubeql.getAliasForTabName(rel.getFromTable().getName())).append(".")
-              .append(rel.getFromColumn()).append(" = ").append(cubeql.getAliasForTabName(rel.getToTable().getName()))
-              .append(".").append(rel.getToColumn());
+          .append(rel.getFromColumn()).append(" = ").append(cubeql.getAliasForTabName(rel.getToTable().getName()))
+          .append(".").append(rel.getToColumn());
 
           // We have to push user specified filters for the joined tables
           String userFilter = null;
@@ -324,7 +342,7 @@ class JoinResolver implements ContextRewriter {
             userFilter = (leftFilter == null ? "" : leftFilter) + (rightFilter == null ? "" : rightFilter);
             storageFilter =
                 (leftStorageFilter == null ? "" : leftStorageFilter)
-                    + (rightStorgeFilter == null ? "" : rightStorgeFilter);
+                + (rightStorgeFilter == null ? "" : rightStorgeFilter);
           }
 
           if (StringUtils.isNotBlank(userFilter)) {
@@ -356,23 +374,22 @@ class JoinResolver implements ContextRewriter {
       return joinsResolved;
     }
 
-    public Map<AbstractCubeTable, List<String>> getJoinPathColumnsOfTable(AbstractCubeTable table) {
-      return joinPathColumns.get(table);
-    }
-
     // Includes both queried join paths and optional join paths
     public Set<String> getAllJoinPathColumnsOfTable(AbstractCubeTable table) {
       Set<String> allPaths = new HashSet<String>();
-      for (Map<AbstractCubeTable, List<String>> optPaths : joinPathColumns.values()) {
+      for (Map<AbstractCubeTable, List<String>> optPaths : joinPathFromColumns.values()) {
         if (optPaths.get(table) != null) {
           allPaths.addAll(optPaths.get(table));
         }
       }
-      return allPaths;
-    }
 
-    public Map<Dimension, Map<AbstractCubeTable, List<String>>> getAlljoinPathColumns() {
-      return joinPathColumns;
+      for (Map<AbstractCubeTable, List<String>> optPaths : joinPathToColumns.values()) {
+        if (optPaths.get(table) != null) {
+          allPaths.addAll(optPaths.get(table));
+        }
+      }
+
+      return allPaths;
     }
 
     public void pruneAllPaths(CubeInterface cube, final Set<CandidateFact> cfacts,

@@ -429,4 +429,25 @@ public class TestJoinResolver extends TestQueryRewrite {
     query = "select citystate.name, cubestate.name, msr2 from basecube where " + twoDaysRange;
     query = "select cubestate.name, cityStateCapital msr2 from basecube where " + twoDaysRange;
   }
+
+  @Test
+  public void testMultiPaths() throws SemanticException, ParseException {
+    String query = "select testdim3.name, sum(msr2) from testcube where " + twoDaysRange;
+    String hqlQuery = rewrite(query, hconf);
+    String expected = getExpectedQuery("testcube", "select testdim3.name, sum(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testcube.testdim3id = testdim3.id and testdim3.dt = 'latest'",
+      null, "group by testdim3.name",
+      null, getWhereForDailyAndHourly2days("testcube", "c1_summary1"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    // hit a fact where there is no direct path
+    query = "select testdim3.name, avg(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select testdim3.name, avg(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim2tbl testdim2 ON testcube.dim2 = testdim2.id and testdim2.dt = 'latest'" +
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testdim2.testdim3id = testdim3.id and testdim3.dt = 'latest'",
+      null, "group by testdim3.name",
+      null, getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+  }
 }

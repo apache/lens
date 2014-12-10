@@ -208,6 +208,7 @@ class TimerangeResolver implements ContextRewriter {
             while (joinPathIterator.hasNext()) {
               SchemaGraph.JoinPath path = joinPathIterator.next();
               if (path.containsColumnOfTable(col, (AbstractCubeTable) cubeql.getCube())) {
+                LOG.info("Removing join path:" + path + " as columns :" + col + " is not available in the range");
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left

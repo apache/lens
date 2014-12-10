@@ -542,6 +542,9 @@ public class CubeTestSetup {
         "Timedim reference", new TableReference("hourdim", "id"), null, null, null));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim_day_id", "int", "ref dim"),
         "Timedim reference", new TableReference("daydim", "id"), null, null, null));
+    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("testdim3id", "int", "direct id to testdim3"),
+        "Timedim reference", new TableReference("testdim3", "id"), null, null, null));
+
     List<TableReference> references = new ArrayList<TableReference>();
     references.add(new TableReference("daydim", "full_date"));
     references.add(new TableReference("hourdim", "full_hour"));
@@ -1693,6 +1696,7 @@ public class CubeTestSetup {
     // add dimensions of the cube
     factColumns.add(new FieldSchema("dim1", "string", "dim1"));
     factColumns.add(new FieldSchema("dim2", "string", "dim2"));
+    factColumns.add(new FieldSchema("testdim3id", "string", "dim2"));
     factColumns.add(new FieldSchema("dim2big", "string", "dim2"));
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
@@ -1735,7 +1739,7 @@ public class CubeTestSetup {
 
     // create cube fact summary1
     Map<String, String> properties = new HashMap<String, String>();
-    String validColumns = commonCols.toString() + ",dim1";
+    String validColumns = commonCols.toString() + ",dim1,testdim3id";
     properties.put(MetastoreUtil.getValidColumnsKey(factName), validColumns);
     CubeFactTable fact1 =
         new CubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageUpdatePeriods, 10L, properties);

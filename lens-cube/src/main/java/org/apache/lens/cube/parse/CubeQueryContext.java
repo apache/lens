@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import lombok.Getter;
+import lombok.ToString;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -240,10 +241,11 @@ public class CubeQueryContext {
   // A dimension is optional if it is not queried directly by the user, but is
   // required by a candidate table to get a denormalized field from reference
   // or required in a join chain
+
+  @ToString
   static class OptionalDimCtx {
     OptionalDimCtx() {
     }
-
     Set<String> colQueried = new HashSet<String>();
     Set<CandidateTable> requiredForCandidates = new HashSet<CandidateTable>();
     boolean isRequiredInJoinChain = false;

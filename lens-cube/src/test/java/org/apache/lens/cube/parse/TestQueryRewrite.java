@@ -53,7 +53,6 @@ public abstract class TestQueryRewrite {
 
   protected String rewrite(String query, Configuration conf) throws SemanticException, ParseException {
     System.out.println("User query:" + query);
-    CubeQueryRewriter driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
     CubeQueryContext rewrittenQuery = rewriteCtx(query, conf);
     return rewrittenQuery.toHQL();
   }
