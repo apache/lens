@@ -69,6 +69,14 @@ public abstract class LensResultSetMetadata {
           typeDesc.getTypeQualifiers().getScale()).toLowerCase();
       }
     }
+    else if(typeDesc.getType().isComplexType()) {
+      switch (typeDesc.getType()) {
+      case ARRAY_TYPE:
+      case MAP_TYPE:
+      case STRUCT_TYPE:
+        return "string";
+      }
+    }
     return typeDesc.getTypeName().toLowerCase();
   }
 }

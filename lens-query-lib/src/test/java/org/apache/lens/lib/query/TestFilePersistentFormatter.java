@@ -32,6 +32,7 @@ import org.testng.annotations.Test;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -248,5 +249,130 @@ public class TestFilePersistentFormatter extends TestAbstractFileFormatter {
     List<String> actual = readZipOutputFile(new Path(formatter.getFinalOutputPath()), conf, "UTF-8");
     System.out.println("Actual rows:" + actual);
     Assert.assertEquals(actual, getExpectedCSVRowsWithMultiple());
+  }
+
+  protected List<String> getExpectedCSVRows() {
+    return new ArrayList<String>() {
+      {
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+          + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRows() {
+    return new ArrayList<String>() {
+      {
+        add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("1oneoneone            11one1one       ");
+        add("2twotwotwo            122two1one       2two       ");
+        add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+        add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+        add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedCSVRowsWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+          + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRowsWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("1oneoneone            11one1one       ");
+        add("2twotwotwo            122two1one       2two       ");
+        add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+        add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+        add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedCSVRowsWithMultiple() {
+    return new ArrayList<String>() {
+      {
+
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+          + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRowsWithMultiple() {
+    return new ArrayList<String>() {
+      {
+        add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("1oneoneone            11one1one       ");
+        add("2twotwotwo            122two1one       2two       ");
+        add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+        add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+        add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedCSVRowsWithMultipleWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+        add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+        add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+          + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRowsWithMultipleWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("1oneoneone            11one1one       ");
+        add("2twotwotwo            122two1one       2two       ");
+        add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+        add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+        add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
+        add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+        add("Total rows:5");
+      }
+    };
   }
 }

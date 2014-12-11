@@ -153,7 +153,7 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
 
     mapElements = new LinkedHashMap<Integer, String>();
     mapElements.put(1, "one");
-    mapElements.put(2, "two");
+    mapElements.put(2, "two, 3=three");
     elements = new ArrayList<Object>();
     elements.add(2);
     elements.add("two");
@@ -232,6 +232,130 @@ public class TestFileSerdeFormatter extends TestAbstractFileFormatter {
     for (ResultRow row : getTestRows()) {
       ((InMemoryOutputFormatter) formatter).writeRow(row);
     }
+  }
+
+  protected List<String> getExpectedCSVRows() {
+    return new ArrayList<String>() {
+      {
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"[1]\",\"[1, one]\",\"{1=one}\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"[1, 2]\",\"[2, two]\",\"{1=one, 2=two, 3=three}\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"[1, 2, null]\",\"[null, three]\",\"{1=one, 2=two, null=three}\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"[1, 2, null, 4]\",\"[4, null]\","
+          + "\"{1=one, 2=two, null=three, 4=null}\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"[1, 2, null, 4, null]\",\"[null, null]\","
+          + "\"{1=one, 2=two, null=three, 4=null, 5=null}\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRows() {
+    List<String> txtRows = new ArrayList<String>();
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("1oneoneone            11one1one       ");
+    txtRows.add("2twotwotwo            122two1one       2two       ");
+    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+    txtRows.add("Total rows:5");
+    return txtRows;
+  }
+
+  protected List<String> getExpectedCSVRowsWithoutComma() {
+    List<String> csvRows = new ArrayList<String>();
+    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+    csvRows
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+    csvRows.add("Total rows:5");
+    return csvRows;
+  }
+
+  protected List<String> getExpectedTextRowsWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("firstcol\u0001secondcol\u0001thirdcol\u0001fourthcol\u0001fifthcol\u0001sixthcol\u0001seventhcol");
+        add("1\u0001one\u0001one\u0001one            \u0001[1]\u0001[1, one]\u0001{1=one}");
+        add("2\u0001two\u0001two\u0001two            \u0001[1, 2]\u0001[2, two]\u0001{1=one, 2=two, 3=three}");
+        add("\\N\u0001three\u0001three\u0001three          \u0001[1, 2, null]\u0001"
+          + "[null, three]\u0001{1=one, 2=two, null=three}");
+        add("4\u0001\\N\u0001\\N\u0001\\N\u0001[1, 2, null, 4]\u0001[4, null]\u0001{1=one, 2=two, null=three, 4=null}");
+        add("\\N\u0001\\N\u0001\\N\u0001\\N\u0001[1, 2, null, 4, null]\u0001[null, null]"
+          + "\u0001{1=one, 2=two, null=three, 4=null, 5=null}");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedCSVRowsWithMultiple() {
+    return new ArrayList<String>() {
+      {
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"1\",\"one\",\"one\",\"one\",\"[1]\",\"[1, one]\",\"{1=one}\"");
+        add("\"2\",\"two\",\"two\",\"two\",\"[1, 2]\",\"[2, two]\",\"{1=one, 2=two, 3=three}\"");
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"three\",\"three\",\"three\",\"[1, 2, null]\",\"[null, three]\",\"{1=one, 2=two, null=three}\"");
+        add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"[1, 2, null, 4]\",\"[4, null]\","
+          + "\"{1=one, 2=two, null=three, 4=null}\"");
+        add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+        add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"[1, 2, null, 4, null]\","
+          + "\"[null, null]\",\"{1=one, 2=two, null=three, 4=null, 5=null}\"");
+        add("Total rows:5");
+      }
+    };
+  }
+
+  protected List<String> getExpectedTextRowsWithMultiple() {
+    List<String> txtRows = new ArrayList<String>();
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("1oneoneone            11one1one       ");
+    txtRows.add("2twotwotwo            122two1one       2two       ");
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
+    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
+    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
+    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
+    txtRows.add("Total rows:5");
+    return txtRows;
+  }
+
+  protected List<String> getExpectedCSVRowsWithMultipleWithoutComma() {
+    List<String> csvRows = new ArrayList<String>();
+    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
+    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
+    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
+    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
+    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
+    csvRows
+      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
+        + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
+    csvRows.add("Total rows:5");
+    return csvRows;
+  }
+
+  protected List<String> getExpectedTextRowsWithMultipleWithoutComma() {
+    return new ArrayList<String>() {
+      {
+        add("firstcol\u0001secondcol\u0001thirdcol\u0001fourthcol\u0001fifthcol\u0001sixthcol\u0001seventhcol");
+        add("1\u0001one\u0001one\u0001one            \u0001[1]\u0001[1, one]\u0001{1=one}");
+        add("2\u0001two\u0001two\u0001two            \u0001[1, 2]\u0001[2, two]\u0001{1=one, 2=two, 3=three}");
+        add("firstcol\u0001secondcol\u0001thirdcol\u0001fourthcol\u0001fifthcol\u0001sixthcol\u0001seventhcol");
+        add("\\N\u0001three\u0001three\u0001three          \u0001[1, 2, null]"
+          + "\u0001[null, three]\u0001{1=one, 2=two, null=three}");
+        add("4\u0001\\N\u0001\\N\u0001\\N\u0001[1, 2, null, 4]\u0001[4, null]\u0001{1=one, 2=two, null=three, 4=null}");
+        add("firstcol\u0001secondcol\u0001thirdcol\u0001fourthcol\u0001fifthcol\u0001sixthcol\u0001seventhcol");
+        add("\\N\u0001\\N\u0001\\N\u0001\\N\u0001[1, 2, null, 4, null]"
+          + "\u0001[null, null]\u0001{1=one, 2=two, null=three, 4=null, 5=null}");
+        add("Total rows:5");
+      }
+    };
   }
 
 }

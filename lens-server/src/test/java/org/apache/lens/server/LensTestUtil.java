@@ -59,17 +59,19 @@ public class LensTestUtil {
    *          the parent
    * @param lensSessionId
    *          the lens session id
+   * @param schemaStr
+   *          the schema string, with surrounding parenthesis.
    * @throws InterruptedException
    *           the interrupted exception
    */
-  public static void createTable(String tblName, WebTarget parent, LensSessionHandle lensSessionId)
+  public static void createTable (String tblName, WebTarget parent, LensSessionHandle lensSessionId, String schemaStr)
       throws InterruptedException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     final WebTarget target = parent.path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();
-    String createTable = "CREATE TABLE IF NOT EXISTS " + tblName + "(ID INT, IDSTR STRING)";
+    String createTable = "CREATE TABLE IF NOT EXISTS " + tblName + schemaStr;
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
@@ -98,6 +100,10 @@ public class LensTestUtil {
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
   }
 
+  public static void createTable(String tblName, WebTarget parent, LensSessionHandle lensSessionId)
+    throws InterruptedException {
+    createTable(tblName, parent, lensSessionId, "(ID INT, IDSTR STRING)");
+  }
   /**
    * Load data.
    *

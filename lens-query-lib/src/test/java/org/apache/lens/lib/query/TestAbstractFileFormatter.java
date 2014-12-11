@@ -222,8 +222,11 @@ public abstract class TestAbstractFileFormatter {
     } catch (LensException e) {
       Assert.fail(e.getMessage());
     }
-    QueryContext ctx = new QueryContext("test writer query", "testuser", conf, new ArrayList<LensDriver>() {{
-      add(mockDriver); }} );
+    QueryContext ctx = new QueryContext("test writer query", "testuser", conf, new ArrayList<LensDriver>() {
+      {
+        add(mockDriver);
+      }
+    });
 
     ctx.setSelectedDriver(mockDriver);
     formatter = createFormatter();
@@ -340,59 +343,6 @@ public abstract class TestAbstractFileFormatter {
     };
   }
 
-  protected List<String> getExpectedCSVRows() {
-    List<String> csvRows = new ArrayList<String>();
-    csvRows
-      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
-    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
-    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
-    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
-    csvRows
-      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
-    csvRows.add("Total rows:5");
-    return csvRows;
-  }
-
-  protected List<String> getExpectedTextRows() {
-    List<String> txtRows = new ArrayList<String>();
-    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("1oneoneone            11one1one       ");
-    txtRows.add("2twotwotwo            122two1one       2two       ");
-    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
-    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
-    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
-    txtRows.add("Total rows:5");
-    return txtRows;
-  }
-
-  protected List<String> getExpectedCSVRowsWithoutComma() {
-    List<String> csvRows = new ArrayList<String>();
-    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
-    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
-    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
-    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
-    csvRows
-      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
-    csvRows.add("Total rows:5");
-    return csvRows;
-  }
-
-  protected List<String> getExpectedTextRowsWithoutComma() {
-    List<String> txtRows = new ArrayList<String>();
-    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("1oneoneone            11one1one       ");
-    txtRows.add("2twotwotwo            122two1one       2two       ");
-    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
-    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
-    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
-    txtRows.add("Total rows:5");
-    return txtRows;
-  }
-
   /**
    * Read zip output file.
    *
@@ -420,67 +370,19 @@ public abstract class TestAbstractFileFormatter {
     return result;
   }
 
-  protected List<String> getExpectedCSVRowsWithMultiple() {
-    List<String> csvRows = new ArrayList<String>();
-    csvRows
-      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
-    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
-    csvRows
-      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
-    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
-    csvRows
-      .add("\"firstcol\",\"format(secondcol,2)\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows
-      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
-    csvRows.add("Total rows:5");
-    return csvRows;
-  }
+  protected abstract List<String> getExpectedCSVRows();
 
-  protected List<String> getExpectedTextRowsWithMultiple() {
-    List<String> txtRows = new ArrayList<String>();
-    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("1oneoneone            11one1one       ");
-    txtRows.add("2twotwotwo            122two1one       2two       ");
-    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
-    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
-    txtRows.add("firstcolformat(secondcol,2)thirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
-    txtRows.add("Total rows:5");
-    return txtRows;
-  }
+  protected abstract List<String> getExpectedTextRows();
 
-  protected List<String> getExpectedCSVRowsWithMultipleWithoutComma() {
-    List<String> csvRows = new ArrayList<String>();
-    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"1\",\"one\",\"one\",\"one\",\"1\",\"1:one\",\"1=one\"");
-    csvRows.add("\"2\",\"two\",\"two\",\"two\",\"1,2\",\"2:two\",\"1=one,2=two\"");
-    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows.add("\"NULL\",\"three\",\"three\",\"three\",\"1,2,NULL\",\"NULL:three\",\"1=one,2=two,NULL=three\"");
-    csvRows.add("\"4\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4\",\"4:NULL\",\"1=one,2=two,NULL=three,4=NULL\"");
-    csvRows.add("\"firstcol\",\"secondcol\",\"thirdcol\",\"fourthcol\",\"fifthcol\",\"sixthcol\",\"seventhcol\"");
-    csvRows
-      .add("\"NULL\",\"NULL\",\"NULL\",\"NULL\",\"1,2,NULL,4,NULL\",\"NULL:NULL\","
-             + "\"1=one,2=two,NULL=three,4=NULL,5=NULL\"");
-    csvRows.add("Total rows:5");
-    return csvRows;
-  }
+  protected abstract List<String> getExpectedCSVRowsWithoutComma();
 
-  protected List<String> getExpectedTextRowsWithMultipleWithoutComma() {
-    List<String> txtRows = new ArrayList<String>();
-    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("1oneoneone            11one1one       ");
-    txtRows.add("2twotwotwo            122two1one       2two       ");
-    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("\\Nthreethreethree          12\\N\\Nthree1one       2two       \\Nthree     ");
-    txtRows.add("4\\N\\N\\N12\\N44\\N1one       2two       \\Nthree     4\\N");
-    txtRows.add("firstcolsecondcolthirdcolfourthcolfifthcolsixthcolseventhcol");
-    txtRows.add("\\N\\N\\N\\N12\\N4\\N\\N\\N1one       2two       \\Nthree     4\\N5\\N");
-    txtRows.add("Total rows:5");
-    return txtRows;
-  }
+  protected abstract List<String> getExpectedTextRowsWithoutComma();
 
+  protected abstract List<String> getExpectedCSVRowsWithMultiple();
+
+  protected abstract List<String> getExpectedTextRowsWithMultiple();
+
+  protected abstract List<String> getExpectedCSVRowsWithMultipleWithoutComma();
+
+  protected abstract List<String> getExpectedTextRowsWithMultipleWithoutComma();
 }

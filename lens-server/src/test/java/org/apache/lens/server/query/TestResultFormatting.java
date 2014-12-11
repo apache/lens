@@ -55,6 +55,7 @@ import org.testng.annotations.Test;
 @Test(groups = "unit-test")
 public class TestResultFormatting extends LensJerseyTest {
 
+  private static final String TEST_DATA_FILE = "./testdata/testdata2.txt";
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -71,8 +72,8 @@ public class TestResultFormatting extends LensJerseyTest {
     super.setUp();
     queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
     lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
-    LensTestUtil.createTable(testTable, target(), lensSessionId);
-    LensTestUtil.loadData(testTable, TestQueryService.TEST_DATA_FILE, target(), lensSessionId);
+    LensTestUtil.createTable(testTable, target(), lensSessionId, "(ID INT, IDSTR STRING, IDARR ARRAY<INT>, IDSTRARR ARRAY<STRING>)");
+    LensTestUtil.loadData(testTable, TEST_DATA_FILE, target(), lensSessionId);
   }
 
   /*
@@ -213,8 +214,8 @@ public class TestResultFormatting extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
         MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-        + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+      "select ID, IDSTR, IDARR, IDSTRARR from " + testTable));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
         MediaType.APPLICATION_XML_TYPE));
@@ -233,11 +234,14 @@ public class TestResultFormatting extends LensJerseyTest {
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
+
     Assert.assertEquals(ctx.getStatus().getStatus(), status);
 
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
       // fetch results
-      TestQueryService.validatePersistedResult(handle, target(), lensSessionId, isDir);
+      TestQueryService.validatePersistedResult(handle, target(), lensSessionId, new String[][]{
+        {"ID", "INT"}, {"IDSTR", "STRING"}, {"IDARR", "ARRAY"}, {"IDSTRARR", "ARRAY"},
+      }, isDir);
       if (!isDir) {
         TestQueryService.validateHttpEndPoint(target(), lensSessionId, handle, reDirectUrl);
       }
