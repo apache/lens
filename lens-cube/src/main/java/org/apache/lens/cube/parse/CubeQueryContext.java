@@ -167,7 +167,7 @@ public class CubeQueryContext {
     }
     for (String alias : missing) {
       // try adding them as joinchains
-      boolean added = addJoinChain(alias);
+      boolean added = addJoinChain(alias, false);
       if (!added) {
         LOG.info("Queried tables do not exist. Missing table:" + alias);
         throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
@@ -175,18 +175,19 @@ public class CubeQueryContext {
     }
   }
 
-  private boolean addJoinChain(String alias) throws SemanticException {
+  private boolean addJoinChain(String alias, boolean isOptional) throws SemanticException {
     if (getCube() != null) {
       Set<String> cubechains = getCube().getJoinChainNames();
       if (cubechains.contains(alias.toLowerCase())) {
         JoinChain joinchain = getCube().getChainByName(alias);
         joinchains.put(alias.toLowerCase(), new JoinChain(joinchain));
         String destTable = joinchain.getDestTable();
-        boolean added = addQueriedTable(alias, destTable);
+        boolean added = addQueriedTable(alias, destTable, isOptional);
         if (!added) {
           LOG.info("Queried tables do not exist. Missing tables:" + destTable);
           throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
         }
+        LOG.info("Added join chain for " + destTable);
         return true;
       }
     }
@@ -194,19 +195,23 @@ public class CubeQueryContext {
   }
 
   public boolean addQueriedTable(String alias) throws SemanticException {
+    return addQueriedTable(alias, false);
+  }
+
+  private boolean addQueriedTable(String alias, boolean isOptional) throws SemanticException {
     String tblName = qb.getTabNameForAlias(alias);
     if (tblName == null) {
       tblName = alias;
     }
-    boolean added = addQueriedTable(alias, tblName);
+    boolean added = addQueriedTable(alias, tblName, isOptional);
     if (!added) {
       // try adding as joinchain
-      added = addJoinChain(alias);
+      added = addJoinChain(alias, isOptional);
     }
     return added;
   }
 
-  private boolean addQueriedTable(String alias, String tblName) throws SemanticException {
+  private boolean addQueriedTable(String alias, String tblName, boolean isOptional) throws SemanticException {
     alias = alias.toLowerCase();
     if (cubeTbls.containsKey(alias)) {
       return true;
@@ -222,7 +227,9 @@ public class CubeQueryContext {
         cubeTbls.put(alias, (AbstractCubeTable) cube);
       } else if (client.isDimension(tblName)) {
         Dimension dim = client.getDimension(tblName);
-        dimensions.add(dim);
+        if (!isOptional) {
+          dimensions.add(dim);
+        }
         cubeTbls.put(alias, dim);
       } else {
         return false;
@@ -254,32 +261,23 @@ public class CubeQueryContext {
   public void addOptionalDimTable(String alias, String col, CandidateTable candidate, boolean isRequiredInJoin)
       throws SemanticException {
     alias = alias.toLowerCase();
-    String tblName = qb.getTabNameForAlias(alias);
-    if (tblName == null) {
-      tblName = alias;
-    }
     try {
       LOG.info("Adding optional dimension:" + alias);
-      if (client.isDimension(tblName)) {
-        Dimension dim;
-        if (cubeTbls.containsKey(alias)) {
-          dim = (Dimension) cubeTbls.get(alias);
-        } else {
-          dim = client.getDimension(tblName);
-          cubeTbls.put(alias, dim);
-        }
-        OptionalDimCtx optDim = optionalDimensions.get(dim);
-        if (optDim == null) {
-          optDim = new OptionalDimCtx();
-          optionalDimensions.put(dim, optDim);
-        }
-        if (col != null && candidate != null) {
-          optDim.colQueried.add(col);
-          optDim.requiredForCandidates.add(candidate);
-        }
-        if (!optDim.isRequiredInJoinChain) {
-          optDim.isRequiredInJoinChain = isRequiredInJoin;
-        }
+      if (!addQueriedTable(alias, true)) {
+        throw new SemanticException("Could not add queried table or chain:" + alias);
+      }
+      Dimension dim = (Dimension)cubeTbls.get(alias);
+      OptionalDimCtx optDim = optionalDimensions.get(dim);
+      if (optDim == null) {
+        optDim = new OptionalDimCtx();
+        optionalDimensions.put(dim, optDim);
+      }
+      if (col != null && candidate != null) {
+        optDim.colQueried.add(col);
+        optDim.requiredForCandidates.add(candidate);
+      }
+      if (!optDim.isRequiredInJoinChain) {
+        optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
     } catch (HiveException e) {
       throw new SemanticException(e);

@@ -256,8 +256,7 @@ public class RewriteUtil {
             LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
             driverQueries.put(driver, finalQuery);
           } catch (SemanticException e) {
-            LOG.warn("Driver : " + driver.getClass().getName() + " Skipped for the query rewriting due to "
-                + e.getMessage());
+            LOG.warn("Driver : " + driver.getClass().getName() + " Skipped for the query rewriting due to ", e);
             rewriteFailure.append(" Driver :").append(driver.getClass().getName());
             rewriteFailure.append(" Cause :" + e.getLocalizedMessage());
             if (failureCause != null && !failureCause.equals(e.getLocalizedMessage())) {
