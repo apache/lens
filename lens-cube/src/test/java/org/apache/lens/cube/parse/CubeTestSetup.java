@@ -542,8 +542,9 @@ public class CubeTestSetup {
         "Timedim reference", new TableReference("hourdim", "id"), null, null, null));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim_day_id", "int", "ref dim"),
         "Timedim reference", new TableReference("daydim", "id"), null, null, null));
-    cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("test_time_dim_hour_id2", "int", "ref dim"),
-        "Timedim reference", new TableReference("hourdim", "id"), null, null, null));
+    // not creating test_time_dim_hour_id2 ref dim attribute to avoid the reference in schema graph for other paths
+    // the column is only defined in chain
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("test_time_dim_hour_id2", "int", "ref dim")));
     cubeDimensions.add(new ReferencedDimAtrribute(new FieldSchema("testdim3id", "int", "direct id to testdim3"),
         "Timedim reference", new TableReference("testdim3", "id"), null, null, null));
 
