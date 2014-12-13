@@ -22,11 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.URLClassLoader;
+import java.util.*;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.TaskStatus;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIServiceClient;
@@ -314,7 +312,8 @@ public class HiveDriver implements LensDriver {
   @Override
   public HiveQueryPlan explain(final String query, final Configuration conf) throws LensException {
     LOG.info("Explain: " + query);
-    Configuration explainConf = new Configuration(conf);
+    HiveConf explainConf = new HiveConf(conf, this.getClass());
+    explainConf.setClassLoader(conf.getClassLoader());
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     final String explainQuery = "EXPLAIN EXTENDED " + query;
     QueryContext explainQueryCtx = new QueryContext(explainQuery, SessionState.get().getUserName(), new LensConf(),
@@ -328,7 +327,7 @@ public class HiveDriver implements LensDriver {
     }
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
-      return new HiveQueryPlan(explainOutput, null, this.driverConf);
+      return new HiveQueryPlan(explainOutput, null, explainConf);
     } catch (HiveException e) {
       throw new LensException("Unable to create hive query plan", e);
     }
@@ -430,7 +429,8 @@ public class HiveDriver implements LensDriver {
           ctx.getConf().set("mapred.job.priority", priority);
           LOG.info("set priority to " + priority);
         } catch(LensException e) {
-          LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier(), e);
+          LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier()
+            + "User query: " + ctx.getUserQuery(), e);
         }
       }
       OperationHandle op = getClient().executeStatementAsync(getSession(ctx), ctx.getSelectedDriverQuery(),

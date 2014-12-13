@@ -128,7 +128,7 @@ public class DriverSelectorQueryContext {
         driverQueryContext.setDriverQueryPlan(driver.explain(driverQueries.get(driver),
           driverQueryContext.getDriverSpecificConf()));
       } catch (Exception e) {
-        LOG.error(e.getStackTrace());
+        LOG.error("Setting driver plan failed for driver " + driver, e);
         driverQueryContext.setDriverQueryPlanGenerationError(e);
       }
     }
