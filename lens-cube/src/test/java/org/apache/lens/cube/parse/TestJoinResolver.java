@@ -449,5 +449,35 @@ public class TestJoinResolver extends TestQueryRewrite {
       null, "group by testdim3.name",
       null, getWhereForHourly2days("testcube", "c1_testfact2_raw"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    // resolve denorm variable through multi hop chain paths
+    query = "select testdim3id, avg(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select testdim3.id, avg(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim2tbl testdim2 ON testcube.dim2 = testdim2.id and testdim2.dt = 'latest'" +
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testdim2.testdim3id = testdim3.id and testdim3.dt = 'latest'",
+      null, "group by testdim3.id",
+      null, getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    // test multi hops
+    query = "select testdim4.name, avg(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select testdim4.name, avg(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim2tbl testdim2 ON testcube.dim2 = testdim2.id and testdim2.dt = 'latest'" +
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testdim2.testdim3id = testdim3.id and testdim3.dt = 'latest'"
+      + " join " + getDbName() + "c1_testdim4tbl testdim4 ON testdim3.testDim4id = testdim4.id and" +
+      " testdim4.dt = 'latest'", null, "group by testdim4.name", null,
+      getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    query = "select testdim4.name, sum(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select testdim4.name, sum(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testcube.testdim3id = testdim3.id and testdim3.dt = 'latest'"
+      + " join " + getDbName() + "c1_testdim4tbl testdim4 ON testdim3.testDim4id = testdim4.id and" +
+      " testdim4.dt = 'latest'", null, "group by testdim4.name", null,
+      getWhereForDailyAndHourly2days("testcube", "c1_summary1"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
   }
 }

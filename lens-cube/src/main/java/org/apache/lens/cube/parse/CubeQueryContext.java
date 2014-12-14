@@ -262,7 +262,6 @@ public class CubeQueryContext {
       throws SemanticException {
     alias = alias.toLowerCase();
     try {
-      LOG.info("Adding optional dimension:" + alias);
       if (!addQueriedTable(alias, true)) {
         throw new SemanticException("Could not add queried table or chain:" + alias);
       }
@@ -279,6 +278,7 @@ public class CubeQueryContext {
       if (!optDim.isRequiredInJoinChain) {
         optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
+      LOG.info("Adding optional dimension:" + dim + " optDim:" + optDim);
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -750,25 +750,29 @@ public class CubeQueryContext {
     } else {
       dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
     }
+    // Prune join paths once denorm tables are picked
+    if (autoJoinCtx != null) {
+      // prune join paths for picked fact and dimensions
+      autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
+    }
     if (autoJoinCtx != null) {
       // add optional dims from Join resolver
-      Set<Dimension> joiningTables = autoJoinCtx.pickOptionalTables(dimsToQuery, this);
+      Set<Dimension> joiningTables = new HashSet<Dimension>();
       if (cfacts != null && cfacts.size() > 1) {
-        // copy tables for each fact
         for (CandidateFact cfact : cfacts) {
-          factDimMap.get(cfact).addAll(joiningTables);
+          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(cfact, factDimMap.get(cfact), this);
+          factDimMap.get(cfact).addAll(factJoiningTables);
+          joiningTables.addAll(factJoiningTables);
         }
+      } else {
+        joiningTables.addAll(autoJoinCtx.pickOptionalTables(null,
+            dimsToQuery!= null ? dimsToQuery.keySet() : null, this));
       }
       if (dimsToQuery == null) {
         dimsToQuery = pickCandidateDimsToQuery(joiningTables);
       } else {
         dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
       }
-    }
-    // Prune join paths once denorm tables and joining tables are picked
-    if (autoJoinCtx != null) {
-      // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
     }
     LOG.info("Picked Fact:" + cfacts + " dimsToQuery:" + dimsToQuery);
 

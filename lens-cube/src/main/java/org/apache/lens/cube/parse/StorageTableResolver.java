@@ -157,6 +157,12 @@ class StorageTableResolver implements ContextRewriter {
         break;
       case DIM_TABLE_AND_PARTITIONS:
         resolveDimStorageTablesAndPartitions(cubeql);
+        if (cubeql.getAutoJoinCtx() != null) {
+          // After all candidates are pruned after storage resolver, prune join paths.
+          cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(), cubeql.getCandidateFactTables(), null);
+          cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
+          cubeql.getAutoJoinCtx().refreshJoinPathColumns();
+        }
         break;
     }
     //Doing this on all three phases. Keep updating cubeql with the current identified missing partitions.
