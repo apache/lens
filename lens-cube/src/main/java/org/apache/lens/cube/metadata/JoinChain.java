@@ -188,13 +188,14 @@ public class JoinChain implements Named {
     this.paths.add(new Path(refs));
   }
 
+  private transient String destTable = null;
   /**
    * Get final destination table
    *
    * @return
    */
   public String getDestTable() {
-    String destTable = null;
+    if (destTable == null) {
     for (Path path : paths) {
       if (destTable == null) {
         destTable = path.getDestTable();
@@ -204,6 +205,7 @@ public class JoinChain implements Named {
           throw new IllegalArgumentException("Paths have different destination tables :" + destTable + "," + temp);
         }
       }
+    }
     }
     return destTable;
   }

@@ -256,7 +256,7 @@ class CandidateTableResolver implements ContextRewriter {
 
         // go over join chains and prune facts that dont have any of the columns in each chain
         for (JoinChain chain : cubeql.getJoinchains().values()) {
-          OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(chain.getDestTable());
+          OptionalDimCtx optdim = cubeql.getOptionalDimensionMap().get(cubeql.getCubeTbls().get(chain.getName()));
           if (!checkForColumnExists(cfact, chain.getSourceColumns())) {
             // check if chain is optional or not
             if (optdim == null || optdim.isRequiredInJoinChain
