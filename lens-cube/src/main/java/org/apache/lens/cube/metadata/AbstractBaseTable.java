@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -38,12 +40,16 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   private final Set<ExprColumn> expressions;
   private static final List<FieldSchema> columns = new ArrayList<FieldSchema>();
   private final Map<String, ExprColumn> exprMap;
+  @Getter
+  private final Set<JoinChain> joinChains;
+  private final Map<String, JoinChain> chainMap;
 
   static {
     columns.add(new FieldSchema("dummy", "string", "dummy column"));
   }
 
-  public AbstractBaseTable(String name, Set<ExprColumn> exprs, Map<String, String> properties, double weight) {
+  public AbstractBaseTable(String name, Set<ExprColumn> exprs, Set<JoinChain> joinChains, Map<String, String>
+    properties, double weight) {
     super(name, columns, properties, weight);
 
     exprMap = new HashMap<String, ExprColumn>();
@@ -56,6 +62,17 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     for (ExprColumn expr : expressions) {
       exprMap.put(expr.getName().toLowerCase(), expr);
     }
+
+    if (joinChains != null) {
+      this.joinChains = joinChains;
+    } else {
+      this.joinChains = new HashSet<JoinChain>();
+    }
+
+    chainMap = new HashMap<String, JoinChain>();
+    for (JoinChain chain : this.joinChains) {
+      chainMap.put(chain.getName().toLowerCase(), chain);
+    }
   }
 
   public AbstractBaseTable(Table tbl) {
@@ -64,6 +81,11 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     exprMap = new HashMap<String, ExprColumn>();
     for (ExprColumn expr : expressions) {
       exprMap.put(expr.getName().toLowerCase(), expr);
+    }
+    this.joinChains = getJoinChains();
+    chainMap = new HashMap<String, JoinChain>();
+    for (JoinChain chain : joinChains) {
+      chainMap.put(chain.getName().toLowerCase(), chain);
     }
   }
 
@@ -77,6 +99,8 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
     super.addProperties();
     MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getExpressionListKey(getName()), expressions);
     setExpressionProperties(getProperties(), expressions);
+    MetastoreUtil.addNameStrings(getProperties(), getJoinChainListPropKey(getName()), joinChains);
+    setJoinChainProperties(joinChains);
   }
 
   private static void setExpressionProperties(Map<String, String> props, Set<ExprColumn> expressions) {
@@ -109,6 +133,14 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
         return false;
       }
     } else if (!this.getExpressions().equals(other.getExpressions())) {
+      return false;
+    }
+
+    if (this.getJoinChains() == null) {
+      if (other.getJoinChains() != null) {
+        return false;
+      }
+    } else if (!this.getJoinChains().equals(other.getJoinChains())) {
       return false;
     }
     return true;
@@ -149,7 +181,7 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
   /**
    * Remove the measure with name specified
    * 
-   * @param msrName
+   * @param exprName
    */
   public void removeExpression(String exprName) {
     if (exprMap.containsKey(exprName.toLowerCase())) {
@@ -177,6 +209,91 @@ public abstract class AbstractBaseTable extends AbstractCubeTable {
 
   public Set<String> getAllFieldNames() {
     return getExpressionNames();
+  }
+
+
+
+  public void setJoinChainProperties(Set<JoinChain> chains) {
+    for (JoinChain chain : chains) {
+      chain.addProperties(this);
+    }
+  }
+
+  /**
+   * Alters the joinchain if already existing or just adds if it is new chain
+   *
+   * @param joinchain
+   * @throws HiveException
+   */
+  public void alterJoinChain(JoinChain joinchain) throws HiveException {
+    if (joinchain == null) {
+      throw new NullPointerException("Cannot add null joinchain");
+    }
+
+    // Replace dimension if already existing
+    if (chainMap.containsKey(joinchain.getName().toLowerCase())) {
+      joinChains.remove(getChainByName(joinchain.getName()));
+      LOG.info("Replacing joinchain " + getChainByName(joinchain.getName()) + " with " + joinchain);
+    }
+
+    joinChains.add(joinchain);
+    chainMap.put(joinchain.getName().toLowerCase(), joinchain);
+    MetastoreUtil.addNameStrings(getProperties(), getJoinChainListPropKey(getName()), joinChains);
+    joinchain.addProperties(this);
+  }
+
+  public JoinChain getChainByName(String name) {
+    Preconditions.checkNotNull(name) ;
+    return chainMap.get(name.toLowerCase());
+  }
+
+  /**
+   * Returns the property key for Cube/Dimension specific join chain list
+   * @param tblname
+   * @return
+   */
+  protected abstract String getJoinChainListPropKey(String tblname);
+
+  /**
+   * Get join chains from properties
+   * @param props
+   * @return
+   */
+  public Set<JoinChain> getJoinChains() {
+    Set<JoinChain> joinChains = new HashSet<JoinChain>();
+    String joinChainsStr = MetastoreUtil.getNamedStringValue(getProperties(), getJoinChainListPropKey(getName()));
+    if (!StringUtils.isBlank(joinChainsStr)) {
+      String[] cnames = joinChainsStr.split(",");
+      for (String chainName : cnames) {
+        JoinChain chain = new JoinChain(this, chainName);
+        joinChains.add(chain);
+      }
+    }
+    return joinChains;
+  }
+
+  public Set<String> getJoinChainNames() {
+    Set<String> chainNames = new HashSet<String>();
+    for (JoinChain f : getJoinChains()) {
+      chainNames.add(f.getName().toLowerCase());
+    }
+    return chainNames;
+  }
+
+
+  /**
+   * Remove the joinchain with name specified
+   *
+   * @param chainName
+   */
+  public boolean removeJoinChain(String chainName) {
+    if (chainMap.containsKey(chainName.toLowerCase())) {
+      joinChains.remove(getChainByName(chainName));
+      chainMap.remove(chainName.toLowerCase());
+      MetastoreUtil.addNameStrings(getProperties(), getJoinChainListPropKey(getName()), joinChains);
+      return true;
+    }
+    return false;
   }
 
 }

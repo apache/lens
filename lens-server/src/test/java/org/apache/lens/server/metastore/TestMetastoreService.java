@@ -1006,6 +1006,27 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB);
     try {
       XDimension dimension = createDimension("testdim");
+      XDimension dimension2 = createDimension("testdim2");
+
+      XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
+
+      XJoinchain xj1 = new XJoinchain();
+      xj1.setName("chain1");
+      xj1.setDescription("first chain");
+      xj1.setDisplayString("Chain-1");
+      XTablereferences path1 = cubeObjectFactory.createXTablereferences();
+      XTablereference link1 = new XTablereference();
+      link1.setDestTable("testdim");
+      link1.setDestColumn("col1");
+      XTablereference link2 = new XTablereference();
+      link2.setDestTable("testdim2");
+      link2.setDestColumn("col1");
+      path1.getTableReferences().add(link1);
+      path1.getTableReferences().add(link2);
+      xj1.getPaths().add(path1);
+      joinchains.getChains().add(xj1);
+      dimension.setJoinchains(joinchains);
+
       final WebTarget target = target().path("metastore").path("dimensions");
 
       // create
@@ -1035,6 +1056,10 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(testDim.getWeight(), 100.0);
       assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
       assertEquals(testDim.getExpressions().getExpressions().size(), 1);
+      assertEquals(testDim.getJoinchains().getChains().size(), 2);
+      assertEquals(testDim.getJoinchains().getChains().get(0).getPaths().size(), 1);
+      assertEquals(testDim.getJoinchains().getChains().get(0).getDescription(), "first chain");
+      assertEquals(testDim.getJoinchains().getChains().get(0).getDisplayString(), "Chain-1");
 
       Dimension dim = JAXBUtils.dimensionFromXDimension(dimension);
       assertNotNull(dim.getAttributeByName("col1"));

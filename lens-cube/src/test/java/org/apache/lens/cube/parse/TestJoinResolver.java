@@ -32,12 +32,7 @@ import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.SchemaGraph;
-import org.apache.lens.cube.metadata.StorageConstants;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
-import org.apache.lens.cube.parse.CubeQueryContext;
-import org.apache.lens.cube.parse.CubeQueryRewriter;
-import org.apache.lens.cube.parse.HQLParser;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -146,8 +141,8 @@ public class TestJoinResolver extends TestQueryRewrite {
     }
 
     Assert.assertEquals(expected, actual,
-        "Edges: " + jp.getEdges().toString() + " Expected Tables: " + Arrays.toString(tables) + " Actual Tables: "
-            + actual.toString());
+                        "Edges: " + jp.getEdges().toString() + " Expected Tables: " + Arrays.toString(tables) + " Actual Tables: "
+                          + actual.toString());
   }
 
   private void printGraph(Map<AbstractCubeTable, Set<TableRelationship>> graph) {
@@ -263,8 +258,8 @@ public class TestJoinResolver extends TestQueryRewrite {
     String hql = ctx.toHQL();
     String joinClause = getAutoResolvedFromString(ctx);
     System.out.println("@Resolved join clause " + joinClause);
-    Assert.assertEquals(getDbName() + "c1_testfact2_raw testcube join " + getDbName()
-        + "c1_citytable citydim on testcube.cityid = citydim.id and (citydim.dt = 'latest')", joinClause.trim());
+    Assert.assertEquals(getDbName() + "c1_testfact2_raw testcube join " + getDbName() + "c1_citytable citydim on " +
+                          "testcube.cityid = citydim.id and (citydim.dt = 'latest')", joinClause.trim());
   }
 
   @Test
@@ -305,7 +300,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     // Check that aliases are preserved in the join clause
     // Conf will be ignored in this case since user has specified partial join
     Assert.assertEquals(getDbName() + "c1_testfact2_raw t inner join " + getDbName()
-        + "c1_citytable c on t.cityid = c.id and (c.dt = 'latest')", getAutoResolvedFromString(ctx).trim());
+                          + "c1_citytable c on t.cityid = c.id and (c.dt = 'latest')", getAutoResolvedFromString(ctx).trim());
     String whereClause = hql.substring(hql.indexOf("WHERE"));
     // Check that the partition condition is not added again in where clause
     Assert.assertFalse(whereClause.contains("c.dt = 'latest'"));
@@ -333,8 +328,8 @@ public class TestJoinResolver extends TestQueryRewrite {
     System.out.println("testDimOnlyQuery@@@HQL2:" + hql);
     HQLParser.parseHQL(hql);
     Assert.assertEquals(getDbName() + "c1_citytable citydim inner join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id and (statedim.dt = 'latest')",
-        getAutoResolvedFromString(ctx).trim());
+                          + "c1_statetable statedim on citydim.stateid = statedim.id and (statedim.dt = 'latest')",
+                        getAutoResolvedFromString(ctx).trim());
   }
 
   @Test
@@ -348,8 +343,8 @@ public class TestJoinResolver extends TestQueryRewrite {
     System.out.println("##1 hql " + hql);
     System.out.println("##1 " + getAutoResolvedFromString(context));
     Assert.assertEquals(getDbName() + "c1_citytable citydim left outer join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id" + " and (statedim.dt = 'latest')",
-        getAutoResolvedFromString(context).trim());
+                          + "c1_statetable statedim on citydim.stateid = statedim.id" + " and (statedim.dt = 'latest')",
+                        getAutoResolvedFromString(context).trim());
     Assert.assertTrue(hql.matches(".*?WHERE\\W+citydim.dt = 'latest'\\W+.*?"));
 
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "RIGHTOUTER");
@@ -370,8 +365,8 @@ public class TestJoinResolver extends TestQueryRewrite {
     System.out.println("##3 hql " + hql);
     System.out.println("##3 " + getAutoResolvedFromString(context));
     Assert.assertEquals(getDbName() + "c1_citytable citydim full outer join " + getDbName()
-        + "c1_statetable statedim on citydim.stateid = statedim.id "
-        + "and (citydim.dt = 'latest') and (statedim.dt = 'latest')", getAutoResolvedFromString(context).trim());
+                          + "c1_statetable statedim on citydim.stateid = statedim.id "
+                          + "and (citydim.dt = 'latest') and (statedim.dt = 'latest')", getAutoResolvedFromString(context).trim());
     Assert.assertTrue(!hql.contains("WHERE"));
   }
 
@@ -424,6 +419,72 @@ public class TestJoinResolver extends TestQueryRewrite {
         null, "group by citystate.name, citystate.capital",
         null, getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+
+    // Test 4 Dim only query with join chains
+
+    List<String> expectedClauses = new ArrayList<String>();
+    List<String> actualClauses = new ArrayList<String>();
+    String dimOnlyQuery = "select testDim2.name, testDim2.cityStateCapital FROM testDim2 where " + twoDaysRange;
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryContext rewrittenQuery = driver.rewrite(dimOnlyQuery);
+    String hql = rewrittenQuery.toHQL();
+    System.out.println("testAutoJoinResolverauto join HQL:" + hql);
+    System.out.println("testAutoJoinResolver@@Resolved join chain:[" + getAutoResolvedFromString(rewrittenQuery) + "]");
+    expectedClauses.add(getDbName() + "c1_testdim2tbl testdim2");
+    expectedClauses.add(getDbName()
+                          + "c1_citytable citydim on testdim2.cityid = citydim.id and (citydim.dt = 'latest')");
+    expectedClauses.add(getDbName()
+                          + "c1_statetable citystate on citydim.stateid = citystate.id and (citystate.dt = 'latest')");
+
+
+    for (String clause : StringUtils.splitByWholeSeparator(getAutoResolvedFromString(rewrittenQuery), "join")) {
+      if (StringUtils.isNotBlank(clause)) {
+        actualClauses.add(clause.trim());
+      }
+    }
+    System.out.println("testDimOnlyJoinChainExpected1 : " + expectedClauses);
+    System.out.println("testDimOnlyJoinChainActual1 : " + actualClauses);
+    Assert.assertEquals(expectedClauses, actualClauses);
+
+    //Dim only join chain query without qualified tableName for join chain ref column
+    actualClauses.clear();
+    dimOnlyQuery = "select name, cityStateCapital FROM testDim2 where " + twoDaysRange;
+    driver = new CubeQueryRewriter(hconf);
+    rewrittenQuery = driver.rewrite(dimOnlyQuery);
+    hql = rewrittenQuery.toHQL();
+    System.out.println("testAutoJoinResolverauto join HQL:" + hql);
+    System.out.println("testAutoJoinResolver@@Resolved join chain:[" + getAutoResolvedFromString(rewrittenQuery) + "]");
+
+
+    for (String clause : StringUtils.splitByWholeSeparator(getAutoResolvedFromString(rewrittenQuery), "join")) {
+      if (StringUtils.isNotBlank(clause)) {
+        actualClauses.add(clause.trim());
+      }
+    }
+    System.out.println("testDimOnlyJoinChainExpected1 : " + expectedClauses);
+    System.out.println("testDimOnlyJoinChainActual1 : " + actualClauses);
+    Assert.assertEquals(expectedClauses, actualClauses);
+
+
+    //With ChainRef.col
+    actualClauses.clear();
+    dimOnlyQuery = "select testDim2.name, cityState.capital FROM testDim2 where " + twoDaysRange;
+    driver = new CubeQueryRewriter(hconf);
+    rewrittenQuery = driver.rewrite(dimOnlyQuery);
+    hql = rewrittenQuery.toHQL();
+    System.out.println("testAutoJoinResolverauto join HQL:" + hql);
+    System.out.println("testAutoJoinResolver@@Resolved join chain:[" + getAutoResolvedFromString(rewrittenQuery) + "]");
+
+
+    for (String clause : StringUtils.splitByWholeSeparator(getAutoResolvedFromString(rewrittenQuery), "join")) {
+      if (StringUtils.isNotBlank(clause)) {
+        actualClauses.add(clause.trim());
+      }
+    }
+    System.out.println("testDimOnlyJoinChainExpected1 : " + expectedClauses);
+    System.out.println("testDimOnlyJoinChainActual1 : " + actualClauses);
+    Assert.assertEquals(expectedClauses, actualClauses);
 
     //TODO add below tests once support for multichains with same destination is available
     query = "select citystate.name, cubestate.name, msr2 from basecube where " + twoDaysRange;

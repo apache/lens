@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import lombok.EqualsAndHashCode;
@@ -44,15 +45,37 @@ public class JoinChain implements Named {
   // c1.r2->t1.k2
   @Getter private final List<Path> paths;
 
-  public void addProperties(Map<String, String> props) {
-    props.put(MetastoreUtil.getJoinChainNumChainsKey(getName()), String.valueOf(paths.size()));
+
+  public void addProperties(AbstractCubeTable tbl) {
+    if(tbl instanceof Cube) {
+      addProperties((Cube)tbl);
+    } else {
+      addProperties((Dimension) tbl);
+    }
+  }
+
+  public void addProperties(Cube cube) {
+    Map<String, String> props = cube.getProperties();
+    props.put(MetastoreUtil.getCubeJoinChainNumChainsKey(getName()), String.valueOf(paths.size()));
     for (int i = 0; i< paths.size(); i++) {
-      props.put(MetastoreUtil.getJoinChainFullChainKey(getName(), i),
+      props.put(MetastoreUtil.getCubeJoinChainFullChainKey(getName(), i),
           MetastoreUtil.getReferencesString(paths.get(i).getReferences()));
     }
-    props.put(MetastoreUtil.getJoinChainDisplayKey(getName()), displayString);
-    props.put(MetastoreUtil.getJoinChainDescriptionKey(getName()), description);
+    props.put(MetastoreUtil.getCubeJoinChainDisplayKey(getName()), displayString);
+    props.put(MetastoreUtil.getCubeJoinChainDescriptionKey(getName()), description);
   }
+
+  public void addProperties(Dimension dimension) {
+    Map<String, String> props = dimension.getProperties();
+    props.put(MetastoreUtil.getDimensionJoinChainNumChainsKey(getName()), String.valueOf(paths.size()));
+    for (int i = 0; i< paths.size(); i++) {
+      props.put(MetastoreUtil.getDimensionJoinChainFullChainKey(getName(), i),
+                MetastoreUtil.getReferencesString(paths.get(i).getReferences()));
+    }
+    props.put(MetastoreUtil.getDimensionJoinChainDisplayKey(getName()), displayString);
+    props.put(MetastoreUtil.getDimensionJoinChainDescriptionKey(getName()), description);
+  }
+
 
   /**
    * Construct join chain
@@ -71,16 +94,32 @@ public class JoinChain implements Named {
   /**
    * This is used only for serializing
    *
+   * @param table
    * @param name
-   * @param props
    */
-  public JoinChain(String name, Map<String, String> props) {
+  public JoinChain(AbstractCubeTable table, String name) {
+    boolean isCube = false;
+    if(table instanceof Cube) {
+      isCube = true;
+    }
     this.name = name;
     this.paths = new ArrayList<Path>();
-    int numChains = Integer.parseInt(props.get(MetastoreUtil.getJoinChainNumChainsKey(getName())));
+    int numChains = 0;
+
+    Map<String, String> props = table.getProperties();
+    if(isCube) {
+      numChains = Integer.parseInt(props.get(MetastoreUtil.getCubeJoinChainNumChainsKey(getName())));
+    } else {
+      numChains = Integer.parseInt(props.get(MetastoreUtil.getDimensionJoinChainNumChainsKey(getName())));
+    }
     for (int i = 0; i < numChains; i++) {
       Path chain = new Path();
-      String refListStr = props.get(MetastoreUtil.getJoinChainFullChainKey(getName(), i));
+      String refListStr;
+      if(isCube) {
+        refListStr = props.get(MetastoreUtil.getCubeJoinChainFullChainKey(getName(), i));
+      } else {
+        refListStr = props.get(MetastoreUtil.getDimensionJoinChainFullChainKey(getName(), i));
+      }
       String refListDims[] = StringUtils.split(refListStr, ",");
       TableReference from = null;
       for (String refDimRaw : refListDims) {
@@ -93,8 +132,14 @@ public class JoinChain implements Named {
       }
       paths.add(chain);
     }
-    this.description = props.get(MetastoreUtil.getJoinChainDescriptionKey(name));
-    this.displayString = props.get(MetastoreUtil.getJoinChainDisplayKey(name));
+    if(isCube) {
+      this.description = props.get(MetastoreUtil.getCubeJoinChainDescriptionKey(name));
+      this.displayString = props.get(MetastoreUtil.getCubeJoinChainDisplayKey(name));
+    } else {
+      this.description = props.get(MetastoreUtil.getDimensionJoinChainDescriptionKey(name));
+      this.displayString = props.get(MetastoreUtil.getDimensionJoinChainDisplayKey(name));
+    }
+
   }
 
   /**
@@ -130,12 +175,27 @@ public class JoinChain implements Named {
       return relationShip;
     }
 
-    TableRelationship toCubeToDimRelationship(CubeMetastoreClient client) throws HiveException {
+    /**
+     * return Cube or Dimension relationship depending on the source table of the join chain.
+     * @param client
+     * @return
+     * @throws HiveException
+     */
+    TableRelationship toCubeOrDimRelationship(CubeMetastoreClient client) throws HiveException {
       if (relationShip == null) {
-        relationShip = new TableRelationship(from.getDestColumn(),
-        (AbstractCubeTable)client.getCube(from.getDestTable()),
-        to.getDestColumn(),
-        client.getDimension(to.getDestTable()));
+        AbstractCubeTable fromTable = null;
+        if(client.isCube(from.getDestTable())) {
+          fromTable = (AbstractCubeTable)client.getCube(from.getDestTable());
+        } else if(client.isDimension(from.getDestTable())) {
+          fromTable = client.getDimension(from.getDestTable());
+        }
+
+        if(fromTable != null) {
+          relationShip = new TableRelationship(from.getDestColumn(),
+                                               fromTable,
+                                               to.getDestColumn(),
+                                               client.getDimension(to.getDestTable()));
+        }
       }
       return relationShip;
     }
@@ -256,7 +316,7 @@ public class JoinChain implements Named {
       for (int i = path.links.size() -1; i> 0; i -= 1) {
         jp.addEdge(path.links.get(i).toDimToDimRelationship(client));
       }
-      jp.addEdge(path.links.get(0).toCubeToDimRelationship(client));
+      jp.addEdge(path.links.get(0).toCubeOrDimRelationship(client));
       schemaGraphPaths.add(jp);
     }
     return schemaGraphPaths;

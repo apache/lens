@@ -800,7 +800,7 @@ class JoinResolver implements ContextRewriter {
 
     // Remove target
     dimTables.remove(target);
-    if (dimTables.isEmpty()) {
+    if (dimTables.isEmpty() && !joinChainDims.contains(target)) {
       // Joins not required
       LOG.info("No dimension tables to resolve!");
       return;

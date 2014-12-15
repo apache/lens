@@ -24,6 +24,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+import lombok.Getter;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
@@ -37,19 +39,18 @@ public class Dimension extends AbstractBaseTable {
   }
 
   public Dimension(String name, Set<CubeDimAttribute> attributes, Map<String, String> properties, double weight) {
-    this(name, attributes, null, properties, weight);
+    this(name, attributes, null, null, properties, weight);
   }
 
-  public Dimension(String name, Set<CubeDimAttribute> attributes, Set<ExprColumn> expressions,
+  public Dimension(String name, Set<CubeDimAttribute> attributes, Set<ExprColumn> expressions, Set<JoinChain> joinChains,
       Map<String, String> properties, double weight) {
-    super(name, expressions, properties, weight);
+    super(name, expressions, joinChains, properties, weight);
     this.attributes = attributes;
 
     attributeMap = new HashMap<String, CubeDimAttribute>();
     for (CubeDimAttribute dim : attributes) {
       attributeMap.put(dim.getName().toLowerCase(), dim);
     }
-
     addProperties();
   }
 
@@ -61,6 +62,12 @@ public class Dimension extends AbstractBaseTable {
     for (CubeDimAttribute attr : attributes) {
       addAllAttributesToMap(attr);
     }
+
+  }
+
+  public Dimension(final String name, final Set<CubeDimAttribute> attributes, final Set<ExprColumn> exprs, final
+    Map<String, String> dimProps, final long weight) {
+    this(name, attributes, exprs, null, dimProps, weight);
   }
 
   private void addAllAttributesToMap(CubeDimAttribute attr) {
@@ -119,6 +126,19 @@ public class Dimension extends AbstractBaseTable {
     return attributes;
   }
 
+  /**
+   * @see org.apache.lens.cube.metadata.AbstractBaseTable
+   */
+  @Override
+  protected String getJoinChainListPropKey(String tblname) {
+    return MetastoreUtil.getDimensionJoinChainListKey(tblname);
+  }
+
+//  public boolean isChainedColumn(String name) {
+//    Preconditions.checkArgument(name != null);
+//    return ((ReferencedDimAtrribute) attributeMap.get(name.toLowerCase())).isChainedColumn();
+//  }
+
   @Override
   public boolean equals(Object obj) {
     if (!super.equals(obj)) {
@@ -130,6 +150,14 @@ public class Dimension extends AbstractBaseTable {
         return false;
       }
     } else if (!this.getAttributes().equals(other.getAttributes())) {
+      return false;
+    }
+
+    if (this.getJoinChains() == null) {
+      if (other.getJoinChains() != null) {
+        return false;
+      }
+    } else if (!this.getJoinChains().equals(other.getJoinChains())) {
       return false;
     }
     return true;
@@ -147,7 +175,7 @@ public class Dimension extends AbstractBaseTable {
    * Alters the attribute if already existing or just adds if it is new
    * attribute
    * 
-   * @param dimension
+   * @param attribute
    * @throws HiveException
    */
   public void alterAttribute(CubeDimAttribute attribute) throws HiveException {

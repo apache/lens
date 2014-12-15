@@ -171,24 +171,44 @@ public class MetastoreUtil implements MetastoreConstants {
   ////////////////////////////
   // Join chain properties  //
   ////////////////////////////
-  public static String getJoinChainKey(String colName) {
-    return JOIN_CHAIN_KEY + colName.toLowerCase();
+  public static String getCubeJoinChainKey(String colName) {
+    return CUBE_KEY_PFX + JOIN_CHAIN_KEY + colName.toLowerCase();
   }
 
-  public static String getJoinChainNumChainsKey(String colName) {
-    return getJoinChainKey(colName) + NUM_CHAINS_SFX;
+  public static String getCubeJoinChainNumChainsKey(String colName) {
+    return getCubeJoinChainKey(colName) + NUM_CHAINS_SFX;
   }
 
-  public static String getJoinChainFullChainKey(String colName, int index) {
-    return getJoinChainKey(colName) + FULL_CHAIN_KEY + index;
+  public static String getCubeJoinChainFullChainKey(String colName, int index) {
+    return getCubeJoinChainKey(colName) + FULL_CHAIN_KEY + index;
   }
-  public static String getJoinChainDescriptionKey(String colName) {
-    return getJoinChainKey(colName) + DESC_SFX;
+  public static String getCubeJoinChainDescriptionKey(String colName) {
+    return getCubeJoinChainKey(colName) + DESC_SFX;
   }
 
-  public static String getJoinChainDisplayKey(String colName) {
-    return getJoinChainKey(colName) + DISPLAY_SFX;
+  public static String getCubeJoinChainDisplayKey(String colName) {
+    return getCubeJoinChainKey(colName) + DISPLAY_SFX;
   }
+
+  public static String getDimensionJoinChainKey(String colName) {
+    return DIMENSION_PFX + JOIN_CHAIN_KEY + colName.toLowerCase();
+  }
+
+  public static String getDimensionJoinChainNumChainsKey(String colName) {
+    return getDimensionJoinChainKey(colName) + NUM_CHAINS_SFX;
+  }
+
+  public static String getDimensionJoinChainFullChainKey(String colName, int index) {
+    return getDimensionJoinChainKey(colName) + FULL_CHAIN_KEY + index;
+  }
+  public static String getDimensionJoinChainDescriptionKey(String colName) {
+    return getDimensionJoinChainKey(colName) + DESC_SFX;
+  }
+
+  public static String getDimensionJoinChainDisplayKey(String colName) {
+    return getDimensionJoinChainKey(colName) + DISPLAY_SFX;
+  }
+
 
 
   // ////////////////////////
@@ -274,6 +294,10 @@ public class MetastoreUtil implements MetastoreConstants {
 
   public static final String getCubeJoinChainListKey(String cubeName) {
     return getCubePrefix(cubeName) + JOIN_CHAIN_LIST_SFX;
+  }
+
+  public static final String getDimensionJoinChainListKey(String dimName) {
+    return getDimPrefix(dimName) + JOIN_CHAIN_LIST_SFX;
   }
 
   public static final String getParentCubeNameKey(String cubeName) {

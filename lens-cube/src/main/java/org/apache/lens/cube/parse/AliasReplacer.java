@@ -47,12 +47,11 @@ import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
 /**
  * Finds queried column to table alias. Finds queried dim attributes and queried
  * measures.
- * 
+ *
  * Does queried field validation wrt derived cubes, if all fields of queried
  * cube cannot be queried together.
- * 
+ *
  * Replaces all the columns in all expressions with tablealias.column
- * 
  */
 class AliasReplacer implements ContextRewriter {
 
@@ -67,6 +66,7 @@ class AliasReplacer implements ContextRewriter {
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     colToTableAlias = new HashMap<String, String>();
+
     extractTabAliasForCol(cubeql);
     doFieldValidation(cubeql);
 
@@ -160,7 +160,7 @@ class AliasReplacer implements ContextRewriter {
           // together
           if (!queriedDimAttrs.isEmpty()) {
             throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedDimAttrs.toString() + " and "
-                + queriedMsrs.toString());
+              + queriedMsrs.toString());
           } else {
             throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedMsrs.toString());
           }

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -176,22 +175,42 @@ public class CubeQueryContext {
   }
 
   private boolean addJoinChain(String alias, boolean isOptional) throws SemanticException {
+    boolean retVal = false;
+    String aliasLowerCaseStr = alias.toLowerCase();
+    JoinChain joinchain = null;
+
     if (getCube() != null) {
-      Set<String> cubechains = getCube().getJoinChainNames();
-      if (cubechains.contains(alias.toLowerCase())) {
-        JoinChain joinchain = getCube().getChainByName(alias);
-        joinchains.put(alias.toLowerCase(), new JoinChain(joinchain));
-        String destTable = joinchain.getDestTable();
-        boolean added = addQueriedTable(alias, destTable, isOptional);
-        if (!added) {
-          LOG.info("Queried tables do not exist. Missing tables:" + destTable);
-          throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
-        }
-        LOG.info("Added join chain for " + destTable);
-        return true;
+      JoinChain chainByName = getCube().getChainByName(aliasLowerCaseStr);
+      if (chainByName != null) {
+        joinchain = chainByName;
+        retVal = true;
       }
     }
-    return false;
+
+    if(!retVal) {
+      for (Dimension table : dimensions) {
+        JoinChain chainByName = table.getChainByName(aliasLowerCaseStr);
+        if (chainByName != null) {
+          joinchain = chainByName;
+          retVal = true;
+          break;
+        }
+      }
+    }
+
+    if (retVal) {
+      joinchains.put(aliasLowerCaseStr, new JoinChain(joinchain));
+      String destTable = joinchain.getDestTable();
+      boolean added = addQueriedTable(alias, destTable, isOptional);
+      if (!added) {
+        LOG.info("Queried tables do not exist. Missing tables:" + destTable);
+        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+      }
+      LOG.info("Added join chain for " + destTable);
+      return true;
+    }
+
+    return retVal;
   }
 
   public boolean addQueriedTable(String alias) throws SemanticException {
