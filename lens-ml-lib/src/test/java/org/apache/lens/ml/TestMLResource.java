@@ -51,6 +51,7 @@ import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
+import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.ml.MLApp;
 import org.apache.lens.server.ml.MLService;
 import org.apache.lens.server.ml.MLServiceImpl;
@@ -109,7 +110,7 @@ public class TestMLResource extends LensJerseyTest {
   public void setUp() throws Exception {
     super.setUp();
     setServiceProvider();
-    HiveSessionService sessionService = serviceProvider.getService(HiveSessionService.NAME);
+    HiveSessionService sessionService = serviceProvider.getService(SessionService.NAME);
     this.sessionHandle = sessionService.openSession("foo@localhost", "bar", new HashMap<String, String>());
     mlClient = new LensMLClient(connectionParams, sessionHandle);
   }

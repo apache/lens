@@ -30,8 +30,7 @@ import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.session.HiveSessionService;
-import org.apache.lens.server.session.SessionApp;
+import org.apache.lens.server.api.session.SessionService;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -260,7 +259,7 @@ public class TestSessionResource extends LensJerseyTest {
     Assert.assertNotNull(handle);
 
     // verify aux jars are loaded
-    HiveSessionService service = (HiveSessionService) LensServices.get().getService(HiveSessionService.NAME);
+    HiveSessionService service = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
     ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
     boolean found = false;
     for (URL path : ((URLClassLoader) loader).getURLs()) {
