@@ -40,6 +40,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
+import lombok.Getter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -68,10 +69,10 @@ import org.apache.lens.api.query.SubmitOp;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
-import org.apache.lens.server.EventServiceImpl;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.alerts.AlertHandler;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
@@ -252,6 +253,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     }
   };
+  private int purgeMaxTimeout;
 
   /**
    * Instantiates a new query execution service impl.
@@ -267,8 +269,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * Initialize query acceptors and listeners.
    */
   private void initializeQueryAcceptorsAndListeners() {
+    QueryStatusLogger statusLogger = new QueryStatusLogger();
     if (conf.getBoolean(LensConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
-      getEventService().addListenerForType(new QueryStatusLogger(), StatusChange.class);
+      getEventService().addListenerForType(statusLogger, StatusChange.class);
       LOG.info("Registered query state logger");
     }
     // Add result formatter
@@ -277,6 +280,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
                                          QueryEnded.class);
     getEventService().addListenerForType(new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
+    getEventService().addListenerForType(
+      new AlertHandler<QueryPurgeFailed>(getCliService().getHiveConf()), QueryPurgeFailed.class);
   }
 
   /**
@@ -362,7 +367,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * The Class QueryStatusLogger.
    */
-  public static class QueryStatusLogger implements LensEventListener<StatusChange> {
+  public static class QueryStatusLogger implements LensEventListener<QueryEvent> {
 
     /**
      * The Constant STATUS_LOG.
@@ -375,7 +380,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
      * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
      */
     @Override
-    public void onEvent(StatusChange event) throws LensException {
+    public void onEvent(QueryEvent event) throws LensException {
       STATUS_LOG.info(event.toString());
     }
   }
@@ -384,9 +389,17 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * The Class FinishedQuery.
    */
   private class FinishedQuery implements Delayed {
-    public static final int PURGE_MAX_TIMEOUT = 1000;
-    public int purgeDelay = 0;
-
+    /**
+     * currentPurgeDelay in seconds.
+     */
+    @Getter
+    public int currentPurgeDelay = 0;
+    private int totalDelayIncurred = 0;
+    /**
+     * How many purge retries have happened so far.
+     */
+    @Getter
+    private int numTries = 0;
     /**
      * The ctx.
      */
@@ -411,7 +424,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     @Override
@@ -426,7 +439,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
      */
     @Override
     public long getDelay(TimeUnit unit) {
-      return unit.convert(purgeDelay * 1000 - (System.currentTimeMillis() - startTime), TimeUnit.MILLISECONDS);
+      return unit.convert(currentPurgeDelay * 1000 - (System.currentTimeMillis() - startTime), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -443,14 +456,37 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       return ctx;
     }
 
-    public int getPurgeDelay() {
-      return purgeDelay;
+    /**
+     * <p>
+     * If purge failed, increase the delay before retrying.
+     * A backoff is successful if already maximum number of
+     * backoffs are not completed for this query. Maximun number
+     * of backoffs is bound by totalDelayIncurred <= PURGE_MAX_TIMEOUT.
+     * We keep increasing currentPurgeDelay in each backoff.
+     * And totalDelayIncurred is increased by in each backoff by currentPurgeDelay
+     * </p>
+     * <p>
+     * Backoff policy is new delay = 2 (old delay + 5)
+     * </p>
+     *
+     * @return true if backoff was successful
+     */
+    public boolean exponentialBackoffForPurgeDelay() {
+      currentPurgeDelay += 5;
+      currentPurgeDelay *= 2;
+      totalDelayIncurred += currentPurgeDelay;
+      numTries++;
+      startTime = System.currentTimeMillis();
+      return whetherBackoffSuccessful();
     }
 
-    public void exponentialBackoffForPurgeDelay() {
-      purgeDelay += 5;
-      purgeDelay *= 2;
-      startTime = System.currentTimeMillis();
+    /**
+     *
+     * @return Whether last backoff was successful or not.
+     * @see #exponentialBackoffForPurgeDelay()
+     */
+    private boolean whetherBackoffSuccessful() {
+      return totalDelayIncurred <= purgeMaxTimeout;
     }
   }
 
@@ -778,12 +814,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             LOG.info("Saved query " + finishedQuery.getHandle() + " to DB");
           } catch (Exception e) {
             LOG.warn("Exception while purging query ", e);
-            finished.exponentialBackoffForPurgeDelay();
-            if(finished.getPurgeDelay() <= FinishedQuery.PURGE_MAX_TIMEOUT) {
-              finishedQueries.offer(finished, finished.getPurgeDelay(), TimeUnit.SECONDS);
+            if(finished.exponentialBackoffForPurgeDelay()) {
+              //Re-insert with increased delay.
+              finishedQueries.offer(finished, finished.getCurrentPurgeDelay(), TimeUnit.SECONDS);
             } else {
-              getEventService().notifyEvent(new QueryPurgeFailed(finished.getCtx(), e));
+              LOG.error("Query purge failed.  Lens Session id = " + finished.getCtx().getLensSessionIdentifier()
+                + ". User query = " + finished.getCtx().getUserQuery());
             }
+            getEventService().notifyEvent(new QueryPurgeFailed(finished.getCtx(), finished.getNumTries(), e));
             continue;
           }
 
@@ -862,7 +900,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       throw new IllegalStateException("Could not load drivers");
     }
     maxFinishedQueries = conf.getInt(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY,
-                                     LensConfConstants.DEFAULT_FINISHED_QUERIES);
+      LensConfConstants.DEFAULT_FINISHED_QUERIES);
+    purgeMaxTimeout = conf.getInt(LensConfConstants.PURGE_MAX_TIMEOUT,
+      LensConfConstants.DEFAULT_PURGE_MAX_TIMEOUT);
     initalizeFinishedQueryStore(conf);
     LOG.info("Query execution service initialized");
   }

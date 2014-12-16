@@ -28,6 +28,7 @@ import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryEnded;
+import org.apache.lens.server.util.UtilityMethods;
 
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
@@ -127,7 +128,7 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
         LensConfConstants.QUERY_RESULT_DEFAULT_EMAIL_CC);
 
     LOG.info("Sending completion email for query handle: " + event.getQueryHandle());
-    sendMail(host, port, from, to, cc, mailSubject, mailMessage, mailSmtpTimeout, mailSmtpConnectionTimeout);
+    UtilityMethods.sendMail(host, port, from, to, cc, mailSubject, mailMessage,      mailSmtpTimeout, mailSmtpConnectionTimeout);
   }
 
   /**
@@ -157,63 +158,5 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       break;
     }
     return msgBuilder.toString();
-  }
-
-  /**
-   * Send mail.
-   *
-   * @param host
-   *          the host
-   * @param port
-   *          the port
-   * @param from
-   *          the from
-   * @param to
-   *          the to
-   * @param cc
-   *          the cc
-   * @param subject
-   *          the subject
-   * @param mailMessage
-   *          the mail message
-   * @param mailSmtpTimeout
-   *          the mail smtp timeout
-   * @param mailSmtpConnectionTimeout
-   *          the mail smtp connection timeout
-   */
-  public static void sendMail(String host, String port, String from, String to, String cc, String subject,
-      String mailMessage, int mailSmtpTimeout, int mailSmtpConnectionTimeout) {
-    Properties props = System.getProperties();
-    props.put("mail.smtp.host", host);
-    props.put("mail.smtp.port", port);
-    props.put("mail.smtp.timeout", mailSmtpTimeout);
-    props.put("mail.smtp.connectiontimeout", mailSmtpConnectionTimeout);
-    Session session = Session.getDefaultInstance(props, null);
-    try {
-      MimeMessage message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(from));
-      for(String recipient: to.trim().split("\\s*,\\s*")) {
-        message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-      }
-      if (cc != null && cc.length() > 0) {
-        for(String recipient: cc.trim().split("\\s*,\\s*")) {
-          message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
-        }
-      }
-      message.setSubject(subject);
-      message.setSentDate(new Date());
-
-      MimeBodyPart messagePart = new MimeBodyPart();
-      messagePart.setText(mailMessage);
-      Multipart multipart = new MimeMultipart();
-
-      multipart.addBodyPart(messagePart);
-      message.setContent(multipart);
-      Transport.send(message);
-    } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
-      metricsService.incrCounter(QueryEndNotifier.class, EMAIL_ERROR_COUNTER);
-      LOG.error("Error sending query end email", e);
-    }
   }
 }

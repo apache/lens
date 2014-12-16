@@ -176,7 +176,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
    * @see org.apache.lens.server.api.events.LensEventService#getListeners(java.lang.Class)
    */
   @Override
-  public Collection<LensEventListener> getListeners(Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
@@ -225,7 +225,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
    * LensEventListener, java.lang.Class)
    */
   @Override
-  public void addListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> void addListenerForType(LensEventListener<? super T> listener, Class<T> eventType) {
     synchronized (eventListeners) {
       List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners == null) {
@@ -244,7 +244,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
    * LensEventListener, java.lang.Class)
    */
   @Override
-  public void removeListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> void removeListenerForType(LensEventListener<? super T> listener, Class<T> eventType) {
     synchronized (eventListeners) {
       List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners != null) {

@@ -666,6 +666,17 @@ public final class LensConfConstants {
   public static final String RESULT_FS_READ_URL = QUERY_PFX + "result.fs.read.url";
 
   /**
+   * purge max timeout when purge is failing for some reason
+   * Try for total this number of seconds before giving up.
+   * In between the
+   */
+  public static final String PURGE_MAX_TIMEOUT = QUERY_PFX + "purge.max.timeout";
+
+  /**
+   * default value 5 hours
+   */
+  public static final int DEFAULT_PURGE_MAX_TIMEOUT = 5 * 3600;
+  /**
    * The Constant AUX_JARS.
    */
   public static final String AUX_JARS = SESSION_PFX + "aux.jars";
