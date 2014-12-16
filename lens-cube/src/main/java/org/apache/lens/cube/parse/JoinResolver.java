@@ -496,8 +496,8 @@ class JoinResolver implements ContextRewriter {
             }
           }
         }
-        pruneEmptyPaths(allPaths);
       }
+      pruneEmptyPaths(allPaths);
     }
 
     private void pruneEmptyPaths(Map<Dimension, List<SchemaGraph.JoinPath>> allPaths) {
