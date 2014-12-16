@@ -521,6 +521,28 @@ public class TestJoinResolver extends TestQueryRewrite {
       null, getWhereForHourly2days("testcube", "c1_testfact2_raw"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
+    // tests from multiple different chains
+    query = "select testdim4.name, testdim3id, avg(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select testdim4.name, testdim3.id, avg(testcube.msr2) FROM ",
+      " join " + getDbName() + "c1_testdim2tbl testdim2 ON testcube.dim2 = testdim2.id and testdim2.dt = 'latest'" +
+      " join " + getDbName() + "c1_testdim3tbl testdim3 ON testdim2.testdim3id = testdim3.id and testdim3.dt = 'latest'"
+      + " join " + getDbName() + "c1_testdim4tbl testdim4 ON testdim3.testDim4id = testdim4.id and" +
+      " testdim4.dt = 'latest'", null, "group by testdim4.name, testdim3.id", null,
+      getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
+    query = "select citydim.name, testdim4.name, testdim3id, avg(msr2) from testcube where " + twoDaysRange;
+    hqlQuery = rewrite(query, hconf);
+    expected = getExpectedQuery("testcube", "select citydim.name, testdim4.name, testdim3.id, avg(testcube.msr2) FROM ",
+        " join " + getDbName() + "c1_citytable citydim ON testcube.cityid = citydim.id and citydim.dt = 'latest'" +
+        " join " + getDbName() + "c1_testdim2tbl testdim2 ON testcube.dim2 = testdim2.id and testdim2.dt = 'latest'" +
+        " join " + getDbName() + "c1_testdim3tbl testdim3 ON testdim2.testdim3id = testdim3.id and testdim3.dt = 'latest'"
+        + " join " + getDbName() + "c1_testdim4tbl testdim4 ON testdim3.testDim4id = testdim4.id and" +
+        " testdim4.dt = 'latest'", null, "group by citydim.name, testdim4.name, testdim3.id", null,
+        getWhereForHourly2days("testcube", "c1_testfact2_raw"));
+    TestCubeRewriter.compareQueries(expected, hqlQuery);
+
     // test multi hops
     query = "select testdim4.name, avg(msr2) from testcube where " + twoDaysRange;
     hqlQuery = rewrite(query, hconf);

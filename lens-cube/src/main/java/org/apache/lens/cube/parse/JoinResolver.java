@@ -491,6 +491,7 @@ class JoinResolver implements ContextRewriter {
                 LOG.info("Removing join path:" + jp + " as columns :" + cols + " dont exist");
                 paths.remove(i);
                 i--;
+                break;
               }
             }
           }
