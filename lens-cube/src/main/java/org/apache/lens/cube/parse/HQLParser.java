@@ -197,7 +197,7 @@ public class HQLParser {
 
   /**
    * Debug function for printing query AST to stdout
-   * 
+   *
    * @param node
    * @param level
    */
@@ -252,9 +252,9 @@ public class HQLParser {
   }
 
   /**
-   * Find a node in the tree rooted at root, given the path of type of tokens
-   * from the root's children to the desired node
-   * 
+   * Find a node in the tree rooted at root, given the path of type of tokens from the root's children to the desired
+   * node
+   *
    * @param root
    * @param path
    *          starts at the level of root's children
@@ -309,7 +309,7 @@ public class HQLParser {
 
   /**
    * Breadth first traversal of AST
-   * 
+   *
    * @param root
    * @param visitor
    * @throws SemanticException
@@ -344,11 +344,10 @@ public class HQLParser {
 
   /**
    * Recursively reconstruct query string given a query AST
-   * 
+   *
    * @param root
    * @param buf
-   *          preallocated builder where the reconstructed string will be
-   *          written
+   *          preallocated builder where the reconstructed string will be written
    */
   public static void toInfixString(ASTNode root, StringBuilder buf) {
     if (root == null) {
@@ -408,18 +407,25 @@ public class HQLParser {
 
     } else if (BINARY_OPERATORS.contains(Integer.valueOf(root.getToken().getType()))) {
       buf.append("(");
-      // Left operand
-      toInfixString((ASTNode) root.getChild(0), buf);
-      // Operand name
-      if (root.getToken().getType() != DOT) {
+      if (MINUS == rootType && root.getChildCount() == 1) {
+        // If minus has only one child, then it's a unary operator.
+        // Add Operator name first
         buf.append(' ').append(rootText.toLowerCase()).append(' ');
+        // Operand
+        toInfixString((ASTNode) root.getChild(0), buf);
       } else {
-        buf.append(rootText.toLowerCase());
+        // Left operand
+        toInfixString((ASTNode) root.getChild(0), buf);
+        // Operator name
+        if (root.getToken().getType() != DOT) {
+          buf.append(' ').append(rootText.toLowerCase()).append(' ');
+        } else {
+          buf.append(rootText.toLowerCase());
+        }
+        // Right operand
+        toInfixString((ASTNode) root.getChild(1), buf);
       }
-      // Right operand
-      toInfixString((ASTNode) root.getChild(1), buf);
       buf.append(")");
-
     } else if (LSQUARE == rootType) {
       // square brackets for array and map types
       toInfixString((ASTNode) root.getChild(0), buf);
