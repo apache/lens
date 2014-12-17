@@ -26,8 +26,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.server.LensServices;
-import org.apache.lens.server.session.HiveSessionService;
-import org.apache.lens.server.session.SessionResource;
+import org.apache.lens.server.api.session.SessionService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 import javax.ws.rs.*;
@@ -51,7 +50,7 @@ public class SessionUIResource {
   public static HashMap<UUID, LensSessionHandle> openSessions = new HashMap<UUID, LensSessionHandle>();
 
   /** The session service. */
-  private HiveSessionService sessionService;
+  private SessionService sessionService;
 
   /**
    * API to know if session service is up and running
@@ -71,7 +70,7 @@ public class SessionUIResource {
    *           the lens exception
    */
   public SessionUIResource() throws LensException {
-    sessionService = (HiveSessionService) LensServices.get().getService("session");
+    sessionService = (SessionService) LensServices.get().getService("session");
   }
 
   /**

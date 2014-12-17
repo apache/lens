@@ -44,6 +44,7 @@ import org.apache.lens.api.StringList;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.session.SessionService;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
 /**
@@ -58,7 +59,7 @@ public class SessionResource {
   public static final Log LOG = LogFactory.getLog(SessionResource.class);
 
   /** The session service. */
-  private HiveSessionService sessionService;
+  private SessionService sessionService;
 
   /**
    * API to know if session service is up and running
@@ -78,7 +79,7 @@ public class SessionResource {
    *           the lens exception
    */
   public SessionResource() throws LensException {
-    sessionService = (HiveSessionService) LensServices.get().getService("session");
+    sessionService = (SessionService) LensServices.get().getService("session");
   }
 
   /**

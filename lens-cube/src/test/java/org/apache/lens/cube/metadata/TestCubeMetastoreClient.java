@@ -345,6 +345,15 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(city.getExpressionByName("stateAndCountry").getExpr(),
         "concat(statedim.name, \"-\", countrydim.name)");
 
+    List<TableReference> chain = new ArrayList<TableReference>();
+    chain.add(new TableReference("zipdim", "cityid"));
+    chain.add(new TableReference("citydim", "id"));
+    chain.add(new TableReference("citydim", "stateid"));
+    chain.add(new TableReference("statedim", "id"));
+    JoinChain zipState = new JoinChain("stateFromZip", "Zip State", "zip State desc");
+    zipState.addPath(chain);
+    joinChains.add(zipState);
+
     // alter dimension
     Table tbl = client.getHiveTable(zipDim.getName());
     Dimension toAlter = new Dimension(tbl);
@@ -360,9 +369,11 @@ public class TestCubeMetastoreClient {
     toAlter.getProperties().put("alter.prop", "altered");
     toAlter.alterExpression(new ExprColumn(new FieldSchema("formattedcode", "string", "formatted zipcode"),
         "Formatted zipcode", "format_number(code, \"#,###,###\")"));
+    toAlter.alterJoinChain(zipState);
 
     client.alterDimension(zipDim.getName(), toAlter);
     Dimension altered = client.getDimension(zipDim.getName());
+
 
     Assert.assertEquals(toAlter, altered);
     Assert.assertNotNull(altered.getAttributeByName("newZipDim"));
@@ -395,6 +406,19 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(((ReferencedDimAtrribute) stateid).getReferences().get(0).getDestColumn(), "id");
 
     Assert.assertEquals(altered.getProperties().get("alter.prop"), "altered");
+
+    Assert.assertEquals(altered.getChainByName("stateFromZip"), zipState);
+
+    Assert.assertEquals(altered.getJoinChains().size(), 1);
+    JoinChain zipchain = altered.getChainByName("stateFromZip");
+    Assert.assertEquals(zipchain.getDisplayString(), "Zip State");
+    Assert.assertEquals(zipchain.getDescription(), "zip State desc");
+    Assert.assertEquals(zipchain.getPaths().size(), 1);
+    Assert.assertEquals(zipchain.getPaths().get(0).getReferences().size(), 4);
+    Assert.assertEquals(zipchain.getPaths().get(0).getReferences().get(0).toString(), "zipdim.cityid");
+    Assert.assertEquals(zipchain.getPaths().get(0).getReferences().get(1).toString(), "citydim.id");
+    Assert.assertEquals(zipchain.getPaths().get(0).getReferences().get(2).toString(), "citydim.stateid");
+    Assert.assertEquals(zipchain.getPaths().get(0).getReferences().get(3).toString(), "statedim.id");
   }
 
   private void validateDim(Dimension udim, Set<CubeDimAttribute> attrs, String basedim, String referdim)

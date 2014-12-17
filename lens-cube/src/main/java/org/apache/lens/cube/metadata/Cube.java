@@ -35,10 +35,9 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 public class Cube extends AbstractBaseTable implements CubeInterface {
   private final Set<CubeMeasure> measures;
   private final Set<CubeDimAttribute> dimensions;
-  @Getter private final Set<JoinChain> joinChains;
   private final Map<String, CubeMeasure> measureMap;
   private final Map<String, CubeDimAttribute> dimMap;
-  private final Map<String, JoinChain> chainMap;
+
 
   public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions) {
     this(name, measures, dimensions, new HashMap<String, String>());
@@ -54,16 +53,10 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   }
 
   public Cube(String name, Set<CubeMeasure> measures, Set<CubeDimAttribute> dimensions, Set<ExprColumn> expressions,
-      Set<JoinChain> joinChains,
-      Map<String, String> properties, double weight) {
-    super(name, expressions, properties, weight);
+      Set<JoinChain> joinChains, Map<String, String> properties, double weight) {
+    super(name, expressions, joinChains, properties, weight);
     this.measures = measures;
     this.dimensions = dimensions;
-    if (joinChains != null) {
-      this.joinChains = joinChains;
-    } else {
-      this.joinChains = new HashSet<JoinChain>();
-    }
 
     measureMap = new HashMap<String, CubeMeasure>();
     for (CubeMeasure m : measures) {
@@ -75,11 +68,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
       dimMap.put(dim.getName().toLowerCase(), dim);
     }
 
-    chainMap = new HashMap<String, JoinChain>();
-    for (JoinChain chain : this.joinChains) {
-      chainMap.put(chain.getName().toLowerCase(), chain);
-    }
-
     addProperties();
   }
 
@@ -87,7 +75,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     super(tbl);
     this.measures = getMeasures(getName(), getProperties());
     this.dimensions = getDimensions(getName(), getProperties());
-    this.joinChains = getJoinChains(getName(), getProperties());
+
     measureMap = new HashMap<String, CubeMeasure>();
     for (CubeMeasure m : measures) {
       measureMap.put(m.getName().toLowerCase(), m);
@@ -96,11 +84,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     dimMap = new HashMap<String, CubeDimAttribute>();
     for (CubeDimAttribute dim : dimensions) {
       addAllDimsToMap(dim);
-    }
-
-    chainMap = new HashMap<String, JoinChain>();
-    for (JoinChain chain : joinChains) {
-      chainMap.put(chain.getName().toLowerCase(), chain);
     }
   }
 
@@ -142,8 +125,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     setMeasureProperties(getProperties(), measures);
     MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeDimensionListKey(getName()), dimensions);
     setDimensionProperties(getProperties(), dimensions);
-    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeJoinChainListKey(getName()), joinChains);
-    setJoinChainProperties(getProperties(), joinChains);
   }
 
   private static void setMeasureProperties(Map<String, String> props, Set<CubeMeasure> measures) {
@@ -155,12 +136,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   private static void setDimensionProperties(Map<String, String> props, Set<CubeDimAttribute> dimensions) {
     for (CubeDimAttribute dimension : dimensions) {
       dimension.addProperties(props);
-    }
-  }
-
-  private static void setJoinChainProperties(Map<String, String> props, Set<JoinChain> chains) {
-    for (JoinChain chain : chains) {
-      chain.addProperties(props);
     }
   }
 
@@ -204,19 +179,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     return dimensions;
   }
 
-  private static Set<JoinChain> getJoinChains(String name, Map<String, String> props) {
-    Set<JoinChain> joinChains = new HashSet<JoinChain>();
-    String joinChainsStr = MetastoreUtil.getNamedStringValue(props, MetastoreUtil.getCubeJoinChainListKey(name));
-    if (!StringUtils.isBlank(joinChainsStr)) {
-      String[] cnames = joinChainsStr.split(",");
-      for (String chainName : cnames) {
-        JoinChain chain = new JoinChain(chainName, props);
-        joinChains.add(chain);
-      }
-    }
-    return joinChains;
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (!super.equals(obj)) {
@@ -235,13 +197,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
         return false;
       }
     } else if (!this.getDimAttributes().equals(other.getDimAttributes())) {
-      return false;
-    }
-    if (this.getJoinChains() == null) {
-      if (other.getJoinChains() != null) {
-        return false;
-      }
-    } else if (!this.getJoinChains().equals(other.getJoinChains())) {
       return false;
     }
     return true;
@@ -264,10 +219,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
       }
     }
     return cubeCol;
-  }
-
-  public JoinChain getChainByName(String name) {
-    return chainMap.get(name == null ? name : name.toLowerCase());
   }
 
   /**
@@ -294,6 +245,19 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   }
 
   /**
+   * Remove the joinchain with name specified
+   *
+   * @param chainName
+   */
+  public boolean removeJoinChain(String chainName) {
+    if(super.removeJoinChain(chainName)) {
+      LOG.info("Removing dimension " + getDimAttributeByName(chainName));
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * Alters the dimension if already existing or just adds if it is new
    * dimension
    * 
@@ -317,42 +281,7 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     dimension.addProperties(getProperties());
   }
 
-  /**
-   * Alters the joinchain if already existing or just adds if it is new chain
-   *
-   * @param joinchain
-   * @throws HiveException
-   */
-  public void alterJoinChain(JoinChain joinchain) throws HiveException {
-    if (joinchain == null) {
-      throw new NullPointerException("Cannot add null joinchain");
-    }
 
-    // Replace dimension if already existing
-    if (chainMap.containsKey(joinchain.getName().toLowerCase())) {
-      joinChains.remove(getChainByName(joinchain.getName()));
-      LOG.info("Replacing joinchain " + getChainByName(joinchain.getName()) + " with " + joinchain);
-    }
-
-    joinChains.add(joinchain);
-    chainMap.put(joinchain.getName().toLowerCase(), joinchain);
-    MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeJoinChainListKey(getName()), joinChains);
-    joinchain.addProperties(getProperties());
-  }
-
-  /**
-   * Remove the joinchain with name specified
-   *
-   * @param chainName
-   */
-  public void removeJoinChain(String chainName) {
-    if (chainMap.containsKey(chainName.toLowerCase())) {
-      LOG.info("Removing dimension " + getDimAttributeByName(chainName));
-      joinChains.remove(getChainByName(chainName));
-      chainMap.remove(chainName.toLowerCase());
-      MetastoreUtil.addNameStrings(getProperties(), MetastoreUtil.getCubeJoinChainListKey(getName()), joinChains);
-    }
-  }
 
   /**
    * Remove the dimension with name specified
@@ -448,15 +377,6 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
   }
 
   @Override
-  public Set<String> getJoinChainNames() {
-    Set<String> chainNames = new HashSet<String>();
-    for (JoinChain f : getJoinChains()) {
-      chainNames.add(f.getName().toLowerCase());
-    }
-    return chainNames;
-  }
-
-  @Override
   public boolean allFieldsQueriable() {
     String canbeQueried = getProperties().get(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE);
     if (canbeQueried != null) {
@@ -472,6 +392,14 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     fieldNames.addAll(getDimAttributeNames());
     fieldNames.addAll(getTimedDimensions());
     return fieldNames;
+  }
+
+  /**
+   * @see org.apache.lens.cube.metadata.AbstractBaseTable
+   */
+  @Override
+  protected String getJoinChainListPropKey(String tblname) {
+    return MetastoreUtil.getCubeJoinChainListKey(getName());
   }
 
   public String getPartitionColumnOfTimeDim(String timeDimName) {
@@ -490,4 +418,5 @@ public class Cube extends AbstractBaseTable implements CubeInterface {
     }
     return partCol;
   }
+
 }

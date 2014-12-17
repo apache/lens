@@ -73,7 +73,10 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
    * Exception occurs mostly when one of drivers/explained queries/plans is null
    */
   public Priority decidePriority(AbstractQueryContext abstractQueryContext) throws LensException {
-    return costToPriorityRangeMap.get(getDurationCost(abstractQueryContext));
+    float cost = getDurationCost(abstractQueryContext);
+    Priority priority = costToPriorityRangeMap.get(cost);
+    LOG.info("Deciding Priority " + priority + " since cost = " + cost);
+    return priority;
   }
 
   /**
@@ -106,14 +109,13 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
 
   float getDurationCost(AbstractQueryContext queryContext) throws LensException {
     final Map<String, List<String>> partitions = extractPartitions(queryContext);
+    LOG.info("partitions picked: " + partitions);
     float cost = 0;
     for(String table: partitions.keySet()) {
       for(String partition: partitions.get(table)) {
         if(!partition.equals("latest")) {
-          cost +=
-            queryContext.getDriverContext().getSelectedDriverQueryPlan().getTableWeight(table) *
-              getNormalizedPartitionCost
-              (partition);
+          cost += queryContext.getDriverContext().getSelectedDriverQueryPlan().getTableWeight(table)
+              * getNormalizedPartitionCost(partition);
         }
       }
     }

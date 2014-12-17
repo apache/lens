@@ -30,6 +30,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 
 import javax.ws.rs.NotFoundException;
@@ -45,13 +46,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * The Class HiveSessionService.
  */
-public class HiveSessionService extends LensService {
+public class HiveSessionService extends LensService implements SessionService {
 
   /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(HiveSessionService.class);
 
-  /** The Constant NAME. */
-  public static final String NAME = "session";
 
   /** The restorable sessions. */
   private List<LensSessionImpl.LensSessionPersistInfo> restorableSessions;
@@ -73,15 +72,7 @@ public class HiveSessionService extends LensService {
   }
 
   /**
-   * Adds the resource to all services.
-   *
-   * @param sessionid
-   *          the sessionid
-   * @param type
-   *          the type
-   * @param path
-   *          the path
-   * @return the int
+   * @inheritDoc
    */
   public int addResourceToAllServices(LensSessionHandle sessionid, String type, String path) {
     int numAdded = 0;
@@ -102,12 +93,10 @@ public class HiveSessionService extends LensService {
     return numAdded;
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.server.LensService#addResource(org.apache.lens.api.LensSessionHandle, java.lang.String,
-   * java.lang.String)
+  /**
+   * @inheritDoc
    */
+  @Override
   public void addResource(LensSessionHandle sessionid, String type, String path) {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
@@ -120,12 +109,10 @@ public class HiveSessionService extends LensService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.server.LensService#deleteResource(org.apache.lens.api.LensSessionHandle, java.lang.String,
-   * java.lang.String)
+  /**
+   * @inheritDoc
    */
+  @Override
   public void deleteResource(LensSessionHandle sessionid, String type, String path) {
     String command = "delete " + type.toLowerCase() + " " + path;
     try {
@@ -173,11 +160,10 @@ public class HiveSessionService extends LensService {
     }
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.server.LensService#openSession(java.lang.String, java.lang.String, java.util.Map)
+  /**
+   * @inheritDoc
    */
+  @Override
   public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
       throws LensException {
     LensSessionHandle sessionid = super.openSession(username, password, configuration);
@@ -194,18 +180,9 @@ public class HiveSessionService extends LensService {
   }
 
   /**
-   * Gets the all session parameters.
-   *
-   * @param sessionid
-   *          the sessionid
-   * @param verbose
-   *          the verbose
-   * @param key
-   *          the key
-   * @return the all session parameters
-   * @throws LensException
-   *           the lens exception
+   * @inheritDoc
    */
+  @Override
   public List<String> getAllSessionParameters(LensSessionHandle sessionid, boolean verbose, String key)
       throws LensException {
     List<String> result = new ArrayList<String>();
@@ -235,15 +212,9 @@ public class HiveSessionService extends LensService {
   }
 
   /**
-   * Sets the session parameter.
-   *
-   * @param sessionid
-   *          the sessionid
-   * @param key
-   *          the key
-   * @param value
-   *          the value
+   * @inheritDoc
    */
+  @Override
   public void setSessionParameter(LensSessionHandle sessionid, String key, String value) {
     setSessionParameter(sessionid, key, value, true);
   }
@@ -389,10 +360,8 @@ public class HiveSessionService extends LensService {
     LOG.info("Session service recovered " + sessionMap.size() + " sessions");
   }
 
-  /*
-   * (non-Javadoc)
-   * 
-   * @see org.apache.lens.server.LensService#closeSession(org.apache.lens.api.LensSessionHandle)
+  /**
+   * @inheritDoc
    */
   @Override
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {

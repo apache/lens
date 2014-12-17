@@ -85,7 +85,7 @@ public interface MetastoreConstants {
   public static final String METASTORE_ENABLE_CACHING = "cube.metastore.enable.cache";
 
   // join chain constants
-  public static final String JOIN_CHAIN_KEY = "cube.joinchain.";
+  public static final String JOIN_CHAIN_KEY = "joinchain.";
   public static final String NUM_CHAINS_SFX = ".numchains";
   public static final String FULL_CHAIN_KEY = ".fullchain.";
 

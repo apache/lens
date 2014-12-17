@@ -157,7 +157,7 @@ public class JAXBUtils {
    *
    * @param xd
    *
-   * @return {@link CubeDimension}
+   * @return {@link org.apache.lens.cube.metadata.CubeDimAttribute}
    */
   public static CubeDimAttribute hiveDimAttrFromXDimAttr(XDimAttribute xd) {
     Date startDate = getDateFromXML(xd.getStartTime());
@@ -350,7 +350,7 @@ public class JAXBUtils {
   /**
    * Create cube's JoinChain from JAXB counterpart
    *
-   * @param xm
+   * @param xj
    *
    * @return {@link JoinChain}
    */
@@ -784,9 +784,16 @@ public class JAXBUtils {
       }
     }
 
+    Set<JoinChain> joinchains = new LinkedHashSet<JoinChain>();
+    if (dimension.getJoinchains() != null) {
+      for (XJoinchain xj : dimension.getJoinchains().getChains()) {
+        joinchains.add(joinChainFromXJoinChain(xj));
+      }
+    }
+
     Map<String, String> properties = mapFromXProperties(dimension.getProperties());
     double dimWeight = dimension.getWeight() == null ? 0d : dimension.getWeight();
-    return new Dimension(dimension.getName(), dims, expressions, properties, dimWeight);
+    return new Dimension(dimension.getName(), dims, expressions, joinchains, properties, dimWeight);
   }
 
   public static XDimension xdimensionFromDimension(Dimension dimension) {
@@ -807,6 +814,14 @@ public class JAXBUtils {
       xexprList.add(xExprColumnFromHiveExprColumn(ec));
     }
     xd.setExpressions(xexprs);
+
+    XJoinchains xjc = XCF.createXJoinchains();
+    List<XJoinchain> chainSet = xjc.getChains();
+    for (JoinChain jc : dimension.getJoinChains()) {
+      chainSet.add(xJoinChainFromJoinChain(jc));
+    }
+    xjc.getChains().addAll(chainSet);
+    xd.setJoinchains(xjc);
 
     return xd;
   }

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -176,22 +175,42 @@ public class CubeQueryContext {
   }
 
   private boolean addJoinChain(String alias, boolean isOptional) throws SemanticException {
+    boolean retVal = false;
+    String aliasLowerCaseStr = alias.toLowerCase();
+    JoinChain joinchain = null;
+
     if (getCube() != null) {
-      Set<String> cubechains = getCube().getJoinChainNames();
-      if (cubechains.contains(alias.toLowerCase())) {
-        JoinChain joinchain = getCube().getChainByName(alias);
-        joinchains.put(alias.toLowerCase(), new JoinChain(joinchain));
-        String destTable = joinchain.getDestTable();
-        boolean added = addQueriedTable(alias, destTable, isOptional);
-        if (!added) {
-          LOG.info("Queried tables do not exist. Missing tables:" + destTable);
-          throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
-        }
-        LOG.info("Added join chain for " + destTable);
-        return true;
+      JoinChain chainByName = getCube().getChainByName(aliasLowerCaseStr);
+      if (chainByName != null) {
+        joinchain = chainByName;
+        retVal = true;
       }
     }
-    return false;
+
+    if(!retVal) {
+      for (Dimension table : dimensions) {
+        JoinChain chainByName = table.getChainByName(aliasLowerCaseStr);
+        if (chainByName != null) {
+          joinchain = chainByName;
+          retVal = true;
+          break;
+        }
+      }
+    }
+
+    if (retVal) {
+      joinchains.put(aliasLowerCaseStr, new JoinChain(joinchain));
+      String destTable = joinchain.getDestTable();
+      boolean added = addQueriedTable(alias, destTable, isOptional);
+      if (!added) {
+        LOG.info("Queried tables do not exist. Missing tables:" + destTable);
+        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+      }
+      LOG.info("Added join chain for " + destTable);
+      return true;
+    }
+
+    return retVal;
   }
 
   public boolean addQueriedTable(String alias) throws SemanticException {
@@ -262,7 +281,6 @@ public class CubeQueryContext {
       throws SemanticException {
     alias = alias.toLowerCase();
     try {
-      LOG.info("Adding optional dimension:" + alias);
       if (!addQueriedTable(alias, true)) {
         throw new SemanticException("Could not add queried table or chain:" + alias);
       }
@@ -279,6 +297,7 @@ public class CubeQueryContext {
       if (!optDim.isRequiredInJoinChain) {
         optDim.isRequiredInJoinChain = isRequiredInJoin;
       }
+      LOG.info("Adding optional dimension:" + dim + " optDim:" + optDim);
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -750,25 +769,29 @@ public class CubeQueryContext {
     } else {
       dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
     }
+    // Prune join paths once denorm tables are picked
+    if (autoJoinCtx != null) {
+      // prune join paths for picked fact and dimensions
+      autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
+    }
     if (autoJoinCtx != null) {
       // add optional dims from Join resolver
-      Set<Dimension> joiningTables = autoJoinCtx.pickOptionalTables(dimsToQuery, this);
+      Set<Dimension> joiningTables = new HashSet<Dimension>();
       if (cfacts != null && cfacts.size() > 1) {
-        // copy tables for each fact
         for (CandidateFact cfact : cfacts) {
-          factDimMap.get(cfact).addAll(joiningTables);
+          Set<Dimension> factJoiningTables = autoJoinCtx.pickOptionalTables(cfact, factDimMap.get(cfact), this);
+          factDimMap.get(cfact).addAll(factJoiningTables);
+          joiningTables.addAll(factJoiningTables);
         }
+      } else {
+        joiningTables.addAll(autoJoinCtx.pickOptionalTables(null,
+            dimsToQuery!= null ? dimsToQuery.keySet() : null, this));
       }
       if (dimsToQuery == null) {
         dimsToQuery = pickCandidateDimsToQuery(joiningTables);
       } else {
         dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
       }
-    }
-    // Prune join paths once denorm tables and joining tables are picked
-    if (autoJoinCtx != null) {
-      // prune join paths for picked fact and dimensions
-      autoJoinCtx.pruneAllPaths(cube, cfacts, dimsToQuery);
     }
     LOG.info("Picked Fact:" + cfacts + " dimsToQuery:" + dimsToQuery);
 
