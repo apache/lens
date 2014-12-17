@@ -203,9 +203,14 @@ public class UtilityMethods {
       for(String recipient: email.getTo().trim().split("\\s*,\\s*")) {
         message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
       }
-      if (email.getCc() != null && email.getCc().length() > 0) {
+      if (email.getCc() != null && !email.getCc().isEmpty()) {
         for(String recipient: email.getCc().trim().split("\\s*,\\s*")) {
           message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
+        }
+      }
+      if(email.getBcc() != null && !email.getBcc().isEmpty()) {
+        for(String recipient: email.getBcc().trim().split("\\s*,\\s*")) {
+          message.addRecipients(Message.RecipientType.BCC, InternetAddress.parse(recipient));
         }
       }
       message.setSubject(email.getSubject());

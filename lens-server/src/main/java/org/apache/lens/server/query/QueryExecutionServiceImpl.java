@@ -282,9 +282,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     getEventService().addListenerForType(new AlertHandler<QueryEnded>(getCliService().getHiveConf()){
       @Override
       public void process(QueryEnded event) {
-        if(Boolean.parseBoolean(event.getQueryContext().getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
-          LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT))) {
-          super.process(event);
+        if(!event.getCurrentValue().equals(Status.CLOSED)) {
+          if(Boolean.parseBoolean(event.getQueryContext().getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
+            LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT))) {
+            super.process(event);
+          }
         }
       }
     }, QueryEnded.class);
