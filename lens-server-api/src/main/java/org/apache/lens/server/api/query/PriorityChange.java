@@ -32,9 +32,9 @@ public class PriorityChange extends QueryEvent<Priority> {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public PriorityChange(long eventTime, Priority prev, Priority current, QueryHandle handle) {
-    super(eventTime, prev, current, handle);
+  public PriorityChange(long eventTime, Priority prev, Priority current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx);
   }
 }

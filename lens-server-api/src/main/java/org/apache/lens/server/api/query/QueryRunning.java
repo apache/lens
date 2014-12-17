@@ -32,10 +32,10 @@ public class QueryRunning extends StatusChange {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public QueryRunning(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(eventTime, prev, current, handle);
+  public QueryRunning(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx);
     checkCurrentState(QueryStatus.Status.RUNNING);
   }
 }

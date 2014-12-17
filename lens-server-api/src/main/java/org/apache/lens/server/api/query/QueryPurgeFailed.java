@@ -48,7 +48,7 @@ public class QueryPurgeFailed extends QueryEvent<String> implements Alertable {
   private final int numTries;
 
   public QueryPurgeFailed(QueryContext context, int numTries, Exception e) {
-    super(System.currentTimeMillis(), context.getUserQuery(), context.getUserQuery(), context.getQueryHandle());
+    super(System.currentTimeMillis(), context.getUserQuery(), context.getUserQuery(), context);
     this.context = context;
     this.cause = e;
     this.numTries = numTries;

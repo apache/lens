@@ -46,12 +46,8 @@ public abstract class QueryEvent<T> extends LensEvent {
   @Getter
   protected final T currentValue;
 
-  /**
-   * The query handle.
-   */
   @Getter
-  protected final QueryHandle queryHandle;
-
+  protected final QueryContext queryContext;
   /**
    * The id.
    */
@@ -63,13 +59,13 @@ public abstract class QueryEvent<T> extends LensEvent {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public QueryEvent(long eventTime, T prev, T current, QueryHandle handle) {
+  public QueryEvent(long eventTime, T prev, T current, QueryContext ctx) {
     super(eventTime);
     previousValue = prev;
     currentValue = current;
-    this.queryHandle = handle;
+    this.queryContext = ctx;
   }
 
   @Override
@@ -88,5 +84,9 @@ public abstract class QueryEvent<T> extends LensEvent {
       .append(id).append(", query:").append(getQueryHandle()).append(", change:[").append(previousValue)
       .append(" -> ").append(currentValue).append("]}");
     return buf.toString();
+  }
+
+  public QueryHandle getQueryHandle() {
+    return getQueryContext().getQueryHandle();
   }
 }

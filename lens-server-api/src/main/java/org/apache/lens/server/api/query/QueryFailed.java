@@ -32,13 +32,13 @@ public class QueryFailed extends QueryEnded {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    * @param user      the user
    * @param cause     the cause
    */
-  public QueryFailed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryFailed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx,
     String user, String cause) {
-    super(eventTime, prev, current, handle, user, cause);
+    super(eventTime, prev, current, ctx, user, cause);
     checkCurrentState(QueryStatus.Status.FAILED);
   }
 }

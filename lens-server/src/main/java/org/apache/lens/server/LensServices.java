@@ -102,7 +102,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
     METASTORE_NODROP, // DELETE requests on metastore are not accepted
     /** The open. */
     OPEN // All requests are accepted
-  };
+  }
 
   /**
    * Instantiates a new lens services.

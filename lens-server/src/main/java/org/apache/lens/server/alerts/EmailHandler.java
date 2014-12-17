@@ -27,8 +27,8 @@ import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.util.UtilityMethods;
 
-public class AlertHandler<T extends LensEvent & Alertable> extends AsyncEventListener<T> {
-  public static final Log LOG = LogFactory.getLog(AlertHandler.class);
+public class EmailHandler<T extends LensEvent & Alertable> extends AsyncEventListener<T> {
+  public static final Log LOG = LogFactory.getLog(EmailHandler.class);
   private final HiveConf conf;
   private final boolean whetherMail;
   private final boolean whetherLog;
@@ -38,7 +38,7 @@ public class AlertHandler<T extends LensEvent & Alertable> extends AsyncEventLis
   private final int mailSmtpTimeout;
   private final int mailSmtpConnectionTimeout;
 
-  public AlertHandler(HiveConf conf, boolean whetherLog, boolean whetherMail) {
+  public EmailHandler(HiveConf conf, boolean whetherLog, boolean whetherMail) {
     this.conf = conf;
     this.whetherLog = whetherLog;
     this.whetherMail = whetherMail;

@@ -32,10 +32,10 @@ public class QuerySuccess extends QueryEnded {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public QuerySuccess(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(eventTime, prev, current, handle, null, null);
+  public QuerySuccess(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx, null, null);
     checkCurrentState(QueryStatus.Status.SUCCESSFUL);
   }
 }

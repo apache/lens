@@ -37,12 +37,12 @@ public class QueryQueued extends StatusChange {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    * @param user      the user
    */
-  public QueryQueued(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryQueued(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx,
     String user) {
-    super(eventTime, prev, current, handle);
+    super(eventTime, prev, current, ctx);
     checkCurrentState(QueryStatus.Status.QUEUED);
     this.user = user;
   }

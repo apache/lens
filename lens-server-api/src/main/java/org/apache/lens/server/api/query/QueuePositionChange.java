@@ -31,9 +31,9 @@ public class QueuePositionChange extends QueryEvent<Integer> {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public QueuePositionChange(long eventTime, Integer prev, Integer current, QueryHandle handle) {
-    super(eventTime, prev, current, handle);
+  public QueuePositionChange(long eventTime, Integer prev, Integer current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx);
   }
 }

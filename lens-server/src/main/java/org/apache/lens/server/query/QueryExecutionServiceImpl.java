@@ -72,7 +72,6 @@ import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.alerts.AlertHandler;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
@@ -280,8 +279,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
                                          QueryEnded.class);
     getEventService().addListenerForType(new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
     LOG.info("Registered query result formatter");
-    getEventService().addListenerForType(
-      new AlertHandler<QueryPurgeFailed>(getCliService().getHiveConf()), QueryPurgeFailed.class);
+//    getEventService().addListenerForType(
+//      new AlertHandler<QueryPurgeFailed>(getCliService().getHiveConf()), QueryPurgeFailed.class);
   }
 
   /**
@@ -721,22 +720,22 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     switch (currState) {
     case CANCELED:
       // TODO: correct username. put who cancelled it, not the submitter. Similar for others
-      return new QueryCancelled(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+      return new QueryCancelled(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
     case CLOSED:
-      return new QueryClosed(ctx.getClosedTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+      return new QueryClosed(ctx.getClosedTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
     case FAILED:
-      return new QueryFailed(ctx.getEndTime(), prevState, currState, query, ctx.getSubmittedUser(), null);
+      return new QueryFailed(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
     case LAUNCHED:
-      return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, query);
+      return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, ctx);
     case QUEUED:
-      return new QueryQueued(ctx.getSubmissionTime(), prevState, currState, query, ctx.getSubmittedUser());
+      return new QueryQueued(ctx.getSubmissionTime(), prevState, currState, ctx, ctx.getSubmittedUser());
     case RUNNING:
       return new QueryRunning(System.currentTimeMillis() - ctx.getDriverStatus().getDriverStartTime(), prevState,
-                              currState, query);
+                              currState, ctx);
     case EXECUTED:
-      return new QueryExecuted(ctx.getDriverStatus().getDriverFinishTime(), prevState, currState, query);
+      return new QueryExecuted(ctx.getDriverStatus().getDriverFinishTime(), prevState, currState, ctx);
     case SUCCESSFUL:
-      return new QuerySuccess(ctx.getEndTime(), prevState, currState, query);
+      return new QuerySuccess(ctx.getEndTime(), prevState, currState, ctx);
     default:
       LOG.warn("Query " + query + " transitioned to " + currState + " state from " + prevState + " state");
       return null;

@@ -21,6 +21,7 @@ package org.apache.lens.server.api.query;
 import lombok.Getter;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.server.api.alerts.Alertable;
 
 import java.util.EnumSet;
 
@@ -28,7 +29,7 @@ import java.util.EnumSet;
  * Generic event denoting that query has ended. If a listener wants to just be notified when query has ended
  * irrespective of its success or failure, then that listener can subscribe for this event type
  */
-public class QueryEnded extends StatusChange {
+public class QueryEnded extends StatusChange implements Alertable {
 
   /**
    * The user.
@@ -54,17 +55,32 @@ public class QueryEnded extends StatusChange {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    * @param user      the user
    * @param cause     the cause
    */
-  public QueryEnded(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle,
+  public QueryEnded(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx,
     String user, String cause) {
-    super(eventTime, prev, current, handle);
+    super(eventTime, prev, current, ctx);
     this.user = user;
     this.cause = cause;
     if (!END_STATES.contains(current)) {
-      throw new IllegalStateException("Not a valid end state: " + current + " query: " + handle);
+      throw new IllegalStateException("Not a valid end state: " + current + " query: " + getQueryHandle());
     }
+  }
+
+  @Override
+  public String getLogMessage() {
+    return null;
+  }
+
+  @Override
+  public String getEmailSubject() {
+    return null;
+  }
+
+  @Override
+  public String getEmailMessage() {
+    return null;
   }
 }
