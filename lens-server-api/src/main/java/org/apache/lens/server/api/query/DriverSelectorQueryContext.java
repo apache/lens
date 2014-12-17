@@ -54,13 +54,11 @@ public class DriverSelectorQueryContext {
 
   public DriverSelectorQueryContext(final String userQuery, final Configuration queryConf,
     final Collection<LensDriver> drivers) {
-    if(drivers != null) {
-      for (LensDriver driver : drivers) {
-        DriverQueryContext ctx = new DriverQueryContext(driver);
-        ctx.setDriverSpecificConf(mergeConf(driver, queryConf));
-        ctx.setQuery(userQuery);
-        driverQueryContextMap.put(driver, ctx);
-      }
+    for (LensDriver driver : drivers) {
+      DriverQueryContext ctx = new DriverQueryContext(driver);
+      ctx.setDriverSpecificConf(mergeConf(driver, queryConf));
+      ctx.setQuery(userQuery);
+      driverQueryContextMap.put(driver, ctx);
     }
   }
 

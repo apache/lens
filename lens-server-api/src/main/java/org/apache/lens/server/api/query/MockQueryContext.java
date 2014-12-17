@@ -19,12 +19,15 @@
 package org.apache.lens.server.api.query;
 
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.driver.LensDriver;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.UUID;
 
 public class MockQueryContext extends QueryContext {
   public MockQueryContext(QueryHandle handle) {
-    super(null, null, null, null, null);
+    super("", "", new org.apache.hadoop.conf.Configuration(), new ArrayList<LensDriver>());
     setQueryHandle(handle);
   }
   public MockQueryContext() {
