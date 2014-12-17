@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.lens.api.query.QueryHandle;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.query.QueryStatus;
 
 /**
@@ -35,10 +35,16 @@ public class QueryFailed extends QueryEnded {
    * @param ctx       the context
    * @param user      the user
    * @param cause     the cause
+   * @param hiveConf
    */
   public QueryFailed(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx,
-    String user, String cause) {
-    super(eventTime, prev, current, ctx, user, cause);
+    String user, String cause, HiveConf hiveConf) {
+    super(eventTime, prev, current, ctx, user, cause, hiveConf);
     checkCurrentState(QueryStatus.Status.FAILED);
+  }
+
+  @Override
+  public String getEmailMessage() {
+    return queryContext.getStatus().getErrorMessage();
   }
 }

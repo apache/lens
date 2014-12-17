@@ -71,8 +71,10 @@ import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.alerts.AlertHandler;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
+import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -277,10 +279,18 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     getEventService().addListenerForType(new ResultFormatter(this), QueryExecuted.class);
     getEventService().addListenerForType(new QueryExecutionStatisticsGenerator(this, getEventService()),
                                          QueryEnded.class);
-    getEventService().addListenerForType(new QueryEndNotifier(this, getCliService().getHiveConf()), QueryEnded.class);
+    getEventService().addListenerForType(new AlertHandler<QueryEnded>(getCliService().getHiveConf()){
+      @Override
+      public void process(QueryEnded event) {
+        if(Boolean.parseBoolean(event.getQueryContext().getConf().get(LensConfConstants.QUERY_MAIL_NOTIFY,
+          LensConfConstants.WHETHER_MAIL_NOTIFY_DEFAULT))) {
+          super.process(event);
+        }
+      }
+    }, QueryEnded.class);
     LOG.info("Registered query result formatter");
-//    getEventService().addListenerForType(
-//      new AlertHandler<QueryPurgeFailed>(getCliService().getHiveConf()), QueryPurgeFailed.class);
+    getEventService().addListenerForType(
+      new AlertHandler<QueryPurgeFailed>(getCliService().getHiveConf()), QueryPurgeFailed.class);
   }
 
   /**
@@ -715,16 +725,16 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @param currState the curr state
    * @return the status change
    */
-  private static StatusChange newStatusChangeEvent(QueryContext ctx, QueryStatus.Status prevState, QueryStatus.Status currState) {
+  private StatusChange newStatusChangeEvent(QueryContext ctx, QueryStatus.Status prevState, QueryStatus.Status currState) {
     QueryHandle query = ctx.getQueryHandle();
     switch (currState) {
     case CANCELED:
       // TODO: correct username. put who cancelled it, not the submitter. Similar for others
-      return new QueryCancelled(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
+      return new QueryCancelled(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null, getCliService().getHiveConf());
     case CLOSED:
-      return new QueryClosed(ctx.getClosedTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
+      return new QueryClosed(ctx.getClosedTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null, getCliService().getHiveConf());
     case FAILED:
-      return new QueryFailed(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null);
+      return new QueryFailed(ctx.getEndTime(), prevState, currState, ctx, ctx.getSubmittedUser(), null, getCliService().getHiveConf());
     case LAUNCHED:
       return new QueryLaunched(ctx.getLaunchTime(), prevState, currState, ctx);
     case QUEUED:
@@ -735,7 +745,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     case EXECUTED:
       return new QueryExecuted(ctx.getDriverStatus().getDriverFinishTime(), prevState, currState, ctx);
     case SUCCESSFUL:
-      return new QuerySuccess(ctx.getEndTime(), prevState, currState, ctx);
+      return new QuerySuccess(ctx.getEndTime(), prevState, currState, ctx, getCliService().getHiveConf());
     default:
       LOG.warn("Query " + query + " transitioned to " + currState + " state from " + prevState + " state");
       return null;
@@ -820,7 +830,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
               LOG.error("Query purge failed.  Lens Session id = " + finished.getCtx().getLensSessionIdentifier()
                 + ". User query = " + finished.getCtx().getUserQuery());
             }
-            getEventService().notifyEvent(new QueryPurgeFailed(finished.getCtx(), finished.getNumTries(), e));
+            getEventService().notifyEvent(new QueryPurgeFailed(finished.getCtx(), getCliService().getHiveConf(), finished.getNumTries(), e));
             continue;
           }
 

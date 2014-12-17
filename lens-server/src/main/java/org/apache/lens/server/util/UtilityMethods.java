@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.alerts.Email;
 import org.apache.lens.server.api.metrics.MetricsService;
 
 import javax.mail.Message;
@@ -182,23 +183,14 @@ public class UtilityMethods {
    *          the host
    * @param port
    *          the port
-   * @param from
-   *          the from
-   * @param to
-   *          the to
-   * @param cc
-   *          the cc
-   * @param subject
-   *          the subject
-   * @param mailMessage
+   * @param email
    *          the mail message
    * @param mailSmtpTimeout
    *          the mail smtp timeout
    * @param mailSmtpConnectionTimeout
    *          the mail smtp connection timeout
    */
-  public static void sendMail(String host, String port, String from, String to, String cc, String subject,
-    String mailMessage, int mailSmtpTimeout, int mailSmtpConnectionTimeout) {
+  public static void sendMail(String host, String port, String from, Email email, int mailSmtpTimeout, int mailSmtpConnectionTimeout) {
     Properties props = System.getProperties();
     props.put("mail.smtp.host", host);
     props.put("mail.smtp.port", port);
@@ -208,19 +200,19 @@ public class UtilityMethods {
     try {
       MimeMessage message = new MimeMessage(session);
       message.setFrom(new InternetAddress(from));
-      for(String recipient: to.trim().split("\\s*,\\s*")) {
+      for(String recipient: email.getTo().trim().split("\\s*,\\s*")) {
         message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
       }
-      if (cc != null && cc.length() > 0) {
-        for(String recipient: cc.trim().split("\\s*,\\s*")) {
+      if (email.getCc() != null && email.getCc().length() > 0) {
+        for(String recipient: email.getCc().trim().split("\\s*,\\s*")) {
           message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
         }
       }
-      message.setSubject(subject);
+      message.setSubject(email.getSubject());
       message.setSentDate(new Date());
 
       MimeBodyPart messagePart = new MimeBodyPart();
-      messagePart.setText(mailMessage);
+      messagePart.setText(email.getMessage());
       Multipart multipart = new MimeMultipart();
 
       multipart.addBodyPart(messagePart);

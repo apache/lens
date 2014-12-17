@@ -19,9 +19,12 @@
 package org.apache.lens.server.api.query;
 
 import lombok.Getter;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.alerts.Alertable;
+import org.apache.lens.server.api.alerts.Email;
 import org.apache.lens.server.api.events.LensEvent;
 
 import java.util.UUID;
@@ -46,10 +49,12 @@ public class QueryPurgeFailed extends QueryEvent<String> implements Alertable {
    */
   @Getter
   private final int numTries;
+  private final HiveConf serverConf;
 
-  public QueryPurgeFailed(QueryContext context, int numTries, Exception e) {
+  public QueryPurgeFailed(QueryContext context, HiveConf serverConf, int numTries, Exception e) {
     super(System.currentTimeMillis(), context.getUserQuery(), context.getUserQuery(), context);
     this.context = context;
+    this.serverConf = serverConf;
     this.cause = e;
     this.numTries = numTries;
   }
@@ -60,11 +65,22 @@ public class QueryPurgeFailed extends QueryEvent<String> implements Alertable {
   }
 
   @Override
+  public Email getEmail() {
+
+    return new Email(
+      serverConf.get(LensConfConstants.MAINTAINER_EMAIL_TO),
+      serverConf.get(LensConfConstants.MAINTAINER_EMAIL_CC),
+      serverConf.get(LensConfConstants.MAINTAINER_EMAIL_BCC),
+      getEmailSubject(),
+      getEmailMessage()
+    );
+  }
+
+
   public String getEmailSubject() {
     return "Query Purge Failed(" + context.getSubmittedUser() + "): " + getQueryHandle();
   }
 
-  @Override
   public String getEmailMessage() {
     return String.format(
       "User query: %s\n\n"

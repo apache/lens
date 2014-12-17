@@ -774,4 +774,8 @@ public final class LensConfConstants {
    * The Constant SERVICE_PROVIDER_FACTORY.
    */
   public static final String SERVICE_PROVIDER_FACTORY = SERVER_PFX + "service.provider.factory";
+
+  public static final String MAINTAINER_EMAIL_TO = SERVER_PFX + "maintainer.email.to";
+  public static final String MAINTAINER_EMAIL_CC = SERVER_PFX + "maintainer.email.cc";
+  public static final String MAINTAINER_EMAIL_BCC = SERVER_PFX + "maintainer.email.bcc";
 }

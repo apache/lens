@@ -18,8 +18,31 @@
  */
 package org.apache.lens.server.api.alerts;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public interface Alertable {
-  String getLogMessage();
-  Email getEmail();
+@AllArgsConstructor
+@NoArgsConstructor
+public class Email {
+  @Getter
+  @Setter
+  String to;
+
+  @Getter
+  @Setter
+  String cc;
+
+  @Getter
+  @Setter
+  String bcc;
+
+  @Getter
+  @Setter
+  String subject;
+
+  @Getter
+  @Setter
+  String message;
 }

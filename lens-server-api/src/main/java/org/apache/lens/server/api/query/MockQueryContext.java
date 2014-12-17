@@ -16,10 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.alerts;
+package org.apache.lens.server.api.query;
 
+import org.apache.lens.api.query.QueryHandle;
 
-public interface Alertable {
-  String getLogMessage();
-  Email getEmail();
+import java.util.UUID;
+
+public class MockQueryContext extends QueryContext {
+  public MockQueryContext(QueryHandle handle) {
+    super(null, null, null, null, null);
+    setQueryHandle(handle);
+  }
+  public MockQueryContext() {
+    this(new QueryHandle(UUID.randomUUID()));
+  }
 }

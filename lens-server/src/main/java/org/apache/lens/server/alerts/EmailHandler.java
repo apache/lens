@@ -20,6 +20,7 @@ package org.apache.lens.server.alerts;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.alerts.Alertable;
@@ -29,7 +30,7 @@ import org.apache.lens.server.util.UtilityMethods;
 
 public class EmailHandler<T extends LensEvent & Alertable> extends AsyncEventListener<T> {
   public static final Log LOG = LogFactory.getLog(EmailHandler.class);
-  private final HiveConf conf;
+  private final Configuration conf;
   private final boolean whetherMail;
   private final boolean whetherLog;
   private final String from;
@@ -38,7 +39,7 @@ public class EmailHandler<T extends LensEvent & Alertable> extends AsyncEventLis
   private final int mailSmtpTimeout;
   private final int mailSmtpConnectionTimeout;
 
-  public EmailHandler(HiveConf conf, boolean whetherLog, boolean whetherMail) {
+  public EmailHandler(org.apache.hadoop.conf.Configuration conf, boolean whetherLog, boolean whetherMail) {
     this.conf = conf;
     this.whetherLog = whetherLog;
     this.whetherMail = whetherMail;
@@ -57,7 +58,8 @@ public class EmailHandler<T extends LensEvent & Alertable> extends AsyncEventLis
       LOG.error(event.getLogMessage());
     }
     if (whetherMail) {
-      UtilityMethods.sendMail(host, port, from, null, null, event.getEmailSubject(), event.getEmailMessage(),
+      UtilityMethods.sendMail(host, port, from,
+        event.getEmail(),
         mailSmtpTimeout, mailSmtpConnectionTimeout);
     }
   }

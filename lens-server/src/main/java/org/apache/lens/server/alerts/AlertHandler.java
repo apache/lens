@@ -51,13 +51,17 @@ public class AlertHandler<T extends LensEvent & Alertable> extends AsyncEventLis
       LensConfConstants.MAIL_DEFAULT_SMTP_CONNECTIONTIMEOUT));
   }
 
+  public AlertHandler(HiveConf hiveConf) {
+    this(hiveConf, true, true);
+  }
+
   @Override
   public void process(T event) {
-    if (whetherLog) {
-      LOG.error(event.getLogMessage());
+    if (whetherLog && event.getLogMessage() != null && !event.getLogMessage().isEmpty()) {
+      LOG.info(event.getLogMessage());
     }
     if (whetherMail) {
-      UtilityMethods.sendMail(host, port, from, null, null, event.getEmailSubject(), event.getEmailMessage(),
+      UtilityMethods.sendMail(host, port, from, event.getEmail(),
         mailSmtpTimeout, mailSmtpConnectionTimeout);
     }
   }
