@@ -18,7 +18,15 @@
  */
 package org.apache.lens.driver.jdbc;
 
-import java.util.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -38,9 +46,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
 
 /**
  * The Class TestColumnarSQLRewriter.
@@ -114,16 +119,16 @@ public class TestColumnarSQLRewriter {
 
   /*
    * Star schema used for the queries below
-   * 
+   *
    * create table sales_fact (time_key integer, item_key integer, branch_key integer, location_key integer, dollars_sold
    * double, units_sold integer);
-   * 
+   *
    * create table time_dim ( time_key integer, day date);
-   * 
+   *
    * create table item_dim ( item_key integer, item_name varchar(500) );
-   * 
+   *
    * create table branch_dim ( branch_key integer, branch_key varchar(100));
-   * 
+   *
    * create table location_dim (location_key integer,location_name varchar(100));
    */
 
@@ -295,7 +300,7 @@ public class TestColumnarSQLRewriter {
 
   /**
    * Test all filter cond.
-   * 
+   *
    * @throws ParseException
    *           the parse exception
    * @throws SemanticException
@@ -577,14 +582,14 @@ public class TestColumnarSQLRewriter {
         + "( time_dim___time_dim . day_of_week ), ( time_dim___time_dim . day ) order by dollars_sold  asc";
     compareQueries(expected, actual);
   }
-  
-@Test  
+
+@Test
   public void testNoAggCol() throws ParseException, SemanticException, LensException {
-   
+
     String query = "SELECT  distinct ( location_dim . id ) FROM location_dim " +
         "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id " +
         "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
-    
+
     SessionState.start(conf);
 
     String actual = qtest.rewrite(query, conf);
@@ -650,7 +655,7 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
 
     compareQueries(expected, actual);
   }
-  
+
 
   @Test
   public void testSkipSnowflakeJoinFact() throws ParseException, SemanticException, LensException {
@@ -679,15 +684,15 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
     compareQueries(expected, actual);
   }
 
-  
+
   @Test
   public void testFactFilterPushDown() throws ParseException, SemanticException, LensException {
 
-    String query = "SELECT (dim1 . date) date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  " +
-        "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' " +
-        "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.m3 > 3000 " +
-        "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null " +
-        "GROUP BY (dim1 . date),  (dim2 . name)";
+    String query = "SELECT (dim1 . date) date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
+        + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "
+        + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.m3 > 3000 "
+        + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
+        + "GROUP BY (dim1 . date),  (dim2 . name)";
 
     SessionState.start(conf);
 
@@ -704,7 +709,32 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
 
     compareQueries(expected, actual);
   }
- 
+
+  @Test
+  public void testOrderByAlias() throws ParseException, SemanticException, LensException {
+
+    String query = "SELECT (dim1 . date) dim1_date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
+        + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "
+        + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.m3 > 3000 "
+        + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
+        + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
+
+    SessionState.start(conf);
+
+    String actual = qtest.rewrite(query, conf);
+    String expected = "select ( dim1___dim1 . date ) dim1_date , sum(sum_fact___f_msr1) msr1 , ( dim2___dim2 . name ) dim2_name  "
+        + "from  (select fact___f.dim2_id, fact___f.dim1_id, fact___f.m4, fact___f.m3, fact___f.m2,sum(( fact___f . msr1 )) "
+        + "as sum_fact___f_msr1 from fact fact___f where ( fact___f . m4 ) is not null  and (( fact___f . m2 ) =  '1234' ) "
+        + "and (( fact___f . m3 ) >  3000 ) and fact___f.dim1_id in  (  select dim1 .id from dim1 "
+        + "where (( dim1. date ) =  '2014-11-25 00:00:00' ) )  group by fact___f.dim2_id, fact___f.dim1_id, "
+        + "fact___f.m4, fact___f.m3, fact___f.m2) fact___f  inner join dim1 dim1___dim1 on ((( fact___f . dim1_id ) = "
+        + "( dim1___dim1 . id )) and (( fact___f . m2 ) =  '1234' ))  inner join dim2 dim2___dim2 on ((( fact___f . dim2_id ) = "
+        + "( dim2___dim2 . id )) and (( fact___f . m3 ) >  3000 ))  where ((( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) and "
+        + "( fact___f . m4 ) is not null ) group by ( dim1___dim1 . date ), ( dim2___dim2 . name ) order by dim1_date  asc";
+
+    compareQueries(expected, actual);
+  }
+
   /**
    * Test replace db name.
    *

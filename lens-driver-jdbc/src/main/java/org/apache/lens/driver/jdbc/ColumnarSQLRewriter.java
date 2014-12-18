@@ -18,16 +18,36 @@
  */
 package org.apache.lens.driver.jdbc;
 
-import java.util.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FROM;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FULLOUTERJOIN;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_JOIN;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LEFTOUTERJOIN;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LEFTSEMIJOIN;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_RIGHTOUTERJOIN;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABNAME;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABREF;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_UNIQUEJOIN;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
 import org.antlr.runtime.CommonToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -38,8 +58,6 @@ import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.QueryRewriter;
-
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 /**
  * The Class ColumnarSQLRewriter.
@@ -68,10 +86,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private String limit;
 
   /** The fact filters. */
-  private StringBuilder factFilters = new StringBuilder();
+  private final StringBuilder factFilters = new StringBuilder();
 
   /** The fact in line query. */
-  private StringBuilder factInLineQuery = new StringBuilder();
+  private final StringBuilder factInLineQuery = new StringBuilder();
 
   /** The all sub queries. */
   protected StringBuilder allSubQueries = new StringBuilder();
@@ -84,10 +102,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /** The merged query. */
   protected StringBuilder mergedQuery = new StringBuilder();
-  
+
   /** The fact filters for push down   */
   protected StringBuilder factFilterPush = new StringBuilder();
-  
+
   /** The join list. */
   protected ArrayList<String> joinList = new ArrayList<String>();
 
@@ -110,10 +128,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private String leftFilter;
 
   /** The map agg tab alias. */
-  private Map<String, String> mapAggTabAlias = new HashMap<String, String>();
+  private final Map<String, String> mapAggTabAlias = new HashMap<String, String>();
 
   /** The map aliases. */
-  private Map<String, String> mapAliases = new HashMap<String, String>();
+  private final Map<String, String> mapAliases = new HashMap<String, String>();
 
   /** The Constant LOG. */
   private static final Log LOG = LogFactory.getLog(ColumnarSQLRewriter.class);
@@ -166,6 +184,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   public ColumnarSQLRewriter() {
   }
 
+  @Override
   public void init(Configuration conf) {
     this.conf = new HiveConf(conf, ColumnarSQLRewriter.class);
   }
@@ -324,7 +343,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /**
    * Construct join chain
-   * 
+   *
    * @return
    */
   public StringBuilder constructJoinChain() {
@@ -336,7 +355,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     return joinCondition;
   }
-  
+
   /*
    * Get filter conditions if user has specified a join condition for filter pushdown.
    */
@@ -357,7 +376,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     if (node.getToken().getType() == HiveParser.KW_AND) {
       ASTNode right = (ASTNode) node.getChild(1);
-      String filterCond = HQLParser.getString((ASTNode) right);
+      String filterCond = HQLParser.getString(right);
       rightFilter.add(filterCond);
     }
 
@@ -366,10 +385,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       getFilterInJoinCond(child);
     }
   }
-  
+
   /**
    * Get the fact alias
-   * 
+   *
    * @return
    */
 
@@ -385,10 +404,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     return factAlias;
   }
-  
+
   /**
    * Get fact filters for pushdown
-   * 
+   *
    * @param node
    */
 
@@ -401,7 +420,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     String filterCond = "";
     if (node.getToken().getType() == HiveParser.KW_AND) {
       ASTNode right = (ASTNode) node.getChild(1);
-      filterCond = HQLParser.getString((ASTNode) right);
+      filterCond = HQLParser.getString(right);
     }
     String factAlias = getFactAlias();
 
@@ -414,10 +433,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       factFilterPushDown(child);
     }
   }
-   
+
   /**
    * Get fact keys used in the AST
-   * 
+   *
    * @param node
    */
   public void getFactKeysFromNode(ASTNode node) {
@@ -444,7 +463,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /**
    * Get all fact keys used in all ASTs
-   * 
+   *
    * @param node
    */
   public void getAllFactKeys() {
@@ -480,9 +499,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ASTNode right = (ASTNode) node.getChild(1);
 
         // Get the fact and dimension columns in table_name.column_name format
-        String factJoinKeys = HQLParser.getString((ASTNode) left).toString().replaceAll("\\s+", "")
+        String factJoinKeys = HQLParser.getString(left).toString().replaceAll("\\s+", "")
             .replaceAll("[(,)]", "");
-        String dimJoinKeys = HQLParser.getString((ASTNode) right).toString().replaceAll("\\s+", "")
+        String dimJoinKeys = HQLParser.getString(right).toString().replaceAll("\\s+", "")
             .replaceAll("[(,)]", "");
         String dimTableName = dimJoinKeys.substring(0, dimJoinKeys.indexOf("__"));
 
@@ -530,7 +549,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       buildSubqueries(child);
     }
   }
-  
+
   /**
    * Get the table or alias from the given key string
    *
@@ -566,7 +585,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       if (node.getToken().getType() == HiveParser.TOK_FUNCTION || node.getToken().getType() == HiveParser.DOT) {
 
         ASTNode right = (ASTNode) node.getChild(1);
-        String aggCol = HQLParser.getString((ASTNode) right);
+        String aggCol = HQLParser.getString(right);
 
         String funident = HQLParser.findNodeByPath(node, Identifier).toString();
         String measure = funident.concat("(").concat(aggCol).concat(")");
@@ -657,12 +676,12 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     if (node.getToken().getType() == HiveParser.KW_AND) {
       ASTNode right = (ASTNode) node.getChild(1);
-      String allFilters = HQLParser.getString((ASTNode) right);
+      String allFilters = HQLParser.getString(right);
       leftFilter = HQLParser.getString((ASTNode) node.getChild(0));
       rightFilter.add(allFilters);
     } else if (node.getToken().getType() == HiveParser.TOK_WHERE) {
       ASTNode right = (ASTNode) node.getChild(1);
-      String allFilters = HQLParser.getString((ASTNode) right);
+      String allFilters = HQLParser.getString(right);
       leftFilter = HQLParser.getString((ASTNode) node.getChild(0));
       rightFilter.add(allFilters);
     }
@@ -846,7 +865,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     for (Map.Entry<String, String> entry : mapAggTabAlias.entrySet()) {
       selectTree = selectTree.replace(entry.getKey(), entry.getValue());
-      
+
       if (orderByTree != null) {
         orderByTree = orderByTree.replace(entry.getKey(), entry.getValue());
       }
@@ -935,7 +954,10 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   private void replaceAlias(ASTNode tree) {
     if (TOK_TABLE_OR_COL == tree.getToken().getType()) {
       ASTNode alias = (ASTNode) tree.getChild(0);
-      alias.getToken().setText(mapAliases.get(tree.getChild(0).toString()));
+      if (mapAliases.get(tree.getChild(0).toString()) != null )
+        alias.getToken().setText(mapAliases.get(tree.getChild(0).toString()));
+      else
+        alias.getToken().setText(tree.getChild(0).toString());
     }
     for (int i = 0; i < tree.getChildCount(); i++) {
       replaceAlias((ASTNode) tree.getChild(i));
@@ -1002,7 +1024,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.query.QueryRewriter#rewrite(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
@@ -1044,7 +1066,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
     }
     return queryReplacedUdf;
   }
-  
+
   // Replace Lens database names with storage's proper DB and table name based
   // on table properties.
   /**
