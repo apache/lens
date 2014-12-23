@@ -72,7 +72,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#configure(org.apache.hadoop.conf.Configuration)
    */
   @Override
@@ -121,7 +121,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String,
    * org.apache.hadoop.conf.Configuration)
    */
@@ -132,7 +132,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#updateStatus(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
@@ -144,7 +144,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#cancelQuery(org.apache.lens.api.query.QueryHandle)
    */
   @Override
@@ -154,7 +154,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#closeQuery(org.apache.lens.api.query.QueryHandle)
    */
   @Override
@@ -163,7 +163,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#close()
    */
   @Override
@@ -182,7 +182,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#prepare(org.apache.lens.server.api.query.PreparedQueryContext)
    */
   @Override
@@ -193,7 +193,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.lens.server.api.driver.LensDriver
    * #explainAndPrepare(org.apache.lens.server.api.query.PreparedQueryContext)
@@ -207,7 +207,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#closePreparedQuery(org.apache.lens.api.query.QueryPrepareHandle)
    */
   @Override
@@ -218,7 +218,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#execute(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
@@ -255,7 +255,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#executeAsync(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
@@ -265,7 +265,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#fetchResultSet(org.apache.lens.server.api.query.QueryContext)
    */
   @Override
@@ -312,7 +312,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensDriver#closeResultSet(org.apache.lens.api.query.QueryHandle)
    */
   @Override
@@ -322,7 +322,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification
    * (org.apache.lens.api.query.QueryHandle, long, org.apache.lens.server.api.driver.QueryCompletionListener)
@@ -337,7 +337,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
    */
   @Override
@@ -347,7 +347,7 @@ public class MockDriver implements LensDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
    */
   @Override
