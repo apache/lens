@@ -184,6 +184,10 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String result = qCom.getAllQueries("", "testQuery1", user, -1, Long.MAX_VALUE);
     // this is because previous query has run two query handle will be there
     Assert.assertTrue(result.contains(qh), result);
+    Assert.assertTrue(result.contains("Total number of queries"));
+    String [] resultSplits = result.split("\n");
+    // assert on the number of queries
+    Assert.assertEquals(String.valueOf(resultSplits.length -1), resultSplits[resultSplits.length-1].split(": ")[1]);
 
     // Check that query name searching is 'ilike'
     String result2 = qCom.getAllQueries("", "query", "all", -1, Long.MAX_VALUE);

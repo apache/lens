@@ -191,7 +191,8 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
     }
     List<QueryHandle> handles = getClient().getQueries(state, queryName, user, fromDate, toDate);
     if (handles != null && !handles.isEmpty()) {
-      return Joiner.on("\n").skipNulls().join(handles);
+      return Joiner.on("\n").skipNulls().join(handles).concat("\n").concat("Total number of queries: "
+          + handles.size());
     } else {
       return "No queries";
     }
