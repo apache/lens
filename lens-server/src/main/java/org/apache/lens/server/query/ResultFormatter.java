@@ -86,7 +86,8 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       if (ctx.isResultAvailableInDriver()) {
         LOG.info("Result formatter for " + queryHandle);
         LensResultSet resultSet = queryService.getDriverResultset(queryHandle);
-        if (resultSet instanceof PersistentResultSet) {
+        boolean isPersistedInDriver = resultSet instanceof PersistentResultSet;
+        if (isPersistedInDriver) {
           // skip result formatting if persisted size is huge
           Path persistedDirectory = new Path(ctx.getHdfsoutPath());
           FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
@@ -102,7 +103,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           }
         }
         // now do the formatting
-        createAndSetFormatter(ctx);
+        createAndSetFormatter(ctx, isPersistedInDriver);
         QueryOutputFormatter formatter = ctx.getQueryOutputFormatter();
         try {
           formatter.init(ctx, resultSet.getMetadata());
@@ -110,7 +111,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
               LensConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
             formatter.writeHeader();
           }
-          if (resultSet instanceof PersistentResultSet) {
+          if (isPersistedInDriver) {
             LOG.info("Result formatter for " + queryHandle + " in persistent result");
             Path persistedDirectory = new Path(ctx.getHdfsoutPath());
             // write all files from persistent directory
@@ -150,15 +151,16 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
    *
    * @param ctx
    *          the ctx
+   * @param isPersistedInDriver
    * @throws LensException
    *           the lens exception
    */
   @SuppressWarnings("unchecked")
-  void createAndSetFormatter(QueryContext ctx) throws LensException {
+  void createAndSetFormatter(QueryContext ctx, boolean isPersistedInDriver) throws LensException {
     if (ctx.getQueryOutputFormatter() == null && ctx.isPersistent()) {
       QueryOutputFormatter formatter;
       try {
-        if (ctx.isDriverPersistent()) {
+        if (isPersistedInDriver) {
           formatter = ReflectionUtils.newInstance(
               ctx.getConf().getClass(
                   LensConfConstants.QUERY_OUTPUT_FORMATTER,

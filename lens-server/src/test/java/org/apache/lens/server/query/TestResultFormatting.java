@@ -37,6 +37,9 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.query.InMemoryOutputFormatter;
+import org.apache.lens.server.api.query.PersistedOutputFormatter;
+import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.query.QueryApp;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.glassfish.jersey.client.ClientConfig;
@@ -238,6 +241,17 @@ public class TestResultFormatting extends LensJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), status);
 
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
+      QueryContext qctx = queryService.getQueryContext(handle);
+      if (!isDir) {
+        // isDir is true if the formatter is skipped due to result being the max size allowed
+        if (qctx.isDriverPersistent()) {
+          Assert.assertTrue(qctx.getQueryOutputFormatter() instanceof PersistedOutputFormatter);
+        } else {
+          Assert.assertTrue(qctx.getQueryOutputFormatter() instanceof InMemoryOutputFormatter);
+        }
+      } else {
+        Assert.assertNull(qctx.getQueryOutputFormatter());
+      }
       // fetch results
       TestQueryService.validatePersistedResult(handle, target(), lensSessionId, new String[][]{
         {"ID", "INT"}, {"IDSTR", "STRING"}, {"IDARR", "ARRAY"}, {"IDSTRARR", "ARRAY"},
