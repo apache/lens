@@ -419,6 +419,16 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
     String filterCond = "";
     if (node.getToken().getType() == HiveParser.KW_AND) {
+
+      ASTNode parentNode = (ASTNode) node.getChild(0).getParent();
+      // Skip the join conditions used as "and" for fact filter pushdown.
+      // eg. inner join fact.id1 = dim.id and fact.id2 = dim.id
+      if (parentNode.getChild(0).getChild(0).getType() == HiveParser.DOT
+          && parentNode.getChild(0).getChild(1).getType() == HiveParser.DOT
+          && parentNode.getChild(1).getChild(0).getType() == HiveParser.DOT
+          && parentNode.getChild(1).getChild(1).getType() == HiveParser.DOT)
+        return;
+
       ASTNode right = (ASTNode) node.getChild(1);
       filterCond = HQLParser.getString(right);
     }
@@ -497,6 +507,19 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
         ASTNode left = (ASTNode) node.getChild(0);
         ASTNode right = (ASTNode) node.getChild(1);
+
+        ASTNode parentNode = (ASTNode) node.getParent();
+        HQLParser.printAST(parentNode);
+
+        // Skip the join conditions used as "and" while building subquery
+        // eg. inner join fact.id1 = dim.id and fact.id2 = dim.id
+        if (parentNode.getChild(0).getChild(0).getType() == HiveParser.DOT
+            && parentNode.getChild(0).getChild(1).getType() == HiveParser.DOT
+            && parentNode.getChild(1).getChild(0).getType() == HiveParser.DOT
+            && parentNode.getChild(1).getChild(1).getType() == HiveParser.DOT) {
+          HQLParser.printAST(parentNode);
+          return;
+        }
 
         // Get the fact and dimension columns in table_name.column_name format
         String factJoinKeys = HQLParser.getString(left).toString().replaceAll("\\s+", "")

@@ -735,6 +735,31 @@ public void testCountReplace() throws ParseException, SemanticException, LensExc
     compareQueries(expected, actual);
   }
 
+  @Test
+  public void testExcludeJoinFilterFromFactQuery() throws ParseException, SemanticException, LensException {
+
+    String query = "SELECT (dim1 . date) dim1_date , sum((f . msr1)) msr1 , (dim2 . name) dim2_name  "
+        + "FROM fact f  INNER JOIN dim1 dim1 ON f.dim1_id = dim1.id  and f.m2 = '1234' "
+        + "INNER JOIN dim2 dim2 ON f.dim2_id = dim2.id  and f.dim3_id = dim2.id "
+        + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
+        + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
+
+    SessionState.start(conf);
+
+    String actual = qtest.rewrite(query, conf);
+    String expected = "select ( dim1___dim1 . date ) dim1_date , sum(sum_fact___f_msr1) msr1 , ( dim2___dim2 . name ) dim2_name  "
+        + "from  (select fact___f.dim2_id, fact___f.dim1_id, fact___f.dim3_id, fact___f.m4, fact___f.m2,sum(( fact___f . msr1 )) "
+        + "as sum_fact___f_msr1 from fact fact___f where ( fact___f . m4 ) is not null  and (( fact___f . m2 ) =  '1234' ) and "
+        + "fact___f.dim1_id in  (  select dim1 .id from dim1 where (( dim1. date ) =  '2014-11-25 00:00:00' ) )  "
+        + "group by fact___f.dim2_id, fact___f.dim1_id, fact___f.dim3_id, fact___f.m4, fact___f.m2) fact___f  inner join dim1 "
+        + "dim1___dim1 on ((( fact___f . dim1_id ) = ( dim1___dim1 . id )) and (( fact___f . m2 ) =  '1234' ))  inner join "
+        + "dim2 dim2___dim2 on ((( fact___f . dim2_id ) = ( dim2___dim2 . id )) and (( fact___f . dim3_id ) = ( dim2___dim2 . id ))) "
+        + " where ((( dim1___dim1 . date ) =  '2014-11-25 00:00:00' ) and ( fact___f . m4 ) is not null ) group by ( dim1___dim1 . date ), "
+        + "( dim2___dim2 . name ) order by dim1_date  asc";
+
+    compareQueries(expected, actual);
+  }
+
   /**
    * Test replace db name.
    *
