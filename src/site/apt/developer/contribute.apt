@@ -93,6 +93,19 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * If new features require illustrative examples, they should be added in lens-examples.
 
+** Naming convention for config properties
+
+  Developers should follow the following naming convention for configuration properties
+
+  * All server configuration names start with <<lens.server>>.
+
+  * All configuration overridable for each query start with <<lens.query>>.
+
+  * All configuration of drivers start with <<lens.driver>>. For HiveDriver the names start with <<lens.driver.hive>>.
+    and for JDBCDriver it is <<lens.driver.jdbc>>
+
+  * All configuration overridable for each session start with <<lens.session>>.
+
 ** Generating patch
 
 *** Creating patch
@@ -241,8 +254,30 @@ Developer Documentation : How to contribute to Apache Lens?
 ** How to update documentation?
 
   The new doc files can added in src/site of parent module. Or doc change can be done in existing files under src/site.
+  Update the config files and run the TestGenerateConfigDoc test calss for updating the config docs.
   Once the changes are done, contributor can run mvn site:run, which will start localhost doc server on port 8080,
   which can opened through browser and doc can be validated.
+
+* How to update the config docs?
+
+  Add/Delete/Modify the config to the resource config files(Ex: lens-client-default.xml file for Client resource).
+  Run the TestGenerateConfigDoc, which automatically updates the config apt files under src/site.
+
+*--+--+---+
+||Resource|| Config FileName || Location of config property file|
+*--+--+---+
+|<<Server>>|lensserver-default.xml|lens-server/src/main/resources/lensserver-default.xml|
+*--+--+---+
+|<<Client>>|lens-client-default.xml|lens-client/src/main/resources/lens-client-default.xml|
+*--+--+---+
+|<<Session>>|lenssession-default.xml|lens-server/src/main/resources/lenssession-default.xml|
+*--+--+---+
+|<<Hive Driver>>|hivedriver-default.xml|lens-driver-hive/src/main/resources/hivedriver-default.xml|
+*--+--+---+
+|<<JDBC Driver>>|jdbcdriver-default.xml|lens-driver-jdbc/src/main/resources/jdbcdriver-default.xml|
+*--+--+---+
+|<<Cube>>|olap-query-conf.xml|lens-cube/src/main/resources/olap-query-conf.xml|
+*--+--+---+
 
 ** How to add license headers for newly added files?
 
