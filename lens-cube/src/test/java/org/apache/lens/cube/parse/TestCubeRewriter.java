@@ -1351,4 +1351,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
       npe.printStackTrace();
     }
   }
+
+  @Test
+  public void testDimAttributeQueryWithFact() throws Exception {
+    String query = "select count (distinct dim1) from testCube where " + twoDaysRange;
+    HiveConf conf = new HiveConf(getConf(), TestCubeRewriter.class);
+    CubeQueryRewriter cubeQueryRewriter = new CubeQueryRewriter(conf);
+    CubeQueryContext ctx = cubeQueryRewriter.rewrite(query);
+    String rewrittenQuery = ctx.toHQL();
+    System.out.println("##testDimAttributeQueryWithFact " + rewrittenQuery);
+    Assert.assertTrue(rewrittenQuery.contains("summary1"));
+  }
 }
