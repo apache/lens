@@ -24,12 +24,46 @@ Developer Documentation : How to contribute to Apache Lens?
   Welcome contributors! This page provides necessary guidelines on how to contribute towards furthering the development
   and evolution of Apache Lens.
 
-* Dev Environment Setup
+* Contributions
+
+  Contributions are welcome in all the following forms which improves the project overall.
+
+  * {{{#Code_Contributions}Code contributions}}
+
+  * {{{#Documentation}Documentation}}
+
+  * {{{#Quality_improvements}Quality Improvements}}
+
+  * {{{#Review} Reviewing}}
+
+  * Miscellaneous contributions
+
+    ** Simpler tasks like setting component field to No component issues in jira, set appropriate Priority for jira
+     issues
+
+    ** Propose new features and improvements for the project
+
+    ** Participate in discussions on dev list and jiras
+
+    ** Verify and Vote for a release
+
+    ** Volunteer for releasing a version of the project
+
+    ** Improve review process, release process, builds, packaging, jenkins jobs, code contribution process and etc.
+
+* Development Environment Setup
+
+  Below sections guide a developer on how to contribute code or doc changes to Lens.
 
 ** Source Repository
 
   Lens uses {{{http://git-scm.com/} git}} for its code repository. The repository is available at
   {{{https://git-wip-us.apache.org/repos/asf/incubator-lens.git} https://git-wip-us.apache.org/repos/asf/incubator-lens.git}}.
+
+  If you are comfortable working in github environment by forking a github repo, sothat you can push changes to your
+  repository before they are accepted in apache, we have a mirror of source at
+  {{{https://github.com/apache/incubator-lens} https://github.com/apache/incubator-lens}}. Its better to add the apache
+  repo as remote than github repo, because github repo might be delayed as it is a mirror of apache repo.
 
 ** Build tools
 
@@ -55,15 +89,17 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * Set up the IDE to follow the source layout rules of the project.
 
-* Contributing
+* Code Contributions
 
-  All changes should be initiated based on an issue in {{{TODO_link}LENS JIRA}}, so that other contributors are aware
-  of the proposed work and have the opportunity to actively participate (through review, suggestions, etc). This also
-  allows scoping the changes in appropriate releases. Code contributions are to be made available as a patch against
-  a specific JIRA created for the task. Once patches are attached to the JIRA, the JIRA issue should be marked
-  as "Patch available". Lens project follows RTC (Review then commit). It is recommended that large changes are
-  broken up into smaller changes, thus making it easy for review. The patches should comply with the requirements
-  below before they are made available for review.
+  All code changes should be initiated based on an issue in {{{https://issues.apache.org/jira/browse/LENS}LENS JIRA}},
+  so that other contributors are aware of the proposed work and have the opportunity to actively participate
+  (through review, suggestions, etc). This also allows scoping the changes in appropriate releases. Code contributions
+  are to be made available as a patch against a specific JIRA created for the task. Once patches are attached to the
+  JIRA, the JIRA issue should be marked as "Patch available" by clicking submit. Lens project follows
+  RTC (Review then commit). If the change is bigger than a couple of lines of code, contributor should raise a review
+  request on review board and attach the patch on jira once review request gets "Ship it" from one of the reviewers.
+  It is recommended that large changes are broken up into smaller changes, thus making it
+  easy for review. The patches should comply with the requirements below before they are made available for review.
 
 ** Code compliance
 
@@ -79,9 +115,10 @@ Developer Documentation : How to contribute to Apache Lens?
    uses {{{http://testng.org/doc/index.html} TestNG}} test framework. If any code change does not include unit test,
    the contributor should give the reason why it is not possible to include a unit test.
 
-  * Project documentation corresponding to the change should be updated along with the code change.
+  * Project documentation corresponding to the change should be updated along with the code change. See
+  {{{#Documentation}Documentation}} section to know how Lens documentation is organized and how to update
 
-  * Code must be formatted according to java standards, which include the following changes:
+  * Code must be formatted according to java standards, with the following changes:
 
     * Trailing White spaces: Remove all trailing white spaces.
 
@@ -91,9 +128,9 @@ Developer Documentation : How to contribute to Apache Lens?
 
   * All working files (java, xml, others) should have the ASF license header in all versioned files.
 
-  * If new features require illustrative examples, they should be added in lens-examples.
+  * If new features requires illustrative examples, they should be added in lens-examples.
 
-** Naming convention for config properties
+** Naming convention for configuration properties
 
   Developers should follow the following naming convention for configuration properties
 
@@ -149,24 +186,12 @@ Developer Documentation : How to contribute to Apache Lens?
 
   Please do:
 
-  * Try to adhere to the coding style of files you edit;
+  * Try to adhere to the coding style of files you edit.
 
-  * Comment code whose function or rationale is not obvious;
+  * Comment code whose function or rationale is not obvious.
 
   * Update documentation (e.g., package.html files, this wiki, etc.)
 
-
-  If you need to rename files in your patch:
-
-  * Write a shell script that uses 'git mv' to rename the original files.
-
-  * Edit files as needed (e.g., to change package names).
-
-  * Create a patch file with 'git diff'.
-
-  * Submit both the shell script and the patch file.
-
-  This way other developers can preview your change by running the script and then applying the patch.
 
 *** Naming your patch
 
@@ -183,7 +208,8 @@ Developer Documentation : How to contribute to Apache Lens?
 
   Before submitting your patch, make sure all tests pass by running <mvn clean package> .
   Upon successful completion of the build, you can upload the patch on the JIRA and mark the JIRA as patch available.
-  Once a committer reviews the change, it will be committed to the repo and jira issue will be resolved.
+  Till the automatic jenkins setup is available to verifying patch available issues, please update the test report on
+  jira. Once a committer reviews the change, it will be committed to the repo and jira issue will be resolved.
 
 *** Applying a patch
 
@@ -228,9 +254,9 @@ Developer Documentation : How to contribute to Apache Lens?
 
 +---+
 
-  Any changes you make from the command line to the review request are not published. They are only submitted as a draft. So the second step
-  would be to open the review request url and update the necessary info like Title, Reviewer, Bug number etc.
-
+  Any changes you make from the command line to the review request are not published. They are only submitted as a
+  draft. So the second step would be to open the review request url and update the necessary info like Title, Reviewer,
+  Bug number etc.
 
 *** After the patch is merged
 
@@ -242,11 +268,172 @@ Developer Documentation : How to contribute to Apache Lens?
 
 +---+
 
+* Quality improvements
+
+  Here are some guidelines for contributing to Apache Lens, to improve quality of the project
+
+  * Actively look at {{{https://reviews.apache.org/dashboard/?group=lens&view=to-group}Review board}} and
+  {{{https://issues.apache.org/jira/issues/?jql=project%20%3D%20LENS%20AND%20status%20%3D%20%22Patch%20Available%22%20ORDER%20BY%20updated%20DESC%2C%20priority%20DESC} Patch available queue}}
+  on lens and check the issues if they are verifiable, by looking for the following
+
+    ** All the issues are updated with enough documentation which can be used in verifying.
+
+    ** All bug fixes have an illustrative unit test to illustrate the bug, which can be added to regression.
+
+    ** None of the patches degrade the quality of the project.
+
+  * Add more code quality tools for the build like findbugs.
+
+  * Verify resolved issues and close them by adding regression
+
+  * Improve test suite by adding unit tests, smoke tests, regression tests, integration tests and etc.
+
+  * Report issues you encountered while trying out a feature
+
+* Documentation
+
+  You can contribute to improving project documentation by reporting issues in existing documentation or proposing
+  changes. Most of the doc changes are done in existing files under src/site or add you can add new files under
+  src/site or you can use space on confluence for some of the documentation. You can provide the changes for
+  documentation in code similar to code contributions. For updating confluence space, you can request for edit access
+  on dev mailing list for your account.
+
+  Below are some guidelines on updating document
+
+** Project documentation
+
+  The design, architecture and feature documentation needs to be updated in src/site of parent module. The
+  documentation is organized into four menus under the site.
+
+*** Lens Menu
+
+  Has main page, getting started page, install and run pages. This is place for all additions/changes required which
+  improves documentation for the whole project
+
+*** User Menu
+
+  User menu is meant for end user to use the lens as platform. It should be the place to reach end user. The
+  documentation here should not talk about implementation details. For new feature user guide needs to be updated with
+  how end user can use it. If feature is only a server improvement or admin feature, which end user shouldn't care,
+  then this is not the place to add them. Usually api documentation, client side documentation, user level
+  configuration go here.
+
+*** Admin Menu
+
+  Admin menu is meant for administrator of the lens platform. All the documentation with respect to server deployment,
+  configurations, monitoring goes here. Any new feature or improvement which is effecting admin should update this
+  admin doc on how admin can use that feature.
+
+*** Developer Menu
+
+  Developer menu is meant for developers to understand lens design and architecture, modules
+  Developer documentation would contain overall design and architecture doc, feature design docs, extension api doc,
+  how to contribute/commit/release docs and etc.
+
+** Configuration documentation
+
+  Configuration pages should be linked from user guide and admin guide with respect to the configuration exposed to
+  them. See {{{#Developer_FAQ} Developer FAQ}} on how to update config docs.
+
+** REST api documentation
+
+  REST api documentation is auto generated through {{{http://enunciate.codehaus.org/} Enunciate}}. Once the javadoc for
+  the resource api is updated correctly, the REST api doc should get updated.
+
+  If a new resource is added in lens-server module, it should be updated in lens-server/enunciate.xml sothat the
+  REST api doc gets generated. If a new module is added with resources and the module pom entry need to updated with
+  enunciate plugin usage and tools/scripts/generate-site-public.sh needs to be updated with site generation and
+  publishing the docs.
+
+** Feature documentation
+
+  TODO
+
+** Design and architecture documentation
+
+  TODO
+
+** Confluence usage
+
+  {{{https://cwiki.apache.org/confluence/display/LENS/}Cwiki}} should be used for documentation that cannot go into
+  code, which is some adhoc documentation. This falls into following main categories
+
+  * Design doc for a feature, which is just proposed or it is under implementation. Once the feature is implemented doc
+  should be updated in project documentation
+
+  * Project roadmap
+
+  * Discussions : Placeholder for discussions that cannot be done in jira
+
+  * Presentations : Links to slideshare or google docs
+
+  * Events : Developer/User Meetup minutes
+
+  Cwiki should not be used for documentation that is already present in code, which is the following
+
+  * Architecture documentation
+
+  * Feature documentation
+
+  * How to contribute/commit/release pages
+
+  * Generated doc for REST API/Javadoc
+
+  * Getting started pages
+
+* Review
+
+  Lens uses {{{https://reviews.apache.org/dashboard/?group=lens&view=to-group}Review board}} for review requests. If
+  you are interested in reviewing in changes put by other contributors actively look at the review board for requests
+  put up
+
+  Some things that are important to check for in patches/review requests
+
+  * Code style as per {{{./contribute.html#Code_compliance}coding guidelines in contributer guide}}
+
+  * Correctness of the patch
+
+  * Exception handling and thread safety
+
+  * Log levels
+
+  * Documentation (project documentation, javadoc, feature design docs)
+
+  * Any assumptions made in the patch that might not be practical or that could be cumbersome to manage
+
+  * Increase in complexity of installation, use, or operability
+
+* Becoming a committer
+
+  "What do I need to do in order to become a committer?" The simple (though frustrating) answer to this question
+   is, "If you want to become a committer, behave like a committer." If you follow this advice, then rest assured
+   that the PMC will notice, and committership will seek you out rather than the other way around.
+   So besides continuing to contribute high-quality code and tests, there are many other things that you should
+   naturally be undertaking as part of getting deeper into the project's life:
+
+   * Help out users and other developers on the mailing lists, in JIRA, and in IRC
+
+   * Review and test the patches submitted by others; this can help to offload the burden on existing
+   committers, who will definitely appreciate your efforts
+
+   * Participate in discussions about releases, roadmaps, architecture, and long-term plans
+
+   * Help improve the website and the wiki
+
+   * Participate in (or even initiate) real-world events such as user/developer meetups,
+    papers/talks at conferences, etc
+
+   * Improve project infrastructure in order to increase the efficiency of committers and other contributors
+
+   * Help raise the project's quality bar (e.g. by setting up code coverage analysis)
+
+   * As much as possible, keep your activity sustained rather than sporadic
+
 * Stay involved
 
-  Contributors should join the Lens mailing lists. In particular, the commit list (to see changes as they are made),
-  the dev list (to join discussions of changes) and the user list (to help others). Also refer to
-  {{{http://www.apache.org/dev/contributors.html} Apache contributors guide}} and
+  Contributors should join the Lens {{{./mail-lists.html}mailing lists}}. In particular, the commit list (to see
+  changes as they are made), the dev list (to join discussions of changes) and the user list (to help others). Also
+  refer to {{{http://www.apache.org/dev/contributors.html} Apache contributors guide}} and
   {{{http://www.apache.org/foundation/voting.html} Apache voting process}}.
 
 * Developer FAQ
@@ -258,7 +445,7 @@ Developer Documentation : How to contribute to Apache Lens?
   Once the changes are done, contributor can run mvn site:run, which will start localhost doc server on port 8080,
   which can opened through browser and doc can be validated.
 
-* How to update the config docs?
+** How to update the config docs?
 
   Add/Delete/Modify the config to the resource config files(Ex: lens-client-default.xml file for Client resource).
   Run the TestGenerateConfigDoc, which automatically updates the config apt files under src/site.
