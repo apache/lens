@@ -87,8 +87,24 @@
     </fileSet>
 
     <fileSet>
+      <directory>../tools/conf-pseudo-distr/</directory>
+      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
+      <includes>
+        <include>lens-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
       <directory>../tools/conf/server</directory>
       <outputDirectory>/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+     <fileSet>
+      <directory>../tools/conf-pseudo-distr/server</directory>
+      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>

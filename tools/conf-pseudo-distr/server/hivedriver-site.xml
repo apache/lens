@@ -23,18 +23,31 @@
 
 <configuration>
 <property>
-  <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
+  <name>lens.driver.hive.connection.class</name>
+  <value>org.apache.lens.driver.hive.RemoteThriftConnection</value>
+  <description>The connection class from HiveDriver to HiveServer. The default is
+   an embedded connection which does not require a remote hive server.
+   For connecting to a hiveserver end point, remote connection should be used. 
+  The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection
+   and org.apache.lens.driver.hive.RemoteThriftConnection. </description>
 </property>
 
 <property>
-  <name>hive.lock.manager</name>
-  <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
+  <name>hive.server2.thrift.bind.host</name>
+  <value>localhost</value>
+  <description>The host on which hive server is running</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.port</name>
+  <value>10000</value>
+  <description>The port on which hive server is running</description>
 </property>
 
 <!-- Adding in supported storages by hive driver -->
 <property>
   <name>lens.cube.query.driver.supported.storages</name>
   <value>local,cluster</value>
+  <final>true</final>
 </property>
 </configuration>

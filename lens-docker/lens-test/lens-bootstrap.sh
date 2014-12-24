@@ -18,7 +18,9 @@
 #
 
 echo "LENS_HOME " $LENS_HOME
+echo "LENS_SERVER_CONF " $LENS_SERVER_CONF
 echo "LENS_CLIENT " $LENS_CLIENT
+echo "LENS_CLIENT_CONF " $LENS_CLIENT_CONF
 
 #start hive bootstrap script
 /etc/hive-bootstrap.sh
@@ -28,14 +30,14 @@ sleep 10
 
 #start lens server
 echo "Starting Lens server..."
-$LENS_HOME/bin/lens-ctl start
+$LENS_HOME/bin/lens-ctl start --conf $LENS_SERVER_CONF 
 
 echo "Waiting for 20 secs for Lens Server to start ..."
 sleep 20
 
 #Setting up client
-$LENS_CLIENT/bin/run-examples.sh sample-metastore
-$LENS_CLIENT/bin/run-examples.sh populate-metastore
-$LENS_CLIENT/bin/lens-cli.sh
+$LENS_CLIENT/bin/run-examples.sh sample-metastore --conf $LENS_CLIENT_CONF
+$LENS_CLIENT/bin/run-examples.sh populate-metastore --conf $LENS_CLIENT_CONF
+$LENS_CLIENT/bin/lens-cli.sh --conf $LENS_CLIENT_CONF
 
 /bin/bash
