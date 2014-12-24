@@ -85,8 +85,11 @@ public class TestJdbcDriver {
     assertNotNull(driver);
     assertTrue(driver.configured);
 
-    drivers = new ArrayList<LensDriver>() {{
-      add(driver); }};
+    drivers = new ArrayList<LensDriver>() {
+      {
+        add(driver);
+      }
+    };
   }
 
   /**
@@ -100,10 +103,13 @@ public class TestJdbcDriver {
     driver.close();
   }
 
-
   private QueryContext createQueryContext(final String query) throws LensException {
     QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
-    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
+      {
+        put(driver, query);
+      }
+    });
     context.setSelectedDriver(driver);
     return context;
   }
@@ -289,8 +295,12 @@ public class TestJdbcDriver {
     insertData("prepare_test");
 
     final String query = "SELECT * from prepare_test";
-    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers );
-    pContext.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }});
+    PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
+    pContext.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
+      {
+        put(driver, query);
+      }
+    });
     pContext.setSelectedDriver(driver);
     driver.prepare(pContext);
   }
@@ -478,9 +488,16 @@ public class TestJdbcDriver {
     System.out.println("@@@ test_cancel:" + context.getQueryHandle());
     driver.executeAsync(context);
     QueryHandle handle = context.getQueryHandle();
-    driver.cancelQuery(handle);
+    boolean isCancelled = driver.cancelQuery(handle);
     driver.updateStatus(context);
-    assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
+
+    if (isCancelled) {
+      assertEquals(context.getDriverStatus().getState(), DriverQueryState.CANCELED);
+    } else {
+      // Query completed before cancelQuery call
+      assertEquals(context.getDriverStatus().getState(), DriverQueryState.SUCCESSFUL);
+    }
+
     assertTrue(context.getDriverStatus().getDriverStartTime() > 0);
     assertTrue(context.getDriverStatus().getDriverFinishTime() > 0);
     driver.closeQuery(handle);

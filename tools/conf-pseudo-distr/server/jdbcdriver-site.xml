@@ -37,6 +37,7 @@
   <property>
     <name>lens.cube.query.driver.supported.storages</name>
     <value>mydb</value>
+    <final>true</final>
   </property>
   <property>
     <name>lens.driver.jdbc.query.rewriter</name>

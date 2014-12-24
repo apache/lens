@@ -41,11 +41,17 @@
 
     <dependencies>
         <dependency>
-        <groupId>org.apache.lens</groupId>
+            <groupId>org.apache.lens</groupId>
             <artifactId>lens-server-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.lens</groupId>
+            <artifactId>lens-server-api</artifactId>
+            <type>test-jar</type>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.apache.lens</groupId>
             <artifactId>lens-api</artifactId>

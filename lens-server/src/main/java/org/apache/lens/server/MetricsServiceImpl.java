@@ -190,7 +190,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       reporters.add(reporter);
     }
 
-    if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
+    if (hiveConf.getBoolean(LensConfConstants.ENABLE_GANGLIA_METRICS, false)) {
       GMetric ganglia;
       try {
         ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME), hiveConf.getInt(
@@ -409,5 +409,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   @Override
   public long getTotalSuccessfulQueries() {
     return totalSuccessfulQueries.getCount();
+  }
+
+  protected List<ScheduledReporter> getReporters() {
+    return reporters;
   }
 }

@@ -123,6 +123,13 @@
         <groupId>org.apache.hadoop</groupId>
         <artifactId>hadoop-mapreduce-client-common</artifactId>
       </dependency>
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-server-api</artifactId>
+        <type>test-jar</type>
+        <version>${project.version}</version>
+        <scope>test</scope>
+      </dependency>
   </dependencies>
 
 </project>    

@@ -115,11 +115,13 @@ class AliasReplacer implements ContextRewriter {
       Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
       Set<String> queriedDimAttrs = new HashSet<String>();
       Set<String> queriedMsrs = new HashSet<String>();
-      for (String col : cubeColsQueried) {
-        if (cube.getMeasureNames().contains(col)) {
-          queriedMsrs.add(col);
-        } else if (cube.getDimAttributeNames().contains(col)) {
-          queriedDimAttrs.add(col);
+      if (cubeColsQueried != null && !cubeColsQueried.isEmpty()) {
+        for (String col : cubeColsQueried) {
+          if (cube.getMeasureNames().contains(col)) {
+            queriedMsrs.add(col);
+          } else if (cube.getDimAttributeNames().contains(col)) {
+            queriedDimAttrs.add(col);
+          }
         }
       }
       cubeql.addQueriedDimAttrs(queriedDimAttrs);
@@ -152,7 +154,7 @@ class AliasReplacer implements ContextRewriter {
             derivedCubeFound = true;
           }
         }
-        if (!derivedCubeFound) {
+        if (!derivedCubeFound && !queriedDimAttrs.isEmpty()) {
           throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedDimAttrs.toString());
         }
         if (!queriedMsrs.isEmpty()) {

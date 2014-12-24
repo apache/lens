@@ -18,10 +18,17 @@
  */
 package org.apache.lens.server;
 
+import static org.testng.Assert.assertEquals;
+
+import java.util.List;
+
 import org.apache.lens.server.LensApplication;
+import org.apache.lens.server.api.metrics.MetricsService;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.codahale.metrics.ScheduledReporter;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
@@ -68,6 +75,13 @@ public class TestLensApplication extends LensJerseyTest {
     Assert.assertEquals(response.readEntity(String.class), "OK");
   }
 
+  @Test
+  public void testMetricService() {
+    MetricsService metrics = ((MetricsService) LensServices.get().getService(MetricsService.NAME));
+    List<ScheduledReporter> reporters = ((MetricsServiceImpl) metrics).getReporters();
+
+    assertEquals(reporters.size(), 1, "mismatch in the number of reporters");
+  }
   @Override
   protected int getTestPort() {
     return 19998;
