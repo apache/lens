@@ -94,7 +94,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         rewriteCtx("cube select" + " SUM(msr2) from testCube where " + twoDaysRange, getConf());
     String expected =
         getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-            getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+          getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, rewrittenQuery.toHQL());
     System.out.println("Non existing parts:" + rewrittenQuery.getNonExistingParts());
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
@@ -171,7 +171,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         getExpectedQuery(CubeTestSetup.DERIVED_CUBE_NAME, "select testdim2.name, sum(derivedCube.msr2) FROM ", " JOIN "
             + getDbName() + "c1_testdim2tbl testdim2 ON derivedCube.dim2 = "
             + " testdim2.id and (testdim2.dt = 'latest') ", null, "group by (testdim2.name)", null,
-            getWhereForDailyAndHourly2days(CubeTestSetup.DERIVED_CUBE_NAME, "c1_summary2"));
+          getWhereForDailyAndHourly2days(CubeTestSetup.DERIVED_CUBE_NAME, "c1_summary2"));
     compareQueries(expected, hqlQuery);
 
     // Test that explicit join query passes with join resolver disabled
@@ -463,8 +463,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // q2
     hqlQuery =
         rewrite("select statedim.name, SUM(msr2) from" + " testCube" + " join citydim on testCube.cityid = citydim.id"
-            + " left outer join statedim on statedim.id = citydim.stateid"
-            + " right outer join zipdim on citydim.zipcode = zipdim.code" + " where " + twoDaysRange, getConf());
+          + " left outer join statedim on statedim.id = citydim.stateid"
+          + " right outer join zipdim on citydim.zipcode = zipdim.code" + " where " + twoDaysRange, getConf());
     joinWhereConds = new ArrayList<String>();
     joinWhereConds.add(StorageUtil.getWherePartClause("dt", "citydim", StorageConstants.getPartitionsForLatest()));
     joinWhereConds.add(StorageUtil.getWherePartClause("dt", "zipdim", StorageConstants.getPartitionsForLatest()));
@@ -490,7 +490,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
             + "c1_citytable ct ON" + " tc.cityid = ct.id LEFT OUTER JOIN " + getDbName() + "c1_statetable st"
             + " ON st.id = ct.stateid and (st.dt = 'latest') " + "RIGHT OUTER JOIN " + getDbName() + "c1_ziptable"
             + " zt ON ct.zipcode = zt.code", null, " group by" + " st.name ", joinWhereConds,
-            getWhereForDailyAndHourly2days("tc", "C2_testfact"));
+          getWhereForDailyAndHourly2days("tc", "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     // q4
@@ -1174,7 +1174,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     compareQueries(expected, hqlQuery);
     hqlQuery =
         rewrite("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysRange + " OR "
-            + CubeTestSetup.twoDaysRangeBefore4days, getConf());
+          + CubeTestSetup.twoDaysRangeBefore4days, getConf());
     expected =
         getExpectedQuery(cubeName, "select testcube.dim1, max(testcube.msr3), sum(testcube.msr2) FROM ", null,
             " group by testcube.dim1", expectedRangeWhere, "C1_summary1");
@@ -1202,7 +1202,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String hqlQuery = rewrite("select DISTINCT name, stateid" + " from citydim", getConf());
     String expected =
         getExpectedQuery("citydim", "select DISTINCT" + " citydim.name, citydim.stateid from ", null, "c1_citytable",
-            true);
+          true);
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select id, sum(distinct id) from" + " citydim group by id", getConf());
@@ -1361,5 +1361,22 @@ public class TestCubeRewriter extends TestQueryRewrite {
     String rewrittenQuery = ctx.toHQL();
     System.out.println("##testDimAttributeQueryWithFact " + rewrittenQuery);
     Assert.assertTrue(rewrittenQuery.contains("summary1"));
+  }
+
+  @Test
+  public void testSelectDimonlyJoinOnCube() throws Exception {
+    String query = "SELECT count (distinct citydim.name) from testCube where " + twoDaysRange;
+    HiveConf conf = new HiveConf(getConf(), TestCubeRewriter.class);
+    conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
+    try {
+      CubeQueryRewriter rewriter = new CubeQueryRewriter(conf);
+      CubeQueryContext context = rewriter.rewrite(query);
+      String hql = context.toHQL();
+      System.out.println("@@ HQL = " + hql);
+      Assert.assertNotNull(hql);
+    } catch (Exception exc) {
+      exc.printStackTrace();
+      Assert.fail("Query should be rewritten successfully.");
+    }
   }
 }
