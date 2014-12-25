@@ -29,7 +29,6 @@ TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/lens-server/target/site/wsdocs
 IMAGES_DIR=`pwd`/src/site/apt/figures
-LOGO_FILE=`pwd`/grill-logo.png
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
 
@@ -57,7 +56,6 @@ mkdir -p versions/$VERSION || due "unable to create dir versions/$VERSION"
 
 find current -type f -exec git rm {} \;
 echo "Copying REST docs from " $REST_DIR
-cp $LOGO_FILE .
 # Delete index.html from the source wsdocs as it conflitcs with maven index.html
 echo "DELETE $REST_DIR/index.html"
 rm $REST_DIR/index.html

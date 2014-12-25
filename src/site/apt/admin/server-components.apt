@@ -24,7 +24,7 @@ Lens server components
   
   Here is the diagram describing all the components:
 
-[../figures/serverdesign.png] Lens Server components
+[/images/serverdesign.png] Lens Server components
 
 * Lens services
 

@@ -29,7 +29,7 @@ OLAP Data cube concepts
   
   The typical data layout is depicted in the following diagram.
   
-[../figures/data-layout.png] Fact data and dimension data
+[/images/data-layout.png] Fact data and dimension data
   
   Lens provides an abstraction to represent above layout, and allows user to define schema
   of the data at conceptual level and also query the same, without knowing
