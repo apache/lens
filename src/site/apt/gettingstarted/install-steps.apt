@@ -29,9 +29,9 @@ Installing and running lens
 
    git clone https://git-wip-us.apache.org/repos/asf/incubator-lens.git
 
-   cd lens
+   cd incubator-lens
 
-   git checkout develop
+   git checkout master
 
    mvn clean package
    
