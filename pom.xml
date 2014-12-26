@@ -75,6 +75,13 @@
      <url>https://builds.apache.org/view/H-L/view/Lens/</url>
   </ciManagement>
 
+  <distributionManagement>
+    <site>
+      <id>lens-site</id>
+      <url>http://lens.incubator.apache.org/</url>
+    </site>
+  </distributionManagement>
+
   <mailingLists>
     <mailingList>
       <name>lens-user</name>

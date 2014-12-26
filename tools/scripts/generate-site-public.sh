@@ -24,6 +24,7 @@ die() {
     exit 1
 }
 
+SVN_TARGET=$1
 REPO=https://git-wip-us.apache.org/repos/asf/incubator-lens.git
 TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
@@ -37,18 +38,17 @@ CURR_BRANCH=`git branch | sed -n '/\* /s///p'`
 echo "Running site in current lens branch" $CURR_BRANCH
 mvn clean test -Dtest=TestGenerateConfigDoc || die "Unable to generate config docs"
 mvn install -DskipTests
-mvn clean site site:stage -Ddependency.locations.enabled=false -Ddependency.details.enabled=false || die "unable to generate site"
+mvn site site:stage -Ddependency.locations.enabled=false -Ddependency.details.enabled=false || die "unable to generate site"
 cd lens-server
 mvn enunciate:docs
 cd ..
 echo "Site gen complete"
 
 rm -rf $TMP || die "unable to clear $TMP"
+mkdir -p $TMP
 
 echo "Beginning push to gh-pages from " $CURR_BRANCH
-git clone $REPO $TMP || die "unable to clone $TMP"
 cd $TMP
-git checkout gh-pages || die "unable to checkout gh-pages"
 
 mkdir -p current || die "unable to create dir current"
 mkdir -p wsdocs || die "Unable to create dir for REST docs"
@@ -78,9 +78,8 @@ do
 done
 echo '</ul>' >> versions/index.html
 
-git add . || die "unable to add for commit"
-git commit -m "Updated documentation for version $VERSION. Source branch $CURR_BRANCH" || die "unable to commit to git"
-git push origin gh-pages || die "unable to push to gh-pages"
 
-cd $STAGE
-rm -rf $TMP || die "unable to clear $TMP"
+## Copy entire doc directory to Apache SVN Target dir
+cp -r $TMP/ $SVN_TARGET/site/publish 
+cd $SVN_TARGET
+echo "Site gen complete. Ready to commit"
