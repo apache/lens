@@ -232,7 +232,6 @@
             <!-- build the test JAR (test classes) -->
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-jar-plugin</artifactId>
-            <version>2.4</version>
             <executions>
               <execution>
                 <goals>
@@ -257,7 +256,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.15</version>
                 <configuration>
                     <systemPropertyVariables>
                         <hadoop.bin.path>${pom.basedir}/../lens-driver-hive/testutils/hadoop</hadoop.bin.path>

@@ -191,7 +191,6 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-site-plugin</artifactId>
-          <version>3.3</version>
           <configuration>
             <generateReports>true</generateReports>
           </configuration>
@@ -199,10 +198,10 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
-          <version>2.2</version>
           <executions>
             <execution>
               <goals>
+                <goal>jar</goal>
                 <goal>test-jar</goal>
               </goals>
             </execution>
@@ -220,26 +219,8 @@
         <plugin>
           <artifactId>jdeb</artifactId>
           <groupId>org.vafer</groupId>
-          <version>0.9</version>
+          <version>1.0.1</version>
         </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-gpg-plugin</artifactId>
-          <version>1.5</version>
-          <configuration>
-            <skip>true</skip>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <version>2.8</version>
-        </plugin>
-        <plugin>
-           <groupId>org.apache.rat</groupId>
-           <artifactId>apache-rat-plugin</artifactId>
-           <version>0.7</version>
-         </plugin>
          <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
@@ -363,8 +344,7 @@
     </plugins>
 
   </build>
-
-  <repositories>
+    <repositories>
     <repository>
       <id>inmobi.repo</id>
       <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
@@ -430,7 +410,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <!-- see https://jira.springsource.org/browse/SHL-52 -->
+    <!-- see https://jira.springsource.org/browse/SHL-52  -->
     <repository>
       <id>ext-release-local</id>
       <url>http://repo.springsource.org/simple/ext-release-local/</url>
@@ -439,7 +419,6 @@
       </snapshots>
     </repository>
   </repositories>
-
   <dependencyManagement>
     <dependencies>
       <dependency>
