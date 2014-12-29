@@ -41,6 +41,7 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
@@ -790,8 +791,13 @@ public class TestHiveDriver {
     Configuration conf = new Configuration();
     final MockDriver mockDriver = new MockDriver();
     mockDriver.configure(conf);
-
-    BufferedReader br = new BufferedReader(new InputStreamReader(TestHiveDriver.class.getResourceAsStream("/priority_tests.txt")));
+    DurationBasedQueryPriorityDecider alwaysNormalPriorityDecider = new DurationBasedQueryPriorityDecider("",
+      HiveDriver.MONTHLY_PARTITION_WEIGHT_DEFAULT,
+      HiveDriver.DAILY_PARTITION_WEIGHT_DEFAULT,
+      HiveDriver.HOURLY_PARTITION_WEIGHT_DEFAULT
+    );
+    BufferedReader br = new BufferedReader(new InputStreamReader(
+      TestHiveDriver.class.getResourceAsStream("/priority_tests.txt")));
     String line;
     while((line = br.readLine()) != null) {
       String[] kv = line.split("\\s*:\\s*");
@@ -816,6 +822,7 @@ public class TestHiveDriver {
             put("table1", partitions);
         }});
       Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
+      Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
     }
   }
 }

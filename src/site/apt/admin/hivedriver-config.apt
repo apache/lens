@@ -42,11 +42,11 @@ Hive driver configuration
 *--+--+---+--+
 |9|lens.cube.query.enable.multi.table.select|false|Tells whether multiple tables are allowed in from clause of final HQL query|
 *--+--+---+--+
-|10|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
+|10|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced      with its corresponding partition column name.    |
 *--+--+---+--+
 |11|lens.driver.hive.calculate.priority|true|Whether priority should be calculated for hive mr jobs or not|
 *--+--+---+--+
-|12|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
+|12|lens.driver.hive.connection.class|org.apache.lens.driver.hive.EmbeddedThriftConnection|The connection class from HiveDriver to HiveServer. The default is   an embedded connection which does not require a remote hive server.   For connecting to a hiveserver end point, remote connection should be used.  The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection   and org.apache.lens.driver.hive.RemoteThriftConnection. |
 *--+--+---+--+
 |13|lens.driver.hive.hs2.connection.expiry.delay|600000|The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2|
 *--+--+---+--+
@@ -55,5 +55,7 @@ Hive driver configuration
 |15|lens.driver.hive.priority.partition.weight.hourly|1.0|Weight of monthly partition in cost calculation|
 *--+--+---+--+
 |16|lens.driver.hive.priority.partition.weight.monthly|0.5|Weight of monthly partition in cost calculation|
+*--+--+---+--+
+|17|lens.driver.hive.priority.ranges|VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW|Priority Ranges. The numbers are the costs of the query.      The cost is calculated based on partition weights and fact weights. The interpretation of the      default config is:      cost <= 7                 :      Priority = VERY_HIGH      7 < cost <= 30         :      Priority = HIGH      30 < cost <= 90        :      Priority = NORMAL      90 < cost                 :      Priority = LOW      Some perspective wrt default weights and default ranges(1 for hourly, 0.75 for daily, 0.5 for monthly):      For exclusively hourly data this translates to VERY_HIGH,7days,HIGH,30days,NORMAL,90days,LOW      FOR exclusively daily data this translates to VERY_HIGH,9days,HIGH,40days,NORMAL,120days,LOW      for exclusively monthly data this translates to VERY_HIGH,never,HIGH,1month,NORMAL,6months,LOW      One use case in range tuning can be that you never want queries to run with VERY_HIGH,      assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be      HIGH,30.0,NORMAL,90,LOW      via the configs, you can tune both the ranges and partition weights. this would give the end      user more control.    |
 *--+--+---+--+
 The configuration parameters and their default values
