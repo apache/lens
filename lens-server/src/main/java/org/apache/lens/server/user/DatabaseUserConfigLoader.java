@@ -18,6 +18,7 @@
  */
 package org.apache.lens.server.user;
 
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.util.UtilityMethods;
@@ -25,7 +26,6 @@ import org.apache.lens.server.util.UtilityMethods;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
-import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +48,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
   protected final Cache<String, Map<String, String>> cache;
 
   /** The ds. */
-  protected DataSource ds;
+  protected BasicDataSource ds;
 
   /**
    * Instantiates a new database user config loader.
@@ -62,7 +62,6 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     super(conf);
     querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
-    ds = UtilityMethods.getDataSourceFromConf(conf);
     cache = CacheBuilder.newBuilder()
         .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
         .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
@@ -70,7 +69,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
    */
   @Override
@@ -79,9 +78,8 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
       return cache.get(loggedInUser, new Callable<Map<String, String>>() {
         @Override
         public Map<String, String> call() throws Exception {
-
           try {
-            final String[] config = UtilityMethods.queryDatabase(ds, querySql, false, loggedInUser);
+            final String[] config = queryDatabase(querySql, false, loggedInUser);
             if (config.length != keys.length) {
               throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") "
                   + "is not equal to the number of keys required(" + keys.length + ").");
@@ -101,5 +99,16 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
     } catch (ExecutionException e) {
       throw new UserConfigLoaderException(e);
     }
+  }
+
+  private BasicDataSource refreshDataSource() {
+    if(ds == null || ds.isClosed()) {
+      ds = UtilityMethods.getDataSourceFromConf(hiveConf);
+    }
+    return ds;
+  }
+
+  String[] queryDatabase(String querySql, boolean allowNull, Object... args) throws SQLException {
+    return UtilityMethods.queryDatabase(refreshDataSource(), querySql, allowNull, args);
   }
 }

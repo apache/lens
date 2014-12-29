@@ -24,7 +24,6 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.api.LensConfConstants;
 
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
@@ -101,7 +100,7 @@ public class UtilityMethods {
    * @throws SQLException
    *           the SQL exception
    */
-  public static String[] queryDatabase(DataSource ds, String querySql, final boolean allowNull, Object... args)
+  public static String[] queryDatabase(BasicDataSource ds, String querySql, final boolean allowNull, Object... args)
       throws SQLException {
     QueryRunner runner = new QueryRunner(ds);
     return runner.query(querySql, new ResultSetHandler<String[]>() {
