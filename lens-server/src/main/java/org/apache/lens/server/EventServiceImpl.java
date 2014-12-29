@@ -63,7 +63,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#init(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
@@ -76,10 +76,10 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
-   * org.apache.lens.server.api.events.LensEventService#removeListener(org.apache.lens.server.api.events.LensEventListener
-   * )
+   * org.apache.lens.server.api.events.LensEventService#removeListener
+   * (org.apache.lens.server.api.events.LensEventListener)
    */
   @Override
   public void removeListener(LensEventListener listener) {
@@ -133,7 +133,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -154,7 +154,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#notifyEvent(org.apache.lens.server.api.events.LensEvent)
    */
   @SuppressWarnings("unchecked")
@@ -172,17 +172,17 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#getListeners(java.lang.Class)
    */
   @Override
-  public Collection<LensEventListener> getListeners(Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> Collection<LensEventListener> getListeners(Class<T> eventType) {
     return Collections.unmodifiableList(eventListeners.get(eventType));
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#start()
    */
   @Override
@@ -192,7 +192,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#stop()
    */
   @Override
@@ -220,12 +220,12 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#addListenerForType(org.apache.lens.server.api.events.
    * LensEventListener, java.lang.Class)
    */
   @Override
-  public void addListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> void addListenerForType(LensEventListener<? super T> listener, Class<T> eventType) {
     synchronized (eventListeners) {
       List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners == null) {
@@ -239,12 +239,12 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#removeListenerForType(org.apache.lens.server.api.events.
    * LensEventListener, java.lang.Class)
    */
   @Override
-  public void removeListenerForType(LensEventListener listener, Class<? extends LensEvent> eventType) {
+  public <T extends LensEvent> void removeListenerForType(LensEventListener<? super T> listener, Class<T> eventType) {
     synchronized (eventListeners) {
       List<LensEventListener> listeners = eventListeners.get(eventType);
       if (listeners != null) {
