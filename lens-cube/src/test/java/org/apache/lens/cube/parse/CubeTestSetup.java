@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -96,6 +97,7 @@ import org.testng.Assert;
  */
 
 @SuppressWarnings("deprecation")
+@Slf4j
 public class CubeTestSetup {
 
   public static String HOUR_FMT = "yyyy-MM-dd-HH";
@@ -111,16 +113,23 @@ public class CubeTestSetup {
   public static final String DERIVED_CUBE_NAME2 = "der2";
   public static final String DERIVED_CUBE_NAME3 = "der3";
   public static final String DERIVED_CUBE_NAME4 = "der4";
+
+  // Time Instances as Date Type
   public static Date now;
+  public static Date lastHour;
   public static Date twodaysBack;
   public static Date oneDayBack;
-  public static String twoDaysRange;
   public static Date twoMonthsBack;
+  public static Date before4daysStart;
+  public static Date before4daysEnd;
+
+  // Time Ranges
+  public static String lastHourTimeRange;
+  public static String twoDaysRange;
   public static String twoMonthsRangeUptoMonth;
   public static String twoMonthsRangeUptoHours;
   public static String twoDaysRangeBefore4days;
-  public static Date before4daysStart;
-  public static Date before4daysEnd;
+
   private static boolean zerothHour;
   private static String c1 = "C1";
   private static String c2 = "C2";
@@ -134,8 +143,17 @@ public class CubeTestSetup {
     }
     Calendar cal = Calendar.getInstance();
     now = cal.getTime();
+    log.debug("Test now:{}", now);
+
+    // Figure out if current hour is 0th hour
     zerothHour = (cal.get(Calendar.HOUR_OF_DAY) == 0);
-    System.out.println("Test now:" + now);
+
+    // Figure out last hour
+    cal.add(Calendar.HOUR_OF_DAY, -1);
+    lastHour = cal.getTime();
+    log.debug("LastHour:{}",lastHour);
+
+    cal.setTime(now);
     cal.add(Calendar.DAY_OF_MONTH, -1);
     oneDayBack = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -1);
@@ -163,6 +181,9 @@ public class CubeTestSetup {
         "time_range_in(dt, '" + getDateUptoMonth(twoMonthsBack) + "','" + getDateUptoMonth(now) + "')";
     twoMonthsRangeUptoHours =
         "time_range_in(dt, '" + getDateUptoHours(twoMonthsBack) + "','" + getDateUptoHours(now) + "')";
+
+    // calculate lastHourTimeRange
+    setLastHourTimeRange();
     inited = true;
   }
 
@@ -1914,4 +1935,11 @@ public class CubeTestSetup {
     HQLParser.printAST(HQLParser.parseHQL(query));
   }
 
+  private static void setLastHourTimeRange() {
+    lastHourTimeRange = getTimeRangeString(getDateUptoHours(lastHour), getDateUptoHours(now));
+  }
+
+  private static String getTimeRangeString(final String startDate, final String endDate) {
+    return "time_range_in(dt, '" + startDate + "','" + endDate + "')";
+  }
 }

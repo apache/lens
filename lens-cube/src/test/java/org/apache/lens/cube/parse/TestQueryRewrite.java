@@ -19,6 +19,7 @@
 
 package org.apache.lens.cube.parse;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -28,6 +29,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
 
+@Slf4j
 public abstract class TestQueryRewrite {
 
   private static CubeTestSetup setup;
@@ -52,13 +54,13 @@ public abstract class TestQueryRewrite {
   }
 
   protected String rewrite(String query, Configuration conf) throws SemanticException, ParseException {
-    System.out.println("User query:" + query);
-    CubeQueryContext rewrittenQuery = rewriteCtx(query, conf);
-    return rewrittenQuery.toHQL();
+    String rewrittenQuery = rewriteCtx(query, conf).toHQL();
+    log.info("Rewritten query: {}",rewrittenQuery);
+    return rewrittenQuery;
   }
 
   protected CubeQueryContext rewriteCtx(String query, Configuration conf) throws SemanticException, ParseException {
-    System.out.println("User query:" + query);
+    log.info("User query: {}",query);
     CubeQueryRewriter driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
     return driver.rewrite(query);
   }

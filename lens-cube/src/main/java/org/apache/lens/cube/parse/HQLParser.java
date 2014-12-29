@@ -82,6 +82,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Optional;
 import org.antlr.runtime.tree.Tree;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
@@ -673,5 +674,37 @@ public class HQLParser {
     }
 
     return false;
+  }
+
+  /**
+   *
+   * @param node an ASTNode
+   * @return true when input node is a SELECT AST Node. Otherwise, false.
+   *
+   */
+  public static boolean isSelectASTNode(final ASTNode node) {
+
+    Optional<Integer> astNodeType = getASTNodeType(node);
+    if (astNodeType.isPresent()) {
+      return astNodeType.get() == HiveParser.TOK_SELECT;
+    }
+
+    return false;
+  }
+
+  /**
+   *
+   * @param node an ASTNode
+   * @return When node is null or token inside node is null, then Optional.absent is returned.
+   *         Otherwise, an integer representing ASTNodeType is returned.
+   */
+  private static Optional<Integer> getASTNodeType(final ASTNode node) {
+
+    Optional<Integer> astNodeType = Optional.absent();
+    if (node != null && node.getToken() != null) {
+      astNodeType = Optional.of(node.getToken().getType());
+    }
+
+    return astNodeType;
   }
 }

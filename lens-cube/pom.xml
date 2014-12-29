@@ -50,7 +50,7 @@
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+        <artifactId>mockito-all</artifactId>
     </dependency>
      <dependency>
         <groupId>org.powermock</groupId>
@@ -70,6 +70,26 @@
         <type>test-jar</type>
         <version>${project.version}</version>
         <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.projectlombok</groupId>
+        <artifactId>lombok</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
       </dependency>
     </dependencies>
 
