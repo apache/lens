@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -121,13 +121,13 @@
   </organization>
 
   <issueManagement>
-     <system>JIRA</system>
-     <url>https://issues.apache.org/jira/browse/LENS</url>
+    <system>JIRA</system>
+    <url>https://issues.apache.org/jira/browse/LENS</url>
   </issueManagement>
 
   <ciManagement>
-     <system>Jenkins</system>
-     <url>https://builds.apache.org/view/H-L/view/Lens/</url>
+    <system>Jenkins</system>
+    <url>https://builds.apache.org/view/H-L/view/Lens/</url>
   </ciManagement>
 
   <distributionManagement>
@@ -283,7 +283,7 @@
           <groupId>org.vafer</groupId>
           <version>${jdeb.plugin.version}</version>
         </plugin>
-         <plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
           <version>${checkstyle.plugin.version}</version>
@@ -321,7 +321,7 @@
       </plugins>
     </pluginManagement>
     <plugins>
-       <plugin>
+      <plugin>
         <groupId>org.apache.rat</groupId>
         <artifactId>apache-rat-plugin</artifactId>
         <configuration>
@@ -330,44 +330,44 @@
           <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
           <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
           <excludes>
-             <exclude>**/*.txt</exclude>
-             <exclude>.git/**</exclude>
-             <exclude>.reviewboardrc</exclude>
-             <exclude>.idea/**</exclude>
-             <exclude>**/*.twiki</exclude>
-             <exclude>**/*.iml</exclude>
-             <exclude>**/target/**</exclude>
-             <exclude>**/activemq-data/**</exclude>
-             <exclude>**/build/**</exclude>
-             <exclude>*.patch</exclude>
-             <exclude>**/*.log</exclude>
-             <exclude>**/logs/**</exclude>
-             <exclude>**/.classpath</exclude>
-             <exclude>**/.project</exclude>
-             <exclude>**/.checkstyle</exclude>
-             <exclude>**/.settings/**</exclude>
-             <exclude>**/test-output/**</exclude>
-             <exclude>**/maven-eclipse.xml</exclude>
-             <exclude>**/.externalToolBuilders/**</exclude>
-             <exclude>.gitignore</exclude>
-             <exclude>README.*</exclude>
-             <exclude>**/*.diff</exclude>
-             <exclude>**/*.png</exclude>
-             <exclude>**/*.pptx</exclude>
-             <exclude>**/*.jar</exclude>
-             <exclude>**/*.data</exclude>
-             <exclude>**/control</exclude>
-             <exclude>**/query_logs/**</exclude>
+            <exclude>**/*.txt</exclude>
+            <exclude>.git/**</exclude>
+            <exclude>.reviewboardrc</exclude>
+            <exclude>.idea/**</exclude>
+            <exclude>**/*.twiki</exclude>
+            <exclude>**/*.iml</exclude>
+            <exclude>**/target/**</exclude>
+            <exclude>**/activemq-data/**</exclude>
+            <exclude>**/build/**</exclude>
+            <exclude>*.patch</exclude>
+            <exclude>**/*.log</exclude>
+            <exclude>**/logs/**</exclude>
+            <exclude>**/.classpath</exclude>
+            <exclude>**/.project</exclude>
+            <exclude>**/.checkstyle</exclude>
+            <exclude>**/.settings/**</exclude>
+            <exclude>**/test-output/**</exclude>
+            <exclude>**/maven-eclipse.xml</exclude>
+            <exclude>**/.externalToolBuilders/**</exclude>
+            <exclude>.gitignore</exclude>
+            <exclude>README.*</exclude>
+            <exclude>**/*.diff</exclude>
+            <exclude>**/*.png</exclude>
+            <exclude>**/*.pptx</exclude>
+            <exclude>**/*.jar</exclude>
+            <exclude>**/*.data</exclude>
+            <exclude>**/control</exclude>
+            <exclude>**/query_logs/**</exclude>
           </excludes>
         </configuration>
         <executions>
-           <execution>
-             <id>rat-check</id>
-             <goals>
-               <goal>check</goal>
-             </goals>
-             <phase>package</phase>
-           </execution>
+          <execution>
+            <id>rat-check</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>package</phase>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -393,7 +393,7 @@
           <skip>true</skip>
         </configuration>
       </plugin>
-      <!--  Checkstyle Plugin -->
+      <!-- Checkstyle Plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
@@ -424,7 +424,7 @@
     </plugins>
 
   </build>
-    <repositories>
+  <repositories>
     <repository>
       <id>inmobi.repo</id>
       <url>https://github.com/InMobi/mvn-repo/raw/master/releases</url>
@@ -490,7 +490,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <!-- see https://jira.springsource.org/browse/SHL-52  -->
+    <!-- see https://jira.springsource.org/browse/SHL-52 -->
     <repository>
       <id>ext-release-local</id>
       <url>http://repo.springsource.org/simple/ext-release-local/</url>
@@ -845,7 +845,8 @@
         <version>${dbutils.version}</version>
       </dependency>
 
-      <dependency> <!-- Spark dependency -->
+      <!-- Spark dependency -->
+      <dependency>
         <groupId>org.apache.spark</groupId>
         <artifactId>spark-core_2.10</artifactId>
         <version>${spark.version}</version>
@@ -921,7 +922,7 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <includes>
-                <!--  integration test would run with mvn clean install -P integration-tests-->
+                <!-- integration test would run with mvn clean install -P integration-tests -->
                 <include>**/IT*.java</include>
               </includes>
               <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
