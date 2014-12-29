@@ -50,7 +50,7 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-common</artifactId>
+      <artifactId>hadoop-client</artifactId>
       <scope>runtime</scope>
     </dependency>
   </dependencies>
