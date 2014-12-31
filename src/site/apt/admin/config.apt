@@ -26,15 +26,15 @@ Lens server configuration
 *--+--+---+--+
 |1|hive.server2.async.exec.threads|5|Number of threads required in async thread pool for query execution in the lens directly. Lens uses query execution directly only to add and delete resources, which are mostly synchronous. So keeping to a lower value.|
 *--+--+---+--+
-|2|hive.server2.authentication|NONE|    Client authentication types.       NONE: no authentication check       LDAP: LDAP/AD based authentication       KERBEROS: Kerberos/GSSAPI authentication       CUSTOM: Custom authentication provider               (Use with property hive.server2.custom.authentication.class)       PAM: Pluggable authentication module.  |
+|2|hive.server2.authentication|NONE|Client authentication types. NONE: no authentication check LDAP: LDAP/AD based authentication KERBEROS: Kerberos/GSSAPI authentication CUSTOM: Custom authentication provider (Use with property hive.server2.custom.authentication.class) PAM: Pluggable authentication module.|
 *--+--+---+--+
-|3|hive.server2.authentication.ldap.Domain| |    The ldap domin  |
+|3|hive.server2.authentication.ldap.Domain| |The ldap domin|
 *--+--+---+--+
-|4|hive.server2.authentication.ldap.baseDN| |    LDAP base DN  |
+|4|hive.server2.authentication.ldap.baseDN| |LDAP base DN|
 *--+--+---+--+
-|5|hive.server2.authentication.ldap.security.protocol|ssl|    Its value is a string determined by the service provider (e.g. "ssl").    If this property is unspecified, the behaviour is determined by the service provider.    It's value will be directly passed as "java.naming.security.protocol"  |
+|5|hive.server2.authentication.ldap.security.protocol|ssl|Its value is a string determined by the service provider (e.g. "ssl"). If this property is unspecified, the behaviour is determined by the service provider. It's value will be directly passed as "java.naming.security.protocol"|
 *--+--+---+--+
-|6|hive.server2.authentication.ldap.url| |    LDAP connection URL  |
+|6|hive.server2.authentication.ldap.url| |LDAP connection URL|
 *--+--+---+--+
 |7|hive.server2.log.redirection.enabled|false|Disable the log direction on the lens server sessions. There are no logs required for each session in lens sessions. This will decrease number of file handles associated to lens server.|
 *--+--+---+--+
@@ -46,15 +46,15 @@ Lens server configuration
 *--+--+---+--+
 |11|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
-|12|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored.    Also used for database based user config loaders|
+|12|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored. Also used for database based user config loaders|
 *--+--+---+--+
 |13|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|14|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located.    Also used for database based user config loaders|
+|14|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located. Also used for database based user config loaders|
 *--+--+---+--+
 |15|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|16|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users.    For the server, the username will be without domain and domain will come through conf.|
+|16|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+
 |17|lens.server.drivers|org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
 *--+--+---+--+
@@ -88,15 +88,15 @@ Lens server configuration
 *--+--+---+--+
 |32|lens.server.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|33|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests. |
+|33|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.|
 *--+--+---+--+
 |34|lens.server.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
 *--+--+---+--+
-|35|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location  |
+|35|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location|
 *--+--+---+--+
 |36|lens.server.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|37|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger |
+|37|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger|
 *--+--+---+--+
 |38|lens.server.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
 *--+--+---+--+
@@ -106,7 +106,7 @@ Lens server configuration
 *--+--+---+--+
 |41|lens.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|42|lens.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed. |
+|42|lens.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed.|
 *--+--+---+--+
 |43|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
@@ -114,7 +114,7 @@ Lens server configuration
 *--+--+---+--+
 |45|lens.server.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
-|46|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used    to lookup the factory implementation class name that would provide an    instance of ServiceProvider. Users should instantiate the class to obtain its instance.        Example    --    Class spfClass 				= conf.getClass("lens.server.service.provider.factory",      	null, ServiceProviderFactory.class);    ServiceProviderFactory spf = spfClass.newInstance();		ServiceProvider serviceProvider = spf.getServiceProvider();		--       This is not supposed to be overridden by users.|
+|46|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used to lookup the factory implementation class name that would provide an instance of ServiceProvider. Users should instantiate the class to obtain its instance. Example -- Class spfClass 				= conf.getClass("lens.server.service.provider.factory", 	null, ServiceProviderFactory.class); ServiceProviderFactory spf = spfClass.newInstance(); 		ServiceProvider serviceProvider = spf.getServiceProvider(); 		-- This is not supposed to be overridden by users.|
 *--+--+---+--+
 |47|lens.server.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when lens-server starts up|
 *--+--+---+--+
@@ -140,41 +140,41 @@ Lens server configuration
 *--+--+---+--+
 |58|lens.server.ui.static.dir|webapp/lens-server/static|The base directory to server UI static files from|
 *--+--+---+--+
-|59|lens.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver.      In case the provided implementations are not sufficient for user config resolver,      a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader  |
+|59|lens.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver. In case the provided implementations are not sufficient for user config resolver, a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader|
 *--+--+---+--+
-|60|lens.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the database driver class|
+|60|lens.server.user.resolver.db.driver.name|org.hsqldb.jdbcDriver|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the database driver class|
 *--+--+---+--+
-|61|lens.server.user.resolver.db.jdbc.password| |Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the jdbc password|
+|61|lens.server.user.resolver.db.jdbc.password| |Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the jdbc password|
 *--+--+---+--+
-|62|lens.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/lens_user_config_loader.db|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, jdbc url of the database|
+|62|lens.server.user.resolver.db.jdbc.url|jdbc:hsqldb:/tmp/lens_user_config_loader.db|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, jdbc url of the database|
 *--+--+---+--+
-|63|lens.server.user.resolver.db.jdbc.username|SA|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the jdbc username|
+|63|lens.server.user.resolver.db.jdbc.username|SA|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the jdbc username|
 *--+--+---+--+
-|64|lens.server.user.resolver.db.keys|lens.session.cluster.user,mapred.job.queue.name|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loaders, the conf keys that will be loaded from database.|
+|64|lens.server.user.resolver.db.keys|lens.session.cluster.user,mapred.job.queue.name|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loaders, the conf keys that will be loaded from database.|
 *--+--+---+--+
-|65|lens.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.      For database based user config loader, this query will be run with single argument = logged in user      and the result columns will be assigned to lens.server.user.resolver.db.keys in order.      For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.  |
+|65|lens.server.user.resolver.db.query|select clusteruser,queue from user_config_table where username=?|Required for DATABASE and LDAP_BACKED_DATABASE user resolvers. For database based user config loader, this query will be run with single argument = logged in user and the result columns will be assigned to lens.server.user.resolver.db.keys in order. For ldap backed database resolver, the argument to this query will be the intermediate values obtained from ldap.|
 *--+--+---+--+
-|66|lens.server.user.resolver.fixed.value| |Required for FIXED user resolver.      when lens.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
+|66|lens.server.user.resolver.fixed.value| |Required for FIXED user resolver. when lens.server.user.resolver.type=FIXED, This will be the value cluster user will resolve to.|
 *--+--+---+--+
-|67|lens.server.user.resolver.ldap.bind.dn| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap dn for admin binding      example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...  |
+|67|lens.server.user.resolver.ldap.bind.dn| |Required for LDAP_BACKED_DATABASE user resolvers. ldap dn for admin binding example: CN=company-it-admin,ou=service-account,ou=company-service-account,dc=dc1,dc=com...|
 *--+--+---+--+
-|68|lens.server.user.resolver.ldap.bind.password| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap password for admin binding above|
+|68|lens.server.user.resolver.ldap.bind.password| |Required for LDAP_BACKED_DATABASE user resolvers. ldap password for admin binding above|
 *--+--+---+--+
-|69|lens.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers.      list of fields to be obtained from ldap. These will be cached by the intermediate db.|
+|69|lens.server.user.resolver.ldap.fields|department|Required for LDAP_BACKED_DATABASE user resolvers. list of fields to be obtained from ldap. These will be cached by the intermediate db.|
 *--+--+---+--+
-|70|lens.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers.      query to delete intermediate values from database backing ldap as cache.      one argument: logged in user.  |
+|70|lens.server.user.resolver.ldap.intermediate.db.delete.sql|delete from user_department where username=?|Required for LDAP_BACKED_DATABASE user resolvers. query to delete intermediate values from database backing ldap as cache. one argument: logged in user.|
 *--+--+---+--+
-|71|lens.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers.      query to insert intermediate values from database backing ldap as cache.      arguments: first logged in user, then all intermediate values, then current time + expiration time  |
+|71|lens.server.user.resolver.ldap.intermediate.db.insert.sql|insert into user_department (username, department, expiry) values (?, ?, ?)|Required for LDAP_BACKED_DATABASE user resolvers. query to insert intermediate values from database backing ldap as cache. arguments: first logged in user, then all intermediate values, then current time + expiration time|
 *--+--+---+--+
-|72|lens.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers.      query to obtain intermediate values from database backing ldap as cache.      two arguments: logged in user and current time.  |
+|72|lens.server.user.resolver.ldap.intermediate.db.query|select department from user_department where username=? and expiry>?|Required for LDAP_BACKED_DATABASE user resolvers. query to obtain intermediate values from database backing ldap as cache. two arguments: logged in user and current time.|
 *--+--+---+--+
-|73|lens.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers.      for searching intermediate values for a user, the search keys.      example: cn=users,dc=dc1,dc=dc2...  |
+|73|lens.server.user.resolver.ldap.search.base| |Required for LDAP_BACKED_DATABASE user resolvers. for searching intermediate values for a user, the search keys. example: cn=users,dc=dc1,dc=dc2...|
 *--+--+---+--+
-|74|lens.server.user.resolver.ldap.search.filter|(&(objectClass=user)(sAMAccountName=%s))|Required for LDAP_BACKED_DATABASE user resolvers.      filter pattern for ldap search|
+|74|lens.server.user.resolver.ldap.search.filter|(&(objectClass=user)(sAMAccountName=%s))|Required for LDAP_BACKED_DATABASE user resolvers. filter pattern for ldap search|
 *--+--+---+--+
-|75|lens.server.user.resolver.ldap.url| |Required for LDAP_BACKED_DATABASE user resolvers.      ldap url to connect to.|
+|75|lens.server.user.resolver.ldap.url| |Required for LDAP_BACKED_DATABASE user resolvers. ldap url to connect to.|
 *--+--+---+--+
-|76|lens.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver.      when lens.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to      determine cluster user. Each line should contain username followed by DOT followed by property full name      followed by equal-to sign and followed by value.      example schema of the file is:      user1.lens.server.cluster.user=clusteruser1      user1.mapred.job.queue.name=queue1      *.lens.server.cluster.user=defaultclusteruser      *.mapred.job.queue.name=default  |
+|76|lens.server.user.resolver.propertybased.filename|/path/to/propertyfile|Required for PROPERTYBASED user resolver. when lens.server.user.resolver.type is PROPERTYBASED, then this file will be read and parsed to determine cluster user. Each line should contain username followed by DOT followed by property full name followed by equal-to sign and followed by value. example schema of the file is: user1.lens.server.cluster.user=clusteruser1 user1.mapred.job.queue.name=queue1 *.lens.server.cluster.user=defaultclusteruser *.mapred.job.queue.name=default|
 *--+--+---+--+
 |77|lens.server.user.resolver.type|FIXED|Type of user config resolver. allowed values are FIXED, PROPERTYBASED, DATABASE, LDAP_BACKED_DATABASE, CUSTOM.|
 *--+--+---+--+

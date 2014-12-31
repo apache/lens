@@ -33,10 +33,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * The Class TestGenerateConfigDoc.
@@ -185,9 +182,9 @@ public class TestGenerateConfigDoc {
     private String value;
 
     /**
-     * The description.
+     * The description. Multi line handled with a list.
      */
-    private String description;
+    private List<String> description;
 
     /**
      * Validate.
@@ -198,6 +195,7 @@ public class TestGenerateConfigDoc {
       if (name == null || name.isEmpty()) {
         throw new IllegalArgumentException("Name cannot be empty");
       }
+
 
       if (description == null || description.isEmpty()) {
         throw new IllegalArgumentException("Description cannot be empty for property: " + name);
@@ -305,7 +303,21 @@ public class TestGenerateConfigDoc {
         }
       } else if (inProperty && "description".equalsIgnoreCase(qName)) {
         // replace new lines with space
-        entry.description = buf.toString().replaceAll("\\r|\\n", "");
+        entry.description = Arrays.asList(buf.toString().split("\\\\\\r|\\\\\\n"));
+        ListIterator<String> iter = entry.description.listIterator();
+        int maxLength = -1;
+        while(iter.hasNext()) {
+          String descriptionLine = iter.next().replaceAll("\\r|\\n", " ").replaceAll(" +", " ").trim();
+          if (descriptionLine.length() > maxLength) {
+            maxLength = descriptionLine.length();
+          }
+          iter.set(descriptionLine);
+        }
+        iter = entry.description.listIterator();
+        while(iter.hasNext()) {
+          String descriptionLine = iter.next();
+          iter.set(descriptionLine + getSpaces(maxLength - descriptionLine.length()));
+        }
       } else if (inProperty && "property".equalsIgnoreCase(qName)) {
         entry.validate();
         entries.add(entry);
@@ -371,20 +383,27 @@ public class TestGenerateConfigDoc {
         apt.println();
 
         // Print config entries
-        int i = 1;
+        int i = 0;
         apt.println("*--+--+---+--+");
         apt.println("|<<No.>>|<<Property Name>>|<<Default Value>>|<<Description>>|");
         for (ConfigEntry entry : entries) {
           apt.println("*--+--+---+--+");
-          apt.print("|");
-          apt.print(i++);
-          apt.print("|");
-          apt.print(entry.name);
-          apt.print("|");
-          apt.print(entry.value);
-          apt.print("|");
-          apt.print(entry.description == null ? "" : entry.description);
-          apt.println("|");
+          i++;
+          String col;
+          for(int j = 0; j < entry.description.size(); j++) {
+            apt.print("|");
+            col = i + "";
+            apt.print(j == 0 ? col : col.replaceAll(".", " "));
+            apt.print("|");
+            col = entry.name;
+            apt.print(j == 0 ? col : col.replaceAll(".", " "));
+            apt.print("|");
+            col = entry.value;
+            apt.print(j == 0 ? col : col.replaceAll(".", " "));
+            apt.print("|");
+            apt.print(entry.description.get(j) + ((j == entry.description.size() - 1) ? (j == 0 ? "" : "  ") : "\\ "));
+            apt.println("|");
+          }
         }
         apt.println("*--+--+---+--+");
         apt.println("The configuration parameters and their default values");
@@ -410,5 +429,11 @@ public class TestGenerateConfigDoc {
     }
 
   }
-
+  public static StringBuilder getSpaces(int num) {
+    StringBuilder sb = new StringBuilder();
+    for(int i = 0; i < num; i++) {
+      sb.append(" ");
+    }
+    return sb;
+  }
 }

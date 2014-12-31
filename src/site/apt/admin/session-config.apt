@@ -46,7 +46,7 @@ Lens session configuration
 *--+--+---+--+
 |11|lens.cube.query.promote.select.togroupby|true|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|12|lens.query.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself. |
+|12|lens.query.add.insert.overwrite|true|Prefix query with insert overwrite clause if the query is persistent. User can disable if user gave the clause himself.|
 *--+--+---+--+
 |13|lens.query.enable.mail.notify|false|When a query ends, whether to notify the submitter by mail or not.|
 *--+--+---+--+
@@ -72,17 +72,17 @@ Lens session configuration
 *--+--+---+--+
 |24|lens.query.output.write.footer|false|Whether to write footer as part of query result. When enabled, total number of rows will be written as part of header.|
 *--+--+---+--+
-|25|lens.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results. |
+|25|lens.query.output.write.header|false|Whether to write header as part of query result formatting. When enabled the user given header will be added in case of driver persisted results, and column names chosen will be added as header for in-memory results.|
 *--+--+---+--+
-|26|lens.query.result.email.cc| |When query ends, the result/failure reason will be sent to  the user via email. The mail would be cc'ed to the addresses provided  in this field.|
+|26|lens.query.result.email.cc| |When query ends, the result/failure reason will be sent to the user via email. The mail would be cc'ed to the addresses provided in this field.|
 *--+--+---+--+
 |27|lens.query.result.fs.read.url| |Http read URL for FileSystem on which result is present, if available. For example webhdfs as http read url should http://host:port/webhdfs/v1. Currently we support only webhdfs url as the http url for HDFS file system|
 *--+--+---+--+
 |28|lens.query.result.output.dir.format| |The format of the output if result is persisted in hdfs. The format should be expressed in HQL.|
 *--+--+---+--+
-|29|lens.query.result.output.serde|org.apache.lens.lib.query.CSVSerde|The default serde class name that should be used by  org.apache.lens.lib.query.FileSerdeFormatter for formatting the output  |
+|29|lens.query.result.output.serde|org.apache.lens.lib.query.CSVSerde|The default serde class name that should be used by org.apache.lens.lib.query.FileSerdeFormatter for formatting the output|
 *--+--+---+--+
-|30|lens.query.result.parent.dir|/tmp/lensreports|The directory for storing persisted result of query. This  directory should exist and should have writable permissions by lens server|
+|30|lens.query.result.parent.dir|/tmp/lensreports|The directory for storing persisted result of query. This directory should exist and should have writable permissions by lens server|
 *--+--+---+--+
 |31|lens.query.result.size.format.threshold|10737418240|The maximum allowed size of the query result. If exceeds, no server side formatting would be done.|
 *--+--+---+--+

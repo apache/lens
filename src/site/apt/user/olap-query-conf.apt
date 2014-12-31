@@ -42,7 +42,7 @@ OLAP query configuration
 *--+--+---+--+
 |9|lens.cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
 *--+--+---+--+
-|10|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition |
+|10|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
 *--+--+---+--+
 |11|lens.cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
 *--+--+---+--+
@@ -54,7 +54,7 @@ OLAP query configuration
 *--+--+---+--+
 |15|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|16|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter |
+|16|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+
 |17|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
 *--+--+---+--+
