@@ -31,11 +31,12 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Logger;
 
 /**
@@ -46,6 +47,9 @@ public class LensServer {
   /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(LensServer.class);
 
+  private static final String SEP_LINE =
+    "\n###############################################################\n";
+
   /** The server. */
   final HttpServer server;
 
@@ -54,6 +58,11 @@ public class LensServer {
 
   /** The conf. */
   final HiveConf conf;
+
+  /** This flag indicates that the lens server can run,
+   * When this is set to false, main thread bails out.
+   */
+  volatile boolean canRun = true;
 
   static {
     SLF4JBridgeHandler.removeHandlersForRootLogger();
@@ -120,7 +129,7 @@ public class LensServer {
    * @throws IOException
    *           Signals that an I/O exception has occurred.
    */
-  public void start() throws IOException {
+  public synchronized void start() throws IOException {
     server.start();
     uiServer.start();
   }
@@ -128,14 +137,31 @@ public class LensServer {
   /**
    * Stop.
    */
-  public void stop() {
+  public synchronized void stop() {
     server.shutdownNow();
     uiServer.shutdownNow();
     LensServices.get().stop();
+    printShutdownMessage();
   }
 
-  /** The this server. */
-  private static LensServer thisServer;
+  /**
+   * This keeps the server running till a shutdown is
+   * triggered. Either through a shutdown sequence initiated
+   * by an administrator or if applications encounters a
+   * fatal exception or it enters an unrecoverable state.
+   */
+  private void join() {
+    while (canRun) {
+      synchronized (this) {
+        try {
+          wait(2000);
+        } catch (InterruptedException e) {
+          LOG.warn("Received an interrupt in the main loop", e);
+        }
+      }
+    }
+    LOG.info("Exiting main run loop...");
+  }
 
   /**
    * The main method.
@@ -145,27 +171,17 @@ public class LensServer {
    * @throws Exception
    *           the exception
    */
-  @SuppressWarnings("restriction")
   public static void main(String[] args) throws Exception {
-    Signal.handle(new Signal("TERM"), new SignalHandler() {
 
-      @Override
-      public void handle(Signal signal) {
-        try {
-          LOG.info("Request for stopping lens server received");
-          if (thisServer != null) {
-            synchronized (thisServer) {
-              thisServer.notify();
-            }
-          }
-        } catch (Exception e) {
-          LOG.warn("Error in shutting down databus", e);
-        }
-      }
-    });
-
+    printStartupMessage();
     try {
-      thisServer = new LensServer(LensServerConf.get());
+      final LensServer thisServer = new LensServer(LensServerConf.get());
+
+      registerShutdownHook(thisServer);
+      registerDefaultExceptionHandler();
+
+      thisServer.start();
+      thisServer.join();
     } catch (Exception exc) {
       LOG.fatal("Error while creating Lens server", exc);
       try {
@@ -173,14 +189,70 @@ public class LensServer {
       } catch (Exception e) {
         LOG.error("Error stopping services", e);
       }
-      System.exit(1);
     }
+  }
 
-    thisServer.start();
-    synchronized (thisServer) {
-      thisServer.wait();
+  /**
+   * Print message from lens-build-info file during startup.
+   */
+  private static void printStartupMessage() {
+    StringBuilder buffer = new StringBuilder();
+    buffer.append(SEP_LINE);
+    buffer.append("                    Lens Server (STARTUP)");
+    Properties buildProperties = new Properties();
+    InputStream buildPropertiesResource = LensServer.class.
+      getResourceAsStream("/lens-build-info.properties");
+    if (buildPropertiesResource != null) {
+      try {
+        buildProperties.load(buildPropertiesResource);
+        for (Map.Entry entry : buildProperties.entrySet()) {
+              buffer.append('\n').append('\t').append(entry.getKey()).
+                      append(":\t").append(entry.getValue());
+          }
+      } catch (Throwable e) {
+          buffer.append("*** Unable to get build info ***");
+      }
+    } else {
+      buffer.append("*** Unable to get build info ***");
     }
-    thisServer.stop();
-    System.exit(0);
+    buffer.append(SEP_LINE);
+    LOG.info(buffer.toString());
+  }
+
+  /**
+   * Print message before the lens server stops.
+   */
+  private static void printShutdownMessage() {
+    StringBuilder buffer = new StringBuilder();
+    buffer.append(SEP_LINE);
+    buffer.append("                    Lens Server (SHUTDOWN)");
+    buffer.append(SEP_LINE);
+    LOG.info(buffer.toString());
+  }
+
+  /** Registering a shutdown hook to listen to SIGTERM events.
+   * Upon receiving a SIGTERM, notify the server, which is put
+   * on wait state.
+   */
+  private static void registerShutdownHook(final LensServer thisServer) {
+    Runtime.getRuntime().addShutdownHook(new Thread() {
+      @Override
+      public void run() {
+        Thread.currentThread().setName("Shutdown");
+        LOG.info("Server has been requested to be stopped.");
+        thisServer.canRun = false;
+        thisServer.stop();
+      }
+    });
+  }
+
+  /** Registering a default uncaught exception handler. */
+  private static void registerDefaultExceptionHandler() {
+    Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+      @Override
+      public void uncaughtException(Thread t, Throwable e) {
+        LOG.fatal("Uncaught exception in Thread " + t, e);
+      }
+    });
   }
 }

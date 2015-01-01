@@ -98,6 +98,7 @@
     <checkstyle.plugin.version>2.9.1</checkstyle.plugin.version>
     <war.plugin.version>2.1.1</war.plugin.version>
     <license.plugin.version>2.6</license.plugin.version>
+    <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
   </properties>
 
   <groupId>org.apache.lens</groupId>
@@ -241,6 +242,11 @@
             <dependencyDetailsEnabled>false</dependencyDetailsEnabled>
             <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>buildnumber-maven-plugin</artifactId>
+          <version>${buildnumber.plugin.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
