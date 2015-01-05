@@ -75,7 +75,7 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
    */
   private String formatResultSet(LensClient.LensClientResultSetWithStats rs) {
     StringBuilder b = new StringBuilder();
-    int i = 0;
+    int numRows = 0;
     if (rs.getResultSet() != null) {
       QueryResultSetMetadata resultSetMetadata = rs.getResultSet().getResultSetMetadata();
       for (ResultColumn column : resultSetMetadata.getColumns()) {
@@ -89,11 +89,12 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
           for (Object col : row.getValues()) {
             b.append(col).append("\t");
           }
-          i++;
+          numRows++;
           b.append("\n");
         }
       } else {
         PersistentQueryResult temp = (PersistentQueryResult) r;
+        numRows = temp.getNumRows();
         b.append("Results of query stored at : ").append(temp.getPersistedURI()).append(" ");
       }
     }
@@ -101,7 +102,7 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
     if (rs.getQuery() != null) {
       long submissionTime = rs.getQuery().getSubmissionTime();
       long endTime = rs.getQuery().getFinishTime();
-      b.append(i).append(" rows process in (").append(endTime > 0 ? ((endTime - submissionTime) / 1000) : 0)
+      b.append(numRows).append(" rows process in (").append(endTime > 0 ? ((endTime - submissionTime) / 1000) : 0)
       .append(") seconds.\n");
     }
     return b.toString();
