@@ -58,10 +58,6 @@
       <artifactId>javax.ws.rs-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.glassfish.jersey.media</groupId>
-      <artifactId>jersey-media-moxy</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-cube</artifactId>
       <version>${project.version}</version>
