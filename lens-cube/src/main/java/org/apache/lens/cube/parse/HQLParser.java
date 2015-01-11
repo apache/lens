@@ -64,11 +64,11 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ISNULL;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_LOCAL_DIR;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ORDERBY;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELECT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELECTDI;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TAB;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABSORTCOLNAMEASC;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABSORTCOLNAMEDESC;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TAB;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -82,7 +82,6 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.google.common.base.Optional;
 import org.antlr.runtime.tree.Tree;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
@@ -95,6 +94,8 @@ import org.apache.hadoop.hive.ql.parse.ParseDriver;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.ParseUtils;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import com.google.common.base.Optional;
 
 public class HQLParser {
   public static final Pattern P_WSPACE = Pattern.compile("\\s+");
@@ -706,6 +707,24 @@ public class HQLParser {
     }
 
     return astNodeType;
+  }
+
+  public static boolean hasAggregate(ASTNode node) {
+    int nodeType = node.getToken().getType();
+    if (nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT) {
+      return false;
+    } else {
+      if (HQLParser.isAggregateAST(node)) {
+        return true;
+      }
+
+      for (int i = 0; i < node.getChildCount(); i++) {
+        if (hasAggregate((ASTNode) node.getChild(i))) {
+          return true;
+        }
+      }
+      return false;
+    }
   }
 
   public static boolean equalsAST(ASTNode n1, ASTNode n2) {

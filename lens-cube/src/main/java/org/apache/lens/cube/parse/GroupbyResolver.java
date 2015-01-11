@@ -18,6 +18,11 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_GROUPBY;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,15 +34,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
-
 /**
  * Promotes groupby to select and select to groupby.
- * 
+ *
  */
 class GroupbyResolver implements ContextRewriter {
   private static Log LOG = LogFactory.getLog(GroupbyResolver.class.getName());
@@ -219,7 +221,7 @@ class GroupbyResolver implements ContextRewriter {
 
     for (int i = 0; i < selectASTNode.getChildCount(); i++) {
       ASTNode childNode = (ASTNode) selectASTNode.getChild(i);
-      if (hasMeasure(childNode,cubeQueryCtx) || hasAggregate(childNode)) {
+      if (hasMeasure(childNode,cubeQueryCtx) || HQLParser.hasAggregate(childNode)) {
         continue;
       }
       nonMsrNonAggSelASTChildren.add(childNode);
@@ -241,31 +243,13 @@ class GroupbyResolver implements ContextRewriter {
       if (hasMeasure(child, cubeql)) {
         continue;
       }
-      if (hasAggregate(child)) {
+      if (HQLParser.hasAggregate(child)) {
         continue;
       }
       list.add(HQLParser.getString((ASTNode) node.getChild(i)));
     }
 
     return list;
-  }
-
-  private boolean hasAggregate(ASTNode node) {
-    int nodeType = node.getToken().getType();
-    if (nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT) {
-      return false;
-    } else {
-      if (HQLParser.isAggregateAST(node)) {
-        return true;
-      }
-
-      for (int i = 0; i < node.getChildCount(); i++) {
-        if (hasAggregate((ASTNode) node.getChild(i))) {
-          return true;
-        }
-      }
-      return false;
-    }
   }
 
   boolean hasMeasure(ASTNode node, CubeQueryContext cubeql) {

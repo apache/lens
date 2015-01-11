@@ -43,12 +43,12 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
  * if default aggregate is defined and if there isn't already an aggregate
  * function specified on the columns.
  * </p>
- * 
+ *
  * <p>
  * Expressions which already contain aggregate sub-expressions will not be
  * changed.
  * </p>
- * 
+ *
  * <p>
  * At this point it's assumed that aliases have been added to all columns.
  * </p>
@@ -66,9 +66,8 @@ class AggregateResolver implements ContextRewriter {
     }
 
     boolean nonDefaultAggregates = false;
-    boolean aggregateResolverDisabled =
-        cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER,
-            CubeQueryConfUtil.DEFAULT_DISABLE_AGGREGATE_RESOLVER);
+    boolean aggregateResolverDisabled = cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER,
+        CubeQueryConfUtil.DEFAULT_DISABLE_AGGREGATE_RESOLVER);
     // Check if the query contains measures
     // 1. not inside default aggregate expressions
     // 2. With no default aggregate defined
@@ -103,6 +102,18 @@ class AggregateResolver implements ContextRewriter {
     resolveClause(cubeql, cubeql.getSelectAST());
 
     resolveClause(cubeql, cubeql.getHavingAST());
+
+    Configuration distConf = cubeql.getHiveConf();
+    boolean isDimOnlyDistinctEnabled = distConf.getBoolean(CubeQueryConfUtil.ENABLE_ATTRFIELDS_ADD_DISTINCT,
+        CubeQueryConfUtil.DEFAULT_ATTR_FIELDS_ADD_DISTINCT);
+    if (isDimOnlyDistinctEnabled) {
+      // Check if any measure/aggregate columns and distinct clause used in
+      // select tree. If not, update selectAST token "SELECT" to "SELECT DISTINCT"
+      if (!hasMeasures(cubeql, cubeql.getSelectAST()) && !isDistinctClauseUsed(cubeql.getSelectAST())
+          && !HQLParser.hasAggregate(cubeql.getSelectAST())) {
+        cubeql.getSelectAST().getToken().setType(HiveParser.TOK_SELECTDI);
+      }
+    }
   }
 
   // We need to traverse the clause looking for eligible measures which can be
@@ -233,6 +244,26 @@ class AggregateResolver implements ContextRewriter {
         // Return on the first measure not inside its default aggregate
         return true;
       }
+    }
+    return false;
+  }
+
+ /*
+  * Check if distinct keyword used in node
+  */
+  private boolean isDistinctClauseUsed(ASTNode node) {
+    if (node == null) {
+      return false;
+    }
+    if (node.getToken() != null) {
+      if (node.getToken().getType() == HiveParser.TOK_FUNCTIONDI
+          || node.getToken().getType() == HiveParser.TOK_SELECTDI) {
+        return true;
+      }
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      if (isDistinctClauseUsed((ASTNode) node.getChild(i)))
+        return true;
     }
     return false;
   }
