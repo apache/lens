@@ -36,7 +36,7 @@ class StorageUtil {
     for (int i = 0; i < parts.size(); i++) {
       partStr.append(sep);
       partStr.append("(");
-      partStr.append(tableName);
+      partStr.append(tableName != null ? tableName : "%s");
       partStr.append(".");
       partStr.append(timeDimName);
       partStr.append(" = '");
@@ -141,5 +141,11 @@ class StorageUtil {
       }
     }
     return Collections.singletonMap(maxCoveringStorage, maxCoveringSet);
+  }
+  public static String getWhereClause(String clause, String alias) {
+    return String.format(clause, alias);
+  }
+  public static String getWhereClause(CandidateDim dim, String alias) {
+    return getWhereClause(dim.whereClause, alias);
   }
 }

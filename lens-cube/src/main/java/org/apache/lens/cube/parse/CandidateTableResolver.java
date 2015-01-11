@@ -72,7 +72,7 @@ class CandidateTableResolver implements ContextRewriter {
         cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT,
             CubeQueryConfUtil.DEFAULT_MULTI_TABLE_SELECT);
     if (checkForQueriedColumns) {
-      LOG.debug("Dump queried columns:" + cubeql.getTblAlaisToColumns());
+      LOG.debug("Dump queried columns:" + cubeql.getTblAliasToColumns());
       populateCandidateTables(cubeql);
       resolveCandidateFactTables(cubeql);
       resolveCandidateDimTables(cubeql);

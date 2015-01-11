@@ -61,15 +61,6 @@ class DimOnlyHQLContext extends DimHQLContext {
     return null;
   }
 
-  protected String getFromString() throws SemanticException {
-    String fromString = getFromTable();
-    if (query.isAutoJoinResolved()) {
-      fromString =
-          query.getAutoJoinCtx().getFromString(fromString, null, getDimsToQuery().keySet(), getDimsToQuery(), query);
-    }
-    return fromString;
-  }
-
   @Override
   protected Set<Dimension> getQueriedDimSet() {
     return getDimsToQuery().keySet();

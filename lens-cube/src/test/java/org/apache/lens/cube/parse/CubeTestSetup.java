@@ -655,28 +655,78 @@ public class CubeTestSetup {
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
     cubeProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "false");
 
-    Set<JoinChain> joinchains = new HashSet<JoinChain>();
-    JoinChain cityState = new JoinChain("cityState", "city-state", "state thru city");
-    List<TableReference> statePaths1 = new ArrayList<TableReference>();
-    statePaths1.add(new TableReference("basecube", "cityid"));
-    statePaths1.add(new TableReference("citydim", "id"));
-    statePaths1.add(new TableReference("citydim", "stateid"));
-    statePaths1.add(new TableReference("statedim", "id"));
-    cityState.addPath(statePaths1);
-    List<TableReference> statePaths2 = new ArrayList<TableReference>();
-    statePaths2.add(new TableReference("basecube", "cityid"));
-    statePaths2.add(new TableReference("citydim", "id"));
-    statePaths2.add(new TableReference("citydim", "statename"));
-    statePaths2.add(new TableReference("statedim", "name"));
-    cityState.addPath(statePaths2);
-    joinchains.add(cityState);
-
-    JoinChain cubeState = new JoinChain("cubeState", "cube-state", "state thru cube");
-    List<TableReference> statePaths3 = new ArrayList<TableReference>();
-    statePaths3.add(new TableReference("basecube", "stateid"));
-    statePaths3.add(new TableReference("statedim", "id"));
-    cubeState.addPath(statePaths3);
-    joinchains.add(cubeState);
+    Set<JoinChain> joinchains = new HashSet<JoinChain>(){
+      {
+        add(new JoinChain("cityState", "city-state", "state thru city") {
+          {
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "cityid"));
+                add(new TableReference("citydim", "id"));
+                add(new TableReference("citydim", "stateid"));
+                add(new TableReference("statedim", "id"));
+              }
+            });
+            addPath(new ArrayList<TableReference>() {
+              {
+                add(new TableReference("basecube", "cityid"));
+                add(new TableReference("citydim", "id"));
+                add(new TableReference("citydim", "statename"));
+                add(new TableReference("statedim", "name"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("cubeState", "cube-state", "state thru cube"){
+          {
+            addPath(new ArrayList<TableReference>(){
+              {
+                add(new TableReference("basecube", "stateid"));
+                add(new TableReference("statedim", "id"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("cityZip", "city-zip", "zip thru city"){
+          {
+            addPath(new ArrayList<TableReference>(){
+              {
+                add(new TableReference("basecube", "cityid"));
+                add(new TableReference("citydim", "id"));
+                add(new TableReference("citydim", "zipcode"));
+                add(new TableReference("zipdim", "code"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("cubeStateCountry", "cube-state-country", "country through state"){
+          {
+            addPath(new ArrayList<TableReference>(){
+              {
+                add(new TableReference("basecube", "stateid"));
+                add(new TableReference("statedim", "id"));
+                add(new TableReference("statedim", "countryid"));
+                add(new TableReference("countrydim", "id"));
+              }
+            });
+          }
+        });
+        add(new JoinChain("cubeCityStateCountry", "cube-city-state-country", "country through state through city"){
+          {
+            addPath(new ArrayList<TableReference>(){
+              {
+                add(new TableReference("basecube", "cityid"));
+                add(new TableReference("citydim", "id"));
+                add(new TableReference("citydim", "stateid"));
+                add(new TableReference("statedim", "id"));
+                add(new TableReference("statedim", "countryid"));
+                add(new TableReference("countrydim", "id"));
+              }
+            });
+          }
+        });
+      }
+    };
 
     // add ref dim through chain
     cubeDimensions2.add(new ReferencedDimAtrribute(
