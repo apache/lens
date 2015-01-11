@@ -97,6 +97,16 @@
     <war.plugin.version>2.1.1</war.plugin.version>
     <license.plugin.version>2.6</license.plugin.version>
     <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
+
+    <!-- debian -->
+    <mvn.deb.build.dir>${project.build.directory}/debian</mvn.deb.build.dir>
+
+    <!-- installation -->
+    <mvn.lens.install.dir>/usr/local/lens</mvn.lens.install.dir>
+    <mvn.lens.bin.dir>${mvn.lens.install.dir}/bin</mvn.lens.bin.dir>
+    <mvn.lens.webapp.dir>${mvn.lens.install.dir}/webapp</mvn.lens.webapp.dir>
+    <mvn.lens.server.dir>${mvn.lens.webapp.dir}/lens-server</mvn.lens.server.dir>
+
   </properties>
 
   <groupId>org.apache.lens</groupId>
@@ -230,6 +240,15 @@
   </reporting>
 
   <build>
+
+    <resources>
+      <resource>
+        <directory>${basedir}/src/deb/control</directory>
+        <targetPath>${mvn.deb.build.dir}/control</targetPath>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+
     <pluginManagement>
       <plugins>
         <plugin>

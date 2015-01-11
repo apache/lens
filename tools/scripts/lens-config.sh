@@ -94,12 +94,7 @@ case $type in
     LENS_EXPANDED_WEBAPP_DIR=${LENS_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
     export LENS_EXPANDED_WEBAPP_DIR
     # set the server classpath
-    if [ ! -d ${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF ]; then
-      mkdir -p ${LENS_EXPANDED_WEBAPP_DIR}/lens-server
-      cd ${LENS_EXPANDED_WEBAPP_DIR}/lens-server
-      $JAR_BIN -xf ${BASEDIR}/webapp/lens-server.war
-      cd -
-    fi
+
     LENSCPPATH="${LENSCPPATH}:${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/classes"
     LENSCPPATH=${LENSCPPATH}:`ls ${LENS_EXPANDED_WEBAPP_DIR}/lens-server/WEB-INF/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
     LENSCPPATH=${LENSCPPATH}:`ls ${BASEDIR}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
