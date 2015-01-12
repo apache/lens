@@ -42,7 +42,7 @@ Lens server configuration
 *--+--+---+--+
 |9|lens.server.authentication.ws.filter.impl|org.apache.lens.server.AuthenticationFilter|Implementation class for Authentication Filter|
 *--+--+---+--+
-|10|lens.server.base.url|http://localhost:9999/lensapi/|The base url for the lens server|
+|10|lens.server.base.url|http://0.0.0.0:9999/lensapi/|The base url for the lens server|
 *--+--+---+--+
 |11|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
@@ -134,7 +134,7 @@ Lens server configuration
 *--+--+---+--+
 |55|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|56|lens.server.ui.base.uri|http://localhost:19999/|The base url for the Lens UI Server|
+|56|lens.server.ui.base.uri|http://0.0.0.0:19999/|The base url for the Lens UI Server|
 *--+--+---+--+
 |57|lens.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+

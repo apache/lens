@@ -66,13 +66,13 @@
 
 <property>
   <name>lens.server.base.url</name>
-  <value>http://localhost:9999/lensapi/</value>
+  <value>http://0.0.0.0:9999/lensapi/</value>
   <description>The base url for the lens server</description>
 </property>
 
 <property>
     <name>lens.server.ui.base.uri</name>
-    <value>http://localhost:19999/</value>
+    <value>http://0.0.0.0:19999/</value>
     <description>The base url for the Lens UI Server</description>
 </property>
 
