@@ -71,7 +71,7 @@ class ColumnResolver implements ContextRewriter {
     getColsForTree(cubeql, cubeql.getOrderByAST());
 
     // Update join dimension tables
-    for (String table : cubeql.getTblAlaisToColumns().keySet()) {
+    for (String table : cubeql.getTblAliasToColumns().keySet()) {
       try {
         if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
           cubeql.addQueriedTable(table);

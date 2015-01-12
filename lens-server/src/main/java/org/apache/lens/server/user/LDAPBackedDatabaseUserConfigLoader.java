@@ -23,7 +23,6 @@ import com.google.common.cache.CacheBuilder;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.util.UtilityMethods;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -67,7 +66,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
 
   /** The Constant outputFormatter. */
   private final static DateTimeFormatter outputFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:SS")
-      .withZoneUTC();
+    .withZoneUTC();
 
   /** The expiry hours. */
   private final int expiryHours;
@@ -78,16 +77,14 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
   /** The search filter pattern. */
   private final String searchFilterPattern;
 
-  /** The ctx. */
-  private final InitialLdapContext ctx;
+  /** The environment to connect to ldap. picked from conf. */
+  private final Hashtable<String, Object> env;
 
   /**
    * Instantiates a new LDAP backed database user config loader.
    *
-   * @param conf
-   *          the conf
-   * @throws UserConfigLoaderException
-   *           the user config loader exception
+   * @param conf the conf
+   * @throws UserConfigLoaderException the user config loader exception
    */
   public LDAPBackedDatabaseUserConfigLoader(final HiveConf conf) throws UserConfigLoaderException {
     super(conf);
@@ -99,11 +96,11 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
     searchBase = conf.get(LensConfConstants.USER_RESOLVER_LDAP_SEARCH_BASE);
     searchFilterPattern = conf.get(LensConfConstants.USER_RESOLVER_LDAP_SEARCH_FILTER);
     intermediateCache = CacheBuilder.newBuilder().expireAfterWrite(expiryHours, TimeUnit.HOURS)
-        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
     cache = CacheBuilder.newBuilder().expireAfterWrite(expiryHours, TimeUnit.HOURS)
-        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
 
-    Hashtable<String, Object> env = new Hashtable<String, Object>() {
+    env = new Hashtable<String, Object>() {
       {
         put(Context.SECURITY_AUTHENTICATION, "simple");
         put(Context.SECURITY_PRINCIPAL, conf.get(LensConfConstants.USER_RESOLVER_LDAP_BIND_DN));
@@ -113,45 +110,41 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
         put("java.naming.ldap.attributes.binary", "objectSID");
       }
     };
-    try {
-      ctx = new InitialLdapContext(env, null);
-    } catch (NamingException e) {
-      throw new UserConfigLoaderException(e);
-    }
   }
 
   /**
    * Find account by account name.
    *
-   * @param accountName
-   *          the account name
+   * @param accountName the account name
    * @return the search result
-   * @throws NamingException
-   *           the naming exception
+   * @throws NamingException the naming exception
    */
   protected SearchResult findAccountByAccountName(String accountName) throws NamingException {
     String searchFilter = String.format(searchFilterPattern, accountName);
     SearchControls searchControls = new SearchControls();
     searchControls.setSearchScope(SearchControls.SUBTREE_SCOPE);
-    NamingEnumeration<SearchResult> results = ctx.search(searchBase, searchFilter, searchControls);
-    if (!results.hasMoreElements()) {
-      throw new UserConfigLoaderException("LDAP Search returned no accounts");
+    InitialLdapContext ctx = new InitialLdapContext(env, null);
+    try {
+      NamingEnumeration<SearchResult> results = ctx.search(searchBase, searchFilter, searchControls);
+      if (!results.hasMoreElements()) {
+        throw new UserConfigLoaderException("LDAP Search returned no accounts");
+      }
+      SearchResult searchResult = results.nextElement();
+      if (results.hasMoreElements()) {
+        throw new UserConfigLoaderException("More than one account found in ldap search");
+      }
+      return searchResult;
+    } finally {
+      ctx.close();
     }
-    SearchResult searchResult = results.nextElement();
-    if (results.hasMoreElements()) {
-      throw new UserConfigLoaderException("More than one account found in ldap search");
-    }
-    return searchResult;
   }
 
   /**
    * Gets the attributes.
    *
-   * @param user
-   *          the user
+   * @param user the user
    * @return the attributes
-   * @throws NamingException
-   *           the naming exception
+   * @throws NamingException the naming exception
    */
   public String[] getAttributes(String user) throws NamingException {
     String[] attributes = new String[ldapFields.length];
@@ -164,7 +157,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.user.DatabaseUserConfigLoader#getUserConfig(java.lang.String)
    */
   @Override
@@ -173,8 +166,8 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
       final String[] intermediateKey = intermediateCache.get(loggedInUser, new Callable<String[]>() {
         @Override
         public String[] call() throws Exception {
-          String[] config = UtilityMethods.queryDatabase(ds, intermediateQuerySql, true, loggedInUser,
-              Timestamp.valueOf(DateTime.now().toString(outputFormatter)));
+          String[] config = queryDatabase(intermediateQuerySql, true, loggedInUser,
+            Timestamp.valueOf(DateTime.now().toString(outputFormatter)));
           if (config == null) {
             config = getAttributes(loggedInUser);
             Object[] updateArray = new Object[config.length + 2];
@@ -183,7 +176,7 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
             }
             updateArray[0] = loggedInUser;
             updateArray[config.length + 1] = Timestamp.valueOf(DateTime.now().plusHours(expiryHours)
-                .toString(outputFormatter));
+              .toString(outputFormatter));
             QueryRunner runner = new QueryRunner(ds);
             runner.update(intermediateDeleteSql, loggedInUser);
             runner.update(intermediateInsertSql, updateArray);
@@ -194,10 +187,10 @@ public class LDAPBackedDatabaseUserConfigLoader extends DatabaseUserConfigLoader
       return cache.get(intermediateKey, new Callable<Map<String, String>>() {
         @Override
         public Map<String, String> call() throws Exception {
-          final String[] argsAsArray = UtilityMethods.queryDatabase(ds, querySql, false, intermediateKey);
+          final String[] argsAsArray = queryDatabase(querySql, false, intermediateKey);
           if (argsAsArray.length != keys.length) {
             throw new UserConfigLoaderException("size of columns retrieved by db query(" + argsAsArray.length + ") "
-                + "is not equal to the number of keys required(" + keys.length + ").");
+              + "is not equal to the number of keys required(" + keys.length + ").");
           }
           return new HashMap<String, String>() {
             {

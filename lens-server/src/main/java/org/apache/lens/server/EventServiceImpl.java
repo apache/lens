@@ -63,7 +63,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#init(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
@@ -76,10 +76,10 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
-   * org.apache.lens.server.api.events.LensEventService#removeListener(org.apache.lens.server.api.events.LensEventListener
-   * )
+   * org.apache.lens.server.api.events.LensEventService#removeListener
+   * (org.apache.lens.server.api.events.LensEventListener)
    */
   @Override
   public void removeListener(LensEventListener listener) {
@@ -133,7 +133,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see java.lang.Runnable#run()
      */
     public void run() {
@@ -154,7 +154,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#notifyEvent(org.apache.lens.server.api.events.LensEvent)
    */
   @SuppressWarnings("unchecked")
@@ -172,7 +172,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#getListeners(java.lang.Class)
    */
   @Override
@@ -182,7 +182,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#start()
    */
   @Override
@@ -192,7 +192,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#stop()
    */
   @Override
@@ -220,7 +220,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#addListenerForType(org.apache.lens.server.api.events.
    * LensEventListener, java.lang.Class)
    */
@@ -239,7 +239,7 @@ public class EventServiceImpl extends AbstractService implements LensEventServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.LensEventService#removeListenerForType(org.apache.lens.server.api.events.
    * LensEventListener, java.lang.Class)
    */

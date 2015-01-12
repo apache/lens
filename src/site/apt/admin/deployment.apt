@@ -28,7 +28,7 @@ Lens server deployment
 
   Typical deployment suggested is depicted in the following  diagram
 
-[../figures/deployment.png] Lens Server deployment
+[/images/deployment.png] Lens Server deployment
 
   It requires HiveMetastore server, HiveServer2 and Lens Server running on different machines.
 

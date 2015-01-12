@@ -229,7 +229,7 @@ class StorageTableResolver implements ContextRewriter {
               if (!failOnPartialData || numParts > 0) {
                 storageTables.add(tableName);
                 String whereClause =
-                  StorageUtil.getWherePartClause(dim.getTimedDimension(), cubeql.getAliasForTabName(dim.getName()),
+                  StorageUtil.getWherePartClause(dim.getTimedDimension(), null,
                     StorageConstants.getPartitionsForLatest());
                 whereClauses.put(tableName, whereClause);
               } else {

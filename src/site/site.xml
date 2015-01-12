@@ -26,10 +26,18 @@
 	<version position="right"/>
 	<bannerLeft>
     <name>Lens Analytics Platform</name>
+        <src>/images/apache-lens-logo.png</src>
 		<title>Lens Analytics Platform</title>
 		<href>http://lens.incubator.apache.org</href>
+        <height>54px</height>
   </bannerLeft>
 	
+    <bannerRight>
+        <name>Apache Incubator</name>
+        <src>/images/apache-incubator-logo.png</src>
+        <href>http://incubator.apache.org</href>
+    </bannerRight>
+
  <body>
     <menu name="Lens" >
       <item name="Overview" href="index.html" />
@@ -60,14 +68,14 @@
     </menu>
     <menu ref="reports"/>
     <breadcrumbs>
-      <item name="ASF" href="http://www.apache.org" />
+      <item name="Apache" href="http://www.apache.org" />
 			<item name="Lens" href="http://lens.incubator.apache.org" />
     </breadcrumbs>
   </body>
   <skin>
     <groupId>org.apache.maven.skins</groupId>
-    <artifactId>maven-classic-skin</artifactId>
-    <version>1.1</version>
+    <artifactId>maven-fluido-skin</artifactId>
+    <version>1.3.0</version>
   </skin>
   <poweredBy>
     <logo name="ASF" href="http://www.apache.org/"/>

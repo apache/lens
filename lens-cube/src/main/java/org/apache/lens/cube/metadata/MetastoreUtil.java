@@ -168,6 +168,10 @@ public class MetastoreUtil implements MetastoreConstants {
     return getColumnKeyPrefix(colName) + TYPE_SFX;
   }
 
+  public static final String getExprEncodingPropertyKey(String colName) {
+    return getExprColumnKey(colName) + BASE64_SFX;
+  }
+
   ////////////////////////////
   // Join chain properties  //
   ////////////////////////////

@@ -26,13 +26,8 @@ import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.parse.CandidateFact;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
-import org.apache.lens.cube.parse.CubeQueryContext;
-import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -142,6 +137,55 @@ public class TestAggregateResolver extends TestQueryRewrite {
     }
     aggregateFactSelectionTests(conf);
     rawFactSelectionTests(conf);
+  }
+
+  @Test
+  public void testDimOnlyDistinctQuery() throws SemanticException, ParseException {
+
+    conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
+
+    //Add distinct
+    String query1 = "SELECT testcube.cityid,testcube.zipcode,testcube.stateid from testCube where " + twoDaysRange;
+    String hQL1 = rewrite(query1,conf);
+    String expectedQL1 =
+        getExpectedQuery(cubeName, "SELECT distinct testcube.cityid, testcube.zipcode, testcube.stateid" + " from ", null,
+            null, getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expectedQL1, hQL1);
+
+    //Don't add distinct
+    String query2 = "SELECT count (distinct testcube.cityid) from testcube where " + twoDaysRange;
+    String hQL2 = rewrite(query2, conf);
+    String expectedQL2 =
+        getExpectedQuery(cubeName, "SELECT count (distinct testcube.cityid)" + " from ", null, null,
+            getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expectedQL2, hQL2);
+
+    //Don't add distinct
+    String query3 = "SELECT  testcube.cityid, count(distinct testcube.stateid) from testcube where " + twoDaysRange;
+    String hQL3 = rewrite(query3, conf);
+    String expectedQL3 =
+        getExpectedQuery(cubeName, "SELECT testcube.cityid, count(distinct testcube.stateid)" + " from ", null,
+            "group by testcube.cityid", getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expectedQL3, hQL3);
+
+    //Don't add distinct
+    String query4 = "SELECT  count(testcube.stateid) from testcube where " + twoDaysRange;
+    String hQL4 = rewrite(query4, conf);
+    String expectedQL4 =
+        getExpectedQuery(cubeName, "SELECT count(testcube.stateid)" + " from ", null,
+            null, getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expectedQL4, hQL4);
+
+    //Don't add distinct, by setting the flag false
+    conf.setBoolean(CubeQueryConfUtil.ENABLE_ATTRFIELDS_ADD_DISTINCT, false);
+    String query5 = "SELECT  testcube.stateid from testcube where " + twoDaysRange;
+    String hQL5 = rewrite(query5, conf);
+    String expectedQL5 =
+        getExpectedQuery(cubeName, "SELECT testcube.stateid" + " from ", null,
+            null, getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expectedQL5, hQL5);
+
+
   }
 
   @Test

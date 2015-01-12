@@ -29,7 +29,7 @@ OLAP Data cube concepts
   
   The typical data layout is depicted in the following diagram.
   
-[../figures/data-layout.png] Fact data and dimension data
+[/images/data-layout.png] Fact data and dimension data
   
   Lens provides an abstraction to represent above layout, and allows user to define schema
   of the data at conceptual level and also query the same, without knowing
@@ -189,6 +189,73 @@ QUARTERLY, YEARLY update periods.
   
   Various configurations available for running an OLAP query are documented at {{{./olap-query-conf.html} OLAP query configurations}} 
 
+<<How to pass timerange in cubeQL>>
+
+ Users have the capability to specify the time range as absolute and relative time in lens cube query.
+ Lens cube query language allows passing timerange at different granularities like secondly, minutely, hourly, daily, weekly, monthly and yearly.
+ Relative timerange is helpful to the users in scheduling their queries
+
+ User can specify the HOURLY granularity with 'now.hour'.
+
+ The follwong table tells the available <<unit granularities>> and how to specify those granualarities for relative timerange
+
+*--+--+--+
+||UNIT||Specification||Relative time||
+*--+--+--+
+|Secondly | now.second | now.second{+/-}30seconds|
+*--+--+--+
+|Minutely | now.minute | now.minute{+/-}30minutes|
+*--+--+--+
+|Hourly | now.hour | now.hour{+/-}3hours|
+*--+--+--+
+|Daily | now.day  | now.day{+/-}3days|
+*--+--+--+
+|Weekly | now.week | now.week{+/-}3weeks|
+*--+--+--+
+|Monthly | now.month | now.month{+/-}3months|
+*--+--+--+
+|Yearly | now.year | now.year{+/-}2years|
+*--+--+--+
+
+<<Example queries with relative timerange>>:
+
++---+
+
+ query execute cube select col1 from cube where TIME_RANGE_IN(col2, "now.hour-4hours", "now.hour")
+
+ The above queries for the last 4hours data.
++---+
+
+ Users can query the data with absolute timerange at different granularities.
+ The following table describes how to specify absoulte timerange at different granularities
+
+*--+--+
+||UNIT||Absolute time specification||
+*--+--+
+|Secondly | yyyy-MM-dd-HH:mm:ss|
+*--+--+
+|Minutely | yyyy-MM-dd-HH:mm|
+*--+--+
+|Hourly | yyyy-MM-dd-HH|
+*--+--+
+|Daily | yyyy-MM-dd|
+*--+--+
+|Monthly | yyyy-MM|
+*--+--+
+|Yearly | yyyy|
+*--+--+
+
+<<Example queries with absolute timerange>>:
+
++---+
+
+ query execute cube select col1 from cube where TIME_RANGE_IN(it, "2014-12-29-07", "2014-12-29-11")
+
+ query execute cube select col1 from cube where TIME_RANGE_IN(it, "2014-12-29", "2014-12-30")
+
+ It queries the data between 29th Dec 2014 and 30th Dec 2014.
+
++---+
 * Query API
 
   LENS provides {{{../resource_QueryServiceResource.html} REST api}},

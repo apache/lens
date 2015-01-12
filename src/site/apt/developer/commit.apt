@@ -31,7 +31,7 @@ Committer Guide
 
   * {{{http://www.apache.org/dev/committers.html}Committer FAQ}}
 
-  * {{{http://www.apache.org/dev/committers.html#committer-responsibilities} Committer Responsiilities}}
+  * {{{http://www.apache.org/dev/committers.html#committer-responsibilities} Committer Responsibilities}}
 
 * Review
 
@@ -42,44 +42,32 @@ Committer Guide
 
   The list of submitted patches should be ordered by Updated timestamp -
   {{{https://issues.apache.org/jira/issues/?jql=project%20%3D%20LENS%20AND%20status%20%3D%20%22Patch%20Available%22%20ORDER%20BY%20updated%20DESC%2C%20priority%20DESC} Lens patch available issues}}
-  Committers should scan the list from one which was updated first, looking for patches that they feel
-  qualified to review and possibly commit.
+  and {{{https://reviews.apache.org/dashboard/?group=lens&view=to-group}Review board}}. Committers should scan the list
+  from one which was updated earliest, looking for patches that they feel qualified to review and possibly commit.
+
+  Review guidelines are put up at {{{./contribute.html#Review}review guidelines in contributer guide}}
 
   The committers are allowed to commit their own patch only if the patch first receives a +1 vote from another
   committer.
 
-  Some things that are important to check for in patches
-
-  * Code style as per {{{./contribute.html#Code_compliance}coding guidelines in contributer guide}}
-
-  * Correctness of the patch
-
-  * Exception handling and thread safety
-
-  * Log levels
-
-  * Documentation (project documentation, javadoc, feature design docs)
-
-  * Any assumptions made in the patch that might not be practical or that could be cumbersome to manage
-
-  * Increase in complexity of installation, use, or operability
-
   Patches should be rejected which do not adhere to the guidelines above and
-   {{{./contribute.html#Code_compliance}code compliance guidelines in contributer guide}}. Committers should always
+  {{{./contribute.html#Code_compliance}code compliance guidelines in contributer guide}}. Committers should always
   be polite to contributors and try to instruct and encourage them to contribute better patches. If a committer
   wishes to improve an unacceptable patch, then it should first be rejected, and a new patch should be attached by
   the committer for review.
 
 * Commit
 
+  The commit repo is at
+  {{{https://git-wip-us.apache.org/repos/asf/incubator-lens.git} https://git-wip-us.apache.org/repos/asf/incubator-lens.git}}
   When you commit a patch, please:
 
   * Ensure that all tests pass with patch applied.
 
   * Ensure that the patch has a +1 vote from another committer or yourself.
 
-  * Ensure that 24 hours have elapsed since the jira is made patch available. As a practice we should observe this,
-   but it should be possible to consciously override and commit with a shorter turnaround time.
+  * Ensure that 24 hours have elapsed since the jira is made patch available or the review request is up. As a practice
+   we should observe this, but it should be possible to consciously override and commit with a shorter turnaround time.
 
   * Apply the patch attached on jira. The patch should licensed under apache license.
 
@@ -106,7 +94,7 @@ Committer Guide
 
   * Put incompatibility flags on, if the change is an incompatible change.
 
-  * Add appropriate release note about what the issue is fixing. New features should have elobarate release note on
+  * Add appropriate release note about what the issue is fixing. New features should have elaborate release note on
   how to use the feature.
 
 * Backporting patches
@@ -117,28 +105,16 @@ Committer Guide
 
   Fix version needs to include this release version as well.
 
-* Becoming a committer
+* Updating Lens site
+ 
+  Lens uses Apache SVN Pub-Sub system to maintain its website. The script tools/scripts/generate-site-public.sh can be used to generate the
+	documentation, which has to be committed to website svn. Steps are as follows -
 
-  "What do I need to do in order to become a committer?" The simple (though frustrating) answer to this question
-   is, "If you want to become a committer, behave like a committer." If you follow this advice, then rest assured
-   that the PMC will notice, and committership will seek you out rather than the other way around.
-   So besides continuing to contribute high-quality code and tests, there are many other things that you should
-   naturally be undertaking as part of getting deeper into the project's life:
+	* Checkout website svn: svn co https://svn.apache.org/repos/asf/incubator/lens/ $SVN_SITE_DIR
 
-   * Help out users and other developers on the mailing lists, in JIRA, and in IRC
+	* Run tools/scripts/generate-site-public.sh $SVN_SITE_DIR
 
-   * Review and test the patches submitted by others; this can help to offload the burden on existing
-   committers, who will definitely appreciate your efforts
+	* Add newly created files to SVN
 
-   * Participate in discussions about releases, roadmaps, architecture, and long-term plans
+	* Commit. (Please contact one of the committers for incubator site SVN access)
 
-   * Help improve the website and the wiki
-
-   * Participate in (or even initiate) real-world events such as user/developer meetups,
-    papers/talks at conferences, etc
-
-   * Improve project infrastructure in order to increase the efficiency of committers and other contributors
-
-   * Help raise the project's quality bar (e.g. by setting up code coverage analysis)
-
-   * As much as possible, keep your activity sustained rather than sporadic

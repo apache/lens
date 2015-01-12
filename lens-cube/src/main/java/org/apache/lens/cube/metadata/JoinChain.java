@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import lombok.EqualsAndHashCode;
@@ -98,10 +97,7 @@ public class JoinChain implements Named {
    * @param name
    */
   public JoinChain(AbstractCubeTable table, String name) {
-    boolean isCube = false;
-    if(table instanceof Cube) {
-      isCube = true;
-    }
+    boolean isCube = (table instanceof Cube);
     this.name = name;
     this.paths = new ArrayList<Path>();
     int numChains = 0;

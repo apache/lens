@@ -21,37 +21,17 @@ package org.apache.lens.server.util;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.alerts.Email;
-import org.apache.lens.server.api.metrics.MetricsService;
 
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * The Class UtilityMethods.
  */
 public class UtilityMethods {
-
-  private static final String EMAIL_ERROR_COUNTER = "email-send-errors";
-
-  public static final Log LOG = LogFactory.getLog(UtilityMethods.class);
 
   /**
    * Merge maps.
@@ -120,7 +100,7 @@ public class UtilityMethods {
    * @throws SQLException
    *           the SQL exception
    */
-  public static String[] queryDatabase(DataSource ds, String querySql, final boolean allowNull, Object... args)
+  public static String[] queryDatabase(BasicDataSource ds, String querySql, final boolean allowNull, Object... args)
       throws SQLException {
     QueryRunner runner = new QueryRunner(ds);
     return runner.query(querySql, new ResultSetHandler<String[]>() {
@@ -175,59 +155,4 @@ public class UtilityMethods {
     }
     return sb.toString();
   }
-
-  /**
-   * Send mail.
-   *
-   * @param host
-   *          the host
-   * @param port
-   *          the port
-   * @param email
-   *          the mail message
-   * @param mailSmtpTimeout
-   *          the mail smtp timeout
-   * @param mailSmtpConnectionTimeout
-   *          the mail smtp connection timeout
-   */
-  public static void sendMail(String host, String port, String from, Email email, int mailSmtpTimeout, int mailSmtpConnectionTimeout) {
-    Properties props = System.getProperties();
-    props.put("mail.smtp.host", host);
-    props.put("mail.smtp.port", port);
-    props.put("mail.smtp.timeout", mailSmtpTimeout);
-    props.put("mail.smtp.connectiontimeout", mailSmtpConnectionTimeout);
-    Session session = Session.getDefaultInstance(props, null);
-    try {
-      MimeMessage message = new MimeMessage(session);
-      message.setFrom(new InternetAddress(from));
-      for(String recipient: email.getTo().trim().split("\\s*,\\s*")) {
-        message.addRecipients(Message.RecipientType.TO, InternetAddress.parse(recipient));
-      }
-      if (email.getCc() != null && !email.getCc().isEmpty()) {
-        for(String recipient: email.getCc().trim().split("\\s*,\\s*")) {
-          message.addRecipients(Message.RecipientType.CC, InternetAddress.parse(recipient));
-        }
-      }
-      if(email.getBcc() != null && !email.getBcc().isEmpty()) {
-        for(String recipient: email.getBcc().trim().split("\\s*,\\s*")) {
-          message.addRecipients(Message.RecipientType.BCC, InternetAddress.parse(recipient));
-        }
-      }
-      message.setSubject(email.getSubject());
-      message.setSentDate(new Date());
-
-      MimeBodyPart messagePart = new MimeBodyPart();
-      messagePart.setText(email.getMessage());
-      Multipart multipart = new MimeMultipart();
-
-      multipart.addBodyPart(messagePart);
-      message.setContent(multipart);
-      Transport.send(message);
-    } catch (Exception e) {
-      MetricsService metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
-      metricsService.incrCounter(UtilityMethods.class, EMAIL_ERROR_COUNTER);
-      LOG.error("Error sending mail", e);
-    }
-  }
 }
-

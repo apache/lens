@@ -166,13 +166,13 @@ public class TestCubeMetastoreClient {
         new TableReference("testdim2", "id")));
 
     cubeExpressions.add(new ExprColumn(new FieldSchema("msr5", "double", "fifth measure"), "Avg msr5",
-        "avg(msr1 + msr2)"));
+        "avg(msr1 + msr2)", "avg(msr2 + msr1)", "avg(msr1 + msr2 - msr1 + msr1)" ));
     cubeExpressions.add(new ExprColumn(new FieldSchema("msr5start", "double", "expr measure with start and end times"),
         "AVG of SUM", "avg(msr1 + msr2)"));
     cubeExpressions.add(new ExprColumn(new FieldSchema("booleancut", "boolean", "a boolean expression"), "Boolean Cut",
-        "dim1 != 'x' AND dim2 != 10 "));
+        "dim1 != 'x' AND dim2 != 10 ", "dim1 | dim2 AND dim2 = 'XYZ'"));
     cubeExpressions.add(new ExprColumn(new FieldSchema("substrexpr", "string", "a subt string expression"),
-        "SUBSTR EXPR", "substr(dim1, 3)"));
+        "SUBSTR EXPR", "substr(dim1, 3)", "substr(dim2, 3)"));
 
     List<CubeDimAttribute> locationHierarchyWithStartTime = new ArrayList<CubeDimAttribute>();
     locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("zipcode2", "int", "zip"),
@@ -268,7 +268,7 @@ public class TestCubeMetastoreClient {
     cityAttrs.add(new ReferencedDimAtrribute(new FieldSchema("stateid", "int", "state id"), "State refer",
         new TableReference("statedim", "id")));
     dimExpressions.add(new ExprColumn(new FieldSchema("stateAndCountry", "String", "state and country together"),
-        "State and Country", "concat(statedim.name, \":\", countrydim.name)"));
+        "State and Country", "concat(statedim.name, \":\", countrydim.name)", "state_and_country"));
     dimExpressions.add(new ExprColumn(new FieldSchema("CityAddress", "string", "city with state and city and zip"),
         "City Address", "concat(citydim.name, \":\", statedim.name, \":\", countrydim.name, \":\", zipcode.code)"));
     Map<String, String> dimProps = new HashMap<String, String>();
@@ -335,15 +335,42 @@ public class TestCubeMetastoreClient {
     Assert.assertNotNull(city.getExpressionByName("cityaddress"));
     Assert.assertEquals(city.getExpressionByName("cityaddress").getDescription(), "city with state and city and zip");
     Assert.assertEquals(city.getExpressionByName("cityaddress").getDisplayString(), "City Address");
-    city.alterExpression(new ExprColumn(new FieldSchema("stateAndCountry", "String",
-        "state and country together with hiphen as separator"), "State and Country",
-        "concat(statedim.name, \"-\", countrydim.name)"));
+
+    ExprColumn stateCountryExpr = new ExprColumn(new FieldSchema("stateAndCountry", "String",
+      "state and country together with hiphen as separator"), "State and Country",
+      "concat(statedim.name, \"-\", countrydim.name)");
+    stateCountryExpr.addExpression("concat(countrydim.name, \"-\", countrydim.name)");
+
+    // Assert expression validation
+    try {
+      stateCountryExpr.addExpression("contact(countrydim.name");
+      Assert.fail("Expected add expression to fail because of syntax error");
+    } catch (ParseException exc) {
+      // Pass
+    }
+    city.alterExpression(stateCountryExpr);
+
+
     city.removeExpression("cityAddress");
     city = client.getDimension(cityDim.getName());
     Assert.assertEquals(1, city.getExpressions().size());
+
+    ExprColumn stateAndCountryActual = city.getExpressionByName("stateAndCountry");
+    Assert.assertNotNull(stateAndCountryActual.getExpressions());
+    Assert.assertEquals(2, stateAndCountryActual.getExpressions().size());
+    Assert.assertTrue(stateAndCountryActual.getExpressions().contains("concat(statedim.name, \"-\", countrydim.name)"));
+    Assert.assertTrue(stateAndCountryActual.getExpressions().contains("concat(countrydim.name, \"-\", countrydim.name)"));
+
     Assert.assertNotNull(city.getExpressionByName("stateAndCountry"));
     Assert.assertEquals(city.getExpressionByName("stateAndCountry").getExpr(),
         "concat(statedim.name, \"-\", countrydim.name)");
+
+    stateAndCountryActual.removeExpression("concat(countrydim.name, \"-\", countrydim.name)");
+    city.alterExpression(stateAndCountryActual);
+    client.alterDimension(city.getName(), city);
+    Dimension cityAltered = client.getDimension(city.getName());
+    Assert.assertEquals(1, cityAltered.getExpressionByName("stateAndCountry").getExpressions().size());
+
 
     List<TableReference> chain = new ArrayList<TableReference>();
     chain.add(new TableReference("zipdim", "cityid"));
@@ -476,6 +503,10 @@ public class TestCubeMetastoreClient {
     Assert.assertNotNull(cube2.getExpressionByName("booleancut"));
     Assert.assertEquals(cube2.getExpressionByName("booleancut").getDescription(), "a boolean expression");
     Assert.assertEquals(cube2.getExpressionByName("booleancut").getDisplayString(), "Boolean Cut");
+    Assert.assertEquals(cube2.getExpressionByName("booleancut").getExpressions().size(), 2);
+    // Validate expression can contain delimiter character
+    List<String> booleanCutExprs = new ArrayList<String>(cube2.getExpressionByName("booleancut").getExpressions());
+    Assert.assertTrue(booleanCutExprs.contains("dim1 | dim2 AND dim2 = 'XYZ'"));
     Assert.assertTrue(cube2.allFieldsQueriable());
 
     Assert.assertTrue(cube2.getJoinChainNames().contains("cityfromzip"));

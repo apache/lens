@@ -19,6 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.testng.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -638,10 +640,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
             + " format_number(SUM(msr1)-(SUM(msr2)+SUM(msr3)),\"##################.###\") AS a6"
             + "  FROM testCube where " + twoDaysRange + " HAVING (SUM(msr1) >=1000)  AND (SUM(msr2)>=0.01)", conf);
     String actualExpr =
-        " join " + getDbName() + "c1_citytable citydim on testcube.cityid = citydim.id and (citydim.dt = 'latest')"
-            + " join " + getDbName()
-            + "c1_ziptable zipdim on testcube.zipcode = zipdim.code and (zipdim.dt = 'latest')  " + " join "
-            + getDbName() + "c1_statetable statedim on testcube.stateid = statedim.id and (statedim.dt = 'latest')";
+      ""
+        + " join " + getDbName() + "c1_statetable statedim on testcube.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_ziptable zipdim on testcube.zipcode = zipdim.code and (zipdim.dt = 'latest')  "
+        + " join " + getDbName() + "c1_citytable citydim on testcube.cityid = citydim.id and (citydim.dt = 'latest')"
+        + "";
     expected =
         getExpectedQuery(
             cubeName,
@@ -728,6 +731,38 @@ public class TestCubeRewriter extends TestQueryRewrite {
                 + "   OR ((zipdim.f1=\"api\"  OR  zipdim.f1==\"uk\" OR (zipdim.f1==\"adc\"  AND  zipdim.f1!=\"js\")) AND"
                 + "  citydim.id==12))," + " zipdim.f1 " + "HAVING (SUM(msr1) >=1000)  AND (SUM(msr2)>=0.01)", conf);
     compareQueries(expected, hqlQuery);
+  }
+
+  @Test
+  public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithAsKeywordBwColAndAlias() throws SemanticException, ParseException {
+
+    String inputQuery = "cube select name as `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
+        + " on testCube.cityid = citydim.id where "+ lastHourTimeRange;
+
+    String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
+        + "testmeasure  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c1_citytable citydim ON "
+        + "(( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"+CubeTestSetup.getDateUptoHours(lastHour)+"' ) AND ((citydim.dt ="
+        + " 'latest')))) GROUP BY ( citydim . name )";
+
+    String actualRewrittenQuery = rewrite(inputQuery, getConf());
+
+    assertEquals(actualRewrittenQuery, expectedRewrittenQuery);
+  }
+
+  @Test
+  public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithoutAsKeywordBwColAndAlias() throws SemanticException, ParseException {
+
+    String inputQuery = "cube select name `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
+        + " on testCube.cityid = citydim.id where "+ lastHourTimeRange;
+
+    String expectedRewrittenQuery = "SELECT ( citydim . name ) as `Alias With Spaces` , sum(( testcube . msr2 )) "
+        + "testmeasure  FROM TestQueryRewrite.c2_testfact testcube inner JOIN TestQueryRewrite.c1_citytable citydim ON "
+        + "(( testcube . cityid ) = ( citydim . id )) WHERE (((( testcube . dt ) =  '"+CubeTestSetup.getDateUptoHours(lastHour)+"' ) AND ((citydim.dt ="
+        + " 'latest')))) GROUP BY ( citydim . name )";
+
+    String actualRewrittenQuery = rewrite(inputQuery, getConf());
+
+    assertEquals(actualRewrittenQuery, expectedRewrittenQuery);
   }
 
   @Test

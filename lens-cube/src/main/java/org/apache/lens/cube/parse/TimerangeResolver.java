@@ -205,9 +205,9 @@ class TimerangeResolver implements ContextRewriter {
           LOG.info("Timerange queried is not in column life for " + column
               + ", Removing join paths containing the column");
           // Remove join paths containing this column
-          Map<Dimension, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
+          Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
 
-          for (Dimension dimension : allPaths.keySet()) {
+          for (Aliased<Dimension> dimension : allPaths.keySet()) {
             List<SchemaGraph.JoinPath> joinPaths = allPaths.get(dimension);
             Iterator<SchemaGraph.JoinPath> joinPathIterator = joinPaths.iterator();
 

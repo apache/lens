@@ -18,7 +18,10 @@
  */
 package org.apache.lens.cube.metadata;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.parse.JoinType;
 
 import java.util.*;
 
@@ -27,32 +30,16 @@ public class SchemaGraph {
    * An edge in the schema graph
    */
   public static class TableRelationship {
-    final String fromColumn;
-    final AbstractCubeTable fromTable;
-    final String toColumn;
-    final AbstractCubeTable toTable;
+    @Getter final String fromColumn;
+    @Getter final AbstractCubeTable fromTable;
+    @Getter final String toColumn;
+    @Getter final AbstractCubeTable toTable;
 
     public TableRelationship(String fromCol, AbstractCubeTable fromTab, String toCol, AbstractCubeTable toTab) {
       fromColumn = fromCol;
       fromTable = fromTab;
       toColumn = toCol;
       toTable = toTab;
-    }
-
-    public String getFromColumn() {
-      return fromColumn;
-    }
-
-    public String getToColumn() {
-      return toColumn;
-    }
-
-    public AbstractCubeTable getFromTable() {
-      return fromTable;
-    }
-
-    public AbstractCubeTable getToTable() {
-      return toTable;
     }
 
     @Override

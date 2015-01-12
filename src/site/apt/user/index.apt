@@ -120,7 +120,7 @@ Lens User Guide
 
 	The following diagram shows query state transition in the Lens Server 
 
-[../figures/querystate.png] Query States in Lens
+[/images/querystate.png] Query States in Lens
 
 
 	When user submits a query to the Lens Server, its starts in the <<NEW>> state. After the query is submitted, it moves into the <<QUEUED>> state. Until Lens server is free to take up the query, it remains in the <<QUEUED>> state. As soon as Lens server starts processing the query, it enters the <<LAUNCHED>> state. At this stage Lens has decided which backend engine will be used to execute the query. 

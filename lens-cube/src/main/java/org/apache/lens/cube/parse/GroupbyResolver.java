@@ -20,10 +20,11 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_GROUPBY;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.antlr.runtime.CommonToken;
@@ -33,13 +34,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 /**
  * Promotes groupby to select and select to groupby.
- * 
+ *
  */
 class GroupbyResolver implements ContextRewriter {
   private static Log LOG = LogFactory.getLog(GroupbyResolver.class.getName());
@@ -55,7 +55,7 @@ class GroupbyResolver implements ContextRewriter {
             CubeQueryConfUtil.DEFAULT_ENABLE_GROUP_BY_TO_SELECT);
   }
 
-  private void promoteSelect(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)
+  private void promoteSelect(CubeQueryContext cubeql, List<String> nonMsrNonAggSelExprsWithoutAlias, List<String> groupByExprs)
       throws SemanticException {
     if (!selectPromotionEnabled) {
       return;
@@ -69,14 +69,13 @@ class GroupbyResolver implements ContextRewriter {
     // each selected column, if it is not a cube measure, and does not have
     // aggregation on the column, then it is added to group by columns.
     if (cubeql.hasAggregates()) {
-      for (String expr : selectExprs) {
-        expr = getExpressionWithoutAlias(cubeql, expr);
+      for (String expr : nonMsrNonAggSelExprsWithoutAlias) {
+
         if (!groupByExprs.contains(expr)) {
           if (!cubeql.isAggregateExpr(expr)) {
-            String groupbyExpr = expr;
             ASTNode exprAST;
             try {
-              exprAST = HQLParser.parseExpr(groupbyExpr);
+              exprAST = HQLParser.parseExpr(expr);
             } catch (ParseException e) {
               throw new SemanticException(e);
             }
@@ -157,7 +156,7 @@ class GroupbyResolver implements ContextRewriter {
         groupByExprs.add(g.trim());
       }
     }
-    promoteSelect(cubeql, selectExprs, groupByExprs);
+    promoteSelect(cubeql, getNonMsrNonAggSelExprsWithoutAlias(cubeql.getSelectAST(), cubeql), groupByExprs);
     promoteGroupby(cubeql, selectExprs, groupByExprs);
   }
 
@@ -179,6 +178,58 @@ class GroupbyResolver implements ContextRewriter {
     return false;
   }
 
+  /**
+   *
+   * @param selectASTNode a select AST Node
+   * @param cubeQueryCtx
+   * @return List of non measure and non aggregate select expressions in string format without aliases
+   */
+  private List<String> getNonMsrNonAggSelExprsWithoutAlias(final ASTNode selectASTNode, CubeQueryContext cubeQueryCtx) {
+
+    List<String> nonMsrNonAggSelExprsWithoutAlias = new LinkedList<String>();
+    List<ASTNode> nonMsrNonAggSelASTChildren = filterNonMsrNonAggSelectASTChildren(selectASTNode,cubeQueryCtx);
+
+    for (ASTNode nonMsrNonAggSelASTChild : nonMsrNonAggSelASTChildren) {
+
+      /* Assuming all children of SelectASTNode are SELECT Expression AST Nodes only.
+      Refer:https://reviews.apache.org/r/29422/#comment109498 for more details.
+      Order of Children of select expression AST Node => Index 0: Select Expression Without Alias, Index 1: Alias */
+
+      ASTNode selExprWithoutAlias = (ASTNode) nonMsrNonAggSelASTChild.getChildren().get(0);
+      String result = HQLParser.getString(selExprWithoutAlias);
+      nonMsrNonAggSelExprsWithoutAlias.add(result);
+
+    }
+    return nonMsrNonAggSelExprsWithoutAlias;
+  }
+
+  /**
+   *
+   * @param selectASTNode a select ASTNode
+   * @param cubeQueryCtx
+   * @return list of selectASTNode Children which does not contain a measure or an aggregate.
+   *         Empty list is returned when selectASTNode is not a Select AST Node.
+   *         Empty list is returned when there are no non measure and non aggregate children nodes present in select AST.
+   */
+  private List<ASTNode> filterNonMsrNonAggSelectASTChildren(final ASTNode selectASTNode, CubeQueryContext cubeQueryCtx) {
+
+    List<ASTNode> nonMsrNonAggSelASTChildren = new LinkedList<ASTNode>();
+
+    if (!HQLParser.isSelectASTNode(selectASTNode)) {
+      return nonMsrNonAggSelASTChildren;
+    }
+
+    for (int i = 0; i < selectASTNode.getChildCount(); i++) {
+      ASTNode childNode = (ASTNode) selectASTNode.getChild(i);
+      if (hasMeasure(childNode,cubeQueryCtx) || HQLParser.hasAggregate(childNode)) {
+        continue;
+      }
+      nonMsrNonAggSelASTChildren.add(childNode);
+    }
+
+    return nonMsrNonAggSelASTChildren;
+  }
+
   private List<String> getExpressions(ASTNode node, CubeQueryContext cubeql) {
 
     List<String> list = new ArrayList<String>();
@@ -192,31 +243,13 @@ class GroupbyResolver implements ContextRewriter {
       if (hasMeasure(child, cubeql)) {
         continue;
       }
-      if (hasAggregate(child)) {
+      if (HQLParser.hasAggregate(child)) {
         continue;
       }
       list.add(HQLParser.getString((ASTNode) node.getChild(i)));
     }
 
     return list;
-  }
-
-  private boolean hasAggregate(ASTNode node) {
-    int nodeType = node.getToken().getType();
-    if (nodeType == HiveParser.TOK_TABLE_OR_COL || nodeType == HiveParser.DOT) {
-      return false;
-    } else {
-      if (HQLParser.isAggregateAST(node)) {
-        return true;
-      }
-
-      for (int i = 0; i < node.getChildCount(); i++) {
-        if (hasAggregate((ASTNode) node.getChild(i))) {
-          return true;
-        }
-      }
-      return false;
-    }
   }
 
   boolean hasMeasure(ASTNode node, CubeQueryContext cubeql) {

@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+
+# Postinst script for lens
+
+manage_war_expansion () {
+
+    # Lens Server war is expanded into lens server directory.
+
+    WEB_APP_DIR=${mvn.lens.webapp.dir}
+    LENS_SERVER_DIR=${mvn.lens.server.dir}
+
+    #   1. Remove lens server directory and its contents
+    rm -rf $LENS_SERVER_DIR
+
+    #   2. Recreate lens server directory
+    mkdir -p $LENS_SERVER_DIR
+
+    #   3. Expand the newly installed war in lens server directory
+    cd $LENS_SERVER_DIR
+    if [ $? -ne 0 ]; then
+        echo "Could not change directory to->"$LENS_SERVER_DIR
+        return 1
+    fi
+
+    jar -xf $WEB_APP_DIR/lens-server.war
+
+    if [ $? -ne 0 ]; then
+        echo "War expansion failed"
+        return 1
+    fi
+
+    cd -
+    if [ $? -ne 0 ]; then
+        echo "Could not move back from the changed directory"
+        return 1
+    fi
+
+    return 0
+
+}
+
+manage_war_expansion
+
+if [ $? -ne 0 ]; then
+    echo "Debian installation unsuccessful"
+    exit 1
+fi
+
+exit 0

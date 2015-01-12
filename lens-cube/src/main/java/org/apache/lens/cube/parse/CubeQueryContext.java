@@ -70,8 +70,11 @@ public class CubeQueryContext {
 
   // metadata
   private CubeInterface cube;
-  // Dimensions accessed in the query
-  protected Set<Dimension> dimensions = new HashSet<Dimension>();
+  // Dimensions accessed in the query, contains dimensions that are joinchain destinations
+  // of the joinchains used.
+  @Getter protected Set<Dimension> dimensions = new HashSet<Dimension>();
+  // The dimensions accessed by name in the query directly, via tablename.columname
+  @Getter protected Set<Dimension> nonChainedDimensions = new HashSet<Dimension>();
   // Joinchains accessed in the query
   @Getter protected Map<String, JoinChain> joinchains = new HashMap<String, JoinChain>();
   private final Set<String> queriedDimAttrs = new HashSet<String>();
@@ -201,7 +204,7 @@ public class CubeQueryContext {
     if (retVal) {
       joinchains.put(aliasLowerCaseStr, new JoinChain(joinchain));
       String destTable = joinchain.getDestTable();
-      boolean added = addQueriedTable(alias, destTable, isOptional);
+      boolean added = addQueriedTable(alias, destTable, isOptional, true);
       if (!added) {
         LOG.info("Queried tables do not exist. Missing tables:" + destTable);
         throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
@@ -222,7 +225,7 @@ public class CubeQueryContext {
     if (tblName == null) {
       tblName = alias;
     }
-    boolean added = addQueriedTable(alias, tblName, isOptional);
+    boolean added = addQueriedTable(alias, tblName, isOptional, false);
     if (!added) {
       // try adding as joinchain
       added = addJoinChain(alias, isOptional);
@@ -230,7 +233,22 @@ public class CubeQueryContext {
     return added;
   }
 
-  private boolean addQueriedTable(String alias, String tblName, boolean isOptional) throws SemanticException {
+  /**
+   * destination table  : a table whose columns are getting queried
+   * intermediate table : a table which is only used as a link between cube and destination table
+   *
+   * @param alias
+   * @param tblName
+   * @param isOptional          pass false when it's a destination table
+   *                            pass true when it's an intermediate table
+   *                            when join chain destination is being added, this will be false.
+   * @param isChainedDimension  pass true when you're adding the dimension as a joinchain destination,
+   *                            pass false when this table is mentioned by name in the user query
+   * @return                    true if added
+   * @throws SemanticException
+   */
+  private boolean addQueriedTable(String alias, String tblName, boolean isOptional, boolean isChainedDimension)
+    throws SemanticException {
     alias = alias.toLowerCase();
     if (cubeTbls.containsKey(alias)) {
       return true;
@@ -248,6 +266,9 @@ public class CubeQueryContext {
         Dimension dim = client.getDimension(tblName);
         if (!isOptional) {
           dimensions.add(dim);
+        }
+        if(!isChainedDimension) {
+          nonChainedDimensions.add(dim);
         }
         cubeTbls.put(alias, dim);
       } else {
@@ -356,10 +377,6 @@ public class CubeQueryContext {
       dimMsgs.put(dimtable, pruneMsgs);
     }
     pruneMsgs.add(msg);
-  }
-
-  public Set<Dimension> getDimensions() {
-    return dimensions;
   }
 
   public String getAliasForTabName(String tabName) {
@@ -557,8 +574,7 @@ public class CubeQueryContext {
   }
 
   private String getWhereClauseWithAlias(Map<Dimension, CandidateDim> dimsToQuery, String alias) {
-    Dimension dim = (Dimension) cubeTbls.get(alias);
-    return dimsToQuery.get(dim).whereClause.replace(getAliasForTabName(dim.getName()), alias);
+    return StorageUtil.getWhereClause(dimsToQuery.get(cubeTbls.get(alias)), alias);
   }
 
   String getQBFromString(CandidateFact fact, Map<Dimension, CandidateDim> dimsToQuery) throws SemanticException {
@@ -723,7 +739,6 @@ public class CubeQueryContext {
         throw new SemanticException(ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE, reason);
       }
     }
-
     return facts;
   }
 
@@ -833,7 +848,7 @@ public class CubeQueryContext {
     return ParseUtils.findRootNonNullToken(tree);
   }
 
-  public Map<String, Set<String>> getTblAlaisToColumns() {
+  public Map<String, Set<String>> getTblAliasToColumns() {
     return tblAliasToColumns;
   }
 

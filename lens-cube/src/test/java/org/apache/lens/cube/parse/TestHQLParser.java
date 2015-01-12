@@ -291,4 +291,22 @@ public class TestHQLParser {
         TOK_SELECT));
   }
 
+  @Test
+  public void testEqualsAST() throws Exception {
+    ASTNode expr1 = HQLParser.parseExpr("T1.a + T2.b - T2.c");
+    ASTNode expr2 = HQLParser.parseExpr("t1.A + t2.B - t2.C");
+
+    Assert.assertTrue(HQLParser.equalsAST(expr1, expr2));
+
+    ASTNode literalExpr1 = HQLParser.parseExpr("A = 'FooBar'");
+    ASTNode literalExpr2 = HQLParser.parseExpr("a = 'FooBar'");
+    Assert.assertTrue(HQLParser.equalsAST(literalExpr1, literalExpr2));
+
+    ASTNode literalExpr3 = HQLParser.parseExpr("A = 'fOObAR'");
+    Assert.assertFalse(HQLParser.equalsAST(literalExpr1, literalExpr3));
+
+    ASTNode literalExpr4 = HQLParser.parseExpr("A <> 'FooBar'");
+    Assert.assertFalse(HQLParser.equalsAST(literalExpr1, literalExpr4));
+  }
+
 }

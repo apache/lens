@@ -28,7 +28,7 @@
   <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>
   <description>The connection class from HiveDriver to HiveServer. The default is
    an embedded connection which does not require a remote hive server.
-   For connecting to a hiveserver end point, remote connection should be used. 
+   For connecting to a hiveserver end point, remote connection should be used.
   The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection
    and org.apache.lens.driver.hive.RemoteThriftConnection. </description>
 </property>
@@ -100,13 +100,41 @@
   <property>
     <name>lens.cube.query.replace.timedim</name>
     <value>true</value>
-    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
+    <description>Tells whether timedim attribute queried in the time range should be replaced
+      with its corresponding partition column name.
+    </description>
   </property>
 
   <property>
     <name>lens.driver.hive.calculate.priority</name>
     <value>true</value>
     <description>Whether priority should be calculated for hive mr jobs or not</description>
+  </property>
+
+  <property>
+    <name>lens.driver.hive.priority.ranges</name>
+    <value>VERY_HIGH,7.0,HIGH,30.0,NORMAL,90,LOW</value>
+    <description>Priority Ranges. The numbers are the costs of the query.\
+      The cost is calculated based on partition weights and fact weights. The interpretation of the
+      default config is: \
+      \
+      cost \&lt;= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \       Priority = VERY_HIGH  \
+      7 \&lt; cost \&lt;= 30\ \ \ \ \ \ \ :\ \ \ \ \       Priority = HIGH       \
+      30 \&lt; cost \&lt;= 90\ \ \ \ \ \ :\ \ \ \ \       Priority = NORMAL     \
+      90 \&lt; cost\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \       Priority = LOW        \
+      \
+      Some perspective wrt default weights and default ranges(1 for hourly, 0.75 for daily, 0.5 for monthly):\
+      For exclusively hourly data this translates to VERY_HIGH,7days,HIGH,30days,NORMAL,90days,LOW. \
+      FOR exclusively daily data this translates to VERY_HIGH,9days,HIGH,40days,NORMAL,120days,LOW. \
+      for exclusively monthly data this translates to VERY_HIGH,never,HIGH,1month,NORMAL,6months,LOW. \
+      \
+      One use case in range tuning can be that you never want queries to run with VERY_HIGH,
+      assuming no other changes, you'll modify the value of this param in hivedriver-site.xml to be
+      HIGH,30.0,NORMAL,90,LOW
+      \
+      via the configs, you can tune both the ranges and partition weights. this would give the end
+      user more control.
+    </description>
   </property>
 
   <property>
