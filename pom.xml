@@ -247,6 +247,10 @@
         <targetPath>${mvn.deb.build.dir}/control</targetPath>
         <filtering>true</filtering>
       </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
     </resources>
 
     <pluginManagement>
