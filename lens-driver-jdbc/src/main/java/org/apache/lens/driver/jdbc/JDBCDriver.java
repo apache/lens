@@ -31,7 +31,6 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
-import static org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryRewriter;
@@ -294,7 +293,7 @@ public class JDBCDriver implements LensDriver {
 
         if (conn != null) {
           try {
-            stmt = getStatement(conn);
+            stmt = createStatement(conn);
             result.stmt = stmt;
             Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
             if (isResultAvailable) {
@@ -323,17 +322,39 @@ public class JDBCDriver implements LensDriver {
     }
 
     /**
-     * Gets the statement.
+     * Create statement used to issue the query
      *
      * @param conn
-     *          the conn
-     * @return the statement
+     *          pre created SQL Connection object
+     * @return statement
      * @throws SQLException
      *           the SQL exception
      */
-    public Statement getStatement(Connection conn) throws SQLException {
-      Statement stmt = queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery()) : conn
-          .createStatement();
+    public Statement createStatement(Connection conn) throws SQLException {
+      Statement stmt;
+
+      boolean enabledRowRetrieval = queryContext.getLensContext().getConf().getBoolean(JDBCDriverConfConstants.JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL,
+        JDBCDriverConfConstants.DEFAULT_JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL);
+
+      if (enabledRowRetrieval) {
+        LOG.info("JDBC streaming retrieval is enabled for " + queryContext.getLensContext().getQueryHandle());
+        if (queryContext.isPrepared()) {
+          stmt = conn.prepareStatement(queryContext.getRewrittenQuery(),
+            ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        } else {
+          stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        }
+        stmt.setFetchSize(Integer.MIN_VALUE);
+      } else {
+        stmt = queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery())
+          : conn.createStatement();
+
+        // Get default fetch size from conf if not overridden in query conf
+        int fetchSize = queryContext.getLensContext().getConf().getInt(
+          JDBCDriverConfConstants.JDBC_FETCH_SIZE, JDBCDriverConfConstants.DEFAULT_JDBC_FETCH_SIZE);
+        stmt.setFetchSize(fetchSize);
+      }
+
       stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
       return stmt;
     }
