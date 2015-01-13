@@ -32,10 +32,10 @@ public abstract class StatusChange extends QueryEvent<QueryStatus.Status> {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public StatusChange(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(eventTime, prev, current, handle);
+  public StatusChange(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx);
   }
 
   /**
@@ -45,7 +45,7 @@ public abstract class StatusChange extends QueryEvent<QueryStatus.Status> {
    */
   protected void checkCurrentState(QueryStatus.Status status) {
     if (currentValue != status) {
-      throw new IllegalStateException("Invalid query state: " + currentValue + " query:" + queryHandle.toString());
+      throw new IllegalStateException("Invalid query state: " + currentValue + " query:" + getQueryHandle().toString());
     }
   }
 

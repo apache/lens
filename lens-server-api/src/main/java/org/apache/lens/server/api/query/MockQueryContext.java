@@ -19,21 +19,18 @@
 package org.apache.lens.server.api.query;
 
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.driver.LensDriver;
 
-/**
- * Event fired when query moves up or down in the execution engine's queue.
- */
-public class QueuePositionChange extends QueryEvent<Integer> {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.UUID;
 
-  /**
-   * Instantiates a new queue position change.
-   *
-   * @param eventTime the event time
-   * @param prev      the prev
-   * @param current   the current
-   * @param ctx       the context
-   */
-  public QueuePositionChange(long eventTime, Integer prev, Integer current, QueryContext ctx) {
-    super(eventTime, prev, current, ctx);
+public class MockQueryContext extends QueryContext {
+  public MockQueryContext(QueryHandle handle) {
+    super("", "", new org.apache.hadoop.conf.Configuration(), new ArrayList<LensDriver>());
+    setQueryHandle(handle);
+  }
+  public MockQueryContext() {
+    this(new QueryHandle(UUID.randomUUID()));
   }
 }

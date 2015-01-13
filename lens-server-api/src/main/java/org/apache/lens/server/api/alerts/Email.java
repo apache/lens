@@ -16,24 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.query;
+package org.apache.lens.server.api.alerts;
 
-import org.apache.lens.api.query.QueryHandle;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/**
- * Event fired when query moves up or down in the execution engine's queue.
- */
-public class QueuePositionChange extends QueryEvent<Integer> {
+@AllArgsConstructor
+@NoArgsConstructor
+public class Email {
+  @Getter
+  @Setter
+  String to;
 
-  /**
-   * Instantiates a new queue position change.
-   *
-   * @param eventTime the event time
-   * @param prev      the prev
-   * @param current   the current
-   * @param ctx       the context
-   */
-  public QueuePositionChange(long eventTime, Integer prev, Integer current, QueryContext ctx) {
-    super(eventTime, prev, current, ctx);
-  }
+  @Getter
+  @Setter
+  String cc;
+
+  @Getter
+  @Setter
+  String bcc;
+
+  @Getter
+  @Setter
+  String subject;
+
+  @Getter
+  @Setter
+  String message;
 }

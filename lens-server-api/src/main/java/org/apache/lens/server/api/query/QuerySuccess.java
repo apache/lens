@@ -18,8 +18,10 @@
  */
 package org.apache.lens.server.api.query;
 
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.server.api.LensConfConstants;
 
 /**
  * Event fired when query is successfully completed.
@@ -32,10 +34,24 @@ public class QuerySuccess extends QueryEnded {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
+   * @param hiveConf
    */
-  public QuerySuccess(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryHandle handle) {
-    super(eventTime, prev, current, handle, null, null);
+  public QuerySuccess(long eventTime, QueryStatus.Status prev, QueryStatus.Status current, QueryContext ctx, HiveConf hiveConf) {
+    super(eventTime, prev, current, ctx, null, null, hiveConf);
     checkCurrentState(QueryStatus.Status.SUCCESSFUL);
+  }
+
+  @Override
+  public String getEmailMessage() {
+    String baseURI = serverConf.get
+      (LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
+    return new StringBuilder()
+      .append("Result available at ")
+      .append(baseURI)
+      .append("queryapi/queries/")
+      .append(queryContext.getQueryHandle())
+      .append("/httpresultset")
+      .toString();
   }
 }

@@ -31,9 +31,9 @@ public class QueryRejected extends QueryEvent<String> {
    * @param eventTime the event time
    * @param prev      the prev
    * @param current   the current
-   * @param handle    the handle
+   * @param ctx       the context
    */
-  public QueryRejected(long eventTime, String prev, String current, QueryHandle handle) {
-    super(eventTime, prev, current, handle);
+  public QueryRejected(long eventTime, String prev, String current, QueryContext ctx) {
+    super(eventTime, prev, current, ctx);
   }
 }
