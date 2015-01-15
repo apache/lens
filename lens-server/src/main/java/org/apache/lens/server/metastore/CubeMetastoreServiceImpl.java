@@ -1334,9 +1334,12 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         if (storages != null && !storages.isEmpty()) {
           for (String storage : storages) {
             String storageTableName = MetastoreUtil.getFactStorageTableName(factTable.getName(), storage);
-            List<Partition> parts =
-              getClient(sessionid).getPartitionsByFilter(storageTableName, StorageConstants.getLatestPartFilter(partitionColumn));
-
+            List<Partition> parts = new LinkedList<Partition>();
+            try {
+              parts = getClient(sessionid).getPartitionsByFilter(storageTableName, StorageConstants.getLatestPartFilter(partitionColumn));
+            } catch (HiveException e) {
+              LOG.info("Storage Table "+storageTableName+" skipped while finding latestDate due to exception: ",e);
+            }
             if (parts.size() == 1) {
               Date tmpDate = getClient(sessionid).getLatestTimeStamp(parts.get(0), partitionColumn);
               if (latestDate == null || latestDate.before(tmpDate)) {

@@ -28,6 +28,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
 import org.apache.commons.lang.StringUtils;
@@ -42,9 +43,6 @@ import org.apache.lens.api.StringList;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
-import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
-import org.apache.lens.server.metastore.JAXBUtils;
-import org.apache.lens.server.metastore.MetastoreApp;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -851,7 +849,7 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
-  private XStorageTableDesc createStorageTableDesc(String name) {
+  private XStorageTableDesc createStorageTableDesc(String name,final String[] timePartColNames) {
     XStorageTableDesc xs1 = cubeObjectFactory.createXStorageTableDesc();
     xs1.setCollectionDelimiter(",");
     xs1.setEscapeChar("\\");
@@ -861,18 +859,28 @@ public class TestMetastoreService extends LensJerseyTest {
     xs1.setMapKeyDelimiter("\r");
     xs1.setTableLocation("/tmp/" + name);
     xs1.setExternal(true);
-    Columns partCols = cubeObjectFactory.createColumns();
-    Column dt = cubeObjectFactory.createColumn();
-    dt.setName("dt");
-    dt.setType("string");
-    dt.setComment("default partition column");
-    partCols.getColumns().add(dt);
-    xs1.getTimePartCols().add("dt");
-    xs1.setPartCols(partCols);
+
+    Columns timePartCols = cubeObjectFactory.createColumns();
+
+    for (String timePartColName : timePartColNames) {
+      Column partCol = cubeObjectFactory.createColumn();
+      partCol.setName(timePartColName);
+      partCol.setType("string");
+      partCol.setComment("partition column");
+      timePartCols.getColumns().add(partCol);
+      xs1.getTimePartCols().add(timePartColName);
+    }
+
+    xs1.setPartCols(timePartCols);
+
     return xs1;
   }
 
   private XStorageTableElement createStorageTblElement(String storageName, String table, String... updatePeriod) {
+    final String[] timePartColNames = {"dt"};
+    return createStorageTblElement(storageName,table,timePartColNames,updatePeriod);
+  }
+  private XStorageTableElement createStorageTblElement(String storageName, String table, final String[] timePartColNames, String... updatePeriod) {
     XStorageTableElement tbl = cubeObjectFactory.createXStorageTableElement();
     tbl.setStorageName(storageName);
     if (updatePeriod != null) {
@@ -880,7 +888,7 @@ public class TestMetastoreService extends LensJerseyTest {
         tbl.getUpdatePeriods().add(p);
       }
     }
-    tbl.setTableDesc(createStorageTableDesc(table));
+    tbl.setTableDesc(createStorageTableDesc(table,timePartColNames));
     return tbl;
   }
 
@@ -1398,10 +1406,14 @@ public class TestMetastoreService extends LensJerseyTest {
   }
 
   private FactTable createFactTable(String factName, String[] storages, String[] updatePeriods) {
+    return createFactTable(factName,storages,updatePeriods,"testCube");
+  }
+
+  private FactTable createFactTable(String factName, String[] storages, String[] updatePeriods,final String cubeName) {
     FactTable f = cubeObjectFactory.createFactTable();
     f.setName(factName);
     f.setWeight(10.0);
-    f.setCubeName("testCube");
+    f.setCubeName(cubeName);
 
     Columns cols = cubeObjectFactory.createColumns();
     Column c1 = cubeObjectFactory.createColumn();
@@ -1452,7 +1464,7 @@ public class TestMetastoreService extends LensJerseyTest {
       storageTables.getStorageTables().add(createStorageTblElement("S2", table, "DAILY"));
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
-          lensSessionId, medType));
+              lensSessionId, medType));
       mp.bodyPart(new FormDataBodyPart(
           FormDataContentDisposition.name("fact").fileName("fact").build(),
           cubeObjectFactory.createFactTable(f), medType));
@@ -1637,17 +1649,112 @@ public class TestMetastoreService extends LensJerseyTest {
   }
 
   private XPartition createPartition(String cubeTableName, Date partDate) {
+    return createPartition(cubeTableName,partDate,"dt");
+  }
+
+  private XPartition createPartition(String cubeTableName, Date partDate, final String timeDimension) {
+
+    XTimePartSpecElement timePart = cubeObjectFactory.createXTimePartSpecElement();
+    timePart.setKey(timeDimension);
+    timePart.setValue(JAXBUtils.getXMLGregorianCalendar(partDate));
+
+    return createPartition(cubeTableName,Arrays.asList(timePart));
+  }
+
+  private XPartition createPartition(String cubeTableName, final List<XTimePartSpecElement> timePartSpecs) {
+
     XPartition xp = cubeObjectFactory.createXPartition();
     xp.setLocation("file:///tmp/part/test_part");
     xp.setCubeTableName(cubeTableName);
     XTimePartSpec timeSpec = cubeObjectFactory.createXTimePartSpec();
-    XTimePartSpecElement timePart = cubeObjectFactory.createXTimePartSpecElement();
-    timePart.setKey("dt");
-    timePart.setValue(JAXBUtils.getXMLGregorianCalendar(partDate));
-    timeSpec.getPartSpecElement().add(timePart);
+    for (XTimePartSpecElement timePartSpec : timePartSpecs) {
+      timeSpec.getPartSpecElement().add(timePartSpec);
+    }
     xp.setTimePartitionSpec(timeSpec);
     xp.setUpdatePeriod("HOURLY");
     return xp;
+  }
+
+  @Test
+  public void testLatestDateWithInputTimeDimAbsentFromAtleastOneFactPartition() throws Exception {
+
+    final String dbName = dbPFX + getUniqueDbName();
+    String prevDb = getCurrentDatabase();
+
+    try {
+
+      // Begin: Setup
+      createDatabase(dbName);
+      setCurrentDatabase(dbName);
+
+      String[] storages = {"S1"};
+      for (String storage : storages) {
+        createStorage(storage);
+      }
+
+       // Create a cube with name testCube
+      final String cubeName="testCube";
+      final XCube cube = createTestCube(cubeName);
+      APIResult result = target().path("metastore").path("cubes").queryParam("sessionid", lensSessionId).request(mediaType)
+                      .post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
+      if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+        throw new RuntimeException("Setup failure: Cube Creation failed : "+result.getMessage());
+      }
+
+      // Create two facts and fact storage tables with one of the facts not having one of the time dimensions in the partition
+
+      final String timeDimensionPresentInPartitionOfAllFacts = "it";
+      final String timeDimOnlyPresentInPartitionOfFact1 = "et";
+      String fact1TableName = "fact1";
+      String[] fact1TimePartColNames = {timeDimensionPresentInPartitionOfAllFacts,timeDimOnlyPresentInPartitionOfFact1};
+
+      String fact2TableName = "fact2";
+      String[] fact2TimePartColNames = {timeDimensionPresentInPartitionOfAllFacts};
+
+      createTestFactAndStorageTable(cubeName,storages,fact1TableName,fact1TimePartColNames);
+      createTestFactAndStorageTable(cubeName,storages,fact2TableName,fact2TimePartColNames);
+
+      // Add partition to fact storage table of the fact whose partition has all time dimension
+
+      // Prepare Partition spec elements
+      final Date currentDate = new Date();
+      final Date expectedLatestDate = DateUtils.addHours(currentDate,2);
+
+      XTimePartSpecElement timePartSpecElement1 = cubeObjectFactory.createXTimePartSpecElement();
+      timePartSpecElement1.setKey(timeDimensionPresentInPartitionOfAllFacts);
+      timePartSpecElement1.setValue(JAXBUtils.getXMLGregorianCalendar(currentDate));
+
+      XTimePartSpecElement timePartSpecElement2 = cubeObjectFactory.createXTimePartSpecElement();
+      timePartSpecElement2.setKey(timeDimOnlyPresentInPartitionOfFact1);
+      timePartSpecElement2.setValue(JAXBUtils.getXMLGregorianCalendar(expectedLatestDate));
+
+      // Create Partition with prepared partition spec elements
+      XPartition xp = createPartition(fact1TableName, Arrays.asList(timePartSpecElement1,timePartSpecElement2));
+
+      APIResult partAddResult = target().path("metastore/facts/").path(fact1TableName).path("storages/"+storages[0]+"/partitions")
+              .queryParam("sessionid", lensSessionId).request(mediaType)
+              .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
+      if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+        throw new RuntimeException("Setup failure: Partition Creation failed : "+result.getMessage());
+      }
+
+      // End: Setup
+
+      // Begin: Test Execution
+      // Get latest date for Cube using timeDimOnlyPresentInPartitionOfFact1
+      DateTime retrievedLatestDate = target().path("metastore/cubes").path(cubeName).path("latestdate").queryParam("timeDimension", timeDimOnlyPresentInPartitionOfFact1)
+                      .queryParam("sessionid", lensSessionId).request(mediaType).get(DateTime.class);
+      // End: Test Execution
+
+      // Begin: Verification
+      assertEquals(retrievedLatestDate.getDate(),DateUtils.truncate(expectedLatestDate, Calendar.HOUR));
+      // End: Verification
+
+    } finally {
+      // Cleanup
+      setCurrentDatabase(prevDb);
+      dropDatabase(dbName);
+    }
   }
 
   @Test
@@ -2076,5 +2183,41 @@ public class TestMetastoreService extends LensJerseyTest {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
     }
+  }
+
+  private void createTestFactAndStorageTable(final String cubeName,final String[] storages, final String tableName, final String[] timePartColNames) {
+
+    // Create a fact table object linked to cubeName
+    String[] updatePeriods = {"HOURLY"};
+    FactTable f = createFactTable(tableName, storages, updatePeriods, cubeName);
+
+    // Create a storage tables object
+    XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
+    storageTables.getStorageTables().add(createStorageTblElement("S1", tableName, timePartColNames, "HOURLY"));
+
+    // Call API to create a fact table and storage table
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+            lensSessionId, medType));
+    mp.bodyPart(new FormDataBodyPart(
+            FormDataContentDisposition.name("fact").fileName("fact").build(),
+            cubeObjectFactory.createFactTable(f), medType));
+    mp.bodyPart(new FormDataBodyPart(
+            FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
+            cubeObjectFactory.createXStorageTables(storageTables), medType));
+    APIResult result = target()
+            .path("metastore")
+            .path("facts")
+            .request(mediaType)
+            .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+    if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+      throw new RuntimeException("Fact/Storage Table Creation failed");
+    }
+
+  }
+
+  private String getUniqueDbName() {
+    // hyphens replaced with underscore to create a valid db name
+    return  java.util.UUID.randomUUID().toString().replaceAll("-","_");
   }
 }
