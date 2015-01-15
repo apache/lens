@@ -30,6 +30,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
@@ -46,9 +48,7 @@ import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import static org.testng.Assert.*;
 
@@ -101,6 +101,13 @@ public class TestJdbcDriver {
   @AfterTest
   public void close() throws Exception {
     driver.close();
+  }
+
+  @BeforeMethod
+  public void beforeMethod() throws Exception {
+    if (SessionState.get() == null) {
+      SessionState.start(new HiveConf(baseConf, TestJdbcDriver.class));
+    }
   }
 
   private QueryContext createQueryContext(final String query) throws LensException {
