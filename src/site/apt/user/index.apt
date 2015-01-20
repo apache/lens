@@ -128,9 +128,12 @@ Lens User Guide
 	For each query Lens server will poll the chosen backend engine for query status. A GET on the query endpoint returns the latest status of the query.
 
 
-		The <<RUNNING>> state indicates that the query is currently being processed by the query backend. 
+  The <<RUNNING>> state indicates that the query is currently being processed by the query backend. 
+  After the <<RUNNING>> state, the query can enter either the <<EXECUTED>> or <<FAILED>> states, depending on the result of query execution.
+  If the execution is successful, then server would format the result if required and then set the state to
+  <<SUCCESSFUL>> or <<FAILED>> if formatting fails.
 
-		After the <<RUNNING>> state, the query can enter either the <<SUCCESSFUL>> or <<FAILED>> states, depending on the result of query execution. If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Lens server state.
+	 If the query is <<SUCCESSFUL>>, its result set can be retrieved using the result set API call, by passing the session handle and query handle. The query can be executed once, and its results can be fetched multiple times unless the query has been purged from Lens server state.
 
 	In any state, if the user requests that the query be cancelled, the query will enter into <<CANCELLED>> state. Query can be cancelled by sending a DELETE at the query endpoint. 
 
@@ -156,7 +159,5 @@ Lens User Guide
 
 	For Java clients, JAXB classes corresponding to each of the endpoints are available.
 
-
-* Quota service
 
 
