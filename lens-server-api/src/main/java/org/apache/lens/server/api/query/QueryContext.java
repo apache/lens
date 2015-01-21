@@ -18,10 +18,11 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
@@ -33,10 +34,11 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryStatus;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
-import java.util.UUID;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The Class QueryContext.
@@ -299,7 +301,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   @Override

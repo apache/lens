@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.Collection;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
-import java.util.Collection;
+import org.apache.hadoop.conf.Configuration;
 
 public class MockQueryContext extends AbstractQueryContext {
 

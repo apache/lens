@@ -18,18 +18,20 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
+import java.io.Serializable;
+import java.util.Collection;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.io.Serializable;
-import java.util.Collection;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public abstract class AbstractQueryContext implements Serializable {
   /**

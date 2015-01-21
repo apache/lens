@@ -18,7 +18,8 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
+import java.io.Externalizable;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
@@ -26,7 +27,7 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
-import java.io.Externalizable;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The Interface LensDriver.

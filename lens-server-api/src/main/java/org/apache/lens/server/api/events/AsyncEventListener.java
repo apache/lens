@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.events;
 
-import org.apache.lens.api.LensException;
-
 import java.util.concurrent.*;
+
+import org.apache.lens.api.LensException;
 
 /**
  * Event listeners should implement this class if they wish to process events asynchronously. This should be used when

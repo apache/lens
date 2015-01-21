@@ -18,6 +18,15 @@
  */
 package org.apache.lens.lib.query;
 
+import java.io.IOException;
+import java.util.Properties;
+
+import org.apache.lens.api.query.ResultRow;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.query.InMemoryOutputFormatter;
+import org.apache.lens.server.api.query.QueryContext;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.AbstractSerDe;
@@ -27,14 +36,6 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspectorFactory;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
-import org.apache.lens.server.api.query.InMemoryOutputFormatter;
-import org.apache.lens.server.api.query.QueryContext;
-
-import java.io.IOException;
-import java.util.Properties;
 
 /**
  * File format which provides implementation for {@link InMemoryOutputFormatter}
@@ -63,7 +64,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.lib.query.WrappedFileFormatter#init(org.apache.lens.server.api.query.QueryContext,
    * org.apache.lens.server.api.driver.LensResultSetMetadata)
    */
@@ -101,7 +102,7 @@ public class FileSerdeFormatter extends WrappedFileFormatter implements InMemory
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.query.InMemoryOutputFormatter#writeRow(org.apache.lens.api.query.ResultRow)
    */
   @Override

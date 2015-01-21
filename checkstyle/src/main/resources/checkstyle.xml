@@ -57,7 +57,7 @@
 
     <!-- Checks whether files end with a new line.                        -->
     <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
-    <!--module name="NewlineAtEndOfFile"/-->
+    <module name="NewlineAtEndOfFile"/>
 
     <module name="FileLength"/>
     <module name="FileTabCharacter"/>
@@ -106,7 +106,12 @@
         <!-- defaults to sun.* packages -->
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
-
+        <module name="ImportOrder">
+            <property name="groups" value="java,javax,/org\.apache\.lens\./,/org\.apache\./,org"/>
+            <property name="ordered" value="true"/> <!-- sorting between imports of same group -->
+            <property name="separated" value="true"/> <!-- blank line b/w blocks -->
+            <property name="option" value="top"/> <!-- ensures static imports above regular imports -->
+        </module>
 
         <!-- Checks for Size Violations.                    -->
         <!-- See http://checkstyle.sf.net/config_sizes.html -->
@@ -141,11 +146,11 @@
             <property name="tokens" value="COMMA, SEMI"/>
         </module>
 
-        <!-- module name="Regexp">
+        <module name="Regexp">
             <property name="format" value="[ \t]+$"/>
             <property name="illegalPattern" value="true"/>
             <property name="message" value="Trailing whitespace"/>
-        </module-->
+        </module>
 
         <!-- Modifier Checks                                    -->
         <!-- See http://checkstyle.sf.net/config_modifiers.html -->

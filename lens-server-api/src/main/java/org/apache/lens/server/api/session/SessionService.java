@@ -19,16 +19,16 @@
 
 package org.apache.lens.server.api.session;
 
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.LensSessionHandle;
-
 import java.util.List;
 import java.util.Map;
+
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
 
 public interface SessionService {
 
   /** The Constant NAME. */
-  public static final String NAME = "session";
+  String NAME = "session";
 
   /**
    * Open session.
@@ -40,8 +40,8 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
-      throws LensException;
+  LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
+    throws LensException;
 
   /**
    * Restore session from previous instance of lens server.
@@ -52,7 +52,7 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  public void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException;
+  void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException;
 
   /**
    * Close session.
@@ -61,7 +61,7 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  public void closeSession(LensSessionHandle sessionHandle) throws LensException;
+  void closeSession(LensSessionHandle sessionHandle) throws LensException;
 
   /**
    * Adds the resource.
@@ -72,7 +72,7 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  public void addResource(LensSessionHandle sessionHandle, String type, String path);
+  void addResource(LensSessionHandle sessionHandle, String type, String path);
 
   /**
    * Delete resource.
@@ -83,37 +83,37 @@ public interface SessionService {
    * @throws LensException the lens exception
    */
 
-  public void deleteResource(LensSessionHandle sessionHandle, String type, String path);
+  void deleteResource(LensSessionHandle sessionHandle, String type, String path);
 
 
   /**
    * Gets the all session parameters.
    *
    * @param sessionHandle the sessionid
-   * @param verbose   the verbose
-   * @param key       the key
+   * @param verbose       the verbose
+   * @param key           the key
    * @return the all session parameters
    * @throws LensException the lens exception
    */
-  public List<String> getAllSessionParameters(LensSessionHandle sessionHandle, boolean verbose, String key)
-      throws LensException;
+  List<String> getAllSessionParameters(LensSessionHandle sessionHandle, boolean verbose, String key)
+    throws LensException;
 
   /**
    * Sets the session parameter.
    *
    * @param sessionHandle the sessionid
-   * @param key       the key
-   * @param value     the value
+   * @param key           the key
+   * @param value         the value
    */
-  public void setSessionParameter(LensSessionHandle sessionHandle, String key, String value);
+  void setSessionParameter(LensSessionHandle sessionHandle, String key, String value);
 
   /**
    * Adds the resource to all services.
    *
    * @param sessionHandle the sessionid
-   * @param type the type
-   * @param path the path
+   * @param type          the type
+   * @param path          the path
    * @return the number of services that the resource has been added to
    */
-  public int addResourceToAllServices(LensSessionHandle sessionHandle, String type, String path);
+  int addResourceToAllServices(LensSessionHandle sessionHandle, String type, String path);
 }

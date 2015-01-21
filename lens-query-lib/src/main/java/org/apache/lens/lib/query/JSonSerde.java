@@ -18,6 +18,8 @@
  */
 package org.apache.lens.lib.query;
 
+import java.util.*;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.SerDe;
@@ -27,9 +29,8 @@ import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.*;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
-import org.codehaus.jackson.map.ObjectMapper;
 
-import java.util.*;
+import org.codehaus.jackson.map.ObjectMapper;
 
 /**
  * This SerDe can be used for processing JSON data in Hive. It supports arbitrary JSON data, and can handle all Hive
@@ -288,7 +289,7 @@ public class JSonSerde implements SerDe {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.serde2.Serializer#serialize(java.lang.Object,
    * org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector)
    */

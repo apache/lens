@@ -18,9 +18,9 @@
  */
 package org.apache.lens.lib.query;
 
-import org.apache.hadoop.fs.Path;
-
 import java.io.IOException;
+
+import org.apache.hadoop.fs.Path;
 
 /**
  * File formatter interface which is wrapped in {@link WrappedFileFormatter}.

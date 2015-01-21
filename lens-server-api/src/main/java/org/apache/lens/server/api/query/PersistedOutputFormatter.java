@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.hadoop.fs.Path;
-
 import java.io.IOException;
+
+import org.apache.hadoop.fs.Path;
 
 /**
  * Query result formatter, if the result is persisted by driver.

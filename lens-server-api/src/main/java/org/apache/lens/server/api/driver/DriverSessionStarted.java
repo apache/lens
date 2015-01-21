@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.driver;
 
-import lombok.Getter;
-
 import java.util.UUID;
+
+import lombok.Getter;
 
 /**
  * The Class DriverSessionStarted.

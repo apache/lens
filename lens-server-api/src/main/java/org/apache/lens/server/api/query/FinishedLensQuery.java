@@ -29,13 +29,13 @@ import lombok.ToString;
 
 /*
  * (non-Javadoc)
- * 
+ *
  * @see java.lang.Object#hashCode()
  */
 @EqualsAndHashCode
 /*
  * (non-Javadoc)
- * 
+ *
  * @see java.lang.Object#toString()
  */
 @ToString

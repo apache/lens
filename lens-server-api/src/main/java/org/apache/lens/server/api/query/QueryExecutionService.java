@@ -18,13 +18,14 @@
  */
 package org.apache.lens.server.api.query;
 
+import java.util.List;
+
+import javax.ws.rs.core.Response;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.*;
-
-import javax.ws.rs.core.Response;
-import java.util.List;
 
 /**
  * The Interface QueryExecutionService.

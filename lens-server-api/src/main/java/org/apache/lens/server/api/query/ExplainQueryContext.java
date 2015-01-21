@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.Collection;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.util.Collection;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The class ExplainQueryContext

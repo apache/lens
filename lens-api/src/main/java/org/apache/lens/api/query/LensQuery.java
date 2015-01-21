@@ -17,19 +17,20 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.api.query;
+
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.Priority;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.Priority;
-
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * The Class LensQuery.

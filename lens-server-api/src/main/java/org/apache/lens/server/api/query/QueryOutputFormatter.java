@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
-
 import java.io.IOException;
+
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
 /**
  * The interface for query result formatting

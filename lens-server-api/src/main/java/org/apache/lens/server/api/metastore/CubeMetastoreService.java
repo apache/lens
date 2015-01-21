@@ -18,13 +18,14 @@
  */
 package org.apache.lens.server.api.metastore;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 
-import java.util.Date;
-import java.util.List;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 
 
 public interface CubeMetastoreService {

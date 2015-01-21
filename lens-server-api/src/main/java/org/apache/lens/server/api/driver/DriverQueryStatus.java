@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.api.driver;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.io.Serializable;
+
 import org.apache.lens.api.query.QueryStatus;
 
-import java.io.Serializable;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The Class DriverQueryStatus.
@@ -183,7 +184,7 @@ public class DriverQueryStatus implements Serializable {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Object#toString()
    */
   @Override

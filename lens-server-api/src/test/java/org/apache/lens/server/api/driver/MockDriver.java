@@ -18,10 +18,13 @@
  */
 package org.apache.lens.server.api.driver;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hive.service.cli.ColumnDescriptor;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
@@ -32,12 +35,11 @@ import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hive.service.cli.ColumnDescriptor;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The Class MockDriver.

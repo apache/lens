@@ -17,14 +17,15 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.api;
 
-import lombok.*;
+import java.util.List;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.List;
+
+import lombok.*;
 
 /**
  * The Class StringList.

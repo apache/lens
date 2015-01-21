@@ -19,8 +19,9 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensException;
+
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The Interface QueryRewriter.

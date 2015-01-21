@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
+import java.util.EnumSet;
+
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 
-import java.util.EnumSet;
+import lombok.Getter;
 
 /**
  * Generic event denoting that query has ended. If a listener wants to just be notified when query has ended
