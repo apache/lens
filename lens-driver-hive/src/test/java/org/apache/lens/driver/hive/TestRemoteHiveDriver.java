@@ -414,7 +414,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
         + "AND table_1.ET='1'";
 
     SessionState.setCurrentSessionState(ss);
-    DriverQueryPlan plan = driver.explain(explainQuery, conf);
+    DriverQueryPlan plan = driver.explain(createExplainContext(explainQuery, conf));
 
     Assert.assertEquals(0, driver.getHiveHandleSize());
     System.out.println("@@ partitions" + plan.getPartitions());

@@ -46,6 +46,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.annotations.AfterTest;
@@ -129,9 +130,10 @@ public class TestHiveDriver {
 
   protected QueryContext createContext(final String query, Configuration conf) throws LensException {
     QueryContext context = new QueryContext(query, "testuser", conf, drivers);
-    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
-    context.setSelectedDriver(driver);
+    // session id has to be set before calling setDriverQueriesAndPlans
     context.setLensSessionIdentifier(sessionid);
+    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
+    context.setSelectedDriver(driver);
     return context;
   }
 
@@ -139,6 +141,12 @@ public class TestHiveDriver {
     QueryContext context = new QueryContext(query, "testuser", conf);
     context.setLensSessionIdentifier(sessionid);
     return context;
+  }
+
+  protected ExplainQueryContext createExplainContext(final String query, Configuration conf) {
+    ExplainQueryContext ectx = new ExplainQueryContext(query, "testuser", null, conf, drivers);
+    ectx.setLensSessionIdentifier(sessionid);
+    return ectx;
   }
 
   /**
@@ -387,8 +395,8 @@ public class TestHiveDriver {
     // Now run a command that would fail
     String expectFail = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    conf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     QueryContext context = createContext(expectFail, conf);
+    context.getConf().set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
     driver.executeAsync(context);
     Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.FAILED, true, false);
@@ -654,7 +662,7 @@ public class TestHiveDriver {
   public void testExplain() throws Exception {
     createTestTable("test_explain");
     SessionState.setCurrentSessionState(ss);
-    DriverQueryPlan plan = driver.explain("SELECT ID FROM test_explain", conf);
+    DriverQueryPlan plan = driver.explain(createExplainContext("SELECT ID FROM test_explain", conf));
     assertTrue(plan instanceof HiveQueryPlan);
     assertEquals(plan.getTableWeight(DATA_BASE + ".test_explain"), 500.0);
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -710,7 +718,7 @@ public class TestHiveDriver {
     createPartitionedTable("test_part_table");
     // acquire
     SessionState.setCurrentSessionState(ss);
-    DriverQueryPlan plan = driver.explain("SELECT ID FROM test_part_table", conf);
+    DriverQueryPlan plan = driver.explain(createExplainContext("SELECT ID FROM test_part_table", conf));
     Assert.assertEquals(0, driver.getHiveHandleSize());
     assertTrue(plan instanceof HiveQueryPlan);
     assertNotNull(plan.getTablesQueried());
@@ -735,9 +743,9 @@ public class TestHiveDriver {
     createTestTable("explain_test_2");
 
     SessionState.setCurrentSessionState(ss);
-    DriverQueryPlan plan = driver.explain("SELECT explain_test_1.ID, count(1) FROM "
+    DriverQueryPlan plan = driver.explain(createExplainContext("SELECT explain_test_1.ID, count(1) FROM "
         + " explain_test_1  join explain_test_2 on explain_test_1.ID = explain_test_2.ID"
-        + " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" + " GROUP BY explain_test_1.ID", conf);
+        + " WHERE explain_test_1.ID = 'foo' or explain_test_2.ID = 'bar'" + " GROUP BY explain_test_1.ID", conf));
 
     Assert.assertEquals(0, driver.getHiveHandleSize());
     assertTrue(plan instanceof HiveQueryPlan);
@@ -811,7 +819,7 @@ public class TestHiveDriver {
       };
       AbstractQueryContext ctx = new MockQueryContext("driverQuery1", new LensConf(), conf,
                                                       driverQuery1.keySet());
-      ctx.getDriverContext().setDriverQueriesAndPlans(driverQuery1);
+      ctx.setDriverQueriesAndPlans(driverQuery1);
       ctx.setSelectedDriver(mockDriver);
 
       ((MockDriver.MockQueryPlan)ctx.getDriverContext().getDriverQueryPlan(mockDriver)).setPartitions

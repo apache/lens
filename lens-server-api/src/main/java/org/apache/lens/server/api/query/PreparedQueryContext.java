@@ -40,6 +40,8 @@ import lombok.Setter;
  */
 public class PreparedQueryContext extends AbstractQueryContext implements Delayed {
 
+  private static final long serialVersionUID = 1L;
+
   /**
    * The prepare handle.
    */
@@ -91,7 +93,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
-    super(query, qconf, conf, drivers);
+    super(query, user, qconf, conf, drivers);
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());

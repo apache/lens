@@ -53,6 +53,7 @@ import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.priority.QueryPriorityDecider;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -307,15 +308,16 @@ public class HiveDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public HiveQueryPlan explain(final String query, final Configuration conf) throws LensException {
-    LOG.info("Explain: " + query);
-    HiveConf explainConf = new HiveConf(conf, this.getClass());
-    explainConf.setClassLoader(conf.getClassLoader());
+  public HiveQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
+    LOG.info("Explain: " + explainCtx.getDriverQuery(this));
+    HiveConf explainConf = new HiveConf(explainCtx.getDriverConf(this), this.getClass());
+    explainConf.setClassLoader(explainCtx.getConf().getClassLoader());
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    final String explainQuery = "EXPLAIN EXTENDED " + query;
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, SessionState.get().getUserName(), new LensConf(),
+    final String explainQuery = "EXPLAIN EXTENDED " + explainCtx.getDriverQuery(this);
+    QueryContext explainQueryCtx = new QueryContext(explainQuery, explainCtx.getSubmittedUser(), new LensConf(),
       explainConf,
       Lists.newArrayList((LensDriver) this), (LensDriver) this, new Date().getTime());
+    explainQueryCtx.setLensSessionIdentifier(explainCtx.getLensSessionIdentifier());
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
@@ -344,7 +346,7 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
-    DriverQueryPlan plan = explain(pContext.getSelectedDriverQuery(), pContext.getSelectedDriverConf());
+    DriverQueryPlan plan = explain(pContext);
     plan.setPrepareHandle(pContext.getPrepareHandle());
     return plan;
   }
@@ -381,7 +383,7 @@ public class HiveDriver implements LensDriver {
       addPersistentPath(ctx);
       ctx.getConf().set("mapred.job.name", ctx.getQueryHandle().toString());
       OperationHandle op = getClient().executeStatement(getSession(ctx), ctx.getSelectedDriverQuery(),
-        ctx.getConf().getValByRegex(".*"));
+        ctx.getSelectedDriverConf().getValByRegex(".*"));
       LOG.info("The hive operation handle: " + op);
       ctx.setDriverOpHandle(op.toString());
       hiveHandles.put(ctx.getQueryHandle(), op);
@@ -423,7 +425,7 @@ public class HiveDriver implements LensDriver {
         try {
           // Inside try since non-data fetching queries can also be executed by async method.
           String priority = queryPriorityDecider.decidePriority(ctx).toString();
-          ctx.getConf().set("mapred.job.priority", priority);
+          ctx.getSelectedDriverConf().set("mapred.job.priority", priority);
           LOG.info("set priority to " + priority);
         } catch (LensException e) {
           LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier()
@@ -752,7 +754,9 @@ public class HiveDriver implements LensDriver {
     String hiveQuery;
     if (context.isDriverPersistent()
       && context.getConf().getBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE,
-      LensConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)) {
+      LensConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)
+      && (context.getSelectedDriverQuery().startsWith("SELECT")
+          || context.getSelectedDriverQuery().startsWith("select"))) {
       // store persistent data into user specified location
       // If absent, take default home directory
       Path resultSetPath = context.getHDFSResultDir();

@@ -45,6 +45,7 @@ import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.QueryCompletionListener;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.testng.Assert;
@@ -112,13 +113,18 @@ public class TestJdbcDriver {
 
   private QueryContext createQueryContext(final String query) throws LensException {
     QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
-    context.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
+    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
       {
         put(driver, query);
       }
     });
     context.setSelectedDriver(driver);
     return context;
+  }
+
+  protected ExplainQueryContext createExplainContext(final String query, Configuration conf) {
+    ExplainQueryContext ectx = new ExplainQueryContext(query, "testuser", null, conf, drivers);
+    return ectx;
   }
 
   /**
@@ -241,10 +247,10 @@ public class TestJdbcDriver {
     insertData("explain_test"); // Insert some data into table
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
-    driver.explain(query1, baseConf);
+    driver.explain(createExplainContext(query1, baseConf));
 
     try {
-      driver.explain(query2, baseConf);
+      driver.explain(createExplainContext(query2, baseConf));
       Assert.fail("Running explain on a non existing table.");
     } catch (LensException ex) {
       System.out.println("Error : " + ex);
@@ -303,7 +309,7 @@ public class TestJdbcDriver {
 
     final String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
-    pContext.getDriverContext().setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
+    pContext.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
       {
         put(driver, query);
       }
@@ -415,7 +421,7 @@ public class TestJdbcDriver {
     insertData("invalid_conn_close");
 
     final String query = "SELECT * from invalid_conn_close2";
-    QueryContext ctx = createQueryContext(query);
+    QueryContext ctx = new QueryContext(query, "SA", baseConf, drivers);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
       driver.executeAsync(ctx);
@@ -519,7 +525,7 @@ public class TestJdbcDriver {
   @Test
   public void testInvalidQuery() throws Exception {
     final String query = "SELECT * FROM invalid_table";
-    QueryContext ctx = createQueryContext(query);
+    QueryContext ctx = new QueryContext(query, "SA", baseConf, drivers);
     try {
       LensResultSet rs = driver.execute(ctx);
       fail("Should have thrown exception");

@@ -468,11 +468,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           QueryContext ctx = acceptedQueries.take();
           synchronized (ctx) {
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
-              LOG.info("Launching query:" + ctx.getSelectedDriverQuery());
+              LOG.info("Launching query:" + ctx.getUserQuery());
               try {
                 // acquire session before any query operation.
                 acquire(ctx.getLensSessionIdentifier());
-                if (ctx.getSelectedDriver() == null) {
+                // the check to see if the query was already rewritten and selected driver's rewritten query is set
+                if (!ctx.isSelectedDriverQueryExplicitlySet()) {
                   rewriteAndSelect(ctx);
                 } else {
                   LOG.info("Submitting to already selected driver");
@@ -964,7 +965,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void rewriteAndSelect(AbstractQueryContext ctx) throws LensException {
-    ctx.getDriverContext().setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(ctx));
+    ctx.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(ctx));
 
     // 2. select driver to run the query
     LensDriver driver = driverSelector.select(ctx, conf);
@@ -1782,10 +1783,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.info("Explain: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, lensConf);
-      ExplainQueryContext explainQueryContext = new ExplainQueryContext(query, lensConf, qconf, drivers.values());
+      ExplainQueryContext explainQueryContext = new ExplainQueryContext(query,
+          getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
 
       accept(query, qconf, SubmitOp.EXPLAIN);
-      explainQueryContext.getDriverContext().setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(explainQueryContext));
+      explainQueryContext.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(explainQueryContext));
       // select driver to run the query
       explainQueryContext.setSelectedDriver(driverSelector.select(explainQueryContext, qconf));
       return explainQueryContext.getSelectedDriverQueryPlan().toQueryPlan();
@@ -1907,11 +1909,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       for (int i = 0; i < numQueries; i++) {
         QueryContext ctx = (QueryContext) in.readObject();
 
-        //Create Driver Selector Context with driver conf for now and reset it in start()
-        DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctx.getDriverQuery(), new Configuration(),
+        //Create DriverSelectorQueryContext by passing all the drivers and the user query
+        //Driver conf gets reset in start
+        DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctx.getUserQuery(), new Configuration(),
                                                                               drivers.values());
         ctx.setDriverContext(driverCtx);
         boolean driverAvailable = in.readBoolean();
+        // set the selected driver if available, if not available for the cases of queued queries,
+        // query service will do the selection from existing drivers and update
         if (driverAvailable) {
           String clsName = in.readUTF();
           ctx.getDriverContext().setSelectedDriver(drivers.get(clsName));

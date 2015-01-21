@@ -32,6 +32,7 @@ import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
@@ -128,8 +129,8 @@ public class MockDriver implements LensDriver {
    * org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public DriverQueryPlan explain(String query, Configuration conf) throws LensException {
-    return new MockQueryPlan(query);
+  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
+    return new MockQueryPlan(explainCtx.getUserQuery());
   }
 
   /*

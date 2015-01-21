@@ -122,13 +122,13 @@ public class DriverSelectorQueryContext {
    * @param driverQueries
    * @throws LensException
    */
-  public void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries) throws LensException {
+  void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries, AbstractQueryContext qctx)
+    throws LensException {
     for (LensDriver driver : driverQueries.keySet()) {
       final DriverQueryContext driverQueryContext = driverQueryContextMap.get(driver);
       driverQueryContext.setQuery(driverQueries.get(driver));
       try {
-        driverQueryContext.setDriverQueryPlan(driver.explain(driverQueries.get(driver),
-          driverQueryContext.getDriverSpecificConf()));
+        driverQueryContext.setDriverQueryPlan(driver.explain(qctx));
       } catch (Exception e) {
         LOG.error("Setting driver plan failed for driver " + driver, e);
         driverQueryContext.setDriverQueryPlanGenerationError(e);
@@ -163,11 +163,11 @@ public class DriverSelectorQueryContext {
   }
 
   public Configuration getSelectedDriverConf() {
-    return driverQueryContextMap.get(getSelectedDriver()).getDriverSpecificConf();
+    return getSelectedDriver() == null ? null : driverQueryContextMap.get(getSelectedDriver()).getDriverSpecificConf();
   }
 
   public String getSelectedDriverQuery() {
-    return driverQueryContextMap.get(getSelectedDriver()).getQuery();
+    return getSelectedDriver() == null ? null : driverQueryContextMap.get(getSelectedDriver()).getQuery();
   }
 
   public void setDriverConf(LensDriver driver, Configuration conf) {

@@ -29,6 +29,6 @@ public class MockQueryContext extends AbstractQueryContext {
 
   public MockQueryContext(final String query, final LensConf qconf,
     final Configuration conf, final Collection<LensDriver> drivers) {
-    super(query, qconf, conf, drivers);
+    super(query, "testuser", qconf, conf, drivers);
   }
 }

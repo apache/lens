@@ -58,12 +58,6 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   private QueryHandle queryHandle;
 
   /**
-   * The submitted user.
-   */
-  @Getter
-  private final String submittedUser; // Logged in user.
-
-  /**
    * The priority.
    */
   @Getter
@@ -127,13 +121,6 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   @Getter
   @Setter
   private long closedTime;
-
-  /**
-   * The lens session identifier.
-   */
-  @Getter
-  @Setter
-  private String lensSessionIdentifier;
 
   /**
    * The driver op handle.
@@ -245,7 +232,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
       prepared.getDriverContext()
         .getSelectedDriver(), new Date().getTime());
     setDriverContext(prepared.getDriverContext());
-    setSelectedDriverQuery(prepared.getDriverQuery());
+    setSelectedDriverQuery(prepared.getSelectedDriverQuery());
   }
 
   /**
@@ -260,7 +247,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    */
   public QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
     Collection<LensDriver> drivers, LensDriver selectedDriver, long submissionTime) {
-    super(userQuery, qconf, conf, drivers);
+    super(userQuery, user, qconf, conf, drivers);
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
@@ -272,7 +259,6 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
     this.isDriverPersistent = conf.getBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
       LensConfConstants.DEFAULT_DRIVER_PERSISTENT_RESULT_SET);
     this.userQuery = userQuery;
-    this.submittedUser = user;
     if (selectedDriver != null) {
       this.setSelectedDriver(selectedDriver);
     }
@@ -341,7 +327,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    * @return the lens query
    */
   public LensQuery toLensQuery() {
-    return new LensQuery(queryHandle, userQuery, submittedUser, priority, isPersistent,
+    return new LensQuery(queryHandle, userQuery, super.getSubmittedUser(), priority, isPersistent,
       getSelectedDriver() != null ? getSelectedDriver().getClass()
         .getCanonicalName() : null,
       getSelectedDriverQuery(),
@@ -406,6 +392,6 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   }
 
   public String getClusterUser() {
-    return conf.get(LensConfConstants.SESSION_CLUSTER_USER, submittedUser);
+    return conf.get(LensConfConstants.SESSION_CLUSTER_USER, getSubmittedUser());
   }
 }
