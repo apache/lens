@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
@@ -55,8 +56,8 @@ class GroupbyResolver implements ContextRewriter {
             CubeQueryConfUtil.DEFAULT_ENABLE_GROUP_BY_TO_SELECT);
   }
 
-  private void promoteSelect(CubeQueryContext cubeql, List<String> nonMsrNonAggSelExprsWithoutAlias, List<String> groupByExprs)
-      throws SemanticException {
+  private void promoteSelect(CubeQueryContext cubeql, List<String> nonMsrNonAggSelExprsWithoutAlias,
+      List<String> groupByExprs) throws SemanticException {
     if (!selectPromotionEnabled) {
       return;
     }
@@ -80,20 +81,57 @@ class GroupbyResolver implements ContextRewriter {
               throw new SemanticException(e);
             }
             ASTNode groupbyAST = cubeql.getGroupByAST();
-            if (groupbyAST != null) {
-              // groupby ast exists, add the expression to AST
-              groupbyAST.addChild(exprAST);
-              exprAST.setParent(groupbyAST);
-            } else {
-              // no group by ast exist, create one
-              ASTNode newAST = new ASTNode(new CommonToken(TOK_GROUPBY));
-              newAST.addChild(exprAST);
-              cubeql.setGroupByAST(newAST);
+            if (!isConstantsUsed(exprAST)) {
+              if (groupbyAST != null) {
+                // groupby ast exists, add the expression to AST
+                groupbyAST.addChild(exprAST);
+                exprAST.setParent(groupbyAST);
+              } else {
+                // no group by ast exist, create one
+                ASTNode newAST = new ASTNode(new CommonToken(TOK_GROUPBY));
+                newAST.addChild(exprAST);
+                cubeql.setGroupByAST(newAST);
+              }
             }
           }
         }
       }
     }
+  }
+
+  /*
+   * Check if constants projected
+   */
+  private boolean isConstantsUsed(ASTNode node) {
+    if (node == null) {
+      return false;
+    }
+    if (node.getToken() != null) {
+      if (hasTableOrColumn(node)) {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
+  }
+
+
+  /*
+   * Check if table or column used in node
+   */
+  private boolean hasTableOrColumn(ASTNode node) {
+    if (node.getToken() != null) {
+      if (node.getToken().getType() == HiveParser.TOK_TABLE_OR_COL) {
+        return true;
+      }
+    }
+    for (int i = 0; i < node.getChildCount(); i++) {
+      if (hasTableOrColumn((ASTNode) node.getChild(i)))
+        return true;
+    }
+    return false;
   }
 
   private void promoteGroupby(CubeQueryContext cubeql, List<String> selectExprs, List<String> groupByExprs)

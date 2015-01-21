@@ -533,6 +533,43 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
+  public void testCubeGroupbyWithConstantProjected() throws Exception {
+    // check constants
+    String hqlQuery1 = rewrite("select cityid, 99, \"placeHolder\", -1001, SUM(msr2) from testCube" + " where "
+        + twoDaysRange, getConf());
+    String expected1 = getExpectedQuery(cubeName, "select testcube.cityid, 99, \"placeHolder\", -1001,"
+        + " sum(testcube.msr2) FROM ", null, " group by testcube.cityid ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected1, hqlQuery1);
+
+    // check constants with expression
+    String hqlQuery2 = rewrite(
+        "select cityid, case when stateid = 'za' then \"Not Available\" end, 99, \"placeHolder\", -1001, "
+            + "SUM(msr2) from testCube" + " where " + twoDaysRange, getConf());
+    String expected2 = getExpectedQuery(cubeName,
+        "select testcube.cityid, case when testcube.stateid = 'za' then \"Not Available\" end, 99, \"placeHolder\", -1001,"
+            + " sum(testcube.msr2) FROM ", null,
+        " group by testcube.cityid, case when testcube.stateid = 'za' then \"Not Available\" end ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected2, hqlQuery2);
+
+    // check expression with boolean and numeric constants
+    String hqlQuery3 = rewrite(
+        "select cityid,stateid + 99, 44 + stateid, stateid - 33, 999 - stateid, TRUE, FALSE, round(123.4567,2), case when stateid='za' then 99 else -1001 end,  "
+            + "SUM(msr2), SUM(msr2 + 39), SUM(msr2) + 567 from testCube" + " where " + twoDaysRange, getConf());
+    String expected3 = getExpectedQuery(
+        cubeName,
+        "select testcube.cityid, testcube.stateid + 99, 44 + testcube.stateid, testcube.stateid - 33, 999 - testcube.stateid, TRUE, FALSE, round(123.4567,2), "
+            + "case when testcube.stateid='za' then 99 else -1001 end,"
+            + " sum(testcube.msr2), sum(testcube.msr2 + 39), sum(testcube.msr2) + 567 FROM ",
+        null,
+        " group by testcube.cityid,testcube.stateid + 99, 44 + testcube.stateid, testcube.stateid - 33, 999 - testcube.stateid, "
+            + " case when testcube.stateid='za' then 99 else -1001 end ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected3, hqlQuery3);
+  }
+
+  @Test
   public void testCubeGroupbyQuery() throws Exception {
     String hqlQuery =
         rewrite("select name, SUM(msr2) from" + " testCube join citydim on testCube.cityid = citydim.id where "
