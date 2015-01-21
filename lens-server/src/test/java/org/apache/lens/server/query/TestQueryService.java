@@ -457,6 +457,8 @@ public class TestQueryService extends LensJerseyTest {
         .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     Assert.assertTrue(plan.isError());
     Assert.assertNotNull(plan.getErrorMsg());
+    Assert.assertTrue(plan.getErrorMsg().contains("Invalid table alias or column reference 'NO_ID': " +
+        "(possible column names are: id, idstr)"));
 
     // Test explain and prepare
     final WebTarget ptarget = target().path("queryapi/preparedqueries");
@@ -475,6 +477,8 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertTrue(plan2.isError());
     Assert.assertNotNull(plan2.getErrorMsg());
     Assert.assertNull(plan2.getPrepareHandle());
+    Assert.assertTrue(plan.getErrorMsg().contains("Invalid table alias or column reference 'NO_ID': " +
+        "(possible column names are: id, idstr)"));
   }
 
   // post to preparedqueries
