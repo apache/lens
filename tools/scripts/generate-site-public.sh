@@ -25,11 +25,9 @@ die() {
 }
 
 SVN_TARGET=$1
-REPO=https://git-wip-us.apache.org/repos/asf/incubator-lens.git
 TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
 REST_DIR=`pwd`/lens-server/target/site/wsdocs
-IMAGES_DIR=`pwd`/src/site/apt/figures
 VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpression=project.version|grep -Ev '(^\[|Download\w+:)' || die "unable to get version")
 
 
@@ -47,11 +45,9 @@ echo "Site gen complete"
 rm -rf $TMP || die "unable to clear $TMP"
 mkdir -p $TMP
 
-echo "Beginning push to gh-pages from " $CURR_BRANCH
 cd $TMP
 
 mkdir -p current || die "unable to create dir current"
-mkdir -p wsdocs || die "Unable to create dir for REST docs"
 mkdir -p versions/$VERSION || due "unable to create dir versions/$VERSION"
 
 find current -type f -exec git rm {} \;
@@ -61,10 +57,10 @@ echo "DELETE $REST_DIR/index.html"
 rm $REST_DIR/index.html
 echo "Copy enunciate documentation"
 cp -r $REST_DIR/* .
-echo "Copy images"
-cp -r $IMAGES_DIR . 
+cp -r $REST_DIR/* current/ || die "unable to copy REST to current"
+cp -r $REST_DIR/* versions/$VERSION/ || die "unable to copy REST to versions/$VERSION"
 echo "Copy MVN site"
-cp -r $STAGE/ . || die "unable to copy to base"
+cp -r $STAGE/ .
 echo "Copy docs to current/"
 cp -r $STAGE/ current/ || die "unable to copy to current"
 echo "Copy docs to version:" $VERSION
@@ -80,6 +76,7 @@ echo '</ul>' >> versions/index.html
 
 
 ## Copy entire doc directory to Apache SVN Target dir
-cp -r $TMP/ $SVN_TARGET/site/publish 
+mkdir -p $SVN_TARGET/site/publish
+cp -r $TMP/ $SVN_TARGET/site/publish
 cd $SVN_TARGET
-echo "Site gen complete. Ready to commit"
+echo "Generated site."
