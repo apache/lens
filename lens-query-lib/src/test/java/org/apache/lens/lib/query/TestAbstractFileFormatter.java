@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
@@ -224,11 +225,8 @@ public abstract class TestAbstractFileFormatter {
     } catch (LensException e) {
       Assert.fail(e.getMessage());
     }
-    QueryContext ctx = new QueryContext("test writer query", "testuser", conf, new ArrayList<LensDriver>() {
-      {
-        add(mockDriver);
-      }
-    });
+    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser", new LensConf(),
+        conf, mockDriver, null);
 
     ctx.setSelectedDriver(mockDriver);
     formatter = createFormatter();

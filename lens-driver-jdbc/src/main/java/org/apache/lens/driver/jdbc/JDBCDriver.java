@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
@@ -583,10 +584,8 @@ public class JDBCDriver implements LensDriver {
       explainQuery = rewrittenQuery.replaceAll("select ", "select "
           + explainKeyword + " ");
     LOG.info("Explain Query : " + explainQuery);
-    final LensDriver driver = (LensDriver) this;
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, null,
-        explainConf, new ArrayList<LensDriver>() {{ add(driver); }});
-    explainQueryCtx.setLensSessionIdentifier(explainCtx.getLensSessionIdentifier());
+    QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null,
+        new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
     QueryResult result = null;
     try {
       result = executeInternal(explainQueryCtx, explainQuery);

@@ -83,6 +83,8 @@ import org.codehaus.jackson.*;
 import org.codehaus.jackson.map.*;
 import org.codehaus.jackson.map.module.SimpleModule;
 
+import com.google.common.collect.Lists;
+
 /**
  * The Class QueryExecutionServiceImpl.
  */
@@ -1336,17 +1338,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         if (query == null) {
           throw new NotFoundException("Query not found " + queryHandle);
         }
-        QueryContext finishedCtx = new QueryContext(query.getUserQuery(), query.getSubmitter(), conf,
-                                                    drivers.values(), query.getSubmissionTime());
-        finishedCtx.setQueryHandle(queryHandle);
-        finishedCtx.setEndTime(query.getEndTime());
-        finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(query.getStatus()),
-                                                                    query.getErrorMessage() == null ? "" : query.getErrorMessage(), query.getResult() != null, null, null));
-        finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());
-        finishedCtx.getDriverStatus().setDriverFinishTime(query.getDriverEndTime());
-        finishedCtx.setResultSetPath(query.getResult());
-        finishedCtx.setQueryName(query.getQueryName());
-        return finishedCtx;
+        return query.toQueryContext(conf, drivers.values());
       }
       updateStatus(queryHandle);
       return ctx;
@@ -1816,9 +1808,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
     try {
       acquire(sessionHandle);
+      String command = "add " + type.toLowerCase() + " " + path;
       for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          driver.execute(createAddResourceQuery(sessionHandle, type, path));
+          driver.execute(createResourceQuery(command, sessionHandle, driver));
         }
       }
     } finally {
@@ -1827,22 +1820,23 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   /**
-   * Creates the add resource query.
+   * Creates the add/delete resource query.
    *
-   * @param sessionHandle the session handle
-   * @param type          the type
-   * @param path          the path
-   * @return the query context
-   * @throws LensException the lens exception
+   * @param command
+   * @param sessionHandle
+   * @param type
+   * @param path
+   * @param driver
+   * @return
+   * @throws LensException
    */
-  private QueryContext createAddResourceQuery(LensSessionHandle sessionHandle, String type, String path)
-    throws LensException {
-    String command = "add " + type.toLowerCase() + " " + path;
-    LensConf conf = new LensConf();
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    QueryContext addQuery = new QueryContext(command, getSession(sessionHandle).getLoggedInUser(), conf, getLensConf(
-      sessionHandle, conf), drivers.values());
-    addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
+  private QueryContext createResourceQuery(String command, LensSessionHandle sessionHandle, LensDriver driver)
+      throws LensException {
+    LensConf qconf = new LensConf();
+    qconf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    QueryContext addQuery = QueryContext.createContextWithSingleDriver(command,
+        getSession(sessionHandle).getLoggedInUser(), qconf, getLensConf(
+              sessionHandle, qconf), driver, sessionHandle.getPublicId().toString());
     return addQuery;
   }
 
@@ -1858,12 +1852,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       String command = "delete " + type.toLowerCase() + " " + path;
       for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          LensConf conf = new LensConf();
-          conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-          QueryContext addQuery = new QueryContext(command, getSession(sessionHandle).getLoggedInUser(), getLensConf(
-            sessionHandle, conf), drivers.values());
-          addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
-          driver.execute(addQuery);
+          driver.execute(createResourceQuery(command, sessionHandle, driver));
         }
       }
     } finally {
@@ -2123,9 +2112,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       if (resources != null && !resources.isEmpty()) {
         for (LensSessionImpl.ResourceEntry resource : resources) {
           LOG.info("Restoring resource " + resource + " for session " + lensSession);
+          String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
           try {
             // Execute add resource query in blocking mode
-            hiveDriver.execute(createAddResourceQuery(sessionHandle, resource.getType(), resource.getLocation()));
+            hiveDriver.execute(createResourceQuery(command, sessionHandle, hiveDriver));
             resource.restoredResource();
             LOG.info("Restored resource " + resource + " for session " + lensSession);
           } catch (Exception exc) {

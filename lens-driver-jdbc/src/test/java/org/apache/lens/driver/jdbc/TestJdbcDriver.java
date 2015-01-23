@@ -33,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
@@ -112,7 +113,7 @@ public class TestJdbcDriver {
   }
 
   private QueryContext createQueryContext(final String query) throws LensException {
-    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
     context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
       {
         put(driver, query);
@@ -421,7 +422,7 @@ public class TestJdbcDriver {
     insertData("invalid_conn_close");
 
     final String query = "SELECT * from invalid_conn_close2";
-    QueryContext ctx = new QueryContext(query, "SA", baseConf, drivers);
+    QueryContext ctx = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
 
     for (int i = 0; i < JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE_DEFAULT; i++) {
       driver.executeAsync(ctx);
@@ -525,7 +526,7 @@ public class TestJdbcDriver {
   @Test
   public void testInvalidQuery() throws Exception {
     final String query = "SELECT * FROM invalid_table";
-    QueryContext ctx = new QueryContext(query, "SA", baseConf, drivers);
+    QueryContext ctx = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
     try {
       LensResultSet rs = driver.execute(ctx);
       fail("Should have thrown exception");

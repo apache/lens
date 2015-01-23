@@ -1366,11 +1366,13 @@ public class TestQueryService extends LensJerseyTest {
 
     final String query = "select ID from " + testTable;
     QueryContext ctx = new QueryContext(query, null, queryConf, conf, queryService.getDrivers());
-    Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>() {{ put(queryService.getDrivers()
-        .iterator().next(), query); }};
+    Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
+    for (LensDriver driver :queryService.getDrivers()) {
+      driverQueries.put(driver, query);
+    }
     ctx.setDriverQueriesAndPlans(driverQueries);
 
-    Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader() ,  ctx.getConf()
+    Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(), ctx.getConf()
       .getClassLoader());
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(),
         ctx.getDriverContext().getDriverConf(queryService.getDrivers().iterator().next()).getClassLoader());

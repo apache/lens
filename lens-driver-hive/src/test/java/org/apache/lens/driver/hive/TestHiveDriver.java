@@ -129,7 +129,7 @@ public class TestHiveDriver {
   }
 
   protected QueryContext createContext(final String query, Configuration conf) throws LensException {
-    QueryContext context = new QueryContext(query, "testuser", conf, drivers);
+    QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, drivers);
     // session id has to be set before calling setDriverQueriesAndPlans
     context.setLensSessionIdentifier(sessionid);
     context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
@@ -138,7 +138,7 @@ public class TestHiveDriver {
   }
 
   protected QueryContext createContext(PreparedQueryContext query, Configuration conf) {
-    QueryContext context = new QueryContext(query, "testuser", conf);
+    QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf);
     context.setLensSessionIdentifier(sessionid);
     return context;
   }

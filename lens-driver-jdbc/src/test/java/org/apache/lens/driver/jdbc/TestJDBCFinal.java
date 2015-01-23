@@ -33,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.ColumnarSQLRewriter;
 import org.apache.lens.driver.jdbc.JDBCDriver;
@@ -189,7 +190,7 @@ public class TestJDBCFinal {
         + "where time_dim.day between '1900-01-01' and '1900-01-03' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc";
 
-    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
     context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
     context.setSelectedDriver(driver);
 
@@ -248,7 +249,7 @@ public class TestJDBCFinal {
         + "where time_dim.day between '1900-01-01' and '1900-01-04' " + "and location_dim.location_name = 'loc2' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold  desc ";
 
-    QueryContext context = new QueryContext(query, "SA", baseConf, drivers);
+    QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
     context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {{ put(driver, query); }} );
     context.setSelectedDriver(driver);
     LensResultSet resultSet = driver.execute(context);

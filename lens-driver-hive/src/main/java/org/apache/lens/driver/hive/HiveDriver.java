@@ -314,10 +314,9 @@ public class HiveDriver implements LensDriver {
     explainConf.setClassLoader(explainCtx.getConf().getClassLoader());
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     final String explainQuery = "EXPLAIN EXTENDED " + explainCtx.getDriverQuery(this);
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, explainCtx.getSubmittedUser(), new LensConf(),
-      explainConf,
-      Lists.newArrayList((LensDriver) this), (LensDriver) this, new Date().getTime());
-    explainQueryCtx.setLensSessionIdentifier(explainCtx.getLensSessionIdentifier());
+
+    QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery,
+        explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
