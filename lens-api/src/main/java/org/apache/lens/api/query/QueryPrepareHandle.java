@@ -17,15 +17,16 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.api.query;
 
-import lombok.*;
+import java.util.UUID;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.UUID;
+
+import lombok.*;
 
 /**
  * The Class QueryPrepareHandle.

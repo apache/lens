@@ -17,23 +17,24 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.doc;
 
-import org.testng.annotations.Test;
-import org.xml.sax.Attributes;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
+
+import org.testng.annotations.Test;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * The Class TestGenerateConfigDoc.
@@ -306,7 +307,7 @@ public class TestGenerateConfigDoc {
         entry.description = Arrays.asList(buf.toString().split("\\\\\\r|\\\\\\n"));
         ListIterator<String> iter = entry.description.listIterator();
         int maxLength = -1;
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
           String descriptionLine = iter.next().replaceAll("\\r|\\n", " ").replaceAll(" +", " ").trim();
           if (descriptionLine.length() > maxLength) {
             maxLength = descriptionLine.length();
@@ -314,7 +315,7 @@ public class TestGenerateConfigDoc {
           iter.set(descriptionLine);
         }
         iter = entry.description.listIterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
           String descriptionLine = iter.next();
           iter.set(descriptionLine + getSpaces(maxLength - descriptionLine.length()));
         }
@@ -390,7 +391,7 @@ public class TestGenerateConfigDoc {
           apt.println("*--+--+---+--+");
           i++;
           String col;
-          for(int j = 0; j < entry.description.size(); j++) {
+          for (int j = 0; j < entry.description.size(); j++) {
             apt.print("|");
             col = i + "";
             apt.print(j == 0 ? col : col.replaceAll(".", " "));
@@ -429,9 +430,10 @@ public class TestGenerateConfigDoc {
     }
 
   }
+
   public static StringBuilder getSpaces(int num) {
     StringBuilder sb = new StringBuilder();
-    for(int i = 0; i < num; i++) {
+    for (int i = 0; i < num; i++) {
       sb.append(" ");
     }
     return sb;

@@ -18,16 +18,17 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.Collection;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
-import java.util.Collection;
+import org.apache.hadoop.conf.Configuration;
 
 public class MockQueryContext extends AbstractQueryContext {
 
   public MockQueryContext(final String query, final LensConf qconf,
     final Configuration conf, final Collection<LensDriver> drivers) {
-    super(query, qconf, conf, drivers);
+    super(query, "testuser", qconf, conf, drivers);
   }
 }

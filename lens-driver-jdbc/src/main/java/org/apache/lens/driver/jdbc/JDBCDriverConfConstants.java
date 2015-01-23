@@ -80,5 +80,10 @@ public interface JDBCDriverConfConstants {
   /** The Constant DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT. */
   public static final boolean DEFAULT_JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT = true;
   
-  
+  public static final String JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL =
+    JDBC_DRIVER_PFX + "enable.resultset.streaming.retrieval";
+  public static final boolean DEFAULT_JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL = false;
+
+  public static final String JDBC_FETCH_SIZE = JDBC_DRIVER_PFX + "fetch.size";
+  public static final int DEFAULT_JDBC_FETCH_SIZE = 1000;
 }

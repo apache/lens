@@ -83,6 +83,8 @@ import org.codehaus.jackson.*;
 import org.codehaus.jackson.map.*;
 import org.codehaus.jackson.map.module.SimpleModule;
 
+import com.google.common.collect.Lists;
+
 /**
  * The Class QueryExecutionServiceImpl.
  */
@@ -468,11 +470,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
           QueryContext ctx = acceptedQueries.take();
           synchronized (ctx) {
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
-              LOG.info("Launching query:" + ctx.getSelectedDriverQuery());
+              LOG.info("Launching query:" + ctx.getUserQuery());
               try {
                 // acquire session before any query operation.
                 acquire(ctx.getLensSessionIdentifier());
-                if (ctx.getSelectedDriver() == null) {
+                // the check to see if the query was already rewritten and selected driver's rewritten query is set
+                if (!ctx.isSelectedDriverQueryExplicitlySet()) {
                   rewriteAndSelect(ctx);
                 } else {
                   LOG.info("Submitting to already selected driver");
@@ -964,7 +967,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void rewriteAndSelect(AbstractQueryContext ctx) throws LensException {
-    ctx.getDriverContext().setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(ctx));
+    ctx.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(ctx));
 
     // 2. select driver to run the query
     LensDriver driver = driverSelector.select(ctx, conf);
@@ -1120,7 +1123,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle, String query, LensConf lensConf, String queryName)
     throws LensException {
     try {
-      LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
+      LOG.info("ExplainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
       PreparedQueryContext prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
@@ -1335,17 +1338,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         if (query == null) {
           throw new NotFoundException("Query not found " + queryHandle);
         }
-        QueryContext finishedCtx = new QueryContext(query.getUserQuery(), query.getSubmitter(), conf,
-                                                    drivers.values(), query.getSubmissionTime());
-        finishedCtx.setQueryHandle(queryHandle);
-        finishedCtx.setEndTime(query.getEndTime());
-        finishedCtx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(query.getStatus()),
-                                                                    query.getErrorMessage() == null ? "" : query.getErrorMessage(), query.getResult() != null, null, null));
-        finishedCtx.getDriverStatus().setDriverStartTime(query.getDriverStartTime());
-        finishedCtx.getDriverStatus().setDriverFinishTime(query.getDriverEndTime());
-        finishedCtx.setResultSetPath(query.getResult());
-        finishedCtx.setQueryName(query.getQueryName());
-        return finishedCtx;
+        return query.toQueryContext(conf, drivers.values());
       }
       updateStatus(queryHandle);
       return ctx;
@@ -1782,10 +1775,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.info("Explain: " + sessionHandle.toString() + " query:" + query);
       acquire(sessionHandle);
       Configuration qconf = getLensConf(sessionHandle, lensConf);
-      ExplainQueryContext explainQueryContext = new ExplainQueryContext(query, lensConf, qconf, drivers.values());
+      ExplainQueryContext explainQueryContext = new ExplainQueryContext(query,
+          getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
 
       accept(query, qconf, SubmitOp.EXPLAIN);
-      explainQueryContext.getDriverContext().setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(explainQueryContext));
+      explainQueryContext.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(explainQueryContext));
       // select driver to run the query
       explainQueryContext.setSelectedDriver(driverSelector.select(explainQueryContext, qconf));
       return explainQueryContext.getSelectedDriverQueryPlan().toQueryPlan();
@@ -1814,9 +1808,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
     try {
       acquire(sessionHandle);
+      String command = "add " + type.toLowerCase() + " " + path;
       for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          driver.execute(createAddResourceQuery(sessionHandle, type, path));
+          driver.execute(createResourceQuery(command, sessionHandle, driver));
         }
       }
     } finally {
@@ -1825,22 +1820,23 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   /**
-   * Creates the add resource query.
+   * Creates the add/delete resource query.
    *
-   * @param sessionHandle the session handle
-   * @param type          the type
-   * @param path          the path
-   * @return the query context
-   * @throws LensException the lens exception
+   * @param command
+   * @param sessionHandle
+   * @param type
+   * @param path
+   * @param driver
+   * @return
+   * @throws LensException
    */
-  private QueryContext createAddResourceQuery(LensSessionHandle sessionHandle, String type, String path)
-    throws LensException {
-    String command = "add " + type.toLowerCase() + " " + path;
-    LensConf conf = new LensConf();
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    QueryContext addQuery = new QueryContext(command, getSession(sessionHandle).getLoggedInUser(), conf, getLensConf(
-      sessionHandle, conf), drivers.values());
-    addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
+  private QueryContext createResourceQuery(String command, LensSessionHandle sessionHandle, LensDriver driver)
+      throws LensException {
+    LensConf qconf = new LensConf();
+    qconf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    QueryContext addQuery = QueryContext.createContextWithSingleDriver(command,
+        getSession(sessionHandle).getLoggedInUser(), qconf, getLensConf(
+              sessionHandle, qconf), driver, sessionHandle.getPublicId().toString());
     return addQuery;
   }
 
@@ -1856,12 +1852,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       String command = "delete " + type.toLowerCase() + " " + path;
       for (LensDriver driver : drivers.values()) {
         if (driver instanceof HiveDriver) {
-          LensConf conf = new LensConf();
-          conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-          QueryContext addQuery = new QueryContext(command, getSession(sessionHandle).getLoggedInUser(), getLensConf(
-            sessionHandle, conf), drivers.values());
-          addQuery.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
-          driver.execute(addQuery);
+          driver.execute(createResourceQuery(command, sessionHandle, driver));
         }
       }
     } finally {
@@ -1907,11 +1898,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       for (int i = 0; i < numQueries; i++) {
         QueryContext ctx = (QueryContext) in.readObject();
 
-        //Create Driver Selector Context with driver conf for now and reset it in start()
-        DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctx.getDriverQuery(), new Configuration(),
+        //Create DriverSelectorQueryContext by passing all the drivers and the user query
+        //Driver conf gets reset in start
+        DriverSelectorQueryContext driverCtx = new DriverSelectorQueryContext(ctx.getUserQuery(), new Configuration(),
                                                                               drivers.values());
         ctx.setDriverContext(driverCtx);
         boolean driverAvailable = in.readBoolean();
+        // set the selected driver if available, if not available for the cases of queued queries,
+        // query service will do the selection from existing drivers and update
         if (driverAvailable) {
           String clsName = in.readUTF();
           ctx.getDriverContext().setSelectedDriver(drivers.get(clsName));
@@ -2118,9 +2112,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       if (resources != null && !resources.isEmpty()) {
         for (LensSessionImpl.ResourceEntry resource : resources) {
           LOG.info("Restoring resource " + resource + " for session " + lensSession);
+          String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
           try {
             // Execute add resource query in blocking mode
-            hiveDriver.execute(createAddResourceQuery(sessionHandle, resource.getType(), resource.getLocation()));
+            hiveDriver.execute(createResourceQuery(command, sessionHandle, hiveDriver));
             resource.restoredResource();
             LOG.info("Restored resource " + resource + " for session " + lensSession);
           } catch (Exception exc) {

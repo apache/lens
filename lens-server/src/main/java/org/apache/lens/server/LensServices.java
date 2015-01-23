@@ -199,7 +199,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       try {
         Configuration configuration = new Configuration(conf);
         configuration.setBoolean(FS_AUTOMATIC_CLOSE, false);
-        persistenceFS = FileSystem.newInstance(persistDir.toUri(), conf);
+        persistenceFS = FileSystem.newInstance(persistDir.toUri(), configuration);
         setupPersistedState();
       } catch (Exception e) {
         LOG.error("Could not recover from persisted state", e);

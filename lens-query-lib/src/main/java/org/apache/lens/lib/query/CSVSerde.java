@@ -18,8 +18,12 @@
  */
 package org.apache.lens.lib.query;
 
-import au.com.bytecode.opencsv.CSVReader;
-import au.com.bytecode.opencsv.CSVWriter;
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
+import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
+
+import java.io.*;
+import java.util.*;
+
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -35,11 +39,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.*;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 
-import java.io.*;
-import java.util.*;
-
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMNS;
-import static org.apache.hadoop.hive.serde.serdeConstants.LIST_COLUMN_TYPES;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 /**
  * CSVSerde uses opencsv (http://opencsv.sourceforge.net/) to serialize/deserialize columns as CSV.
@@ -143,7 +144,7 @@ public final class CSVSerde extends AbstractSerDe {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.serde2.AbstractSerDe#initialize(org.apache.hadoop.conf.Configuration,
    * java.util.Properties)
    */
@@ -203,7 +204,7 @@ public final class CSVSerde extends AbstractSerDe {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.serde2.AbstractSerDe#serialize(java.lang.Object,
    * org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector)
    */
@@ -391,7 +392,7 @@ public final class CSVSerde extends AbstractSerDe {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.serde2.AbstractSerDe#deserialize(org.apache.hadoop.io.Writable)
    */
   @Override

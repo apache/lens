@@ -144,4 +144,9 @@
     <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition </description>
   </property>
 
+  <property>
+    <name>lens.cube.query.enable.attrfields.add.distinct</name>
+    <value>true</value>
+    <description>When the query has only attribute fields projected from cube and the flag is set to true, distinct clause will be added for the projection so that no duplicate values will be projected. If flag is set to false, projection wont be changed, result might include duplicate values.</description>
+  </property>
 </configuration>

@@ -18,17 +18,17 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.lens.api.query.QueryCost;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryPlan;
-import org.apache.lens.api.query.QueryPrepareHandle;
-
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.lens.api.query.QueryCost;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryPlan;
+import org.apache.lens.api.query.QueryPrepareHandle;
 
 /**
  * The Class DriverQueryPlan.

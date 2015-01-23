@@ -75,10 +75,10 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
    * @param storageName
    *          the storage name
    */
-  public static void addDim1Table(String tableName, String specName, String storageSpecName, String storageName) {
+  public synchronized static void addDim1Table(String tableName, String specName, String storageSpecName,
+      String storageName) {
     LensDimensionTableCommands command = getCommand();
     String dimList = command.showDimensionTables();
-    Assert.assertEquals("No Dimensions Found", dimList, "Dim tables should not be found");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(storageName);
     URL dimSpec = TestLensDimensionTableCommands.class.getClassLoader().getResource(specName);
@@ -93,7 +93,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     }
 
     dimList = command.showDimensionTables();
-    Assert.assertEquals(tableName, dimList, "dim_table table should be found");
+    Assert.assertTrue(dimList.contains(tableName), "dim_table table should be found");
   }
 
   /**

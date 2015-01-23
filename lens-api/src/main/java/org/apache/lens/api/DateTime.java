@@ -17,14 +17,15 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.api;
 
-import lombok.*;
+import java.util.Date;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.Date;
+
+import lombok.*;
 
 /**
  * The Class DateTime.

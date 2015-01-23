@@ -18,8 +18,9 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.api.query.AbstractQueryContext;
+
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The Interface DriverSelector.

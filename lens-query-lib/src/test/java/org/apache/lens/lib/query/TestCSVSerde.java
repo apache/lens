@@ -18,13 +18,14 @@
  */
 package org.apache.lens.lib.query;
 
+import java.util.*;
+
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.io.Text;
+
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
-
-import java.util.*;
 
 /**
  * The Class TestCSVSerde.

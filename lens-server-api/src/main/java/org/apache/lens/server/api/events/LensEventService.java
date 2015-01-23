@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.events;
 
-import org.apache.lens.api.LensException;
-
 import java.util.Collection;
+
+import org.apache.lens.api.LensException;
 
 /**
  * Singleton which is responsible for managing the event-listener mapping as well as processing events.

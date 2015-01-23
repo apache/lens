@@ -338,7 +338,7 @@ public class DenormalizationResolver implements ContextRewriter {
       // Adds all the reference dimensions as eligible for denorm fields
       denormCtx = new DenormalizationContext(cubeql);
       cubeql.setDenormCtx(denormCtx);
-      for (Map.Entry<String, Set<String>> entry : cubeql.getTblAlaisToColumns().entrySet()) {
+      for (Map.Entry<String, Set<String>> entry : cubeql.getTblAliasToColumns().entrySet()) {
         // skip default alias
         if (entry.getKey() == CubeQueryContext.DEFAULT_TABLE) {
           continue;
@@ -373,8 +373,7 @@ public class DenormalizationResolver implements ContextRewriter {
             for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cfact.getName())) {
               if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
                 LOG.info("Not considering fact table:" + cfact + " as column " + refcol.col + " is not available");
-                cubeql.addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(cfact.fact.getName(),
-                    CubeTableCause.COLUMN_NOT_FOUND));
+                cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
                 i.remove();
               }
             }
@@ -394,8 +393,7 @@ public class DenormalizationResolver implements ContextRewriter {
               for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cdim.getName())) {
                 if (denormCtx.getReferencedCols().get(refcol.col.getName()).isEmpty()) {
                   LOG.info("Not considering dim table:" + cdim + " as column " + refcol.col + " is not available");
-                  cubeql.addDimPruningMsgs(dim, cdim.dimtable, new CandidateTablePruneCause(cdim.dimtable.getName(),
-                      CubeTableCause.COLUMN_NOT_FOUND));
+                  cubeql.addDimPruningMsgs(dim, cdim.dimtable,                    CandidateTablePruneCause.columnNotFound(refcol.col.getName()));
                   i.remove();
                 }
               }
@@ -403,7 +401,8 @@ public class DenormalizationResolver implements ContextRewriter {
           }
 
           if (cubeql.getCandidateDimTables().get(dim).size() == 0) {
-            throw new SemanticException(ErrorMsg.NO_DIM_HAS_COLUMN, cubeql.getColumnsQueried(dim.getName()).toString());
+            throw new SemanticException(ErrorMsg.NO_DIM_HAS_COLUMN,
+              dim.toString(), cubeql.getColumnsQueried(dim.getName()).toString());
           }
         }
       }

@@ -84,6 +84,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
 
     /** The partition. */
     PARTITION,
+
+    /** CREATE TABLE if destination is a table */
+    CREATE
   };
 
   /**
@@ -187,8 +190,13 @@ public class HiveQueryPlan extends DriverQueryPlan {
             String table = explainOutput.get(i).trim().substring("name:".length()).trim();
             // update tables queried and weights
             if (!tablesQueried.contains(table)) {
+              Table tbl = metastore.getTable(table, false);
+              if (tbl == null) {
+                // table not found, possible case if query is create table
+                HiveDriver.LOG.info("Table " + table + " not found while extracting plan details");
+                continue;
+              }
               tablesQueried.add(table);
-              Table tbl = metastore.getTable(table);
               String costStr = tbl.getParameters().get(LensConfConstants.STORAGE_COST);
 
               Double weight = 1d;
@@ -206,6 +214,10 @@ public class HiveQueryPlan extends DriverQueryPlan {
               }
               tablePartitions.add(partConditionStr);
             }
+            break;
+          }
+          if (explainOutput.get(i).trim().startsWith("Stage: ")) {
+            // stage got changed
             break;
           }
         }
@@ -246,6 +258,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
       return ParserState.PARTITION_LIST;
     } else if (tr.equals("Partition") && state == ParserState.PARTITION_LIST) {
       return ParserState.PARTITION;
+    } else if (tr.equals("Create Table Operator")) {
+      return ParserState.CREATE;
     }
     return state;
   }

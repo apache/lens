@@ -25,10 +25,13 @@ import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForDailyAndHourly
 import static org.apache.lens.cube.parse.CubeTestSetup.getWhereForHourly2days;
 import static org.apache.lens.cube.parse.CubeTestSetup.twoDaysRange;
 
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
@@ -50,64 +53,49 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
 
   @Test
   public void testColumnErrors() throws Exception {
-    SemanticException th = null;
-    try {
-      rewrite("select dim2, SUM(msr1) from basecube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("dim2") && th.getMessage().contains("msr1"));
+    SemanticException e;
 
-    th = null;
-    try {
-      rewrite("select dim2, cityid, SUM(msr2) from basecube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    // Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(),
-    // ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("dim2") && th.getMessage().contains("cityid"));
+    e = getSemanticExceptionInRewrite("select dim2, SUM(msr1) from basecube" + " where " + twoDaysRange, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("msr1"));
 
-    th = null;
-    try {
-      rewrite("select newmeasure from basecube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    // Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(),
-    // ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("newmeasure"));
+    e = getSemanticExceptionInRewrite("select dim2, cityid, SUM(msr2) from basecube" + " where " + twoDaysRange, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
+      ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("cityid"));
 
-    // expression with fields from two different facts
-    th = null;
-    try {
-      rewrite("select msr11 + msr2 from basecube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    // Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(),
-    // ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
+    e = getSemanticExceptionInRewrite("select newmeasure from basecube" + " where " + twoDaysRange, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
+      ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("newmeasure"));
+
+    e = getSemanticExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + twoDaysRange, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
+      ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
 
     // no fact has the all the dimensions queried
-    th = null;
-    try {
-      rewrite("select dim1, cityid, msr3, msr13 from basecube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    e = getSemanticExceptionInRewrite("select dim1, cityid, msr3, msr13 from basecube" + " where " + twoDaysRange, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
+      ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
+    String regexp = String.format(CandidateTablePruneCause.CubeTableCause.COLUMN_NOT_FOUND.errorFormat,
+      "Column Sets: (.*?)", "queriable together");
+    Matcher matcher = Pattern.compile(regexp).matcher(pruneCauses.getBrief());
+    Assert.assertTrue(matcher.matches());
+    Assert.assertEquals(matcher.groupCount(), 1);
+    String columnSetsStr = matcher.group(1);
+    Assert.assertNotEquals(columnSetsStr.indexOf("cityid"), -1);
+    Assert.assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
+    Assert.assertEquals(pruneCauses.getDetails(),
+      new HashMap<String, CandidateTablePruneCause>() {
+        {
+          put("testfact3_base,testfact3_raw_base", CandidateTablePruneCause.columnNotFound("cityid"));
+          put("testfact2_raw_base,testfact2_base", CandidateTablePruneCause.columnNotFound("msr3", "msr13"));
+        }
+      }
+    );
   }
+
 
   @Test
   public void testCommonDimensions() throws Exception {
@@ -324,7 +312,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     TestCubeRewriter.compareContains(expected2, hqlQuery);
     Assert.assertTrue(hqlQuery.toLowerCase().startsWith("select mq1.expr1 expr1, mq2.msr2 msr2, mq1.expr3 expr3 from ")
         || hqlQuery.toLowerCase().startsWith("select mq1.expr1 expr1, mq1.msr2 msr2, mq2.expr3 expr3 from "));
-
     Assert.assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.expr1 = mq2.expr1"));
   }
 

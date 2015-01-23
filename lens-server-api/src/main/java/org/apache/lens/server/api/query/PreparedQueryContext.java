@@ -18,14 +18,6 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.query.LensPreparedQuery;
-import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.driver.LensDriver;
-
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -33,10 +25,22 @@ import java.util.UUID;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.query.LensPreparedQuery;
+import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.server.api.driver.LensDriver;
+
+import org.apache.hadoop.conf.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * The Class PreparedQueryContext.
  */
 public class PreparedQueryContext extends AbstractQueryContext implements Delayed {
+
+  private static final long serialVersionUID = 1L;
 
   /**
    * The prepare handle.
@@ -89,7 +93,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
-    super(query, qconf, conf, drivers);
+    super(query, user, qconf, conf, drivers);
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());
@@ -99,7 +103,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Comparable#compareTo(java.lang.Object)
    */
   @Override
@@ -109,7 +113,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.util.concurrent.Delayed#getDelay(java.util.concurrent.TimeUnit)
    */
   @Override

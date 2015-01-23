@@ -18,6 +18,8 @@
  */
 package org.apache.lens.storage.db;
 
+import java.util.Map;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.metastore.HiveMetaHook;
 import org.apache.hadoop.hive.metastore.api.MetaException;
@@ -30,8 +32,6 @@ import org.apache.hadoop.hive.serde2.SerDe;
 import org.apache.hadoop.mapred.InputFormat;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputFormat;
-
-import java.util.Map;
 
 /**
  * The Class DBStorageHandler.
@@ -46,7 +46,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.hadoop.hive.ql.metadata.HiveStorageHandler#configureInputJobProperties(org.apache.hadoop.hive.ql.plan
    * .TableDesc, java.util.Map)
@@ -57,7 +57,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.hadoop.hive.ql.metadata.HiveStorageHandler#configureJobConf(org.apache.hadoop.hive.ql.plan.TableDesc,
    * org.apache.hadoop.mapred.JobConf)
@@ -68,7 +68,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.hadoop.hive.ql.metadata.HiveStorageHandler#configureOutputJobProperties(org.apache.hadoop.hive.ql.plan
    * .TableDesc, java.util.Map)
@@ -79,7 +79,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.hadoop.hive.ql.metadata.HiveStorageHandler#configureTableJobProperties(org.apache.hadoop.hive.ql.plan
    * .TableDesc, java.util.Map)
@@ -125,7 +125,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#commitCreateTable(org.apache.hadoop.hive.metastore.api.Table)
    */
   @Override
@@ -134,7 +134,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#commitDropTable(org.apache.hadoop.hive.metastore.api.Table,
    * boolean)
    */
@@ -144,7 +144,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#preCreateTable(org.apache.hadoop.hive.metastore.api.Table)
    */
   @Override
@@ -153,7 +153,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#preDropTable(org.apache.hadoop.hive.metastore.api.Table)
    */
   @Override
@@ -162,7 +162,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#rollbackCreateTable(org.apache.hadoop.hive.metastore.api.Table)
    */
   @Override
@@ -171,7 +171,7 @@ public class DBStorageHandler implements HiveStorageHandler, HiveMetaHook {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.metastore.HiveMetaHook#rollbackDropTable(org.apache.hadoop.hive.metastore.api.Table)
    */
   @Override

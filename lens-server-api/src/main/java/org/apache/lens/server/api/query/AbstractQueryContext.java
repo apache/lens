@@ -18,20 +18,25 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
-import lombok.Setter;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Map;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.io.Serializable;
-import java.util.Collection;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public abstract class AbstractQueryContext implements Serializable {
+  private static final long serialVersionUID = 1L;
+
   /**
    * The Constant LOG
    */
@@ -66,16 +71,51 @@ public abstract class AbstractQueryContext implements Serializable {
   /**
    * The selected Driver query.
    */
-  @Getter
-  protected String driverQuery;
+  protected String selectedDriverQuery;
 
-  protected AbstractQueryContext(final String query, final LensConf qconf, final Configuration conf, final
-  Collection<LensDriver> drivers) {
+  /**
+   * The submitted user.
+   */
+  @Getter
+  private final String submittedUser; // Logged in user.
+
+  /**
+   * The lens session identifier.
+   */
+  @Getter
+  @Setter
+  private String lensSessionIdentifier;
+
+  /**
+   * Will be set to true when the selected driver query is set other than user query
+   * This will help avoiding rewrites in case of system restarts.
+   */
+  @Getter private boolean isSelectedDriverQueryExplicitlySet = false;
+
+  protected AbstractQueryContext(final String query, final String user, final LensConf qconf, final Configuration conf,
+      final Collection<LensDriver> drivers) {
     driverContext = new DriverSelectorQueryContext(query, conf, drivers);
     userQuery = query;
     this.lensConf = qconf;
     this.conf = conf;
-    this.driverQuery = query;
+    this.submittedUser = user;
+    // we are setting selectedDriverQuery as user query only when the drivers size is 1
+    // if drivers size is more than the driver query will be set after selection over drivers
+    if (drivers != null && drivers.size() == 1) {
+      this.selectedDriverQuery = query;
+      setSelectedDriver(drivers.iterator().next());
+    }
+  }
+
+  /**
+   * Set driver queries, and updates for plan from each driver in the context
+   *
+   * @param driverQueries Map of LensDriver to driver's query
+   * @throws LensException
+   */
+  public void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries) throws LensException {
+    driverContext.setDriverQueriesAndPlans(driverQueries, this);
+    isSelectedDriverQueryExplicitlySet = true;
   }
 
   /**
@@ -84,12 +124,20 @@ public abstract class AbstractQueryContext implements Serializable {
    * @return the selected driver's query
    */
   public String getSelectedDriverQuery() {
-    if (driverQuery != null) {
-      return driverQuery;
+    if (selectedDriverQuery != null) {
+      return selectedDriverQuery;
     } else if (driverContext != null) {
       return driverContext.getSelectedDriverQuery();
     }
     return null;
+  }
+
+  public String getDriverQuery(LensDriver driver) {
+    return driverContext.getDriverQuery(driver);
+  }
+
+  public Configuration getDriverConf(LensDriver driver) {
+    return driverContext.getDriverConf(driver);
   }
 
   /**
@@ -110,9 +158,10 @@ public abstract class AbstractQueryContext implements Serializable {
    * @param driverQuery
    */
   public void setSelectedDriverQuery(String driverQuery) {
-    this.driverQuery = driverQuery;
+    this.selectedDriverQuery = driverQuery;
     if (driverContext != null) {
       driverContext.setSelectedDriverQuery(driverQuery);
+      isSelectedDriverQueryExplicitlySet = true;
     }
   }
 
@@ -125,7 +174,7 @@ public abstract class AbstractQueryContext implements Serializable {
   public void setSelectedDriver(LensDriver driver) {
     if (driverContext != null) {
       driverContext.setSelectedDriver(driver);
-      driverQuery = driverContext.getSelectedDriverQuery();
+      selectedDriverQuery = driverContext.getSelectedDriverQuery();
     }
   }
 

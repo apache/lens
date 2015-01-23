@@ -17,15 +17,16 @@
  * under the License.
  */
 /*
- * 
+ *
  */
 package org.apache.lens.api.query;
 
-import lombok.*;
+import java.io.Serializable;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.io.Serializable;
+
+import lombok.*;
 
 /**
  * The Class QueryStatus.

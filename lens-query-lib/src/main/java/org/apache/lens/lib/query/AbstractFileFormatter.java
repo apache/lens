@@ -18,11 +18,12 @@
  */
 package org.apache.lens.lib.query;
 
-import org.apache.hadoop.fs.Path;
+import java.io.IOException;
+
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.query.QueryContext;
 
-import java.io.IOException;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Abstract implementation of {@link FileFormatter}, which gets column details from {@link AbstractOutputFormatter}.
@@ -41,7 +42,7 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.lib.query.AbstractOutputFormatter#init(org.apache.lens.server.api.query.QueryContext,
    * org.apache.lens.server.api.driver.LensResultSetMetadata)
    */
@@ -58,7 +59,7 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.query.QueryOutputFormatter#writeHeader()
    */
   @Override
@@ -68,7 +69,7 @@ public abstract class AbstractFileFormatter extends AbstractOutputFormatter impl
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.query.QueryOutputFormatter#writeFooter()
    */
   @Override

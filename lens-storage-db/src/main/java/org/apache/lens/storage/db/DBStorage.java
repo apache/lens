@@ -18,13 +18,14 @@
  */
 package org.apache.lens.storage.db;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Table;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.lens.cube.metadata.Storage;
 import org.apache.lens.cube.metadata.StoragePartitionDesc;
 
-import java.util.List;
-import java.util.Map;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Table;
 
 /**
  * The Class DBStorage.
@@ -88,7 +89,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.cube.metadata.Storage#addProperties()
    */
   protected void addProperties() {
@@ -104,7 +105,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.lens.cube.metadata.PartitionMetahook#commitAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
@@ -116,7 +117,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.cube.metadata.PartitionMetahook#commitDropPartition(java.lang.String,
    * java.util.List)
    */
@@ -127,7 +128,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.lens.cube.metadata.PartitionMetahook#preAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
@@ -139,7 +140,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.cube.metadata.PartitionMetahook#preDropPartition(java.lang.String, java.util.List)
    */
   @Override
@@ -148,7 +149,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.apache.lens.cube.metadata.PartitionMetahook#rollbackAddPartition(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
@@ -159,7 +160,7 @@ public class DBStorage extends Storage {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.cube.metadata.PartitionMetahook#rollbackDropPartition(java.lang.String,
    * java.util.List)
    */

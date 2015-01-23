@@ -18,23 +18,27 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.Collection;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.server.api.driver.LensDriver;
 
-import java.util.Collection;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The class ExplainQueryContext
  */
 public class ExplainQueryContext extends AbstractQueryContext {
+  private static final long serialVersionUID = 1L;
+
   /**
    * Constructor. Only needs user query and conf.
    *
    * @param query
    * @param qconf
    */
-  public ExplainQueryContext(String query, LensConf conf, Configuration qconf, Collection<LensDriver> drivers) {
-    super(query, conf, qconf, drivers);
+  public ExplainQueryContext(String query, final String user, LensConf conf, Configuration qconf,
+      Collection<LensDriver> drivers) {
+    super(query, user, conf, qconf, drivers);
   }
 }

@@ -30,38 +30,40 @@ OLAP query configuration
 *--+--+---+--+
 |3|lens.cube.query.driver.supported.storages| |List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid|
 *--+--+---+--+
-|4|lens.cube.query.enable.multi.table.select|true|Tells whether multiple tables are allowed in from clause of final HQL query|
+|4|lens.cube.query.enable.attrfields.add.distinct|true|When the query has only attribute fields projected from cube and the flag is set to true, distinct clause will be added for the projection so that no duplicate values will be projected. If flag is set to false, projection wont be changed, result might include duplicate values.|
 *--+--+---+--+
-|5|lens.cube.query.fail.if.data.partial|false|Whether to fail the query of data is partial|
+|5|lens.cube.query.enable.multi.table.select|true|Tells whether multiple tables are allowed in from clause of final HQL query|
 *--+--+---+--+
-|6|lens.cube.query.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
+|6|lens.cube.query.fail.if.data.partial|false|Whether to fail the query of data is partial|
 *--+--+---+--+
-|7|lens.cube.query.lookahead.ptparts.forinterval.${interval}|1|The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.|
+|7|lens.cube.query.join.type|INNER|Tells what the join type is, in-case of automatic resolution of joins is enabled|
 *--+--+---+--+
-|8|lens.cube.query.max.interval| |Maximum value of the update period that the query timed dimensions can take values of. For example, if query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be picked.|
+|8|lens.cube.query.lookahead.ptparts.forinterval.${interval}|1|The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.|
 *--+--+---+--+
-|9|lens.cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
+|9|lens.cube.query.max.interval| |Maximum value of the update period that the query timed dimensions can take values of. For example, if query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be picked.|
 *--+--+---+--+
-|10|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
+|10|lens.cube.query.nonexisting.partitions| |The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter|
 *--+--+---+--+
-|11|lens.cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
+|11|lens.cube.query.partition.where.clause.format| |The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition|
 *--+--+---+--+
-|12|lens.cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
+|12|lens.cube.query.pick.lightest.fact.first|false|If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates|
 *--+--+---+--+
-|13|lens.cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
+|13|lens.cube.query.process.time.partition.column| |The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.|
 *--+--+---+--+
-|14|lens.cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
+|14|lens.cube.query.promote.groupby.toselect|false|Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|15|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
+|15|lens.cube.query.promote.select.togroupby|false|Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses. To enable automatic promotion, this value should be true.|
 *--+--+---+--+
-|16|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
+|16|lens.cube.query.replace.timedim|true|Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.|
 *--+--+---+--+
-|17|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
+|17|lens.cube.query.time.range.writer.class|org.apache.lens.cube.parse.ORTimeRangeWriter|The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter|
 *--+--+---+--+
-|18|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
+|18|lens.cube.query.valid.${cubename}.facttables| |List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid|
 *--+--+---+--+
-|19|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+|19|lens.cube.query.valid.dim.storgaetables| |List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid|
 *--+--+---+--+
-|20|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
+|20|lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods| |List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid|
+*--+--+---+--+
+|21|lens.cube.query.valid.fact.${facttable}.storagetables| |List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid|
 *--+--+---+--+
 The configuration parameters and their default values

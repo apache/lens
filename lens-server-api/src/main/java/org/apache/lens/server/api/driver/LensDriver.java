@@ -18,15 +18,17 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
+import java.io.Externalizable;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 
-import java.io.Externalizable;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The Interface LensDriver.
@@ -49,12 +51,12 @@ public interface LensDriver extends Externalizable {
   /**
    * Explain the given query.
    *
-   * @param query The query should be in HiveQL(SQL like)
-   * @param conf  The query configuration
-   * @return The query plan object;
+   * @param explainCtx The explain context
+   *
+   * @return The query plan object
    * @throws LensException the lens exception
    */
-  DriverQueryPlan explain(String query, Configuration conf) throws LensException;
+  DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException;
 
   /**
    * Prepare the given query.

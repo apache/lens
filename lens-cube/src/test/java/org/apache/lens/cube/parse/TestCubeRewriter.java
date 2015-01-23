@@ -21,9 +21,7 @@ package org.apache.lens.cube.parse;
 
 import static org.testng.Assert.assertEquals;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -54,39 +52,20 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testQueryWithNow() throws Exception {
-    SemanticException th = null;
-    try {
-      rewrite("select SUM(msr2) from testCube where" + " time_range_in(dt, 'NOW - 2DAYS', 'NOW')", getConf());
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    SemanticException e = getSemanticExceptionInRewrite(
+      "select SUM(msr2) from testCube where" + " time_range_in(dt, 'NOW - 2DAYS', 'NOW')", getConf());
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
   }
 
   @Test
   public void testCandidateTables() throws Exception {
-    SemanticException th = null;
-    try {
-      rewrite("select dim12, SUM(msr2) from testCube" + " where " + twoDaysRange, getConf());
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th = getSemanticExceptionInRewrite(
+      "select dim12, SUM(msr2) from testCube" + " where " + twoDaysRange, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
 
-    try {
-      // this query should through exception because invalidMsr is invalid
-      rewrite("SELECT cityid, invalidMsr from testCube " + " where " + twoDaysRange, getConf());
-      Assert.assertTrue(false, "Should not reach here");
-    } catch (SemanticException exc) {
-      exc.printStackTrace();
-      Assert.assertNotNull(exc);
-      th = exc;
-    }
-    Assert.assertNotNull(th);
+    // this query should through exception because invalidMsr is invalid
+    th = getSemanticExceptionInRewrite(
+      "SELECT cityid, invalidMsr from testCube " + " where " + twoDaysRange, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
   }
 
@@ -102,14 +81,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
 
     // Query with column life not in the range
-    SemanticException th = null;
-    try {
-      rewrite("cube select SUM(newmeasure) from testCube" + " where " + twoDaysRange, getConf());
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th = getSemanticExceptionInRewrite(
+      "cube select SUM(newmeasure) from testCube" + " where " + twoDaysRange, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NOT_AVAILABLE_IN_RANGE.getErrorCode());
   }
 
@@ -132,16 +105,18 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     conf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
     conf.setBoolean(CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS, true);
-    SemanticException th = null;
-    try {
-      hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th = getSemanticExceptionInRewrite(
+      "select SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("missingPartitions"));
+    PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
+    Assert.assertEquals(
+      pruneCauses.getBrief().substring
+        (0, CandidateTablePruneCause.CubeTableCause.MISSING_PARTITIONS.errorFormat.length() - 3),
+      CandidateTablePruneCause.CubeTableCause.MISSING_PARTITIONS.errorFormat.substring
+        (0, CandidateTablePruneCause.CubeTableCause.MISSING_PARTITIONS.errorFormat.length() - 3)
+    );
+    Assert.assertEquals(pruneCauses.getDetails().get("testfact").getCause(),
+      CandidateTablePruneCause.CubeTableCause.MISSING_PARTITIONS);
   }
 
   @Test
@@ -155,14 +130,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     System.out.println("Non existing parts:" + rewrittenQuery.getNonExistingParts());
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
 
-    SemanticException th = null;
-    try {
-      rewrite("select SUM(msr4) from derivedCube" + " where " + twoDaysRange, getConf());
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th = getSemanticExceptionInRewrite(
+      "select SUM(msr4) from derivedCube" + " where " + twoDaysRange, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
 
     // test join
@@ -517,19 +486,47 @@ public class TestCubeRewriter extends TestQueryRewrite {
             getWhereForMonthly2months("c2_testfactmonthly"));
     compareQueries(expected, hqlQuery);
 
-    SemanticException th = null;
-    try {
-      hqlQuery =
-          rewrite("select name, SUM(msr2) from testCube" + " join citydim" + " where " + twoDaysRange
+    SemanticException th = getSemanticExceptionInRewrite(
+            "select name, SUM(msr2) from testCube" + " join citydim" + " where " + twoDaysRange
               + " group by name", getConf());
-      Assert.fail("Expected to throw exception");
-    } catch (SemanticException e) {
-      e.printStackTrace();
-      th = e;
-    }
-
-    Assert.assertNotNull(th);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_JOIN_CONDITION_AVAIABLE.getErrorCode());
+  }
+
+  @Test
+  public void testCubeGroupbyWithConstantProjected() throws Exception {
+    // check constants
+    String hqlQuery1 = rewrite("select cityid, 99, \"placeHolder\", -1001, SUM(msr2) from testCube" + " where "
+        + twoDaysRange, getConf());
+    String expected1 = getExpectedQuery(cubeName, "select testcube.cityid, 99, \"placeHolder\", -1001,"
+        + " sum(testcube.msr2) FROM ", null, " group by testcube.cityid ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected1, hqlQuery1);
+
+    // check constants with expression
+    String hqlQuery2 = rewrite(
+        "select cityid, case when stateid = 'za' then \"Not Available\" end, 99, \"placeHolder\", -1001, "
+            + "SUM(msr2) from testCube" + " where " + twoDaysRange, getConf());
+    String expected2 = getExpectedQuery(cubeName,
+        "select testcube.cityid, case when testcube.stateid = 'za' then \"Not Available\" end, 99, \"placeHolder\", -1001,"
+            + " sum(testcube.msr2) FROM ", null,
+        " group by testcube.cityid, case when testcube.stateid = 'za' then \"Not Available\" end ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected2, hqlQuery2);
+
+    // check expression with boolean and numeric constants
+    String hqlQuery3 = rewrite(
+        "select cityid,stateid + 99, 44 + stateid, stateid - 33, 999 - stateid, TRUE, FALSE, round(123.4567,2), case when stateid='za' then 99 else -1001 end,  "
+            + "SUM(msr2), SUM(msr2 + 39), SUM(msr2) + 567 from testCube" + " where " + twoDaysRange, getConf());
+    String expected3 = getExpectedQuery(
+        cubeName,
+        "select testcube.cityid, testcube.stateid + 99, 44 + testcube.stateid, testcube.stateid - 33, 999 - testcube.stateid, TRUE, FALSE, round(123.4567,2), "
+            + "case when testcube.stateid='za' then 99 else -1001 end,"
+            + " sum(testcube.msr2), sum(testcube.msr2 + 39), sum(testcube.msr2) + 567 FROM ",
+        null,
+        " group by testcube.cityid,testcube.stateid + 99, 44 + testcube.stateid, testcube.stateid - 33, 999 - testcube.stateid, "
+            + " case when testcube.stateid='za' then 99 else -1001 end ",
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+    compareQueries(expected3, hqlQuery3);
   }
 
   @Test
@@ -640,10 +637,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
             + " format_number(SUM(msr1)-(SUM(msr2)+SUM(msr3)),\"##################.###\") AS a6"
             + "  FROM testCube where " + twoDaysRange + " HAVING (SUM(msr1) >=1000)  AND (SUM(msr2)>=0.01)", conf);
     String actualExpr =
-        " join " + getDbName() + "c1_citytable citydim on testcube.cityid = citydim.id and (citydim.dt = 'latest')"
-            + " join " + getDbName()
-            + "c1_ziptable zipdim on testcube.zipcode = zipdim.code and (zipdim.dt = 'latest')  " + " join "
-            + getDbName() + "c1_statetable statedim on testcube.stateid = statedim.id and (statedim.dt = 'latest')";
+      ""
+        + " join " + getDbName() + "c1_statetable statedim on testcube.stateid = statedim.id and (statedim.dt = 'latest')"
+        + " join " + getDbName() + "c1_ziptable zipdim on testcube.zipcode = zipdim.code and (zipdim.dt = 'latest')  "
+        + " join " + getDbName() + "c1_citytable citydim on testcube.cityid = citydim.id and (citydim.dt = 'latest')"
+        + "";
     expected =
         getExpectedQuery(
             cubeName,
@@ -810,16 +808,34 @@ public class TestCubeRewriter extends TestQueryRewrite {
   public void testCubeWhereQueryForMonthWithNoPartialData() throws Exception {
     Configuration conf = getConf();
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
-    SemanticException th = null;
-    try {
-      rewrite("select SUM(msr2) from testCube" + " where " + twoMonthsRangeUptoHours, conf);
-      Assert.assertTrue(false);
-    } catch (SemanticException e) {
-      e.printStackTrace();
-      th = e;
-    }
-    Assert.assertNotNull(th);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+
+    SemanticException e = getSemanticExceptionInRewrite(
+      "select SUM(msr2) from testCube" + " where " + twoMonthsRangeUptoHours, conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
+    Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
+      CandidateTablePruneCause.CubeTableCause.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE.errorFormat,
+      new HashMap<String, CandidateTablePruneCause>() {
+        {
+          put("cheapfact", CandidateTablePruneCause.noCandidateStorages(
+            new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
+              {
+                put("C99", CandidateTablePruneCause.SkipStorageCause.UNSUPPORTED);
+              }
+            })
+          );
+          put("summary1,summary2,summary3,summary4", CandidateTablePruneCause.noCandidateStorages(
+            new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
+              {
+                put("c2", CandidateTablePruneCause.SkipStorageCause.PART_COL_DOES_NOT_EXIST);
+              }
+            })
+          );
+          put("summary1,summary2,testfact2_raw,summary3,summary4,testfactmonthly,testfact2,testfact",
+            new CandidateTablePruneCause(CandidateTablePruneCause.CubeTableCause.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE)
+          );
+        }
+      }
+    ));
   }
 
   @Test
@@ -844,35 +860,41 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
     hqlQuery = rewrite("select name, stateid from" + " citydim", conf);
     expected =
-        getExpectedQuery("citydim", "select citydim.name," + " citydim.stateid from ", null, "c2_citytable", false);
+      getExpectedQuery("citydim", "select citydim.name," + " citydim.stateid from ", null, "c2_citytable", false);
     compareQueries(expected, hqlQuery);
 
     // state table is present on c1 with partition dumps and partitions added
-    SemanticException th = null;
-    try {
-      hqlQuery = rewrite("select name, capital from statedim ", conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE.getErrorCode());
-    Assert.assertTrue(th.getMessage().contains("statedim"));
+    SemanticException e = getSemanticExceptionInRewrite("select name, capital from statedim ", conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE.getErrorCode());
+    Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
+      CandidateTablePruneCause.CubeTableCause.NO_CANDIDATE_STORAGES.errorFormat,
+      new HashMap<String, CandidateTablePruneCause>() {
+        {
+          put("statetable", CandidateTablePruneCause.noCandidateStorages(
+            new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
+              {
+                put("c1_statetable", CandidateTablePruneCause.SkipStorageCause.NO_PARTITIONS);
+              }
+            })
+          );
+        }
+      }
+    ));
 
     conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
 
     // non existing parts should be populated
     CubeQueryContext rewrittenQuery = rewriteCtx("select name, capital from statedim ", conf);
     expected =
-        getExpectedQuery("statedim", "select statedim.name," + " statedim.capital from ", null, "c1_statetable", true);
+      getExpectedQuery("statedim", "select statedim.name," + " statedim.capital from ", null, "c1_statetable", true);
     compareQueries(expected, rewrittenQuery.toHQL());
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
 
     // run a query with time range function
     hqlQuery = rewrite("select name, stateid from citydim where " + twoDaysRange, conf);
     expected =
-        getExpectedQuery("citydim", "select citydim.name," + " citydim.stateid from ", null, twoDaysRange, null,
-            "c1_citytable", true);
+      getExpectedQuery("citydim", "select citydim.name," + " citydim.stateid from ", null, twoDaysRange, null,
+        "c1_citytable", true);
     compareQueries(expected, hqlQuery);
 
     // query with alias
@@ -973,32 +995,16 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testColumnAmbiguity() throws Exception {
     String query =
-        "SELECT ambigdim1, sum(testCube.msr1) FROM testCube join" + " citydim on testcube.cityid = citydim.id where "
-            + twoDaysRange;
+      "SELECT ambigdim1, sum(testCube.msr1) FROM testCube join" + " citydim on testcube.cityid = citydim.id where "
+        + twoDaysRange;
 
-    SemanticException th = null;
-    try {
-      String hql = rewrite(query, getConf());
-      Assert.assertTrue(false, "Should not reach here:" + hql);
-    } catch (SemanticException exc) {
-      exc.printStackTrace();
-      th = exc;
-    }
-    Assert.assertNotNull(th);
+    SemanticException th = getSemanticExceptionInRewrite(query, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.AMBIGOUS_CUBE_COLUMN.getErrorCode());
 
-    th = null;
     String q2 =
-        "SELECT ambigdim2 from citydim join" + " statedim on citydim.stateid = statedim.id join countrydim on"
-            + " statedim.countryid = countrydim.id";
-    try {
-      String hql = rewrite(q2, getConf());
-      Assert.fail("Should not reach here: " + hql);
-    } catch (SemanticException exc) {
-      exc.printStackTrace();
-      th = exc;
-    }
-    Assert.assertNotNull(th);
+      "SELECT ambigdim2 from citydim join" + " statedim on citydim.stateid = statedim.id join countrydim on"
+        + " statedim.countryid = countrydim.id";
+    th = getSemanticExceptionInRewrite(q2, getConf());
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.AMBIGOUS_DIM_COLUMN.getErrorCode());
   }
 

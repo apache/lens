@@ -18,12 +18,13 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.query.AbstractQueryContext;
-import org.apache.log4j.Logger;
-
 import java.util.Collections;
 import java.util.Comparator;
+
+import org.apache.lens.server.api.query.AbstractQueryContext;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.log4j.Logger;
 
 public class MinQueryCostSelector implements DriverSelector {
   public static final Logger LOG = Logger.getLogger(MinQueryCostSelector.class);

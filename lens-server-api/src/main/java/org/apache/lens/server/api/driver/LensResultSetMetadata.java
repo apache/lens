@@ -18,16 +18,17 @@
  */
 package org.apache.lens.server.api.driver;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.lens.api.query.QueryResultSetMetadata;
+import org.apache.lens.api.query.ResultColumn;
+
 import org.apache.hadoop.hive.serde2.typeinfo.CharTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.DecimalTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.VarcharTypeInfo;
 import org.apache.hive.service.cli.ColumnDescriptor;
 import org.apache.hive.service.cli.TypeDescriptor;
-import org.apache.lens.api.query.QueryResultSetMetadata;
-import org.apache.lens.api.query.ResultColumn;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The Class LensResultSetMetadata.
@@ -68,8 +69,7 @@ public abstract class LensResultSetMetadata {
         return DecimalTypeInfo.getQualifiedName(typeDesc.getTypeQualifiers().getPrecision(),
           typeDesc.getTypeQualifiers().getScale()).toLowerCase();
       }
-    }
-    else if(typeDesc.getType().isComplexType()) {
+    } else if (typeDesc.getType().isComplexType()) {
       switch (typeDesc.getType()) {
       case ARRAY_TYPE:
       case MAP_TYPE:

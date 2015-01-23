@@ -24,6 +24,7 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.LensClient;
+import org.apache.lens.driver.hive.TestHiveDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -75,6 +76,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     testPreparedQuery(qCom);
     testShowPersistentResultSet(qCom);
     testPurgedFinishedResultSet(qCom);
+    testFailPreparedQuery(qCom);
   }
 
   /**
@@ -129,6 +131,24 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     String handles2 = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, submitTime - 1);
     Assert.assertFalse(handles2.contains(qh), handles2);
+  }
+
+  /**
+   * Test fail prepared query.
+   *
+   * @param qCom
+   *          the q com
+   * @throws Exception
+   *           the exception
+   */
+  private void testFailPreparedQuery(LensQueryCommands qCom) throws Exception {
+    client = new LensClient();
+    client.setConnectionParam("hive.exec.driver.run.hooks", TestHiveDriver.FailHook.class.getCanonicalName());
+    qCom.setClient(client);
+    String sql = "cube select id, name from test_dim";
+    final String result = qCom.explainAndPrepare(sql, "testFailPrepared");
+    Assert.assertTrue(result.contains("Explain FAILED:Error while processing statement: FAILED: Hive Internal Error:" +
+        " java.lang.ClassNotFoundException(org.apache.lens.driver.hive.TestHiveDriver.FailHook)"));
   }
 
   /**

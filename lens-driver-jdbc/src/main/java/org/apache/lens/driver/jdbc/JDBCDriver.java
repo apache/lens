@@ -22,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
@@ -31,7 +32,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
-import static org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryRewriter;
@@ -294,7 +295,7 @@ public class JDBCDriver implements LensDriver {
 
         if (conn != null) {
           try {
-            stmt = getStatement(conn);
+            stmt = createStatement(conn);
             result.stmt = stmt;
             Boolean isResultAvailable = stmt.execute(queryContext.getRewrittenQuery());
             if (isResultAvailable) {
@@ -323,17 +324,40 @@ public class JDBCDriver implements LensDriver {
     }
 
     /**
-     * Gets the statement.
+     * Create statement used to issue the query
      *
      * @param conn
-     *          the conn
-     * @return the statement
+     *          pre created SQL Connection object
+     * @return statement
      * @throws SQLException
      *           the SQL exception
      */
-    public Statement getStatement(Connection conn) throws SQLException {
-      Statement stmt = queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery()) : conn
-          .createStatement();
+    public Statement createStatement(Connection conn) throws SQLException {
+      Statement stmt;
+
+      boolean enabledRowRetrieval = queryContext.getLensContext().getSelectedDriverConf().getBoolean(
+        JDBCDriverConfConstants.JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL,
+        JDBCDriverConfConstants.DEFAULT_JDBC_ENABLE_RESULTSET_STREAMING_RETRIEVAL);
+
+      if (enabledRowRetrieval) {
+        LOG.info("JDBC streaming retrieval is enabled for " + queryContext.getLensContext().getQueryHandle());
+        if (queryContext.isPrepared()) {
+          stmt = conn.prepareStatement(queryContext.getRewrittenQuery(),
+            ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        } else {
+          stmt = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        }
+        stmt.setFetchSize(Integer.MIN_VALUE);
+      } else {
+        stmt = queryContext.isPrepared() ? conn.prepareStatement(queryContext.getRewrittenQuery())
+          : conn.createStatement();
+
+        // Get default fetch size from conf if not overridden in query conf
+        int fetchSize = queryContext.getLensContext().getSelectedDriverConf().getInt(
+          JDBCDriverConfConstants.JDBC_FETCH_SIZE, JDBCDriverConfConstants.DEFAULT_JDBC_FETCH_SIZE);
+        stmt.setFetchSize(fetchSize);
+      }
+
       stmt.setFetchDirection(ResultSet.FETCH_FORWARD);
       return stmt;
     }
@@ -536,21 +560,17 @@ public class JDBCDriver implements LensDriver {
   /**
    * Explain the given query.
    *
-   * @param query
-   *          The query should be in HiveQL(SQL like)
-   * @param conf
-   *          The query configuration
+   * @param explainCtx The explain context
    * @return The query plan object;
    * @throws LensException
    *           the lens exception
    */
   @Override
-  public DriverQueryPlan explain(String query, Configuration conf)
-      throws LensException {
+  public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
     checkConfigured();
     String explainQuery;
-    String rewrittenQuery = rewriteQuery(query, conf);
-    Configuration explainConf = new Configuration(conf);
+    String rewrittenQuery = rewriteQuery(explainCtx.getDriverQuery(this), conf);
+    Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
         false);
     String explainKeyword = explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM,
@@ -564,10 +584,8 @@ public class JDBCDriver implements LensDriver {
       explainQuery = rewrittenQuery.replaceAll("select ", "select "
           + explainKeyword + " ");
     LOG.info("Explain Query : " + explainQuery);
-    final LensDriver driver = (LensDriver) this;
-    QueryContext explainQueryCtx = new QueryContext(explainQuery, null,
-        explainConf, new ArrayList<LensDriver>() {{ add(driver); }});
-
+    QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null,
+        new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
     QueryResult result = null;
     try {
       result = executeInternal(explainQueryCtx, explainQuery);
@@ -635,7 +653,6 @@ public class JDBCDriver implements LensDriver {
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
     checkConfigured();
-    String rewritten = rewriteQuery(pContext.getSelectedDriverQuery(), conf);
     prepare(pContext);
     return new JDBCQueryPlan();
   }

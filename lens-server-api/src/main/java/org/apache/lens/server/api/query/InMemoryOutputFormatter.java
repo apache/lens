@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.lens.api.query.ResultRow;
-
 import java.io.IOException;
+
+import org.apache.lens.api.query.ResultRow;
 
 /**
  * Query result formatter, if the result from driver is in in-memory.

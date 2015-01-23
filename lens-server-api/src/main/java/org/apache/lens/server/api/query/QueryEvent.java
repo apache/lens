@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.api.query;
 
-import lombok.Getter;
+import java.util.UUID;
+
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.events.LensEvent;
 
-import java.util.UUID;
+import lombok.Getter;
 
 /**
  * A generic event related to state change of a query Subclasses must declare the specific type of change they are
@@ -79,7 +80,7 @@ public abstract class QueryEvent<T> extends LensEvent {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Object#toString()
    */
   @Override

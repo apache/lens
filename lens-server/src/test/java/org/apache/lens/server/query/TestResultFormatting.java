@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.query;
 
+import static org.testng.Assert.assertTrue;
+
 import java.io.IOException;
 import java.util.HashMap;
 
@@ -259,6 +261,13 @@ public class TestResultFormatting extends LensJerseyTest {
       if (!isDir) {
         TestQueryService.validateHttpEndPoint(target(), lensSessionId, handle, reDirectUrl);
       }
+    } else {
+      assertTrue(ctx.getSubmissionTime() > 0);
+      assertTrue(ctx.getLaunchTime() > 0);
+      assertTrue(ctx.getDriverStartTime() > 0);
+      assertTrue(ctx.getDriverFinishTime() > 0);
+      assertTrue(ctx.getFinishTime() > 0);
+      Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
     }
   }
 

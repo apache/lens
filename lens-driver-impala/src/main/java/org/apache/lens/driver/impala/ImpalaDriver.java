@@ -28,6 +28,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.log4j.Logger;
@@ -71,7 +72,7 @@ public class ImpalaDriver implements LensDriver {
    * @see org.apache.lens.server.api.driver.LensDriver#explain(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public DriverQueryPlan explain(String query, Configuration conf) {
+  public DriverQueryPlan explain(AbstractQueryContext explainCtx) {
     /*
      * QueryCost q = new QueryCost(); q.setExecMode(ExecMode.INTERACTIVE); q.setScanMode(ScanMode.FULL_SCAN);
      * q.setScanSize(-1);

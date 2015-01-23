@@ -120,4 +120,17 @@
     <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition </description>
   </property>
 
+  <property>
+    <name>lens.driver.jdbc.enable.resultset.streaming.retrieval</name>
+    <value>false</value>
+    <description>Flag to enable row by row retrieval of result set from the database server. This is used to enable
+    streaming result sets for MySQL. This is set to false by default.</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.fetch.size</name>
+    <value>1000</value>
+    <description>Fetch size for JDBC result set</description>
+  </property>
+
 </configuration>

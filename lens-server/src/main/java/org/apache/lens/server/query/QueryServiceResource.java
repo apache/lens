@@ -139,9 +139,9 @@ public class QueryServiceResource {
    *          Returns queries submitted by this user. If set to "all", returns queries of all users. By default, returns
    *          queries of the current user.
    * @param fromDate
-   *          from date to search queries in a time range
+   *          from date to search queries in a time range, the range is inclusive(submitTime >= fromDate)
    * @param toDate
-   *          to date to search queries in a time range
+   *          to date to search queries in a time range, the range is inclusive(toDate >= submitTime)
    * @return List of {@link QueryHandle} objects
    */
   @GET
@@ -187,8 +187,6 @@ public class QueryServiceResource {
    *          The configuration for the query
    * @param timeoutmillis
    *          The timeout for the query, honored only in case of {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation
-   * @param user
-   *          the user
    * @param queryName
    *          human readable query name set by user (optional parameter)
    * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation. {@link QueryPlan} in case of
@@ -202,7 +200,6 @@ public class QueryServiceResource {
   public QuerySubmitResult query(@FormDataParam("sessionid") LensSessionHandle sessionid,
       @FormDataParam("query") String query, @FormDataParam("operation") String operation,
       @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
-      @DefaultValue("") @FormDataParam("user") String user,
       @DefaultValue("") @FormDataParam("queryName") String queryName) {
     checkQuery(query);
     checkSessionId(sessionid);
@@ -239,17 +236,17 @@ public class QueryServiceResource {
    * @param state
    *          If any state is passed, all the queries in that state will be cancelled, otherwise all queries will be
    *          cancelled. Possible states are {@value QueryStatus.Status#values()} The queries in
-   *          {@value QueryStatus.Status#FAILED},{@value QueryStatus.Status#FAILED}, {@value QueryStatus.Status#CLOSED},
-   *          {@value QueryStatus.Status#UNKNOWN} cannot be cancelled
+   *          {@value QueryStatus.Status#FAILED}, {@value QueryStatus.Status#CLOSED},
+   *          {@value QueryStatus.Status#SUCCESSFUL} cannot be cancelled
    * @param user
    *          If any user is passed, all the queries submitted by the user will be cancelled, otherwise all the queries
    *          will be cancelled
    * @param queryName
    *          Cancel queries matching the query name
    * @param fromDate
-   *          the from date
+   *          the from date, inclusive(submitTime>=fromDate)
    * @param toDate
-   *          the to date
+   *          the to date, inclusive(toDate>=submitTime)
    * @return APIResult with state {@value Status#SUCCEEDED} in case of successful cancellation. APIResult with state
    *         {@value Status#FAILED} in case of cancellation failure. APIResult with state {@value Status#PARTIAL} in
    *         case of partial cancellation.

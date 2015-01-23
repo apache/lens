@@ -99,7 +99,8 @@
               <goal>jdeb</goal>
             </goals>
             <configuration>
-              <installDir>/usr/local/lens</installDir>
+              <installDir>${mvn.lens.install.dir}</installDir>
+              <controlDir>${mvn.deb.build.dir}/control</controlDir>
               <deb>${project.build.directory}/lens-server_${project.version}.deb</deb>
               <dataSet>
                 <data>
@@ -107,7 +108,7 @@
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/local/lens</prefix>
+                    <prefix>${mvn.lens.install.dir}</prefix>
                   </mapper>
                 </data>
                 <data>
@@ -115,7 +116,7 @@
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/local/lens/bin</prefix>
+                    <prefix>${mvn.lens.bin.dir}</prefix>
                     <filemode>755</filemode>
                   </mapper>
                 </data>
@@ -124,7 +125,7 @@
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>/usr/local/lens/webapp</prefix>
+                    <prefix>${mvn.lens.webapp.dir}</prefix>
                   </mapper>
                 </data>
               </dataSet>

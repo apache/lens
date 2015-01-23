@@ -18,23 +18,6 @@
  */
 package org.apache.lens.lib.query;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.io.compress.CompressionCodec;
-import org.apache.hadoop.io.compress.CompressionCodecFactory;
-import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.api.LensException;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
-import org.apache.lens.server.api.driver.MockDriver;
-import org.apache.lens.server.api.query.QueryContext;
-import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -42,6 +25,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.query.QueryContext;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
+import org.apache.hive.service.cli.ColumnDescriptor;
+
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
 
 /**
  * The Class TestAbstractFileFormatter.
@@ -222,11 +225,8 @@ public abstract class TestAbstractFileFormatter {
     } catch (LensException e) {
       Assert.fail(e.getMessage());
     }
-    QueryContext ctx = new QueryContext("test writer query", "testuser", conf, new ArrayList<LensDriver>() {
-      {
-        add(mockDriver);
-      }
-    });
+    QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser", new LensConf(),
+        conf, mockDriver, null);
 
     ctx.setSelectedDriver(mockDriver);
     formatter = createFormatter();
