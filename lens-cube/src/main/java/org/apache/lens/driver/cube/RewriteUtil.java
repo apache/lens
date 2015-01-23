@@ -254,6 +254,7 @@ public class RewriteUtil {
             LOG.info("Final rewritten query for driver:" + driver + " is: " + finalQuery);
             driverQueries.put(driver, finalQuery);
           } catch (Exception e) {
+            driverQueries.remove(driver);
             // we are catching all exceptions sothat other drivers can be picked in case of driver bugs
             LOG.warn("Driver : " + driver.getClass().getName() + " Skipped for the query rewriting due to ", e);
             rewriteFailure.append(" Driver :").append(driver.getClass().getName());

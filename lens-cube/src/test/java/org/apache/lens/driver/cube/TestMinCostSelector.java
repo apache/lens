@@ -19,7 +19,6 @@
 package org.apache.lens.driver.cube;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +37,13 @@ public class TestMinCostSelector {
 
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
                                              Map<LensDriver, String> driverQueries) throws LensException {
+    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf,  driverQueries.keySet());
+    ctx.setDriverQueriesAndPlans(driverQueries);
+    return ctx;
+  }
+
+  private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
+      List<LensDriver> drivers, Map<LensDriver, String> driverQueries) throws LensException {
     MockQueryContext ctx = new MockQueryContext(query, lensConf, conf,  driverQueries.keySet());
     ctx.setDriverQueriesAndPlans(driverQueries);
     return ctx;
@@ -83,12 +89,20 @@ public class TestMinCostSelector {
     selected = selector.select(ctx, conf);
     Assert.assertEquals(d2, selected);
 
-
     drivers.add(fd2);
     driverQueries.put(fd2, query);
     ctx = createMockContext(query, conf, qconf, driverQueries);
 
     selected = selector.select(ctx, conf);
     Assert.assertEquals(d2, selected);
+
+    drivers.clear();
+    driverQueries.clear();
+    drivers.add(d1);
+    drivers.add(fd1);
+    driverQueries.put(d1, query);
+    ctx = createMockContext(query, conf, qconf, drivers, driverQueries);
+    selected = selector.select(ctx, conf);
+    Assert.assertEquals(d1, selected);
   }
 }

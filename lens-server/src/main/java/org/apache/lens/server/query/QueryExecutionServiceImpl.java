@@ -1123,7 +1123,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle, String query, LensConf lensConf, String queryName)
     throws LensException {
     try {
-      LOG.info("ExlainAndPrepare: " + sessionHandle.toString() + " query: " + query);
+      LOG.info("ExplainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
       PreparedQueryContext prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
