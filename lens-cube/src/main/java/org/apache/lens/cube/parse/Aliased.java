@@ -18,23 +18,21 @@
  */
 package org.apache.lens.cube.parse;
 
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import org.apache.lens.cube.metadata.Named;
 
-@EqualsAndHashCode
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
 @AllArgsConstructor
 public class Aliased<T extends Named> {
-  @Getter @Setter T object;
-  @Getter @Setter String alias;
-  public String getFinalAlias() {
-    return alias == null ? object.getName() : alias;
-  }
+  T object;
+  String alias;
+
   public static <K extends Named> Aliased<K> create(K obj) {
     return create(obj, null);
   }
+
   public static <K extends Named> Aliased<K> create(K obj, String alias) {
     return new Aliased<K>(obj, alias);
   }

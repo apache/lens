@@ -171,19 +171,21 @@ class JoinResolver implements ContextRewriter {
       return root;
     }
   }
-
+  @Data
+  @ToString(exclude = "parent")
+  @EqualsAndHashCode(exclude = "parent")
   public static class JoinTree {
     //parent of the node
     JoinTree parent;
     // current table is parentRelationship.destTable;
     TableRelationship parentRelationship;
     // Alias for the join clause
-    @Getter @Setter String alias;
+    String alias;
     public Map<TableRelationship, JoinTree> subtrees = new LinkedHashMap<TableRelationship, JoinTree>();
     // Number of nodes from root to this node. depth of root is 0. Unused for now.
-    @Getter private int depthFromRoot;
+    private int depthFromRoot;
     // join type of the current table.
-    @Getter @Setter JoinType joinType;
+    JoinType joinType;
 
     public static JoinTree createRoot() {
       return new JoinTree(null, null, 0);
@@ -227,7 +229,9 @@ class JoinResolver implements ContextRewriter {
       }
       return ret;
     }
-
+    public boolean isLeaf() {
+      return this.subtrees.isEmpty();
+    }
     // Breadth First Traversal. Unused currently.
     public Iterator<JoinTree> bft() {
       return new Iterator<JoinTree>() {
@@ -280,6 +284,18 @@ class JoinResolver implements ContextRewriter {
           throw new RuntimeException("Not implemented");
         }
       };
+    }
+
+    public Set<JoinTree> leaves() {
+      Set<JoinTree> leaves = new HashSet<JoinTree>();
+      Iterator<JoinTree> dft = dft();
+      while(dft.hasNext()) {
+        JoinTree cur = dft.next();
+        if(cur.isLeaf()) {
+          leaves.add(cur);
+        }
+      }
+      return leaves;
     }
   }
 
@@ -420,16 +436,14 @@ class JoinResolver implements ContextRewriter {
         return fromString;
       }
       // Compute the merged join clause string for the min cost joinclause
-      String clause = getMergedJoinClause(cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery,
-          qdims, cubeql);
+      String clause = getMergedJoinClause(cubeql.getAutoJoinCtx().getJoinClause(fact), dimsToQuery);
 
       fromString += clause;
       return fromString;
     }
 
     // Some refactoring needed to account for multiple join paths
-    public String getMergedJoinClause(JoinClause joinClause,
-      Map<Dimension, CandidateDim> dimsToQuery, Set<Dimension> qdims, CubeQueryContext cubeql) {
+    public String getMergedJoinClause(JoinClause joinClause, Map<Dimension, CandidateDim> dimsToQuery) {
       Set<String> clauses = new LinkedHashSet<String>();
       String joinTypeStr = "";
       JoinType joinType = JoinType.INNER;
@@ -443,8 +457,6 @@ class JoinResolver implements ContextRewriter {
           joinTypeStr = getJoinTypeStr(joinType);
         }
       }
-
-      //TODO: prune from tails according to qdims.contains(dimensionAliased.getObject())) {
 
       Iterator<JoinTree> iter = joinClause.joinTree.dft();
       while (iter.hasNext()) {
@@ -734,11 +746,17 @@ class JoinResolver implements ContextRewriter {
      */
     private Iterator<JoinClause> getJoinClausesForAllPaths(final CandidateFact fact,
         final Set<Dimension> qdims, final CubeQueryContext cubeql) {
-      Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths = this.allPaths;
+      Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths;
       // if fact is passed only look at paths possible from fact to dims
       if (fact != null) {
         allPaths = pruneFactPaths(cubeql.getCube(), fact);
+      } else {
+        allPaths = new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>(this.allPaths);
       }
+      // prune allPaths with qdims
+      LOG.info("pruning allPaths before generating all permutations.");
+      pruneAllPathsWithQueriedDims(allPaths, qdims);
+
       // Number of paths in each path set
       final int groupSizes[] = new int[allPaths.values().size()];
       // Total number of elements in the cartesian product
@@ -795,6 +813,26 @@ class JoinResolver implements ContextRewriter {
           throw new UnsupportedOperationException("Cannot remove elements!");
         }
       };
+    }
+
+    /**
+     * Given allPaths, it will remove entries where key is a non-join chain dimension and not contained
+     * in qdims
+     * @param allPaths
+     * @param qdims
+     */
+    private void pruneAllPathsWithQueriedDims
+      (Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths, Set<Dimension> qdims) {
+      Iterator<Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>>> iter = allPaths.entrySet().iterator();
+      while(iter.hasNext()) {
+        Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> cur = iter.next();
+        if(cur.getKey().getAlias() == null) {
+          if(!qdims.contains(cur.getKey().getObject())) {
+            LOG.info("removing from allPaths: " + cur);
+            iter.remove();
+          }
+        }
+      }
     }
 
     public Set<Dimension> pickOptionalTables(final CandidateFact fact,
