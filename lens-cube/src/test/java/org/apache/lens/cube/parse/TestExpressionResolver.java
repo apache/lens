@@ -56,37 +56,17 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
   @Test
   public void testColumnErrors() throws Exception {
-    SemanticException th = null;
-    try {
-      rewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th;
+    th = getSemanticExceptionInRewrite("select nocolexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
     Assert.assertTrue(th.getMessage().contains("nonexist"));
 
-    th = null;
-    try {
-      rewrite("select invalidexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    th = getSemanticExceptionInRewrite("select invalidexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
     Assert.assertTrue(th.getMessage().contains("invalidexpr"));
 
     // Query with column life not in the range
-    th = null;
-    try {
-      rewrite("cube select newexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    th = getSemanticExceptionInRewrite("cube select newexpr, SUM(msr2) from testCube" + " where " + twoDaysRange, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NOT_AVAILABLE_IN_RANGE.getErrorCode());
   }
 
@@ -252,14 +232,8 @@ public class TestExpressionResolver extends TestQueryRewrite {
 
   @Test
   public void testDerivedCube() throws SemanticException, ParseException {
-    SemanticException th = null;
-    try {
-      rewrite("select avgmsr from derivedCube" + " where " + twoDaysRange, conf);
-    } catch (SemanticException e) {
-      th = e;
-      e.printStackTrace();
-    }
-    Assert.assertNotNull(th);
+    SemanticException th =
+      getSemanticExceptionInRewrite("select avgmsr from derivedCube" + " where " + twoDaysRange, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
   }
 

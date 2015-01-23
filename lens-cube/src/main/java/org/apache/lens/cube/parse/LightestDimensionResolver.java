@@ -60,8 +60,8 @@ class LightestDimensionResolver implements ContextRewriter {
           if (dimWeightMap.get(dim) > minWeight) {
             LOG.info("Not considering dimtable:" + dim + " from candidate dimension tables as it has more weight:"
                 + dimWeightMap.get(dim) + " minimum:" + minWeight);
-            cubeql.addDimPruningMsgs(entry.getKey(), dim.dimtable, new CandidateTablePruneCause(dim.dimtable.getName(),
-                CubeTableCause.MORE_WEIGHT));
+            cubeql.addDimPruningMsgs(entry.getKey(), dim.dimtable, new CandidateTablePruneCause(
+              CubeTableCause.MORE_WEIGHT));
             i.remove();
           }
         }

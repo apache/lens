@@ -210,11 +210,7 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     // Test 3 Dim only query should throw error
     String errDimOnlyQuery = "select citydim.id, testDim4.name FROM citydim where " + twoDaysRange;
-    try {
-      hql = rewrite(errDimOnlyQuery, hconf);
-      Assert.fail("dim only query should throw error");
-    } catch (SemanticException exc) {
-    }
+    getSemanticExceptionInRewrite(errDimOnlyQuery, hconf);
   }
 
   @Test

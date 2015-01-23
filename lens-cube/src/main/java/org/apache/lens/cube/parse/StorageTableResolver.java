@@ -182,8 +182,8 @@ class StorageTableResolver implements ContextRewriter {
         CandidateDim candidate = i.next();
         CubeDimensionTable dimtable = candidate.dimtable;
         if (dimtable.getStorages().isEmpty()) {
-          cubeql.addDimPruningMsgs(dim, dimtable, new CandidateTablePruneCause(dimtable.getName(),
-              CubeTableCause.MISSING_STORAGES));
+          cubeql.addDimPruningMsgs(dim, dimtable, new CandidateTablePruneCause(
+            CubeTableCause.MISSING_STORAGES));
           i.remove();
           continue;
         }
@@ -250,10 +250,7 @@ class StorageTableResolver implements ContextRewriter {
         }
         if (storageTables.isEmpty()) {
           LOG.info("Not considering dim table:" + dimtable + " as no candidate storage tables eixst");
-          CandidateTablePruneCause cause =
-              new CandidateTablePruneCause(dimtable.getName(), CubeTableCause.NO_CANDIDATE_STORAGES);
-          cause.setStorageCauses(skipStorageCauses);
-          cubeql.addDimPruningMsgs(dim, dimtable, cause);
+          cubeql.addDimPruningMsgs(dim, dimtable, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
           i.remove();
           continue;
         }
@@ -276,7 +273,7 @@ class StorageTableResolver implements ContextRewriter {
     for (Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator(); i.hasNext();) {
       CubeFactTable fact = i.next().fact;
       if (fact.getUpdatePeriods().isEmpty()) {
-        cubeql.addFactPruningMsgs(fact, new CandidateTablePruneCause(fact.getName(), CubeTableCause.MISSING_STORAGES));
+        cubeql.addFactPruningMsgs(fact, new CandidateTablePruneCause(CubeTableCause.MISSING_STORAGES));
         i.remove();
         continue;
       }
@@ -335,11 +332,11 @@ class StorageTableResolver implements ContextRewriter {
       }
       if (storageTableMap.isEmpty()) {
         LOG.info("Not considering fact table:" + fact + " as it does not" + " have any storage tables");
-        CandidateTablePruneCause cause =
-            new CandidateTablePruneCause(fact.getName(), CubeTableCause.NO_CANDIDATE_STORAGES);
-        cause.setStorageCauses(skipStorageCauses);
-        cause.setUpdatePeriodCauses(updatePeriodCauses);
-        cubeql.addFactPruningMsgs(fact, cause);
+        cubeql.addFactPruningMsgs(fact,
+          updatePeriodCauses.isEmpty() ?
+            CandidateTablePruneCause.noCandidateStorages(skipStorageCauses) :
+            CandidateTablePruneCause.noCandidateStorages(skipStorageCauses, updatePeriodCauses)
+        );
         i.remove();
       }
     }
@@ -387,17 +384,14 @@ class StorageTableResolver implements ContextRewriter {
         LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
             + cubeql.getTimeRanges());
         if (!skipStorageCauses.isEmpty()) {
-          CandidateTablePruneCause cause = new CandidateTablePruneCause(cfact.fact.getName(), skipStorageCauses);
+          CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
         }
         if (!nonExistingParts.isEmpty()) {
-          CandidateTablePruneCause cause =
-              new CandidateTablePruneCause(cfact.fact.getName(), CubeTableCause.MISSING_PARTITIONS);
-          cause.setMissingPartitions(nonExistingParts);
-          cubeql.addFactPruningMsgs(cfact.fact, cause);
+          cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
         } else {
           CandidateTablePruneCause cause =
-              new CandidateTablePruneCause(cfact.fact.getName(), CubeTableCause.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
+              new CandidateTablePruneCause(CubeTableCause.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
         }
         i.remove();
@@ -408,10 +402,7 @@ class StorageTableResolver implements ContextRewriter {
       boolean enabledMultiTableSelect = StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
       if (minimalStorageTables.isEmpty()) {
         LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
-        CandidateTablePruneCause cause =
-            new CandidateTablePruneCause(cfact.fact.getName(), CubeTableCause.NO_CANDIDATE_STORAGES);
-        cause.setStorageCauses(skipStorageCauses);
-        cubeql.addFactPruningMsgs(cfact.fact, cause);
+        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
         i.remove();
         continue;
       }

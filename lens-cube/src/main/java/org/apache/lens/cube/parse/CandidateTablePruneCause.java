@@ -38,8 +38,10 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
@@ -47,33 +49,98 @@ import org.codehaus.jackson.annotate.JsonWriteNullProperties;
  * Contains the cause why a candidate table is not picked for answering the
  * query
  */
+
 @JsonWriteNullProperties(false)
+@Data
+@NoArgsConstructor
 public class CandidateTablePruneCause {
 
   public enum CubeTableCause {
     // invalid cube table
-    INVALID,
-    // column not found in cube table
-    COLUMN_NOT_FOUND,
+    INVALID("Invalid cube Table provided in query"),
     // column not valid in cube table
-    COLUMN_NOT_VALID,
-    // missing partitions for cube table
-    MISSING_PARTITIONS,
-    // missing storage tables for cube table
-    MISSING_STORAGES,
-    // no candidate storges for cube table, storage cause will have why each
-    // storage is not a candidate
-    NO_CANDIDATE_STORAGES,
-    // cube table has more weight
-    MORE_WEIGHT,
-    // cube table has more partitions
-    MORE_PARTITIONS,
-    // cube table is an aggregated fact and queried column is not under default
-    // aggregate
-    MISSING_DEFAULT_AGGREGATE, NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE, NO_COLUMN_PART_OF_A_JOIN_PATH,
+    COLUMN_NOT_VALID("Column not valid in cube table"),
+    // column not found in cube table
+    COLUMN_NOT_FOUND("%s are not %s"){
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        if(causes.size() == 1) {
+          return new String[] {
+            "Columns " + causes.iterator().next().getMissingColumns(),
+            "present in any table"
+          };
+        } else {
+          List<List<String>> columnSets = new ArrayList<List<String>>();
+          for(CandidateTablePruneCause cause: causes) {
+            columnSets.add(cause.getMissingColumns());
+          }
+          return new String[]{
+            "Column Sets: " + columnSets,
+            "queriable together"
+          };
+        }
+      }
+    },
     // candidate table tries to get denormalized field from dimension and the
     // referred dimension is invalid.
-    INVALID_DENORM_TABLE
+    INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
+    // missing storage tables for cube table
+    MISSING_STORAGES("Missing storage tables for the cube table"),
+    // no candidate storges for cube table, storage cause will have why each
+    // storage is not a candidate
+    NO_CANDIDATE_STORAGES("No candidate storages for any table"),
+    // cube table has more weight
+    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
+    NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        List<String> columns = new ArrayList<String>();
+        for(CandidateTablePruneCause cause: causes) {
+          columns.addAll(cause.getJoinColumns());
+        }
+        return new String[]{columns.toString()};
+      }
+    },
+    MORE_WEIGHT("Picked table Had more weight than minimum."),
+    // cube table has more partitions
+    MORE_PARTITIONS("Picked Table has more partitions than minimum"),
+    // cube table is an aggregated fact and queried column is not under default
+    // aggregate
+    MISSING_DEFAULT_AGGREGATE("Columns: [%s] are missing default aggregate"){
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        List<String> columns = new ArrayList<String>();
+        for(CandidateTablePruneCause cause: causes) {
+          columns.addAll(cause.getColumnsMissingDefaultAggregate());
+        }
+        return new String[]{columns.toString()};
+      }
+    },
+    // missing partitions for cube table
+    MISSING_PARTITIONS("Missing partitions for the cube table: %s"){
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        List<List<String>> missingPartitions = new ArrayList<List<String>>();
+        for(CandidateTablePruneCause cause: causes) {
+          missingPartitions.add(cause.getMissingPartitions());
+        }
+        return new String[] {missingPartitions.toString()};
+      }
+    },
+    ;
+
+
+    String errorFormat;
+    CubeTableCause(String format) {
+      this.errorFormat = format;
+    }
+    Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+      return null;
+    }
+
+    String getBriefError(Set<CandidateTablePruneCause> causes) {
+      try {
+        return String.format(errorFormat, getFormatPlaceholders(causes));
+      } catch(NullPointerException e) {
+        return name();
+      }
+    }
   }
 
   public enum SkipStorageCause {
@@ -91,7 +158,7 @@ public class CandidateTablePruneCause {
     // partition column does not exist
     PART_COL_DOES_NOT_EXIST,
     // storage is not supported by execution engine
-    UNSUPPORTED;
+    UNSUPPORTED
   }
 
   public enum SkipUpdatePeriodCause {
@@ -101,7 +168,7 @@ public class CandidateTablePruneCause {
     QUERY_INTERVAL_BIGGER
   }
 
-  private String cubeTableName;
+
   // cause for cube table
   private CubeTableCause cause;
   // storage to skip storage cause
@@ -112,119 +179,71 @@ public class CandidateTablePruneCause {
   private List<String> missingPartitions;
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
+  // populated in case of missing columns
+  private List<String> missingColumns;
+  // populated in case of no column part of a join path
+  private List<String> joinColumns;
+  // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
+  private List<String> columnsMissingDefaultAggregate;
 
-  public CandidateTablePruneCause() {
-  }
-
-  public CandidateTablePruneCause(String name, CubeTableCause cause) {
-    this.cubeTableName = name;
+  public CandidateTablePruneCause(CubeTableCause cause) {
     this.cause = cause;
   }
 
-  public CandidateTablePruneCause(String name, Map<String, SkipStorageCause> storageCauses) {
-    this.cubeTableName = name;
-    this.storageCauses = storageCauses;
-    this.cause = CubeTableCause.NO_CANDIDATE_STORAGES;
-  }
+  // Different static constructors for different causes.
 
-  public CandidateTablePruneCause(String name, Map<String, SkipStorageCause> storageCauses,
-      Map<String, Map<String, SkipUpdatePeriodCause>> updatePeriodCauses) {
-    this.cubeTableName = name;
-    this.storageCauses = storageCauses;
-    this.cause = CubeTableCause.NO_CANDIDATE_STORAGES;
-    this.updatePeriodCauses = updatePeriodCauses;
-  }
-
-  /**
-   * Get name of table
-   * 
-   * @return name
-   */
-  public String getCubeTableName() {
-    return cubeTableName;
-  }
-
-  /**
-   * Set name
-   * 
-   * @param name
-   */
-  public void setCubeTableName(String name) {
-    this.cubeTableName = name;
-  }
-
-  /**
-   * @return the cause
-   */
-  public CubeTableCause getCause() {
+  public static CandidateTablePruneCause columnNotFound(Collection<String> missingColumns) {
+    List<String> colList = new ArrayList<String>();
+    colList.addAll(missingColumns);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.COLUMN_NOT_FOUND);
+    cause.setMissingColumns(colList);
     return cause;
   }
-
-  /**
-   * @param cause
-   *          the cause to set
-   */
-  public void setCause(CubeTableCause cause) {
-    this.cause = cause;
+  public static CandidateTablePruneCause columnNotFound(String... columns) {
+    List<String> colList = new ArrayList<String>();
+    for(String column: columns) {
+      colList.add(column);
+    }
+    return columnNotFound(colList);
   }
-
-  /**
-   * @return the storageCauses
-   */
-  public Map<String, SkipStorageCause> getStorageCauses() {
-    return storageCauses;
+  public static CandidateTablePruneCause missingPartitions(List<String> nonExistingParts) {
+    CandidateTablePruneCause cause =
+      new CandidateTablePruneCause(CubeTableCause.MISSING_PARTITIONS);
+    cause.setMissingPartitions(nonExistingParts);
+    return cause;
   }
-
-  /**
-   * @param storageCauses
-   *          the storageCauses to set
-   */
-  public void setStorageCauses(Map<String, SkipStorageCause> storageCauses) {
-    this.storageCauses = storageCauses;
+  public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
+    CandidateTablePruneCause cause =
+      new CandidateTablePruneCause(CubeTableCause.NO_COLUMN_PART_OF_A_JOIN_PATH);
+    cause.setJoinColumns(new ArrayList<String>(){
+      {
+        addAll(colSet);
+      }
+    });
+    return cause;
   }
-
-  /**
-   * @return the updatePeriodCauses
-   */
-  public Map<String, Map<String, SkipUpdatePeriodCause>> getUpdatePeriodCauses() {
-    return updatePeriodCauses;
+  public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.NO_CANDIDATE_STORAGES);
+    cause.setStorageCauses(new HashMap<String, SkipStorageCause>());
+    for(Map.Entry<String, SkipStorageCause> entry: storageCauses.entrySet()) {
+      String key = entry.getKey();
+      key = key.substring(0, (key.indexOf("_") + key.length() + 1) % (key.length() + 1) ); // extract the storage part
+      cause.getStorageCauses().put(key, entry.getValue());
+    }
+    return cause;
   }
-
-  /**
-   * @param updatePeriodCauses
-   *          the updatePeriodCauses to set
-   */
-  public void setUpdatePeriodCauses(Map<String, Map<String, SkipUpdatePeriodCause>> updatePeriodCauses) {
-    this.updatePeriodCauses = updatePeriodCauses;
+  public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> skipStorageCauses,
+    Map<String, Map<String, SkipUpdatePeriodCause>> updatePeriodCauses) {
+    CandidateTablePruneCause cause = noCandidateStorages(skipStorageCauses);
+    cause.setUpdatePeriodCauses(updatePeriodCauses);
+    return cause;
   }
-
-  /**
-   * @return the missingPartitions
-   */
-  public List<String> getMissingPartitions() {
-    return missingPartitions;
-  }
-
-  /**
-   * @param missingPartitions
-   *          the missingPartitions to set
-   */
-  public void setMissingPartitions(List<String> missingPartitions) {
-    this.missingPartitions = missingPartitions;
-  }
-
-  /**
-   * @return the missingUpdatePeriods
-   */
-  public List<String> getMissingUpdatePeriods() {
-    return missingUpdatePeriods;
-  }
-
-  /**
-   * @param missingUpdatePeriods
-   *          the missingUpdatePeriods to set
-   */
-  public void setMissingUpdatePeriods(List<String> missingUpdatePeriods) {
-    this.missingUpdatePeriods = missingUpdatePeriods;
+  public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.MISSING_DEFAULT_AGGREGATE);
+    cause.setColumnsMissingDefaultAggregate(new ArrayList<String>());
+    for(String name: names) {
+      cause.getColumnsMissingDefaultAggregate().add(name);
+    }
+    return cause;
   }
 }

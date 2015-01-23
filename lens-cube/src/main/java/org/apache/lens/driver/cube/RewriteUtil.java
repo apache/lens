@@ -129,7 +129,6 @@ public class RewriteUtil {
             if (parent.getToken().getType() == HiveParser.TOK_SUBQUERY) {
               // less for the next start and for close parenthesis
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine(), ")");
-              ;
             } else if (parent.getToken().getType() == HiveParser.TOK_UNION) {
               // one less for the next start and less the size of string 'UNION ALL'
               cqi.endPos = getEndPos(originalQuery, parent.getChild(ci + 1).getCharPositionInLine() - 1, "UNION ALL");
@@ -209,8 +208,7 @@ public class RewriteUtil {
    * @return the replaced query
    */
   static String getReplacedQuery(final String query) {
-    String finalQuery = query.replaceAll("[\\n\\r]", " ").replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ");
-    return finalQuery;
+    return query.replaceAll("[\\n\\r]", " ").replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ").trim();
   }
 
   /**

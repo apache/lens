@@ -22,12 +22,14 @@ package org.apache.lens.cube.parse;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.parse.CubeQueryConfUtil;
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestDenormalizationResolver extends TestQueryRewrite {
 
@@ -62,15 +64,8 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
             " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
           getNotLatestConditions(cubeName, "it", "C2_summary4"));
     TestCubeRewriter.compareQueries(expecteddim2big2, hqlQuery);
-    Throwable th = null;
-    try {
-      hqlQuery = rewrite("select dim2bignew, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
-      Assert.fail();
-    } catch (SemanticException e) {
-      e.printStackTrace();
-      th = e;
-    }
-    Assert.assertNotNull(th);
+    getSemanticExceptionInRewrite(
+      "select dim2bignew, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
 
     hqlQuery =
         rewrite("select testdim3.name, dim2big1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
@@ -140,17 +135,28 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
                 + "on testcube.dim2 = testdim2.id AND (testdim2.dt = 'latest')" + " join " + getDbName()
                 + "c1_testdim3tbl testdim3 on " + "testdim2.testdim3id = testdim3.id AND (testdim3.dt = 'latest')",
             null, " group by testdim3.name, (testdim2.bigid1)", null,
-            getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
+          getWhereForDailyAndHourly2days(cubeName, "c1_summary2"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
-
-    Throwable th = null;
-    try {
-      hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysRange, tconf);
-      Assert.fail();
-    } catch (SemanticException e) {
-      th = e;
-    }
-    Assert.assertNotNull(th);
+    SemanticException e = getSemanticExceptionInRewrite(
+      "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysRange, tconf);
+    Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
+      CandidateTablePruneCause.CubeTableCause.NO_CANDIDATE_STORAGES.errorFormat,
+      new HashMap<String, CandidateTablePruneCause>() {
+        {
+          put("summary2,testfact2_raw,summary3",
+            new CandidateTablePruneCause(CandidateTablePruneCause.CubeTableCause.INVALID_DENORM_TABLE));
+          put("summary4", CandidateTablePruneCause.noCandidateStorages(
+            new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
+              {
+                put("C2", CandidateTablePruneCause.SkipStorageCause.UNSUPPORTED);
+              }
+            })
+          );
+          put("summary1,cheapfact,testfactmonthly,testfact2,testfact",
+            CandidateTablePruneCause.columnNotFound("dim2big1", "dim2"));
+        }
+      }
+    ));
   }
 
   @Test
@@ -158,29 +164,24 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     String hqlQuery = rewrite("select citydim.name, citydim.statename from" + " citydim", conf);
 
     String joinExpr =
-        " join " + getDbName() + "c1_statetable statedim on"
-            + " citydim.stateid = statedim.id and (statedim.dt = 'latest')";
+      " join " + getDbName() + "c1_statetable statedim on"
+        + " citydim.stateid = statedim.id and (statedim.dt = 'latest')";
     String expected =
-        getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null, "c1_citytable",
-            true);
+      getExpectedQuery("citydim", "SELECT citydim.name, statedim.name FROM ", joinExpr, null, null, "c1_citytable",
+        true);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select citydim.statename, citydim.name  from" + " citydim", conf);
 
     expected =
-        getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null, "c1_citytable",
-            true);
+      getExpectedQuery("citydim", "SELECT statedim.name, citydim.name FROM ", joinExpr, null, null, "c1_citytable",
+        true);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     // Query would fail because citydim.nocandidatecol does not exist in any candidate
-    Throwable th = null;
-    try {
-      hqlQuery = rewrite("select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
-      Assert.fail();
-    } catch (SemanticException e) {
-      e.printStackTrace();
-      th = e;
-    }
-    Assert.assertNotNull(th);
+    SemanticException e = getSemanticExceptionInRewrite(
+      "select citydim.name, citydim.statename, citydim.nocandidatecol from citydim", conf);
+    Assert.assertEquals(e.getMessage(),
+      "No dimension table has the queried columns for citydim, columns: [name, statename, nocandidatecol]");
   }
 }

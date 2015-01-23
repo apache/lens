@@ -840,8 +840,8 @@ class JoinResolver implements ContextRewriter {
             i.remove();
             LOG.info("Not considering dimtable:" + dimtable + " as its columns are"
                 + " not part of any join paths. Join columns:" + minCostClause.chainColumns.get(dim));
-            cubeql.addDimPruningMsgs(dim, cdim.dimtable, new CandidateTablePruneCause(dimtable.getName(),
-                CubeTableCause.NO_COLUMN_PART_OF_A_JOIN_PATH));
+            cubeql.addDimPruningMsgs(dim, cdim.dimtable,
+              CandidateTablePruneCause.noColumnPartOfAJoinPath(minCostClause.chainColumns.get(dim)));
             break;
           }
         }
@@ -1025,14 +1025,14 @@ class JoinResolver implements ContextRewriter {
                   LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
                   cubeql.getCandidateFactTables().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-                      ((CandidateFact) candidate).fact.getName(), CubeTableCause.COLUMN_NOT_FOUND));
+                    CubeTableCause.COLUMN_NOT_FOUND));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
                 LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
                 cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
                 cubeql.addDimPruningMsgs(
                   (Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
-                    new CandidateTablePruneCause(candidate.getName(), CubeTableCause.COLUMN_NOT_FOUND)
+                    new CandidateTablePruneCause(CubeTableCause.COLUMN_NOT_FOUND)
                 );
               }
             }
