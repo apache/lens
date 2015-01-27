@@ -97,7 +97,7 @@ public class TestUserConfigLoader {
   public void testPropertyBased() throws LensException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/propertybased.xml"));
     conf.set(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME,
-        TestUserConfigLoader.class.getResource("/user/propertybased.txt").getPath());
+        TestUserConfigLoader.class.getResource("/user/propertybased.data").getPath());
     UserConfigLoaderFactory.init(conf);
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), new HashMap<String, String>() {
       {

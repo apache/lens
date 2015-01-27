@@ -279,7 +279,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     TestLensDimensionCommands.createDimension();
     TestLensDimensionTableCommands.addDim1Table("dim_table", "dim_table.xml", "dim_table_storage.xml", "local");
 
-    URL dataFile = TestLensQueryCommands.class.getClassLoader().getResource("data.txt");
+    URL dataFile = TestLensQueryCommands.class.getClassLoader().getResource("data.data");
 
     QueryHandle qh = client.executeQueryAsynch(
         "LOAD DATA LOCAL INPATH '" + new File(dataFile.toURI()).getAbsolutePath()

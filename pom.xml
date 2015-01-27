@@ -357,34 +357,36 @@
           <useIdeaDefaultExcludes>true</useIdeaDefaultExcludes>
           <useEclipseDefaultExcludes>true</useEclipseDefaultExcludes>
           <excludes>
-            <exclude>**/*.txt</exclude>
+            <exclude>README.*</exclude>
+            <exclude>DEPENDENCIES</exclude>
+            <!-- Local git repo -->
             <exclude>.git/**</exclude>
+            <!-- For connecting to ReviewBoard thru rbt tools-->
             <exclude>.reviewboardrc</exclude>
+            <!-- IDE files -->
             <exclude>.idea/**</exclude>
-            <exclude>**/*.twiki</exclude>
             <exclude>**/*.iml</exclude>
-            <exclude>**/target/**</exclude>
-            <exclude>**/activemq-data/**</exclude>
-            <exclude>**/build/**</exclude>
-            <exclude>*.patch</exclude>
-            <exclude>**/*.log</exclude>
-            <exclude>**/logs/**</exclude>
             <exclude>**/.classpath</exclude>
             <exclude>**/.project</exclude>
             <exclude>**/.checkstyle</exclude>
             <exclude>**/.settings/**</exclude>
-            <exclude>**/test-output/**</exclude>
             <exclude>**/maven-eclipse.xml</exclude>
             <exclude>**/.externalToolBuilders/**</exclude>
-            <exclude>.gitignore</exclude>
-            <exclude>README.*</exclude>
+            <!-- Build directories - target for maven build/ for other tools like sloccount -->
+            <exclude>**/target/**</exclude>
+            <exclude>**/build/**</exclude>
+            <!-- To make developer life easy. Source wont have these files -->
             <exclude>**/*.diff</exclude>
+            <exclude>*.patch</exclude>
+            <exclude>**/*.log</exclude>
+            <!-- .png files constitute images required for documentation. .pptx contain the sources for images -->
             <exclude>**/*.png</exclude>
             <exclude>**/*.pptx</exclude>
-            <exclude>**/*.jar</exclude>
+            <!-- .data files are used to hold data for loading into tables - used in tests and examples -->
             <exclude>**/*.data</exclude>
-            <exclude>**/control</exclude>
-            <exclude>**/query_logs/**</exclude>
+            <!-- Used on ui -->
+            <exclude>**/codemirror.min.*</exclude>
+            <exclude>**/*.js</exclude>
           </excludes>
         </configuration>
         <executions>
@@ -408,7 +410,10 @@
           <canUpdateCopyright>true</canUpdateCopyright>
           <canUpdateDescription>true</canUpdateDescription>
           <excludes>
-            <exclude>**/*.txt</exclude>
+            <exclude>**/*.diff</exclude>
+            <exclude>*.patch</exclude>
+            <exclude>**/*.log</exclude>
+            <exclude>**/*.data</exclude>
             <exclude>**/README.*</exclude>
           </excludes>
         </configuration>

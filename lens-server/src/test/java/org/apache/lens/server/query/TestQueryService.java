@@ -165,7 +165,7 @@ public class TestQueryService extends LensJerseyTest {
   private static String testTable = "TEST_TABLE";
 
   /** The Constant TEST_DATA_FILE. */
-  public static final String TEST_DATA_FILE = "./testdata/testdata2.txt";
+  public static final String TEST_DATA_FILE = "./testdata/testdata2.data";
 
   /**
    * Creates the table.

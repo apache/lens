@@ -111,7 +111,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       return;
     }
 
-    dataFile = new File("target/testdata.txt");
+    dataFile = new File("target/testdata.data");
     dataFile.deleteOnExit();
 
     PrintWriter dataFileOut = new PrintWriter(dataFile);
@@ -144,7 +144,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.loadData("test_server_restart", "target/testdata.data", target(), lensSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -242,7 +242,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.data", target(), lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");

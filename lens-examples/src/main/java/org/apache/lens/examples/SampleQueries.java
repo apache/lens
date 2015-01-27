@@ -98,8 +98,8 @@ public class SampleQueries {
    *           Signals that an I/O exception has occurred.
    */
   public void queryAll() throws IOException {
-    runQueries("dimension-queries.txt");
-    runQueries("cube-queries.txt");
+    runQueries("dimension-queries.sql");
+    runQueries("cube-queries.sql");
     System.out.println("Successful queries " + success + " out of " + total + "queries");
   }
 

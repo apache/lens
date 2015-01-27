@@ -60,7 +60,7 @@ import org.testng.annotations.Test;
 @Test(groups = "unit-test")
 public class TestResultFormatting extends LensJerseyTest {
 
-  private static final String TEST_DATA_FILE = "./testdata/testdata2.txt";
+  private static final String TEST_DATA_FILE = "./testdata/testdata2.data";
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 

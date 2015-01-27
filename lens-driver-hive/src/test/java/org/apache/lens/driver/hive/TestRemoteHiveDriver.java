@@ -385,7 +385,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
       partDir.mkdir();
 
       // Create data file
-      File data = new File(partDir, "data.txt");
+      File data = new File(partDir, "data.data");
       FileUtils.writeLines(data, Arrays.asList("one", "two", "three", "four", "five"));
 
       System.out.println("@@ Adding partition " + i);

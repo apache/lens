@@ -60,7 +60,7 @@ import org.testng.annotations.Test;
 public class TestHiveDriver {
 
   /** The Constant TEST_DATA_FILE. */
-  public static final String TEST_DATA_FILE = "testdata/testdata1.txt";
+  public static final String TEST_DATA_FILE = "testdata/testdata1.data";
 
   /** The test output dir. */
   public final String TEST_OUTPUT_DIR = "target/" + this.getClass().getSimpleName() + "/test-output";
@@ -805,7 +805,7 @@ public class TestHiveDriver {
       HiveDriver.HOURLY_PARTITION_WEIGHT_DEFAULT
     );
     BufferedReader br = new BufferedReader(new InputStreamReader(
-      TestHiveDriver.class.getResourceAsStream("/priority_tests.txt")));
+      TestHiveDriver.class.getResourceAsStream("/priority_tests.data")));
     String line;
     while((line = br.readLine()) != null) {
       String[] kv = line.split("\\s*:\\s*");
