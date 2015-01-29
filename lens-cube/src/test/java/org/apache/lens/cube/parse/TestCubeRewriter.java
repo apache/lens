@@ -27,9 +27,11 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.processors.CommandProcessorResponse;
 import org.apache.lens.cube.metadata.*;
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -1418,5 +1420,74 @@ public class TestCubeRewriter extends TestQueryRewrite {
       exc.printStackTrace();
       Assert.fail("Query should be rewritten successfully.");
     }
+  }
+
+  @Test
+  public void testInTimeRangeWriterWithHQL() throws Exception {
+    // For queries with large number of partitions, the where clause generated using
+    // the ORTimeRangeWriter causes a stack overflow exception because the operator tree of the where clause
+    // gets too deep.
+
+    // In this test, we rewrite the query once with the InTimeRangeWriter and once with ORTimeRangeWriter
+    // Explain extended for the  query rewritten with IN clauses passes, while the OR query fails with
+    // stack overflow.
+
+    // Also, we can verify by printing the explain output that partitions are indeed getting identified with
+    // the IN clause
+
+
+    // Test 1 - check for contained part columns
+    String twoDaysITRange =
+      "time_range_in(it, '" + CubeTestSetup.getDateUptoHours(twodaysBack) + "','"
+        + CubeTestSetup.getDateUptoHours(now) + "')";
+    String query = "select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange;
+
+    HiveConf conf = new HiveConf(getConf(), TestCubeRewriter.class);
+    conf.set(CubeQueryConfUtil.PROCESS_TIME_PART_COL, "pt");
+    conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
+      AbridgedTimeRangeWriter.class.asSubclass(TimeRangeWriter.class), TimeRangeWriter.class);
+
+    CubeQueryRewriter rewriter = new CubeQueryRewriter(conf);
+    CubeQueryContext context = rewriter.rewrite(query);
+    String hqlWithInClause = context.toHQL();
+    System.out.println("@@ HQL with IN and OR: " + hqlWithInClause);
+
+    // Run explain on this command, it should pass successfully.
+    CommandProcessorResponse inExplainResponse = runExplain(hqlWithInClause, conf);
+    Assert.assertNotNull(inExplainResponse);
+    Assert.assertTrue(hqlWithInClause.contains("in") &&
+      (hqlWithInClause.contains("OR") || hqlWithInClause.contains("or")));
+
+    // Test 2 - check for single part column
+    // Verify for large number of partitions, single column. This is just to check if we don't see
+    // errors on explain of large conditions
+    String largePartQuery = "SELECT msr1 from testCube WHERE " + twoMonthsRangeUptoHours;
+    HiveConf largeConf = new HiveConf(getConf(), TestCubeRewriter.class);
+    largeConf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
+      AbridgedTimeRangeWriter.class.asSubclass(TimeRangeWriter.class), TimeRangeWriter.class);
+
+    CubeQueryRewriter largePartQueryRewriter = new CubeQueryRewriter(largeConf);
+    CubeQueryContext largePartQueryContext = largePartQueryRewriter.rewrite(largePartQuery);
+    String largePartRewrittenQuery = largePartQueryContext.toHQL();
+    CommandProcessorResponse response = runExplain(largePartRewrittenQuery, largeConf);
+    Assert.assertNotNull(response);
+    Assert.assertTrue(largePartRewrittenQuery.contains("in"));
+  }
+
+  private CommandProcessorResponse runExplain(String hql, HiveConf conf) throws Exception {
+    Driver hiveDriver = new Driver(conf, "anonymous");
+    CommandProcessorResponse response = hiveDriver.run("EXPLAIN EXTENDED " + hql);
+    hiveDriver.resetFetch();
+    hiveDriver.setMaxRows(Integer.MAX_VALUE);
+    List<Object> explainResult = new ArrayList<Object>();
+    hiveDriver.getResults(explainResult);
+
+    for (Object explainRow : explainResult) {
+      // Print the following to stdout to check partition output.
+      // Not parsing the output because it will slow down the test
+      Assert.assertNotNull(explainRow.toString());
+    }
+
+    return response;
   }
 }
