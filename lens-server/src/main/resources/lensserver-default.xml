@@ -457,30 +457,6 @@
   </description>
 </property>
 <property>
-  <name>lens.server.user.resolver.db.driver.name</name>
-  <value>org.hsqldb.jdbcDriver</value>
-  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
-      For database based user config loaders, the database driver class</description>
-</property>
-<property>
-  <name>lens.server.user.resolver.db.jdbc.url</name>
-  <value>jdbc:hsqldb:/tmp/lens_user_config_loader.db</value>
-  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
-      For database based user config loaders, jdbc url of the database</description>
-</property>
-<property>
-  <name>lens.server.user.resolver.db.jdbc.username</name>
-  <value>SA</value>
-  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
-      For database based user config loaders, the jdbc username</description>
-</property>
-<property>
-  <name>lens.server.user.resolver.db.jdbc.password</name>
-  <value></value>
-  <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
-      For database based user config loaders, the jdbc password</description>
-</property>
-<property>
   <name>lens.server.user.resolver.db.keys</name>
   <value>lens.session.cluster.user,mapred.job.queue.name</value>
   <description>Required for DATABASE and LDAP_BACKED_DATABASE user resolvers.
