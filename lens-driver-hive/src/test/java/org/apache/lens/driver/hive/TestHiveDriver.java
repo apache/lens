@@ -103,7 +103,6 @@ public class TestHiveDriver {
     sessionid = SessionState.get().getSessionId();
 
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
-    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     QueryContext context = createContext("USE " + DATA_BASE, conf);
     driver.execute(context);
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
@@ -173,8 +172,7 @@ public class TestHiveDriver {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + "(ID STRING)" + " TBLPROPERTIES ('"
         + LensConfConstants.STORAGE_COST + "'='500')";
-    conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    // Craete again
+    // Create test table
     QueryContext context = createContext(createTable, conf);
     LensResultSet resultSet = driver.execute(context);
     assertNull(resultSet);
@@ -672,8 +670,10 @@ public class TestHiveDriver {
     pctx.setSelectedDriver(driver);
 
     SessionState.setCurrentSessionState(ss);
+    HiveConf inConf = new HiveConf(conf);
+    inConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     plan = driver.explainAndPrepare(pctx);
-    QueryContext qctx = createContext(pctx, conf);
+    QueryContext qctx = createContext(pctx, inConf);
     LensResultSet result = driver.execute(qctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
     validateInMemoryResult(result);
@@ -682,14 +682,14 @@ public class TestHiveDriver {
     qctx = createContext(pctx, conf);
     driver.executeAsync(qctx);
     assertNotNull(qctx.getDriverOpHandle());
-    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, true, false);
     Assert.assertEquals(1, driver.getHiveHandleSize());
 
     driver.closeQuery(qctx.getQueryHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
 
     // for backward compatibility
-    qctx = createContext(pctx, conf);
+    qctx = createContext(pctx, inConf);
     qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     result = driver.execute(qctx);
     assertNotNull(qctx.getDriverOpHandle());
@@ -700,7 +700,7 @@ public class TestHiveDriver {
     qctx.setQueryHandle(new QueryHandle(pctx.getPrepareHandle().getPrepareHandleId()));
     driver.executeAsync(qctx);
     Assert.assertEquals(1, driver.getHiveHandleSize());
-    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, false, false);
+    validateExecuteAsync(qctx, DriverQueryState.SUCCESSFUL, true, false);
 
     driver.closeQuery(qctx.getQueryHandle());
     driver.closePreparedQuery(pctx.getPrepareHandle());

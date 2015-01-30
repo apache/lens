@@ -770,6 +770,7 @@ public class HiveDriver implements LensDriver {
       builder.append(' ').append(context.getSelectedDriverQuery()).append(' ');
       hiveQuery = builder.toString();
     } else {
+      context.unSetDriverPersistent();
       hiveQuery = context.getSelectedDriverQuery();
     }
     LOG.info("Hive driver query:" + hiveQuery);
