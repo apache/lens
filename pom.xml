@@ -47,7 +47,6 @@
     <hadoop.version>2.4.0</hadoop.version>
     <spark.version>1.1.0</spark.version>
     <hive.version>0.13.3-inm</hive.version>
-    <impala.frontend.version>0.1</impala.frontend.version>
 
     <!-- common library/framework versions -->
     <commons.logging.version>1.1.1</commons.logging.version>
@@ -872,11 +871,6 @@
         <version>${hive.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.cloudera</groupId>
-        <artifactId>impala-frontend</artifactId>
-        <version>${impala.frontend.version}</version>
-      </dependency>
-      <dependency>
         <groupId>org.apache.thrift</groupId>
         <artifactId>libthrift</artifactId>
         <version>${libthrift.version}</version>
@@ -897,7 +891,6 @@
     <module>lens-storage-db</module>
     <module>lens-query-lib</module>
     <module>lens-driver-hive</module>
-    <module>lens-driver-impala</module>
     <module>lens-driver-jdbc</module>
     <module>lens-server</module>
     <module>lens-client</module>
