@@ -18,9 +18,11 @@
  */
 package org.apache.lens.server.session;
 
+import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import com.google.common.io.Files;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
@@ -289,5 +291,61 @@ public class TestSessionResource extends LensJerseyTest {
 
     final Response handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
     Assert.assertEquals(handle.getStatus(), 401);
+  }
+
+  @Test
+  public void testServerMustRestartOnManualRelocationOfAddedResources() throws Exception {
+
+    /* Execution Steps: */
+
+    /* Add a resource jar */
+    final String jarFile = getClass().getClassLoader().getResource("restart-on-resource-move-test.jar").getPath();
+    LensSessionHandle sessionHandle = openSession("foo","bar", new LensConf());
+    addResource(sessionHandle,"jar",jarFile);
+
+    /* Move resource jar to a new path */
+    File jarFileObj = new File(jarFile);
+    File newJarFileObj = new File(jarFileObj.getParent(), "restart-on-resource-move-test.jar.moved");
+    Files.move(jarFileObj, newJarFileObj);
+
+    try {
+      /* Verification Steps: server should restart without exceptions */
+      restartLensServer();
+    } finally {
+      /* PostConditions Setup : Move resource back to oldPath */
+      Files.move(newJarFileObj,jarFileObj);
+    }
+  }
+
+  private LensSessionHandle openSession(final String userName,final String passwd, final LensConf conf) {
+
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), userName));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), passwd));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+        conf, MediaType.APPLICATION_XML_TYPE));
+
+    return target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        LensSessionHandle.class);
+
+  }
+
+  private void addResource(final LensSessionHandle lensSessionHandle,final String resourceType, final String resourcePath) {
+
+    final WebTarget target = target().path("session/resources");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionHandle,
+        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), resourceType));
+    mp.bodyPart(
+        new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
+    APIResult result = target.path("add").request()
+        .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+
+    if (!result.getStatus().equals(Status.SUCCEEDED)) {
+      throw new RuntimeException("Could not add resource:"+result);
+    }
   }
 }

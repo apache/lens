@@ -292,7 +292,6 @@ public class HiveSessionService extends LensService implements SessionService {
             addResource(sessionHandle, resourceEntry.getType(), resourceEntry.getLocation());
           } catch (Exception e) {
             LOG.error("Failed to restore resource for session: " + session + " resource: " + resourceEntry);
-            throw new RuntimeException(e);
           }
         }
 
