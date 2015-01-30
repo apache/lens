@@ -1190,53 +1190,95 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     }
   }
 
+  private void addAllMeasuresToFlattenedList(ObjectFactory objectFactory, CubeInterface cube,
+      List<FlattenedColumn> columnList) {
+    for (CubeMeasure msr : cube.getMeasures()) {
+      FlattenedColumn fcol = objectFactory.createFlattenedColumn();
+      fcol.setMeasure(JAXBUtils.xMeasureFromHiveMeasure(msr));
+      fcol.setTableName(cube.getName());
+      columnList.add(fcol);
+    }
+  }
+
+  private void addAllDirectAttributesToFlattenedListFromCube(ObjectFactory objectFactory, CubeInterface cube,
+      List<FlattenedColumn> columnList) {
+    AbstractBaseTable baseTbl = (AbstractBaseTable)(cube instanceof DerivedCube ?
+        ((DerivedCube)cube).getParent() : cube);
+    for (CubeDimAttribute dim : cube.getDimAttributes()) {
+      FlattenedColumn fcol = objectFactory.createFlattenedColumn();
+      fcol.setDimAttribute(JAXBUtils.xDimAttrFromHiveDimAttr(dim, baseTbl));
+      fcol.setTableName(cube.getName());
+      columnList.add(fcol);
+    }
+  }
+
+  private void addAllDirectAttributesToFlattenedListFromDimension(ObjectFactory objectFactory, Dimension dimension,
+      List<FlattenedColumn> columnList, String chainName) {
+    for (CubeDimAttribute cd : dimension.getAttributes()) {
+      FlattenedColumn fcol = objectFactory.createFlattenedColumn();
+      fcol.setDimAttribute(JAXBUtils.xDimAttrFromHiveDimAttr(cd, dimension));
+      fcol.setTableName(dimension.getName());
+      if (chainName != null) {
+        fcol.setChainName(chainName);
+      }
+      columnList.add(fcol);
+    }
+  }
+
+  private void addAllDirectExpressionsToFlattenedList(ObjectFactory objectFactory, AbstractBaseTable baseTbl,
+      List<FlattenedColumn> columnList, String chainName) {
+    for (ExprColumn expr : baseTbl.getExpressions()) {
+      FlattenedColumn fcol = objectFactory.createFlattenedColumn();
+      fcol.setExpression(JAXBUtils.xExprColumnFromHiveExprColumn(expr));
+      fcol.setTableName(baseTbl.getName());
+      if (chainName != null) {
+        fcol.setChainName(chainName);
+      }
+      columnList.add(fcol);
+    }
+  }
+
+  private void addAllChainedColsToFlattenedListFromCube(CubeMetastoreClient client, ObjectFactory objectFactory,
+      CubeInterface cube, List<FlattenedColumn> columnList) throws HiveException {
+    if (cube instanceof DerivedCube) {
+      return;
+    }
+    addAllChainedColsToFlattenedList(client, objectFactory, (AbstractBaseTable)cube, columnList);
+  }
+
+  private void addAllChainedColsToFlattenedList(CubeMetastoreClient client, ObjectFactory objectFactory,
+      AbstractBaseTable baseTbl, List<FlattenedColumn> columnList) throws HiveException {
+    for (JoinChain chain : baseTbl.getJoinChains()) {
+      Dimension dim = client.getDimension(chain.getDestTable());
+      addAllDirectAttributesToFlattenedListFromDimension(objectFactory, dim, columnList, chain.getName());
+      addAllDirectExpressionsToFlattenedList(objectFactory, dim, columnList, chain.getName());
+    }
+  }
+
   @Override
   public FlattenedColumns getFlattenedColumns(LensSessionHandle sessionHandle, String tableName) throws LensException {
     try {
       acquire(sessionHandle);
       CubeMetastoreClient client = getClient(sessionHandle);
 
-      boolean isCube = false;
-      AbstractCubeTable cubeTbl = null;
+      ObjectFactory objectFactory = new ObjectFactory();
+      FlattenedColumns flattenedColumns = objectFactory.createFlattenedColumns();
+      List<FlattenedColumn> columnList = flattenedColumns.getFlattenedColumn();
       // check if the table is a cube or dimension
       if (client.isCube(tableName)) {
-        isCube = true;
         CubeInterface cube = client.getCube(tableName);
-        if (cube instanceof Cube) {
-          cubeTbl = (Cube) cube;
-        } else if (cube instanceof DerivedCube) {
-          cubeTbl = (DerivedCube) cube;
-        }
+        addAllMeasuresToFlattenedList(objectFactory, cube, columnList);
+        addAllDirectAttributesToFlattenedListFromCube(objectFactory, cube, columnList);
+        addAllDirectExpressionsToFlattenedList(objectFactory, (AbstractBaseTable)cube, columnList, null);
+        addAllChainedColsToFlattenedListFromCube(client, objectFactory, cube, columnList);
       } else if (client.isDimension(tableName)) {
-        cubeTbl = client.getDimension(tableName);
+        Dimension dimension = client.getDimension(tableName);
+        addAllDirectAttributesToFlattenedListFromDimension(objectFactory, dimension, columnList, null);
+        addAllDirectExpressionsToFlattenedList(objectFactory, (AbstractBaseTable)dimension, columnList, null);
+        addAllChainedColsToFlattenedList(client, objectFactory, dimension, columnList);
       } else {
         throw new BadRequestException("Can't get reachable columns. '"
           + tableName + "' is neither a cube nor a dimension");
-      }
-
-      Map<String, CubeColumn> columnMap = getFlattenedColumnView(client, cubeTbl, isCube);
-      // Convert this to the JAXB collection
-      ObjectFactory objectFactory = new ObjectFactory();
-      FlattenedColumns flattenedColumns = objectFactory.createFlattenedColumns();
-      List<Object> columnList = flattenedColumns.getMeasureOrExpressionOrDimAttribute();
-
-      for (Map.Entry<String, CubeColumn> entry : columnMap.entrySet()) {
-        String colName = entry.getKey();
-        CubeColumn column = entry.getValue();
-        String table = colName.substring(0, colName.indexOf('.'));
-        if (column instanceof CubeMeasure) {
-          XMeasure xmeasure = JAXBUtils.xMeasureFromHiveMeasure((CubeMeasure) column);
-          xmeasure.setCubeTable(table);
-          columnList.add(xmeasure);
-        } else if (column instanceof CubeDimAttribute) {
-          XDimAttribute xDimAttribute = JAXBUtils.xDimAttrFromHiveDimAttr((CubeDimAttribute) column);
-          xDimAttribute.setCubeTable(table);
-          columnList.add(xDimAttribute);
-        } else if (column instanceof ExprColumn) {
-          XExprColumn xExprColumn = JAXBUtils.xExprColumnFromHiveExprColumn((ExprColumn) column);
-          xExprColumn.setCubeTable(table);
-          columnList.add(xExprColumn);
-        }
       }
       return flattenedColumns;
     } catch (LensException exc) {
@@ -1246,68 +1288,6 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     } finally {
       release(sessionHandle);
     }
-  }
-
-  private Map<String, CubeColumn> getFlattenedColumnView(CubeMetastoreClient client,
-    AbstractCubeTable table,
-    boolean isCube) throws HiveException {
-    SchemaGraph schemaGraph = client.getSchemaGraph();
-    Map<AbstractCubeTable, Set<SchemaGraph.TableRelationship>> graph =
-      isCube ? schemaGraph.getCubeGraph((CubeInterface) table) : schemaGraph.getDimOnlyGraph();
-    Map<String, CubeColumn> columnMap = new LinkedHashMap<String, CubeColumn>();
-
-    // Do a BFS over the schema graph
-    LinkedList<AbstractCubeTable> toVisit = new LinkedList<AbstractCubeTable>();
-    Set<AbstractCubeTable> visited = new HashSet<AbstractCubeTable>();
-    toVisit.add(table);
-
-    while (!toVisit.isEmpty()) {
-      AbstractCubeTable node = toVisit.removeFirst();
-      visited.add(node);
-      String nodeName = node.getName();
-      if (node instanceof CubeInterface) {
-        Cube cube = null;
-
-        if (node instanceof Cube) {
-          cube = (Cube) node;
-        } else if (node instanceof DerivedCube) {
-          cube = ((DerivedCube) node).getParent();
-        } else {
-          continue;
-        }
-
-        // Add columns of the cube
-        for (CubeMeasure measure : cube.getMeasures()) {
-          columnMap.put(nodeName + "." + measure.getName(), measure);
-        }
-
-        for (CubeDimAttribute dimAttribute : cube.getDimAttributes()) {
-          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
-        }
-
-        for (ExprColumn expression : cube.getExpressions()) {
-          columnMap.put(nodeName + "." + expression.getName(), expression);
-        }
-      } else if (node instanceof Dimension) {
-        Dimension dim = (Dimension) node;
-        for (CubeDimAttribute dimAttribute : dim.getAttributes()) {
-          columnMap.put(nodeName + "." + dimAttribute.getName(), dimAttribute);
-        }
-      } else {
-        LOG.warn("Neither cube nor dimension " + node.getName());
-      }
-
-      // Add referenced tables to visited list
-      if (graph.get(node) != null) {
-        for (SchemaGraph.TableRelationship edge : graph.get(node)) {
-          if (!visited.contains(edge.getToTable())) {
-            toVisit.addLast(edge.getToTable());
-          }
-        }
-      }
-    } // end bfs
-    // columnMap now contains flattened view
-    return columnMap;
   }
 
   @Override

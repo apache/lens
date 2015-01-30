@@ -283,10 +283,10 @@ public class TestMetastoreService extends LensJerseyTest {
     xd3.setType("string");
     xd3.setDescription("ref chained dimension");
     xd3.setDisplayString("Chained Dimension");
-    XChaincolumn xcc = new XChaincolumn();
+    XChainColumn xcc = new XChainColumn();
     xcc.setChainName("chain1");
-    xcc.setRefcol("col2");
-    xd3.setChainrefcolumn(xcc);
+    xcc.setRefCol("col2");
+    xd3.setChainRefColumn(xcc);
 
     xdims.getDimAttributes().add(xd1);
     xdims.getDimAttributes().add(xd2);
@@ -322,7 +322,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
 
-    XJoinchain xj1 = new XJoinchain();
+    XJoinChain xj1 = new XJoinChain();
     xj1.setName("chain1");
     xj1.setDescription("first chain");
     xj1.setDisplayString("Chain-1");
@@ -337,6 +337,24 @@ public class TestMetastoreService extends LensJerseyTest {
     path1.getTableReferences().add(link2);
     xj1.getPaths().add(path1);
     joinchains.getChains().add(xj1);
+
+    XJoinChain xj2 = new XJoinChain();
+    xj2.setName("dim2chain");
+    xj2.setDescription("testdim2 chain");
+    xj2.setDisplayString("Chain-2");
+    XTablereferences path = cubeObjectFactory.createXTablereferences();
+    path.getTableReferences().add(link1);
+    path.getTableReferences().add(link2);
+    XTablereference link3 = new XTablereference();
+    link3.setDestTable("testdim");
+    link3.setDestColumn("col2");
+    XTablereference link4 = new XTablereference();
+    link4.setDestTable("testdim2");
+    link4.setDestColumn("col1");
+    path.getTableReferences().add(link3);
+    path.getTableReferences().add(link4);
+    xj2.getPaths().add(path);
+    joinchains.getChains().add(xj2);
     cube.setJoinchains(joinchains);
 
     XExpressions expressions = cubeObjectFactory.createXExpressions();
@@ -575,6 +593,21 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(actual.getMeasures().getMeasures().size(), cube.getMeasures().getMeasures().size());
       assertEquals(actual.getDimAttributes().getDimAttributes().size(), cube.getDimAttributes().getDimAttributes().size());
       assertEquals(actual.getExpressions().getExpressions().size(), cube.getExpressions().getExpressions().size());
+      Map<String, XJoinChain> chains = new HashMap<String, XJoinChain>();
+      for (XJoinChain xjc : actual.getJoinchains().getChains()) {
+        chains.put(xjc.getName(), xjc);
+      }
+      assertEquals(chains.get("chain1").getDestTable(), "testdim");
+      assertEquals(chains.get("dim2chain").getDestTable(), "testdim2");
+      boolean chainValidated = false;
+      for (XDimAttribute attr : actual.getDimAttributes().getDimAttributes()) {
+        if (attr.getName().equalsIgnoreCase("testdim2col2")) {
+          assertEquals(attr.getChainRefColumn().getDestTable(), "testdim");
+          chainValidated = true;
+          break;
+        }
+      }
+      assertTrue(chainValidated);
       assertEquals(actual.getWeight(), 100.0d);
       assertFalse(actual.isDerived());
       assertNull(actual.getParent());
@@ -594,7 +627,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(hcube.getExpressionByName("expr1").getDescription(), "first expression");
       assertEquals(hcube.getExpressionByName("expr1").getDisplayString(), "Expression1");
       Assert.assertFalse(hcube.getJoinChains().isEmpty());
-      Assert.assertEquals(hcube.getJoinChains().size(), 1);
+      Assert.assertEquals(hcube.getJoinChains().size(), 2);
       Assert.assertTrue(hcube.getJoinChainNames().contains("chain1"));
       JoinChain chain1 = hcube.getChainByName("chain1");
       Assert.assertEquals(chain1.getDisplayString(), "Chain-1");
@@ -1006,6 +1039,44 @@ public class TestMetastoreService extends LensJerseyTest {
     return dimension;
   }
 
+  private void createdChainedDimensions() throws Exception {
+    XDimension dimension = createDimension("testdim");
+    XDimension dimension2 = createDimension("testdim2");
+
+    XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
+
+    XJoinChain xj1 = new XJoinChain();
+    xj1.setName("chain1");
+    xj1.setDescription("first chain");
+    xj1.setDisplayString("Chain-1");
+    XTablereferences path1 = cubeObjectFactory.createXTablereferences();
+    XTablereference link1 = new XTablereference();
+    link1.setDestTable("testdim");
+    link1.setDestColumn("col1");
+    XTablereference link2 = new XTablereference();
+    link2.setDestTable("testdim2");
+    link2.setDestColumn("col1");
+    path1.getTableReferences().add(link1);
+    path1.getTableReferences().add(link2);
+    xj1.getPaths().add(path1);
+    joinchains.getChains().add(xj1);
+    dimension.setJoinchains(joinchains);
+
+    final WebTarget target = target().path("metastore").path("dimensions");
+
+    // create
+    APIResult result = target.queryParam("sessionid", lensSessionId).request(
+        mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+    assertNotNull(result);
+    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // create
+    result = target.queryParam("sessionid", lensSessionId).request(
+        mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension2)), APIResult.class);
+    assertNotNull(result);
+    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+  }
   @Test
   public void testDimension() throws Exception {
     final String DB = dbPFX + "test_dimension";
@@ -1013,35 +1084,9 @@ public class TestMetastoreService extends LensJerseyTest {
     createDatabase(DB);
     setCurrentDatabase(DB);
     try {
-      XDimension dimension = createDimension("testdim");
-      XDimension dimension2 = createDimension("testdim2");
-
-      XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
-
-      XJoinchain xj1 = new XJoinchain();
-      xj1.setName("chain1");
-      xj1.setDescription("first chain");
-      xj1.setDisplayString("Chain-1");
-      XTablereferences path1 = cubeObjectFactory.createXTablereferences();
-      XTablereference link1 = new XTablereference();
-      link1.setDestTable("testdim");
-      link1.setDestColumn("col1");
-      XTablereference link2 = new XTablereference();
-      link2.setDestTable("testdim2");
-      link2.setDestColumn("col1");
-      path1.getTableReferences().add(link1);
-      path1.getTableReferences().add(link2);
-      xj1.getPaths().add(path1);
-      joinchains.getChains().add(xj1);
-      dimension.setJoinchains(joinchains);
+      createdChainedDimensions();
 
       final WebTarget target = target().path("metastore").path("dimensions");
-
-      // create
-      APIResult result = target.queryParam("sessionid", lensSessionId).request(
-          mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
-      assertNotNull(result);
-      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // getall
       StringList dimensions = target.queryParam("sessionid", lensSessionId).request(mediaType).get(StringList.class);
@@ -1069,7 +1114,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(testDim.getJoinchains().getChains().get(0).getDescription(), "first chain");
       assertEquals(testDim.getJoinchains().getChains().get(0).getDisplayString(), "Chain-1");
 
-      Dimension dim = JAXBUtils.dimensionFromXDimension(dimension);
+      Dimension dim = JAXBUtils.dimensionFromXDimension(testDim);
       assertNotNull(dim.getAttributeByName("col1"));
       assertEquals(dim.getAttributeByName("col1").getDescription(), "first column");
       assertEquals(dim.getAttributeByName("col1").getDisplayString(), "Column1");
@@ -1084,35 +1129,34 @@ public class TestMetastoreService extends LensJerseyTest {
       XProperty prop = cubeObjectFactory.createXProperty();
       prop.setName("dim.prop2.name");
       prop.setValue("dim.prop2.value");
-      dimension.getProperties().getProperties().add(prop);
+      testDim.getProperties().getProperties().add(prop);
 
-      dimension.getAttributes().getDimAttributes().remove(1);
+      testDim.getAttributes().getDimAttributes().remove(1);
       XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
       xd1.setName("col3");
       xd1.setType("string");
-      dimension.getAttributes().getDimAttributes().add(xd1);
-      dimension.setWeight(200.0);
+      testDim.getAttributes().getDimAttributes().add(xd1);
+      testDim.setWeight(200.0);
 
-      result = target.path("testdim")
+      APIResult result = target.path("testdim")
           .queryParam("sessionid", lensSessionId)
-          .request(mediaType).put(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+          .request(mediaType).put(Entity.xml(cubeObjectFactory.createXDimension(testDim)), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      testDim = target.path("testdim").queryParam("sessionid", lensSessionId).request(mediaType).get(XDimension.class);
-      assertEquals(testDim.getName(), "testdim");
-      assertTrue(testDim.getProperties().getProperties().size() >= 2);
-      assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dim.prop2.name"));
-      assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dim.prop2.name"), "dim.prop2.value");
-      assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dimension.foo"));
-      assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
-      assertEquals(testDim.getWeight(), 200.0);
-      assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
+      XDimension altered = target.path("testdim").queryParam("sessionid", lensSessionId).request(mediaType).get(XDimension.class);
+      assertEquals(altered.getName(), "testdim");
+      assertTrue(altered.getProperties().getProperties().size() >= 2);
+      assertTrue(JAXBUtils.mapFromXProperties(altered.getProperties()).containsKey("dim.prop2.name"));
+      assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dim.prop2.name"), "dim.prop2.value");
+      assertTrue(JAXBUtils.mapFromXProperties(altered.getProperties()).containsKey("dimension.foo"));
+      assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dimension.foo"), "dim.bar");
+      assertEquals(altered.getWeight(), 200.0);
+      assertEquals(altered.getAttributes().getDimAttributes().size(), 2);
 
-      dim = JAXBUtils.dimensionFromXDimension(testDim);
+      dim = JAXBUtils.dimensionFromXDimension(altered);
       System.out.println("Attributes:" + dim.getAttributes());
       assertNotNull(dim.getAttributeByName("col3"));
-      assertNull(dim.getAttributeByName("col2"));
-      assertNotNull(dim.getAttributeByName("col1"));
+      assertTrue(dim.getAttributeByName("col2") == null || dim.getAttributeByName("col1") == null);
 
       // drop the dimension
       result = target.path("testdim")
@@ -2054,63 +2098,33 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
+  private void populateActualTablesAndCols(List<FlattenedColumn> columns, Set<String> tables, Set<String> colSet) {
+    for (FlattenedColumn colObject : columns) {
+      String colStr;
+      tables.add(colObject.getTableName());
+      if (colObject.getMeasure() != null) {
+        colStr = colObject.getTableName() + "." + colObject.getMeasure().getName();
+      } else if (colObject.getDimAttribute() != null) {
+        colStr = (colObject.getChainName() != null ? colObject.getChainName() + "-" : "") + colObject.getTableName()
+            + "." + colObject.getDimAttribute().getName();
+      } else { // it will be expression
+        colStr = (colObject.getChainName() != null ? colObject.getChainName() + "-" : "") + colObject.getTableName()
+            + "." + colObject.getExpression().getName();
+      }
+      colSet.add(colStr);
+    }
+  }
+
   @Test
   public void testFlattenedView() throws Exception {
-    final String DB = dbPFX + "test_native_tables";
+    final String DB = dbPFX + "test_flattened_view";
     String prevDb = getCurrentDatabase();
     createDatabase(DB);
     setCurrentDatabase(DB);
 
     try {
-      XCube flatTestCube = createTestCube("flatTestCube");
-      XDimAttributes dimAttrs = flatTestCube.getDimAttributes();
-
-      GregorianCalendar c = new GregorianCalendar();
-      c.setTime(new Date());
-      final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-
-      // Add link from cube to dim1
-      XDimAttribute cubeToDim1Ref = cubeObjectFactory.createXDimAttribute();
-      cubeToDim1Ref.setName("cubeToDim1Ref");
-      cubeToDim1Ref.setType("string");
-      cubeToDim1Ref.setDescription("test ref cube to dim1");
-      cubeToDim1Ref.setDisplayString("cubeToDim1Ref");
-      cubeToDim1Ref.setStartTime(startDate);
-      // Don't set endtime on this dim to validate null handling on server side
-      cubeToDim1Ref.setCost(10.0);
-      XTablereferences xTablereference = cubeObjectFactory.createXTablereferences();
-      cubeToDim1Ref.setReferences(xTablereference);
-      List<XTablereference> refDimRefs = cubeToDim1Ref.getReferences().getTableReferences();
-      XTablereference r = cubeObjectFactory.createXTablereference();
-      r.setDestTable("flatTestDim1");
-      r.setDestColumn("col1");
-      refDimRefs.add(r);
-      dimAttrs.getDimAttributes().add(cubeToDim1Ref);
-
-      // Link from dim1 to dim2
-      XDimension dim1 = createDimension("flatTestDim1");
-      XDimAttributes dim1Attrs = dim1.getAttributes();
-      XDimAttribute dim1ToDim2Ref = cubeObjectFactory.createXDimAttribute();
-      dim1ToDim2Ref.setName("dim1ToDim2Ref");
-      dim1ToDim2Ref.setType("string");
-      dim1ToDim2Ref.setDescription("test ref dim1 to dim2");
-      dim1ToDim2Ref.setDisplayString("dim1ToDim2Ref");
-      dim1ToDim2Ref.setStartTime(startDate);
-      // Don't set endtime on this dim to validate null handling on server side
-      dim1ToDim2Ref.setCost(10.0);
-      XTablereferences xTablereferences2 = cubeObjectFactory.createXTablereferences();
-      dim1ToDim2Ref.setReferences(xTablereferences2);
-      List<XTablereference> refs = dim1ToDim2Ref.getReferences().getTableReferences();
-      XTablereference r2 = cubeObjectFactory.createXTablereference();
-      r2.setDestTable("flatTestDim2");
-      r2.setDestColumn("col1");
-      refs.add(r2);
-      dim1Attrs.getDimAttributes().add(dim1ToDim2Ref);
-
-      XDimension dim2 = createDimension("flatTestDim2");
-
       // Create the tables
-
+      XCube flatTestCube = createTestCube("flatTestCube");
       // Create cube
       final WebTarget cubeTarget = target().path("metastore").path("cubes");
       APIResult result =
@@ -2119,73 +2133,74 @@ public class TestMetastoreService extends LensJerseyTest {
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      // Dim1
-      final WebTarget dimTarget = target().path("metastore").path("dimensions");
-      result = dimTarget.queryParam("sessionid", lensSessionId).request(
-          mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dim1)), APIResult.class);
-      assertNotNull(result);
-      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
-
-      // Dim2
-      result = dimTarget.queryParam("sessionid", lensSessionId).request(
-          mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dim2)), APIResult.class);
-      assertNotNull(result);
-      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+      // create chained dimensions - testdim and testdim2
+      createdChainedDimensions();
 
       // Now test flattened view
       final WebTarget flatCubeTarget = target().path("metastore").path("flattened").path("flattestcube");
       FlattenedColumns flattenedColumns = null;
-      try {
-        flattenedColumns =
-            flatCubeTarget.queryParam("sessionid", lensSessionId).request().get(FlattenedColumns.class);
-      } catch (Exception exc) {
-        exc.printStackTrace();
-        throw exc;
-      }
+      JAXBElement<FlattenedColumns> actualElement = flatCubeTarget.queryParam("sessionid", lensSessionId).request()
+            .get(new GenericType<JAXBElement<FlattenedColumns>>() {});
+        flattenedColumns = actualElement.getValue();
       assertNotNull(flattenedColumns);
 
-      List<Object> columns = flattenedColumns.getMeasureOrExpressionOrDimAttribute();
+      List<FlattenedColumn> columns = flattenedColumns.getFlattenedColumn();
       assertNotNull(columns);
       assertTrue(!columns.isEmpty());
-      int i = 0;
 
       Set<String> tables = new HashSet<String>();
       Set<String> colSet = new HashSet<String>();
-      for (Object colObject : columns) {
-        assertTrue(colObject instanceof XMeasure || colObject instanceof XDimAttribute || colObject instanceof XExprColumn);
-        if (colObject instanceof XMeasure) {
-          tables.add(((XMeasure) colObject).getCubeTable());
-          colSet.add(((XMeasure) colObject).getCubeTable() + "." + ((XMeasure) colObject).getName() );
-        } else if (colObject instanceof XDimAttribute) {
-          tables.add(((XDimAttribute) colObject).getCubeTable());
-          colSet.add(((XDimAttribute) colObject).getCubeTable() + "." + ((XDimAttribute) colObject).getName() );
-        } else {
-          tables.add(((XExprColumn) colObject).getCubeTable());
-          colSet.add(((XExprColumn) colObject).getCubeTable() + "." + ((XExprColumn) colObject).getName() );
-        }
-      }
+      populateActualTablesAndCols(columns, tables, colSet);
 
-      assertEquals(tables, new HashSet<String>(Arrays.asList("flattestcube", "flattestdim1", "flattestdim2")));
-      assertEquals(colSet,new HashSet<String>(Arrays.asList(
+      assertEquals(tables, new HashSet<String>(Arrays.asList("flattestcube", "testdim", "testdim2")));
+      assertEquals(colSet, new HashSet<String>(Arrays.asList(
           "flattestcube.msr1",
           "flattestcube.msr2",
           "flattestcube.dim1",
           "flattestcube.dim2",
           "flattestcube.testdim2col2",
-          "flattestcube.cubetodim1ref",
           "flattestcube.expr1",
-          "flattestdim1.dim1todim2ref",
-          "flattestdim1.col2",
-          "flattestdim1.col1",
-          "flattestdim2.col2",
-          "flattestdim2.col1")));
+          "chain1-testdim.col2",
+          "chain1-testdim.col1",
+          "chain1-testdim.dimexpr",
+          "dim2chain-testdim2.col2",
+          "dim2chain-testdim2.col1",
+          "dim2chain-testdim2.dimexpr"
+          )));
+
+      // Now test flattened view for dimension
+      final WebTarget flatDimTarget = target().path("metastore").path("flattened").path("testdim");
+      actualElement = flatDimTarget.queryParam("sessionid", lensSessionId).request()
+            .get(new GenericType<JAXBElement<FlattenedColumns>>() {});
+      flattenedColumns = actualElement.getValue();
+      assertNotNull(flattenedColumns);
+
+      columns = flattenedColumns.getFlattenedColumn();
+      assertNotNull(columns);
+      assertTrue(!columns.isEmpty());
+
+      tables = new HashSet<String>();
+      colSet = new HashSet<String>();
+      populateActualTablesAndCols(columns, tables, colSet);
+
+      assertEquals(tables, new HashSet<String>(Arrays.asList("testdim", "testdim2")));
+      assertEquals(colSet, new HashSet<String>(Arrays.asList(
+          "testdim.col2",
+          "testdim.col1",
+          "testdim.dimexpr",
+          "chain1-testdim2.col2",
+          "chain1-testdim2.col1",
+          "chain1-testdim2.dimexpr"
+          )));
+
     } finally {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
     }
   }
 
-  private void createTestFactAndStorageTable(final String cubeName,final String[] storages, final String tableName, final String[] timePartColNames) {
+  private void createTestFactAndStorageTable(final String cubeName,final String[] storages, final String tableName,
+      final String[] timePartColNames) {
 
     // Create a fact table object linked to cubeName
     String[] updatePeriods = {"HOURLY"};

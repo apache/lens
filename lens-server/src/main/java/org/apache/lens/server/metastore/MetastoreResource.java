@@ -1444,17 +1444,17 @@ public class MetastoreResource {
    */
   @GET
   @Path("flattened/{tableName}")
-  public FlattenedColumns getFlattenedColumns(
+  public JAXBElement<FlattenedColumns> getFlattenedColumns(
       @QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("tableName") String tableName) {
     checkSessionId(sessionid);
     try {
-      return getSvc().getFlattenedColumns(sessionid, tableName);
+      return xCubeObjectFactory.createFlattenedColumns(getSvc().getFlattenedColumns(sessionid, tableName));
     } catch (LensException exc) {
       throw new WebApplicationException(exc);
     }
   }
-  
+
   /**
    * Get the latest available date upto which data is available for the base cubes, for the time dimension.
    * 
