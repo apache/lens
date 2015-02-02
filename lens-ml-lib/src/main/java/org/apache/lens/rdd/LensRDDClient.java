@@ -18,11 +18,19 @@
  */
 package org.apache.lens.rdd;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.*;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientResultSet;
 import org.apache.lens.ml.spark.HiveTableRDD;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -41,43 +49,36 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.rdd.RDD;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
 /**
  * <p>
  * Create RDD from a Lens query. User can poll returned query handle with isReadyForRDD() until the RDD is ready to be
  * used.
- *
+ * <p/>
  * Example -
- * 
+ * <p/>
  * <pre>
  *   LensRDDClient client = new LensRDDClient(javaSparkContext);
  *   QueryHandle query = client.createLensRDDAsync("SELECT msr1 from TEST_CUBE WHERE ...", conf);
- * 
+ *
  *   while (!client.isReadyForRDD(query)) {
  *     Thread.sleep(1000);
  *   }
- * 
+ *
  *   JavaRDD<ResultRow> rdd = client.getRDD(query).toJavaRDD();
- * 
+ *
  *   // Consume RDD here -
  *   rdd.map(...);
  * </pre>
- *
+ * <p/>
  * </p>
- *
+ * <p/>
  * <p>
  * Alternatively in blocking mode
- *
+ * <p/>
  * <pre>
  * JavaRDD&lt;ResultRow&gt; rdd = client.createLensRDD(&quot;SELECT msr1 from TEST_CUBE WHERE ...&quot;, conf);
  * </pre>
- * 
+ * <p/>
  * </p>
  */
 public class LensRDDClient {
@@ -98,14 +99,15 @@ public class LensRDDClient {
   /** The Constant TEMP_TABLE_PART_VAL. */
   private static final String TEMP_TABLE_PART_VAL = "placeholder_value";
 
-  /** The Constant hiveConf. */
-  protected static final HiveConf hiveConf = new HiveConf();
+  /** The Constant HIVE_CONF. */
+  protected static final HiveConf HIVE_CONF = new HiveConf();
+
   static {
-    hiveConf.setVar(HiveConf.ConfVars.METASTOREURIS, "");
-    hiveConf.set("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=./metastore_db;create=true");
-    hiveConf.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
-    hiveConf.setBoolean("hive.metastore.local", true);
-    hiveConf.set("hive.metastore.warehouse.dir", "file://${user.dir}/warehouse");
+    HIVE_CONF.setVar(HiveConf.ConfVars.METASTOREURIS, "");
+    HIVE_CONF.set("javax.jdo.option.ConnectionURL", "jdbc:derby:;databaseName=./metastore_db;create=true");
+    HIVE_CONF.set("javax.jdo.option.ConnectionDriverName", "org.apache.derby.jdbc.EmbeddedDriver");
+    HIVE_CONF.setBoolean("hive.metastore.local", true);
+    HIVE_CONF.set("hive.metastore.warehouse.dir", "file://${user.dir}/warehouse");
   }
 
   /** The spark context. */
@@ -117,8 +119,7 @@ public class LensRDDClient {
   /**
    * Create an RDD client with given spark Context.
    *
-   * @param sparkContext
-   *          the spark context
+   * @param sparkContext the spark context
    */
   public LensRDDClient(JavaSparkContext sparkContext) {
     this.sparkContext = sparkContext;
@@ -127,8 +128,7 @@ public class LensRDDClient {
   /**
    * Create an RDD client with given spark Context.
    *
-   * @param sc
-   *          the sc
+   * @param sc the sc
    */
   public LensRDDClient(SparkContext sc) {
     this(new JavaSparkContext(sc));
@@ -137,10 +137,8 @@ public class LensRDDClient {
   /**
    * Instantiates a new lens rdd client.
    *
-   * @param sparkContext
-   *          the spark context
-   * @param lensClient
-   *          the lens client
+   * @param sparkContext the spark context
+   * @param lensClient   the lens client
    */
   public LensRDDClient(JavaSparkContext sparkContext, LensClient lensClient) {
     this.sparkContext = sparkContext;
@@ -150,10 +148,8 @@ public class LensRDDClient {
   /**
    * Instantiates a new lens rdd client.
    *
-   * @param sparkContext
-   *          the spark context
-   * @param lensClient
-   *          the lens client
+   * @param sparkContext the spark context
+   * @param lensClient   the lens client
    */
   public LensRDDClient(SparkContext sparkContext, LensClient lensClient) {
     this(new JavaSparkContext(sparkContext), lensClient);
@@ -169,11 +165,9 @@ public class LensRDDClient {
   /**
    * API for non blocking use.
    *
-   * @param query
-   *          the query
+   * @param query the query
    * @return the query handle
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public QueryHandle createLensRDDAsync(String query) throws LensException {
     return getClient().executeQueryAsynch(query, "");
@@ -182,11 +176,9 @@ public class LensRDDClient {
   /**
    * Check if the RDD is created. RDD will be created as soon as the underlying Lens query is complete
    *
-   * @param queryHandle
-   *          the query handle
+   * @param queryHandle the query handle
    * @return true, if is ready for rdd
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public boolean isReadyForRDD(QueryHandle queryHandle) throws LensException {
     QueryStatus status = getClient().getQueryStatus(queryHandle);
@@ -196,10 +188,8 @@ public class LensRDDClient {
   /**
    * Allow cancelling underlying query in case of non blocking RDD creation.
    *
-   * @param queryHandle
-   *          the query handle
-   * @throws LensException
-   *           the lens exception
+   * @param queryHandle the query handle
+   * @throws LensException the lens exception
    */
   public void cancelRDD(QueryHandle queryHandle) throws LensException {
     getClient().killQuery(queryHandle);
@@ -208,11 +198,9 @@ public class LensRDDClient {
   /**
    * Get the RDD created for the query. This should be used only is isReadyForRDD returns true
    *
-   * @param queryHandle
-   *          the query handle
+   * @param queryHandle the query handle
    * @return the rdd
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public LensRDDResult getRDD(QueryHandle queryHandle) throws LensException {
     QueryStatus status = getClient().getQueryStatus(queryHandle);
@@ -246,8 +234,8 @@ public class LensRDDClient {
     // Now create one RDD
     JavaPairRDD<WritableComparable, HCatRecord> rdd = null;
     try {
-      rdd = HiveTableRDD.createHiveTableRDD(sparkContext, hiveConf, "default", tempTableName, TEMP_TABLE_PART_COL
-          + "='" + TEMP_TABLE_PART_VAL + "'");
+      rdd = HiveTableRDD.createHiveTableRDD(sparkContext, HIVE_CONF, "default", tempTableName, TEMP_TABLE_PART_COL
+        + "='" + TEMP_TABLE_PART_VAL + "'");
       LOG.info("Created RDD " + rdd.name() + " for table " + tempTableName);
     } catch (IOException e) {
       throw new LensException("Error creating RDD for table " + tempTableName, e);
@@ -257,21 +245,19 @@ public class LensRDDClient {
   }
 
   // Create a temp table with schema of the result set and location
+
   /**
    * Creates the temp metastore table.
    *
-   * @param dataLocation
-   *          the data location
-   * @param metadata
-   *          the metadata
+   * @param dataLocation the data location
+   * @param metadata     the metadata
    * @return the string
-   * @throws HiveException
-   *           the hive exception
+   * @throws HiveException the hive exception
    */
   protected String createTempMetastoreTable(String dataLocation, QueryResultSetMetadata metadata) throws HiveException {
     String tableName = "lens_rdd_" + UUID.randomUUID().toString().replace("-", "_");
 
-    Hive hiveClient = Hive.get(hiveConf);
+    Hive hiveClient = Hive.get(HIVE_CONF);
     Table tbl = hiveClient.newTable("default." + tableName);
     tbl.setTableType(TableType.MANAGED_TABLE);
     tbl.setInputFormatClass(INPUT_FORMAT);
@@ -301,11 +287,11 @@ public class LensRDDClient {
   }
 
   // Convert lens data type to Hive data type.
+
   /**
    * To hive type.
    *
-   * @param type
-   *          the type
+   * @param type the type
    * @return the string
    */
   private String toHiveType(ResultColumnType type) {
@@ -315,11 +301,9 @@ public class LensRDDClient {
   /**
    * Blocking call to create an RDD from a Lens query. Return only when the query is complete.
    *
-   * @param query
-   *          the query
+   * @param query the query
    * @return the lens rdd result
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public LensRDDResult createLensRDD(String query) throws LensException {
     QueryHandle queryHandle = createLensRDDAsync(query);
@@ -351,12 +335,9 @@ public class LensRDDClient {
     /**
      * Instantiates a new lens rdd result.
      *
-     * @param rdd
-     *          the rdd
-     * @param lensQuery
-     *          the lens query
-     * @param tempTableName
-     *          the temp table name
+     * @param rdd           the rdd
+     * @param lensQuery     the lens query
+     * @param tempTableName the temp table name
      */
     public LensRDDResult(RDD<List<Object>> rdd, QueryHandle lensQuery, String tempTableName) {
       this.resultRDD = rdd;
@@ -383,17 +364,15 @@ public class LensRDDClient {
      * Recreate RDD. This will work if the result object was saved. As long as the metastore and corresponding HDFS
      * directory is available result object should be able to recreate an RDD.
      *
-     * @param sparkContext
-     *          the spark context
+     * @param sparkContext the spark context
      * @return the rdd
-     * @throws LensException
-     *           the lens exception
+     * @throws LensException the lens exception
      */
     public RDD<List<Object>> recreateRDD(JavaSparkContext sparkContext) throws LensException {
       if (resultRDD == null) {
         try {
           JavaPairRDD<WritableComparable, HCatRecord> javaPairRDD = HiveTableRDD.createHiveTableRDD(sparkContext,
-              hiveConf, "default", tempTableName, TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
+            HIVE_CONF, "default", tempTableName, TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
           LOG.info("Created RDD " + resultRDD.name() + " for table " + tempTableName);
           resultRDD = javaPairRDD.map(new HCatRecordToObjectListMapper()).rdd();
         } catch (IOException e) {
@@ -410,13 +389,12 @@ public class LensRDDClient {
     /**
      * Delete temp table. This should be done to release underlying temp table.
      *
-     * @throws LensException
-     *           the lens exception
+     * @throws LensException the lens exception
      */
     public void deleteTempTable() throws LensException {
       Hive hiveClient = null;
       try {
-        hiveClient = Hive.get(hiveConf);
+        hiveClient = Hive.get(HIVE_CONF);
         hiveClient.dropTable("default." + tempTableName);
         LOG.info("Dropped temp table " + tempTableName);
       } catch (HiveException e) {

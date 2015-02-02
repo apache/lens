@@ -28,10 +28,8 @@ public class SVMClassificationModel extends BaseSparkClassificationModel<SVMMode
   /**
    * Instantiates a new SVM classification model.
    *
-   * @param modelId
-   *          the model id
-   * @param model
-   *          the model
+   * @param modelId the model id
+   * @param model   the model
    */
   public SVMClassificationModel(String modelId, SVMModel model) {
     super(modelId, model);

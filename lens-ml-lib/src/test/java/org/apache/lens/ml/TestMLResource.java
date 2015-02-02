@@ -20,24 +20,11 @@ package org.apache.lens.ml;
 
 import java.io.File;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hive.service.Service;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.LensMLClient;
@@ -59,6 +46,16 @@ import org.apache.lens.server.ml.MLServiceResource;
 import org.apache.lens.server.query.QueryServiceResource;
 import org.apache.lens.server.session.HiveSessionService;
 import org.apache.lens.server.session.SessionResource;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.Hive;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.metadata.Partition;
+import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hive.service.Service;
+
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.testng.Assert;
@@ -71,11 +68,11 @@ import org.testng.annotations.Test;
 public class TestMLResource extends LensJerseyTest {
   private static final Log LOG = LogFactory.getLog(TestMLResource.class);
   private static final String TEST_CONN_URL = "http://localhost:8089/lens-server";
-  private static final LensConnectionParams connectionParams = new LensConnectionParams();
+  private static final LensConnectionParams LENS_CONNECTION_PARAMS = new LensConnectionParams();
 
   static {
-    connectionParams.setBaseUrl(TEST_CONN_URL);
-    connectionParams.getConf().setUser("foo@localhost");
+    LENS_CONNECTION_PARAMS.setBaseUrl(TEST_CONN_URL);
+    LENS_CONNECTION_PARAMS.getConf().setUser("foo@localhost");
   }
 
   private WebTarget mlTarget;
@@ -86,7 +83,7 @@ public class TestMLResource extends LensJerseyTest {
   public void setServiceProvider() throws Exception {
     HiveConf conf = LensServerConf.get();
     Class<? extends ServiceProviderFactory> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY, null,
-        ServiceProviderFactory.class);
+      ServiceProviderFactory.class);
     ServiceProviderFactory spf = spfClass.newInstance();
     this.serviceProvider = spf.getServiceProvider();
   }
@@ -112,7 +109,7 @@ public class TestMLResource extends LensJerseyTest {
     setServiceProvider();
     HiveSessionService sessionService = serviceProvider.getService(SessionService.NAME);
     this.sessionHandle = sessionService.openSession("foo@localhost", "bar", new HashMap<String, String>());
-    mlClient = new LensMLClient(connectionParams, sessionHandle);
+    mlClient = new LensMLClient(LENS_CONNECTION_PARAMS, sessionHandle);
   }
 
   @AfterTest
@@ -145,16 +142,16 @@ public class TestMLResource extends LensJerseyTest {
     Assert.assertNotNull(trainerNames);
 
     Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(NaiveBayesTrainer.class)),
-        MLUtils.getTrainerName(NaiveBayesTrainer.class));
+      MLUtils.getTrainerName(NaiveBayesTrainer.class));
 
     Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(SVMTrainer.class)),
-        MLUtils.getTrainerName(SVMTrainer.class));
+      MLUtils.getTrainerName(SVMTrainer.class));
 
     Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(LogisticRegressionTrainer.class)),
-        MLUtils.getTrainerName(LogisticRegressionTrainer.class));
+      MLUtils.getTrainerName(LogisticRegressionTrainer.class));
 
     Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(DecisionTreeTrainer.class)),
-        MLUtils.getTrainerName(DecisionTreeTrainer.class));
+      MLUtils.getTrainerName(DecisionTreeTrainer.class));
   }
 
   @Test
@@ -181,7 +178,7 @@ public class TestMLResource extends LensJerseyTest {
     URI sampleDataFileURI = sampleDataFile.toURI();
 
     String labelColumn = "label";
-    String features[] = { "feature_1", "feature_2", "feature_3" };
+    String[] features = {"feature_1", "feature_2", "feature_3"};
     String outputTable = "naivebayes_eval_table";
 
     LOG.info("Creating training table from file " + sampleDataFileURI.toString());
@@ -189,15 +186,15 @@ public class TestMLResource extends LensJerseyTest {
     Map<String, String> tableParams = new HashMap<String, String>();
     try {
       ExampleUtils.createTable(conf, database, tableName, sampleDataFileURI.toString(), labelColumn, tableParams,
-          features);
+        features);
     } catch (HiveException exc) {
       exc.printStackTrace();
     }
     MLTask.Builder taskBuilder = new MLTask.Builder();
 
     taskBuilder.algorithm(algoName).hiveConf(conf).labelColumn(labelColumn).outputTable(outputTable)
-        .serverLocation(getBaseUri().toString()).sessionHandle(mlClient.getSessionHandle()).trainingTable(tableName)
-        .userName("foo@localhost").password("bar");
+      .serverLocation(getBaseUri().toString()).sessionHandle(mlClient.getSessionHandle()).trainingTable(tableName)
+      .userName("foo@localhost").password("bar");
 
     // Add features
     taskBuilder.addFeatureColumn("feature_1").addFeatureColumn("feature_2").addFeatureColumn("feature_3");
@@ -215,8 +212,8 @@ public class TestMLResource extends LensJerseyTest {
 
     taskBuilder = new MLTask.Builder();
     taskBuilder.algorithm(algoName).hiveConf(conf).labelColumn(labelColumn).outputTable(outputTable)
-        .serverLocation(getBaseUri().toString()).sessionHandle(mlClient.getSessionHandle()).trainingTable(tableName)
-        .userName("foo@localhost").password("bar");
+      .serverLocation(getBaseUri().toString()).sessionHandle(mlClient.getSessionHandle()).trainingTable(tableName)
+      .userName("foo@localhost").password("bar");
     taskBuilder.addFeatureColumn("feature_1").addFeatureColumn("feature_2").addFeatureColumn("feature_3");
 
     MLTask anotherTask = taskBuilder.build();

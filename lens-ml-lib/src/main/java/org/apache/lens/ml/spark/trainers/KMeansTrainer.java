@@ -18,20 +18,20 @@
  */
 package org.apache.lens.ml.spark.trainers;
 
+import java.util.List;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.ml.*;
 import org.apache.lens.ml.spark.HiveTableRDD;
 import org.apache.lens.ml.spark.models.KMeansClusteringModel;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
-import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.MLTrainer;
-import org.apache.lens.ml.TrainerParam;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -40,9 +40,8 @@ import org.apache.spark.mllib.clustering.KMeans;
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vector;
 import org.apache.spark.mllib.linalg.Vectors;
-import scala.Tuple2;
 
-import java.util.List;
+import scala.Tuple2;
 
 /**
  * The Class KMeansTrainer.
@@ -73,7 +72,8 @@ public class KMeansTrainer implements MLTrainer {
   private int runs = 1;
 
   /** The initialization mode. */
-  @TrainerParam(name = "initializationMode", help = "initialization model, either \"random\" or \"k-means||\" (default).", defaultValue = "k-means||")
+  @TrainerParam(name = "initializationMode",
+    help = "initialization model, either \"random\" or \"k-means||\" (default).", defaultValue = "k-means||")
   private String initializationMode = "k-means||";
 
   @Override
@@ -88,7 +88,7 @@ public class KMeansTrainer implements MLTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLTrainer#configure(org.apache.lens.api.LensConf)
    */
   @Override
@@ -103,14 +103,14 @@ public class KMeansTrainer implements MLTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLTrainer#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
    * java.lang.String, java.lang.String[])
    */
   @Override
   public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException {
     List<String> features = TrainerArgParser.parseArgs(this, params);
-    final int featurePositions[] = new int[features.size()];
+    final int[] featurePositions = new int[features.size()];
     final int NUM_FEATURES = features.size();
 
     JavaPairRDD<WritableComparable, HCatRecord> rdd = null;
@@ -131,7 +131,7 @@ public class KMeansTrainer implements MLTrainer {
         @Override
         public Vector call(Tuple2<WritableComparable, HCatRecord> v1) throws Exception {
           HCatRecord hCatRecord = v1._2();
-          double arr[] = new double[NUM_FEATURES];
+          double[] arr = new double[NUM_FEATURES];
           for (int i = 0; i < NUM_FEATURES; i++) {
             Object val = hCatRecord.get(featurePositions[i]);
             arr[i] = val == null ? 0d : (Double) val;
@@ -150,8 +150,7 @@ public class KMeansTrainer implements MLTrainer {
   /**
    * To hive conf.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the hive conf
    */
   private HiveConf toHiveConf(LensConf conf) {

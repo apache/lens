@@ -27,8 +27,7 @@ public abstract class ClassifierBaseModel extends MLModel<Double> {
   /**
    * Gets the feature vector.
    *
-   * @param args
-   *          the args
+   * @param args the args
    * @return the feature vector
    */
   public final double[] getFeatureVector(Object[] args) {

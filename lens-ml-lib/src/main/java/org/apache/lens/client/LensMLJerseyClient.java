@@ -18,29 +18,35 @@
  */
 package org.apache.lens.client;
 
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.NotFoundException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Form;
+import javax.ws.rs.core.MediaType;
+
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.ml.ModelMetadata;
 import org.apache.lens.api.ml.TestReport;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
-import javax.ws.rs.NotFoundException;
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-
-import java.util.List;
-import java.util.Map;
-
 /*
  * Client code to invoke server side ML API
  */
+
 /**
  * The Class LensMLJerseyClient.
  */
@@ -62,8 +68,7 @@ public class LensMLJerseyClient {
   /**
    * Instantiates a new lens ml jersey client.
    *
-   * @param connection
-   *          the connection
+   * @param connection the connection
    */
   public LensMLJerseyClient(LensConnection connection, String password) {
     this.connection = connection;
@@ -74,8 +79,7 @@ public class LensMLJerseyClient {
   /**
    * Instantiates a new lens ml jersey client.
    *
-   * @param connection
-   *          the connection
+   * @param connection the connection
    */
   public LensMLJerseyClient(LensConnection connection, LensSessionHandle sessionHandle) {
     this.connection = connection;
@@ -93,10 +97,8 @@ public class LensMLJerseyClient {
   /**
    * Gets the model metadata.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return the model metadata
    */
   public ModelMetadata getModelMetadata(String algorithm, String modelID) {
@@ -110,10 +112,8 @@ public class LensMLJerseyClient {
   /**
    * Delete model.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    */
   public void deleteModel(String algorithm, String modelID) {
     getMLWebTarget().path("models").path(algorithm).path(modelID).request().delete();
@@ -122,8 +122,7 @@ public class LensMLJerseyClient {
   /**
    * Gets the models for algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the models for algorithm
    */
   public List<String> getModelsForAlgorithm(String algorithm) {
@@ -143,28 +142,22 @@ public class LensMLJerseyClient {
   /**
    * Train model.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param params
-   *          the params
+   * @param algorithm the algorithm
+   * @param params    the params
    * @return the string
    */
   public String trainModel(String algorithm, Form params) {
     return getMLWebTarget().path(algorithm).path("train").request(MediaType.APPLICATION_JSON_TYPE)
-        .post(Entity.entity(params, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
+      .post(Entity.entity(params, MediaType.APPLICATION_FORM_URLENCODED_TYPE), String.class);
   }
 
   /**
    * Test model.
    *
-   * @param table
-   *          the table
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @param outputTable
-   *          the output table name
+   * @param table       the table
+   * @param algorithm   the algorithm
+   * @param modelID     the model id
+   * @param outputTable the output table name
    * @return the string
    */
   public String testModel(String table, String algorithm, String modelID, String outputTable) {
@@ -175,7 +168,7 @@ public class LensMLJerseyClient {
     LensSessionHandle sessionHandle = this.sessionHandle == null ? connection.getSessionHandle() : this.sessionHandle;
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionHandle,
-        MediaType.APPLICATION_XML_TYPE));
+      MediaType.APPLICATION_XML_TYPE));
 
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("outputTable").build(), outputTable));
     return modelTestTarget.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), String.class);
@@ -184,8 +177,7 @@ public class LensMLJerseyClient {
   /**
    * Gets the test reports of algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the test reports of algorithm
    */
   public List<String> getTestReportsOfAlgorithm(String algorithm) {
@@ -200,10 +192,8 @@ public class LensMLJerseyClient {
   /**
    * Gets the test report.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the test report
    */
   public TestReport getTestReport(String algorithm, String reportID) {
@@ -217,10 +207,8 @@ public class LensMLJerseyClient {
   /**
    * Delete test report.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the string
    */
   public String deleteTestReport(String algorithm, String reportID) {
@@ -230,12 +218,9 @@ public class LensMLJerseyClient {
   /**
    * Predict single.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @param features
-   *          the features
+   * @param algorithm the algorithm
+   * @param modelID   the model id
+   * @param features  the features
    * @return the string
    */
   public String predictSingle(String algorithm, String modelID, Map<String, String> features) {
@@ -251,14 +236,13 @@ public class LensMLJerseyClient {
   /**
    * Gets the param description of trainer.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the param description of trainer
    */
   public List<String> getParamDescriptionOfTrainer(String algorithm) {
     try {
       StringList paramHelp = getMLWebTarget().path("trainers").path(algorithm).request(MediaType.APPLICATION_XML)
-          .get(StringList.class);
+        .get(StringList.class);
       return paramHelp.getElements();
     } catch (NotFoundException exc) {
       return null;

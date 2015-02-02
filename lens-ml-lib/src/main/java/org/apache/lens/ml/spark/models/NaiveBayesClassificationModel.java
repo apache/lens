@@ -28,10 +28,8 @@ public class NaiveBayesClassificationModel extends BaseSparkClassificationModel<
   /**
    * Instantiates a new naive bayes classification model.
    *
-   * @param modelId
-   *          the model id
-   * @param model
-   *          the model
+   * @param modelId the model id
+   * @param model   the model
    */
   public NaiveBayesClassificationModel(String modelId, NaiveBayesModel model) {
     super(modelId, model);

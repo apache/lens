@@ -47,7 +47,7 @@ public class MLDBUtils {
 
   /**
    * Insert an ML Task into ml task table
-   * 
+   *
    * @param task
    */
   public void saveMLTask(MLTask task) {
@@ -56,7 +56,7 @@ public class MLDBUtils {
 
   /**
    * Get ML Task given its id
-   * 
+   *
    * @param taskID
    * @return
    */
@@ -66,7 +66,7 @@ public class MLDBUtils {
 
   /**
    * Insert test report into test report table
-   * 
+   *
    * @param testReport
    */
   public void saveTestReport(MLTestReport testReport) {
@@ -75,7 +75,7 @@ public class MLDBUtils {
 
   /**
    * Get test report given its ID
-   * 
+   *
    * @param testReportID
    * @return
    */
@@ -85,7 +85,7 @@ public class MLDBUtils {
 
   /**
    * Insert model metadata into model table
-   * 
+   *
    * @param mlModel
    */
   public void saveMLModel(MLModel<?> mlModel) {
@@ -94,7 +94,7 @@ public class MLDBUtils {
 
   /**
    * Get model metadata given ID
-   * 
+   *
    * @param modelID
    * @return
    */

@@ -23,8 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.Getter;
-import lombok.ToString;
+import org.apache.lens.api.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,7 +33,6 @@ import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.hive.hcatalog.data.schema.HCatFieldSchema;
 import org.apache.hive.hcatalog.data.schema.HCatSchema;
 import org.apache.hive.hcatalog.mapreduce.HCatInputFormat;
-import org.apache.lens.api.LensException;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -43,6 +41,8 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 import com.google.common.base.Preconditions;
+import lombok.Getter;
+import lombok.ToString;
 
 /**
  * The Class TableTrainingSpec.
@@ -83,7 +83,7 @@ public class TableTrainingSpec implements Serializable {
 
   /** The conf. */
   @Getter
-  transient private HiveConf conf;
+  private transient HiveConf conf;
 
   // By default all samples are considered for training
   /** The split training. */
@@ -131,8 +131,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Hive conf.
      *
-     * @param conf
-     *          the conf
+     * @param conf the conf
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder hiveConf(HiveConf conf) {
@@ -143,8 +142,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Database.
      *
-     * @param db
-     *          the db
+     * @param db the db
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder database(String db) {
@@ -155,8 +153,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Table.
      *
-     * @param table
-     *          the table
+     * @param table the table
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder table(String table) {
@@ -167,8 +164,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Partition filter.
      *
-     * @param partFilter
-     *          the part filter
+     * @param partFilter the part filter
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder partitionFilter(String partFilter) {
@@ -179,8 +175,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Label column.
      *
-     * @param labelColumn
-     *          the label column
+     * @param labelColumn the label column
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder labelColumn(String labelColumn) {
@@ -191,8 +186,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Feature columns.
      *
-     * @param featureColumns
-     *          the feature columns
+     * @param featureColumns the feature columns
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder featureColumns(List<String> featureColumns) {
@@ -212,13 +206,12 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Training fraction.
      *
-     * @param trainingFraction
-     *          the training fraction
+     * @param trainingFraction the training fraction
      * @return the table training spec builder
      */
     public TableTrainingSpecBuilder trainingFraction(double trainingFraction) {
       Preconditions.checkArgument(trainingFraction >= 0 && trainingFraction <= 1.0,
-          "Training fraction shoule be between 0 and 1");
+        "Training fraction shoule be between 0 and 1");
       spec.trainingFraction = trainingFraction;
       spec.splitTraining = true;
       return this;
@@ -239,8 +232,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Instantiates a new data sample.
      *
-     * @param labeledPoint
-     *          the labeled point
+     * @param labeledPoint the labeled point
      */
     public DataSample(LabeledPoint labeledPoint) {
       sample = Math.random();
@@ -259,8 +251,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Instantiates a new training filter.
      *
-     * @param fraction
-     *          the fraction
+     * @param fraction the fraction
      */
     public TrainingFilter(double fraction) {
       trainingFraction = fraction;
@@ -268,7 +259,7 @@ public class TableTrainingSpec implements Serializable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
      */
     @Override
@@ -288,8 +279,7 @@ public class TableTrainingSpec implements Serializable {
     /**
      * Instantiates a new testing filter.
      *
-     * @param fraction
-     *          the fraction
+     * @param fraction the fraction
      */
     public TestingFilter(double fraction) {
       trainingFraction = fraction;
@@ -297,7 +287,7 @@ public class TableTrainingSpec implements Serializable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
      */
     @Override
@@ -313,7 +303,7 @@ public class TableTrainingSpec implements Serializable {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
      */
     @Override
@@ -389,10 +379,8 @@ public class TableTrainingSpec implements Serializable {
   /**
    * Creates the rd ds.
    *
-   * @param sparkContext
-   *          the spark context
-   * @throws LensException
-   *           the lens exception
+   * @param sparkContext the spark context
+   * @throws LensException the lens exception
    */
   public void createRDDs(JavaSparkContext sparkContext) throws LensException {
     // Validate the spec
@@ -419,7 +407,7 @@ public class TableTrainingSpec implements Serializable {
     }
 
     ColumnFeatureFunction trainPrepFunction = new ColumnFeatureFunction(featurePositions, valueMappers, labelPos,
-        numFeatures, 0);
+      numFeatures, 0);
     labeledRDD = tableRDD.map(trainPrepFunction);
 
     if (splitTraining) {
@@ -436,7 +424,8 @@ public class TableTrainingSpec implements Serializable {
       testingRDD = sampledRDD.filter(new TestingFilter(trainingFraction)).map(new GetLabeledPoint()).rdd();
     } else {
       LOG.info("Using same RDD for train and test");
-      trainingRDD = testingRDD = labeledRDD.rdd();
+      trainingRDD = labeledRDD.rdd();
+      testingRDD = trainingRDD;
     }
     LOG.info("Generated RDDs");
   }

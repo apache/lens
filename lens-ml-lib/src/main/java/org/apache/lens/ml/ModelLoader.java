@@ -18,17 +18,6 @@
  */
 package org.apache.lens.ml;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.ml.MLModel;
-
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -36,10 +25,23 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
 /**
  * Load ML models from a FS location.
  */
-public class ModelLoader {
+public final class ModelLoader {
+  private ModelLoader() {
+  }
 
   /** The Constant MODEL_PATH_BASE_DIR. */
   public static final String MODEL_PATH_BASE_DIR = "Lens.ml.model.basedir";
@@ -61,21 +63,18 @@ public class ModelLoader {
   public static final long MODEL_CACHE_SIZE = 10;
 
   /** The Constant MODEL_CACHE_TIMEOUT. */
-  public static final long MODEL_CACHE_TIMEOUT = 3600000L;// one hour
+  public static final long MODEL_CACHE_TIMEOUT = 3600000L; // one hour
 
   /** The model cache. */
   private static Cache<Path, MLModel> modelCache = CacheBuilder.newBuilder().maximumSize(MODEL_CACHE_SIZE)
-      .expireAfterAccess(MODEL_CACHE_TIMEOUT, TimeUnit.MILLISECONDS).build();
+    .expireAfterAccess(MODEL_CACHE_TIMEOUT, TimeUnit.MILLISECONDS).build();
 
   /**
    * Gets the model location.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return the model location
    */
   public static Path getModelLocation(Configuration conf, String algorithm, String modelID) {
@@ -87,20 +86,16 @@ public class ModelLoader {
   /**
    * Load model.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return the ML model
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public static MLModel loadModel(Configuration conf, String algorithm, String modelID) throws IOException {
     final Path modelPath = getModelLocation(conf, algorithm, modelID);
     LOG.info("Loading model for algorithm: " + algorithm + " modelID: " + modelID + " At path: "
-        + modelPath.toUri().toString());
+      + modelPath.toUri().toString());
     try {
       return modelCache.get(modelPath, new Callable<MLModel>() {
         @Override
@@ -138,12 +133,9 @@ public class ModelLoader {
   /**
    * Gets the test report path.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param report
-   *          the report
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param report    the report
    * @return the test report path
    */
   public static Path getTestReportPath(Configuration conf, String algorithm, String report) {
@@ -154,12 +146,9 @@ public class ModelLoader {
   /**
    * Save test report.
    *
-   * @param conf
-   *          the conf
-   * @param report
-   *          the report
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf   the conf
+   * @param report the report
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public static void saveTestReport(Configuration conf, MLTestReport report) throws IOException {
     Path reportDir = new Path(conf.get(TEST_REPORT_BASE_DIR, TEST_REPORT_BASE_DIR_DEFAULT));
@@ -196,15 +185,11 @@ public class ModelLoader {
   /**
    * Load report.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the ML test report
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public static MLTestReport loadReport(Configuration conf, String algorithm, String reportID) throws IOException {
     Path reportLocation = getTestReportPath(conf, algorithm, reportID);
@@ -228,14 +213,10 @@ public class ModelLoader {
   /**
    * Delete model.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param modelID   the model id
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public static void deleteModel(HiveConf conf, String algorithm, String modelID) throws IOException {
     Path modelLocation = getModelLocation(conf, algorithm, modelID);
@@ -246,14 +227,10 @@ public class ModelLoader {
   /**
    * Delete test report.
    *
-   * @param conf
-   *          the conf
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf      the conf
+   * @param algorithm the algorithm
+   * @param reportID  the report id
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public static void deleteTestReport(HiveConf conf, String algorithm, String reportID) throws IOException {
     Path reportPath = getTestReportPath(conf, algorithm, reportID);

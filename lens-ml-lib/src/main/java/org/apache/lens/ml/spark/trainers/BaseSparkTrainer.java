@@ -18,23 +18,24 @@
  */
 package org.apache.lens.ml.spark.trainers;
 
+import java.lang.reflect.Field;
+import java.util.*;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
-import org.apache.lens.ml.spark.TableTrainingSpec;
-import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.Algorithm;
 import org.apache.lens.ml.MLModel;
 import org.apache.lens.ml.MLTrainer;
 import org.apache.lens.ml.TrainerParam;
+import org.apache.lens.ml.spark.TableTrainingSpec;
+import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
-
-import java.lang.reflect.Field;
-import java.util.*;
 
 /**
  * The Class BaseSparkTrainer.
@@ -81,10 +82,8 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * Instantiates a new base spark trainer.
    *
-   * @param name
-   *          the name
-   * @param description
-   *          the description
+   * @param name        the name
+   * @param description the description
    */
   public BaseSparkTrainer(String name, String description) {
     this.name = name;
@@ -102,7 +101,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLTrainer#configure(org.apache.lens.api.LensConf)
    */
   @Override
@@ -112,17 +111,17 @@ public abstract class BaseSparkTrainer implements MLTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLTrainer#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
    * java.lang.String, java.lang.String[])
    */
   @Override
   public MLModel<?> train(LensConf conf, String db, String table, String modelId, String... params)
-      throws LensException {
+    throws LensException {
     parseParams(params);
 
     TableTrainingSpec.TableTrainingSpecBuilder builder = TableTrainingSpec.newBuilder().hiveConf(toHiveConf(conf))
-        .database(db).table(table).partitionFilter(partitionFilter).featureColumns(features).labelColumn(label);
+      .database(db).table(table).partitionFilter(partitionFilter).featureColumns(features).labelColumn(label);
 
     if (useTrainingFraction) {
       builder.trainingFraction(trainingFraction);
@@ -145,8 +144,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * To hive conf.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the hive conf
    */
   protected HiveConf toHiveConf(LensConf conf) {
@@ -160,8 +158,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * Parses the params.
    *
-   * @param args
-   *          the args
+   * @param args the args
    */
   public void parseParams(String[] args) {
     if (args.length % 2 != 0) {
@@ -204,10 +201,8 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * Gets the param value.
    *
-   * @param param
-   *          the param
-   * @param defaultVal
-   *          the default val
+   * @param param      the param
+   * @param defaultVal the default val
    * @return the param value
    */
   public double getParamValue(String param, double defaultVal) {
@@ -215,6 +210,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
       try {
         return Double.parseDouble(params.get(param));
       } catch (NumberFormatException nfe) {
+        LOG.warn("Couldn't parse param value: " + param + " as double.");
       }
     }
     return defaultVal;
@@ -223,10 +219,8 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * Gets the param value.
    *
-   * @param param
-   *          the param
-   * @param defaultVal
-   *          the default val
+   * @param param      the param
+   * @param defaultVal the default val
    * @return the param value
    */
   public int getParamValue(String param, int defaultVal) {
@@ -234,6 +228,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
       try {
         return Integer.parseInt(params.get(param));
       } catch (NumberFormatException nfe) {
+        LOG.warn("Couldn't parse param value: " + param + " as integer.");
       }
     }
     return defaultVal;
@@ -277,22 +272,18 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /**
    * Parses the trainer params.
    *
-   * @param params
-   *          the params
+   * @param params the params
    */
   public abstract void parseTrainerParams(Map<String, String> params);
 
   /**
    * Train internal.
    *
-   * @param modelId
-   *          the model id
-   * @param trainingRDD
-   *          the training rdd
+   * @param modelId     the model id
+   * @param trainingRDD the training rdd
    * @return the base spark classification model
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   protected abstract BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
-      throws LensException;
+    throws LensException;
 }

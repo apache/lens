@@ -18,13 +18,15 @@
  */
 package org.apache.lens.ml.spark.trainers;
 
+import java.util.Map;
+
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.Algorithm;
+import org.apache.lens.ml.TrainerParam;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.spark.models.DecisionTreeClassificationModel;
 import org.apache.lens.ml.spark.models.SparkDecisionTreeModel;
-import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.TrainerParam;
-import org.apache.lens.ml.spark.trainers.BaseSparkTrainer;
+
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.DecisionTree$;
 import org.apache.spark.mllib.tree.configuration.Algo$;
@@ -34,9 +36,8 @@ import org.apache.spark.mllib.tree.impurity.Impurity;
 import org.apache.spark.mllib.tree.impurity.Variance$;
 import org.apache.spark.mllib.tree.model.DecisionTreeModel;
 import org.apache.spark.rdd.RDD;
-import scala.Enumeration;
 
-import java.util.Map;
+import scala.Enumeration;
 
 /**
  * The Class DecisionTreeTrainer.
@@ -50,20 +51,19 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
 
   /** The decision tree impurity. */
   @TrainerParam(name = "impurity", help = "Impurity measure used by the decision tree. "
-      + "Allowed values are 'gini', 'entropy' and 'variance'")
+    + "Allowed values are 'gini', 'entropy' and 'variance'")
   private Impurity decisionTreeImpurity;
 
   /** The max depth. */
-  @TrainerParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.", defaultValue = "100")
+  @TrainerParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.",
+    defaultValue = "100")
   private int maxDepth;
 
   /**
    * Instantiates a new decision tree trainer.
    *
-   * @param name
-   *          the name
-   * @param description
-   *          the description
+   * @param name        the name
+   * @param description the description
    */
   public DecisionTreeTrainer(String name, String description) {
     super(name, description);
@@ -71,7 +71,7 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
    */
   @Override
@@ -97,12 +97,12 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
-      throws LensException {
+    throws LensException {
     DecisionTreeModel model = DecisionTree$.MODULE$.train(trainingRDD, algo, decisionTreeImpurity, maxDepth);
     return new DecisionTreeClassificationModel(modelId, new SparkDecisionTreeModel(model));
   }

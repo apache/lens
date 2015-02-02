@@ -18,13 +18,14 @@
  */
 package org.apache.lens.rdd;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.spark.api.java.function.Function;
-import scala.Tuple2;
 
-import java.util.ArrayList;
-import java.util.List;
+import scala.Tuple2;
 
 /**
  * The Class HCatRecordToObjectListMapper.
@@ -33,7 +34,7 @@ public class HCatRecordToObjectListMapper implements Function<Tuple2<WritableCom
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
    */
   @Override

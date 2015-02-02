@@ -18,22 +18,23 @@
  */
 package org.apache.lens.ml.spark;
 
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.ml.Algorithms;
 import org.apache.lens.ml.MLDriver;
 import org.apache.lens.ml.MLTrainer;
 import org.apache.lens.ml.spark.trainers.*;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
-
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The Class SparkMLDriver.
@@ -79,8 +80,7 @@ public class SparkMLDriver implements MLDriver {
   /**
    * Use spark context.
    *
-   * @param jsc
-   *          the jsc
+   * @param jsc the jsc
    */
   public void useSparkContext(JavaSparkContext jsc) {
     ownsSparkContext = false;
@@ -89,7 +89,7 @@ public class SparkMLDriver implements MLDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLDriver#isTrainerSupported(java.lang.String)
    */
   @Override
@@ -99,7 +99,7 @@ public class SparkMLDriver implements MLDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLDriver#getTrainerInstance(java.lang.String)
    */
   @Override
@@ -134,7 +134,7 @@ public class SparkMLDriver implements MLDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLDriver#init(org.apache.lens.api.LensConf)
    */
   @Override
@@ -177,7 +177,7 @@ public class SparkMLDriver implements MLDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLDriver#start()
    */
   @Override
@@ -223,10 +223,10 @@ public class SparkMLDriver implements MLDriver {
       }
 
       // Add the current jar
-      String[] LensSparkLibJars = JavaSparkContext.jarOfClass(SparkMLDriver.class);
-      for (String LensSparkJar : LensSparkLibJars) {
-        LOG.info("Adding Lens JAR " + LensSparkJar);
-        sparkContext.addJar(LensSparkJar);
+      String[] lensSparkLibJars = JavaSparkContext.jarOfClass(SparkMLDriver.class);
+      for (String lensSparkJar : lensSparkLibJars) {
+        LOG.info("Adding Lens JAR " + lensSparkJar);
+        sparkContext.addJar(lensSparkJar);
       }
     }
 
@@ -236,7 +236,7 @@ public class SparkMLDriver implements MLDriver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLDriver#stop()
    */
   @Override
@@ -260,8 +260,7 @@ public class SparkMLDriver implements MLDriver {
   /**
    * Check started.
    *
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public void checkStarted() throws LensException {
     if (!isStarted) {

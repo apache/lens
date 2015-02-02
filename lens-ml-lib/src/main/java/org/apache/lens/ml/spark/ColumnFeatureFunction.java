@@ -18,14 +18,13 @@
  */
 package org.apache.lens.ml.spark;
 
-import com.google.common.base.Preconditions;
-import org.apache.lens.ml.spark.FeatureFunction;
-import org.apache.lens.ml.spark.FeatureValueMapper;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.log4j.Logger;
 import org.apache.spark.mllib.linalg.Vectors;
 import org.apache.spark.mllib.regression.LabeledPoint;
+
+import com.google.common.base.Preconditions;
 import scala.Tuple2;
 
 /**
@@ -56,23 +55,18 @@ public class ColumnFeatureFunction extends FeatureFunction {
    * Feature positions and value mappers are parallel arrays. featurePositions[i] gives the position of ith feature in
    * the HCatRecord, and valueMappers[i] gives the value mapper used to map that feature to a Double value
    *
-   * @param featurePositions
-   *          position number of feature column in the HCatRecord
-   * @param valueMappers
-   *          mapper for each column position
-   * @param labelColumnPos
-   *          position of the label column
-   * @param numFeatures
-   *          number of features in the feature vector
-   * @param defaultLabel
-   *          default lable to be used for null records
+   * @param featurePositions position number of feature column in the HCatRecord
+   * @param valueMappers     mapper for each column position
+   * @param labelColumnPos   position of the label column
+   * @param numFeatures      number of features in the feature vector
+   * @param defaultLabel     default lable to be used for null records
    */
-  public ColumnFeatureFunction(int featurePositions[], FeatureValueMapper valueMappers[], int labelColumnPos,
-      int numFeatures, double defaultLabel) {
+  public ColumnFeatureFunction(int[] featurePositions, FeatureValueMapper[] valueMappers, int labelColumnPos,
+    int numFeatures, double defaultLabel) {
     Preconditions.checkNotNull(valueMappers, "Value mappers argument is required");
     Preconditions.checkNotNull(featurePositions, "Feature positions are required");
     Preconditions.checkArgument(valueMappers.length == featurePositions.length,
-        "Mismatch between number of value mappers and feature positions");
+      "Mismatch between number of value mappers and feature positions");
 
     this.featurePositions = featurePositions;
     this.featureValueMappers = valueMappers;
@@ -83,7 +77,7 @@ public class ColumnFeatureFunction extends FeatureFunction {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.spark.FeatureFunction#call(scala.Tuple2)
    */
   @Override
@@ -95,7 +89,7 @@ public class ColumnFeatureFunction extends FeatureFunction {
       return defaultLabeledPoint;
     }
 
-    double features[] = new double[numFeatures];
+    double[] features = new double[numFeatures];
 
     for (int i = 0; i < numFeatures; i++) {
       int featurePos = featurePositions[i];

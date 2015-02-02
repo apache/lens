@@ -19,6 +19,7 @@
 package org.apache.lens.ml.spark.models;
 
 import org.apache.lens.ml.spark.DoubleValueMapper;
+
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.mllib.classification.ClassificationModel;
 import org.apache.spark.mllib.linalg.Vector;
@@ -36,8 +37,7 @@ public class SparkDecisionTreeModel implements ClassificationModel {
   /**
    * Instantiates a new spark decision tree model.
    *
-   * @param model
-   *          the model
+   * @param model the model
    */
   public SparkDecisionTreeModel(DecisionTreeModel model) {
     this.model = model;
@@ -45,7 +45,7 @@ public class SparkDecisionTreeModel implements ClassificationModel {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.mllib.classification.ClassificationModel#predict(org.apache.spark.rdd.RDD)
    */
   @Override
@@ -55,7 +55,7 @@ public class SparkDecisionTreeModel implements ClassificationModel {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.mllib.classification.ClassificationModel#predict(org.apache.spark.mllib.linalg.Vector)
    */
   @Override
@@ -65,7 +65,7 @@ public class SparkDecisionTreeModel implements ClassificationModel {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.mllib.classification.ClassificationModel#predict(org.apache.spark.api.java.JavaRDD)
    */
   @Override

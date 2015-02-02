@@ -27,7 +27,7 @@ public class ForecastingModel extends MLModel<MultiPrediction> {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLModel#predict(java.lang.Object[])
    */
   @Override
@@ -46,8 +46,7 @@ public class ForecastingModel extends MLModel<MultiPrediction> {
     /**
      * Instantiates a new forecasting predictions.
      *
-     * @param values
-     *          the values
+     * @param values the values
      */
     public ForecastingPredictions(List<LabelledPrediction> values) {
       this.values = values;
@@ -73,10 +72,8 @@ public class ForecastingModel extends MLModel<MultiPrediction> {
     /**
      * Instantiates a new forecasting label.
      *
-     * @param timestamp
-     *          the timestamp
-     * @param value
-     *          the value
+     * @param timestamp the timestamp
+     * @param value     the value
      */
     public ForecastingLabel(long timestamp, double value) {
       this.timestamp = timestamp;

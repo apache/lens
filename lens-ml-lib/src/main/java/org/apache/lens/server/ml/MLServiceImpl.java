@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server.ml;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
@@ -29,14 +32,12 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
 import org.apache.lens.server.api.query.QueryExecutionService;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hive.service.CompositeService;
-import org.apache.lens.server.ml.MLService;
-
-import java.util.*;
 
 /**
  * The Class MLServiceImpl.
@@ -65,8 +66,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
   /**
    * Instantiates a new ML service impl.
    *
-   * @param name
-   *          the name
+   * @param name the name
    */
   public MLServiceImpl(String name) {
     super(name);
@@ -79,7 +79,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getTrainerForName(java.lang.String)
    */
   @Override
@@ -89,7 +89,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#train(java.lang.String, java.lang.String, java.lang.String[])
    */
   @Override
@@ -99,7 +99,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getModels(java.lang.String)
    */
   @Override
@@ -109,7 +109,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getModel(java.lang.String, java.lang.String)
    */
   @Override
@@ -127,8 +127,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
   /**
    * Gets the service provider factory.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the service provider factory
    */
   private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
@@ -144,7 +143,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#init(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
@@ -158,7 +157,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#start()
    */
   @Override
@@ -170,7 +169,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#stop()
    */
   @Override
@@ -189,7 +188,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getModelPath(java.lang.String, java.lang.String)
    */
   @Override
@@ -199,20 +198,20 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#testModel(org.apache.lens.api.LensSessionHandle, java.lang.String, java.lang.String,
    * java.lang.String)
    */
   @Override
   public MLTestReport testModel(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
-      String outputTable) throws LensException {
+    String outputTable) throws LensException {
 
     return ml.testModel(sessionHandle, table, algorithm, modelID, new DirectQueryRunner(sessionHandle), outputTable);
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getTestReports(java.lang.String)
    */
   @Override
@@ -222,7 +221,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getTestReport(java.lang.String, java.lang.String)
    */
   @Override
@@ -232,7 +231,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#predict(java.lang.String, java.lang.String, java.lang.Object[])
    */
   @Override
@@ -242,7 +241,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#deleteModel(java.lang.String, java.lang.String)
    */
   @Override
@@ -252,7 +251,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#deleteTestReport(java.lang.String, java.lang.String)
    */
   @Override
@@ -268,8 +267,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
     /**
      * Instantiates a new direct query runner.
      *
-     * @param sessionHandle
-     *          the session handle
+     * @param sessionHandle the session handle
      */
     public DirectQueryRunner(LensSessionHandle sessionHandle) {
       super(sessionHandle);
@@ -277,7 +275,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.lens.ml.TestQueryRunner#runQuery(java.lang.String)
      */
     @Override
@@ -308,7 +306,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
       if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
         throw new LensException("Failed to run test query: " + testQueryHandle.getHandleId() + " reason= "
-            + query.getStatus().getErrorMessage());
+          + query.getStatus().getErrorMessage());
       }
 
       return testQueryHandle;
@@ -317,7 +315,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.LensML#getAlgoParamDescription(java.lang.String)
    */
   @Override

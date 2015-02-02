@@ -18,14 +18,14 @@
  */
 package org.apache.lens.ml;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * Instantiates a new ML model.
@@ -72,8 +72,7 @@ public abstract class MLModel<PREDICTION> implements Serializable {
   /**
    * Predict.
    *
-   * @param args
-   *          the args
+   * @param args the args
    * @return the prediction
    */
   public abstract PREDICTION predict(Object... args);

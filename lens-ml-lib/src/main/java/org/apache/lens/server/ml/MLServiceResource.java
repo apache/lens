@@ -18,35 +18,40 @@
  */
 package org.apache.lens.server.ml;
 
+import static org.apache.commons.lang.StringUtils.isBlank;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.ws.rs.*;
+import javax.ws.rs.core.*;
+
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.ml.ModelMetadata;
 import org.apache.lens.api.ml.TestReport;
-import org.apache.lens.ml.ModelLoader;
 import org.apache.lens.ml.MLModel;
 import org.apache.lens.ml.MLTestReport;
+import org.apache.lens.ml.ModelLoader;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
+
 import org.glassfish.jersey.media.multipart.FormDataParam;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.*;
-
-import java.util.*;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
 
 /**
  * Machine Learning service.
  */
 @Path("/ml")
-@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML })
+@Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
 public class MLServiceResource {
 
   /** The Constant LOG. */
@@ -61,7 +66,7 @@ public class MLServiceResource {
   /** The service provider factory. */
   ServiceProviderFactory serviceProviderFactory;
 
-  private static final HiveConf hiveConf;
+  private static final HiveConf HIVE_CONF;
 
   /**
    * Message indicating if ML service is up
@@ -69,17 +74,17 @@ public class MLServiceResource {
   public static final String ML_UP_MESSAGE = "ML service is up";
 
   static {
-    hiveConf = new HiveConf();
+    HIVE_CONF = new HiveConf();
     // Add default config so that we know the service provider implementation
-    hiveConf.addResource("lensserver-default.xml");
-    hiveConf.addResource("lens-site.xml");
+    HIVE_CONF.addResource("lensserver-default.xml");
+    HIVE_CONF.addResource("lens-site.xml");
   }
 
   /**
    * Instantiates a new ML service resource.
    */
   public MLServiceResource() {
-    serviceProviderFactory = getServiceProviderFactory(hiveConf);
+    serviceProviderFactory = getServiceProviderFactory(HIVE_CONF);
   }
 
   private ServiceProvider getServiceProvider() {
@@ -92,8 +97,7 @@ public class MLServiceResource {
   /**
    * Gets the service provider factory.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the service provider factory
    */
   private ServiceProviderFactory getServiceProviderFactory(HiveConf conf) {
@@ -140,8 +144,7 @@ public class MLServiceResource {
   /**
    * Gets the human readable param description of an algorithm
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the param description
    */
   @GET
@@ -162,11 +165,9 @@ public class MLServiceResource {
   /**
    * Get model ID list for a given algorithm.
    *
-   * @param algorithm
-   *          algorithm name
+   * @param algorithm algorithm name
    * @return the models for algo
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @GET
   @Path("models/{algorithm}")
@@ -181,45 +182,39 @@ public class MLServiceResource {
   /**
    * Get metadata of the model given algorithm and model ID.
    *
-   * @param algorithm
-   *          algorithm name
-   * @param modelID
-   *          model ID
+   * @param algorithm algorithm name
+   * @param modelID   model ID
    * @return model metadata
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @GET
   @Path("models/{algorithm}/{modelID}")
   public ModelMetadata getModelMetadata(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID)
-      throws LensException {
+    throws LensException {
     MLModel model = getMlService().getModel(algorithm, modelID);
     if (model == null) {
       throw new NotFoundException("Model not found " + modelID + ", algo=" + algorithm);
     }
 
     ModelMetadata meta = new ModelMetadata(model.getId(), model.getTable(), model.getTrainerName(), StringUtils.join(
-        model.getParams(), ' '), model.getCreatedAt().toString(), getMlService().getModelPath(algorithm, modelID),
-        model.getLabelColumn(), StringUtils.join(model.getFeatureColumns(), ","));
+      model.getParams(), ' '), model.getCreatedAt().toString(), getMlService().getModelPath(algorithm, modelID),
+      model.getLabelColumn(), StringUtils.join(model.getFeatureColumns(), ","));
     return meta;
   }
 
   /**
    * Delete a model given model ID and algorithm name.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return confirmation text
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @DELETE
-  @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
+  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @Path("models/{algorithm}/{modelID}")
   public String deleteModel(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID)
-      throws LensException {
+    throws LensException {
     getMlService().deleteModel(algorithm, modelID);
     return "DELETED model=" + modelID + " algorithm=" + algorithm;
   }
@@ -228,28 +223,25 @@ public class MLServiceResource {
    * Train a model given an algorithm name and algorithm parameters
    * <p>
    * Following parameters are mandatory and must be passed as part of the form
-   *
+   * <p/>
    * <ol>
    * <li>table - input Hive table to load training data from</li>
    * <li>label - name of the labelled column</li>
    * <li>feature - one entry per feature column. At least one feature column is required</li>
    * </ol>
-   *
+   * <p/>
    * </p>
    *
-   * @param algorithm
-   *          algorithm name
-   * @param form
-   *          form data
+   * @param algorithm algorithm name
+   * @param form      form data
    * @return if model is successfully trained, the model ID will be returned
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @POST
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Path("{algorithm}/train")
   public String train(@PathParam("algorithm") String algorithm, MultivaluedMap<String, String> form)
-      throws LensException {
+    throws LensException {
 
     // Check if trainer is valid
     if (getMlService().getTrainerForName(algorithm) == null) {
@@ -294,7 +286,7 @@ public class MLServiceResource {
       }
     }
     LOG.info("Training table " + table + " with algo " + algorithm + " params=" + trainerArgs.toString());
-    String modelId = getMlService().train(table, algorithm, trainerArgs.toArray(new String[] {}));
+    String modelId = getMlService().train(table, algorithm, trainerArgs.toArray(new String[]{}));
     LOG.info("Done training " + table + " modelid = " + modelId);
     return modelId;
   }
@@ -316,24 +308,19 @@ public class MLServiceResource {
   /**
    * Run a test on a model for an algorithm.
    *
-   * @param algorithm
-   *          algorithm name
-   * @param modelID
-   *          model ID
-   * @param table
-   *          Hive table to run test on
-   * @param session
-   *          Lens session ID. This session ID will be used to run the test query
+   * @param algorithm algorithm name
+   * @param modelID   model ID
+   * @param table     Hive table to run test on
+   * @param session   Lens session ID. This session ID will be used to run the test query
    * @return Test report ID
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @POST
   @Path("test/{table}/{algorithm}/{modelID}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   public String test(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID,
-      @PathParam("table") String table, @FormDataParam("sessionid") LensSessionHandle session,
-      @FormDataParam("outputTable") String outputTable) throws LensException {
+    @PathParam("table") String table, @FormDataParam("sessionid") LensSessionHandle session,
+    @FormDataParam("outputTable") String outputTable) throws LensException {
     MLTestReport testReport = getMlService().testModel(session, table, algorithm, modelID, outputTable);
     return testReport.getReportID();
   }
@@ -341,11 +328,9 @@ public class MLServiceResource {
   /**
    * Get list of reports for a given algorithm.
    *
-   * @param algoritm
-   *          the algoritm
+   * @param algoritm the algoritm
    * @return the reports for algorithm
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @GET
   @Path("reports/{algorithm}")
@@ -360,18 +345,15 @@ public class MLServiceResource {
   /**
    * Get a single test report given the algorithm name and report id.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the test report
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @GET
   @Path("reports/{algorithm}/{reportID}")
   public TestReport getTestReport(@PathParam("algorithm") String algorithm, @PathParam("reportID") String reportID)
-      throws LensException {
+    throws LensException {
     MLTestReport report = getMlService().getTestReport(algorithm, reportID);
 
     if (report == null) {
@@ -379,27 +361,24 @@ public class MLServiceResource {
     }
 
     TestReport result = new TestReport(report.getTestTable(), report.getOutputTable(), report.getOutputColumn(),
-        report.getLabelColumn(), StringUtils.join(report.getFeatureColumns(), ","), report.getAlgorithm(),
-        report.getModelID(), report.getReportID(), report.getLensQueryID());
+      report.getLabelColumn(), StringUtils.join(report.getFeatureColumns(), ","), report.getAlgorithm(),
+      report.getModelID(), report.getReportID(), report.getLensQueryID());
     return result;
   }
 
   /**
    * DELETE a report given the algorithm name and report ID.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the string
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @DELETE
   @Path("reports/{algorithm}/{reportID}")
-  @Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN })
+  @Consumes({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public String deleteTestReport(@PathParam("algorithm") String algorithm, @PathParam("reportID") String reportID)
-      throws LensException {
+    throws LensException {
     getMlService().deleteTestReport(algorithm, reportID);
     return "DELETED report=" + reportID + " algorithm=" + algorithm;
   }
@@ -407,21 +386,17 @@ public class MLServiceResource {
   /**
    * Predict.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @param uriInfo
-   *          the uri info
+   * @param algorithm the algorithm
+   * @param modelID   the model id
+   * @param uriInfo   the uri info
    * @return the string
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @GET
   @Path("/predict/{algorithm}/{modelID}")
-  @Produces({ MediaType.APPLICATION_ATOM_XML, MediaType.APPLICATION_JSON })
+  @Produces({MediaType.APPLICATION_ATOM_XML, MediaType.APPLICATION_JSON})
   public String predict(@PathParam("algorithm") String algorithm, @PathParam("modelID") String modelID,
-      @Context UriInfo uriInfo) throws LensException {
+    @Context UriInfo uriInfo) throws LensException {
     // Load the model instance
     MLModel<?> model = getMlService().getModel(algorithm, modelID);
 

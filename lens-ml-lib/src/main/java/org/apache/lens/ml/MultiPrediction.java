@@ -24,5 +24,5 @@ import java.util.List;
  * The Interface MultiPrediction.
  */
 public interface MultiPrediction {
-  public List<LabelledPrediction> getPredictions();
+  List<LabelledPrediction> getPredictions();
 }

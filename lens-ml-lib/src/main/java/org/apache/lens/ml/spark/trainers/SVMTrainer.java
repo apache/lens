@@ -18,17 +18,18 @@
  */
 package org.apache.lens.ml.spark.trainers;
 
+import java.util.Map;
+
 import org.apache.lens.api.LensException;
-import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
-import org.apache.lens.ml.spark.models.SVMClassificationModel;
 import org.apache.lens.ml.Algorithm;
 import org.apache.lens.ml.TrainerParam;
+import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
+import org.apache.lens.ml.spark.models.SVMClassificationModel;
+
 import org.apache.spark.mllib.classification.SVMModel;
 import org.apache.spark.mllib.classification.SVMWithSGD;
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
-
-import java.util.Map;
 
 /**
  * The Class SVMTrainer.
@@ -55,10 +56,8 @@ public class SVMTrainer extends BaseSparkTrainer {
   /**
    * Instantiates a new SVM trainer.
    *
-   * @param name
-   *          the name
-   * @param description
-   *          the description
+   * @param name        the name
+   * @param description the description
    */
   public SVMTrainer(String name, String description) {
     super(name, description);
@@ -66,7 +65,7 @@ public class SVMTrainer extends BaseSparkTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
    */
   @Override
@@ -79,12 +78,12 @@ public class SVMTrainer extends BaseSparkTrainer {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
-      throws LensException {
+    throws LensException {
     SVMModel svmModel = SVMWithSGD.train(trainingRDD, iterations, stepSize, regParam, minBatchFraction);
     return new SVMClassificationModel(modelId, svmModel);
   }
