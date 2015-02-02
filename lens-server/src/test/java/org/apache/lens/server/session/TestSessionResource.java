@@ -19,10 +19,11 @@
 package org.apache.lens.server.session;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
-import com.google.common.io.Files;
+import org.apache.commons.io.FileUtils;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
@@ -33,6 +34,9 @@ import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.common.LenServerTestException;
+import org.apache.lens.server.common.LensServerTestFileUtils;
+import org.apache.lens.server.common.TestResourceFile;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -248,44 +252,52 @@ public class TestSessionResource extends LensJerseyTest {
    *           the lens exception
    */
   @Test
-  public void testAuxJars() throws LensException {
+  public void testAuxJars() throws LensException, IOException, LenServerTestException {
     final WebTarget target = target().path("session");
     final FormDataMultiPart mp = new FormDataMultiPart();
     final LensConf sessionconf = new LensConf();
 
-    sessionconf.addProperty(LensConfConstants.AUX_JARS, "test-util/test-aux.jar");
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        sessionconf, MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new LensConf(), MediaType.APPLICATION_XML_TYPE));
+    String jarFileName = TestResourceFile.TEST_AUX_JAR.getValue();
+    File jarFile = new File(jarFileName);
+    FileUtils.touch(jarFile);
 
-    final LensSessionHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        LensSessionHandle.class);
-    Assert.assertNotNull(handle);
+    try {
+      sessionconf.addProperty(LensConfConstants.AUX_JARS, jarFileName);
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+          sessionconf, MediaType.APPLICATION_XML_TYPE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+          new LensConf(), MediaType.APPLICATION_XML_TYPE));
 
-    // verify aux jars are loaded
-    HiveSessionService service = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
-    ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
-    boolean found = false;
-    for (URL path : ((URLClassLoader) loader).getURLs()) {
-      if (path.toString().contains("test-aux.jar")) {
-        found = true;
+      final LensSessionHandle handle = target.request()
+          .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
+      Assert.assertNotNull(handle);
+
+      // verify aux jars are loaded
+      HiveSessionService service = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
+      ClassLoader loader = service.getSession(handle).getSessionState().getConf().getClassLoader();
+      boolean found = false;
+      for (URL path : ((URLClassLoader) loader).getURLs()) {
+        if (path.toString().contains(jarFileName)) {
+          found = true;
+        }
       }
+      Assert.assertTrue(found);
+
+      final WebTarget resourcetarget = target().path("session/resources");
+      // list all resources
+      StringList listResources = resourcetarget.path("list").queryParam("sessionid", handle).request()
+          .get(StringList.class);
+      Assert.assertEquals(listResources.getElements().size(), 1);
+      Assert.assertTrue(listResources.getElements().get(0).contains(jarFileName));
+
+      // close session
+      APIResult result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
+      Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+    } finally {
+      LensServerTestFileUtils.deleteFile(jarFile);
     }
-    Assert.assertTrue(found);
-
-    final WebTarget resourcetarget = target().path("session/resources");
-    // list all resources
-    StringList listResources = resourcetarget.path("list").queryParam("sessionid", handle).request()
-        .get(StringList.class);
-    Assert.assertEquals(listResources.getElements().size(), 1);
-    Assert.assertTrue(listResources.getElements().get(0).contains("test-aux.jar"));
-
-    // close session
-    APIResult result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
-    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   /**
@@ -306,27 +318,25 @@ public class TestSessionResource extends LensJerseyTest {
   }
 
   @Test
-  public void testServerMustRestartOnManualRelocationOfAddedResources() throws Exception {
+  public void testServerMustRestartOnManualDeletionOfAddedResources() throws IOException, LenServerTestException {
 
-    /* Execution Steps: */
+    /* Begin: Setup */
 
-    /* Add a resource jar */
-    final String jarFile = getClass().getClassLoader().getResource("restart-on-resource-move-test.jar").getPath();
+    /* Add a resource jar to current working directory */
+    File jarFile = new File(TestResourceFile.TEST_RESTART_ON_RESOURCE_MOVE_JAR.getValue());
+    FileUtils.touch(jarFile);
+
+    /* Add the created resource jar to lens server */
     LensSessionHandle sessionHandle = openSession("foo","bar", new LensConf());
-    addResource(sessionHandle,"jar",jarFile);
+    addResource(sessionHandle,"jar",jarFile.getPath());
 
-    /* Move resource jar to a new path */
-    File jarFileObj = new File(jarFile);
-    File newJarFileObj = new File(jarFileObj.getParent(), "restart-on-resource-move-test.jar.moved");
-    Files.move(jarFileObj, newJarFileObj);
+    /* Delete resource jar from current working directory */
+    LensServerTestFileUtils.deleteFile(jarFile);
 
-    try {
-      /* Verification Steps: server should restart without exceptions */
-      restartLensServer();
-    } finally {
-      /* PostConditions Setup : Move resource back to oldPath */
-      Files.move(newJarFileObj,jarFileObj);
-    }
+    /* End: Setup */
+
+    /* Verification Steps: server should restart without exceptions */
+    restartLensServer();
   }
 
   private LensSessionHandle openSession(final String userName,final String passwd, final LensConf conf) {
@@ -360,4 +370,5 @@ public class TestSessionResource extends LensJerseyTest {
       throw new RuntimeException("Could not add resource:"+result);
     }
   }
+
 }
