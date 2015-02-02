@@ -45,6 +45,11 @@
       <item name="Install and Run" href="./gettingstarted/install-steps.html" />
       <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
     </menu>
+      <menu name="Releases" >
+      <item name="Download" href="./releases/download.html" />
+      <item name="Compatibility" href="./releases/incompatibility.html" />
+      <item name="Release Notes" href="./releases/release-note.html" />
+      </menu>
 		<menu name="User Documentation">
       <item name="Lens User Guide" href="./user/index.html" />
       <item name="OLAP data cube" href="./user/olap-cube.html" />
