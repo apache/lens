@@ -755,6 +755,8 @@ class JoinResolver implements ContextRewriter {
       }
       // prune allPaths with qdims
       LOG.info("pruning allPaths before generating all permutations.");
+      LOG.info("allPaths: " + allPaths);
+      LOG.info("qdims: " + qdims);
       pruneAllPathsWithQueriedDims(allPaths, qdims);
 
       // Number of paths in each path set
@@ -824,13 +826,11 @@ class JoinResolver implements ContextRewriter {
     private void pruneAllPathsWithQueriedDims
       (Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths, Set<Dimension> qdims) {
       Iterator<Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>>> iter = allPaths.entrySet().iterator();
-      while(iter.hasNext()) {
+      while (iter.hasNext()) {
         Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> cur = iter.next();
-        if(cur.getKey().getAlias() == null) {
-          if(!qdims.contains(cur.getKey().getObject())) {
-            LOG.info("removing from allPaths: " + cur);
-            iter.remove();
-          }
+        if (!qdims.contains(cur.getKey().getObject())) {
+          LOG.info("removing from allPaths: " + cur);
+          iter.remove();
         }
       }
     }
