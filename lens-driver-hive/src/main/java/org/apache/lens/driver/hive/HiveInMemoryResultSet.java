@@ -23,16 +23,12 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.hive.service.cli.CLIServiceClient;
-import org.apache.hive.service.cli.FetchOrientation;
-import org.apache.hive.service.cli.HiveSQLException;
-import org.apache.hive.service.cli.OperationHandle;
-import org.apache.hive.service.cli.RowSet;
-import org.apache.hive.service.cli.TableSchema;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
+import org.apache.lens.server.api.driver.LensResultSetMetadata;
+
+import org.apache.hive.service.cli.*;
 
 /**
  * The Class HiveInMemoryResultSet.
@@ -69,17 +65,13 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
   /**
    * Instantiates a new hive in memory result set.
    *
-   * @param hiveHandle
-   *          the hive handle
-   * @param client
-   *          the client
-   * @param closeAfterFecth
-   *          the close after fecth
-   * @throws HiveSQLException
-   *           the hive sql exception
+   * @param hiveHandle      the hive handle
+   * @param client          the client
+   * @param closeAfterFecth the close after fecth
+   * @throws HiveSQLException the hive sql exception
    */
   public HiveInMemoryResultSet(OperationHandle hiveHandle, CLIServiceClient client, boolean closeAfterFecth)
-      throws HiveSQLException {
+    throws HiveSQLException {
     this.client = client;
     this.opHandle = hiveHandle;
     this.closeAfterFecth = closeAfterFecth;
@@ -89,7 +81,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensResultSet#size()
    */
   @Override
@@ -108,7 +100,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
    */
   @Override
@@ -134,7 +126,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.InMemoryResultSet#next()
    */
   @Override

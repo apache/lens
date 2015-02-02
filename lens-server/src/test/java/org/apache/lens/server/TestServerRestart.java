@@ -269,15 +269,15 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     TestRemoteHiveDriver.stopHS2Service();
 
     // Wait for server to stop
-    while (TestRemoteHiveDriver.server.getServiceState() != Service.STATE.STOPPED) {
-      LOG.info("Waiting for HS2 to stop. Current state " + TestRemoteHiveDriver.server.getServiceState());
+    while (TestRemoteHiveDriver.getServerState() != Service.STATE.STOPPED) {
+      LOG.info("Waiting for HS2 to stop. Current state " + TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
 
     TestRemoteHiveDriver.createHS2Service();
     // Wait for server to come up
-    while (Service.STATE.STARTED != TestRemoteHiveDriver.server.getServiceState()) {
-      LOG.info("Waiting for HS2 to start " + TestRemoteHiveDriver.server.getServiceState());
+    while (Service.STATE.STARTED != TestRemoteHiveDriver.getServerState()) {
+      LOG.info("Waiting for HS2 to start " + TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
     Thread.sleep(10000);

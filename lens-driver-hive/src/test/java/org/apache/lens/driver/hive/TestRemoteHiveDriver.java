@@ -26,19 +26,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.DriverQueryPlan;
+import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.query.QueryContext;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.Service;
 import org.apache.hive.service.server.HiveServer2;
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.DriverQueryPlan;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.query.QueryContext;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -59,27 +62,27 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   static final int HS2_PORT = 12345;
 
   /** The server. */
-  public static HiveServer2 server;
+  private static HiveServer2 server;
 
   /** The remote conf. */
+
   private static HiveConf remoteConf = new HiveConf();
 
   /**
    * Setup test.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @BeforeClass
   public static void setupTest() throws Exception {
     createHS2Service();
   }
 
+
   /**
    * Creates the h s2 service.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   public static void createHS2Service() throws Exception {
     remoteConf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, RemoteThriftConnection.class, ThriftConnection.class);
@@ -102,8 +105,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Cleanup test.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @AfterClass
   public static void cleanupTest() throws Exception {
@@ -113,8 +115,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Stop h s2 service.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   public static void stopHS2Service() throws Exception {
     try {
@@ -124,23 +125,29 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     }
   }
 
+  public static Service.STATE getServerState() {
+    return server.getServiceState();
+  }
+
   protected void createDriver() throws LensException {
-    DATA_BASE = TestRemoteHiveDriver.class.getSimpleName().toLowerCase();
+    dataBase = TestRemoteHiveDriver.class.getSimpleName().toLowerCase();
     conf = new HiveConf(remoteConf);
     conf.addResource("hivedriver-site.xml");
     driver = new HiveDriver();
     conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
     driver.configure(conf);
-    drivers = new ArrayList<LensDriver>() {{ add
-      (driver);}};
+    drivers = new ArrayList<LensDriver>() {
+      {
+        add(driver);
+      }
+    };
     System.out.println("TestRemoteHiveDriver created");
   }
 
   /**
    * Test multi thread client.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testMultiThreadClient() throws Exception {
@@ -151,7 +158,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     thConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
-    QueryContext ctx = createContext("USE " + DATA_BASE, conf);
+    QueryContext ctx = createContext("USE " + dataBase, conf);
     thrDriver.execute(ctx);
 
     // Launch a select query
@@ -225,8 +232,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Test hive driver persistence.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testHiveDriverPersistence() throws Exception {
@@ -241,7 +247,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    QueryContext ctx = createContext("USE " + DATA_BASE, driverConf);
+    QueryContext ctx = createContext("USE " + dataBase, driverConf);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
 
@@ -296,11 +302,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Persist context.
    *
-   * @param ctx
-   *          the ctx
+   * @param ctx the ctx
    * @return the byte[]
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private byte[] persistContext(QueryContext ctx) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -324,15 +328,11 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Read context.
    *
-   * @param bytes
-   *          the bytes
-   * @param driver
-   *          the driver
+   * @param bytes  the bytes
+   * @param driver the driver
    * @return the query context
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   * @throws ClassNotFoundException
-   *           the class not found exception
+   * @throws IOException            Signals that an I/O exception has occurred.
+   * @throws ClassNotFoundException the class not found exception
    */
   private QueryContext readContext(byte[] bytes, LensDriver driver) throws IOException, ClassNotFoundException {
     ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
@@ -356,19 +356,16 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Creates the partitioned table.
    *
-   * @param tableName
-   *          the table name
-   * @param partitions
-   *          the partitions
-   * @throws Exception
-   *           the exception
+   * @param tableName  the table name
+   * @param partitions the partitions
+   * @throws Exception the exception
    */
   private void createPartitionedTable(String tableName, int partitions) throws Exception {
     conf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
 
     QueryContext ctx = createContext("CREATE EXTERNAL TABLE IF NOT EXISTS " + tableName
-        + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", conf);
+      + " (ID STRING) PARTITIONED BY (DT STRING, ET STRING)", conf);
 
     driver.execute(ctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -390,7 +387,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
       System.out.println("@@ Adding partition " + i);
       QueryContext partCtx = createContext("ALTER TABLE " + tableName + " ADD IF NOT EXISTS PARTITION (DT='p" + i
-          + "', ET='1') LOCATION '" + partDir.getPath() + "'", conf);
+        + "', ET='1') LOCATION '" + partDir.getPath() + "'", conf);
       driver.execute(partCtx);
     }
   }
@@ -398,8 +395,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
   /**
    * Test partition in query plan.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testPartitionInQueryPlan() throws Exception {
@@ -409,9 +405,9 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Query should select 5 partitions of table 1 and 1 partitions of table 2
     String explainQuery = "SELECT table_1.ID  "
-        + "FROM table_1 LEFT OUTER JOIN table_2 ON table_1.ID = table_2.ID AND table_2.DT='p0' "
-        + "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' "
-        + "AND table_1.ET='1'";
+      + "FROM table_1 LEFT OUTER JOIN table_2 ON table_1.ID = table_2.ID AND table_2.DT='p0' "
+      + "WHERE table_1.DT='p0' OR table_1.DT='p1' OR table_1.DT='p2' OR table_1.DT='p3' OR table_1.DT='p4' "
+      + "AND table_1.ET='1'";
 
     SessionState.setCurrentSessionState(ss);
     DriverQueryPlan plan = driver.explain(createExplainContext(explainQuery, conf));

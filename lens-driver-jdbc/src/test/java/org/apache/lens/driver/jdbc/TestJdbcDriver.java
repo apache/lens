@@ -18,6 +18,8 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.testng.Assert.*;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -25,34 +27,29 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.ResultRow;
+import org.apache.lens.server.api.driver.*;
+import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.query.ExplainQueryContext;
+import org.apache.lens.server.api.query.PreparedQueryContext;
+import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.ColumnDescriptor;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.ResultRow;
-import org.apache.lens.driver.jdbc.JDBCDriver;
-import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
-import org.apache.lens.driver.jdbc.JDBCResultSet;
-import org.apache.lens.server.api.driver.LensDriver;
-import org.apache.lens.server.api.driver.LensResultSet;
-import org.apache.lens.server.api.driver.LensResultSetMetadata;
-import org.apache.lens.server.api.driver.InMemoryResultSet;
-import org.apache.lens.server.api.driver.QueryCompletionListener;
-import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
-import org.apache.lens.server.api.query.ExplainQueryContext;
-import org.apache.lens.server.api.query.PreparedQueryContext;
-import org.apache.lens.server.api.query.QueryContext;
-import org.testng.Assert;
-import org.testng.annotations.*;
 
-import static org.testng.Assert.*;
+import org.testng.Assert;
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
+import org.testng.annotations.Test;
 
 /**
  * The Class TestJdbcDriver.
@@ -70,8 +67,7 @@ public class TestJdbcDriver {
   /**
    * Test create jdbc driver.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @BeforeTest
   public void testCreateJdbcDriver() throws Exception {
@@ -97,8 +93,7 @@ public class TestJdbcDriver {
   /**
    * Close.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @AfterTest
   public void close() throws Exception {
@@ -131,10 +126,8 @@ public class TestJdbcDriver {
   /**
    * Creates the table.
    *
-   * @param table
-   *          the table
-   * @throws Exception
-   *           the exception
+   * @param table the table
+   * @throws Exception the exception
    */
   synchronized void createTable(String table) throws Exception {
     Connection conn = null;
@@ -158,10 +151,8 @@ public class TestJdbcDriver {
   /**
    * Insert data.
    *
-   * @param table
-   *          the table
-   * @throws Exception
-   *           the exception
+   * @param table the table
+   * @throws Exception the exception
    */
   void insertData(String table) throws Exception {
     Connection conn = null;
@@ -239,8 +230,7 @@ public class TestJdbcDriver {
   /**
    * Test explain.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testExplain() throws Exception {
@@ -261,8 +251,7 @@ public class TestJdbcDriver {
   /**
    * Test execute.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testExecute() throws Exception {
@@ -300,8 +289,7 @@ public class TestJdbcDriver {
   /**
    * Test prepare.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testPrepare() throws Exception {
@@ -322,8 +310,7 @@ public class TestJdbcDriver {
   /**
    * Test execute async.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testExecuteAsync() throws Exception {
@@ -413,8 +400,7 @@ public class TestJdbcDriver {
   /**
    * Test connection close for failed queries.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testConnectionCloseForFailedQueries() throws Exception {
@@ -450,8 +436,7 @@ public class TestJdbcDriver {
   /**
    * Test connection close for successful queries.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testConnectionCloseForSuccessfulQueries() throws Exception {
@@ -490,8 +475,7 @@ public class TestJdbcDriver {
   /**
    * Test cancel query.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testCancelQuery() throws Exception {
@@ -520,8 +504,7 @@ public class TestJdbcDriver {
   /**
    * Test invalid query.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testInvalidQuery() throws Exception {
