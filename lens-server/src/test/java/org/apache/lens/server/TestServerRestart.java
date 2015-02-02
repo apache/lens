@@ -89,11 +89,6 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     super.tearDown();
   }
 
-  @Override
-  protected int getTestPort() {
-    return 8091;
-  }
-
   /** The file created. */
   private boolean fileCreated;
 

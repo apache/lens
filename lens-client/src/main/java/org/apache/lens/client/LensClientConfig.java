@@ -71,7 +71,7 @@ public class LensClientConfig extends Configuration {
   public static final String SERVER_BASE_URL = "lens.server.base.url";
 
   /** The Constant DEFAULT_SERVER_BASE_URL. */
-  public static final String DEFAULT_SERVER_BASE_URL = "http://localhost:9999/lensapi";
+  public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/lensapi";
 
   /** The Constant SESSION_CLUSTER_USER. */
   public static final String SESSION_CLUSTER_USER = "lens.session.cluster.user";

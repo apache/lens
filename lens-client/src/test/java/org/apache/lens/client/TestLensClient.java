@@ -18,12 +18,15 @@
  */
 package org.apache.lens.client;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.util.List;
 
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.server.LensAllApplicationJerseyTest;
+import org.apache.lens.server.api.LensConfConstants;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -33,13 +36,13 @@ import org.testng.annotations.Test;
 public class TestLensClient extends LensAllApplicationJerseyTest {
 
   @Override
-  protected int getTestPort() {
-    return 9999;
+  protected int getTestPort()  {
+    return 10000;
   }
 
   @Override
   protected URI getBaseUri() {
-    return UriBuilder.fromUri("http://localhost:9999/lensapi").build();
+    return UriBuilder.fromUri("http://localhost/").port(getTestPort()).path("/lensapi").build();
   }
 
   @BeforeTest
@@ -54,7 +57,9 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
 
   @Test
   public void testClient() throws Exception {
-    LensClient client = new LensClient();
+    LensClientConfig lensClientConfig = new LensClientConfig();
+    lensClientConfig.set(LensConfConstants.SERVER_BASE_URL, "http://localhost:"+getTestPort()+"/lensapi");
+    LensClient client = new LensClient(lensClientConfig);
     Assert.assertEquals(client.getCurrentDatabae(), "default",
         "current database");
     List<String> dbs = client.getAllDatabases();

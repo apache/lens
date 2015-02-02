@@ -116,11 +116,6 @@ public class TestResultFormatting extends LensJerseyTest {
   /** The test table. */
   private static String testTable = "RESULT_TEST_TABLE";
 
-  @Override
-  protected int getTestPort() {
-    return 8888;
-  }
-
   // test with execute async post with result formatter, get query, get results
   /**
    * Test result formatter in memory result.

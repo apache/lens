@@ -1378,9 +1378,4 @@ public class TestQueryService extends LensJerseyTest {
         ctx.getDriverContext().getDriverConf(queryService.getDrivers().iterator().next()).getClassLoader());
     Assert.assertTrue(ctx.isSelectedDriverQueryExplicitlySet());
   }
-
-  @Override
-  protected int getTestPort() {
-    return 8083;
-  }
 }

@@ -63,10 +63,6 @@ public class TestIndexResource extends LensJerseyTest {
     return new IndexApp();
   }
 
-  protected int getTestPort() {
-    return 8081;
-  }
-
   /**
    * Test client string response.
    */

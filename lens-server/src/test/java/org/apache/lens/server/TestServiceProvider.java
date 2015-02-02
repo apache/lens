@@ -59,9 +59,4 @@ public class TestServiceProvider extends LensAllApplicationJerseyTest {
     LensEventService eventSvc = (LensEventService) serviceProvider.getService(LensEventService.NAME);
     Assert.assertNotNull(eventSvc);
   }
-
-  @Override
-  protected int getTestPort() {
-    return 12121;
-  }
 }

@@ -85,10 +85,6 @@ public class TestMetastoreService extends LensJerseyTest {
     super.tearDown();
   }
 
-  protected int getTestPort() {
-    return 8082;
-  }
-
   @Override
   protected Application configure() {
     return new MetastoreApp();
