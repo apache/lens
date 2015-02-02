@@ -233,11 +233,11 @@ public class MetastoreResource {
    * @throws LensException
    */
   @GET @Path("nativetables/{tableName}")
-  public JAXBElement<NativeTable> getNativeTable(@QueryParam("sessionid") LensSessionHandle sessionid,
+  public JAXBElement<XNativeTable> getNativeTable(@QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("tableName") String tableName) {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createNativeTable(getSvc().getNativeTable(sessionid, tableName));
+      return xCubeObjectFactory.createXNativeTable(getSvc().getNativeTable(sessionid, tableName));
     } catch (LensException e) {
       checkTableNotFound(e, tableName);
       LOG.error("Error getting native table", e);
@@ -334,9 +334,9 @@ public class MetastoreResource {
     try {
       getSvc().createCube(sessionid, cube);
     } catch (LensException e) {
-      if (cube.isDerived()) {
+      if (cube instanceof XDerivedCube) {
         // parent should exist
-        checkTableNotFound(e, cube.getParent());
+        checkTableNotFound(e, ((XDerivedCube)cube).getParent());
       }
       LOG.error("Error creating cube " + cube.getName(), e);
       return new APIResult(Status.FAILED, e.getMessage());
@@ -344,6 +344,7 @@ public class MetastoreResource {
     return SUCCESS;
   }
 
+  
   private void checkTableNotFound(LensException e, String table) {
     if (e.getCause() instanceof HiveException) {
       HiveException hiveErr = (HiveException) e.getCause();
@@ -370,9 +371,9 @@ public class MetastoreResource {
     try {
       getSvc().updateCube(sessionid, cube);
     } catch (LensException e) {
-      if (cube.isDerived()) {
+      if (cube instanceof XDerivedCube) {
         // parent should exist
-        checkTableNotFound(e, cube.getParent());
+        checkTableNotFound(e, ((XDerivedCube)cube).getParent());
       }
       checkTableNotFound(e, cube.getName());
       LOG.error("Error updating cube " + cube.getName(), e);
@@ -517,7 +518,8 @@ public class MetastoreResource {
    * {@link APIResult} with state {@link Status#FAILED}, if update has failed
    */
   @PUT @Path("/storages/{storageName}")
-  public APIResult updateStorage(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("storageName") String storageName, XStorage storage) {
+  public APIResult updateStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+      @PathParam("storageName") String storageName, XStorage storage) {
     checkSessionId(sessionid);
     try {
       getSvc().alterStorage(sessionid, storageName, storage);
@@ -731,7 +733,7 @@ public class MetastoreResource {
    *
    */
   @GET @Path("/cubes/{cubeName}/facts")
-  public List<FactTable> getAllFactsOfCube(
+  public List<XFactTable> getAllFactsOfCube(
       @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("cubeName") String cubeName)
           throws LensException {
     checkSessionId(sessionid);
@@ -809,11 +811,11 @@ public class MetastoreResource {
    * @return JAXB representation of {@link FactTable}
    */
   @GET @Path("/facts/{factName}")
-  public JAXBElement<FactTable> getFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName)
+  public JAXBElement<XFactTable> getFactTable(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName)
       throws LensException {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createFactTable(getSvc().getFactTable(sessionid, factName));
+      return xCubeObjectFactory.createXFactTable(getSvc().getFactTable(sessionid, factName));
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       throw exc;
@@ -825,7 +827,6 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param fact The {@link FactTable} representation of the fact table definition
-   * @param storageTables The Storage table description of fact in each storage
    *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
@@ -833,13 +834,12 @@ public class MetastoreResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @POST @Path("/facts")
   public APIResult createFactTable(@FormDataParam("sessionid") LensSessionHandle sessionid,
-      @FormDataParam("fact") FactTable fact,
-      @FormDataParam("storageTables") XStorageTables storageTables)
+      @FormDataParam("fact") XFactTable fact)
           throws LensException {
     checkSessionId(sessionid);
     try {
       LOG.info("Create fact table");
-      getSvc().createFactTable(sessionid, fact, storageTables);
+      getSvc().createFactTable(sessionid, fact);
     } catch (LensException exc) {
       LOG.error("Exception creating fact:" , exc);
       return new APIResult(Status.FAILED, exc.getMessage());
@@ -859,7 +859,7 @@ public class MetastoreResource {
    */
   @PUT @Path("/facts/{factName}")
   public APIResult updateFactTable(@QueryParam("sessionid") LensSessionHandle sessionid,
-      @PathParam("factName") String  factName, FactTable fact)
+      @PathParam("factName") String  factName, XFactTable fact)
           throws LensException {
     checkSessionId(sessionid);
     try {
@@ -1015,20 +1015,20 @@ public class MetastoreResource {
    * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
-   * for ex: x &lt "XXX" and y &gt "YYY"
+   * for ex: x &lt "xxx" and y &gt "yyy"
    *
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
   @GET @Path("/facts/{factName}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfFactStorageByFilter(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName,
+  public JAXBElement<XPartitionList> getAllPartitionsOfFactStorageByFilter(@QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("factName") String factName,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter) throws LensException {
     checkSessionId(sessionid);
     try {
       List<XPartition> partitions = getSvc().getAllPartitionsOfFactStorage(sessionid, factName, storage, filter);
-      PartitionList partList = xCubeObjectFactory.createPartitionList();
-      partList.getXPartition().addAll(partitions);
-      return xCubeObjectFactory.createPartitionList(partList);
+      XPartitionList partList = xCubeObjectFactory.createXPartitionList();
+      partList.getPartition().addAll(partitions);
+      return xCubeObjectFactory.createXPartitionList(partList);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       throw exc;
@@ -1042,7 +1042,7 @@ public class MetastoreResource {
    * @param factName The fact table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
-   * for ex: x &lt "XXX" and y &gt "YYY"
+   * for ex: x &lt "xxx" and y &gt "yyy"
    *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
@@ -1137,18 +1137,16 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param dimensionTable The {@link DimensionTable} representation of the dimension table definition
-   * @param storageTables The Storage table description of dimension table in each storage
    *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if create has failed
    */
   @POST @Path("/dimtables")
-  public APIResult createCubeDimension(@FormDataParam("sessionid") LensSessionHandle sessionid,
-      @FormDataParam("dimensionTable") DimensionTable dimensionTable,
-      @FormDataParam("storageTables") XStorageTables storageTables) {
+  public APIResult createDimensionTable(@FormDataParam("sessionid") LensSessionHandle sessionid,
+      @FormDataParam("dimensionTable") XDimensionTable dimensionTable) {
     checkSessionId(sessionid);
     try {
-      getSvc().createCubeDimensionTable(sessionid, dimensionTable, storageTables);
+      getSvc().createDimensionTable(sessionid, dimensionTable);
     } catch (LensException exc) {
       LOG.error("Error creating cube dimension table " + dimensionTable.getTableName(), exc);
       return new APIResult(Status.FAILED, exc.getMessage());
@@ -1160,7 +1158,7 @@ public class MetastoreResource {
    * Update dimension table definition
    *
    * @param sessionid The sessionid in which user is working
-   * @param dimensionTable The {@link DimensionTable} representation of the updated dim table definition
+   * @param dimensionTable The {@link XDimensionTable} representation of the updated dim table definition
    *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
@@ -1168,7 +1166,7 @@ public class MetastoreResource {
   @PUT @Path("/dimtables/{dimTableName}")
   public APIResult updateCubeDimension(@QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("dimTableName") String dimTableName,
-      DimensionTable dimensionTable) {
+      XDimensionTable dimensionTable) {
     checkSessionId(sessionid);
     try {
       getSvc().updateDimensionTable(sessionid, dimensionTable);
@@ -1214,12 +1212,12 @@ public class MetastoreResource {
    * @return JAXB representation of {@link DimensionTable}
    */
   @GET @Path("/dimtables/{dimTableName}")
-  public JAXBElement<DimensionTable> getDimensionTable(
+  public JAXBElement<XDimensionTable> getDimensionTable(
       @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("dimTableName") String dimTableName)
           throws LensException {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createDimensionTable(getSvc().getDimensionTable(sessionid, dimTableName));
+      return xCubeObjectFactory.createXDimensionTable(getSvc().getDimensionTable(sessionid, dimTableName));
     } catch (LensException exc) {
       checkTableNotFound(exc, dimTableName);
       throw exc;
@@ -1258,7 +1256,7 @@ public class MetastoreResource {
       XStorageTableElement storageTbl) {
     checkSessionId(sessionid);
     try {
-      getSvc().createDimTableStorage(sessionid, dimTableName, storageTbl);
+      getSvc().addDimTableStorage(sessionid, dimTableName, storageTbl);
     } catch (LensException e) {
       checkTableNotFound(e, dimTableName);
       LOG.error("Error creating dimension table storage " + dimTableName + ":" + storageTbl.getStorageName(), e);
@@ -1338,21 +1336,21 @@ public class MetastoreResource {
    * @param dimension The dimension table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
-   * for ex: x &lt "XXX" and y &gt "YYY"
+   * for ex: x &lt "xxx" and y &gt "yyy"
    *
    * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
    */
   @GET @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
-  public JAXBElement<PartitionList> getAllPartitionsOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+  public JAXBElement<XPartitionList> getAllPartitionsOfDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("dimTableName") String dimension,
       @PathParam("storage") String storage,
       @QueryParam("filter") String filter)
           throws LensException {
     checkSessionId(sessionid);
     List<XPartition> partitions = getSvc().getAllPartitionsOfDimTableStorage(sessionid, dimension, storage, filter);
-    PartitionList partList = xCubeObjectFactory.createPartitionList();
-    partList.getXPartition().addAll(partitions);
-    return xCubeObjectFactory.createPartitionList(partList);
+    XPartitionList partList = xCubeObjectFactory.createXPartitionList();
+    partList.getPartition().addAll(partitions);
+    return xCubeObjectFactory.createXPartitionList(partList);
   }
 
   /**
@@ -1362,7 +1360,7 @@ public class MetastoreResource {
    * @param dimTableName The dimension table name
    * @param storage The storage name
    * @param filter The filter for partitions, string representation of the filter
-   * for ex: x &lt "XXX" and y &gt "YYY"
+   * for ex: x &lt 'xxx' and y &gt 'yyy'
    *
    * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
    * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
@@ -1444,12 +1442,12 @@ public class MetastoreResource {
    */
   @GET
   @Path("flattened/{tableName}")
-  public JAXBElement<FlattenedColumns> getFlattenedColumns(
+  public JAXBElement<XFlattenedColumns> getFlattenedColumns(
       @QueryParam("sessionid") LensSessionHandle sessionid,
       @PathParam("tableName") String tableName) {
     checkSessionId(sessionid);
     try {
-      return xCubeObjectFactory.createFlattenedColumns(getSvc().getFlattenedColumns(sessionid, tableName));
+      return xCubeObjectFactory.createXFlattenedColumns(getSvc().getFlattenedColumns(sessionid, tableName));
     } catch (LensException exc) {
       throw new WebApplicationException(exc);
     }

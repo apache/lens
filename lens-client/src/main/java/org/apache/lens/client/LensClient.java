@@ -29,6 +29,10 @@ import org.apache.lens.api.query.*;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+
 
 public class LensClient {
   private static final Log LOG = LogFactory.getLog(LensClient.class);
@@ -273,9 +277,8 @@ public class LensClient {
     return this.conn.removeResourceFromConnection("file", path);
   }
 
-  public APIResult createFactTable(String factSpec,
-      String storageSpecPath) {
-    return mc.createFactTable(factSpec, storageSpecPath);
+  public APIResult createFactTable(String factSpec) {
+    return mc.createFactTable(factSpec);
   }
 
   public APIResult createCube(String cubeSpec) {
@@ -290,8 +293,8 @@ public class LensClient {
     return mc.createDimension(dimSpec);
   }
 
-  public APIResult createDimensionTable(String dimSpec, String storageSpec) {
-    return mc.createDimensionTable(dimSpec, storageSpec);
+  public APIResult createDimensionTable(String dimSpec) {
+    return mc.createDimensionTable(dimSpec);
   }
 
   public List<String> getAllStorages() {
@@ -338,15 +341,15 @@ public class LensClient {
     return mc.updateDimension(dimName, dimSpec);
   }
 
-  public FactTable getFactTable(String factName) {
+  public XFactTable getFactTable(String factName) {
     return mc.getFactTable(factName);
   }
 
-  public DimensionTable getDimensionTable(String dimName) {
+  public XDimensionTable getDimensionTable(String dimName) {
     return mc.getDimensionTable(dimName);
   }
 
-  public NativeTable getNativeTable(String tblName) {
+  public XNativeTable getNativeTable(String tblName) {
     return mc.getNativeTable(tblName);
   }
 

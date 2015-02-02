@@ -29,11 +29,9 @@ import javax.xml.bind.Unmarshaller;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.client.LensClientSingletonWrapper;
-import org.apache.lens.client.LensConnection;
 import org.apache.lens.client.LensMetadataClient;
 
 public class SampleMetastore {
-  private LensConnection connection;
   private LensMetadataClient metaClient;
   public static Unmarshaller jaxbUnmarshaller;
   private APIResult result;
@@ -66,55 +64,39 @@ public class SampleMetastore {
   }
 
   public void createCube() throws JAXBException, IOException {
-    XCube cube = (XCube)readFromXML("sample-cube.xml");
-    if (cube != null) {
-      result = metaClient.createCube(cube);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating cube from:sample-cube.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createCube("sample-cube.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating cube from:sample-cube.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
   }
 
   public void createDimensions() throws JAXBException, IOException {
-    XDimension dim1 = (XDimension)readFromXML("sample-dimension.xml");
-    if (dim1 != null) {
-      result = metaClient.createDimension(dim1);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dimension from:sample-dimension.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimension("sample-dimension.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dimension from:sample-dimension.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
 
-    XDimension dim2 = (XDimension)readFromXML("sample-dimension2.xml");
-    if (dim2 != null) {
-      result = metaClient.createDimension(dim2);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dimension from:sample-dimension2.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimension("sample-dimension2.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dimension from:sample-dimension2.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
 
-    XDimension dbDim = (XDimension)readFromXML("sample-db-only-dimension.xml");
-    if (dbDim != null) {
-      result = metaClient.createDimension(dbDim);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dimension from:sample-db-only-dimension.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimension("sample-db-only-dimension.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dimension from:sample-db-only-dimension.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
-
   }
 
   private void createStorage(String fileName)
       throws JAXBException, IOException {
-    XStorage local = (XStorage)readFromXML(fileName);
-    if (local != null) {
-      result = metaClient.createNewStorage(local);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating storage from:" + fileName + " failed");
-        retCode = 1;
-      }
+    result = metaClient.createNewStorage(fileName);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating storage from:" + fileName + " failed, reason:" + result.getMessage());
+      retCode = 1;
     }
   }
   public void createStorages() throws JAXBException, IOException {
@@ -132,73 +114,45 @@ public class SampleMetastore {
   }
 
   private void createDimensionTables() throws JAXBException, IOException {
-    DimensionTable dim = (DimensionTable)readFromXML("dim_table.xml");
-    XStorageTables storageTables = (XStorageTables)readFromXML("dim1-storage-tables.xml");
-    if (dim != null && storageTables != null) {
-      result = metaClient.createDimensionTable(dim, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dim table from: dim_table.xml and dim1-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimensionTable("dim_table.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dim table from: dim_table.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
-    dim = (DimensionTable)readFromXML("dim_table2.xml");
-    storageTables = (XStorageTables)readFromXML("dim2-storage-tables.xml");
-    if (dim != null && storageTables != null) {
-      result = metaClient.createDimensionTable(dim, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dim table from: dim_table2.xml and dim2-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimensionTable("dim_table2.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dim table from: dim_table2.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
 
-    dim = (DimensionTable)readFromXML("dim_table3.xml");
-    storageTables = (XStorageTables)readFromXML("dim3-storage-tables.xml");
-    if (dim != null && storageTables != null) {
-      result = metaClient.createDimensionTable(dim, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dim table from: dim_table3.xml and dim3-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimensionTable("dim_table3.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dim table from: dim_table3.xmlfailed, reason:" + result.getMessage());
+      retCode = 1;
     }
 
-    dim = (DimensionTable)readFromXML("dim_table4.xml");
-    storageTables = (XStorageTables)readFromXML("dim4-storage-tables.xml");
-    if (dim != null && storageTables != null) {
-      result = metaClient.createDimensionTable(dim, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating dim table from: dim_table4.xml and dim4-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createDimensionTable("dim_table4.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating dim table from: dim_table4.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
   }
 
   private void createFacts() throws JAXBException, IOException {
-    FactTable fact = (FactTable)readFromXML("fact1.xml");
-    XStorageTables storageTables = (XStorageTables)readFromXML("fact1-storage-tables.xml");
-    if (fact != null && storageTables != null) {
-      result = metaClient.createFactTable(fact, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating fact table from: fact1.xml and fact1-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createFactTable("fact1.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating fact table from: fact1.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
-    fact = (FactTable)readFromXML("fact2.xml");
-    storageTables = (XStorageTables)readFromXML("fact2-storage-tables.xml");
-    if (fact != null && storageTables != null) {
-      result = metaClient.createFactTable(fact, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating fact table from: fact2.xml and fact2-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createFactTable("fact2.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating fact table from: fact2.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
-    fact = (FactTable)readFromXML("rawfact.xml");
-    storageTables = (XStorageTables)readFromXML("rawfact-storage-tables.xml");
-    if (fact != null && storageTables != null) {
-      result = metaClient.createFactTable(fact, storageTables);
-      if (result.getStatus().equals(APIResult.Status.FAILED)) {
-        System.out.println("Creating fact table from: rawfact.xml and rawfact-storage-tables.xml failed");
-        retCode = 1;
-      }
+    result = metaClient.createFactTable("rawfact.xml");
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.out.println("Creating fact table from: rawfact.xml failed, reason:" + result.getMessage());
+      retCode = 1;
     }
   }
 

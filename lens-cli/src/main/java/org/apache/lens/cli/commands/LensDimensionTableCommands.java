@@ -56,31 +56,19 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Creates the dimension table.
    *
-   * @param dimPair
-   *          the dim pair
+   * @param dimSpec Path to dim spec
    * @return the string
    */
   @CliCommand(value = "create dimtable", help = "Create a new dimension table")
   public String createDimensionTable(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<path to dim-spec> <path to storage-spec>") String dimPair) {
+      @CliOption(key = { "", "table" }, mandatory = true, help = "<path to dim-spec>") String dimSpec) {
 
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(dimPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following "
-          + "format. create dimtable <dimtable spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[0]);
+    File f = new File(dimSpec);
     if (!f.exists()) {
       return "dimtable spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
     }
 
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "storage spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-    APIResult result = getClient().createDimensionTable(pair[0], pair[1]);
+    APIResult result = getClient().createDimensionTable(dimSpec);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "create dimension table succeeded";
     } else {

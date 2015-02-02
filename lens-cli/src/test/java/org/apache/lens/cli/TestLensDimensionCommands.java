@@ -103,9 +103,9 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
 
       String xmlContent = sb.toString();
 
-      xmlContent = xmlContent.replace("<properties name=\"test_dim.prop\" value=\"test\" />\n",
-          "<properties name=\"test_dim.prop\" value=\"test\" />"
-              + "\n<properties name=\"test_dim.prop1\" value=\"test1\" />\n");
+      xmlContent = xmlContent.replace("<property name=\"test_dim.prop\" value=\"test\" />\n",
+          "<property name=\"test_dim.prop\" value=\"test\" />"
+              + "\n<property name=\"test_dim.prop1\" value=\"test1\" />\n");
 
       File newFile = new File("/tmp/test_dim1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

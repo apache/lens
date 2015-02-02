@@ -152,9 +152,9 @@ public class JoinChain implements Named {
 
   @EqualsAndHashCode(exclude={"relationShip"})
   @ToString
-  private static class Edge {
-    final TableReference from;
-    final TableReference to;
+  public static class Edge {
+    @Getter private final TableReference from;
+    @Getter private final TableReference to;
     transient TableRelationship relationShip = null;
     Edge(TableReference from, TableReference to) {
       this.from = from;
@@ -201,7 +201,7 @@ public class JoinChain implements Named {
   @EqualsAndHashCode(exclude={"refs"})
   @ToString
   public static class Path {
-    final List<Edge> links = new ArrayList<Edge>();
+    @Getter final List<Edge> links = new ArrayList<Edge>();
     transient List<TableReference> refs = null;
 
     private void addLink(Edge edge) {

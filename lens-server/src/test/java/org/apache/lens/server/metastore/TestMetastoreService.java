@@ -201,16 +201,16 @@ public class TestMetastoreService extends LensJerseyTest {
     WebTarget target = target().path("metastore").path("storages");
 
     XStorage xs = new XStorage();
+    xs.setProperties(new XProperties());
     xs.setName(storageName);
     xs.setClassname(HDFSStorage.class.getCanonicalName());
-    XProperties props = cubeObjectFactory.createXProperties();
     XProperty prop = cubeObjectFactory.createXProperty();
     prop.setName("prop1.name");
     prop.setValue("prop1.value");
-    props.getProperties().add(prop);
-    xs.setProperties(props);
+    xs.getProperties().getProperty().add(prop);
 
-    APIResult result = target.queryParam("sessionid", lensSessionId).request(mediaType).post(Entity.xml(cubeObjectFactory.createXStorage(xs)), APIResult.class);
+    APIResult result = target.queryParam("sessionid", lensSessionId).request(mediaType).post(Entity.xml(
+        cubeObjectFactory.createXStorage(xs)), APIResult.class);
     assertNotNull(result);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
@@ -233,7 +233,8 @@ public class TestMetastoreService extends LensJerseyTest {
 
   private void setCurrentDatabase(String dbName) throws Exception {
     WebTarget dbTarget = target().path("metastore").path("databases/current");
-    APIResult result = dbTarget.queryParam("sessionid", lensSessionId).request(mediaType).put(Entity.xml(dbName), APIResult.class);
+    APIResult result = dbTarget.queryParam("sessionid", lensSessionId).request(mediaType).put(Entity.xml(dbName),
+        APIResult.class);
     assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
@@ -244,59 +245,57 @@ public class TestMetastoreService extends LensJerseyTest {
     return response;
   }
 
-  private XCube createTestCube(String cubeName) throws Exception {
+  private XBaseCube createTestCube(String cubeName) throws Exception {
     GregorianCalendar c = new GregorianCalendar();
     c.setTime(new Date());
     final XMLGregorianCalendar startDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
     c.add(GregorianCalendar.DAY_OF_MONTH, 7);
     final XMLGregorianCalendar endDate = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
 
-    XCube cube = cubeObjectFactory.createXCube();
+    XBaseCube cube = cubeObjectFactory.createXBaseCube();
     cube.setName(cubeName);
-    cube.setWeight(100.0);
-    XDimAttributes xdims = cubeObjectFactory.createXDimAttributes();
+    cube.setDimAttributes(new XDimAttributes());
+    cube.setExpressions(new XExpressions());
+    cube.setMeasures(new XMeasures());
+    cube.setJoinChains(new XJoinChains());
+    cube.setProperties(new XProperties());
 
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("dim1");
-    xd1.setType("string");
+    xd1.setType(XColumnType.STRING);
     xd1.setDescription("first dimension");
     xd1.setDisplayString("Dimension1");
-    xd1.setStartTime(startDate);
     // Don't set endtime on this dim to validate null handling on server side
-    xd1.setCost(10.0);
+    xd1.setStartTime(startDate);
 
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("dim2");
-    xd2.setType("int");
+    xd2.setType(XColumnType.INT);
     xd2.setDescription("second dimension");
     xd2.setDisplayString("Dimension2");
     // Don't set start time on this dim to validate null handling on server side
     xd2.setEndTime(endDate);
-    xd2.setCost(5.0);
 
     XDimAttribute xd3 = cubeObjectFactory.createXDimAttribute();
     xd3.setName("testdim2col2");
-    xd3.setType("string");
+    xd3.setType(XColumnType.STRING);
     xd3.setDescription("ref chained dimension");
     xd3.setDisplayString("Chained Dimension");
     XChainColumn xcc = new XChainColumn();
     xcc.setChainName("chain1");
     xcc.setRefCol("col2");
-    xd3.setChainRefColumn(xcc);
+    xd3.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
+    xd3.getRefSpec().setChainRefColumn(xcc);
 
-    xdims.getDimAttributes().add(xd1);
-    xdims.getDimAttributes().add(xd2);
-    xdims.getDimAttributes().add(xd3);
-    cube.setDimAttributes(xdims);
-
-    XMeasures measures = cubeObjectFactory.createXMeasures();
+    cube.getDimAttributes().getDimAttribute().add(xd1);
+    cube.getDimAttributes().getDimAttribute().add(xd2);
+    cube.getDimAttributes().getDimAttribute().add(xd3);
 
     XMeasure xm1 = new XMeasure();
     xm1.setName("msr1");
-    xm1.setType("double");
+    xm1.setType(XMeasureType.DOUBLE);
     xm1.setDescription("first measure");
     xm1.setDisplayString("Measure1");
-    xm1.setCost(10.0);
     // Don't set start time and end time to validate null handling on server side.
     //xm1.setStarttime(startDate);
     //xm1.setEndtime(endDate);
@@ -304,98 +303,89 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XMeasure xm2 = new XMeasure();
     xm2.setName("msr2");
-    xm2.setType("int");
+    xm2.setType(XMeasureType.INT);
     xm2.setDescription("second measure");
     xm2.setDisplayString("Measure2");
-    xm2.setCost(10.0);
     xm2.setStartTime(startDate);
     xm2.setEndTime(endDate);
     xm2.setDefaultAggr("max");
 
-    measures.getMeasures().add(xm1);
-    measures.getMeasures().add(xm2);
-    cube.setMeasures(measures);
-
-    XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
+    cube.getMeasures().getMeasure().add(xm1);
+    cube.getMeasures().getMeasure().add(xm2);
 
     XJoinChain xj1 = new XJoinChain();
     xj1.setName("chain1");
     xj1.setDescription("first chain");
     xj1.setDisplayString("Chain-1");
-    XTablereferences path1 = cubeObjectFactory.createXTablereferences();
-    XTablereference link1 = new XTablereference();
-    link1.setDestTable(cubeName);
-    link1.setDestColumn("col1");
-    XTablereference link2 = new XTablereference();
-    link2.setDestTable("testdim");
-    link2.setDestColumn("col1");
-    path1.getTableReferences().add(link1);
-    path1.getTableReferences().add(link2);
-    xj1.getPaths().add(path1);
-    joinchains.getChains().add(xj1);
+    xj1.setPaths(new XJoinPaths());
+    XJoinPath path1 = cubeObjectFactory.createXJoinPath();
+    path1.setEdges(new XJoinEdges());
+    XTableReference link1 = new XTableReference();
+    link1.setTable(cubeName);
+    link1.setColumn("col1");
+    XTableReference link2 = new XTableReference();
+    link2.setTable("testdim");
+    link2.setColumn("col1");
+    XJoinEdge edge1 = cubeObjectFactory.createXJoinEdge();
+    edge1.setFrom(link1);
+    edge1.setTo(link2);
+    path1.getEdges().getEdge().add(edge1);
+    xj1.getPaths().getPath().add(path1);
+    cube.getJoinChains().getJoinChain().add(xj1);
 
     XJoinChain xj2 = new XJoinChain();
     xj2.setName("dim2chain");
     xj2.setDescription("testdim2 chain");
     xj2.setDisplayString("Chain-2");
-    XTablereferences path = cubeObjectFactory.createXTablereferences();
-    path.getTableReferences().add(link1);
-    path.getTableReferences().add(link2);
-    XTablereference link3 = new XTablereference();
-    link3.setDestTable("testdim");
-    link3.setDestColumn("col2");
-    XTablereference link4 = new XTablereference();
-    link4.setDestTable("testdim2");
-    link4.setDestColumn("col1");
-    path.getTableReferences().add(link3);
-    path.getTableReferences().add(link4);
-    xj2.getPaths().add(path);
-    joinchains.getChains().add(xj2);
-    cube.setJoinchains(joinchains);
-
-    XExpressions expressions = cubeObjectFactory.createXExpressions();
+    xj2.setPaths(new XJoinPaths());
+    XJoinPath path = cubeObjectFactory.createXJoinPath();
+    path.setEdges(new XJoinEdges());
+    path.getEdges().getEdge().add(edge1);
+    XJoinEdge edge2 = cubeObjectFactory.createXJoinEdge();
+    XTableReference link3 = new XTableReference();
+    link3.setTable("testdim");
+    link3.setColumn("col2");
+    XTableReference link4 = new XTableReference();
+    link4.setTable("testdim2");
+    link4.setColumn("col1");
+    edge2.setFrom(link3);
+    edge2.setTo(link4);
+    path.getEdges().getEdge().add(edge2);
+    xj2.getPaths().getPath().add(path);
+    cube.getJoinChains().getJoinChain().add(xj2);
 
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("expr1");
-    xe1.setType("double");
+    xe1.setType(XColumnType.DOUBLE);
     xe1.setDescription("first expression");
     xe1.setDisplayString("Expression1");
     xe1.setExpr("msr1/1000");
 
-    expressions.getExpressions().add(xe1);
-    cube.setExpressions(expressions);
+    cube.getExpressions().getExpression().add(xe1);
 
-    XProperties properties = cubeObjectFactory.createXProperties();
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("foo");
     xp1.setValue("bar");
-    properties.getProperties().add(xp1);
-
-    cube.setProperties(properties);
+    cube.getProperties().getProperty().add(xp1);
     return cube;
   }
 
-  private XCube createDerivedCube(String cubeName, String parent) throws Exception {
-    XCube cube = cubeObjectFactory.createXCube();
+  private XDerivedCube createDerivedCube(String cubeName, String parent) throws Exception {
+    XDerivedCube cube = cubeObjectFactory.createXDerivedCube();
     cube.setName(cubeName);
-    cube.setWeight(50.0);
-    XDimAttrNames dimNames = cubeObjectFactory.createXDimAttrNames();
-    dimNames.getDimAttrNames().add("dim1");
-    cube.setDimAttrNames(dimNames);
+    cube.setDimAttrNames(new XDimAttrNames());
+    cube.setMeasureNames(new XMeasureNames());
+    cube.setProperties(new XProperties());
 
-    XMeasureNames msrNames = cubeObjectFactory.createXMeasureNames();
-    msrNames.getMeasures().add("msr1");
-    cube.setMeasureNames(msrNames);
+    cube.getDimAttrNames().getAttrName().add("dim1");
+    cube.getMeasureNames().getMeasureName().add("msr1");
 
-    XProperties properties = cubeObjectFactory.createXProperties();
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("derived.foo");
     xp1.setValue("derived.bar");
-    properties.getProperties().add(xp1);
+    cube.getProperties().getProperty().add(xp1);
 
-    cube.setProperties(properties);
     cube.setParent(parent);
-    cube.setDerived(true);
     return cube;
   }
 
@@ -492,7 +482,7 @@ public class TestMetastoreService extends LensJerseyTest {
       XProperty xp = new XProperty();
       xp.setName(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE);
       xp.setValue("false");
-      qcube.getProperties().getProperties().add(xp);
+      qcube.getProperties().getProperty().add(xp);
 
       result = target.queryParam("sessionid", lensSessionId).request(
           mediaType).post(Entity.xml(cubeObjectFactory.createXCube(qcube)), APIResult.class);
@@ -569,7 +559,7 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB);
 
     try {
-      final XCube cube = createTestCube("testGetCube");
+      final XBaseCube cube = createTestCube("testGetCube");
       // Create this cube first
       WebTarget target = target().path("metastore").path("cubes");
       JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
@@ -581,32 +571,30 @@ public class TestMetastoreService extends LensJerseyTest {
       target = target().path("metastore").path("cubes").path("testGetCube");
       JAXBElement<XCube> actualElement =
           target.queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-      XCube actual = actualElement.getValue();
+      XBaseCube actual = (XBaseCube)actualElement.getValue();
       assertNotNull(actual);
 
       assertTrue(cube.getName().equalsIgnoreCase(actual.getName()));
       assertNotNull(actual.getMeasures());
-      assertEquals(actual.getMeasures().getMeasures().size(), cube.getMeasures().getMeasures().size());
-      assertEquals(actual.getDimAttributes().getDimAttributes().size(), cube.getDimAttributes().getDimAttributes().size());
-      assertEquals(actual.getExpressions().getExpressions().size(), cube.getExpressions().getExpressions().size());
+      assertEquals(actual.getMeasures().getMeasure().size(), cube.getMeasures().getMeasure().size());
+      assertEquals(actual.getDimAttributes().getDimAttribute().size(), cube.getDimAttributes().getDimAttribute().size());
+      assertEquals(actual.getExpressions().getExpression().size(), cube.getExpressions().getExpression().size());
+      assertEquals(actual.getJoinChains().getJoinChain().size(), cube.getJoinChains().getJoinChain().size());
       Map<String, XJoinChain> chains = new HashMap<String, XJoinChain>();
-      for (XJoinChain xjc : actual.getJoinchains().getChains()) {
+      for (XJoinChain xjc : actual.getJoinChains().getJoinChain()) {
         chains.put(xjc.getName(), xjc);
       }
       assertEquals(chains.get("chain1").getDestTable(), "testdim");
       assertEquals(chains.get("dim2chain").getDestTable(), "testdim2");
       boolean chainValidated = false;
-      for (XDimAttribute attr : actual.getDimAttributes().getDimAttributes()) {
+      for (XDimAttribute attr : actual.getDimAttributes().getDimAttribute()) {
         if (attr.getName().equalsIgnoreCase("testdim2col2")) {
-          assertEquals(attr.getChainRefColumn().getDestTable(), "testdim");
+          assertEquals(attr.getRefSpec().getChainRefColumn().getDestTable(), "testdim");
           chainValidated = true;
           break;
         }
       }
       assertTrue(chainValidated);
-      assertEquals(actual.getWeight(), 100.0d);
-      assertFalse(actual.isDerived());
-      assertNull(actual.getParent());
       Cube hcube = (Cube) JAXBUtils.hiveCubeFromXCube(actual, null);
       assertEquals(hcube.getDimAttributeByName("dim1").getDescription(), "first dimension");
       assertEquals(hcube.getDimAttributeByName("dim1").getDisplayString(), "Dimension1");
@@ -634,7 +622,7 @@ public class TestMetastoreService extends LensJerseyTest {
       Assert.assertEquals(links.get(0).toString(), "testgetcube.col1");
       Assert.assertEquals(links.get(1).toString(), "testdim.col1");
 
-      final XCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
+      final XDerivedCube dcube = createDerivedCube("testGetDerivedCube", "testGetCube");
       target = target().path("metastore").path("cubes");
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
@@ -646,15 +634,12 @@ public class TestMetastoreService extends LensJerseyTest {
       target = target().path("metastore").path("cubes").path("testGetDerivedCube");
       actualElement =
           target.queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-      actual = actualElement.getValue();
-      assertNotNull(actual);
-
-      assertTrue(dcube.getName().equalsIgnoreCase(actual.getName()));
-      assertTrue(actual.isDerived());
-      assertEquals(actual.getParent(), "testGetCube".toLowerCase());
-      assertEquals(actual.getWeight(), 50.0d);
-      assertEquals(actual.getMeasureNames().getMeasures().size(), dcube.getMeasureNames().getMeasures().size());
-      assertEquals(actual.getDimAttrNames().getDimAttrNames().size(), dcube.getDimAttrNames().getDimAttrNames().size());
+      XDerivedCube actual2 = (XDerivedCube)actualElement.getValue();
+      assertNotNull(actual2);
+      assertTrue(dcube.getName().equalsIgnoreCase(actual2.getName()));
+      assertEquals(actual2.getParent(), "testGetCube".toLowerCase());
+      assertEquals(actual2.getMeasureNames().getMeasureName().size(), dcube.getMeasureNames().getMeasureName().size());
+      assertEquals(actual2.getDimAttrNames().getAttrName().size(), dcube.getDimAttrNames().getAttrName().size());
     } finally {
       dropDatabase(DB);
       setCurrentDatabase(prevDb);
@@ -693,7 +678,7 @@ public class TestMetastoreService extends LensJerseyTest {
       try {
         JAXBElement<XCube> got =
             target.queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-        fail("Should have thrown 404");
+        fail("Should have thrown 404, got:" + got);
       } catch (NotFoundException ex) {
         ex.printStackTrace();
       }
@@ -706,7 +691,7 @@ public class TestMetastoreService extends LensJerseyTest {
       try {
         JAXBElement<XCube> got =
             target.queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-        fail("Should have thrown 404");
+        fail("Should have thrown 404, got :" + got);
       } catch (NotFoundException ex) {
         ex.printStackTrace();
       }
@@ -725,7 +710,7 @@ public class TestMetastoreService extends LensJerseyTest {
     setCurrentDatabase(DB);
 
     try {
-      final XCube cube = createTestCube(cubeName);
+      final XBaseCube cube = createTestCube(cubeName);
       // Create this cube first
       WebTarget target = target().path("metastore").path("cubes");
       JAXBElement<XCube> element = cubeObjectFactory.createXCube(cube);
@@ -734,25 +719,22 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Update something
-      cube.setWeight(200.0);
       // Add a measure and dimension
       XMeasure xm2 = new XMeasure();
       xm2.setName("msr3");
-      xm2.setType("double");
-      xm2.setCost(20.0);
+      xm2.setType(XMeasureType.DOUBLE);
       xm2.setDefaultAggr("sum");
-      cube.getMeasures().getMeasures().add(xm2);
+      cube.getMeasures().getMeasure().add(xm2);
 
       XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
       xd2.setName("dim3");
-      xd2.setType("string");
-      xd2.setCost(55.0);
-      cube.getDimAttributes().getDimAttributes().add(xd2);
+      xd2.setType(XColumnType.STRING);
+      cube.getDimAttributes().getDimAttribute().add(xd2);
 
       XProperty xp = new XProperty();
       xp.setName("foo2");
       xp.setValue("bar2");
-      cube.getProperties().getProperties().add(xp);
+      cube.getProperties().getProperty().add(xp);
 
 
       element = cubeObjectFactory.createXCube(cube);
@@ -763,19 +745,17 @@ public class TestMetastoreService extends LensJerseyTest {
       JAXBElement<XCube> got =
           target.path(cubeName)
           .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-      XCube actual = got.getValue();
-      assertEquals(actual.getWeight(), 200.0);
-      assertEquals(actual.getDimAttributes().getDimAttributes().size(), 4);
-      assertEquals(actual.getMeasures().getMeasures().size(), 3);
+      XBaseCube actual = (XBaseCube)got.getValue();
+      assertEquals(actual.getDimAttributes().getDimAttribute().size(), 4);
+      assertEquals(actual.getMeasures().getMeasure().size(), 3);
 
       CubeInterface hcube = JAXBUtils.hiveCubeFromXCube(actual, null);
       assertTrue(hcube instanceof Cube);
       assertTrue(hcube.getMeasureByName("msr3").getAggregate().equals("sum"));
-      assertEquals(hcube.getMeasureByName("msr3").getCost(), 20.0);
       assertNotNull(hcube.getDimAttributeByName("dim3"));
       assertEquals(((AbstractCubeTable)hcube).getProperties().get("foo2"), "bar2");
 
-      final XCube dcube = createDerivedCube("test_update_derived", cubeName);
+      final XDerivedCube dcube = createDerivedCube("test_update_derived", cubeName);
       // Create this cube first
       element = cubeObjectFactory.createXCube(dcube);
       result =
@@ -783,15 +763,14 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
       // Update something
-      dcube.setWeight(80.0);
       // Add a measure and dimension
-      dcube.getMeasureNames().getMeasures().add("msr3");
-      dcube.getDimAttrNames().getDimAttrNames().add("dim3");
+      dcube.getMeasureNames().getMeasureName().add("msr3");
+      dcube.getDimAttrNames().getAttrName().add("dim3");
 
       xp = new XProperty();
       xp.setName("foo.derived2");
       xp.setValue("bar.derived2");
-      dcube.getProperties().getProperties().add(xp);
+      dcube.getProperties().getProperty().add(xp);
 
 
       element = cubeObjectFactory.createXCube(dcube);
@@ -801,17 +780,15 @@ public class TestMetastoreService extends LensJerseyTest {
 
       got = target.path("test_update_derived")
           .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-      actual = got.getValue();
-      assertEquals(actual.getWeight(), 80.0);
-      assertEquals(actual.getDimAttrNames().getDimAttrNames().size(), 2);
-      assertEquals(actual.getMeasureNames().getMeasures().size(), 2);
-      assertTrue(actual.getMeasureNames().getMeasures().contains("msr3"));
-      assertTrue(actual.getDimAttrNames().getDimAttrNames().contains("dim3"));
+      XDerivedCube actual2 = (XDerivedCube)got.getValue();
+      assertEquals(actual2.getDimAttrNames().getAttrName().size(), 2);
+      assertEquals(actual2.getMeasureNames().getMeasureName().size(), 2);
+      assertTrue(actual2.getMeasureNames().getMeasureName().contains("msr3"));
+      assertTrue(actual2.getDimAttrNames().getAttrName().contains("dim3"));
 
-      CubeInterface hdcube = JAXBUtils.hiveCubeFromXCube(actual, (Cube)hcube);
+      CubeInterface hdcube = JAXBUtils.hiveCubeFromXCube(actual2, (Cube)hcube);
       assertTrue(hdcube instanceof DerivedCube);
       assertTrue(hdcube.getMeasureByName("msr3").getAggregate().equals("sum"));
-      assertEquals(hdcube.getMeasureByName("msr3").getCost(), 20.0);
       assertNotNull(hdcube.getDimAttributeByName("dim3"));
       assertEquals(((AbstractCubeTable)hdcube).getProperties().get("foo.derived2"), "bar.derived2");
 
@@ -845,7 +822,7 @@ public class TestMetastoreService extends LensJerseyTest {
       XStorage store1 = target.path("store1").queryParam("sessionid", lensSessionId).request(mediaType).get(XStorage.class);
       assertEquals(store1.getName(), "store1");
       assertEquals(store1.getClassname(), HDFSStorage.class.getCanonicalName());
-      assertTrue(store1.getProperties().getProperties().size() >= 1);
+      assertTrue(store1.getProperties().getProperty().size() >= 1);
       assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop1.name"));
       assertEquals(JAXBUtils.mapFromXProperties(store1.getProperties()).get("prop1.name"), "prop1.value");
 
@@ -853,7 +830,7 @@ public class TestMetastoreService extends LensJerseyTest {
       XProperty prop = cubeObjectFactory.createXProperty();
       prop.setName("prop2.name");
       prop.setValue("prop2.value");
-      store1.getProperties().getProperties().add(prop);
+      store1.getProperties().getProperty().add(prop);
 
       APIResult result = target.path("store1")
           .queryParam("sessionid", lensSessionId).queryParam("storage", "store1")
@@ -863,7 +840,7 @@ public class TestMetastoreService extends LensJerseyTest {
       store1 = target.path("store1").queryParam("sessionid", lensSessionId).request(mediaType).get(XStorage.class);
       assertEquals(store1.getName(), "store1");
       assertEquals(store1.getClassname(), HDFSStorage.class.getCanonicalName());
-      assertTrue(store1.getProperties().getProperties().size() >= 2);
+      assertTrue(store1.getProperties().getProperty().size() >= 2);
       assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop1.name"));
       assertEquals(JAXBUtils.mapFromXProperties(store1.getProperties()).get("prop1.name"), "prop1.value");
       assertTrue(JAXBUtils.mapFromXProperties(store1.getProperties()).containsKey("prop2.name"));
@@ -888,20 +865,18 @@ public class TestMetastoreService extends LensJerseyTest {
     xs1.setMapKeyDelimiter("\r");
     xs1.setTableLocation("/tmp/" + name);
     xs1.setExternal(true);
-
-    Columns timePartCols = cubeObjectFactory.createColumns();
+    xs1.setPartCols(new XColumns());
+    xs1.setTableParameters(new XProperties());
+    xs1.setSerdeParameters(new XProperties());
 
     for (String timePartColName : timePartColNames) {
-      Column partCol = cubeObjectFactory.createColumn();
+      XColumn partCol = cubeObjectFactory.createXColumn();
       partCol.setName(timePartColName);
-      partCol.setType("string");
+      partCol.setType(XColumnType.STRING);
       partCol.setComment("partition column");
-      timePartCols.getColumns().add(partCol);
+      xs1.getPartCols().getColumn().add(partCol);
       xs1.getTimePartCols().add(timePartColName);
     }
-
-    xs1.setPartCols(timePartCols);
-
     return xs1;
   }
 
@@ -909,67 +884,57 @@ public class TestMetastoreService extends LensJerseyTest {
     final String[] timePartColNames = {"dt"};
     return createStorageTblElement(storageName,table,timePartColNames,updatePeriod);
   }
-  private XStorageTableElement createStorageTblElement(String storageName, String table, final String[] timePartColNames, String... updatePeriod) {
+  private XStorageTableElement createStorageTblElement(String storageName, String table,
+      final String[] timePartColNames, String... updatePeriod) {
     XStorageTableElement tbl = cubeObjectFactory.createXStorageTableElement();
+    tbl.setUpdatePeriods(new XUpdatePeriods());
     tbl.setStorageName(storageName);
     if (updatePeriod != null) {
       for (String p : updatePeriod) {
-        tbl.getUpdatePeriods().add(p);
+        tbl.getUpdatePeriods().getUpdatePeriod().add(XUpdatePeriod.valueOf(p));
       }
     }
     tbl.setTableDesc(createStorageTableDesc(table,timePartColNames));
     return tbl;
   }
 
-  private DimensionTable createDimTable(String dimName, String table) {
-    DimensionTable dt = cubeObjectFactory.createDimensionTable();
-    dt.setDimName(dimName);
+  private XDimensionTable createDimTable(String dimName, String table) {
+    XDimensionTable dt = cubeObjectFactory.createXDimensionTable();
+    dt.setDimensionName(dimName);
     dt.setTableName(table);
     dt.setWeight(15.0);
+    dt.setColumns(new XColumns());
+    dt.setProperties(new XProperties());
+    dt.setStorageTables(new XStorageTables());
 
-    Columns cols = cubeObjectFactory.createColumns();
-
-    Column c1 = cubeObjectFactory.createColumn();
+    XColumn c1 = cubeObjectFactory.createXColumn();
     c1.setName("col1");
-    c1.setType("string");
+    c1.setType(XColumnType.STRING);
     c1.setComment("Fisrt column");
-    cols.getColumns().add(c1);
-    Column c2 = cubeObjectFactory.createColumn();
+    dt.getColumns().getColumn().add(c1);
+    XColumn c2 = cubeObjectFactory.createXColumn();
     c2.setName("col2");
-    c2.setType("int");
+    c2.setType(XColumnType.INT);
     c2.setComment("Second column");
-    cols.getColumns().add(c2);
-    dt.setColumns(cols);
+    dt.getColumns().getColumn().add(c2);
 
     XProperty p1 = cubeObjectFactory.createXProperty();
     p1.setName("foodim");
     p1.setValue("bardim");
-    XProperties properties = cubeObjectFactory.createXProperties();
-    properties.getProperties().add(p1);
-    dt.setProperties(properties);
+    dt.getProperties().getProperty().add(p1);
 
-    UpdatePeriods periods = cubeObjectFactory.createUpdatePeriods();
-    UpdatePeriodElement ue1 = cubeObjectFactory.createUpdatePeriodElement();
-    ue1.setStorageName("test");
-    ue1.getUpdatePeriods().add("HOURLY");
-    periods.getUpdatePeriodElement().add(ue1);
-    dt.setStorageDumpPeriods(periods);
     return dt;
   }
 
-  private DimensionTable createDimTable(String dimTableName) throws Exception {
-    DimensionTable dt = createDimTable("testdim", dimTableName);
-    XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-    storageTables.getStorageTables().add(createStorageTblElement("test", dimTableName, "HOURLY"));
+  private XDimensionTable createDimTable(String dimTableName) throws Exception {
+    XDimensionTable dt = createDimTable("testdim", dimTableName);
+    dt.getStorageTables().getStorageTable().add(createStorageTblElement("test", dimTableName, "HOURLY"));
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, medType));
     mp.bodyPart(new FormDataBodyPart(
         FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
-        cubeObjectFactory.createDimensionTable(dt), medType));
-    mp.bodyPart(new FormDataBodyPart(
-        FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
-        cubeObjectFactory.createXStorageTables(storageTables), medType));
+        cubeObjectFactory.createXDimensionTable(dt), medType));
     APIResult result = target()
         .path("metastore")
         .path("dimtables")
@@ -988,50 +953,43 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimension dimension = cubeObjectFactory.createXDimension();
     dimension.setName(dimName);
-    dimension.setWeight(100.0);
-    XDimAttributes xdims = cubeObjectFactory.createXDimAttributes();
+    dimension.setAttributes(new XDimAttributes());
+    dimension.setExpressions(new XExpressions());
+    dimension.setJoinChains(new XJoinChains());
+    dimension.setProperties(new XProperties());
 
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("col1");
-    xd1.setType("string");
+    xd1.setType(XColumnType.STRING);
     xd1.setDescription("first column");
     xd1.setDisplayString("Column1");
-    xd1.setStartTime(startDate);
     // Don't set endtime on this dim to validate null handling on server side
-    xd1.setCost(10.0);
+    xd1.setStartTime(startDate);
 
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("col2");
-    xd2.setType("int");
+    xd2.setType(XColumnType.INT);
     xd2.setDescription("second column");
     xd2.setDisplayString("Column2");
     // Don't set start time on this dim to validate null handling on server side
     xd2.setEndTime(endDate);
-    xd2.setCost(5.0);
 
-    xdims.getDimAttributes().add(xd1);
-    xdims.getDimAttributes().add(xd2);
-    dimension.setAttributes(xdims);
+    dimension.getAttributes().getDimAttribute().add(xd1);
+    dimension.getAttributes().getDimAttribute().add(xd2);
 
-    XExpressions expressions = cubeObjectFactory.createXExpressions();
 
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("dimexpr");
-    xe1.setType("string");
+    xe1.setType(XColumnType.STRING);
     xe1.setDescription("dimension expression");
     xe1.setDisplayString("Dim Expression");
     xe1.setExpr("substr(col1, 3)");
+    dimension.getExpressions().getExpression().add(xe1);
 
-    expressions.getExpressions().add(xe1);
-    dimension.setExpressions(expressions);
-
-    XProperties properties = cubeObjectFactory.createXProperties();
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("dimension.foo");
     xp1.setValue("dim.bar");
-    properties.getProperties().add(xp1);
-
-    dimension.setProperties(properties);
+    dimension.getProperties().getProperty().add(xp1);
     return dimension;
   }
 
@@ -1039,24 +997,25 @@ public class TestMetastoreService extends LensJerseyTest {
     XDimension dimension = createDimension("testdim");
     XDimension dimension2 = createDimension("testdim2");
 
-    XJoinchains joinchains = cubeObjectFactory.createXJoinchains();
-
     XJoinChain xj1 = new XJoinChain();
     xj1.setName("chain1");
     xj1.setDescription("first chain");
     xj1.setDisplayString("Chain-1");
-    XTablereferences path1 = cubeObjectFactory.createXTablereferences();
-    XTablereference link1 = new XTablereference();
-    link1.setDestTable("testdim");
-    link1.setDestColumn("col1");
-    XTablereference link2 = new XTablereference();
-    link2.setDestTable("testdim2");
-    link2.setDestColumn("col1");
-    path1.getTableReferences().add(link1);
-    path1.getTableReferences().add(link2);
-    xj1.getPaths().add(path1);
-    joinchains.getChains().add(xj1);
-    dimension.setJoinchains(joinchains);
+    xj1.setPaths(new XJoinPaths());
+    XJoinPath path1 = cubeObjectFactory.createXJoinPath();
+    path1.setEdges(new XJoinEdges());
+    XTableReference link1 = new XTableReference();
+    link1.setTable("testdim");
+    link1.setColumn("col1");
+    XTableReference link2 = new XTableReference();
+    link2.setTable("testdim2");
+    link2.setColumn("col1");
+    XJoinEdge edge1 = cubeObjectFactory.createXJoinEdge();
+    edge1.setFrom(link1);
+    edge1.setTo(link2);
+    path1.getEdges().getEdge().add(edge1);
+    xj1.getPaths().getPath().add(path1);
+    dimension.getJoinChains().getJoinChain().add(xj1);
 
     final WebTarget target = target().path("metastore").path("dimensions");
 
@@ -1099,16 +1058,17 @@ public class TestMetastoreService extends LensJerseyTest {
       // get
       XDimension testDim = target.path("testdim").queryParam("sessionid", lensSessionId).request(mediaType).get(XDimension.class);
       assertEquals(testDim.getName(), "testdim");
-      assertTrue(testDim.getProperties().getProperties().size() >= 1);
+      assertTrue(testDim.getProperties().getProperty().size() >= 1);
       assertTrue(JAXBUtils.mapFromXProperties(testDim.getProperties()).containsKey("dimension.foo"));
       assertEquals(JAXBUtils.mapFromXProperties(testDim.getProperties()).get("dimension.foo"), "dim.bar");
-      assertEquals(testDim.getWeight(), 100.0);
-      assertEquals(testDim.getAttributes().getDimAttributes().size(), 2);
-      assertEquals(testDim.getExpressions().getExpressions().size(), 1);
-      assertEquals(testDim.getJoinchains().getChains().size(), 2);
-      assertEquals(testDim.getJoinchains().getChains().get(0).getPaths().size(), 1);
-      assertEquals(testDim.getJoinchains().getChains().get(0).getDescription(), "first chain");
-      assertEquals(testDim.getJoinchains().getChains().get(0).getDisplayString(), "Chain-1");
+      assertEquals(testDim.getAttributes().getDimAttribute().size(), 2);
+      assertEquals(testDim.getExpressions().getExpression().size(), 1);
+      assertEquals(testDim.getJoinChains().getJoinChain().size(), 1);
+      assertEquals(testDim.getJoinChains().getJoinChain().get(0).getPaths().getPath().size(), 1);
+      assertEquals(
+          testDim.getJoinChains().getJoinChain().get(0).getPaths().getPath().get(0).getEdges().getEdge().size(), 1);
+      assertEquals(testDim.getJoinChains().getJoinChain().get(0).getDescription(), "first chain");
+      assertEquals(testDim.getJoinChains().getJoinChain().get(0).getDisplayString(), "Chain-1");
 
       Dimension dim = JAXBUtils.dimensionFromXDimension(testDim);
       assertNotNull(dim.getAttributeByName("col1"));
@@ -1125,32 +1085,30 @@ public class TestMetastoreService extends LensJerseyTest {
       XProperty prop = cubeObjectFactory.createXProperty();
       prop.setName("dim.prop2.name");
       prop.setValue("dim.prop2.value");
-      testDim.getProperties().getProperties().add(prop);
+      testDim.getProperties().getProperty().add(prop);
 
-      testDim.getAttributes().getDimAttributes().remove(1);
+      testDim.getAttributes().getDimAttribute().remove(1);
       XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
       xd1.setName("col3");
-      xd1.setType("string");
-      testDim.getAttributes().getDimAttributes().add(xd1);
-      testDim.setWeight(200.0);
+      xd1.setType(XColumnType.STRING);
+      testDim.getAttributes().getDimAttribute().add(xd1);
 
       APIResult result = target.path("testdim")
           .queryParam("sessionid", lensSessionId)
           .request(mediaType).put(Entity.xml(cubeObjectFactory.createXDimension(testDim)), APIResult.class);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
 
-      XDimension altered = target.path("testdim").queryParam("sessionid", lensSessionId).request(mediaType).get(XDimension.class);
+      XDimension altered = target.path("testdim").queryParam("sessionid", lensSessionId).request(mediaType).get(
+          XDimension.class);
       assertEquals(altered.getName(), "testdim");
-      assertTrue(altered.getProperties().getProperties().size() >= 2);
+      assertTrue(altered.getProperties().getProperty().size() >= 2);
       assertTrue(JAXBUtils.mapFromXProperties(altered.getProperties()).containsKey("dim.prop2.name"));
       assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dim.prop2.name"), "dim.prop2.value");
       assertTrue(JAXBUtils.mapFromXProperties(altered.getProperties()).containsKey("dimension.foo"));
       assertEquals(JAXBUtils.mapFromXProperties(altered.getProperties()).get("dimension.foo"), "dim.bar");
-      assertEquals(altered.getWeight(), 200.0);
-      assertEquals(altered.getAttributes().getDimAttributes().size(), 2);
+      assertEquals(testDim.getAttributes().getDimAttribute().size(), 2);
 
       dim = JAXBUtils.dimensionFromXDimension(altered);
-      System.out.println("Attributes:" + dim.getAttributes());
       assertNotNull(dim.getAttributeByName("col3"));
       assertTrue(dim.getAttributeByName("col2") == null || dim.getAttributeByName("col1") == null);
 
@@ -1228,14 +1186,14 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("test");
 
     try {
-      DimensionTable dt1 = createDimTable(table);
+      XDimensionTable dt1 = createDimTable(table);
 
-      JAXBElement<DimensionTable> dtElement = target().path("metastore/dimtables").path(table)
+      JAXBElement<XDimensionTable> dtElement = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
-      DimensionTable dt2 = dtElement.getValue();
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
+      XDimensionTable dt2 = dtElement.getValue();
       assertTrue (dt1 != dt2);
-      assertEquals(dt2.getDimName(), dt1.getDimName());
+      assertEquals(dt2.getDimensionName(), dt1.getDimensionName());
       assertEquals(dt2.getTableName(), table);
       assertEquals(dt2.getWeight(), dt1.getWeight());
       Map<String, String> props = JAXBUtils.mapFromXProperties(dt2.getProperties());
@@ -1245,34 +1203,33 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Update a property
       props.put("foodim", "bardim1");
-      dt2.setProperties(JAXBUtils.xPropertiesFromMap(props));
+      dt2.getProperties().getProperty().addAll(JAXBUtils.xPropertiesFromMap(props));
       dt2.setWeight(200.0);
       // Add a column
-      Column c = cubeObjectFactory.createColumn();
+      XColumn c = cubeObjectFactory.createXColumn();
       c.setName("col3");
-      c.setType("string");
+      c.setType(XColumnType.STRING);
       c.setComment("Added column");
-      dt2.getColumns().getColumns().add(c);
+      dt2.getColumns().getColumn().add(c);
 
       // Update the table
       APIResult result = target().path("metastore/dimtables")
           .path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .put(Entity.xml(cubeObjectFactory.createDimensionTable(dt2)), APIResult.class);
+          .put(Entity.xml(cubeObjectFactory.createXDimensionTable(dt2)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Get the updated table
-      JAXBElement<DimensionTable> dtElement2 = target().path("metastore/dimtables").path(table)
+      JAXBElement<XDimensionTable> dtElement2 = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
-      DimensionTable dt3 = dtElement2.getValue();
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
+      XDimensionTable dt3 = dtElement2.getValue();
       assertEquals(dt3.getWeight(), 200.0);
 
-      Columns cols = dt3.getColumns();
-      List<Column> colList = cols.getColumns();
+      List<XColumn> colList = dt3.getColumns().getColumn();
       boolean foundCol = false;
-      for (Column col : colList) {
-        if (col.getName().equals("col3") && col.getType().equals("string") &&
+      for (XColumn col : colList) {
+        if (col.getName().equals("col3") && col.getType().equals(XColumnType.STRING) &&
             "Added column".equalsIgnoreCase(col.getComment())) {
           foundCol = true;
           break;
@@ -1304,7 +1261,7 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("test");
 
     try {
-      DimensionTable dt1 = createDimTable(table);
+      createDimTable(table);
       StringList storages = target().path("metastore").path("dimtables")
           .path(table).path("storages")
           .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -1328,7 +1285,7 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("test2");
     createStorage("test3");
     try {
-      DimensionTable dt1 = createDimTable(table);
+      createDimTable(table);
 
       XStorageTableElement sTbl = createStorageTblElement("test2", table, "DAILY");
       APIResult result = target().path("metastore/dimtables").path(table).path("/storages")
@@ -1345,10 +1302,10 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(storages.getElements().contains("test2"));
 
       // Check get table also contains the storage
-      JAXBElement<DimensionTable> dt = target().path("metastore/dimtables").path(table)
+      JAXBElement<XDimensionTable> dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
-      DimensionTable dimTable = dt.getValue();
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
+      XDimensionTable dimTable = dt.getValue();
       CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertTrue(cdim.getStorages().contains("test"));
       assertTrue(cdim.getStorages().contains("test2"));
@@ -1371,7 +1328,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // Check get table also contains the storage
       dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
       dimTable = dt.getValue();
       cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertFalse(cdim.getStorages().contains("test"));
@@ -1379,7 +1336,7 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(cdim.getSnapshotDumpPeriods().get("test2"), UpdatePeriod.DAILY);
 
       // add another storage without dump period
-      sTbl = createStorageTblElement("test3", table, null);
+      sTbl = createStorageTblElement("test3", table, (String[])null);
       result = target().path("metastore/dimtables").path(table).path("/storages")
           .queryParam("sessionid", lensSessionId).request(mediaType)
           .post(Entity.xml(cubeObjectFactory.createXStorageTableElement(sTbl)), APIResult.class);
@@ -1396,7 +1353,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // Check get table also contains the storage
       dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
       dimTable = dt.getValue();
       cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertTrue(cdim.getStorages().contains("test2"));
@@ -1419,7 +1376,7 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("test2");
 
     try {
-      DimensionTable dt1 = createDimTable(table);
+      createDimTable(table);
       XStorageTableElement sTbl = createStorageTblElement("test2", table, "DAILY");
       APIResult result = target().path("metastore/dimtables").path(table).path("/storages")
           .queryParam("sessionid", lensSessionId).request(mediaType)
@@ -1432,10 +1389,10 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
 
-      JAXBElement<DimensionTable> dt = target().path("metastore/dimtables").path(table)
+      JAXBElement<XDimensionTable> dt = target().path("metastore/dimtables").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<DimensionTable>>() {});
-      DimensionTable dimTable = dt.getValue();
+          .get(new GenericType<JAXBElement<XDimensionTable>>() {});
+      XDimensionTable dimTable = dt.getValue();
       CubeDimensionTable cdim = JAXBUtils.cubeDimTableFromDimTable(dimTable);
       assertTrue(cdim.getStorages().isEmpty());
       assertTrue(cdim.getSnapshotDumpPeriods().isEmpty());
@@ -1445,45 +1402,35 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
-  private FactTable createFactTable(String factName, String[] storages, String[] updatePeriods) {
-    return createFactTable(factName,storages,updatePeriods,"testCube");
+  private XFactTable createFactTable(String factName) {
+    return createFactTable(factName,"testCube");
   }
 
-  private FactTable createFactTable(String factName, String[] storages, String[] updatePeriods,final String cubeName) {
-    FactTable f = cubeObjectFactory.createFactTable();
+  private XFactTable createFactTable(String factName, final String cubeName) {
+    XFactTable f = cubeObjectFactory.createXFactTable();
+    f.setColumns(new XColumns());
+    f.setProperties(new XProperties());
+    f.setStorageTables(new XStorageTables());
     f.setName(factName);
     f.setWeight(10.0);
     f.setCubeName(cubeName);
 
-    Columns cols = cubeObjectFactory.createColumns();
-    Column c1 = cubeObjectFactory.createColumn();
+    XColumn c1 = cubeObjectFactory.createXColumn();
     c1.setName("c1");
-    c1.setType("string");
+    c1.setType(XColumnType.STRING);
     c1.setComment("col1");
-    cols.getColumns().add(c1);
+    f.getColumns().getColumn().add(c1);
 
-    Column c2 = cubeObjectFactory.createColumn();
+    XColumn c2 = cubeObjectFactory.createXColumn();
     c2.setName("c2");
-    c2.setType("string");
-    c2.setComment("col1");
-    cols.getColumns().add(c2);
+    c2.setType(XColumnType.STRING);
+    c2.setComment("col2");
+    f.getColumns().getColumn().add(c2);
 
-    f.setColumns(cols);
 
     Map<String, String> properties = new HashMap<String, String>();
     properties.put("foo", "bar");
-    f.setProperties(JAXBUtils.xPropertiesFromMap(properties));
-
-    UpdatePeriods upd = cubeObjectFactory.createUpdatePeriods();
-
-    for (int i = 0; i < storages.length; i++) {
-      UpdatePeriodElement uel = cubeObjectFactory.createUpdatePeriodElement();
-      uel.setStorageName(storages[i]);
-      uel.getUpdatePeriods().add(updatePeriods[i]);
-      upd.getUpdatePeriodElement().add(uel);
-    }
-
-    f.setStorageUpdatePeriods(upd);
+    f.getProperties().getProperty().addAll(JAXBUtils.xPropertiesFromMap(properties));
     return f;
   }
 
@@ -1498,19 +1445,15 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("S2");
     try {
 
-      FactTable f = createFactTable(table, new String[] {"S1", "S2"},  new String[] {"HOURLY", "DAILY"});
-      XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-      storageTables.getStorageTables().add(createStorageTblElement("S1", table, "HOURLY"));
-      storageTables.getStorageTables().add(createStorageTblElement("S2", table, "DAILY"));
+      XFactTable f = createFactTable(table);
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
               lensSessionId, medType));
       mp.bodyPart(new FormDataBodyPart(
           FormDataContentDisposition.name("fact").fileName("fact").build(),
-          cubeObjectFactory.createFactTable(f), medType));
-      mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
-          cubeObjectFactory.createXStorageTables(storageTables), medType));
+          cubeObjectFactory.createXFactTable(f), medType));
       APIResult result = target()
           .path("metastore")
           .path("facts")
@@ -1524,10 +1467,10 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(factNames.getElements().contains(table.toLowerCase()));
 
       // Get the created table
-      JAXBElement<FactTable> gotFactElement = target().path("metastore/facts").path(table)
+      JAXBElement<XFactTable> gotFactElement = target().path("metastore/facts").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<FactTable>>() {});
-      FactTable gotFact = gotFactElement.getValue();
+          .get(new GenericType<JAXBElement<XFactTable>>() {});
+      XFactTable gotFact = gotFactElement.getValue();
       assertTrue(gotFact.getName().equalsIgnoreCase(table));
       assertEquals(gotFact.getWeight(), 10.0);
       CubeFactTable cf = JAXBUtils.cubeFactFromFactTable(gotFact);
@@ -1549,22 +1492,23 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(cf.getUpdatePeriods().get("S2").contains(UpdatePeriod.DAILY));
 
       // Do some changes to test update
-      cf.addUpdatePeriod("S2", UpdatePeriod.MONTHLY);
       cf.alterWeight(20.0);
       cf.alterColumn(new FieldSchema("c2", "int", "changed to int"));
 
-      FactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
+      XFactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
+      update.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      update.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "MONTHLY"));
 
       // Update
       result = target().path("metastore").path("facts").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .put(Entity.xml(cubeObjectFactory.createFactTable(update)), APIResult.class);
+          .put(Entity.xml(cubeObjectFactory.createXFactTable(update)), APIResult.class);
       assertEquals(result.getStatus(), Status.SUCCEEDED);
 
       // Get the updated table
       gotFactElement = target().path("metastore/facts").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<FactTable>>() {});
+          .get(new GenericType<JAXBElement<XFactTable>>() {});
       gotFact = gotFactElement.getValue();
       CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
 
@@ -1616,21 +1560,15 @@ public class TestMetastoreService extends LensJerseyTest {
     createStorage("S3");
 
     try {
-      String [] storages = {"S1", "S2"};
-      String [] updatePeriods = {"HOURLY", "DAILY"};
-      FactTable f = createFactTable(table, storages, updatePeriods);
-      XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-      storageTables.getStorageTables().add(createStorageTblElement("S1", table, "HOURLY"));
-      storageTables.getStorageTables().add(createStorageTblElement("S2", table, "DAILY"));
+      XFactTable f = createFactTable(table);
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
           lensSessionId, medType));
       mp.bodyPart(new FormDataBodyPart(
           FormDataContentDisposition.name("fact").fileName("fact").build(),
-          cubeObjectFactory.createFactTable(f), medType));
-      mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
-          cubeObjectFactory.createXStorageTables(storageTables), medType));
+          cubeObjectFactory.createXFactTable(f), medType));
       APIResult result = target()
           .path("metastore")
           .path("facts")
@@ -1661,10 +1599,10 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(got.getElements().contains("S2"));
       assertTrue(got.getElements().contains("S3"));
 
-      JAXBElement<FactTable> gotFactElement = target().path("metastore/facts").path(table)
+      JAXBElement<XFactTable> gotFactElement = target().path("metastore/facts").path(table)
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<FactTable>>() {});
-      FactTable gotFact = gotFactElement.getValue();
+          .get(new GenericType<JAXBElement<XFactTable>>() {});
+      XFactTable gotFact = gotFactElement.getValue();
       CubeFactTable ucf = JAXBUtils.cubeFactFromFactTable(gotFact);
 
       assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.MONTHLY));
@@ -1705,13 +1643,15 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XPartition xp = cubeObjectFactory.createXPartition();
     xp.setLocation("file:///tmp/part/test_part");
-    xp.setCubeTableName(cubeTableName);
-    XTimePartSpec timeSpec = cubeObjectFactory.createXTimePartSpec();
+    xp.setFactOrDimensionTableName(cubeTableName);
+    xp.setNonTimePartitionSpec(new XPartSpec());
+    xp.setTimePartitionSpec(new XTimePartSpec());
+    xp.setPartitionParameters(new XProperties());
+    xp.setSerdeParameters(new XProperties());
     for (XTimePartSpecElement timePartSpec : timePartSpecs) {
-      timeSpec.getPartSpecElement().add(timePartSpec);
+      xp.getTimePartitionSpec().getPartSpecElement().add(timePartSpec);
     }
-    xp.setTimePartitionSpec(timeSpec);
-    xp.setUpdatePeriod("HOURLY");
+    xp.setUpdatePeriod(XUpdatePeriod.HOURLY);
     return xp;
   }
 
@@ -1774,15 +1714,16 @@ public class TestMetastoreService extends LensJerseyTest {
       APIResult partAddResult = target().path("metastore/facts/").path(fact1TableName).path("storages/"+storages[0]+"/partitions")
               .queryParam("sessionid", lensSessionId).request(mediaType)
               .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
-      if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
-        throw new RuntimeException("Setup failure: Partition Creation failed : "+result.getMessage());
+      if (!partAddResult.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+        throw new RuntimeException("Setup failure: Partition Creation failed : " + partAddResult.getMessage());
       }
 
       // End: Setup
 
       // Begin: Test Execution
       // Get latest date for Cube using timeDimOnlyPresentInPartitionOfFact1
-      DateTime retrievedLatestDate = target().path("metastore/cubes").path(cubeName).path("latestdate").queryParam("timeDimension", timeDimOnlyPresentInPartitionOfFact1)
+      DateTime retrievedLatestDate = target().path("metastore/cubes").path(cubeName).path("latestdate").queryParam(
+          "timeDimension", timeDimOnlyPresentInPartitionOfFact1)
                       .queryParam("sessionid", lensSessionId).request(mediaType).get(DateTime.class);
       // End: Test Execution
 
@@ -1797,6 +1738,7 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void testFactStoragePartitions() throws Exception {
     final String table = "testFactStoragePartitions";
@@ -1810,25 +1752,18 @@ public class TestMetastoreService extends LensJerseyTest {
     try {
       
       final XCube cube = createTestCube("testCube");
-      APIResult result1 =
-          target().path("metastore").path("cubes").queryParam("sessionid", lensSessionId).request(mediaType)
+      target().path("metastore").path("cubes").queryParam("sessionid", lensSessionId).request(mediaType)
               .post(Entity.xml(cubeObjectFactory.createXCube(cube)), APIResult.class);
 
-      String [] storages = {"S1", "S2"};
-      String [] updatePeriods = {"HOURLY", "DAILY"};
-      FactTable f = createFactTable(table, storages, updatePeriods);
-      XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-      storageTables.getStorageTables().add(createStorageTblElement("S1", table, "HOURLY"));
-      storageTables.getStorageTables().add(createStorageTblElement("S2", table, "DAILY"));
+      XFactTable f = createFactTable(table);
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
           lensSessionId, medType));
       mp.bodyPart(new FormDataBodyPart(
           FormDataContentDisposition.name("fact").fileName("fact").build(),
-          cubeObjectFactory.createFactTable(f), medType));
-      mp.bodyPart(new FormDataBodyPart(
-          FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
-          cubeObjectFactory.createXStorageTables(storageTables), medType));
+          cubeObjectFactory.createXFactTable(f), medType));
       APIResult result = target()
           .path("metastore")
           .path("facts")
@@ -1844,13 +1779,14 @@ public class TestMetastoreService extends LensJerseyTest {
           .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
-      JAXBElement<PartitionList> partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
+      JAXBElement<XPartitionList> partitionsElement = target().path("metastore/facts").path(table)
+          .path("storages/S2/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
-      PartitionList partitions = partitionsElement.getValue();
+      XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 2);
       
       DateTime date =
           target().path("metastore/cubes").path("testCube").path("latestdate").queryParam("timeDimension", "dt")
@@ -1871,11 +1807,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 0);
+      assertEquals(partitions.getPartition().size(), 0);
 
       // Add again
       partAddResult = target().path("metastore/facts/").path(table).path("storages/S2/partitions")
@@ -1886,11 +1822,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was added
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 2);
 
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
@@ -1903,11 +1839,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was dropped
       partitionsElement = target().path("metastore/facts").path(table).path("storages/S2/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 0);
+      assertEquals(partitions.getPartition().size(), 0);
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
@@ -1935,13 +1871,13 @@ public class TestMetastoreService extends LensJerseyTest {
           .post(Entity.xml(cubeObjectFactory.createXPartition(xp)), APIResult.class);
       assertEquals(partAddResult.getStatus(), Status.SUCCEEDED);
 
-      JAXBElement<PartitionList> partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
+      JAXBElement<XPartitionList> partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
-      PartitionList partitions = partitionsElement.getValue();
+      XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 2);
 
       // Drop the partitions
       APIResult dropResult = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
@@ -1953,11 +1889,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was dropped
       partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 0);
+      assertEquals(partitions.getPartition().size(), 0);
 
       // Add again
       partAddResult = target().path("metastore/dimtables/").path(table).path("storages/test/partitions")
@@ -1968,11 +1904,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was added
       partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 2);
 
       // Drop again by values
       String val[] = new String[] {UpdatePeriod.HOURLY.format().format(partDate)};
@@ -1985,11 +1921,11 @@ public class TestMetastoreService extends LensJerseyTest {
       // Verify partition was dropped
       partitionsElement = target().path("metastore/dimtables").path(table).path("storages/test/partitions")
           .queryParam("sessionid", lensSessionId).request(mediaType)
-          .get(new GenericType<JAXBElement<PartitionList>>() {});
+          .get(new GenericType<JAXBElement<XPartitionList>>() {});
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getXPartition().size(), 0);
+      assertEquals(partitions.getPartition().size(), 0);
     } finally {
       setCurrentDatabase(prevDb);
       dropDatabase(DB);
@@ -2040,20 +1976,20 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(nativetables.getElements().get(0), tableName);
 
       // Now get the table
-      JAXBElement<NativeTable> actualElement = target.path(tableName).queryParam(
-          "sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<NativeTable>>() {});
-      NativeTable actual = actualElement.getValue();
+      JAXBElement<XNativeTable> actualElement = target.path(tableName).queryParam(
+          "sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XNativeTable>>() {});
+      XNativeTable actual = actualElement.getValue();
       assertNotNull(actual);
 
       assertTrue(tableName.equalsIgnoreCase(actual.getName()));
-      assertEquals(actual.getColumns().getColumns().size(), 1);
-      assertEquals(actual.getColumns().getColumns().get(0).getName(), "col1");
-      assertEquals(actual.getStorageDescriptor().getPartCols().getColumns().size(), 1);
-      assertEquals(actual.getStorageDescriptor().getPartCols().getColumns().get(0).getName(), "pcol1");
-      assertEquals(actual.getType(), TableType.MANAGED_TABLE.name());
+      assertEquals(actual.getColumns().getColumn().size(), 1);
+      assertEquals(actual.getColumns().getColumn().get(0).getName(), "col1");
+      assertEquals(actual.getStorageDescriptor().getPartCols().getColumn().size(), 1);
+      assertEquals(actual.getStorageDescriptor().getPartCols().getColumn().get(0).getName(), "pcol1");
+      assertEquals(actual.getTableType(), TableType.MANAGED_TABLE.name());
       assertFalse(actual.getStorageDescriptor().isExternal());
       boolean foundProp = false;
-      for (XProperty prop : actual.getStorageDescriptor().getTableParameters().getProperties()) {
+      for (XProperty prop : actual.getStorageDescriptor().getTableParameters().getProperty()) {
         if (prop.getName().equals("test.hive.table.prop")) {
           assertTrue(prop.getValue().equals("tvalue"));
           foundProp = true;
@@ -2094,8 +2030,8 @@ public class TestMetastoreService extends LensJerseyTest {
     }
   }
 
-  private void populateActualTablesAndCols(List<FlattenedColumn> columns, Set<String> tables, Set<String> colSet) {
-    for (FlattenedColumn colObject : columns) {
+  private void populateActualTablesAndCols(List<XFlattenedColumn> columns, Set<String> tables, Set<String> colSet) {
+    for (XFlattenedColumn colObject : columns) {
       String colStr;
       tables.add(colObject.getTableName());
       if (colObject.getMeasure() != null) {
@@ -2134,13 +2070,13 @@ public class TestMetastoreService extends LensJerseyTest {
 
       // Now test flattened view
       final WebTarget flatCubeTarget = target().path("metastore").path("flattened").path("flattestcube");
-      FlattenedColumns flattenedColumns = null;
-      JAXBElement<FlattenedColumns> actualElement = flatCubeTarget.queryParam("sessionid", lensSessionId).request()
-            .get(new GenericType<JAXBElement<FlattenedColumns>>() {});
+      XFlattenedColumns flattenedColumns = null;
+      JAXBElement<XFlattenedColumns> actualElement = flatCubeTarget.queryParam("sessionid", lensSessionId).request()
+            .get(new GenericType<JAXBElement<XFlattenedColumns>>() {});
         flattenedColumns = actualElement.getValue();
       assertNotNull(flattenedColumns);
 
-      List<FlattenedColumn> columns = flattenedColumns.getFlattenedColumn();
+      List<XFlattenedColumn> columns = flattenedColumns.getFlattenedColumn();
       assertNotNull(columns);
       assertTrue(!columns.isEmpty());
 
@@ -2167,7 +2103,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // Now test flattened view for dimension
       final WebTarget flatDimTarget = target().path("metastore").path("flattened").path("testdim");
       actualElement = flatDimTarget.queryParam("sessionid", lensSessionId).request()
-            .get(new GenericType<JAXBElement<FlattenedColumns>>() {});
+            .get(new GenericType<JAXBElement<XFlattenedColumns>>() {});
       flattenedColumns = actualElement.getValue();
       assertNotNull(flattenedColumns);
 
@@ -2199,12 +2135,10 @@ public class TestMetastoreService extends LensJerseyTest {
       final String[] timePartColNames) {
 
     // Create a fact table object linked to cubeName
-    String[] updatePeriods = {"HOURLY"};
-    FactTable f = createFactTable(tableName, storages, updatePeriods, cubeName);
+    XFactTable f = createFactTable(tableName, cubeName);
+    // Create a storage tables
+    f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", tableName, timePartColNames, "HOURLY"));
 
-    // Create a storage tables object
-    XStorageTables storageTables = cubeObjectFactory.createXStorageTables();
-    storageTables.getStorageTables().add(createStorageTblElement("S1", tableName, timePartColNames, "HOURLY"));
 
     // Call API to create a fact table and storage table
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -2212,10 +2146,7 @@ public class TestMetastoreService extends LensJerseyTest {
             lensSessionId, medType));
     mp.bodyPart(new FormDataBodyPart(
             FormDataContentDisposition.name("fact").fileName("fact").build(),
-            cubeObjectFactory.createFactTable(f), medType));
-    mp.bodyPart(new FormDataBodyPart(
-            FormDataContentDisposition.name("storageTables").fileName("storagetables").build(),
-            cubeObjectFactory.createXStorageTables(storageTables), medType));
+            cubeObjectFactory.createXFactTable(f), medType));
     APIResult result = target()
             .path("metastore")
             .path("facts")
@@ -2224,7 +2155,6 @@ public class TestMetastoreService extends LensJerseyTest {
     if (!result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
       throw new RuntimeException("Fact/Storage Table Creation failed");
     }
-
   }
 
   private String getUniqueDbName() {

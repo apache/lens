@@ -56,30 +56,18 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
   /**
    * Creates the fact.
    *
-   * @param tableFilePair
-   *          the table file pair
+   * @param factSpecFileName Path to fact spec
    * @return the string
    */
   @CliCommand(value = "create fact", help = "create a fact table")
   public String createFact(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<fact spec path> <storage spec path>") String tableFilePair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tableFilePair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[0]);
+      @CliOption(key = { "", "table" }, mandatory = true, help = "<fact spec path>") String factSpecFileName) {
+    File f = new File(factSpecFileName);
 
     if (!f.exists()) {
       return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
     }
-    f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path " + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().createFactTable(pair[0], pair[1]);
+    APIResult result = getClient().createFactTable(factSpecFileName);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Fact table Successfully completed";
     } else {

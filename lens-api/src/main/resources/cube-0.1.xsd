@@ -1,63 +1,112 @@
 <!--
 
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
 
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-  attributeFormDefault="unqualified"
-  elementFormDefault="qualified"
-  targetNamespace="uri:lens:cube:0.1"
-  xmlns="uri:lens:cube:0.1"
-  xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.1">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified"
+  targetNamespace="uri:lens:cube:0.1" xmlns="uri:lens:cube:0.1" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+  jaxb:version="2.1">
   <xs:annotation>
     <xs:appinfo>
       <jaxb:schemaBindings>
-        <jaxb:package name="org.apache.lens.api.metastore"/>
+        <jaxb:package name="org.apache.lens.api.metastore" />
       </jaxb:schemaBindings>
     </xs:appinfo>
   </xs:annotation>
-  <xs:element name="x_cube" type="x_cube">
-  </xs:element>
-  <xs:complexType name="x_cube">
+
+  <xs:element name="x_cube" abstract="true" type="x_cube" />
+
+  <xs:complexType name="x_cube" abstract="true">
     <xs:annotation>
       <xs:documentation>
-        XCube can be a base cube for which user would give the full
-        specification of the measures and dimensions. XCube can be
-        a Derived cube, for which user would specify only the measure names,
-        dimension names and parent. Derived cube can have subset of measure
-        names and dimension names defined for its parent. It can have different
-        weight and properties associated with.
+        XCube can either be a Base cube for which the user would give the full specification of the
+        measures and dimensions
+        or can be a Derived cube, for which the user would specify only the measure names,
+        dimension names and parent.
+        Derived cube can have subset of measure names and dimension names associated with its
+        parent. It can have
+        different properties associated with it than the parent.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_measures" name="measures"/>
-      <xs:element type="x_dim_attributes" name="dim_attributes"/>
-      <xs:element type="x_expressions" name="expressions"/>
-      <xs:element type="x_joinchains" name="joinchains"/>
-      <xs:element type="x_properties" name="properties" minOccurs="0"/>
-      <xs:element type="x_measure_names" name="measure_names"/>
-      <xs:element type="x_dim_attr_names" name="dim_attr_names"/>
+      <xs:element type="x_properties" name="properties" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            The properties for the cube. The properties that should to be set are
+
+            1. cube.{cube_name}.timed.dimensions.list - takes comma separated attribute names which are timed
+            dimensions. This base cube's property gets propagated to its derived cubes.
+
+            2. cube.timedim.partition.{time-dim-name} - This property needs to be set if the time dim attribute has its
+            corresponding partition column different in the underlying storage tables. This base cube's property gets
+            propagated to its derived cubes.
+
+            The properties that are over-ridable are
+
+            1. cube.allfields.queriable - (defaults to true) - If set to true, all the fields (measures, attributes) are
+            queryable together. If set to false, there should be derived cubes defined that should group the queriable
+            fields together.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:double" name="weight"/>
-    <xs:attribute type="xs:string" name="parent"/>
-    <xs:attribute type="xs:boolean" name="derived" default="false"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="xs:string" name="description" />
+  </xs:complexType>
+
+  <xs:element name="x_base_cube" type="x_base_cube" />
+  <xs:complexType name="x_base_cube">
+    <xs:annotation>
+      <xs:documentation>
+        For XBaseCube, user would give the full specification of the measures and dimensions, expressions and
+        join-chains.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="x_cube">
+        <xs:sequence>
+          <xs:element type="x_measures" name="measures" maxOccurs="1" minOccurs="1" />
+          <xs:element type="x_dim_attributes" name="dim_attributes" maxOccurs="1" minOccurs="0" />
+          <xs:element type="x_expressions" name="expressions" maxOccurs="1" minOccurs="0" />
+          <xs:element type="x_join_chains" name="join_chains" maxOccurs="1" minOccurs="0" />
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:element name="x_derived_cube" type="x_derived_cube" />
+  <xs:complexType name="x_derived_cube">
+    <xs:annotation>
+      <xs:documentation>
+        For XDerivedCube, user would specify only the measure names, dimension names and its parent.
+        Derived cube can have a subset of measure names and dimension names of its parent. It can have different
+        properties associated with it than its parent.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexContent>
+      <xs:extension base="x_cube">
+        <xs:sequence>
+          <xs:element type="x_measure_names" name="measure_names" maxOccurs="1" minOccurs="0" />
+          <xs:element type="x_dim_attr_names" name="dim_attr_names" maxOccurs="1" minOccurs="0" />
+        </xs:sequence>
+        <xs:attribute type="xs:string" name="parent" use="required" />
+      </xs:extension>
+    </xs:complexContent>
   </xs:complexType>
 
   <xs:element name="x_dimension" type="x_dimension">
@@ -65,29 +114,29 @@
   <xs:complexType name="x_dimension">
     <xs:annotation>
       <xs:documentation>
-        XDimension consists the set dimension attributes
+        XDimension consists of set of attributes, expressions, join-chains
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_dim_attributes" name="attributes"/>
-      <xs:element type="x_expressions" name="expressions"/>
-      <xs:element type="x_joinchains" name="joinchains"/>
-      <xs:element type="x_properties" name="properties" minOccurs="0"/>
+      <xs:element type="x_dim_attributes" name="attributes" maxOccurs="1" minOccurs="0" />
+      <xs:element type="x_expressions" name="expressions" maxOccurs="1" minOccurs="0" />
+      <xs:element type="x_join_chains" name="join_chains" maxOccurs="1" minOccurs="0" />
+      <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0" />
     </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:double" name="weight"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="xs:string" name="description" />
   </xs:complexType>
 
   <xs:complexType name="x_property">
     <xs:annotation>
       <xs:documentation>
-        A key-value pair, which are propagated to the cube.
+        A key-value pair for storing property's name and its value.
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="value" use="required"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="xs:string" name="value" use="required" />
   </xs:complexType>
+
   <xs:complexType name="x_properties">
     <xs:annotation>
       <xs:documentation>
@@ -95,27 +144,80 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_property" name="properties" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="x_property" name="property" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
+
   <xs:complexType name="x_measure">
     <xs:annotation>
       <xs:documentation>
         A cube measure.
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="type" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:string" name="display_string"/>
-    <xs:attribute type="xs:string" name="default_aggr"/>
-    <xs:attribute type="xs:string" name="format_string"/>
-    <xs:attribute type="xs:dateTime" name="start_time"/>
-    <xs:attribute type="xs:dateTime" name="end_time"/>
-    <xs:attribute type="xs:double" name="cost"/>
-    <xs:attribute type="xs:string" name="unit"/>
-    <xs:attribute type="xs:double" name="min"/>
-    <xs:attribute type="xs:double" name="max"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="x_measure_type" name="type" use="required" />
+    <xs:attribute type="xs:string" name="description" />
+    <xs:attribute type="xs:string" name="display_string">
+      <xs:annotation>
+        <xs:documentation>
+          Display string that should be shown to end users. Can be comma separated. It gives UI systems
+          built on top to use this value to show the field to end user.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="default_aggr">
+      <xs:annotation>
+        <xs:documentation>
+          The aggregate for the measure that is used to rollup in aggregated facts.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="format_string">
+      <xs:annotation>
+        <xs:documentation>
+          The string format that can should be used to format the number shown to user. For example:
+          formatting with respect to precision upto 3 decimals, can be specified as
+          format_number(%s,"##################.###")
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="start_time">
+      <xs:annotation>
+        <xs:documentation>
+          The start time from when the measure is available for querying
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="end_time">
+      <xs:annotation>
+        <xs:documentation>
+          The end time till when the measure is available for querying
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="unit">
+      <xs:annotation>
+        <xs:documentation>
+          Specify the unit of the measure. For example, currency in dollars or rupees.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:double" name="min">
+      <xs:annotation>
+        <xs:documentation>
+          The minimum value the measure can take. This is only indicative value for user to know what
+          vaues it can take. Lens does not do any validation based on this value.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:double" name="max">
+      <xs:annotation>
+        <xs:documentation>
+          The maximum value the measure can take. This is only indicative value for user to know what
+          vaues it can take. Lens does not do any validation based on this value.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="x_measures">
@@ -125,7 +227,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_measure" name="measures" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_measure" name="measure" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -136,7 +238,7 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="xs:string" name="measures" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="xs:string" name="measure_name" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
@@ -146,42 +248,121 @@
         An expression column
       </xs:documentation>
     </xs:annotation>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="type" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:string" name="display_string"/>
-    <xs:attribute type="xs:string" name="expr"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="x_column_type" name="type" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN,
+          TINYINT,
+          SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DECIMAL, STRING, CHAR, VARCHAR, DATE, TIMESTAMP, BINARY, ARRAY,
+          MAP, STRUCT
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="description" />
+    <xs:attribute type="xs:string" name="display_string">
+      <xs:annotation>
+        <xs:documentation>
+          Display string that should be shown to end users. Can be comma separated. It gives UI systems
+          built on top to use this value to show the field to end user.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="expr" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The expression can be any string parsable through Hive Query Language.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="x_expressions">
     <xs:annotation>
       <xs:documentation>
-        Set of x_exprcolumn.
+        Set of expressions.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_expr_column" name="expressions" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_expr_column" name="expression" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="x_dim_attribute">
     <xs:annotation>
       <xs:documentation>
-        A cube dimension attribute.
+        A dim attribute.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_tablereferences" name="references"/>
-      <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="1" minOccurs="1"/>
+      <xs:element name="ref_spec" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Reference specifiction needs to be specified if the attribute is a reference attribute. It
+            can either be table reference or a chained column
+
+            ref_spec can be specified as a list of table references to
+            which the attribute is refering to.
+            For ex : userid refers user.id, xuser.id, yuser.id, zuser.id.
+
+            Alternately, ref_spec could be a chained column specifed with chain name and column name.
+          </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+          <xs:choice maxOccurs="1" minOccurs="1">
+            <xs:element type="x_table_references" name="table_references" maxOccurs="1" minOccurs="1" />
+            <xs:element type="x_chain_column" name="chain_ref_column" maxOccurs="1" minOccurs="1" />
+          </xs:choice>
+        </xs:complexType>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="type" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:string" name="display_string"/>
-    <xs:attribute type="xs:dateTime" name="start_time"/>
-    <xs:attribute type="xs:dateTime" name="end_time"/>
-    <xs:attribute type="xs:double" name="cost"/>
-    <xs:attribute type="xs:string" name="expr"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="x_column_type" name="type" use="required" />
+    <xs:attribute type="xs:string" name="description" />
+    <xs:attribute type="xs:string" name="display_string">
+      <xs:annotation>
+        <xs:documentation>
+          Display string that should be shown to end users. Can be comma separated. It gives UI systems
+          built on top to use this value to show the field to end user.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="start_time">
+      <xs:annotation>
+        <xs:documentation>
+          The start time from when the attribute is available for querying.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="end_time">
+      <xs:annotation>
+        <xs:documentation>
+          The end time till when the attribute is available for querying.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="x_dim_attributes">
+    <xs:annotation>
+      <xs:documentation>
+        Set of dim attributes.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element type="x_dim_attribute" name="dim_attribute" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="x_dim_attr_names">
+    <xs:annotation>
+      <xs:documentation>
+        Set of dim attribute names.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element type="xs:string" name="attr_name" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
   </xs:complexType>
 
   <xs:complexType name="x_chain_column">
@@ -196,22 +377,54 @@
     </xs:attribute>
   </xs:complexType>
 
-  <xs:complexType name="x_tablereference">
-    <xs:attribute type="xs:string" name="dest_table" use="required"/>
-    <xs:attribute type="xs:string" name="dest_column" use="required"/>
+  <xs:complexType name="x_table_reference">
+    <xs:attribute type="xs:string" name="table" use="required" />
+    <xs:attribute type="xs:string" name="column" use="required" />
   </xs:complexType>
-  <xs:complexType name="x_tablereferences">
+
+  <xs:complexType name="x_table_references">
+    <xs:annotation>
+      <xs:documentation>
+        Set of table references.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_tablereference" name="table_references" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_table_reference" name="table_reference" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
+
+  <xs:complexType name="x_join_chains">
+    <xs:annotation>
+      <xs:documentation>
+        Set of join chains.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element type="x_join_chain" name="join_chain" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
   <xs:complexType name="x_join_chain">
+    <xs:annotation>
+      <xs:documentation>
+        Join chain represents the paths to reach a dimension.
+        For example, to reach Country from
+        SalesCube, there can be the following equivalent paths:
+        SalesCube.deliveryStateid -> State.id, State.countryid ->Country.id
+        SalesCube.deliveryCityid -> City.id, City.stateid -> State.id, State.countryid ->Country.id
+        Both the above paths will be associated with same
+        join chain i.e with same name, if they are equivalent and at
+        runtime, LENS will choose the path to use. If the
+        paths are not equivalent, they should be named differently.
+        SalesCube.productionStateid -> State.id, State.countryid ->Country.id will be named differently.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_tablereferences" name="paths" maxOccurs="unbounded" minOccurs="1"/>
+      <xs:element type="x_join_paths" name="paths" maxOccurs="1" minOccurs="1" />
     </xs:sequence>
-    <xs:attribute type="xs:string" name="name" use="required"/>
-    <xs:attribute type="xs:string" name="description"/>
-    <xs:attribute type="xs:string" name="display_string"/>
+    <xs:attribute type="xs:string" name="name" use="required" />
+    <xs:attribute type="xs:string" name="description" />
+    <xs:attribute type="xs:string" name="display_string" />
     <xs:attribute type="xs:string" name="dest_table">
       <xs:annotation>
         <xs:documentation>
@@ -220,177 +433,462 @@
       </xs:annotation>
     </xs:attribute>
   </xs:complexType>
-  <xs:complexType name="x_joinchains">
+
+  <xs:complexType name="x_join_path">
     <xs:annotation>
       <xs:documentation>
-        Set of join chains.
+        Represents a path associated with chain.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_join_chain" name="chains" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="x_dim_attributes">
-    <xs:annotation>
-      <xs:documentation>
-        Set of dimensions.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element type="x_dim_attribute" name="dim_attributes" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="x_join_edges" name="edges" maxOccurs="1" minOccurs="1" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:complexType name="x_dim_attr_names">
+  <xs:complexType name="x_join_paths">
     <xs:annotation>
       <xs:documentation>
-        Set of dimension names.
+        Set of join paths.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="xs:string" name="dim_attr_names" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element type="x_join_path" name="path" maxOccurs="unbounded" minOccurs="1"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="dimension_table" type="dimension_table">
+  <xs:complexType name="x_join_edge">
+    <xs:annotation>
+      <xs:documentation>
+        Represents an edge associated with join path.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element type="x_table_reference" name="from" maxOccurs="1" minOccurs="1" />
+      <xs:element type="x_table_reference" name="to" maxOccurs="1" minOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="x_join_edges">
+    <xs:annotation>
+      <xs:documentation>
+        Sequence of join edges.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element type="x_join_edge" name="edge" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="x_dimension_table" type="x_dimension_table">
   </xs:element>
 
-  <xs:complexType name="dimension_table">
-    <xs:sequence>
-      <xs:element type="columns" name="columns"/>
-      <xs:element type="update_periods" name="storage_dump_periods"/>
-      <xs:element type="x_properties" name="properties" minOccurs="0"/>
-    </xs:sequence>
-    <xs:attribute name="dim_name" type="xs:string" use="required"/>
-    <xs:attribute name="table_name" type="xs:string" use="required"/>
-    <xs:attribute name="weight" type="xs:double"/>
-  </xs:complexType>
-
-  <xs:complexType name="columns">
-    <xs:sequence>
-      <xs:element name="columns" type="column" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="column">
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="type" type="xs:string" use="required"/>
-    <xs:attribute name="comment" type="xs:string"/>
-  </xs:complexType>
-
-  <xs:complexType name="update_periods">
-    <xs:sequence>
-      <xs:element name="update_period_element" type="update_period_element" maxOccurs="unbounded" minOccurs="1"/>
-    </xs:sequence>
-  </xs:complexType>
-
-  <xs:complexType name="update_period_element">
+  <xs:complexType name="x_dimension_table">
     <xs:annotation>
       <xs:documentation>
-        Storage name to all its update periods
+        DimensionTable which belongs to a Dimension. The columns in the dimension table will be a subset
+        of all fields in Dimension.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="update_periods" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="columns" type="x_columns" maxOccurs="1" minOccurs="1">
+        <xs:annotation>
+          <xs:documentation>
+            Columns in the table. The order of columns here should be same as the order of columns in
+            the underlying physical tables.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Dimension table properties
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_storage_tables" name="storage_tables" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Storage tables associated with the dimension table, specifying storage name, table description and
+            dump period, if any
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute name="storage_name" type="xs:string"/>
+    <xs:attribute name="dimension_name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The dimension to which the dimension_table belongs to.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="table_name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The dimension table name
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="weight" type="xs:double">
+      <xs:annotation>
+        <xs:documentation>
+          The weight of the dimension table. LENS will use this attribute to determine the lightest
+          table when there are more than one eligible table for answering a query.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="x_storage" type="x_storage"/>
+  <xs:complexType name="x_update_periods">
+    <xs:sequence>
+      <xs:element name="update_period" type="x_update_period" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="x_columns">
+    <xs:sequence>
+      <xs:element name="column" type="x_column" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="x_column">
+    <xs:annotation>
+      <xs:documentation>
+        Column in table.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="type" type="x_column_type" use="required" />
+    <xs:attribute name="comment" type="xs:string" />
+  </xs:complexType>
+
+  <xs:simpleType name="x_column_type">
+    <xs:annotation>
+      <xs:documentation>
+        Column Types allowed.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="BOOLEAN" />
+      <xs:enumeration value="TINYINT" />
+      <xs:enumeration value="SMALLINT" />
+      <xs:enumeration value="INT" />
+      <xs:enumeration value="BIGINT" />
+      <xs:enumeration value="FLOAT" />
+      <xs:enumeration value="DOUBLE" />
+      <xs:enumeration value="DECIMAL" />
+      <xs:enumeration value="STRING" />
+      <xs:enumeration value="CHAR" />
+      <xs:enumeration value="VARCHAR" />
+      <xs:enumeration value="DATE" />
+      <xs:enumeration value="TIMESTAMP" />
+      <xs:enumeration value="BINARY" />
+      <xs:enumeration value="ARRAY" />
+      <xs:enumeration value="MAP" />
+      <xs:enumeration value="STRUCT" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="x_measure_type">
+    <xs:annotation>
+      <xs:documentation>
+        Measure Types allowed.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="TINYINT" />
+      <xs:enumeration value="SMALLINT" />
+      <xs:enumeration value="INT" />
+      <xs:enumeration value="BIGINT" />
+      <xs:enumeration value="FLOAT" />
+      <xs:enumeration value="DOUBLE" />
+      <xs:enumeration value="DECIMAL" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="x_update_period">
+    <xs:annotation>
+      <xs:documentation>
+        Update periods allowed.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="SECONDLY" />
+      <xs:enumeration value="MINUTELY" />
+      <xs:enumeration value="HOURLY" />
+      <xs:enumeration value="DAILY" />
+      <xs:enumeration value="WEEKLY" />
+      <xs:enumeration value="MONTHLY" />
+      <xs:enumeration value="QUARTERLY" />
+      <xs:enumeration value="YEARLY" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:element name="x_storage" type="x_storage" />
   <xs:complexType name="x_storage">
+    <xs:annotation>
+      <xs:documentation>
+        The storage specified by name, which would represent the underlying storage of data.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_properties" name="properties" minOccurs="0"/>
+      <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Storage properties
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="classname" type="xs:string" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required" />
+    <xs:attribute name="classname" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The implementation class of the storage. LENS provides the following in-built implementations:
+          org.apache.lens.cube.metadata.HDFSStorage
+          and org.apache.lens.storage.db.DBStorage.
+          Custom implementation can be specified as long as they are available at server's runtime.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="x_storage_table_desc" type="x_storage_table_desc"/>
+  <xs:element name="x_storage_table_desc" type="x_storage_table_desc" />
   <xs:complexType name="x_storage_table_desc">
+    <xs:annotation>
+      <xs:documentation>
+        The storage table description specifies the underlying format wrt how to read/write data.
+        See
+        https://cwiki.apache.org/confluence/display/Hive/LanguageManual+DDL#LanguageManualDDL-Create/Drop/TruncateTable
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element name="table_parameters" type="x_properties"/>
-      <xs:element name="serde_parameters" type="x_properties"/>
-      <xs:element name="part_cols" type="columns"/>
-      <xs:element name="bucket_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="sort_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="sort_col_order" type="xs:int" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="skewed_info" type="x_skewed_info"/>
-      <xs:element name="time_part_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="part_cols" type="x_columns" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            The partition columns for the table, if partitioned.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="table_parameters" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Table properties.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="serde_parameters" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Serde properties.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="bucket_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            List of bucket columns if the table is bucketed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="sort_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            List of sort columns if the table is bucketed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="sort_col_order" type="xs:int" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            List of sort column order if the table is bucketed.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="skewed_info" type="x_skewed_info">
+        <xs:annotation>
+          <xs:documentation>
+            Skewed info, if the table is skewed. Expressed as
+            SKEWED BY (col_name, col_name, ...) ON ([(col_value, col_value, ...), ...|col_value, col_value, ...].
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="time_part_cols" type="xs:string" maxOccurs="unbounded" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            List of partition columns which are time partition columns. Will be a subset of partition columns.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute name="external" type="xs:boolean" use="required"/>
-    <xs:attribute name="table_location" type="xs:anyURI"/>
-    <xs:attribute name="input_format" type="xs:string"/>
-    <xs:attribute name="output_format" type="xs:string"/>
-    <xs:attribute name="field_delimiter" type="xs:string"/>
-    <xs:attribute name="escape_char" type="xs:string"/>
-    <xs:attribute name="collection_delimiter" type="xs:string"/>
-    <xs:attribute name="line_delimiter" type="xs:string"/>
-    <xs:attribute name="map_key_delimiter" type="xs:string"/>
-    <xs:attribute name="serde_class_name" type="xs:string"/>
-    <xs:attribute name="storage_handler_name" type="xs:string"/>
-    <xs:attribute name="num_buckets" type="xs:int"/>
-    <xs:attribute name="compressed" type="xs:boolean"/>
+    <xs:attribute name="external" type="xs:boolean" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Tells whether the table is external table or managed table.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="table_location" type="xs:anyURI">
+      <xs:annotation>
+        <xs:documentation>
+          Table location. The location of the external table, if not partitioned. Would be dummy for
+          external tables which are partitioned, because data is only available when partitions are registered.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="input_format" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          The input format for reading the underlying data.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="output_format" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          The output format for writing the underlying data, will not be used while querying.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="field_delimiter" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Field delimiter if the row format is TEXTFILE.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="escape_char" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Escape character if the row format is TEXTFILE.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="collection_delimiter" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Collection delimiter if the row format is TEXTFILE.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="line_delimiter" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Line delimiter if the row format is TEXTFILE.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="map_key_delimiter" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          Map key delimiter if the row format is TEXTFILE.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="serde_class_name" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          The serde class name, if not default.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="storage_handler_name" type="xs:string">
+      <xs:annotation>
+        <xs:documentation>
+          The storage handler class name, if stored by storage handler.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="num_buckets" type="xs:int">
+      <xs:annotation>
+        <xs:documentation>
+          Number of buckets in the table, if bucketed.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="compressed" type="xs:boolean">
+      <xs:annotation>
+        <xs:documentation>
+          Tells whether the data is compressed or not.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="x_skewed_info" type="x_skewed_info"/>
   <xs:complexType name="x_skewed_info">
+    <xs:annotation>
+      <xs:documentation>
+        Table skew info.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element name="col_names" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="col_values" type="x_string_list" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="value_location_map" type="x_skewed_value_location" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="col_names" type="xs:string" maxOccurs="unbounded" minOccurs="0" />
+      <xs:element name="col_values" type="x_skew_col_list" maxOccurs="unbounded" minOccurs="0" />
+      <xs:element name="value_location_map" type="x_skewed_value_location" maxOccurs="unbounded" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="x_string_list" type="x_string_list"/>
-  <xs:complexType name="x_string_list">
+  <xs:complexType name="x_skew_col_list">
+    <xs:annotation>
+      <xs:documentation>
+        Skew column list.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element name="elements" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="elements" type="xs:string" maxOccurs="unbounded" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="x_skewed_value_location" type="x_skewed_value_location"/>
   <xs:complexType name="x_skewed_value_location">
+    <xs:annotation>
+      <xs:documentation>
+        Map of the list of values to location.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element name="value" type="x_string_list" minOccurs="1" maxOccurs="1"/>
+      <xs:element name="value" type="x_skew_col_list" minOccurs="1" maxOccurs="1" />
     </xs:sequence>
-    <xs:attribute type="xs:string" name="location" use="required"/>
+    <xs:attribute type="xs:string" name="location" use="required" />
   </xs:complexType>
 
-  <xs:element name="x_storage_table_element" type="x_storage_table_element"/>
+  <xs:element name="x_storage_table_element" type="x_storage_table_element" />
 
   <xs:complexType name="x_storage_table_element">
     <xs:annotation>
       <xs:documentation>
-        Storage and storage table description
+        Storage and storage table description and update periods
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="update_periods" type="xs:string" maxOccurs="unbounded" minOccurs="0"/>
-      <xs:element name="storage_name" type="xs:string"/>
-      <xs:element type="x_storage_table_desc" name="table_desc"/>
+      <xs:element name="update_periods" type="x_update_periods" maxOccurs="1" minOccurs="0" />
+      <xs:element name="storage_name" type="xs:string" />
+      <xs:element type="x_storage_table_desc" name="table_desc" />
     </xs:sequence>
   </xs:complexType>
-  <xs:element name="x_storage_tables" type="x_storage_tables"/>
+
   <xs:complexType name="x_storage_tables">
     <xs:annotation>
       <xs:documentation>
-        A list of property elements.
+        Storage table elements describing the storage name, its update periods and table description.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element type="x_storage_table_element" name="storage_tables" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="storage_table" minOccurs="1" maxOccurs="unbounded" type="x_storage_table_element" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="partition_list" type="partition_list"/>
-
-  <xs:complexType name="partition_list">
+  <xs:element name="x_partition_list" type="x_partition_list" />
+  <xs:complexType name="x_partition_list">
+    <xs:annotation>
+      <xs:documentation>
+        LENS uses this type to return the list of all partitions. Should not be used by end-user directly.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element name="x_partition" type="x_partition" maxOccurs="unbounded" minOccurs="0"/>
+      <xs:element name="partition" type="x_partition" maxOccurs="unbounded" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="x_partition" type="x_partition"/>
+  <xs:element name="x_partition" type="x_partition" />
 
   <xs:complexType name="x_partition">
     <xs:annotation>
@@ -399,25 +897,105 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="non_time_partition_spec" type="x_part_spec"/>
-      <xs:element name="time_partition_spec" type="x_time_part_spec"/>
-      <xs:element name="full_partition_spec" type="x_part_spec"/>
-      <xs:element name="partition_parameters" type="x_properties"/>
-      <xs:element name="serde_parameters" type="x_properties"/>
+      <xs:element name="non_time_partition_spec" maxOccurs="1" minOccurs="0" type ="x_part_spec" >
+        <xs:annotation>
+          <xs:documentation>
+            Non time partition specification with partition columns and values.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="time_partition_spec" maxOccurs="1" minOccurs="0" type = "x_time_part_spec" >
+        <xs:annotation>
+          <xs:documentation>
+            Time partition specification with partition columns and date values.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="full_partition_spec" maxOccurs="1" minOccurs="0" type ="x_part_spec" >
+        <xs:annotation>
+          <xs:documentation>
+            LENS would use this type to retun the specification elements. Should not be used directly by end-user.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="partition_parameters" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Partition properties.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="serde_parameters" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Serde properties.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute type="xs:string" name="cube_table_name" use="required"/>
-    <xs:attribute type="xs:string" name="name"/>
-    <xs:attribute type="xs:string" name="location"/>
-    <xs:attribute type="xs:string" name="input_format"/>
-    <xs:attribute type="xs:string" name="output_format"/>
-    <xs:attribute type="xs:string" name="serde_classname"/>
-    <xs:attribute name="update_period" type="xs:string"/>
+    <xs:attribute type="xs:string" name="fact_or_dimension_table_name" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The table name (fact table/dimension table) to which the partition belongs.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="name">
+      <xs:annotation>
+        <xs:documentation>
+          Name of the partition will be set to the fully qualified specification and returned when
+          XPartition is returned. Need not be passed when creating a partition.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="location">
+      <xs:annotation>
+        <xs:documentation>
+          Location of the partition.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="input_format">
+      <xs:annotation>
+        <xs:documentation>
+          Should be passed if different from the table definition.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="output_format">
+      <xs:annotation>
+        <xs:documentation>
+          Should be passed if different from the table definition.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:string" name="serde_classname">
+      <xs:annotation>
+        <xs:documentation>
+          Should be passed if different from the table definition.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="update_period" type="x_update_period">
+      <xs:annotation>
+        <xs:documentation>
+          Update period if the partition has timed partition specification. All time partition columns will be on same
+          update period.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
   <xs:complexType name="x_part_spec_element">
-    <xs:attribute type="xs:string" name="key" use="required"/>
-    <xs:attribute type="xs:string" name="value" use="required"/>
+    <xs:annotation>
+      <xs:documentation>
+        Partition column name and its value.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute type="xs:string" name="key" use="required" />
+    <xs:attribute type="xs:string" name="value" use="required" />
   </xs:complexType>
+
   <xs:complexType name="x_part_spec">
     <xs:sequence>
       <xs:element type="x_part_spec_element" name="part_spec_element" maxOccurs="unbounded" minOccurs="0"/>
@@ -425,44 +1003,147 @@
   </xs:complexType>
 
   <xs:complexType name="x_time_part_spec_element">
-    <xs:attribute type="xs:string" name="key" use="required"/>
-    <xs:attribute type="xs:dateTime" name="value" use="required"/>
+    <xs:annotation>
+      <xs:documentation>
+        Time partition column name and its value as date-time.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:attribute type="xs:string" name="key" use="required" />
+    <xs:attribute type="xs:dateTime" name="value" use="required" />
   </xs:complexType>
+
   <xs:complexType name="x_time_part_spec">
     <xs:sequence>
       <xs:element type="x_time_part_spec_element" name="part_spec_element" maxOccurs="unbounded" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 
-  <xs:element name="fact_table" type="fact_table"/>
+  <xs:element name="x_fact_table" type="x_fact_table" />
 
-  <xs:complexType name="fact_table">
+  <xs:complexType name="x_fact_table">
+    <xs:annotation>
+      <xs:documentation>
+        Fact table that is associated to a base cube. The columns in the fact table will be a subset of
+        all fields in the base cube.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element type="columns" name="columns"/>
-      <xs:element type="update_periods" name="storage_update_periods"/>
-      <xs:element type="x_properties" name="properties" minOccurs="0"/>
+      <xs:element name="columns" type="x_columns" maxOccurs="1" minOccurs="1">
+        <xs:annotation>
+          <xs:documentation>
+            Columns in the table. Columns should be in the same order as in the underlying physical tables.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
+        <xs:annotation>
+          <xs:documentation>
+            Properties that can be set for a fact are
+
+            1. cube.fact.{fact-name}.valid.columns : comma separated column names which are valid in the fact.
+            2. cube.fact.is.aggregated : Defaults to true. If the fact is a raw fact, this should be set to false,
+             otherwise true.
+
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="storage_tables" type = "x_storage_tables" maxOccurs="1" minOccurs="0"/>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="cube_name" type="xs:string" use="required"/>
-    <xs:attribute name="weight" type="xs:double"/>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The fact table name.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="cube_name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The base cube's name to which the fact_table is associated.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="weight" type="xs:double">
+      <xs:annotation>
+        <xs:documentation>
+          The weight of the fact table. LENS will use this attribute to decide the lightest table to
+          query when there are more than one eligible tables.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="native_table" type="native_table"/>
-  <xs:complexType name="native_table">
+  <xs:element name="x_native_table" type="x_native_table" />
+  <xs:complexType name="x_native_table">
+    <xs:annotation>
+      <xs:documentation>
+        Native tables in metastore. Would never be created by client. This specification is used by the
+        LENS API to.
+        return this information to the end user.
+      </xs:documentation>
+    </xs:annotation>
     <xs:sequence>
-      <xs:element type="columns" name="columns"/>
-      <xs:element type="x_storage_table_desc" name="storage_descriptor"/>
+      <xs:element name="columns" type="x_columns" maxOccurs="1" minOccurs="1">
+        <xs:annotation>
+          <xs:documentation>
+            Columns of the native table.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element type="x_storage_table_desc" name="storage_descriptor">
+        <xs:annotation>
+          <xs:documentation>
+            Table description in metastore.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:element>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="dbname" type="xs:string" use="required"/>
-    <xs:attribute name="owner" type="xs:string" use="required"/>
-    <xs:attribute name="type" type="xs:string" use="required"/>
-    <xs:attribute name="createtime" type="xs:int" use="required"/>
-    <xs:attribute name="lastAccessTime" type="xs:int" use="required"/>
+    <xs:attribute name="name" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Name of the native table.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="dbname" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          DB in which the table is present.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="owner" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Owner of the table.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="table_type" type="xs:string" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Type of the table whether EXTERNAL or MANAGED
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="createtime" type="xs:int" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Table creation time.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute name="lastAccessTime" type="xs:int" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          Last access time of the table.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
   </xs:complexType>
 
-  <xs:element name="flattened_columns" type="flattened_columns" />
-  <xs:complexType name="flattened_columns">
+  <xs:element name="x_flattened_columns" type="x_flattened_columns" />
+  <xs:complexType name="x_flattened_columns">
     <xs:annotation>
       <xs:documentation>
         LENS will use this type to return all flattened columns reachable from a cube or dimension.
@@ -470,10 +1151,10 @@
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="flattened_column" type="flattened_column" maxOccurs="unbounded" minOccurs="0" />
+      <xs:element name="flattened_column" type="x_flattened_column" maxOccurs="unbounded" minOccurs="0" />
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="flattened_column">
+  <xs:complexType name="x_flattened_column">
     <xs:choice maxOccurs="1" minOccurs="1">
       <xs:element name="measure" type="x_measure" />
       <xs:element name="expression" type="x_expr_column" />

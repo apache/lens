@@ -59,7 +59,7 @@ public class LensStorageCommands extends BaseLensCommand implements CommandMarke
       @CliOption(key = { "", "storage" }, mandatory = true, help = "<path to storage-spec>") String storageSpec) {
     File f = new File(storageSpec);
     if (!f.exists()) {
-      return "cube spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
+      return "storage spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
     }
     APIResult result = getClient().createStorage(storageSpec);
     return result.getMessage();
@@ -96,13 +96,13 @@ public class LensStorageCommands extends BaseLensCommand implements CommandMarke
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. create fact <fact spec path> <storage spec path>";
+      return "Syntax error, please try in following " + "format. update storage <storage-name> <storage spec path>";
     }
 
     File f = new File(pair[1]);
 
     if (!f.exists()) {
-      return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
+      return "Storage spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
     }
 
     APIResult result = getClient().updateStorage(pair[0], pair[1]);

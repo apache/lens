@@ -41,9 +41,10 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
 
   /**
    * Test storage commands.
+   * @throws IOException
    */
   @Test
-  public void testStorageCommands() {
+  public void testStorageCommands() throws IOException {
     addLocalStorage("local_storage_test");
     testUpdateStorage("local_storage_test");
     dropStorage("local_storage_test");
@@ -78,8 +79,9 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
    *
    * @param storageName
    *          the storage name
+   * @throws IOException
    */
-  public synchronized static void addLocalStorage(String storageName) {
+  public synchronized static void addLocalStorage(String storageName) throws IOException {
     LensStorageCommands command = getCommand();
     URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
     File newFile = new File("/tmp/local-" + storageName + ".xml");
@@ -107,8 +109,6 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       command.createStorage(newFile.getAbsolutePath());
       storageList = command.getStorages();
       Assert.assertTrue(storageList.contains(storageName));
-    } catch (Exception e) {
-      Assert.fail("Unable to add storage " + storageName);
     } finally {
       newFile.delete();
     }
@@ -119,47 +119,49 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
    *
    * @param storageName
    *          the storage name
+   * @throws IOException
    */
-  private void testUpdateStorage(String storageName) {
+  private void testUpdateStorage(String storageName) throws IOException {
 
+    LensStorageCommands command = getCommand();
+    URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
+    StringBuilder sb = new StringBuilder();
+    BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
+    String s;
+    while ((s = bufferedReader.readLine()) != null) {
+      sb.append(s).append("\n");
+    }
+
+    bufferedReader.close();
+
+    String xmlContent = sb.toString();
+    xmlContent = xmlContent.replace("name=\"local\"", "name=\"" + storageName + "\"");
+    xmlContent = xmlContent.replace("<property name=\"storage.url\" value=\"file:///\" />\n",
+        "<property name=\"storage.url\" value=\"file:///\"/>"
+            + "\n<property name=\"storage.prop1\" value=\"v1\" />\n");
+
+    String updateFilePath = "/tmp/" + storageName + ".xml";
+    File newFile = new File(updateFilePath);
     try {
-      LensStorageCommands command = getCommand();
-      URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
-      StringBuilder sb = new StringBuilder();
-      BufferedReader bufferedReader = new BufferedReader(new FileReader(storageSpec.getFile()));
-      String s;
-      while ((s = bufferedReader.readLine()) != null) {
-        sb.append(s).append("\n");
-      }
-
-      bufferedReader.close();
-
-      String xmlContent = sb.toString();
-      xmlContent = xmlContent.replace("name=\"local\"", "name=\"" + storageName + "\"");
-      xmlContent = xmlContent.replace("<properties name=\"storage.url\" value=\"file:///\"/>\n",
-          "<properties name=\"storage.url\" value=\"file:///\"/>"
-              + "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
-
-      File newFile = new File("/tmp/" + storageName + ".xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
 
       String desc = command.describeStorage(storageName);
       LOG.debug(desc);
+      System.out.println(desc);
       String propString = "name : storage.url  value : file:///";
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateStorage(storageName + " /tmp/local-storage1.xml");
+      String updateResult = command.updateStorage(storageName + " " + updateFilePath);
+      Assert.assertTrue(updateResult.contains("succeeded"));
       desc = command.describeStorage(storageName);
       LOG.debug(desc);
+      String propString2 = "name : storage.prop1  value : v1";
       Assert.assertTrue(desc.contains(propString));
+      Assert.assertTrue(desc.contains(propString2));
+    } finally {
       newFile.delete();
-
-    } catch (Throwable t) {
-      t.printStackTrace();
-      Assert.fail("Testing update storage failed with exception" + t.getMessage());
     }
   }
-
 }

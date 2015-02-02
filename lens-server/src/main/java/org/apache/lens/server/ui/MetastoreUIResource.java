@@ -145,14 +145,15 @@ public class MetastoreUIResource {
     checkSessionHandle(sessionHandle);
     JSONArray attribList = new JSONArray();
     if (type.equals("cube")) {
-      XCube cube;
+      XBaseCube cube;
       try {
-        cube = getSvc().getCube(sessionHandle, name);
+        cube = (XBaseCube)getSvc().getCube(sessionHandle, name);
       } catch (LensException e) {
         throw new WebApplicationException(e);
       }
+      
       if (cube.getMeasures() != null) {
-        for (XMeasure measure : cube.getMeasures().getMeasures()) {
+        for (XMeasure measure : cube.getMeasures().getMeasure()) {
           try {
             attribList.put(new JSONObject().put("name", measure.getName()).put("type", measure.getType()));
           } catch (JSONException j) {
@@ -161,7 +162,7 @@ public class MetastoreUIResource {
         }
       }
       if (cube.getDimAttributes() != null) {
-        for (XDimAttribute dim : cube.getDimAttributes().getDimAttributes()) {
+        for (XDimAttribute dim : cube.getDimAttributes().getDimAttribute()) {
           try {
             attribList.put(new JSONObject().put("name", dim.getName()).put("type", dim.getType()));
           } catch (JSONException j) {
@@ -177,7 +178,7 @@ public class MetastoreUIResource {
         throw new WebApplicationException(e);
       }
       if (table.getAttributes() != null) {
-        for (XDimAttribute col : table.getAttributes().getDimAttributes()) {
+        for (XDimAttribute col : table.getAttributes().getDimAttribute()) {
           try {
             attribList.put(new JSONObject().put("name", col.getName()).put("type", col.getType()));
           } catch (JSONException j) {
@@ -187,7 +188,7 @@ public class MetastoreUIResource {
       }
 
       if (table.getExpressions() != null) {
-        for (XExprColumn expr : table.getExpressions().getExpressions()) {
+        for (XExprColumn expr : table.getExpressions().getExpression()) {
           try {
             attribList.put(new JSONObject().put("name", expr.getName()).put("type", "expression")
                 .put("expression", expr.getExpr()));
