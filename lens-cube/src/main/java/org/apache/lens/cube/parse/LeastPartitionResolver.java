@@ -28,7 +28,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 /**
  * Prune candidate fact sets which require more partitions than minimum parts.
@@ -58,7 +58,7 @@ class LeastPartitionResolver implements ContextRewriter {
           i.remove();
         }
       }
-      cubeql.pruneCandidateFactWithCandidateSet(CubeTableCause.MORE_PARTITIONS);
+      cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCode.MORE_PARTITIONS);
     }
   }
 

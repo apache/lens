@@ -78,7 +78,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
-    String regexp = String.format(CandidateTablePruneCause.CubeTableCause.COLUMN_NOT_FOUND.errorFormat,
+    String regexp = String.format(CandidateTablePruneCause.CandidateTablePruneCode.COLUMN_NOT_FOUND.errorFormat,
       "Column Sets: (.*?)", "queriable together");
     Matcher matcher = Pattern.compile(regexp).matcher(pruneCauses.getBrief());
     Assert.assertTrue(matcher.matches());
@@ -87,10 +87,10 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertNotEquals(columnSetsStr.indexOf("cityid"), -1);
     Assert.assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
     Assert.assertEquals(pruneCauses.getDetails(),
-      new HashMap<String, CandidateTablePruneCause>() {
+      new HashMap<String, List<CandidateTablePruneCause>>() {
         {
-          put("testfact3_base,testfact3_raw_base", CandidateTablePruneCause.columnNotFound("cityid"));
-          put("testfact2_raw_base,testfact2_base", CandidateTablePruneCause.columnNotFound("msr3", "msr13"));
+          put("testfact3_base,testfact3_raw_base", Arrays.asList(CandidateTablePruneCause.columnNotFound("cityid")));
+          put("testfact2_raw_base,testfact2_base", Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
         }
       }
     );
@@ -124,8 +124,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
             + " sum(basecube.msr2) FROM ", null, " and substr(basecube.dim1, 3) != 'XYZ' "
             + "group by basecube.dim1 != 'x' AND basecube.dim2 != 10",
             getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
-    //System.out.println("HQL:" + hqlQuery);
-    //System.out.println("Expected:" + expected);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select dim1, msr12 from basecube" + " where " + twoDaysRange, conf);

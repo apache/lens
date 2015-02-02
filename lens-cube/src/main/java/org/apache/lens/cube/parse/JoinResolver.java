@@ -49,7 +49,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 
 /**
@@ -1063,14 +1063,14 @@ class JoinResolver implements ContextRewriter {
                   LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
                   cubeql.getCandidateFactTables().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-                    CubeTableCause.COLUMN_NOT_FOUND));
+                    CandidateTablePruneCode.COLUMN_NOT_FOUND));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
                 LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
                 cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
                 cubeql.addDimPruningMsgs(
                   (Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
-                    new CandidateTablePruneCause(CubeTableCause.COLUMN_NOT_FOUND)
+                    new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND)
                 );
               }
             }

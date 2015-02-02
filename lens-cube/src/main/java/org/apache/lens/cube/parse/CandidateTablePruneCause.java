@@ -55,7 +55,7 @@ import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 @NoArgsConstructor
 public class CandidateTablePruneCause {
 
-  public enum CubeTableCause {
+  public enum CandidateTablePruneCode {
     // invalid cube table
     INVALID("Invalid cube Table provided in query"),
     // column not valid in cube table
@@ -127,7 +127,7 @@ public class CandidateTablePruneCause {
 
 
     String errorFormat;
-    CubeTableCause(String format) {
+    CandidateTablePruneCode(String format) {
       this.errorFormat = format;
     }
     Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
@@ -143,7 +143,7 @@ public class CandidateTablePruneCause {
     }
   }
 
-  public enum SkipStorageCause {
+  public enum SkipStorageCode {
     // invalid storage table
     INVALID,
     // storage table does not exist
@@ -161,20 +161,46 @@ public class CandidateTablePruneCause {
     UNSUPPORTED
   }
 
-  public enum SkipUpdatePeriodCause {
+  public enum SkipUpdatePeriodCode {
     // invalid update period
     INVALID,
     // Query max interval is more than update period
     QUERY_INTERVAL_BIGGER
   }
 
+  @JsonWriteNullProperties(false)
+  @Data
+  @NoArgsConstructor
+  public static class SkipStorageCause {
+    private SkipStorageCode cause;
+    // update period to skip cause
+    private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
+    private List<String> nonExistantPartCols;
+
+    public SkipStorageCause(SkipStorageCode cause) {
+      this.cause = cause;
+    }
+    public static SkipStorageCause partColDoesNotExist(String... partCols) {
+      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.PART_COL_DOES_NOT_EXIST);
+      ret.nonExistantPartCols = new ArrayList<String>();
+      for(String s: partCols) {
+        ret.nonExistantPartCols.add(s);
+      }
+      return ret;
+    }
+
+    public static SkipStorageCause noCandidateUpdatePeriod(Map<String, SkipUpdatePeriodCode> causes) {
+      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.NO_CANDIDATE_PERIODS);
+      ret.updatePeriodRejectionCause = causes;
+      return ret;
+    }
+  }
 
   // cause for cube table
-  private CubeTableCause cause;
+  private CandidateTablePruneCode cause;
   // storage to skip storage cause
   private Map<String, SkipStorageCause> storageCauses;
-  // storage to update period to skip cause
-  private Map<String, Map<String, SkipUpdatePeriodCause>> updatePeriodCauses;
+
   // populated only incase of missing partitions cause
   private List<String> missingPartitions;
   // populated only incase of missing update periods cause
@@ -186,7 +212,7 @@ public class CandidateTablePruneCause {
   // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
   private List<String> columnsMissingDefaultAggregate;
 
-  public CandidateTablePruneCause(CubeTableCause cause) {
+  public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
   }
 
@@ -195,7 +221,7 @@ public class CandidateTablePruneCause {
   public static CandidateTablePruneCause columnNotFound(Collection<String> missingColumns) {
     List<String> colList = new ArrayList<String>();
     colList.addAll(missingColumns);
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.COLUMN_NOT_FOUND);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND);
     cause.setMissingColumns(colList);
     return cause;
   }
@@ -208,14 +234,14 @@ public class CandidateTablePruneCause {
   }
   public static CandidateTablePruneCause missingPartitions(List<String> nonExistingParts) {
     CandidateTablePruneCause cause =
-      new CandidateTablePruneCause(CubeTableCause.MISSING_PARTITIONS);
+      new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);
     return cause;
   }
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {
     CandidateTablePruneCause cause =
-      new CandidateTablePruneCause(CubeTableCause.NO_COLUMN_PART_OF_A_JOIN_PATH);
-    cause.setJoinColumns(new ArrayList<String>(){
+      new CandidateTablePruneCause(CandidateTablePruneCode.NO_COLUMN_PART_OF_A_JOIN_PATH);
+    cause.setJoinColumns(new ArrayList<String>() {
       {
         addAll(colSet);
       }
@@ -223,7 +249,7 @@ public class CandidateTablePruneCause {
     return cause;
   }
   public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> storageCauses) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.NO_CANDIDATE_STORAGES);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
     cause.setStorageCauses(new HashMap<String, SkipStorageCause>());
     for(Map.Entry<String, SkipStorageCause> entry: storageCauses.entrySet()) {
       String key = entry.getKey();
@@ -232,14 +258,8 @@ public class CandidateTablePruneCause {
     }
     return cause;
   }
-  public static CandidateTablePruneCause noCandidateStorages(Map<String, SkipStorageCause> skipStorageCauses,
-    Map<String, Map<String, SkipUpdatePeriodCause>> updatePeriodCauses) {
-    CandidateTablePruneCause cause = noCandidateStorages(skipStorageCauses);
-    cause.setUpdatePeriodCauses(updatePeriodCauses);
-    return cause;
-  }
   public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
-    CandidateTablePruneCause cause = new CandidateTablePruneCause(CubeTableCause.MISSING_DEFAULT_AGGREGATE);
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);
     cause.setColumnsMissingDefaultAggregate(new ArrayList<String>());
     for(String name: names) {
       cause.getColumnsMissingDefaultAggregate().add(name);

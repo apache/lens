@@ -35,7 +35,7 @@ import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.CubeMeasure;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 /**
  * <p>
@@ -93,7 +93,7 @@ class AggregateResolver implements ContextRewriter {
       LOG.info("Query has non default aggregates, no aggregate resolution will be done");
     }
 
-    cubeql.pruneCandidateFactSet(CubeTableCause.MISSING_DEFAULT_AGGREGATE);
+    cubeql.pruneCandidateFactSet(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);
 
     if (nonDefaultAggregates || aggregateResolverDisabled) {
       return;

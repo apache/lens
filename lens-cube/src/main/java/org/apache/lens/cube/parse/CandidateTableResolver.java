@@ -32,7 +32,7 @@ import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.JoinChain;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 
 /**
@@ -88,7 +88,7 @@ class CandidateTableResolver implements ContextRewriter {
       // check for joined columns and denorm columns on refered tables
       resolveCandidateFactTablesForJoins(cubeql);
       resolveCandidateDimTablesForJoinsAndDenorms(cubeql);
-      cubeql.pruneCandidateFactSet(CubeTableCause.INVALID_DENORM_TABLE);
+      cubeql.pruneCandidateFactSet(CandidateTablePruneCode.INVALID_DENORM_TABLE);
       checkForQueriedColumns = true;
     }
   }
@@ -191,12 +191,12 @@ class CandidateTableResolver implements ContextRewriter {
         LOG.info("Not considering fact:" + candidate + " as refered table does not have any valid dimtables");
         cubeql.getCandidateFactTables().remove(candidate);
         cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-          CubeTableCause.INVALID_DENORM_TABLE));
+          CandidateTablePruneCode.INVALID_DENORM_TABLE));
       } else {
         LOG.info("Not considering dimtable:" + candidate + " as refered table does not have any valid dimtables");
         cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
         cubeql.addDimPruningMsgs((Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
-            new CandidateTablePruneCause(CubeTableCause.INVALID_DENORM_TABLE));
+            new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE));
       }
     }
     // remove join paths corresponding to the dim
@@ -221,7 +221,7 @@ class CandidateTableResolver implements ContextRewriter {
           if (!validFactTables.contains(cfact.getName().toLowerCase())) {
             LOG.info("Not considering fact table:" + cfact + " as it is" + " not a valid fact");
             cubeql
-            .addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(CubeTableCause.INVALID));
+            .addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(CandidateTablePruneCode.INVALID));
             i.remove();
             continue;
           }
@@ -279,7 +279,7 @@ class CandidateTableResolver implements ContextRewriter {
         throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, queriedMsrs.toString());
       }
       cubeql.getCandidateFactSets().addAll(cfactset);
-      cubeql.pruneCandidateFactWithCandidateSet(CubeTableCause.COLUMN_NOT_FOUND);
+      cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCode.COLUMN_NOT_FOUND);
 
       if (cubeql.getCandidateFactTables().size() == 0) {
         throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, queriedDimAttrs.toString());

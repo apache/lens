@@ -28,8 +28,11 @@ import org.testng.annotations.Test;
 
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 public class TestDenormalizationResolver extends TestQueryRewrite {
 
@@ -150,20 +153,21 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     SemanticException e = getSemanticExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysRange, tconf);
     Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
-      CandidateTablePruneCause.CubeTableCause.NO_CANDIDATE_STORAGES.errorFormat,
-      new HashMap<String, CandidateTablePruneCause>() {
+      CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat,
+      new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("summary2,testfact2_raw,summary3",
-            new CandidateTablePruneCause(CandidateTablePruneCause.CubeTableCause.INVALID_DENORM_TABLE));
-          put("summary4", CandidateTablePruneCause.noCandidateStorages(
-            new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
-              {
-                put("C2", CandidateTablePruneCause.SkipStorageCause.UNSUPPORTED);
-              }
-            })
+            Arrays.asList(new CandidateTablePruneCause(CandidateTablePruneCode.INVALID_DENORM_TABLE)));
+          put("summary4", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
+              new HashMap<String, CandidateTablePruneCause.SkipStorageCause>() {
+                {
+                  put("C2", new CandidateTablePruneCause.SkipStorageCause(
+                    CandidateTablePruneCause.SkipStorageCode.UNSUPPORTED));
+                }
+              }))
           );
           put("summary1,cheapfact,testfactmonthly,testfact2,testfact",
-            CandidateTablePruneCause.columnNotFound("dim2big1", "dim2"));
+            Arrays.asList(CandidateTablePruneCause.columnNotFound("dim2big1", "dim2")));
         }
       }
     ));

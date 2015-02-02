@@ -20,21 +20,21 @@
 package org.apache.lens.cube.parse;
 
 import java.io.IOException;
-import java.util.HashMap;
 
-import javassist.runtime.DotClass;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.testng.Assert;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeSuite;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class TestQueryRewrite {
@@ -62,12 +62,12 @@ public abstract class TestQueryRewrite {
 
   protected String rewrite(String query, Configuration conf) throws SemanticException, ParseException {
     String rewrittenQuery = rewriteCtx(query, conf).toHQL();
-    log.info("Rewritten query: {}",rewrittenQuery);
+    log.info("Rewritten query: {}", rewrittenQuery);
     return rewrittenQuery;
   }
 
   protected CubeQueryContext rewriteCtx(String query, Configuration conf) throws SemanticException, ParseException {
-    log.info("User query: {}",query);
+    log.info("User query: {}", query);
     CubeQueryRewriter driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
     return driver.rewrite(query);
   }
@@ -76,11 +76,12 @@ public abstract class TestQueryRewrite {
     try {
       return new ObjectMapper().readValue(
         e.getMessage().substring(e.getMessage().indexOf("{"), e.getMessage().length()),
-        new TypeReference<PruneCauses.BriefAndDetailedError>(){});
+        new TypeReference<PruneCauses.BriefAndDetailedError>() {});
     } catch (IOException e1) {
       throw new RuntimeException("!!!");
     }
   }
+
   protected SemanticException getSemanticExceptionInRewrite(String query, Configuration conf) throws ParseException {
     try {
       rewrite(query, conf);
