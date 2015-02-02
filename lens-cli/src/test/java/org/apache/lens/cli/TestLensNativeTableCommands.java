@@ -21,6 +21,7 @@ package org.apache.lens.cli;
 import org.apache.lens.cli.commands.LensNativeTableCommands;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.server.LensTestUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;

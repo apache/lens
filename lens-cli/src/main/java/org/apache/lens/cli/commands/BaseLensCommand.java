@@ -18,16 +18,19 @@
  */
 package org.apache.lens.cli.commands;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import java.io.IOException;
+
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.Indenter;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
-import java.io.IOException;
 
 /**
  * The Class BaseLensCommand.
@@ -105,12 +108,11 @@ public class BaseLensCommand {
   /**
    * Pretty printing JSON object into CLI String.
    *
-   * @param json
-   *          to be formatted
+   * @param json to be formatted
    * @return cli formatted string
    */
   public String formatJson(String json) {
     return json.replaceAll("\\[ \\{", "\n\n ").replaceAll("\\{", "").replaceAll("}", "").replaceAll("\\[", "")
-        .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
+      .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
   }
 }

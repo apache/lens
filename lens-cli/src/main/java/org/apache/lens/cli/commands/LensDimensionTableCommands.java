@@ -18,19 +18,20 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.lens.api.APIResult;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 
 /**
  * The Class LensDimensionTableCommands.
@@ -61,7 +62,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
    */
   @CliCommand(value = "create dimtable", help = "Create a new dimension table")
   public String createDimensionTable(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<path to dim-spec>") String dimSpec) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<path to dim-spec>") String dimSpec) {
 
     File f = new File(dimSpec);
     if (!f.exists()) {
@@ -79,16 +80,14 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Drop dimension table.
    *
-   * @param dim
-   *          the dim
-   * @param cascade
-   *          the cascade
+   * @param dim     the dim
+   * @param cascade the cascade
    * @return the string
    */
   @CliCommand(value = "drop dimtable", help = "drop dimension table")
   public String dropDimensionTable(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "dimension table name to be dropped") String dim,
-      @CliOption(key = { "cascade" }, mandatory = false, unspecifiedDefaultValue = "false") boolean cascade) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension table name to be dropped") String dim,
+    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false") boolean cascade) {
     APIResult result = getClient().dropDimensionTable(dim, cascade);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dim + "!!!";
@@ -100,18 +99,18 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Update dimension table.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the string
    */
   @CliCommand(value = "update dimtable", help = "update dimension table")
   public String updateDimensionTable(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <path to table-spec>") String specPair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<dimension-table-name> <path to table-spec>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following "
-          + "format. create dimtable <dimtable spec path> <storage spec path>";
+        + "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     File f = new File(pair[1]);
@@ -131,13 +130,12 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Describe dimension table.
    *
-   * @param dim
-   *          the dim
+   * @param dim the dim
    * @return the string
    */
   @CliCommand(value = "describe dimtable", help = "describe a dimension table")
   public String describeDimensionTable(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "dimension table name to be described") String dim) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension table name to be described") String dim) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimensionTable(dim)));
     } catch (IOException e) {
@@ -148,13 +146,12 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Gets the dim storages.
    *
-   * @param dim
-   *          the dim
+   * @param dim the dim
    * @return the dim storages
    */
   @CliCommand(value = "dimtable list storage", help = "display list of storage associated to dimension table")
   public String getDimStorages(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<table-name> for listing storages") String dim) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> for listing storages") String dim) {
     List<String> storages = getClient().getDimStorages(dim);
     StringBuilder sb = new StringBuilder();
     for (String storage : storages) {
@@ -172,13 +169,13 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Drop all dim storages.
    *
-   * @param table
-   *          the table
+   * @param table the table
    * @return the string
    */
   @CliCommand(value = "dimtable drop-all storages", help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<table-name> for which all storage should be dropped") String table) {
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<table-name> for which all storage should be dropped") String table) {
     APIResult result = getClient().dropAllStoragesOfDim(table);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "All storages of " + table + " dropped successfully";
@@ -190,18 +187,18 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Adds the new dim storage.
    *
-   * @param tablepair
-   *          the tablepair
+   * @param tablepair the tablepair
    * @return the string
    */
   @CliCommand(value = "dimtable add storage", help = "adds a new storage to dimension")
   public String addNewDimStorage(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dim-table-name> <path to storage-spec>") String tablepair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<dim-table-name> <path to storage-spec>") String tablepair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following "
-          + "format. create dimtable <dimtable spec path> <storage spec path>";
+        + "format. create dimtable <dimtable spec path> <storage spec path>";
     }
 
     File f = new File(pair[1]);
@@ -220,18 +217,18 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Drop storage from dim.
    *
-   * @param tablepair
-   *          the tablepair
+   * @param tablepair the tablepair
    * @return the string
    */
   @CliCommand(value = "dimtable drop storage", help = "drop storage to dimension table")
   public String dropStorageFromDim(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<dimension-table-name> <storage-name>") String tablepair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following "
-          + "format. create dimtable <dimtable spec path> <storage spec path>";
+        + "format. create dimtable <dimtable spec path> <storage spec path>";
     }
     APIResult result = getClient().dropStorageFromDim(pair[0], pair[1]);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
@@ -244,18 +241,18 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Gets the storage from dim.
    *
-   * @param tablepair
-   *          the tablepair
+   * @param tablepair the tablepair
    * @return the storage from dim
    */
   @CliCommand(value = "dimtable get storage", help = "describe storage of dimension table")
   public String getStorageFromDim(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <storage-name>") String tablepair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<dimension-table-name> <storage-name>") String tablepair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
       return "Syntax error, please try in following "
-          + "format. create dimtable <dimtable spec path> <storage spec path>";
+        + "format. create dimtable <dimtable spec path> <storage spec path>";
     }
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getStorageFromDim(pair[0], pair[1])));
@@ -267,14 +264,13 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Gets the all partitions of dim.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the all partitions of dim
    */
   @CliCommand(value = "dimtable list partitions", help = "get all partitions associated with dimension table")
   public String getAllPartitionsOfDim(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <storageName> "
-          + "[optional <partition query filter> to get]") String specPair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storageName> "
+      + "[optional <partition query filter> to get]") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length == 2) {
@@ -288,27 +284,26 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     if (pair.length == 3) {
       try {
         return formatJson(mapper.writer(pp).writeValueAsString(
-            getClient().getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
+          getClient().getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
       } catch (IOException e) {
         throw new IllegalArgumentException(e);
       }
     }
 
     return "Syntax error, please try in following "
-    + "format. dim list partitions <table> <storage> [partition values]";
+      + "format. dim list partitions <table> <storage> [partition values]";
   }
 
   /**
    * Drop all partitions of dim.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the string
    */
   @CliCommand(value = "dimtable drop partitions", help = "drop all partitions associated with dimension table")
   public String dropAllPartitionsOfDim(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <storageName> "
-          + "[optional <partition query filter> to drop]") String specPair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storageName> "
+      + "[optional <partition query filter> to drop]") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
@@ -319,7 +314,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
       result = getClient().dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
     } else {
       return "Syntax error, please try in following "
-          + "format. dimtable drop partitions <table> <storage> [partition values]";
+        + "format. dimtable drop partitions <table> <storage> [partition values]";
     }
 
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
@@ -333,20 +328,19 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   /**
    * Adds the partition to fact.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the string
    */
   @CliCommand(value = "dimtable add partition", help = "add a partition to dim table")
   public String addPartitionToFact(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<dimension-table-name> <storage-name>"
-          + " <path to partition specification>") String specPair) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
+      + " <path to partition specification>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
     if (pair.length != 3) {
       return "Syntax error, please try in following "
-          + "format. dimtable add partition <table> <storage> <partition spec>";
+        + "format. dimtable add partition <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);

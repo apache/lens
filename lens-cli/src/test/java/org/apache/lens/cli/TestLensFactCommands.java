@@ -18,15 +18,16 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URL;
 
 /**
  * The Class TestLensFactCommands.

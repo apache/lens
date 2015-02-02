@@ -18,8 +18,6 @@
  */
 package org.apache.lens.client;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.util.List;
 
@@ -27,16 +25,17 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.api.LensConfConstants;
+
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-@Test(groups="unit-test")
+@Test(groups = "unit-test")
 public class TestLensClient extends LensAllApplicationJerseyTest {
 
   @Override
-  protected int getTestPort()  {
+  protected int getTestPort() {
     return 10000;
   }
 
@@ -58,10 +57,10 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
   @Test
   public void testClient() throws Exception {
     LensClientConfig lensClientConfig = new LensClientConfig();
-    lensClientConfig.set(LensConfConstants.SERVER_BASE_URL, "http://localhost:"+getTestPort()+"/lensapi");
+    lensClientConfig.set(LensConfConstants.SERVER_BASE_URL, "http://localhost:" + getTestPort() + "/lensapi");
     LensClient client = new LensClient(lensClientConfig);
     Assert.assertEquals(client.getCurrentDatabae(), "default",
-        "current database");
+      "current database");
     List<String> dbs = client.getAllDatabases();
     Assert.assertEquals(dbs.size(), 1, "no of databases");
     client.createDatabase("testclientdb", true);

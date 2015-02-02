@@ -28,13 +28,16 @@ import java.sql.Statement;
 /**
  * The Class DatabaseUtil.
  */
-public class DatabaseUtil {
+public final class DatabaseUtil {
+
+  private DatabaseUtil() {
+
+  }
 
   /**
    * Initalize database storage.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   public static void initalizeDatabaseStorage() throws Exception {
 
@@ -65,10 +68,8 @@ public class DatabaseUtil {
   /**
    * The main method.
    *
-   * @param args
-   *          the arguments
-   * @throws Exception
-   *           the exception
+   * @param args the arguments
+   * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
     DatabaseUtil.initalizeDatabaseStorage();

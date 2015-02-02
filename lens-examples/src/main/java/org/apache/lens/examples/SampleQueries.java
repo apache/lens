@@ -25,9 +25,12 @@ import java.io.InputStreamReader;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.lens.api.query.*;
-import org.apache.lens.client.*;
+import org.apache.lens.client.LensClientSingletonWrapper;
+import org.apache.lens.client.LensMetadataClient;
+import org.apache.lens.client.LensStatement;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * The Class SampleQueries.
@@ -46,8 +49,7 @@ public class SampleQueries {
   /**
    * Instantiates a new sample queries.
    *
-   * @throws JAXBException
-   *           the JAXB exception
+   * @throws JAXBException the JAXB exception
    */
   public SampleQueries() throws JAXBException {
     metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
@@ -64,10 +66,8 @@ public class SampleQueries {
   /**
    * The main method.
    *
-   * @param args
-   *          the arguments
-   * @throws Exception
-   *           the exception
+   * @param args the arguments
+   * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
     SampleQueries queries = null;
@@ -94,8 +94,7 @@ public class SampleQueries {
   /**
    * Query all.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public void queryAll() throws IOException {
     runQueries("dimension-queries.sql");
@@ -112,10 +111,8 @@ public class SampleQueries {
   /**
    * Run queries.
    *
-   * @param fileName
-   *          the file name
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param fileName the file name
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public void runQueries(String fileName) throws IOException {
     InputStream file = SampleMetastore.class.getClassLoader().getResourceAsStream(fileName);
@@ -134,9 +131,9 @@ public class SampleQueries {
       QueryHandle handle = queryClient.executeQuery(query, true, null);
       System.out.println("Status:" + queryClient.getQuery().getStatus());
       System.out.println("Total time in millis:"
-          + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
+        + (queryClient.getQuery().getFinishTime() - queryClient.getQuery().getSubmissionTime()));
       System.out.println("Driver run time in millis:"
-          + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
+        + (queryClient.getQuery().getDriverFinishTime() - queryClient.getQuery().getDriverStartTime()));
       if (queryClient.wasQuerySuccessful()) {
         success++;
         if (queryClient.getQuery().getStatus().isResultSetAvailable()) {

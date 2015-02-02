@@ -18,16 +18,9 @@
  */
 package org.apache.lens.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lens.api.APIResult;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.StringList;
-import org.apache.lens.client.exceptions.LensClientServerConnectionException;
-import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import java.net.ConnectException;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
@@ -37,12 +30,20 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import java.net.ConnectException;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.StringList;
+import org.apache.lens.client.exceptions.LensClientServerConnectionException;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Top level client connection class which is used to connect to a lens server.
@@ -65,8 +66,7 @@ public class LensConnection {
   /**
    * Construct a connection to lens server specified by connection parameters.
    *
-   * @param params
-   *          parameters to be used for creating a connection
+   * @param params parameters to be used for creating a connection
    */
   public LensConnection(LensConnectionParams params) {
     this.params = params;
@@ -75,8 +75,7 @@ public class LensConnection {
   /**
    * Construct a connection to lens server specified by connection parameters with an already established session
    *
-   * @param params
-   *          parameters to be used for creating a connection
+   * @param params parameters to be used for creating a connection
    */
   public LensConnection(LensConnectionParams params, LensSessionHandle sessionHandle) {
     this.params = params;
@@ -96,8 +95,7 @@ public class LensConnection {
   /**
    * Gets the session web target.
    *
-   * @param client
-   *          the client
+   * @param client the client
    * @return the session web target
    */
   private WebTarget getSessionWebTarget(Client client) {
@@ -107,8 +105,7 @@ public class LensConnection {
   /**
    * Gets the metastore web target.
    *
-   * @param client
-   *          the client
+   * @param client the client
    * @return the metastore web target
    */
   private WebTarget getMetastoreWebTarget(Client client) {
@@ -128,8 +125,7 @@ public class LensConnection {
   /**
    * Open.
    *
-   * @param password
-   *          the password
+   * @param password the password
    * @return the lens session handle
    */
   public LensSessionHandle open(String password) {
@@ -139,7 +135,7 @@ public class LensConnection {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), password));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        params.getSessionConf(), MediaType.APPLICATION_XML_TYPE));
+      params.getSessionConf(), MediaType.APPLICATION_XML_TYPE));
     try {
       Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
       if (response.getStatus() != 200) {
@@ -177,7 +173,7 @@ public class LensConnection {
   public APIResult attachDatabaseToSession() {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("databases").path("current").queryParam("sessionid", this.sessionHandle)
-        .request(MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()), APIResult.class);
+      .request(MediaType.APPLICATION_XML_TYPE).put(Entity.xml(params.getDbName()), APIResult.class);
     return result;
 
   }
@@ -201,100 +197,91 @@ public class LensConnection {
   /**
    * Adds the resource to connection.
    *
-   * @param type
-   *          the type
-   * @param resourcePath
-   *          the resource path
+   * @param type         the type
+   * @param resourcePath the resource path
    * @return the API result
    */
   public APIResult addResourceToConnection(String type, String resourcePath) {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
-        MediaType.APPLICATION_XML_TYPE));
+      MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
     APIResult result = target.path("resources/add").request()
-        .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
   /**
    * Removes the resource from connection.
    *
-   * @param type
-   *          the type
-   * @param resourcePath
-   *          the resource path
+   * @param type         the type
+   * @param resourcePath the resource path
    * @return the API result
    */
   public APIResult removeResourceFromConnection(String type, String resourcePath) {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
-        MediaType.APPLICATION_XML_TYPE));
+      MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), type));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(), resourcePath));
     APIResult result = target.path("resources/delete").request()
-        .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
   /**
    * List resources from session
    *
-   * @param type
-   *          type of resource
-   * @return
-   *         List of resources
+   * @param type type of resource
+   * @return List of resources
    */
   public List<String> listResourcesFromConnection(String type) {
     WebTarget target = getSessionWebTarget();
     StringList result = target.path("resources/list").queryParam("sessionid", this.sessionHandle)
-        .queryParam("type", type).request().get(StringList.class);
+      .queryParam("type", type).request().get(StringList.class);
     return result.getElements();
   }
 
   /**
    * Sets the connection params.
    *
-   * @param key
-   *          the key
-   * @param value
-   *          the value
+   * @param key   the key
+   * @param value the value
    * @return the API result
    */
   public APIResult setConnectionParams(String key, String value) {
     WebTarget target = getSessionWebTarget();
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), this.sessionHandle,
-        MediaType.APPLICATION_XML_TYPE));
+      MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("key").build(), key));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("value").build(), value));
     LOG.debug("Setting connection params " + key + "=" + value);
     APIResult result = target.path("params").request()
-        .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      .put(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     return result;
   }
 
   public List<String> getConnectionParams() {
     WebTarget target = getSessionWebTarget();
     StringList list = target.path("params").queryParam("sessionid", this.sessionHandle).queryParam("verbose", true)
-        .request().get(StringList.class);
+      .request().get(StringList.class);
     return list.getElements();
   }
 
   /**
    * Gets the connection params.
    *
-   * @param key
-   *          the key
+   * @param key the key
    * @return the connection params
    */
   public List<String> getConnectionParams(String key) {
     WebTarget target = getSessionWebTarget();
     StringList value = target.path("params").queryParam("sessionid", this.sessionHandle).queryParam("key", key)
-        .request().get(StringList.class);
+      .request().get(StringList.class);
     return value.getElements();
   }
 
@@ -304,7 +291,7 @@ public class LensConnection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Object#toString()
    */
   @Override

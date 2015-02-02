@@ -22,27 +22,27 @@
 <x_fact_table cube_name="sample_cube" name="fact1" weight="100.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-  <column comment="" name="dim1" type="INT" />
-  <column comment="" name="measure2" type="BIGINT" />
-  <column comment="" name="measure3" type="INT" />
-  <column comment="" name="measure4" type="FLOAT" />
+    <column comment="" name="dim1" type="INT"/>
+    <column comment="" name="measure2" type="BIGINT"/>
+    <column comment="" name="measure3" type="INT"/>
+    <column comment="" name="measure4" type="FLOAT"/>
   </columns>
   <properties>
-  <property name="cube.fact.is.aggregated" value="true" />
+    <property name="cube.fact.is.aggregated" value="true"/>
   </properties>
   <storage_tables>
-  <storage_table>
-  <update_periods>
-    <update_period>HOURLY</update_period>
-    <update_period>DAILY</update_period>
-    </update_periods>
-    <storage_name>local</storage_name>
-    <table_desc external="true" field_delimiter="," table_location="/tmp/examples/fact1_local">
-    <part_cols>
-      <column comment="Time column" name="dt" type="STRING" />
-      </part_cols>
-      <time_part_cols>dt</time_part_cols>
-    </table_desc>
-  </storage_table>
+    <storage_table>
+      <update_periods>
+        <update_period>HOURLY</update_period>
+        <update_period>DAILY</update_period>
+      </update_periods>
+      <storage_name>local</storage_name>
+      <table_desc external="true" field_delimiter="," table_location="/tmp/examples/fact1_local">
+        <part_cols>
+          <column comment="Time column" name="dt" type="STRING"/>
+        </part_cols>
+        <time_part_cols>dt</time_part_cols>
+      </table_desc>
+    </storage_table>
   </storage_tables>
 </x_fact_table>

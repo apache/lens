@@ -37,10 +37,8 @@ public class LensJdbcConnection implements Connection {
   /**
    * Instantiates a new lens jdbc connection.
    *
-   * @param uri
-   *          the uri
-   * @param info
-   *          the info
+   * @param uri  the uri
+   * @param info the info
    */
   public LensJdbcConnection(String uri, Properties info) {
     LensConnectionParams params = JDBCUtils.parseUrl(uri);
@@ -51,7 +49,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createStatement()
    */
   @Override
@@ -62,7 +60,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String)
    */
   @Override
@@ -72,7 +70,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createStatement(int, int)
    */
   @Override
@@ -88,7 +86,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String, int, int)
    */
   @Override
@@ -103,7 +101,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#close()
    */
   @Override
@@ -138,7 +136,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#clearWarnings()
    */
   @Override
@@ -161,7 +159,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createStatement(int, int, int)
    */
   @Override
@@ -171,7 +169,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareCall(java.lang.String)
    */
   @Override
@@ -181,7 +179,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareCall(java.lang.String, int, int)
    */
   @Override
@@ -191,7 +189,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareCall(java.lang.String, int, int, int)
    */
   @Override
@@ -201,7 +199,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String, int)
    */
   @Override
@@ -211,7 +209,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String, int[])
    */
   @Override
@@ -221,7 +219,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String, java.lang.String[])
    */
   @Override
@@ -231,18 +229,18 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#prepareStatement(java.lang.String, int, int, int)
    */
   @Override
   public PreparedStatement prepareStatement(String s, int rsType, int rsConcurrency, int rsHoldability)
-      throws SQLException {
+    throws SQLException {
     throw new SQLException("Operation not supported!!!!");
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#nativeSQL(java.lang.String)
    */
   @Override
@@ -257,7 +255,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#commit()
    */
   @Override
@@ -267,7 +265,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#rollback()
    */
   @Override
@@ -312,7 +310,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#setSavepoint()
    */
   @Override
@@ -322,7 +320,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#setSavepoint(java.lang.String)
    */
   @Override
@@ -332,7 +330,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#rollback(java.sql.Savepoint)
    */
   @Override
@@ -342,7 +340,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#releaseSavepoint(java.sql.Savepoint)
    */
   @Override
@@ -352,7 +350,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createClob()
    */
   @Override
@@ -362,7 +360,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createBlob()
    */
   @Override
@@ -372,7 +370,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createNClob()
    */
   @Override
@@ -382,7 +380,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createSQLXML()
    */
   @Override
@@ -392,7 +390,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#isValid(int)
    */
   @Override
@@ -402,7 +400,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#setClientInfo(java.lang.String, java.lang.String)
    */
   @Override
@@ -417,7 +415,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#getClientInfo(java.lang.String)
    */
   @Override
@@ -432,7 +430,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createArrayOf(java.lang.String, java.lang.Object[])
    */
   @Override
@@ -442,7 +440,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Connection#createStruct(java.lang.String, java.lang.Object[])
    */
   @Override
@@ -461,10 +459,8 @@ public class LensJdbcConnection implements Connection {
   /**
    * Abort.
    *
-   * @param executor
-   *          the executor
-   * @throws SQLException
-   *           the SQL exception
+   * @param executor the executor
+   * @throws SQLException the SQL exception
    */
   public void abort(Executor executor) throws SQLException {
     throw new SQLException("Operation not supported!!!");
@@ -473,12 +469,9 @@ public class LensJdbcConnection implements Connection {
   /**
    * Sets the network timeout.
    *
-   * @param executor
-   *          the executor
-   * @param milliseconds
-   *          the milliseconds
-   * @throws SQLException
-   *           the SQL exception
+   * @param executor     the executor
+   * @param milliseconds the milliseconds
+   * @throws SQLException the SQL exception
    */
   public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
     throw new SQLException("Operation not supported!!!");
@@ -490,7 +483,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#unwrap(java.lang.Class)
    */
   @Override
@@ -500,7 +493,7 @@ public class LensJdbcConnection implements Connection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
    */
   @Override

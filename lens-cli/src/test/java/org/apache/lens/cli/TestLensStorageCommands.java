@@ -18,15 +18,16 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensStorageCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URL;
 
 /**
  * The Class TestLensStorageCommands.
@@ -81,7 +82,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
    *          the storage name
    * @throws IOException
    */
-  public synchronized static void addLocalStorage(String storageName) throws IOException {
+  public static synchronized void addLocalStorage(String storageName) throws IOException {
     LensStorageCommands command = getCommand();
     URL storageSpec = TestLensStorageCommands.class.getClassLoader().getResource("local-storage.xml");
     File newFile = new File("/tmp/local-" + storageName + ".xml");

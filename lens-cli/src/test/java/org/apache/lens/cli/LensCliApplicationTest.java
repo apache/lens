@@ -18,12 +18,14 @@
  */
 package org.apache.lens.cli;
 
-import org.apache.lens.server.LensAllApplicationJerseyTest;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
+
+import org.apache.lens.server.LensAllApplicationJerseyTest;
+
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 
 /**
  * The Class LensCliApplicationTest.

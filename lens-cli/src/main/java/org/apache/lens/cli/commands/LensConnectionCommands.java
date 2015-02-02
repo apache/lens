@@ -18,19 +18,17 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
+import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.lens.api.APIResult;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.ExitShellRequest;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
-import javax.ws.rs.BadRequestException;
+import com.google.common.base.Joiner;
 
 /**
  * The Class LensConnectionCommands.
@@ -41,12 +39,11 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   /**
    * Sets the param.
    *
-   * @param keyval
-   *          the keyval
+   * @param keyval the keyval
    * @return the string
    */
   @CliCommand(value = "set", help = "sets a session parameter.")
-  public String setParam(@CliOption(key = { "", "param" }, mandatory = true, help = "key=val") String keyval) {
+  public String setParam(@CliOption(key = {"", "param"}, mandatory = true, help = "key=val") String keyval) {
     String[] pair = keyval.split("=");
     if (pair.length != 2) {
       return "Error: Pass parameter as <key>=<value>";
@@ -72,7 +69,7 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
    * @return the string
    */
   @CliCommand(value = "list resources", help = "list all resources from session")
-  public String listResources(@CliOption(key = { "", "type" }, mandatory = false, help = "jar/file") String type) {
+  public String listResources(@CliOption(key = {"", "type"}, mandatory = false, help = "jar/file") String type) {
     List<String> resources = getClient().listResources(type);
     if (resources == null) {
       return "No resources found";
@@ -83,25 +80,23 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   /**
    * Gets the param.
    *
-   * @param param
-   *          the param
+   * @param param the param
    * @return the param
    */
   @CliCommand(value = "get", help = "gets value of session parameter")
-  public String getParam(@CliOption(key = { "", "param" }, mandatory = true, help = "param name") String param) {
+  public String getParam(@CliOption(key = {"", "param"}, mandatory = true, help = "param name") String param) {
     return Joiner.on("\n").skipNulls().join(getClient().getConnectionParam(param));
   }
 
   /**
    * Adds the jar.
    *
-   * @param path
-   *          the path
+   * @param path the path
    * @return the string
    */
   @CliCommand(value = "add jar", help = "adds a jar resource to session")
   public String addJar(
-      @CliOption(key = { "", "param" }, mandatory = true, help = "path to jar on serverside") String path) {
+    @CliOption(key = {"", "param"}, mandatory = true, help = "path to jar on serverside") String path) {
     APIResult result = getClient().addJarResource(path);
     return result.getMessage();
   }
@@ -109,13 +104,12 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   /**
    * Removes the jar.
    *
-   * @param path
-   *          the path
+   * @param path the path
    * @return the string
    */
   @CliCommand(value = "remove jar", help = "removes a jar resource from session")
   public String removeJar(
-      @CliOption(key = { "", "param" }, mandatory = true, help = "path to jar on serverside") String path) {
+    @CliOption(key = {"", "param"}, mandatory = true, help = "path to jar on serverside") String path) {
     APIResult result = getClient().removeJarResource(path);
     return result.getMessage();
   }
@@ -123,13 +117,12 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   /**
    * Adds the file.
    *
-   * @param path
-   *          the path
+   * @param path the path
    * @return the string
    */
   @CliCommand(value = "add file", help = "adds a file resource to session")
   public String addFile(
-      @CliOption(key = { "", "param" }, mandatory = true, help = "path to file on serverside") String path) {
+    @CliOption(key = {"", "param"}, mandatory = true, help = "path to file on serverside") String path) {
     APIResult result = getClient().addFileResource(path);
     return result.getMessage();
   }
@@ -137,13 +130,12 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   /**
    * Removes the file.
    *
-   * @param path
-   *          the path
+   * @param path the path
    * @return the string
    */
   @CliCommand(value = "remove file", help = "removes a file resource from session")
   public String removeFile(
-      @CliOption(key = { "", "param" }, mandatory = true, help = "path to file on serverside") String path) {
+    @CliOption(key = {"", "param"}, mandatory = true, help = "path to file on serverside") String path) {
     APIResult result = getClient().removeFileResource(path);
     return result.getMessage();
   }
@@ -153,7 +145,7 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
    *
    * @return the exit shell request
    */
-  @CliCommand(value = { "close" }, help = "Exits the shell")
+  @CliCommand(value = {"close"}, help = "Exits the shell")
   public ExitShellRequest quitShell() {
     closeClientConnection();
     return ExitShellRequest.NORMAL_EXIT;

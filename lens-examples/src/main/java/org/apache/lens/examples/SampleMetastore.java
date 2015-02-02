@@ -27,13 +27,13 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.metastore.ObjectFactory;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensMetadataClient;
 
 public class SampleMetastore {
   private LensMetadataClient metaClient;
-  public static Unmarshaller jaxbUnmarshaller;
+  public static final Unmarshaller JAXB_UNMARSHALLER;
   private APIResult result;
   private int retCode = 0;
 
@@ -41,7 +41,7 @@ public class SampleMetastore {
     try {
       JAXBContext jaxbContext;
       jaxbContext = JAXBContext.newInstance(ObjectFactory.class);
-      jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+      JAXB_UNMARSHALLER = jaxbContext.createUnmarshaller();
     } catch (JAXBException e) {
       throw new RuntimeException("Could not initialize JAXBCOntext");
     }
@@ -52,7 +52,7 @@ public class SampleMetastore {
     if (file == null) {
       throw new IOException("File not found:" + filename);
     }
-    return ((JAXBElement)jaxbUnmarshaller.unmarshal(file)).getValue();
+    return ((JAXBElement) JAXB_UNMARSHALLER.unmarshal(file)).getValue();
   }
 
   public SampleMetastore() throws JAXBException {
@@ -91,14 +91,14 @@ public class SampleMetastore {
     }
   }
 
-  private void createStorage(String fileName)
-      throws JAXBException, IOException {
+  private void createStorage(String fileName) throws JAXBException, IOException {
     result = metaClient.createNewStorage(fileName);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
       System.out.println("Creating storage from:" + fileName + " failed, reason:" + result.getMessage());
       retCode = 1;
     }
   }
+
   public void createStorages() throws JAXBException, IOException {
     createStorage("local-storage.xml");
     createStorage("local-cluster-storage.xml");
@@ -169,11 +169,11 @@ public class SampleMetastore {
       }
       metastore.createAll();
       System.out.println("Created sample metastore!");
-      System.out.println("Database:" + metastore.metaClient.getCurrentDatabase());;
-      System.out.println("Storages:" + metastore.metaClient.getAllStorages());;
-      System.out.println("Cubes:" + metastore.metaClient.getAllCubes());;
-      System.out.println("Dimensions:" + metastore.metaClient.getAllDimensions());;
-      System.out.println("Fact tables:" + metastore.metaClient.getAllFactTables());;
+      System.out.println("Database:" + metastore.metaClient.getCurrentDatabase());
+      System.out.println("Storages:" + metastore.metaClient.getAllStorages());
+      System.out.println("Cubes:" + metastore.metaClient.getAllCubes());
+      System.out.println("Dimensions:" + metastore.metaClient.getAllDimensions());
+      System.out.println("Fact tables:" + metastore.metaClient.getAllFactTables());
       System.out.println("Dimension tables:" + metastore.metaClient.getAllDimensionTables());
       if (metastore.retCode != 0) {
         System.exit(metastore.retCode);

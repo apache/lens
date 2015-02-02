@@ -43,8 +43,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
   /**
    * Instantiates a new lens jdbc result set metadata.
    *
-   * @param metadata
-   *          the metadata
+   * @param metadata the metadata
    */
   public LensJdbcResultSetMetadata(QueryResultSetMetadata metadata) {
     this.metadata = metadata;
@@ -63,7 +62,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isAutoIncrement(int)
    */
   @Override
@@ -73,23 +72,17 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isCaseSensitive(int)
    */
   @Override
   public boolean isCaseSensitive(int index) throws SQLException {
-    String type = colTypes.get(toZeroIndex(index));
-
-    if ("string".equalsIgnoreCase(type)) {
-      return true;
-    } else {
-      return false;
-    }
+    return "string".equalsIgnoreCase(colTypes.get(toZeroIndex(index)));
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isSearchable(int)
    */
   @Override
@@ -99,7 +92,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isCurrency(int)
    */
   @Override
@@ -109,7 +102,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isNullable(int)
    */
   @Override
@@ -119,7 +112,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isSigned(int)
    */
   @Override
@@ -129,7 +122,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnDisplaySize(int)
    */
   @Override
@@ -139,7 +132,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnLabel(int)
    */
   @Override
@@ -149,7 +142,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnName(int)
    */
   @Override
@@ -159,7 +152,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getSchemaName(int)
    */
   @Override
@@ -169,7 +162,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getPrecision(int)
    */
   @Override
@@ -179,7 +172,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getScale(int)
    */
   @Override
@@ -189,7 +182,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getTableName(int)
    */
   @Override
@@ -199,7 +192,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getCatalogName(int)
    */
   @Override
@@ -209,7 +202,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnType(int)
    */
   @Override
@@ -219,7 +212,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnTypeName(int)
    */
   @Override
@@ -229,7 +222,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isReadOnly(int)
    */
   @Override
@@ -239,7 +232,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isWritable(int)
    */
   @Override
@@ -249,7 +242,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#isDefinitelyWritable(int)
    */
   @Override
@@ -259,7 +252,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.ResultSetMetaData#getColumnClassName(int)
    */
   @Override
@@ -269,7 +262,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#unwrap(java.lang.Class)
    */
   @Override
@@ -279,7 +272,7 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
    */
   @Override
@@ -290,11 +283,9 @@ public class LensJdbcResultSetMetadata implements ResultSetMetaData {
   /**
    * To zero index.
    *
-   * @param column
-   *          the column
+   * @param column the column
    * @return the int
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   protected int toZeroIndex(int column) throws SQLException {
     if (colTypes.isEmpty()) {

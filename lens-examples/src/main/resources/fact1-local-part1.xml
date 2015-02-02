@@ -23,6 +23,6 @@
   xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <time_partition_spec>
-    <part_spec_element key="dt" value="2014-06-24T23:00:00" />
+    <part_spec_element key="dt" value="2014-06-24T23:00:00"/>
   </time_partition_spec>
 </x_partition>

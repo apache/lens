@@ -22,23 +22,23 @@
 <x_dimension_table dimension_name="sample_dim" table_name="dim_table" weight="0.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
-    <column comment="ID" name="id" type="INT" />
-    <column comment="name" name="name" type="STRING" />
-    <column comment="more details" name="detail" type="STRING" />
-    <column comment="d2 ID" name="d2id" type="INT" />
+    <column comment="ID" name="id" type="INT"/>
+    <column comment="name" name="name" type="STRING"/>
+    <column comment="more details" name="detail" type="STRING"/>
+    <column comment="d2 ID" name="d2id" type="INT"/>
   </columns>
   <properties>
-    <property name="dim1.prop" value="d1" />
+    <property name="dim1.prop" value="d1"/>
   </properties>
   <storage_tables>
     <storage_table>
-    <update_periods>
-      <update_period>HOURLY</update_period>
+      <update_periods>
+        <update_period>HOURLY</update_period>
       </update_periods>
       <storage_name>local</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/examples/dim1">
-      <part_cols>
-        <column comment="Time column" name="dt" type="STRING" />
+        <part_cols>
+          <column comment="Time column" name="dt" type="STRING"/>
         </part_cols>
         <time_part_cols>dt</time_part_cols>
       </table_desc>

@@ -18,16 +18,17 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensDimensionTableCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * The Class TestLensDimensionTableCommands.
@@ -73,14 +74,12 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
    *          the table name
    * @param specName
    *          the spec name
-   * @param storageSpecName
-   *          the storage spec name
    * @param storageName
    *          the storage name
    * @throws IOException
    */
-  public synchronized static void addDim1Table(String tableName, String specName, String storageName)
-      throws IOException {
+  public static synchronized void addDim1Table(String tableName, String specName, String storageName)
+    throws IOException {
     LensDimensionTableCommands command = getCommand();
     String dimList = command.showDimensionTables();
     // add local storage before adding fact table

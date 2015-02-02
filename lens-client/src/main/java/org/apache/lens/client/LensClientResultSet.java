@@ -35,10 +35,8 @@ public class LensClientResultSet {
   /**
    * Instantiates a new lens client result set.
    *
-   * @param result
-   *          the result
-   * @param resultSetMetaData
-   *          the result set meta data
+   * @param result            the result
+   * @param resultSetMetaData the result set meta data
    */
   public LensClientResultSet(QueryResult result, QueryResultSetMetadata resultSetMetaData) {
     this.result = result;

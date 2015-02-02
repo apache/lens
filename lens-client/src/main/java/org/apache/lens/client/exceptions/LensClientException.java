@@ -35,10 +35,8 @@ public class LensClientException extends RuntimeException {
   /**
    * Instantiates a new lens client exception.
    *
-   * @param message
-   *          the message
-   * @param cause
-   *          the cause
+   * @param message the message
+   * @param cause   the cause
    */
   public LensClientException(String message, Exception cause) {
     this.message = message;
@@ -48,8 +46,7 @@ public class LensClientException extends RuntimeException {
   /**
    * Instantiates a new lens client exception.
    *
-   * @param message
-   *          the message
+   * @param message the message
    */
   public LensClientException(String message) {
     this.message = message;

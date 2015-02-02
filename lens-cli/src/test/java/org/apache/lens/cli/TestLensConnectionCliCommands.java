@@ -18,17 +18,18 @@
  */
 package org.apache.lens.cli;
 
-import org.apache.lens.cli.commands.LensConnectionCommands;
-import org.apache.lens.client.LensClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
 import java.io.File;
 import java.io.IOException;
 
 import javax.ws.rs.BadRequestException;
+
+import org.apache.lens.cli.commands.LensConnectionCommands;
+import org.apache.lens.client.LensClient;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 /**
  * The Class TestLensConnectionCliCommands.

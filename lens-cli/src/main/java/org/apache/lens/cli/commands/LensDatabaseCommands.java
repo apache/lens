@@ -18,15 +18,16 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
+import java.util.List;
 
 import org.apache.lens.api.APIResult;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.google.common.base.Joiner;
 
 /**
  * The Class LensDatabaseCommands.
@@ -52,13 +53,12 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
   /**
    * Switch database.
    *
-   * @param database
-   *          the database
+   * @param database the database
    * @return the string
    */
   @CliCommand(value = "use", help = "change to new database")
   public String switchDatabase(
-      @CliOption(key = { "", "db" }, mandatory = true, help = "Database to change to") String database) {
+    @CliOption(key = {"", "db"}, mandatory = true, help = "Database to change to") String database) {
     boolean status = getClient().setDatabase(database);
     if (status) {
       return "Successfully switched to " + database;
@@ -70,16 +70,14 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
   /**
    * Creates the database.
    *
-   * @param database
-   *          the database
-   * @param ignore
-   *          the ignore
+   * @param database the database
+   * @param ignore   the ignore
    * @return the string
    */
   @CliCommand(value = "create database", help = "create a database with specified name")
   public String createDatabase(
-      @CliOption(key = { "", "db" }, mandatory = true, help = "Database to create") String database,
-      @CliOption(key = { "ignore" }, mandatory = false, unspecifiedDefaultValue = "false") boolean ignore) {
+    @CliOption(key = {"", "db"}, mandatory = true, help = "Database to create") String database,
+    @CliOption(key = {"ignore"}, mandatory = false, unspecifiedDefaultValue = "false") boolean ignore) {
     APIResult result = getClient().createDatabase(database, ignore);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return ("Create database " + database + " successful");
@@ -91,12 +89,12 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
   /**
    * Drop database.
    *
-   * @param database
-   *          the database
+   * @param database the database
    * @return the string
    */
   @CliCommand(value = "drop database", help = "drop a database with specified name")
-  public String dropDatabase(@CliOption(key = { "", "db" }, mandatory = true, help = "Database to drop") String database) {
+  public String dropDatabase(@CliOption(key = {"", "db"}, mandatory = true,
+    help = "Database to drop") String database) {
     APIResult result = getClient().dropDatabase(database);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return ("drop database " + database + " successful");

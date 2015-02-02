@@ -22,18 +22,18 @@
 <x_dimension name="sample_dim" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
-    <dim_attribute name="id" type="INT" />
-    <dim_attribute name="name" type="STRING" />
-    <dim_attribute name="detail" type="STRING" start_time='2013-12-01-00:00' />
+    <dim_attribute name="id" type="INT"/>
+    <dim_attribute name="name" type="STRING"/>
+    <dim_attribute name="detail" type="STRING" start_time='2013-12-01-00:00'/>
     <dim_attribute name="d2id" type="INT" start_time='2013-12-01-00:00'>
       <ref_spec>
         <table_references>
-          <table_reference table="sample_dim2" column="id" />
+          <table_reference table="sample_dim2" column="id"/>
         </table_references>
       </ref_spec>
     </dim_attribute>
   </attributes>
   <properties>
-    <property name="dimension.sample_dim.timed.dimension" value="dt" />
+    <property name="dimension.sample_dim.timed.dimension" value="dt"/>
   </properties>
 </x_dimension>

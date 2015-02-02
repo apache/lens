@@ -18,13 +18,14 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
+import java.util.List;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.google.common.base.Joiner;
 
 /**
  * The Class LensNativeTableCommands.
@@ -50,13 +51,12 @@ public class LensNativeTableCommands extends BaseLensCommand implements CommandM
   /**
    * Describe native table.
    *
-   * @param tblName
-   *          the tbl name
+   * @param tblName the tbl name
    * @return the string
    */
   @CliCommand(value = "describe nativetable", help = "describe nativetable")
   public String describeNativeTable(
-      @CliOption(key = { "", "nativetable" }, mandatory = true, help = "<native-table-name>") String tblName) {
+    @CliOption(key = {"", "nativetable"}, mandatory = true, help = "<native-table-name>") String tblName) {
 
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getNativeTable(tblName)));
