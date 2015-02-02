@@ -220,6 +220,11 @@ public class TestSessionResource extends LensJerseyTest {
         .put(Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
 
+    // list all resources
+    StringList listResources = resourcetarget.path("list").queryParam("sessionid", handle).request()
+        .get(StringList.class);
+    Assert.assertEquals(listResources.getElements().size(), 1);
+
     // delete the resource
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), handle,
@@ -230,6 +235,11 @@ public class TestSessionResource extends LensJerseyTest {
     result = resourcetarget.path("delete").request()
         .put(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // list all resources
+    StringList listResourcesAfterDeletion = resourcetarget.path("list").queryParam("sessionid", handle)
+        .request().get(StringList.class);
+    Assert.assertNull(listResourcesAfterDeletion.getElements());
 
     // close session
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
@@ -270,6 +280,13 @@ public class TestSessionResource extends LensJerseyTest {
       }
     }
     Assert.assertTrue(found);
+
+    final WebTarget resourcetarget = target().path("session/resources");
+    // list all resources
+    StringList listResources = resourcetarget.path("list").queryParam("sessionid", handle).request()
+        .get(StringList.class);
+    Assert.assertEquals(listResources.getElements().size(), 1);
+    Assert.assertTrue(listResources.getElements().get(0).contains("test-aux.jar"));
 
     // close session
     APIResult result = target.queryParam("sessionid", handle).request().delete(APIResult.class);

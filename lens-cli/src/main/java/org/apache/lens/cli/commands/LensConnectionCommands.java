@@ -20,6 +20,7 @@ package org.apache.lens.cli.commands;
 
 import com.google.common.base.Joiner;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.lens.api.APIResult;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.ExitShellRequest;
@@ -28,6 +29,8 @@ import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import javax.ws.rs.BadRequestException;
 
 /**
  * The Class LensConnectionCommands.
@@ -61,6 +64,20 @@ public class LensConnectionCommands extends BaseLensCommand implements CommandMa
   public String showParameters() {
     List<String> params = getClient().getConnectionParam();
     return Joiner.on("\n").skipNulls().join(params);
+  }
+
+  /**
+   * List resources.
+   *
+   * @return the string
+   */
+  @CliCommand(value = "list resources", help = "list all resources from session")
+  public String listResources(@CliOption(key = { "", "type" }, mandatory = false, help = "jar/file") String type) {
+    List<String> resources = getClient().listResources(type);
+    if (resources == null) {
+      return "No resources found";
+    }
+    return Joiner.on("\n").skipNulls().join(resources);
   }
 
   /**

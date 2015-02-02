@@ -19,8 +19,8 @@
 package org.apache.lens.client;
 
 import com.google.common.collect.Maps;
-import org.apache.lens.api.metastore.*;
 
+import org.apache.lens.api.metastore.*;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.lens.api.APIResult;
@@ -473,6 +473,10 @@ public class LensClient {
 
   public boolean isConnectionOpen() {
     return this.conn.isOpen();
+  }
+
+  public List<String> listResources(String type) {
+    return this.conn.listResourcesFromConnection(type);
   }
 
 }

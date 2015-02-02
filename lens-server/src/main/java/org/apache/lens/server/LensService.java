@@ -44,6 +44,7 @@ import org.apache.lens.server.util.UtilityMethods;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotAuthorizedException;
 import javax.ws.rs.NotFoundException;
+
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
@@ -320,7 +321,6 @@ public abstract class LensService extends CompositeService implements Externaliz
    */
   public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
   }
-
   /**
    * Delete resource.
    *

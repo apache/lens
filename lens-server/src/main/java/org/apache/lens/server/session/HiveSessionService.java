@@ -32,9 +32,12 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
+import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 
+import javax.ws.rs.BadRequestException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
+
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
@@ -91,6 +94,25 @@ public class HiveSessionService extends LensService implements SessionService {
       getSession(sessionid).addResource(type, path);
     }
     return numAdded;
+  }
+
+  @Override
+  public List<String> listAllResources(LensSessionHandle sessionHandle, String type) {
+    if (!isValidResouceType(type)) {
+      throw new BadRequestException("Bad resource type is passed. Please pass jar or file as source type");
+    }
+    List<ResourceEntry> resources = getSession(sessionHandle).getResources();
+    List<String> allResources = new ArrayList<String>();
+    for (ResourceEntry resource : resources) {
+      if (type == null || resource.getType().equalsIgnoreCase(type)) {
+        allResources.add(resource.toString());
+      }
+    }
+    return allResources;
+  }
+
+  private boolean isValidResouceType(String type) {
+    return (type == null || type.equalsIgnoreCase("jar") || type.equalsIgnoreCase("file"));
   }
 
   /**
