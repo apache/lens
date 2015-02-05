@@ -105,8 +105,6 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       writer.close();
       LOG.debug("Using Storage spec from file : " + newFile.getAbsolutePath());
       String storageList = command.getStorages();
-      Assert.assertFalse(storageList.contains(storageName), " Storage list contains " + storageName
-          + " storage list is  " + storageList + " file used is " + newFile.getAbsolutePath());
       command.createStorage(newFile.getAbsolutePath());
       storageList = command.getStorages();
       Assert.assertTrue(storageList.contains(storageName));
