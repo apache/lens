@@ -20,13 +20,8 @@
 package org.apache.lens.cube.metadata;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.fs.Path;
@@ -34,31 +29,25 @@ import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.ql.io.IgnoreKeyTextOutputFormat;
-import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
-import org.apache.hadoop.hive.ql.metadata.Partition;
-import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.metadata.*;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
 
 /**
- * 
- * Storage is Named Interface which would represent the underlying storage of
- * the data.
- * 
+ * Storage is Named Interface which would represent the underlying storage of the data.
  */
 public abstract class Storage extends AbstractCubeTable implements PartitionMetahook {
 
-  private static final List<FieldSchema> columns = new ArrayList<FieldSchema>();
+  private static final List<FieldSchema> COLUMNS = new ArrayList<FieldSchema>();
+
   static {
-    columns.add(new FieldSchema("dummy", "string", "dummy column"));
+    COLUMNS.add(new FieldSchema("dummy", "string", "dummy column"));
   }
 
   protected Storage(String name, Map<String, String> properties) {
-    super(name, columns, properties, 0L);
+    super(name, COLUMNS, properties, 0L);
     addProperties();
   }
 
@@ -68,7 +57,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
 
   /**
    * Get the name prefix of the storage
-   * 
+   *
    * @return Name followed by storage separator
    */
   public String getPrefix() {
@@ -93,9 +82,8 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
 
   /**
    * Get the name prefix of the storage
-   * 
-   * @param name
-   *          Name of the storage
+   *
+   * @param name Name of the storage
    * @return Name followed by storage separator
    */
   public static String getPrefix(String name) {
@@ -130,15 +118,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
 
   /**
    * Get the storage table descriptor for the given parent table.
-   * 
-   * @param client
-   *          The metastore client
-   * @param parent
-   *          Is either Fact or Dimension table
-   * @param crtTbl
-   *          Create table info
+   *
+   * @param client The metastore client
+   * @param parent Is either Fact or Dimension table
+   * @param crtTbl Create table info
    * @return Table describing the storage table
-   * 
    * @throws HiveException
    */
   public Table getStorageTable(Hive client, Table parent, StorageTableDesc crtTbl) throws HiveException {
@@ -159,7 +143,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
 
     if (crtTbl.getStorageHandler() != null) {
       tbl.setProperty(org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE,
-          crtTbl.getStorageHandler());
+        crtTbl.getStorageHandler());
     }
     HiveStorageHandler storageHandler = tbl.getStorageHandler();
 
@@ -245,20 +229,15 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
   }
 
   /**
-   * Add a partition in the underlying hive table and update latest partition
-   * links
-   * 
-   * @param client
-   *          The metastore client
-   * @param addPartitionDesc
-   *          add Partition specification
-   * @param latestInfo
-   *          The latest partition info, null if latest should not be created
-   * 
+   * Add a partition in the underlying hive table and update latest partition links
+   *
+   * @param client           The metastore client
+   * @param addPartitionDesc add Partition specification
+   * @param latestInfo       The latest partition info, null if latest should not be created
    * @throws HiveException
    */
   public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
-      throws HiveException {
+    throws HiveException {
     preAddPartition(addPartitionDesc);
     boolean success = false;
     try {
@@ -307,7 +286,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           }
           AddPartitionDesc latestPart = new AddPartitionDesc(dbName, tableName, true);
           latestPart.addPartition(
-              StorageConstants.getLatestPartSpec(addPartitionDesc.getStoragePartSpec(), latestPartCol), location);
+            StorageConstants.getLatestPartSpec(addPartitionDesc.getStoragePartSpec(), latestPartCol), location);
           latestPart.getPartition(0).setPartParams(entry.getValue().getPartParams(partParams));
           latestPart.getPartition(0).setInputFormat(addPartitionDesc.getInputFormat());
           latestPart.getPartition(0).setOutputFormat(addPartitionDesc.getOutputFormat());
@@ -330,23 +309,16 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
   }
 
   /**
-   * Drop the partition in the underlying hive table and update latest partition
-   * link
-   * 
-   * @param client
-   *          The metastore client
-   * @param storageTableName
-   *          TableName
-   * @param partSpec
-   *          Partition specification
-   * @param latestInfo
-   *          The latest partition info if it needs update, null if latest
-   *          should not be updated
-   * 
+   * Drop the partition in the underlying hive table and update latest partition link
+   *
+   * @param client           The metastore client
+   * @param storageTableName TableName
+   * @param partSpec         Partition specification
+   * @param latestInfo       The latest partition info if it needs update, null if latest should not be updated
    * @throws HiveException
    */
   public void dropPartition(Hive client, String storageTableName, List<String> partVals,
-      Map<String, LatestInfo> updateLatestInfo) throws HiveException {
+    Map<String, LatestInfo> updateLatestInfo) throws HiveException {
     preDropPartition(storageTableName, partVals);
     boolean success = false;
     try {
@@ -370,15 +342,15 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
         if (latest != null && latest.part != null) {
           AddPartitionDesc latestPart = new AddPartitionDesc(dbName, storageTableName, true);
           latestPart.addPartition(StorageConstants.getLatestPartSpec(latest.part.getSpec(), latestPartCol),
-              latest.part.getLocation());
+            latest.part.getLocation());
           latestPart.getPartition(0).setPartParams(
-              latest.latestParts.get(latestPartCol).getPartParams(latest.part.getParameters()));
+            latest.latestParts.get(latestPartCol).getPartParams(latest.part.getParameters()));
           latestPart.getPartition(0).setInputFormat(latest.part.getInputFormatClass().getCanonicalName());
           latestPart.getPartition(0).setOutputFormat(latest.part.getOutputFormatClass().getCanonicalName());
           latestPart.getPartition(0).setNumBuckets(latest.part.getBucketCount());
           latestPart.getPartition(0).setCols(latest.part.getCols());
           latestPart.getPartition(0).setSerializationLib(
-              latest.part.getTPartition().getSd().getSerdeInfo().getSerializationLib());
+            latest.part.getTPartition().getSd().getSerdeInfo().getSerializationLib());
           latestPart.getPartition(0).setSerdeParams(latest.part.getTPartition().getSd().getSerdeInfo().getParameters());
           latestPart.getPartition(0).setBucketCols(latest.part.getBucketCols());
           latestPart.getPartition(0).setSortCols(latest.part.getSortCols());
@@ -399,7 +371,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     try {
       Class<?> clazz = Class.forName(storageClassName);
       Constructor<?> constructor = clazz.getConstructor(Table.class);
-      Storage storage = (Storage) constructor.newInstance(new Object[] { tbl });
+      Storage storage = (Storage) constructor.newInstance(new Object[]{tbl});
       return storage;
     } catch (Exception e) {
       throw new HiveException("Could not create storage class" + storageClassName, e);

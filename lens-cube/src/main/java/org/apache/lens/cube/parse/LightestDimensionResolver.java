@@ -18,18 +18,15 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 /**
  * Prune dimension tables having more weight than minimum
@@ -59,7 +56,7 @@ class LightestDimensionResolver implements ContextRewriter {
           CandidateDim dim = i.next();
           if (dimWeightMap.get(dim) > minWeight) {
             LOG.info("Not considering dimtable:" + dim + " from candidate dimension tables as it has more weight:"
-                + dimWeightMap.get(dim) + " minimum:" + minWeight);
+              + dimWeightMap.get(dim) + " minimum:" + minWeight);
             cubeql.addDimPruningMsgs(entry.getKey(), dim.dimtable, new CandidateTablePruneCause(
               CandidateTablePruneCode.MORE_WEIGHT));
             i.remove();

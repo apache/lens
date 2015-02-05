@@ -24,9 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.cube.metadata.UpdatePeriod;
-import org.apache.lens.cube.parse.ORTimeRangeWriter;
-import org.apache.lens.cube.parse.StorageUtil;
-import org.apache.lens.cube.parse.TimeRangeWriter;
+
 import org.testng.Assert;
 
 public class TestORTimeRangeWriter extends TestTimeRangeWriter {
@@ -45,13 +43,13 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateDisjoint(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.twoMonthsBack));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack));
-      parts.add(UpdatePeriod.HOURLY.format().format(CubeTestSetup.now));
+      parts.add(UpdatePeriod.MONTHLY.format().format(CubeTestSetup.TWO_MONTHS_BACK));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(UpdatePeriod.HOURLY.format().format(CubeTestSetup.NOW));
     } else {
-      parts.add(format.format(CubeTestSetup.twoMonthsBack));
-      parts.add(format.format(CubeTestSetup.twodaysBack));
-      parts.add(format.format(CubeTestSetup.now));
+      parts.add(format.format(CubeTestSetup.TWO_MONTHS_BACK));
+      parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(format.format(CubeTestSetup.NOW));
     }
 
     System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
@@ -62,13 +60,13 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateConsecutive(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.oneDayBack));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.twodaysBack));
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.now));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.NOW));
     } else {
-      parts.add(format.format(CubeTestSetup.oneDayBack));
-      parts.add(format.format(CubeTestSetup.twodaysBack));
-      parts.add(format.format(CubeTestSetup.now));
+      parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
+      parts.add(format.format(CubeTestSetup.TWODAYS_BACK));
+      parts.add(format.format(CubeTestSetup.NOW));
     }
 
     System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));
@@ -79,9 +77,9 @@ public class TestORTimeRangeWriter extends TestTimeRangeWriter {
   public void validateSingle(String whereClause, DateFormat format) {
     List<String> parts = new ArrayList<String>();
     if (format == null) {
-      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.oneDayBack));
+      parts.add(UpdatePeriod.DAILY.format().format(CubeTestSetup.ONE_DAY_BACK));
     } else {
-      parts.add(format.format(CubeTestSetup.oneDayBack));
+      parts.add(format.format(CubeTestSetup.ONE_DAY_BACK));
     }
 
     System.out.println("Expected :" + StorageUtil.getWherePartClause("dt", "test", parts));

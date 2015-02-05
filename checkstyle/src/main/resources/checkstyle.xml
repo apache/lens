@@ -125,7 +125,10 @@
           <property name="max" value="500"/>
           <property name="countEmpty" value="false"/>
         </module>
-        <module name="ParameterNumber"/>
+        <!--TODO: remove max = 15 condition. -->
+        <module name="ParameterNumber">
+          <property name="max" value="15" />
+        </module>
         <module name="OuterTypeNumber"/>
 
         <!-- Checks for whitespace                               -->

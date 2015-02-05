@@ -19,13 +19,10 @@
 
 package org.apache.lens.cube.metadata;
 
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -37,13 +34,13 @@ public class TestMetastoreUtil {
     attrs.add(new BaseDimAttribute(new FieldSchema("first", "string", "")));
     attrs.add(new BaseDimAttribute(new FieldSchema("second", "string", "")));
     attrs.add(new BaseDimAttribute(new FieldSchema("biggggger", "string", "")));
-    
+
     List<String> names = MetastoreUtil.getNamedStrs(attrs, 10);
     Assert.assertEquals(names.size(), 3);
     Assert.assertEquals(names.get(0), "first,");
     Assert.assertEquals(names.get(1), "second,");
     Assert.assertEquals(names.get(2), "biggggger");
-    
+
     Map<String, String> props = new HashMap<String, String>();
     MetastoreUtil.addNameStrings(props, "test.key", attrs);
     String propValue = MetastoreUtil.getNamedStringValue(props, "test.key");

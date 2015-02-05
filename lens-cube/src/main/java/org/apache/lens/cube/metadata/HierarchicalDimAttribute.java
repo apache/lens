@@ -77,7 +77,7 @@ public class HierarchicalDimAttribute extends CubeDimAttribute {
         Class<?> clazz = Class.forName(className);
         Constructor<?> constructor;
         constructor = clazz.getConstructor(String.class, Map.class);
-        dim = (CubeDimAttribute) constructor.newInstance(new Object[] { dimName, props });
+        dim = (CubeDimAttribute) constructor.newInstance(new Object[]{dimName, props});
       } catch (ClassNotFoundException e) {
         throw new IllegalArgumentException("Invalid Dimension", e);
       } catch (SecurityException e) {

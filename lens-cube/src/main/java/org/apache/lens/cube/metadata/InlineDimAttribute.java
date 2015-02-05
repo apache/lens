@@ -35,7 +35,7 @@ public class InlineDimAttribute extends BaseDimAttribute {
   }
 
   public InlineDimAttribute(FieldSchema column, String displayString, Date startTime, Date endTime, Double cost,
-      List<String> values) {
+    List<String> values) {
     super(column, displayString, startTime, endTime, cost);
     this.values = values;
   }
@@ -53,7 +53,7 @@ public class InlineDimAttribute extends BaseDimAttribute {
 
   /**
    * This is used only for serializing
-   * 
+   *
    * @param name
    * @param props
    */

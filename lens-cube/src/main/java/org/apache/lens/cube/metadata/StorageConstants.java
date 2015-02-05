@@ -24,17 +24,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StorageConstants {
+public final class StorageConstants {
+  private StorageConstants() {
+
+  }
+
   public static final String DATE_PARTITION_KEY = "dt";
   public static final String STORGAE_SEPARATOR = "_";
   public static final String LATEST_PARTITION_VALUE = "latest";
 
   /**
    * Get the partition spec for latest partition
-   * 
-   * @param The
-   *          partition column for latest spec
-   * 
+   *
+   * @param partCol column for latest spec
    * @return latest partition spec as Map from String to String
    */
   public static String getLatestPartFilter(String partCol) {
@@ -43,7 +45,7 @@ public class StorageConstants {
 
   /**
    * Get the latest partition value as List
-   * 
+   *
    * @return List
    */
   public static List<String> getPartitionsForLatest() {
@@ -54,10 +56,9 @@ public class StorageConstants {
 
   /**
    * Get the partition spec for latest partition
-   * 
-   * @param The
-   *          partition column for latest spec
-   * 
+   *
+   * @param partSpec The latest partition spec
+   * @param partCol  The partition column for latest spec
    * @return latest partition spec as Map from String to String
    */
   public static Map<String, String> getLatestPartSpec(Map<String, String> partSpec, String partCol) {

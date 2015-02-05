@@ -18,21 +18,16 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTION;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
-import org.antlr.runtime.CommonToken;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeFactTable;
+import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
+import org.apache.lens.cube.parse.HQLParser.TreeNode;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -44,16 +39,14 @@ import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
-import org.apache.lens.cube.parse.HQLParser.TreeNode;
+
+import org.antlr.runtime.CommonToken;
 
 /**
  * Holds context of a candidate fact table.
- * 
  */
 class CandidateFact implements CandidateTable {
-  public static Log LOG = LogFactory.getLog(CandidateFact.class.getName());
+  public static final Log LOG = LogFactory.getLog(CandidateFact.class.getName());
   final CubeFactTable fact;
   Set<String> storageTables;
   // flag to know if querying multiple storage tables is enabled for this fact
@@ -153,9 +146,8 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * Update the ASTs to include only the fields queried from this fact, in all
-   * the expressions
-   * 
+   * Update the ASTs to include only the fields queried from this fact, in all the expressions
+   *
    * @param cubeql
    * @throws SemanticException
    */
@@ -180,7 +172,7 @@ class CandidateFact implements CandidateTable {
             // replace the alias node
             ASTNode newAliasNode = new ASTNode(new CommonToken(HiveParser.Identifier, alias));
             this.selectAST.getChild(currentChild).replaceChildren(selectExpr.getChildCount() - 1,
-                selectExpr.getChildCount() - 1, newAliasNode);
+              selectExpr.getChildCount() - 1, newAliasNode);
           }
         } else {
           // add column alias
@@ -320,8 +312,7 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param selectAST
-   *          the selectAST to set
+   * @param selectAST the selectAST to set
    */
   public void setSelectAST(ASTNode selectAST) {
     this.selectAST = selectAST;
@@ -335,8 +326,7 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param whereAST
-   *          the whereAST to set
+   * @param whereAST the whereAST to set
    */
   public void setWhereAST(ASTNode whereAST) {
     this.whereAST = whereAST;
@@ -350,8 +340,7 @@ class CandidateFact implements CandidateTable {
   }
 
   /**
-   * @param havingAST
-   *          the havingAST to set
+   * @param havingAST the havingAST to set
    */
   public void setHavingAST(ASTNode havingAST) {
     this.havingAST = havingAST;
@@ -386,7 +375,7 @@ class CandidateFact implements CandidateTable {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
-    if(!dbResolved) {
+    if (!dbResolved) {
       singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
     }
     List<FieldSchema> partitionKeys = null;
@@ -395,8 +384,8 @@ class CandidateFact implements CandidateTable {
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
-    for(FieldSchema fs: partitionKeys) {
-      if(cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(baseTable, fs.getName()))) {
+    for (FieldSchema fs : partitionKeys) {
+      if (cubeTimeDimensions.contains(CubeQueryContext.getTimeDimOfPartitionColumn(baseTable, fs.getName()))) {
         timePartDimensions.add(fs.getName());
       }
     }

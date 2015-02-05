@@ -23,10 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.*;
+
+import org.apache.hadoop.conf.Configuration;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -36,15 +38,15 @@ import org.testng.annotations.Test;
 public class TestMinCostSelector {
 
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
-                                             Map<LensDriver, String> driverQueries) throws LensException {
-    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf,  driverQueries.keySet());
+    Map<LensDriver, String> driverQueries) throws LensException {
+    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
     ctx.setDriverQueriesAndPlans(driverQueries);
     return ctx;
   }
 
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
-      List<LensDriver> drivers, Map<LensDriver, String> driverQueries) throws LensException {
-    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf,  driverQueries.keySet());
+    List<LensDriver> drivers, Map<LensDriver, String> driverQueries) throws LensException {
+    MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
     ctx.setDriverQueriesAndPlans(driverQueries);
     return ctx;
   }

@@ -19,5 +19,5 @@
 package org.apache.lens.cube.metadata;
 
 public interface Named {
-  public String getName();
+  String getName();
 }

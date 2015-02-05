@@ -39,7 +39,7 @@ public final class ColumnMeasure extends CubeMeasure {
   }
 
   public ColumnMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
-      Date startTime, Date endTime, Double cost, Double min, Double max) {
+    Date startTime, Date endTime, Double cost, Double min, Double max) {
     super(column, displayString, formatString, aggregate, unit, startTime, endTime, cost, min, max);
   }
 

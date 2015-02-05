@@ -19,38 +19,40 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.DateUtil.resolveDate;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.lens.cube.parse.DateUtil;
+
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-import static org.apache.lens.cube.parse.DateUtil.resolveDate;
-
 /**
  * Unit tests for cube DateUtil class TestDateUtil.
- * 
  */
 public class TestDateUtil {
-  public static final String[] testpairs = { "2013-Jan-01", "2013-Jan-31", "2013-Jan-01", "2013-May-31", "2013-Jan-01",
-      "2013-Dec-31", "2013-Feb-01", "2013-Apr-25", "2012-Feb-01", "2013-Feb-01", "2011-Feb-01", "2013-Feb-01",
-      "2013-Jan-02", "2013-Feb-02", "2013-Jan-02", "2013-Mar-02", };
+  public static final String[] TEST_PAIRS = {
+    "2013-Jan-01", "2013-Jan-31", "2013-Jan-01", "2013-May-31",
+    "2013-Jan-01", "2013-Dec-31", "2013-Feb-01", "2013-Apr-25",
+    "2012-Feb-01", "2013-Feb-01", "2011-Feb-01", "2013-Feb-01",
+    "2013-Jan-02", "2013-Feb-02", "2013-Jan-02", "2013-Mar-02",
+  };
 
   public static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MMM-dd");
 
-  private Date pairs[];
+  private Date[] pairs;
 
   @BeforeTest
   public void setUp() {
-    pairs = new Date[testpairs.length];
-    for (int i = 0; i < testpairs.length; i++) {
+    pairs = new Date[TEST_PAIRS.length];
+    for (int i = 0; i < TEST_PAIRS.length; i++) {
       try {
-        pairs[i] = DATE_FMT.parse(testpairs[i]);
+        pairs[i] = DATE_FMT.parse(TEST_PAIRS[i]);
       } catch (ParseException e) {
         e.printStackTrace();
       }
@@ -61,15 +63,15 @@ public class TestDateUtil {
   public void testMonthsBetween() throws Exception {
     int i = 0;
     Assert.assertEquals(1, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
-        "2013-Jan-01 to 2013-Jan-31");
+      "2013-Jan-01 to 2013-Jan-31");
 
     i += 2;
     Assert.assertEquals(5, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
-        "2013-Jan-01 to 2013-May-31");
+      "2013-Jan-01 to 2013-May-31");
 
     i += 2;
     Assert.assertEquals(12, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
-        "2013-Jan-01 to 2013-Dec-31");
+      "2013-Jan-01 to 2013-Dec-31");
 
     i += 2;
     Assert.assertEquals(2, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2013-Feb-01 to 2013-Apr-25");
@@ -97,7 +99,7 @@ public class TestDateUtil {
 
     i += 2;
     Assert.assertEquals(4, DateUtil.getQuartersBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
-        "2013-Jan-01 to 2013-Dec-31");
+      "2013-Jan-01 to 2013-Dec-31");
 
     i += 2;
     Assert.assertEquals(0, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2013-Feb-01 to 2013-Apr-25");
@@ -119,7 +121,7 @@ public class TestDateUtil {
 
     i += 2;
     Assert.assertEquals(1, DateUtil.getYearsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)), ""
-        + pairs[i] + "->" + pairs[i + 1]);
+      + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
     Assert.assertEquals(0, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);

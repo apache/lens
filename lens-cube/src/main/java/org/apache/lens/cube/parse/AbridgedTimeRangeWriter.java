@@ -19,10 +19,10 @@
 
 package org.apache.lens.cube.parse;
 
+import java.util.*;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-
-import java.util.*;
 
 /**
  * Collapses the time range filters using IN operators
@@ -30,6 +30,7 @@ import java.util.*;
 public class AbridgedTimeRangeWriter implements TimeRangeWriter {
   /**
    * Return IN clause for the partitions selected in the cube query
+   *
    * @param cubeQueryContext
    * @param tableName
    * @param parts
@@ -38,8 +39,8 @@ public class AbridgedTimeRangeWriter implements TimeRangeWriter {
    */
   @Override
   public String getTimeRangeWhereClause(CubeQueryContext cubeQueryContext,
-                                        String tableName,
-                                        Set<FactPartition> parts) throws SemanticException {
+    String tableName,
+    Set<FactPartition> parts) throws SemanticException {
     if (parts == null || parts.isEmpty()) {
       return "";
     }

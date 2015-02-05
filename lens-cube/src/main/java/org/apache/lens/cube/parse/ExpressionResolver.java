@@ -19,17 +19,8 @@
 
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
-import org.antlr.runtime.CommonToken;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.AbstractBaseTable;
 import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.Dimension;
@@ -37,9 +28,17 @@ import org.apache.lens.cube.metadata.ExprColumn;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.ParseException;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import org.antlr.runtime.CommonToken;
+
 /**
  * Replaces expression with its AST in all query ASTs
- * 
  */
 class ExpressionResolver implements ContextRewriter {
 

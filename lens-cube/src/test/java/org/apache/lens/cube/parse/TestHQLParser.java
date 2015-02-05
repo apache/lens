@@ -23,7 +23,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.lens.cube.parse.HQLParser;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -63,7 +63,7 @@ public class TestHQLParser {
   @Test
   public void testCaseStatementGetString() throws Exception {
     String query = "SELECT  " + "CASE (col1 * 100)/200 + 5 " + "WHEN 'ABC' THEN 'def' " + "WHEN 'EFG' THEN 'hij' "
-        + "ELSE 'XyZ' " + "END AS ComplexCaseStatement FROM FOO";
+      + "ELSE 'XyZ' " + "END AS ComplexCaseStatement FROM FOO";
 
     ASTNode tree = HQLParser.parseHQL(query);
     ASTNode select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
@@ -72,10 +72,10 @@ public class TestHQLParser {
     System.out.println(selectStr);
     Assert.assertEquals("case ((( col1  *  100 ) /  200 ) +  5 ) "
         + "when  'ABC'  then  'def'  when  'EFG'  then  'hij'  " + "else  'XyZ'  end  complexcasestatement",
-        selectStr.trim());
+      selectStr.trim());
 
     String q2 = "SELECT " + "CASE WHEN col1 = 'abc' then 'def' " + "when col1 = 'ghi' then 'jkl' "
-        + "else 'none' END AS Complex_Case_Statement_2" + " from FOO";
+      + "else 'none' END AS Complex_Case_Statement_2" + " from FOO";
 
     tree = HQLParser.parseHQL(q2);
     select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
@@ -83,10 +83,10 @@ public class TestHQLParser {
     System.out.println("reconstructed clause 2");
     System.out.println(selectStr);
     Assert.assertEquals("case  when ( col1  =  'abc' ) then  'def'  " + "when ( col1  =  'ghi' ) then  'jkl'  "
-        + "else  'none'  end  complex_case_statement_2", selectStr.trim());
+      + "else  'none'  end  complex_case_statement_2", selectStr.trim());
 
     String q3 = "SELECT  " + "CASE (col1 * 100)/200 + 5 " + "WHEN 'ABC' THEN 'def' " + "WHEN 'EFG' THEN 'hij' "
-        + "END AS ComplexCaseStatement FROM FOO";
+      + "END AS ComplexCaseStatement FROM FOO";
 
     tree = HQLParser.parseHQL(q3);
     select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
@@ -94,10 +94,10 @@ public class TestHQLParser {
     System.out.println("reconstructed clause ");
     System.out.println(selectStr);
     Assert.assertEquals("case ((( col1  *  100 ) /  200 ) +  5 ) " + "when  'ABC'  then  'def'  when  'EFG'  "
-        + "then  'hij'  end  complexcasestatement", selectStr.trim());
+      + "then  'hij'  end  complexcasestatement", selectStr.trim());
 
     String q4 = "SELECT " + "CASE WHEN col1 = 'abc' then 'def' " + "when col1 = 'ghi' then 'jkl' "
-        + "END AS Complex_Case_Statement_2" + " from FOO";
+      + "END AS Complex_Case_Statement_2" + " from FOO";
 
     tree = HQLParser.parseHQL(q4);
     select = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
@@ -105,7 +105,7 @@ public class TestHQLParser {
     System.out.println("reconstructed clause 2");
     System.out.println(selectStr);
     Assert.assertEquals("case  when ( col1  =  'abc' ) then  " + "'def'  when ( col1  =  'ghi' ) then  'jkl'  "
-        + "end  complex_case_statement_2", selectStr.trim());
+      + "end  complex_case_statement_2", selectStr.trim());
 
   }
 
@@ -148,13 +148,13 @@ public class TestHQLParser {
   @Test
   public void testBinaryOperators() throws Exception {
     String q1 = "SELECT * FROM FOO WHERE " + "(A <=> 10) AND (B & C = 10) AND (D | E = 10) "
-        + "AND (F ^ G = 10) AND (H % 2 = 1) AND  (~I = 10)" + "AND (!J) AND (NOT K) AND TRUE AND FALSE";
+      + "AND (F ^ G = 10) AND (H % 2 = 1) AND  (~I = 10)" + "AND (!J) AND (NOT K) AND TRUE AND FALSE";
 
     ASTNode where = HQLParser.findNodeByPath(HQLParser.parseHQL(q1), TOK_INSERT, TOK_WHERE);
     String whereStr = HQLParser.getString(where);
     String expected = "(((((((((( a  <=>  10 ) and (( b  &  c ) =  10 )) "
-        + "and (( d  |  e ) =  10 )) and (( f  ^  g ) =  10 )) "
-        + "and (( h  %  2 ) =  1 )) and ( ~  i  =  10 )) and  not  j ) " + "and  not  k ) and  true ) and  false )";
+      + "and (( d  |  e ) =  10 )) and (( f  ^  g ) =  10 )) "
+      + "and (( h  %  2 ) =  1 )) and ( ~  i  =  10 )) and  not  j ) " + "and  not  k ) and  true ) and  false )";
     System.out.println(whereStr);
     Assert.assertEquals(expected, whereStr.trim());
   }
@@ -219,7 +219,8 @@ public class TestHQLParser {
 
   @Test
   public void testInnerJoin() throws Exception {
-    String query = "select tab1.a, tab2.b from table1 tab1 inner join table tab2 on tab1.id = tab2.id where tab1.a > 123";
+    String query
+      = "select tab1.a, tab2.b from table1 tab1 inner join table tab2 on tab1.id = tab2.id where tab1.a > 123";
     ASTNode node = HQLParser.parseHQL(query);
     ASTNode temp = HQLParser.findNodeByPath(node, TOK_FROM, TOK_JOIN);
     String expected = " table1  tab1  table  tab2 (( tab1 . id ) = ( tab2 . id ))";
@@ -288,7 +289,7 @@ public class TestHQLParser {
 
     // Validate returned string is parseable
     HQLParser.printAST(HQLParser.findNodeByPath(HQLParser.parseHQL("SELECT " + genQuery2 + " FROM table1"), TOK_INSERT,
-        TOK_SELECT));
+      TOK_SELECT));
   }
 
   @Test

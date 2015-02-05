@@ -18,13 +18,17 @@
  */
 package org.apache.lens.cube.parse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.lens.cube.metadata.StorageConstants;
-
 import java.util.*;
 
-class StorageUtil {
+import org.apache.lens.cube.metadata.StorageConstants;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+public final class StorageUtil {
+  private StorageUtil() {
+
+  }
   private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
   public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
@@ -52,7 +56,7 @@ class StorageUtil {
     StringBuilder sb = new StringBuilder();
     String sep = "";
     for (String timePartCol : timedDimensions) {
-      if(!timePartCol.equals(partCol)) {
+      if (!timePartCol.equals(partCol)) {
         sb.append(sep).append(alias).append(".").append(timePartCol)
           .append(" != '").append(StorageConstants.LATEST_PARTITION_VALUE).append("'");
         sep = " AND ";
@@ -142,9 +146,11 @@ class StorageUtil {
     }
     return Collections.singletonMap(maxCoveringStorage, maxCoveringSet);
   }
+
   public static String getWhereClause(String clause, String alias) {
     return String.format(clause, alias);
   }
+
   public static String getWhereClause(CandidateDim dim, String alias) {
     return getWhereClause(dim.whereClause, alias);
   }

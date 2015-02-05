@@ -33,7 +33,7 @@ public abstract class CubeMeasure extends CubeColumn {
   private final Double max;
 
   protected CubeMeasure(FieldSchema column, String displayString, String formatString, String aggregate, String unit,
-      Date startTime, Date endTime, Double cost, Double min, Double max) {
+    Date startTime, Date endTime, Double cost, Double min, Double max) {
     super(column.getName(), column.getComment(), displayString, startTime, endTime, cost);
     this.column = column;
     assert (column != null);
@@ -54,11 +54,10 @@ public abstract class CubeMeasure extends CubeColumn {
     this.unit = props.get(MetastoreUtil.getMeasureUnitPropertyKey(name));
     String minStr = props.get(MetastoreUtil.getMeasureMinPropertyKey(name));
     String maxStr = props.get(MetastoreUtil.getMeasureMaxPropertyKey(name));
-    if(minStr != null && maxStr != null && !minStr.isEmpty() && !maxStr.isEmpty()) {
+    if (minStr != null && maxStr != null && !minStr.isEmpty() && !maxStr.isEmpty()) {
       this.min = Double.parseDouble(minStr);
       this.max = Double.parseDouble(maxStr);
-    }
-    else{
+    } else {
       this.min = null;
       this.max = null;
     }

@@ -27,141 +27,132 @@ public interface CubeInterface extends Named {
 
   /**
    * Get all measures of the cube
-   * 
+   *
    * @return set of {@link CubeMeasure}
    */
-  public Set<CubeMeasure> getMeasures();
+  Set<CubeMeasure> getMeasures();
 
   /**
    * Get all dimension attributes of the cube
-   * 
+   *
    * @return set {@link CubeDimAttribute}
    */
-  public Set<CubeDimAttribute> getDimAttributes();
+  Set<CubeDimAttribute> getDimAttributes();
 
   /**
    * Get all expressions defined on the cube
-   * 
+   *
    * @return set {@link ExprColumn}
    */
-  public Set<ExprColumn> getExpressions();
+  Set<ExprColumn> getExpressions();
 
   /**
    * Get all joinchains defined on the cube
    *
    * @return set {@link JoinChain}
    */
-  public Set<JoinChain> getJoinChains();
+  Set<JoinChain> getJoinChains();
 
   /**
    * Get dimension attribute given by name
-   * 
-   * @param dimAttrName
-   *          dimension attribute name
-   * 
+   *
+   * @param dimAttrName dimension attribute name
    * @return A {@link CubeDimAttribute} object
    */
-  public CubeDimAttribute getDimAttributeByName(String dimAttrName);
+  CubeDimAttribute getDimAttributeByName(String dimAttrName);
 
   /**
    * Get measure by given by name
-   * 
-   * @param msrName
-   *          Measure name
-   * 
+   *
+   * @param msrName Measure name
    * @return A {@link CubeMeasure} object
    */
-  public CubeMeasure getMeasureByName(String msrName);
+  CubeMeasure getMeasureByName(String msrName);
 
   /**
    * Get expression by given by name
-   * 
-   * @param exprName
-   *          Expression name
-   * 
+   *
+   * @param exprName Expression name
    * @return A {@link ExprColumn} object
    */
-  public ExprColumn getExpressionByName(String exprName);
+  ExprColumn getExpressionByName(String exprName);
 
   /**
    * Get joinchain by given by name
    *
    * @param chainName Chain name
-   *
    * @return A {@link JoinChain} object
    */
-  public JoinChain getChainByName(String chainName);
+  JoinChain getChainByName(String chainName);
 
   /**
    * Get cube column given by column name.
-   * 
+   * <p/>
    * It can be a measure, dimension attribute or an expression.
-   * 
-   * @param colName
-   *          Column name
-   * 
+   *
+   * @param colName Column name
    * @return A {@link CubeColumn} object
    */
-  public CubeColumn getColumnByName(String colName);
+  CubeColumn getColumnByName(String colName);
 
   /**
    * Get all timed dimensions of cube
-   * 
+   *
    * @return Set of strings
    */
-  public Set<String> getTimedDimensions();
+  Set<String> getTimedDimensions();
 
   /**
    * Is the cube a derived cube or base cube
-   * 
+   *
    * @return true if cube is derived, false if it is base
    */
-  public boolean isDerivedCube();
+  boolean isDerivedCube();
 
   /**
    * Get all measure names
-   * 
+   *
    * @return Set of strings
    */
-  public Set<String> getMeasureNames();
+  Set<String> getMeasureNames();
 
   /**
    * Get all dimension attribute names
-   * 
+   *
    * @return Set of strings
    */
-  public Set<String> getDimAttributeNames();
+  Set<String> getDimAttributeNames();
 
   /**
    * Get all join chain names
    *
    * @return Set of strings
    */
-  public Set<String> getJoinChainNames();
+  Set<String> getJoinChainNames();
 
   /**
    * Get all expression names
    *
    * @return Set of strings
    */
-  public Set<String> getExpressionNames();
+  Set<String> getExpressionNames();
 
   /**
    * Get all field names reachable from cube
    *
    * @return Set of strings
    */
-  public Set<String> getAllFieldNames();
+  Set<String> getAllFieldNames();
 
   /**
    * Whether all the fields of cube can be queried.
-   * 
-   * If false, the fields can queried through derived cubes. Users can look at
-   * derived cube fields to know which all fields can be queried together.
-   * 
+   * <p/>
+   * If false, the fields can queried through derived cubes. Users can look at derived cube fields to know which all
+   * fields can be queried together.
+   * <p/>
    * If true, all the fields can be directly queried.
-   * 
+   *
    * @return true or false
    */
-  public boolean allFieldsQueriable();
+  boolean allFieldsQueriable();
 }

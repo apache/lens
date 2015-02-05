@@ -24,7 +24,8 @@
     <name>lens.cube.query.disable.auto.join</name>
     <value>true</value>
     <description>Tells whether to disable automatic resolution of join conditions between tables involved.
- To enable automatic resolution, this value should be false.</description>
+      To enable automatic resolution, this value should be false.
+    </description>
   </property>
 
   <property>
@@ -37,51 +38,66 @@
     <name>lens.cube.query.disable.aggregate.resolver</name>
     <value>true</value>
     <description>Tells whether to disable automatic resolution of aggregations for measures in a cube.
- To enable automatic resolution, this value should be false.</description>
+      To enable automatic resolution, this value should be false.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.promote.groupby.toselect</name>
     <value>false</value>
-    <description>Tells whether to promote group by clauses to be promoted to select expressions if they are already not projected.
- To enable automatic promotion, this value should be true.</description>
+    <description>Tells whether to promote group by clauses to be promoted to select expressions if they are already not
+      projected.
+      To enable automatic promotion, this value should be true.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.promote.select.togroupby</name>
     <value>false</value>
-    <description>Tells whether to promote select expressions which is not inside any aggregate, to be promoted to groupby clauses, if they are already not part of groupby clauses.
- To enable automatic promotion, this value should be true.</description>
+    <description>Tells whether to promote select expressions which is not inside any aggregate, to be promoted to
+      groupby clauses, if they are already not part of groupby clauses.
+      To enable automatic promotion, this value should be true.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.valid.dim.storgaetables</name>
     <value></value>
-    <description>List of comma separated dimension storage tables that are valid. If no value is specified, all tables are valid</description>
+    <description>List of comma separated dimension storage tables that are valid. If no value is specified, all tables
+      are valid
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.driver.supported.storages</name>
     <value></value>
-    <description>List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid</description>
+    <description>List of comma separated storage names that supported by a driver. If no value is specified, all
+      storages are valid
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.valid.${cubename}.facttables</name>
     <value></value>
-    <description>List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables are valid</description>
+    <description>List of comma separated fact tables that are valid for cube. If no value is specified, all fact tables
+      are valid
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.valid.fact.${facttable}.storagetables</name>
     <value></value>
-    <description>List of comma separated storage tables that are valid for a fact. If no value is specified, all storage tables are valid</description>
+    <description>List of comma separated storage tables that are valid for a fact. If no value is specified, all storage
+      tables are valid
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.valid.fact.${facttable}.storage.${storagename}.updateperiods</name>
     <value></value>
-    <description>List of comma separated update periods that are valid for a fact on a storage. If no value is specified, all update periods are valid</description>
+    <description>List of comma separated update periods that are valid for a fact on a storage. If no value is
+      specified, all update periods are valid
+    </description>
   </property>
 
   <property>
@@ -93,7 +109,9 @@
   <property>
     <name>lens.cube.query.nonexisting.partitions</name>
     <value></value>
-    <description>The list of comma separated non existing partitions, if query can run with partial data. The value will be set by the cube query rewriter</description>
+    <description>The list of comma separated non existing partitions, if query can run with partial data. The value will
+      be set by the cube query rewriter
+    </description>
   </property>
 
   <property>
@@ -105,48 +123,67 @@
   <property>
     <name>lens.cube.query.max.interval</name>
     <value></value>
-    <description>Maximum value of the update period that the query timed dimensions can take values of. For example, if query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be picked.</description>
+    <description>Maximum value of the update period that the query timed dimensions can take values of. For example, if
+      query involves month ranges, user can say query maximum interval is daily, then no monthly partitions will be
+      picked.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.process.time.partition.column</name>
     <value></value>
-    <description>The column name which is a process time column. If process time column is specified, query rewriter will look ahead the partitions of other timed dimensions inside this column.</description>
+    <description>The column name which is a process time column. If process time column is specified, query rewriter
+      will look ahead the partitions of other timed dimensions inside this column.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.lookahead.ptparts.forinterval.${interval}</name>
     <value>1</value>
-    <description>The value of number of lookahead process time partitions for interval specified. Interval can be any Update period.</description>
+    <description>The value of number of lookahead process time partitions for interval specified. Interval can be any
+      Update period.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.replace.timedim</name>
     <value>true</value>
-    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding partition column name.</description>
+    <description>Tells whether timedim attribute queried in the time range should be replaced with its corresponding
+      partition column name.
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.pick.lightest.fact.first</name>
     <value>false</value>
-    <description>If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will be resolved to check all partitions exist and then pick lightest fact among candidates</description>
+    <description>If set to true, lightest fact will be resolved first than resolving storages. Otherwise, storages will
+      be resolved to check all partitions exist and then pick lightest fact among candidates
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.time.range.writer.class</name>
     <value>org.apache.lens.cube.parse.ORTimeRangeWriter</value>
-    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and org.apache.lens.cube.parse.BetweenTimeRangeWriter </description>
+    <description>The timerange writer class which specifies how the resolved partitions in timeranges should be written
+      in final query. Available writers are org.apache.lens.cube.parse.ORTimeRangeWriter and
+      org.apache.lens.cube.parse.BetweenTimeRangeWriter
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.partition.where.clause.format</name>
     <value></value>
-    <description>The simple date format of how the queried partition should be put in where clause. If nothing is specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition </description>
+    <description>The simple date format of how the queried partition should be put in where clause. If nothing is
+      specified, it will use the format from org.apache.lens.cube.metadata.UpdatePeriod for each type of partition
+    </description>
   </property>
 
   <property>
     <name>lens.cube.query.enable.attrfields.add.distinct</name>
     <value>true</value>
-    <description>When the query has only attribute fields projected from cube and the flag is set to true, distinct clause will be added for the projection so that no duplicate values will be projected. If flag is set to false, projection wont be changed, result might include duplicate values.</description>
+    <description>When the query has only attribute fields projected from cube and the flag is set to true, distinct
+      clause will be added for the projection so that no duplicate values will be projected. If flag is set to false,
+      projection wont be changed, result might include duplicate values.
+    </description>
   </property>
 </configuration>

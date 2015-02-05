@@ -20,14 +20,14 @@ package org.apache.lens.cube.parse;
 
 import java.util.Collection;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.Dimension;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hive.ql.session.SessionState;
+
 /**
  * Holds context of a candidate dim table.
- * 
  */
 class CandidateDim implements CandidateTable {
   final CubeDimensionTable dimtable;

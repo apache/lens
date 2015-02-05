@@ -18,11 +18,7 @@
  */
 package org.apache.lens.cube.metadata;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -33,22 +29,22 @@ public final class CubeDimensionTable extends AbstractCubeTable {
   private final Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
-      Map<String, UpdatePeriod> snapshotDumpPeriods) {
+    Map<String, UpdatePeriod> snapshotDumpPeriods) {
     this(dimName, dimTblName, columns, weight, snapshotDumpPeriods, new HashMap<String, String>());
   }
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
-      Set<String> storages) {
+    Set<String> storages) {
     this(dimName, dimTblName, columns, weight, getSnapshotDumpPeriods(storages), new HashMap<String, String>());
   }
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
-      Set<String> storages, Map<String, String> properties) {
+    Set<String> storages, Map<String, String> properties) {
     this(dimName, dimTblName, columns, weight, getSnapshotDumpPeriods(storages), properties);
   }
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
-      Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
+    Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
     super(dimTblName, columns, properties, weight);
     this.dimName = dimName;
     if (snapshotDumpPeriods != null) {
@@ -95,7 +91,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
   }
 
   private static void setSnapshotPeriods(String name, Map<String, String> props,
-      Map<String, UpdatePeriod> snapshotDumpPeriods) {
+    Map<String, UpdatePeriod> snapshotDumpPeriods) {
     if (snapshotDumpPeriods != null) {
       props.put(MetastoreUtil.getDimensionStorageListKey(name), MetastoreUtil.getStr(snapshotDumpPeriods.keySet()));
       for (Map.Entry<String, UpdatePeriod> entry : snapshotDumpPeriods.entrySet()) {
@@ -130,6 +126,11 @@ public final class CubeDimensionTable extends AbstractCubeTable {
       return dumpPeriods;
     }
     return null;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
   }
 
   @Override
@@ -171,7 +172,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   /**
    * Alter the dimension name that the table belongs to
-   * 
+   *
    * @param newDimName
    */
   public void alterUberDim(String newDimName) {
@@ -181,11 +182,9 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   /**
    * Alter snapshot dump period of a storage
-   * 
-   * @param storage
-   *          Storage name
-   * @param period
-   *          The new value
+   *
+   * @param storage Storage name
+   * @param period  The new value
    * @throws HiveException
    */
   public void alterSnapshotDumpPeriod(String storage, UpdatePeriod period) throws HiveException {

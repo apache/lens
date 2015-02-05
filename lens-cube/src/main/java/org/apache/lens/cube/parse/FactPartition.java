@@ -26,7 +26,7 @@ import java.util.Set;
 
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
-class FactPartition implements Comparable<FactPartition> {
+public class FactPartition implements Comparable<FactPartition> {
   private final String partCol;
   private final Date partSpec;
   private final Set<String> storageTables = new LinkedHashSet<String>();
@@ -34,7 +34,8 @@ class FactPartition implements Comparable<FactPartition> {
   private final FactPartition containingPart;
   private final DateFormat partFormat;
 
-  FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart, DateFormat partFormat) {
+  FactPartition(String partCol, Date partSpec, UpdatePeriod period,
+    FactPartition containingPart, DateFormat partFormat) {
     this.partCol = partCol;
     this.partSpec = partSpec;
     this.period = period;
@@ -43,7 +44,7 @@ class FactPartition implements Comparable<FactPartition> {
   }
 
   FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart,
-      DateFormat partFormat, Set<String> storageTables) {
+    DateFormat partFormat, Set<String> storageTables) {
     this(partCol, partSpec, period, containingPart, partFormat);
     this.storageTables.addAll(storageTables);
   }

@@ -24,44 +24,42 @@ import org.apache.lens.cube.metadata.AbstractCubeTable;
 
 /**
  * Candidate table interface
- * 
  */
-interface CandidateTable {
+public interface CandidateTable {
 
   /**
    * Get storage string of the base table alias passed
-   * 
+   *
    * @param alias
-   * 
    * @return storage string
    */
-  public String getStorageString(String alias);
+  String getStorageString(String alias);
 
   /**
    * Get candidate table
-   * 
+   *
    * @return Candidate fact or dim table
    */
-  public AbstractCubeTable getTable();
+  AbstractCubeTable getTable();
 
   /**
    * Get base table of the candidate table
-   * 
+   *
    * @return Cube or DerivedCube or Dimesions
    */
-  public AbstractCubeTable getBaseTable();
+  AbstractCubeTable getBaseTable();
 
   /**
    * Get name of the candidate table
-   * 
+   *
    * @return name
    */
-  public String getName();
+  String getName();
 
   /**
    * Get columns of candidate table
-   * 
+   *
    * @return set or list of columns
    */
-  public Collection<String> getColumns();
+  Collection<String> getColumns();
 }

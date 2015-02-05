@@ -48,7 +48,7 @@ public class BaseDimAttribute extends CubeDimAttribute {
 
   /**
    * This is used only for serializing
-   * 
+   *
    * @param name
    * @param props
    */

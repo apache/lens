@@ -23,20 +23,21 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.Dimension;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.metadata.Dimension;
 
 /**
- * Writes a join query with all the facts involved, with where, groupby and
- * having expressions pushed down to the fact queries.
+ * Writes a join query with all the facts involved, with where, groupby and having expressions pushed down to the fact
+ * queries.
  */
 class MultiFactHQLContext extends SimpleHQLContext {
 
-  public static Log LOG = LogFactory.getLog(MultiFactHQLContext.class.getName());
+  public static final Log LOG = LogFactory.getLog(MultiFactHQLContext.class.getName());
 
   private Map<Dimension, CandidateDim> dimsToQuery;
   private Set<CandidateFact> facts;
@@ -44,7 +45,7 @@ class MultiFactHQLContext extends SimpleHQLContext {
   private Map<CandidateFact, Set<Dimension>> factDimMap;
 
   MultiFactHQLContext(Set<CandidateFact> facts, Map<Dimension, CandidateDim> dimsToQuery,
-      Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
+    Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
     super();
     this.query = query;
     this.facts = facts;
@@ -96,10 +97,10 @@ class MultiFactHQLContext extends SimpleHQLContext {
     for (int i = 0; i < query.getSelectAST().getChildCount(); i++) {
       if (selectToFactIndex.get(i) == null) {
         throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT, HQLParser.getString((ASTNode) query
-            .getSelectAST().getChild(i)));
+          .getSelectAST().getChild(i)));
       }
       select.append("mq").append(selectToFactIndex.get(i)).append(".").append(query.getSelectAlias(i)).append(" ")
-          .append(query.getSelectFinalAlias(i));
+        .append(query.getSelectFinalAlias(i));
       if (i != query.getSelectAST().getChildCount() - 1) {
         select.append(", ");
       }

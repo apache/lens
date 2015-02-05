@@ -28,7 +28,7 @@ public abstract class CubeDimAttribute extends CubeColumn {
   }
 
   public CubeDimAttribute(String name, String description, String displayString, Date startTime, Date endTime,
-      Double cost) {
+    Double cost) {
     super(name, description, displayString, startTime, endTime, cost);
   }
 

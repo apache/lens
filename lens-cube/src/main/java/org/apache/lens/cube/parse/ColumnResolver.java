@@ -18,24 +18,19 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_ALLCOLREF;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTION;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTIONSTAR;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.HashSet;
 import java.util.Set;
+
+import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
+import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
-import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
 class ColumnResolver implements ContextRewriter {
 
@@ -156,7 +151,7 @@ class ColumnResolver implements ContextRewriter {
   // ** If alias has spaces, select alias is constructed as 'expr' + index of
   // the expression
   // and user given alias is the final alias of the expression.
-  private static String SELECT_ALIAS_PREFIX = "expr";
+  private static final String SELECT_ALIAS_PREFIX = "expr";
 
   private void getColsForSelectTree(final CubeQueryContext cubeql) throws SemanticException {
     int exprInd = 1;
@@ -229,7 +224,7 @@ class ColumnResolver implements ContextRewriter {
   }
 
   private static void addColumnsForSelectExpr(final CubeQueryContext cubeql, ASTNode node, ASTNode parent,
-      Set<String> cols) {
+    Set<String> cols) {
     if (node.getToken().getType() == TOK_TABLE_OR_COL && (parent != null && parent.getToken().getType() != DOT)) {
       // Take child ident.totext
       ASTNode ident = (ASTNode) node.getChild(0);

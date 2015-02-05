@@ -25,15 +25,10 @@ import java.util.List;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
-import org.apache.hadoop.hive.ql.parse.ASTNode;
-import org.apache.hadoop.hive.ql.parse.ParseDriver;
-import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.ParseUtils;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
+import org.apache.hadoop.hive.ql.parse.*;
 
 /**
  * Rewrites given cube query into simple storage table HQL.
- * 
  */
 public class CubeQueryRewriter {
   private final Configuration conf;
@@ -51,63 +46,63 @@ public class CubeQueryRewriter {
       // IOException is ignorable
     }
     lightFactFirst =
-        conf.getBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, CubeQueryConfUtil.DEFAULT_LIGHTEST_FACT_FIRST);
+      conf.getBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, CubeQueryConfUtil.DEFAULT_LIGHTEST_FACT_FIRST);
     setupRewriters();
   }
 
   /*
    * Here is the rewriter flow.
-   * 
+   *
    * Expression resolver: replaces the queried expression columns with their
    * expression ASTs in the query AST.
-   * 
+   *
    * ColumnResolver : ColumnResolver finds all the columns in the query AST
-   * 
+   *
    * AliasReplacer: - Finds queried column to table alias. - Finds queried dim
    * attributes and queried measures. - Does queried field validation wrt
    * derived cubes, if all fields of queried cube cannot be queried together. -
    * Replaces all the columns in all expressions with tablealias.column
-   * 
+   *
    * DenormalizationResolver: Phase 1: Finds all the queried column references
    * if any.
-   * 
+   *
    * CandidateTableResolver: Phase 1: - Prune candidate fact tables if queried
    * dim attributes are not present. - Also Figures out if queried column is not
    * part of candidate table, but it is a denormalized field which can reached
    * through a reference - Finds all the candidate fact sets containing queried
    * measures. Prunes facts which do not contain any of the queried measures.
-   * 
+   *
    * JoinResolver : - Finds all the join chains for between tables queried.
-   * 
+   *
    * TimerangeResolver : - Finds all timeranges in the query and does validation
    * wrt the queried field's life and the range queried
-   * 
+   *
    * CandidateTableResolver: Phase 2: - Prunes candidates tables if required
    * join columns are not part of candidate tables - Required source
    * columns(join columns) for reaching a denormalized field, are not part of
    * candidate tables - Required denormalized fields are not part of refered
    * tables, there by all the candidates which are using denormalized fields.
-   * 
+   *
    * AggregateResolver : - If non default aggregate or no aggregate queried for
    * a measure, it prunes all aggregate facts from candidates. - Replaces
    * measures with default aggregates. if enabled
-   * 
+   *
    * GroupbyResolver : - Promotes select to groupby and groupby to select, if
    * enabled
-   * 
+   *
    * StorageTableResolver : - Resolves storages and partitions for all candidate
    * tables. Prunes candidates if not storages are available.
-   * 
+   *
    * Whenever a candidate fact is pruned (because of no storages, no default
    * aggregate and etc), the sets containing the fact are also pruned.
-   * 
+   *
    * LeastPartitionResolver and LightestFactResolver work on candidate fact sets
    * and considers sets with least number of partitions required and lightest
    * facts respectively.
-   * 
+   *
    * If LightestFact first flag is enabled, LightestFactResolver is applied
    * before StorageTableResolver.
-   * 
+   *
    * Once all rewriters are done, finally picks up one of the available
    * candidate sets to answer the query, after all the resolvers are done. Once
    * the final candidate fact set is picked, if number of elements in the fact

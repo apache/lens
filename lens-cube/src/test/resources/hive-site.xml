@@ -23,26 +23,28 @@
 
 <configuration>
 
-<property>
-  <name>lens.server.drivers</name>
-  <value>org.apache.lens.server.api.driver.MockDriver</value>
-</property>
+  <property>
+     
+    <name>lens.server.drivers</name>
+     
+    <value>org.apache.lens.server.api.driver.MockDriver</value>
+  </property>
 
-<property>
-  <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
-</property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/tmp/hive/warehouse</value>
+  </property>
 
-<property>
-  <name>hive.querylog.location</name>
-  <value>${test.tmp.dir}/tmp</value>
-  <description>Location of the structured hive logs</description>
-</property>
+  <property>
+    <name>hive.querylog.location</name>
+    <value>${test.tmp.dir}/tmp</value>
+    <description>Location of the structured hive logs</description>
+  </property>
 
-<property>
-  <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
-  <description>JDBC connect string for a JDBC metastore</description>
-</property>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
+    <description>JDBC connect string for a JDBC metastore</description>
+  </property>
 
 </configuration>

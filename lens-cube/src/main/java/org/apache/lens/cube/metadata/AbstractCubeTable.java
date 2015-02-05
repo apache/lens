@@ -18,13 +18,7 @@
  */
 package org.apache.lens.cube.metadata;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -86,7 +80,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Alters the weight of table
-   * 
+   *
    * @param weight
    */
   public void alterWeight(double weight) {
@@ -96,7 +90,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Add more table properties
-   * 
+   *
    * @param properties
    */
   public void addProperties(Map<String, String> props) {
@@ -106,7 +100,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Remove property specified by the key
-   * 
+   *
    * @param propKey
    */
   public void removeProperty(String propKey) {
@@ -115,7 +109,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Alters the column if already existing or just adds it if it is new column
-   * 
+   *
    * @param column
    * @throws HiveException
    */
@@ -139,7 +133,7 @@ public abstract class AbstractCubeTable implements Named {
     }
     if (alterPos != -1) {
       LOG.info("In " + getName() + " replacing column " + toReplace.getName() + ":" + toReplace.getType() + " to "
-          + column.getName() + ":" + column.getType());
+        + column.getName() + ":" + column.getType());
       columns.add(alterPos, column);
     } else {
       columns.add(column);
@@ -148,7 +142,7 @@ public abstract class AbstractCubeTable implements Named {
 
   /**
    * Adds or alters the columns passed
-   * 
+   *
    * @param columns
    * @throws HiveException
    */

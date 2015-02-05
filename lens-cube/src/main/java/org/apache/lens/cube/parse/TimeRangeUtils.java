@@ -18,9 +18,12 @@
  */
 package org.apache.lens.cube.parse;
 
-class TimeRangeUtils {
+public final class TimeRangeUtils {
+  private TimeRangeUtils() {
+
+  }
   public static String getTimeRangePartitionFilter(FactPartition partition, CubeQueryContext cubeQueryContext,
-      String tableName) {
+    String tableName) {
     String partCol = partition.getPartCol();
     String partFilter;
 

@@ -27,58 +27,58 @@ public interface HQLContextInterface {
 
   /**
    * Get the HQL query.
-   * 
+   *
    * @return query string
    * @throws SemanticException
    */
-  public String toHQL() throws SemanticException;
+  String toHQL() throws SemanticException;
 
   /**
    * Get select expression.
-   * 
+   *
    * @return select
    */
-  public String getSelect();
+  String getSelect();
 
   /**
    * Get from string
-   * 
+   *
    * @return from
    */
-  public String getFrom();
+  String getFrom();
 
   /**
    * Get where string
-   * 
+   *
    * @return where
    */
-  public String getWhere();
+  String getWhere();
 
   /**
    * Get groupby string
-   * 
+   *
    * @return groupby
    */
-  public String getGroupby();
+  String getGroupby();
 
   /**
    * Get having string
-   * 
+   *
    * @return having
    */
-  public String getHaving();
+  String getHaving();
 
   /**
    * Get orderby string
-   * 
+   *
    * @return orderby
    */
-  public String getOrderby();
+  String getOrderby();
 
   /**
    * Get limit
-   * 
+   *
    * @return limit
    */
-  public Integer getLimit();
+  Integer getLimit();
 }

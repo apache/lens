@@ -18,11 +18,15 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.*;
-
-import org.apache.commons.lang.StringUtils;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+
+import org.apache.commons.lang.StringUtils;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
@@ -32,8 +36,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<CandidateTablePruneCause>> {
-  @Getter(lazy=true) private final HashMap<CandidateTablePruneCause, List<T>> reversed = reverse();
-  @Getter(lazy=true) private final BriefAndDetailedError jsonObject = toJsonObject();
+  @Getter(lazy = true)
+  private final HashMap<CandidateTablePruneCause, List<T>> reversed = reverse();
+  @Getter(lazy = true)
+  private final BriefAndDetailedError jsonObject = toJsonObject();
+
   public void addPruningMsg(T table, CandidateTablePruneCause msg) {
     if (get(table) == null) {
       put(table, new ArrayList<CandidateTablePruneCause>());
@@ -43,9 +50,9 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
 
   public HashMap<CandidateTablePruneCause, List<T>> reverse() {
     HashMap<CandidateTablePruneCause, List<T>> result = new HashMap<CandidateTablePruneCause, List<T>>();
-    for(T key: keySet()) {
-      for(CandidateTablePruneCause value: get(key)) {
-        if(result.get(value) == null) {
+    for (T key : keySet()) {
+      for (CandidateTablePruneCause value : get(key)) {
+        if (result.get(value) == null) {
           result.put(value, new ArrayList<T>());
         }
         result.get(value).add(key);
@@ -57,9 +64,9 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   public BriefAndDetailedError toJsonObject() {
     final HashMap<String, List<CandidateTablePruneCause>> detailedMessage
       = new HashMap<String, List<CandidateTablePruneCause>>();
-    for(Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
       String key = StringUtils.join(entry.getValue(), ",");
-      if(detailedMessage.get(key) == null) {
+      if (detailedMessage.get(key) == null) {
         detailedMessage.put(key, new ArrayList<CandidateTablePruneCause>());
       }
       detailedMessage.get(key).add(entry.getKey());
@@ -68,15 +75,15 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   }
 
   public String getBriefCause() {
-    CandidateTablePruneCause.CandidateTablePruneCode maxCause = CandidateTablePruneCause.CandidateTablePruneCode.values()[0];
-    for(CandidateTablePruneCause cause: getReversed().keySet()) {
-      if(cause.getCause().compareTo(maxCause) > 0) {
+    CandidateTablePruneCode maxCause = CandidateTablePruneCode.values()[0];
+    for (CandidateTablePruneCause cause : getReversed().keySet()) {
+      if (cause.getCause().compareTo(maxCause) > 0) {
         maxCause = cause.getCause();
       }
     }
     Map<CandidateTablePruneCause, List<T>> maxCauseMap = new HashMap<CandidateTablePruneCause, List<T>>();
-    for(Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
-      if(entry.getKey().getCause().compareTo(maxCause) == 0) {
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
+      if (entry.getKey().getCause().compareTo(maxCause) == 0) {
         maxCauseMap.put(entry.getKey(), entry.getValue());
       }
     }
@@ -92,7 +99,7 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   @AllArgsConstructor
   @NoArgsConstructor
   public static final class BriefAndDetailedError {
-    public String brief;
-    public HashMap<String, List<CandidateTablePruneCause>> details;
+    private String brief;
+    private HashMap<String, List<CandidateTablePruneCause>> details;
   }
 }

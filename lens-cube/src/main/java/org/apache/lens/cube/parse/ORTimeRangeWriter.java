@@ -29,7 +29,7 @@ public class ORTimeRangeWriter implements TimeRangeWriter {
 
   @Override
   public String getTimeRangeWhereClause(CubeQueryContext cubeQueryContext, String tableName,
-      Set<FactPartition> rangeParts) {
+    Set<FactPartition> rangeParts) {
     if (rangeParts.size() == 0) {
       return "";
     }

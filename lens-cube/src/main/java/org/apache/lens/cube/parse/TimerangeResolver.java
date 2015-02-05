@@ -18,16 +18,15 @@
  */
 package org.apache.lens.cube.parse;
 
-import static org.apache.hadoop.hive.ql.parse.HiveParser.DOT;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_FUNCTION;
-import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeColumn;
+import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.SchemaGraph;
+import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -37,19 +36,12 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
-import org.apache.lens.cube.metadata.AbstractCubeTable;
-import org.apache.lens.cube.metadata.CubeColumn;
-import org.apache.lens.cube.metadata.Dimension;
-import org.apache.lens.cube.metadata.SchemaGraph;
-import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColumn;
 
 /**
- * Finds all timeranges in the query and does validation wrt the queried field's
- * life and the range queried
- * 
+ * Finds all timeranges in the query and does validation wrt the queried field's life and the range queried
  */
 class TimerangeResolver implements ContextRewriter {
-  private static Log LOG = LogFactory.getLog(TimerangeResolver.class.getName());
+  public static final Log LOG = LogFactory.getLog(TimerangeResolver.class.getName());
 
   public TimerangeResolver(Configuration conf) {
   }
@@ -75,7 +67,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   private void searchTimeRanges(ASTNode root, CubeQueryContext cubeql, ASTNode parent, int childIndex)
-      throws SemanticException {
+    throws SemanticException {
     if (root == null) {
       return;
     } else if (root.getToken().getType() == TOK_FUNCTION) {
@@ -105,7 +97,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   private void processTimeRangeFunction(CubeQueryContext cubeql, ASTNode timenode, ASTNode parent, int childIndex)
-      throws SemanticException {
+    throws SemanticException {
     TimeRange.TimeRangeBuilder builder = TimeRange.getBuilder();
     builder.astNode(timenode);
     builder.parent(parent);
@@ -163,8 +155,8 @@ class TimerangeResolver implements ContextRewriter {
         }
         if (isColumnLifeInvalid(column, range)) {
           throw new SemanticException(ErrorMsg.NOT_AVAILABLE_IN_RANGE, col, range.toString(),
-              (column.getStartTime() == null ? "" : " from:" + column.getStartTime()), (column.getEndTime() == null
-                  ? "" : " upto:" + column.getEndTime()));
+            (column.getStartTime() == null ? "" : " from:" + column.getStartTime()), (column.getEndTime() == null
+            ? "" : " upto:" + column.getEndTime()));
         }
       }
     }
@@ -203,7 +195,7 @@ class TimerangeResolver implements ContextRewriter {
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (isColumnLifeInvalid(column, range)) {
           LOG.info("Timerange queried is not in column life for " + column
-              + ", Removing join paths containing the column");
+            + ", Removing join paths containing the column");
           // Remove join paths containing this column
           Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
 
@@ -219,7 +211,7 @@ class TimerangeResolver implements ContextRewriter {
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
                   throw new SemanticException(ErrorMsg.NO_JOIN_PATH, "No valid join path available for dimension "
-                      + dimension + " which would satisfy time range " + range.getFromDate() + "-" + range.getToDate());
+                    + dimension + " which would satisfy time range " + range.getFromDate() + "-" + range.getToDate());
                 }
               }
             } // End loop to remove path
@@ -233,6 +225,6 @@ class TimerangeResolver implements ContextRewriter {
 
   private boolean isColumnLifeInvalid(CubeColumn column, TimeRange range) {
     return (column.getStartTime() != null && column.getStartTime().after(range.getFromDate()))
-        || (column.getEndTime() != null && column.getEndTime().before(range.getToDate()));
+      || (column.getEndTime() != null && column.getEndTime().before(range.getToDate()));
   }
 }

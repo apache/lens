@@ -56,7 +56,7 @@ public class StorageTableDesc extends CreateTableDesc {
 
   /**
    * This is not honored.
-   * 
+   *
    * @deprecated
    */
   @Override

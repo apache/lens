@@ -18,13 +18,7 @@
  */
 package org.apache.lens.cube.metadata;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -33,9 +27,10 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 
 public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
-  private static final List<FieldSchema> columns = new ArrayList<FieldSchema>();
+  private static final List<FieldSchema> COLUMNS = new ArrayList<FieldSchema>();
+
   static {
-    columns.add(new FieldSchema("dummy", "string", "dummy column"));
+    COLUMNS.add(new FieldSchema("dummy", "string", "dummy column"));
   }
 
   private final Cube parent;
@@ -47,8 +42,8 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
   }
 
   public DerivedCube(String name, Set<String> measures, Set<String> dimensions, Map<String, String> properties,
-      double weight, Cube parent) {
-    super(name, columns, properties, weight);
+    double weight, Cube parent) {
+    super(name, COLUMNS, properties, weight);
     for (String msr : measures) {
       this.measures.add(msr.toLowerCase());
     }
@@ -105,7 +100,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
     super.addProperties();
     getProperties().put(MetastoreUtil.getCubeMeasureListKey(getName()), StringUtils.join(measures, ",").toLowerCase());
     getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()),
-        StringUtils.join(dimensions, ",").toLowerCase());
+      StringUtils.join(dimensions, ",").toLowerCase());
     getProperties().put(MetastoreUtil.getParentCubeNameKey(getName()), parent.getName().toLowerCase());
     getProperties().put(MetastoreUtil.getParentCubeNameKey(getName()), parent.getName().toLowerCase());
   }
@@ -137,6 +132,11 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
   public Cube getParent() {
     return parent;
+  }
+
+  @Override
+  public int hashCode() {
+    return super.hashCode();
   }
 
   @Override
@@ -189,7 +189,7 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
   /**
    * Add a new measure
-   * 
+   *
    * @param measure
    * @throws HiveException
    */
@@ -200,30 +200,30 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
 
   /**
    * Add a new dimension
-   * 
+   *
    * @param dimension
    * @throws HiveException
    */
   public void addDimension(String dimension) throws HiveException {
     dimensions.add(dimension.toLowerCase());
     getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()),
-        StringUtils.join(dimensions, ",").toLowerCase());
+      StringUtils.join(dimensions, ",").toLowerCase());
   }
 
   /**
    * Remove the dimension with name specified
-   * 
+   *
    * @param dimName
    */
   public void removeDimension(String dimName) {
     dimensions.remove(dimName.toLowerCase());
     getProperties().put(MetastoreUtil.getCubeDimensionListKey(getName()),
-        StringUtils.join(dimensions, ",").toLowerCase());
+      StringUtils.join(dimensions, ",").toLowerCase());
   }
 
   /**
    * Remove the measure with name specified
-   * 
+   *
    * @param msrName
    */
   public void removeMeasure(String msrName) {

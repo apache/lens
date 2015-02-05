@@ -31,7 +31,7 @@ public class TableReference {
   }
 
   public TableReference(String reference) {
-    String desttoks[] = reference.split("\\.+");
+    String[] desttoks = reference.split("\\.+");
     this.destTable = desttoks[0];
     this.destColumn = desttoks[1];
   }

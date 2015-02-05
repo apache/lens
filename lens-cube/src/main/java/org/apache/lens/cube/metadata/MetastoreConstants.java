@@ -18,7 +18,11 @@
  */
 package org.apache.lens.cube.metadata;
 
-public interface MetastoreConstants {
+public final class MetastoreConstants {
+  private MetastoreConstants() {
+
+  }
+
   public static final String TABLE_TYPE_KEY = "cube.table.type";
   public static final String CUBE_TABLE_PFX = "cube.table.";
   public static final String WEIGHT_KEY_SFX = ".weight";

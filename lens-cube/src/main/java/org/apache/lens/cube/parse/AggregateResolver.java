@@ -24,7 +24,9 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_TABLE_OR_COL;
 
 import java.util.Iterator;
 
-import org.antlr.runtime.CommonToken;
+import org.apache.lens.cube.metadata.CubeMeasure;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,24 +36,14 @@ import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.lens.cube.metadata.CubeMeasure;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
+
+import org.antlr.runtime.CommonToken;
 
 /**
- * <p>
- * Replace select and having columns with default aggregate functions on them,
- * if default aggregate is defined and if there isn't already an aggregate
- * function specified on the columns.
- * </p>
- *
- * <p>
- * Expressions which already contain aggregate sub-expressions will not be
- * changed.
- * </p>
- *
- * <p>
- * At this point it's assumed that aliases have been added to all columns.
- * </p>
+ * <p> Replace select and having columns with default aggregate functions on them, if default aggregate is defined and
+ * if there isn't already an aggregate function specified on the columns. </p> <p/> <p> Expressions which already
+ * contain aggregate sub-expressions will not be changed. </p> <p/> <p> At this point it's assumed that aliases have
+ * been added to all columns. </p>
  */
 class AggregateResolver implements ContextRewriter {
   public static final Log LOG = LogFactory.getLog(AggregateResolver.class.getName());
@@ -67,7 +59,7 @@ class AggregateResolver implements ContextRewriter {
 
     boolean nonDefaultAggregates = false;
     boolean aggregateResolverDisabled = cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER,
-        CubeQueryConfUtil.DEFAULT_DISABLE_AGGREGATE_RESOLVER);
+      CubeQueryConfUtil.DEFAULT_DISABLE_AGGREGATE_RESOLVER);
     // Check if the query contains measures
     // 1. not inside default aggregate expressions
     // 2. With no default aggregate defined
@@ -75,11 +67,11 @@ class AggregateResolver implements ContextRewriter {
     // If yes, only the raw (non aggregated) fact can answer this query.
     // In that case remove aggregate facts from the candidate fact list
     if (hasMeasuresInDistinctClause(cubeql, cubeql.getSelectAST(), false)
-        || hasMeasuresInDistinctClause(cubeql, cubeql.getHavingAST(), false)
-        || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getSelectAST(), null, aggregateResolverDisabled)
-        || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getHavingAST(), null, aggregateResolverDisabled)
-        || hasMeasures(cubeql, cubeql.getWhereAST()) || hasMeasures(cubeql, cubeql.getGroupByAST())
-        || hasMeasures(cubeql, cubeql.getOrderByAST())) {
+      || hasMeasuresInDistinctClause(cubeql, cubeql.getHavingAST(), false)
+      || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getSelectAST(), null, aggregateResolverDisabled)
+      || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getHavingAST(), null, aggregateResolverDisabled)
+      || hasMeasures(cubeql, cubeql.getWhereAST()) || hasMeasures(cubeql, cubeql.getGroupByAST())
+      || hasMeasures(cubeql, cubeql.getOrderByAST())) {
       Iterator<CandidateFact> factItr = cubeql.getCandidateFactTables().iterator();
       while (factItr.hasNext()) {
         CandidateFact candidate = factItr.next();
@@ -105,12 +97,12 @@ class AggregateResolver implements ContextRewriter {
 
     Configuration distConf = cubeql.getHiveConf();
     boolean isDimOnlyDistinctEnabled = distConf.getBoolean(CubeQueryConfUtil.ENABLE_ATTRFIELDS_ADD_DISTINCT,
-        CubeQueryConfUtil.DEFAULT_ATTR_FIELDS_ADD_DISTINCT);
+      CubeQueryConfUtil.DEFAULT_ATTR_FIELDS_ADD_DISTINCT);
     if (isDimOnlyDistinctEnabled) {
       // Check if any measure/aggregate columns and distinct clause used in
       // select tree. If not, update selectAST token "SELECT" to "SELECT DISTINCT"
       if (!hasMeasures(cubeql, cubeql.getSelectAST()) && !isDistinctClauseUsed(cubeql.getSelectAST())
-          && !HQLParser.hasAggregate(cubeql.getSelectAST())) {
+        && !HQLParser.hasAggregate(cubeql.getSelectAST())) {
         cubeql.getSelectAST().getToken().setType(HiveParser.TOK_SELECTDI);
       }
     }
@@ -207,7 +199,7 @@ class AggregateResolver implements ContextRewriter {
   }
 
   private boolean hasMeasuresNotInDefaultAggregates(CubeQueryContext cubeql, ASTNode node, String function,
-      boolean aggregateResolverDisabled) {
+    boolean aggregateResolverDisabled) {
     if (node == null) {
       return false;
     }
@@ -248,22 +240,23 @@ class AggregateResolver implements ContextRewriter {
     return false;
   }
 
- /*
-  * Check if distinct keyword used in node
-  */
+  /*
+   * Check if distinct keyword used in node
+   */
   private boolean isDistinctClauseUsed(ASTNode node) {
     if (node == null) {
       return false;
     }
     if (node.getToken() != null) {
       if (node.getToken().getType() == HiveParser.TOK_FUNCTIONDI
-          || node.getToken().getType() == HiveParser.TOK_SELECTDI) {
+        || node.getToken().getType() == HiveParser.TOK_SELECTDI) {
         return true;
       }
     }
     for (int i = 0; i < node.getChildCount(); i++) {
-      if (isDistinctClauseUsed((ASTNode) node.getChild(i)))
+      if (isDistinctClauseUsed((ASTNode) node.getChild(i))) {
         return true;
+      }
     }
     return false;
   }
