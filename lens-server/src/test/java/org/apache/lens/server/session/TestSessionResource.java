@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -186,6 +187,16 @@ public class TestSessionResource extends LensJerseyTest {
     // close session
     result = target.queryParam("sessionid", handle).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+    // now getting session params should return session is expired
+    try {
+      sessionParams = paramtarget.queryParam("sessionid", handle).queryParam("key", "hivevar:myvar").request()
+            .get(StringList.class);
+      Assert.fail("Expected 410");
+    } catch(ClientErrorException ce) {
+      Assert.assertEquals(ce.getResponse().getStatus(), 410);
+    }
+
     result = target.queryParam("sessionid", handle2).request().delete(APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }

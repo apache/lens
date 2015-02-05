@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
@@ -231,7 +231,8 @@ public abstract class LensService extends CompositeService implements Externaliz
       return ((LensSessionImpl) getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
       LOG.warn("Session " + sessionHandle.getPublicId() + " not found", exc);
-      throw new NotFoundException("Session " + sessionHandle.getPublicId() + " not found " + sessionHandle);
+      // throw resource gone exception (410)
+      throw new ClientErrorException("Session " + sessionHandle.getPublicId() + " is invalid " + sessionHandle, 410);
     }
   }
 

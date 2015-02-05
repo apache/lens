@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.BadRequestException;
+import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.WebApplicationException;
 
@@ -410,7 +411,7 @@ public class HiveSessionService extends LensService implements SessionService {
           if (session.isActive()) {
             itr.remove();
           }
-        } catch (NotFoundException nfe) {
+        } catch (ClientErrorException nfe) {
           itr.remove();
         }
       }
@@ -422,7 +423,7 @@ public class HiveSessionService extends LensService implements SessionService {
           closeSession(sessionHandle);
           LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
             + new Date(lastAccessTime));
-        } catch (NotFoundException nfe) {
+        } catch (ClientErrorException nfe) {
           // Do nothing
         } catch (LensException e) {
           LOG.error("Error closing session " + sessionHandle.getPublicId() + " reason " + e.getMessage());
