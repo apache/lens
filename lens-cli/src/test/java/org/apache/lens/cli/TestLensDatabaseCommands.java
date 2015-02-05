@@ -55,6 +55,9 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
     result = command.switchDatabase(myDatabase);
     Assert.assertEquals("Successfully switched to my_db", result);
 
+    result = command.switchDatabase("default");
+    Assert.assertEquals("Successfully switched to default", result);
+
     result = command.dropDatabase(myDatabase);
     Assert.assertEquals("drop database my_db successful", result);
   }
