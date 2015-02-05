@@ -29,8 +29,7 @@ public abstract class LoggableLensStatistics extends LensStatistics {
   /**
    * Instantiates a new loggable lens statistics.
    *
-   * @param eventTime
-   *          the event time
+   * @param eventTime the event time
    */
   public LoggableLensStatistics(long eventTime) {
     super(eventTime);
@@ -46,8 +45,7 @@ public abstract class LoggableLensStatistics extends LensStatistics {
   /**
    * Gets the hive table.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the hive table
    */
   public abstract Table getHiveTable(Configuration conf);

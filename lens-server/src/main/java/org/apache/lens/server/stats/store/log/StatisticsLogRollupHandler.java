@@ -18,12 +18,14 @@
  */
 package org.apache.lens.server.stats.store.log;
 
-import org.apache.hadoop.conf.Configuration;
+import java.util.Timer;
+
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.LensEventService;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 
-import java.util.Timer;
+import org.apache.hadoop.conf.Configuration;
+
+import org.eclipse.jetty.util.ConcurrentHashSet;
 
 /**
  * Class which handles the log4j rolled file.
@@ -45,8 +47,7 @@ public class StatisticsLogRollupHandler {
   /**
    * Initalize the handler.
    *
-   * @param conf
-   *          configuration to be used while initialization.
+   * @param conf configuration to be used while initialization.
    */
   public void initialize(Configuration conf) {
     task = new StatisticsLogFileScannerTask();
@@ -57,8 +58,7 @@ public class StatisticsLogRollupHandler {
   /**
    * Start.
    *
-   * @param service
-   *          the service
+   * @param service the service
    */
   public void start(LensEventService service) {
     task.setService(service);
@@ -75,8 +75,7 @@ public class StatisticsLogRollupHandler {
   /**
    * Adds the to scan task.
    *
-   * @param event
-   *          the event
+   * @param event the event
    */
   public void addToScanTask(String event) {
     if (!scanSet.contains(event)) {

@@ -18,6 +18,26 @@
  */
 package org.apache.lens.server;
 
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.ws.rs.BadRequestException;
+import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
+
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.session.LensSessionImpl;
+import org.apache.lens.server.user.UserConfigLoaderFactory;
+import org.apache.lens.server.util.UtilityMethods;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -33,25 +53,6 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.SessionManager;
 import org.apache.hive.service.cli.thrift.TSessionHandle;
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.session.LensSessionImpl;
-import org.apache.lens.server.user.UserConfigLoaderFactory;
-import org.apache.lens.server.util.UtilityMethods;
-
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.NotAuthorizedException;
-import javax.ws.rs.NotFoundException;
-
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Class LensService.
@@ -70,15 +71,14 @@ public abstract class LensService extends CompositeService implements Externaliz
   // Static session map which is used by query submission thread to get the
   // lens session before submitting a query to hive server
   /** The session map. */
-  protected static ConcurrentHashMap<String, LensSessionHandle> sessionMap = new ConcurrentHashMap<String, LensSessionHandle>();
+  protected static ConcurrentHashMap<String, LensSessionHandle> sessionMap
+    = new ConcurrentHashMap<String, LensSessionHandle>();
 
   /**
    * Instantiates a new lens service.
    *
-   * @param name
-   *          the name
-   * @param cliService
-   *          the cli service
+   * @param name       the name
+   * @param cliService the cli service
    */
   protected LensService(String name, CLIService cliService) {
     super(name);
@@ -99,18 +99,14 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Open session.
    *
-   * @param username
-   *          the username
-   * @param password
-   *          the password
-   * @param configuration
-   *          the configuration
+   * @param username      the username
+   * @param password      the password
+   * @param configuration the configuration
    * @return the lens session handle
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
-      throws LensException {
+    throws LensException {
     if (StringUtils.isBlank(username)) {
       throw new BadRequestException("User name cannot be null or empty");
     }
@@ -133,8 +129,8 @@ public abstract class LensService extends CompositeService implements Externaliz
       String clusterUser = sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER);
       password = "useless";
       if (cliService.getHiveConf().getVar(ConfVars.HIVE_SERVER2_AUTHENTICATION)
-          .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
-          && cliService.getHiveConf().getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
+        .equals(HiveAuthFactory.AuthTypes.KERBEROS.toString())
+        && cliService.getHiveConf().getBoolVar(ConfVars.HIVE_SERVER2_ENABLE_DOAS)) {
         String delegationTokenStr = null;
         try {
           delegationTokenStr = cliService.getDelegationTokenFromMetaStore(username);
@@ -149,7 +145,7 @@ public abstract class LensService extends CompositeService implements Externaliz
       throw new LensException(e);
     }
     LensSessionHandle lensSession = new LensSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
-        sessionHandle.getHandleIdentifier().getSecretId());
+      sessionHandle.getHandleIdentifier().getSecretId());
     sessionMap.put(lensSession.getPublicId().toString(), lensSession);
     return lensSession;
   }
@@ -157,23 +153,19 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Restore session from previous instance of lens server.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @param userName
-   *          the user name
-   * @param password
-   *          the password
-   * @throws LensException
-   *           the lens exception
+   * @param sessionHandle the session handle
+   * @param userName      the user name
+   * @param password      the password
+   * @throws LensException the lens exception
    */
   public void restoreSession(LensSessionHandle sessionHandle, String userName, String password) throws LensException {
     HandleIdentifier handleIdentifier = new HandleIdentifier(sessionHandle.getPublicId(), sessionHandle.getSecretId());
     SessionHandle hiveSessionHandle = new SessionHandle(new TSessionHandle(handleIdentifier.toTHandleIdentifier()));
     try {
       SessionHandle restoredHandle = cliService.restoreSession(hiveSessionHandle, userName, password,
-          new HashMap<String, String>());
+        new HashMap<String, String>());
       LensSessionHandle restoredSession = new LensSessionHandle(restoredHandle.getHandleIdentifier().getPublicId(),
-          restoredHandle.getHandleIdentifier().getSecretId());
+        restoredHandle.getHandleIdentifier().getSecretId());
       sessionMap.put(restoredSession.getPublicId().toString(), restoredSession);
     } catch (HiveSQLException e) {
       throw new LensException("Error restoring session " + sessionHandle, e);
@@ -183,14 +175,12 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Do passwd auth.
    *
-   * @param userName
-   *          the user name
-   * @param password
-   *          the password
+   * @param userName the user name
+   * @param password the password
    */
   private void doPasswdAuth(String userName, String password) {
     // Lens confs to Hive Confs.
-    for (ConfVars var : new ConfVars[] { ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN }) {
+    for (ConfVars var : new ConfVars[]{ConfVars.HIVE_SERVER2_PLAIN_LDAP_DOMAIN}) {
       if (cliService.getHiveConf().getVar(var) == null) {
         cliService.getHiveConf().setVar(var, cliService.getHiveConf().get(LensConfConstants.SERVER_DOMAIN));
       }
@@ -200,9 +190,9 @@ public abstract class LensService extends CompositeService implements Externaliz
     if (!authType.equalsIgnoreCase(HiveAuthFactory.AuthTypes.NOSASL.toString())) {
       try {
         AuthenticationProviderFactory.AuthMethods authMethod = AuthenticationProviderFactory.AuthMethods
-            .getValidAuthMethod(authType);
+          .getValidAuthMethod(authType);
         PasswdAuthenticationProvider provider = AuthenticationProviderFactory.getAuthenticationProvider(authMethod,
-            cliService.getHiveConf());
+          cliService.getHiveConf());
         provider.Authenticate(userName, password);
       } catch (Exception e) {
         LOG.error("Auth error: " + e);
@@ -214,10 +204,8 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Close session.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @throws LensException
-   *           the lens exception
+   * @param sessionHandle the session handle
+   * @throws LensException the lens exception
    */
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     try {
@@ -235,8 +223,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Gets the session.
    *
-   * @param sessionHandle
-   *          the session handle
+   * @param sessionHandle the session handle
    * @return the session
    */
   public LensSessionImpl getSession(LensSessionHandle sessionHandle) {
@@ -251,8 +238,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Acquire.
    *
-   * @param sessionHandle
-   *          the session handle
+   * @param sessionHandle the session handle
    */
   public void acquire(LensSessionHandle sessionHandle) {
     if (sessionHandle != null) {
@@ -264,8 +250,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Acquire a lens session specified by the public UUID.
    *
-   * @param sessionHandle
-   *          public UUID of the session
+   * @param sessionHandle public UUID of the session
    */
   public void acquire(String sessionHandle) {
     acquire(sessionMap.get(sessionHandle));
@@ -274,8 +259,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Release.
    *
-   * @param sessionHandle
-   *          the session handle
+   * @param sessionHandle the session handle
    */
   public void release(LensSessionHandle sessionHandle) {
     if (sessionHandle != null) {
@@ -287,10 +271,8 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Releases a lens session specified by the public UUID.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @throws LensException
-   *           if session cannot be released
+   * @param sessionHandle the session handle
+   * @throws LensException if session cannot be released
    */
   public void release(String sessionHandle) throws LensException {
     getSession(sessionMap.get(sessionHandle)).release();
@@ -299,8 +281,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Gets the session handle.
    *
-   * @param sessionid
-   *          the sessionid
+   * @param sessionid the sessionid
    * @return the session handle
    */
   protected LensSessionHandle getSessionHandle(String sessionid) {
@@ -310,28 +291,21 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Adds the resource.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @param type
-   *          the type
-   * @param path
-   *          the path
-   * @throws LensException
-   *           the lens exception
+   * @param sessionHandle the session handle
+   * @param type          the type
+   * @param path          the path
+   * @throws LensException the lens exception
    */
   public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
   }
+
   /**
    * Delete resource.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @param type
-   *          the type
-   * @param path
-   *          the path
-   * @throws LensException
-   *           the lens exception
+   * @param sessionHandle the session handle
+   * @param type          the type
+   * @param path          the path
+   * @throws LensException the lens exception
    */
   public void deleteResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
   }
@@ -339,25 +313,21 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Gets the hive session handle.
    *
-   * @param lensHandle
-   *          the lens handle
+   * @param lensHandle the lens handle
    * @return the hive session handle
    */
   public static SessionHandle getHiveSessionHandle(LensSessionHandle lensHandle) {
     return new SessionHandle(new HandleIdentifier(lensHandle.getPublicId(), lensHandle.getSecretId()),
-        CLIService.SERVER_VERSION);
+      CLIService.SERVER_VERSION);
   }
 
   /**
    * Gets the lens conf.
    *
-   * @param sessionHandle
-   *          the session handle
-   * @param conf
-   *          the conf
+   * @param sessionHandle the session handle
+   * @param conf          the conf
    * @return the lens conf
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public Configuration getLensConf(LensSessionHandle sessionHandle, LensConf conf) throws LensException {
     Configuration qconf = new Configuration(false);
@@ -377,11 +347,9 @@ public abstract class LensService extends CompositeService implements Externaliz
   /**
    * Gets the lens conf.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the lens conf
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public Configuration getLensConf(LensConf conf) throws LensException {
     Configuration qconf = LensSessionImpl.createDefaultConf();
@@ -403,7 +371,7 @@ public abstract class LensService extends CompositeService implements Externaliz
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.io.Externalizable#readExternal(java.io.ObjectInput)
    */
   @Override
@@ -412,7 +380,7 @@ public abstract class LensService extends CompositeService implements Externaliz
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.io.Externalizable#writeExternal(java.io.ObjectOutput)
    */
   @Override

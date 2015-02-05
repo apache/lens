@@ -18,25 +18,22 @@
  */
 package org.apache.lens.server.query;
 
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.InMemoryResultSet;
+import org.apache.lens.server.api.driver.LensResultSet;
+import org.apache.lens.server.api.driver.PersistentResultSet;
+import org.apache.lens.server.api.events.AsyncEventListener;
+import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.api.query.*;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.LensResultSet;
-import org.apache.lens.server.api.driver.InMemoryResultSet;
-import org.apache.lens.server.api.driver.PersistentResultSet;
-import org.apache.lens.server.api.events.AsyncEventListener;
-import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.api.query.InMemoryOutputFormatter;
-import org.apache.lens.server.api.query.PersistedOutputFormatter;
-import org.apache.lens.server.api.query.QueryContext;
-import org.apache.lens.server.api.query.QueryExecuted;
-import org.apache.lens.server.api.query.QueryOutputFormatter;
 
 /**
  * The Class ResultFormatter.
@@ -52,8 +49,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /**
    * Instantiates a new result formatter.
    *
-   * @param queryService
-   *          the query service
+   * @param queryService the query service
    */
   public ResultFormatter(QueryExecutionServiceImpl queryService) {
     this.queryService = queryService;
@@ -61,7 +57,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
    */
   @Override
@@ -72,8 +68,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /**
    * Format output.
    *
-   * @param event
-   *          the event
+   * @param event the event
    */
   private void formatOutput(QueryExecuted event) {
     QueryHandle queryHandle = event.getQueryHandle();
@@ -93,11 +88,11 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
           FileSystem fs = persistedDirectory.getFileSystem(ctx.getConf());
           long size = fs.getContentSummary(persistedDirectory).getLength();
           long threshold = ctx.getConf().getLong(LensConfConstants.RESULT_FORMAT_SIZE_THRESHOLD,
-              LensConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
+            LensConfConstants.DEFAULT_RESULT_FORMAT_SIZE_THRESHOLD);
           LOG.info(" size :" + size + " threshold:" + threshold);
           if (size > threshold) {
             LOG.warn("Persisted result size more than the threshold, size:" + size + " and threshold:" + threshold
-                + "; Skipping formatter");
+              + "; Skipping formatter");
             queryService.setSuccessState(ctx);
             return;
           }
@@ -108,7 +103,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
         try {
           formatter.init(ctx, resultSet.getMetadata());
           if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_HEADER,
-              LensConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
+            LensConfConstants.DEFAULT_OUTPUT_WRITE_HEADER)) {
             formatter.writeHeader();
           }
           if (isPersistedInDriver) {
@@ -124,7 +119,7 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
             }
           }
           if (ctx.getConf().getBoolean(LensConfConstants.QUERY_OUTPUT_WRITE_FOOTER,
-              LensConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
+            LensConfConstants.DEFAULT_OUTPUT_WRITE_FOOTER)) {
             formatter.writeFooter();
           }
           formatter.commit();
@@ -149,11 +144,9 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
   /**
    * Creates the and set formatter.
    *
-   * @param ctx
-   *          the ctx
+   * @param ctx                 the ctx
    * @param isPersistedInDriver
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @SuppressWarnings("unchecked")
   void createAndSetFormatter(QueryContext ctx, boolean isPersistedInDriver) throws LensException {
@@ -162,18 +155,18 @@ public class ResultFormatter extends AsyncEventListener<QueryExecuted> {
       try {
         if (isPersistedInDriver) {
           formatter = ReflectionUtils.newInstance(
-              ctx.getConf().getClass(
-                  LensConfConstants.QUERY_OUTPUT_FORMATTER,
-                  (Class<? extends PersistedOutputFormatter>) Class
-                      .forName(LensConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER), PersistedOutputFormatter.class),
-              ctx.getConf());
+            ctx.getConf().getClass(
+              LensConfConstants.QUERY_OUTPUT_FORMATTER,
+              (Class<? extends PersistedOutputFormatter>) Class
+                .forName(LensConfConstants.DEFAULT_PERSISTENT_OUTPUT_FORMATTER), PersistedOutputFormatter.class),
+            ctx.getConf());
         } else {
           formatter = ReflectionUtils.newInstance(
-              ctx.getConf().getClass(
-                  LensConfConstants.QUERY_OUTPUT_FORMATTER,
-                  (Class<? extends InMemoryOutputFormatter>) Class
-                      .forName(LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER), InMemoryOutputFormatter.class),
-              ctx.getConf());
+            ctx.getConf().getClass(
+              LensConfConstants.QUERY_OUTPUT_FORMATTER,
+              (Class<? extends InMemoryOutputFormatter>) Class
+                .forName(LensConfConstants.DEFAULT_INMEMORY_OUTPUT_FORMATTER), InMemoryOutputFormatter.class),
+            ctx.getConf());
         }
       } catch (ClassNotFoundException e) {
         throw new LensException(e);

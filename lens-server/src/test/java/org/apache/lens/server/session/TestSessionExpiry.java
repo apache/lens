@@ -18,20 +18,18 @@
  */
 package org.apache.lens.server.session;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hive.service.cli.CLIService;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.server.LensServerConf;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.session.LensSessionImpl;
-import org.apache.lens.server.session.HiveSessionService;
-import org.testng.annotations.Test;
+import static org.testng.Assert.*;
 
 import java.util.HashMap;
 
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
+
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.cli.CLIService;
+
+import org.testng.annotations.Test;
 
 /**
  * The Class TestSessionExpiry.
@@ -42,8 +40,7 @@ public class TestSessionExpiry {
   /**
    * Test session expiry.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   public void testSessionExpiry() throws Exception {
     HiveConf conf = LensServerConf.get();
@@ -60,7 +57,7 @@ public class TestSessionExpiry {
       LensSessionImpl session = lensService.getSession(sessionHandle);
       assertTrue(session.isActive());
       session.setLastAccessTime(session.getLastAccessTime() - 2000
-          * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
+        * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
 
       // run the expiry thread

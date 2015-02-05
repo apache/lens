@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.user;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.LensConfConstants;
-
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+
+import org.apache.lens.server.api.LensConfConstants;
+
+import org.apache.hadoop.hive.conf.HiveConf;
 
 /**
  * The Class CustomUserConfigLoader.
@@ -38,13 +39,12 @@ public class CustomUserConfigLoader extends UserConfigLoader {
   /**
    * Instantiates a new custom user config loader.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    */
   public CustomUserConfigLoader(HiveConf conf) {
     super(conf);
     this.customHandlerClass = (Class<? extends UserConfigLoader>) hiveConf.getClass(
-        LensConfConstants.USER_RESOLVER_CUSTOM_CLASS, UserConfigLoader.class);
+      LensConfConstants.USER_RESOLVER_CUSTOM_CLASS, UserConfigLoader.class);
     try {
       this.customProvider = customHandlerClass.getConstructor(HiveConf.class).newInstance(conf);
       // in java6, these four extend directly from Exception. So have to handle separately. In java7,
@@ -62,7 +62,7 @@ public class CustomUserConfigLoader extends UserConfigLoader {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
    */
   @Override

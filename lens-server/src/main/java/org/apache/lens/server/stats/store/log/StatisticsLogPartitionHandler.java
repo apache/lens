@@ -18,6 +18,18 @@
  */
 package org.apache.lens.server.stats.store.log;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.events.AsyncEventListener;
+import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.stats.event.LoggableLensStatistics;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -27,19 +39,9 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.events.AsyncEventListener;
-import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.stats.event.LoggableLensStatistics;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Class used to copy log files to HDFS and add partition to hive metastore.
@@ -64,8 +66,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /**
    * Initialize.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    */
   public void initialize(Configuration conf) {
     String temp = conf.get(LensConfConstants.STATISTICS_WAREHOUSE_KEY, LensConfConstants.DEFAULT_STATISTICS_WAREHOUSE);
@@ -81,7 +82,7 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
    */
   @Override
@@ -109,14 +110,10 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /**
    * Adds the partition.
    *
-   * @param eventName
-   *          the event name
-   * @param key
-   *          the key
-   * @param finalPath
-   *          the final path
-   * @param className
-   *          the class name
+   * @param eventName the event name
+   * @param key       the key
+   * @param finalPath the final path
+   * @param className the class name
    * @return true, if successful
    */
   private boolean addPartition(String eventName, String key, Path finalPath, String className) {
@@ -138,13 +135,10 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /**
    * Gets the table.
    *
-   * @param eventName
-   *          the event name
-   * @param className
-   *          the class name
+   * @param eventName the event name
+   * @param className the class name
    * @return the table
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   private Table getTable(String eventName, String className) throws Exception {
     Table tmp = null;
@@ -162,13 +156,10 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /**
    * Creates the table.
    *
-   * @param eventName
-   *          the event name
-   * @param className
-   *          the class name
+   * @param eventName the event name
+   * @param className the class name
    * @return the table
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   private Table createTable(String eventName, String className) throws Exception {
     Table tmp;
@@ -197,12 +188,9 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /**
    * Copy to hdfs.
    *
-   * @param localPath
-   *          the local path
-   * @param finalPath
-   *          the final path
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param localPath the local path
+   * @param finalPath the final path
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private void copyToHdfs(String localPath, Path finalPath) throws IOException {
     Configuration conf = new Configuration();

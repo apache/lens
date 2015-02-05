@@ -18,11 +18,12 @@
  */
 package org.apache.lens.server.user;
 
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.LensConfConstants;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.lens.server.api.LensConfConstants;
+
+import org.apache.hadoop.hive.conf.HiveConf;
 
 /**
  * The Class FixedUserConfigLoader.
@@ -32,8 +33,7 @@ public class FixedUserConfigLoader extends UserConfigLoader {
   /**
    * Instantiates a new fixed user config loader.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    */
   public FixedUserConfigLoader(HiveConf conf) {
     super(conf);
@@ -41,7 +41,7 @@ public class FixedUserConfigLoader extends UserConfigLoader {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.user.UserConfigLoader#getUserConfig(java.lang.String)
    */
   @Override

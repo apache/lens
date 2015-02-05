@@ -18,11 +18,11 @@
  */
 package org.apache.lens.server.stats.store.log;
 
-import lombok.Getter;
-
 import java.util.Map;
 
 import org.apache.lens.server.api.events.LensEvent;
+
+import lombok.Getter;
 
 /**
  * Event class which encapsulates the partition information.
@@ -42,12 +42,9 @@ public class PartitionEvent extends LensEvent {
   /**
    * Instantiates a new partition event.
    *
-   * @param eventName
-   *          the event name
-   * @param partMap
-   *          the part map
-   * @param className
-   *          the class name
+   * @param eventName the event name
+   * @param partMap   the part map
+   * @param className the class name
    */
   public PartitionEvent(String eventName, Map<String, String> partMap, String className) {
     super(System.currentTimeMillis());

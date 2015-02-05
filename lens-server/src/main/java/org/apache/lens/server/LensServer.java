@@ -18,12 +18,21 @@
  */
 package org.apache.lens.server;
 
-import com.codahale.metrics.servlets.AdminServlet;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Properties;
+import java.util.logging.Logger;
+
+import javax.ws.rs.core.UriBuilder;
+
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.ui.UIApp;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.ui.UIApp;
+
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
@@ -32,12 +41,7 @@ import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import javax.ws.rs.core.UriBuilder;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
-import java.util.Properties;
-import java.util.logging.Logger;
+import com.codahale.metrics.servlets.AdminServlet;
 
 /**
  * The Class LensServer.
@@ -59,7 +63,8 @@ public class LensServer {
   /** The conf. */
   final HiveConf conf;
 
-  /** This flag indicates that the lens server can run,
+  /**
+   * This flag indicates that the lens server can run,
    * When this is set to false, main thread bails out.
    */
   volatile boolean canRun = true;
@@ -72,10 +77,8 @@ public class LensServer {
   /**
    * Instantiates a new lens server.
    *
-   * @param conf
-   *          the conf
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @param conf the conf
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private LensServer(HiveConf conf) throws IOException {
     this.conf = conf;
@@ -85,9 +88,9 @@ public class LensServer {
 
     WebappContext adminCtx = new WebappContext("admin", "");
     adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", ((MetricsServiceImpl) LensServices
-        .get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getMetricRegistry());
+      .get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getMetricRegistry());
     adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-        ((MetricsServiceImpl) LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getHealthCheck());
+      ((MetricsServiceImpl) LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getHealthCheck());
 
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");
@@ -95,7 +98,7 @@ public class LensServer {
     adminCtx.deploy(this.server);
     String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI, LensConfConstants.DEFAULT_SERVER_UI_URI);
     this.uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(), getUIApp(),
-        false);
+      false);
   }
 
   private ResourceConfig getApp() {
@@ -115,8 +118,7 @@ public class LensServer {
   /**
    * Start services.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    */
   public void startServices(HiveConf conf) {
     LensServices.get().init(conf);
@@ -126,8 +128,7 @@ public class LensServer {
   /**
    * Start.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   public synchronized void start() throws IOException {
     server.start();
@@ -166,10 +167,8 @@ public class LensServer {
   /**
    * The main method.
    *
-   * @param args
-   *          the arguments
-   * @throws Exception
-   *           the exception
+   * @param args the arguments
+   * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
 
@@ -206,11 +205,11 @@ public class LensServer {
       try {
         buildProperties.load(buildPropertiesResource);
         for (Map.Entry entry : buildProperties.entrySet()) {
-              buffer.append('\n').append('\t').append(entry.getKey()).
-                      append(":\t").append(entry.getValue());
-          }
+          buffer.append('\n').append('\t').append(entry.getKey()).
+            append(":\t").append(entry.getValue());
+        }
       } catch (Throwable e) {
-          buffer.append("*** Unable to get build info ***");
+        buffer.append("*** Unable to get build info ***");
       }
     } else {
       buffer.append("*** Unable to get build info ***");
@@ -230,7 +229,8 @@ public class LensServer {
     LOG.info(buffer.toString());
   }
 
-  /** Registering a shutdown hook to listen to SIGTERM events.
+  /**
+   * Registering a shutdown hook to listen to SIGTERM events.
    * Upon receiving a SIGTERM, notify the server, which is put
    * on wait state.
    */

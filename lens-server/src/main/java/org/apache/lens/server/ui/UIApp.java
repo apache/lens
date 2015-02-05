@@ -18,14 +18,16 @@
  */
 package org.apache.lens.server.ui;
 
-import org.apache.lens.server.AuthenticationFilter;
-import org.apache.lens.server.LensApplicationListener;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
-import java.util.HashSet;
-import java.util.Set;
+
+import org.apache.lens.server.AuthenticationFilter;
+import org.apache.lens.server.LensApplicationListener;
+
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 /**
  * The Class UIApp.

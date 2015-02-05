@@ -18,20 +18,21 @@
  */
 package org.apache.lens.server.user;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.util.UtilityMethods;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.util.UtilityMethods;
+
+import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.hadoop.hive.conf.HiveConf;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * The Class DatabaseUserConfigLoader.
@@ -53,18 +54,16 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
   /**
    * Instantiates a new database user config loader.
    *
-   * @param conf
-   *          the conf
-   * @throws UserConfigLoaderException
-   *           the user config loader exception
+   * @param conf the conf
+   * @throws UserConfigLoaderException the user config loader exception
    */
   public DatabaseUserConfigLoader(HiveConf conf) throws UserConfigLoaderException {
     super(conf);
     querySql = conf.get(LensConfConstants.USER_RESOLVER_DB_QUERY);
     keys = conf.get(LensConfConstants.USER_RESOLVER_DB_KEYS).split("\\s*,\\s*", -1);
     cache = CacheBuilder.newBuilder()
-        .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
-        .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
+      .expireAfterWrite(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_EXPIRY, 2), TimeUnit.HOURS)
+      .maximumSize(conf.getInt(LensConfConstants.USER_RESOLVER_CACHE_MAX_SIZE, 100)).build();
   }
 
   /*
@@ -82,7 +81,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
             final String[] config = queryDatabase(querySql, false, loggedInUser);
             if (config.length != keys.length) {
               throw new UserConfigLoaderException("size of columns retrieved by db query(" + config.length + ") "
-                  + "is not equal to the number of keys required(" + keys.length + ").");
+                + "is not equal to the number of keys required(" + keys.length + ").");
             }
             return new HashMap<String, String>() {
               {
@@ -102,7 +101,7 @@ public class DatabaseUserConfigLoader extends UserConfigLoader {
   }
 
   private BasicDataSource refreshDataSource() {
-    if(ds == null || ds.isClosed()) {
+    if (ds == null || ds.isClosed()) {
       ds = UtilityMethods.getDataSourceFromConf(hiveConf);
     }
     return ds;

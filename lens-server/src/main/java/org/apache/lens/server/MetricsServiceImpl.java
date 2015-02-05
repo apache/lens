@@ -18,18 +18,11 @@
  */
 package org.apache.lens.server;
 
-import info.ganglia.gmetric4j.gmetric.GMetric;
-import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import lombok.Getter;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hive.service.AbstractService;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
@@ -37,19 +30,20 @@ import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
+
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hive.service.AbstractService;
 import org.apache.log4j.Logger;
 
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.JvmAttributeGaugeSet;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ScheduledReporter;
+import com.codahale.metrics.*;
 import com.codahale.metrics.ganglia.GangliaReporter;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
+import info.ganglia.gmetric4j.gmetric.GMetric;
+import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
+import lombok.Getter;
 
 /**
  * The Class MetricsServiceImpl.
@@ -113,7 +107,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
      */
     @Override
@@ -124,8 +118,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     /**
      * Process current status.
      *
-     * @param currentValue
-     *          the current value
+     * @param currentValue the current value
      */
     protected void processCurrentStatus(Status currentValue) {
       switch (currentValue) {
@@ -153,8 +146,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /**
    * Instantiates a new metrics service impl.
    *
-   * @param name
-   *          the name
+   * @param name the name
    */
   public MetricsServiceImpl(String name) {
     super(METRICS_SVC_NAME);
@@ -169,7 +161,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#init(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
@@ -186,7 +178,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     if (hiveConf.getBoolean(LensConfConstants.ENABLE_CONSOLE_METRICS, false)) {
       // Start console reporter
       ConsoleReporter reporter = ConsoleReporter.forRegistry(metricRegistry).convertRatesTo(TimeUnit.SECONDS)
-          .convertDurationsTo(TimeUnit.MILLISECONDS).build();
+        .convertDurationsTo(TimeUnit.MILLISECONDS).build();
       reporters.add(reporter);
     }
 
@@ -194,9 +186,9 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
       GMetric ganglia;
       try {
         ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME), hiveConf.getInt(
-            LensConfConstants.GANGLIA_PORT, 8080), UDPAddressingMode.MULTICAST, 1);
+          LensConfConstants.GANGLIA_PORT, 8080), UDPAddressingMode.MULTICAST, 1);
         GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry).convertRatesTo(TimeUnit.SECONDS)
-            .convertDurationsTo(TimeUnit.MILLISECONDS).build(ganglia);
+          .convertDurationsTo(TimeUnit.MILLISECONDS).build(ganglia);
 
         reporters.add(greporter);
       } catch (IOException e) {
@@ -212,43 +204,43 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
    */
   protected void initCounters() {
     queuedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, QUEUED_QUERIES),
-        new Gauge<Long>() {
-          @Override
-          public Long getValue() {
-            return getQuerySvc().getQueuedQueriesCount();
-          }
-        });
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getQueuedQueriesCount();
+        }
+      });
 
     runningQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, RUNNING_QUERIES),
-        new Gauge<Long>() {
-          @Override
-          public Long getValue() {
-            return getQuerySvc().getRunningQueriesCount();
-          }
-        });
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getRunningQueriesCount();
+        }
+      });
 
     finishedQueries = metricRegistry.register(MetricRegistry.name(QueryExecutionService.class, FINISHED_QUERIES),
-        new Gauge<Long>() {
-          @Override
-          public Long getValue() {
-            return getQuerySvc().getFinishedQueriesCount();
-          }
-        });
+      new Gauge<Long>() {
+        @Override
+        public Long getValue() {
+          return getQuerySvc().getFinishedQueriesCount();
+        }
+      });
 
     totalAcceptedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + ACCEPTED_QUERIES));
+      + ACCEPTED_QUERIES));
 
     totalSuccessfulQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class,
-        "total-success-queries"));
+      "total-success-queries"));
 
     totalFinishedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + FINISHED_QUERIES));
+      + FINISHED_QUERIES));
 
     totalFailedQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + FAILED_QUERIES));
+      + FAILED_QUERIES));
 
     totalCancelledQueries = metricRegistry.counter(MetricRegistry.name(QueryExecutionService.class, "total-"
-        + CANCELLED_QUERIES));
+      + CANCELLED_QUERIES));
 
     metricRegistry.register("gc", new GarbageCollectorMetricSet());
     metricRegistry.register("memory", new MemoryUsageGaugeSet());
@@ -258,7 +250,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#start()
    */
   @Override
@@ -272,7 +264,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.AbstractService#stop()
    */
   @Override
@@ -299,7 +291,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#incrCounter(java.lang.String)
    */
   @Override
@@ -309,7 +301,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#decrCounter(java.lang.String)
    */
   @Override
@@ -319,7 +311,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#incrCounter(java.lang.Class, java.lang.String)
    */
   @Override
@@ -329,7 +321,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#decrCounter(java.lang.Class, java.lang.String)
    */
   @Override
@@ -339,7 +331,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#getCounter(java.lang.String)
    */
   @Override
@@ -349,7 +341,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#getCounter(java.lang.Class, java.lang.String)
    */
   @Override
@@ -394,7 +386,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.metrics.MetricsService#publishReport()
    */
   @Override

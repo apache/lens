@@ -38,7 +38,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
    */
   @Override

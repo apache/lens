@@ -18,34 +18,33 @@
  */
 package org.apache.lens.server.util;
 
-import org.apache.commons.dbcp.BasicDataSource;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.server.api.LensConfConstants;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
+import org.apache.lens.server.api.LensConfConstants;
+
+import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.hadoop.conf.Configuration;
+
 /**
  * The Class UtilityMethods.
  */
-public class UtilityMethods {
+public final class UtilityMethods {
+  private UtilityMethods() {
+
+  }
 
   /**
    * Merge maps.
    *
-   * @param <K>
-   *          the key type
-   * @param <V>
-   *          the value type
-   * @param into
-   *          the into
-   * @param from
-   *          the from
-   * @param override
-   *          the override
+   * @param <K>      the key type
+   * @param <V>      the value type
+   * @param into     the into
+   * @param from     the from
+   * @param override the override
    */
   public static <K, V> void mergeMaps(Map<K, V> into, Map<K, V> from, boolean override) {
     for (K key : from.keySet()) {
@@ -58,8 +57,7 @@ public class UtilityMethods {
   /**
    * Removes the domain.
    *
-   * @param username
-   *          the username
+   * @param username the username
    * @return the string
    */
   public static String removeDomain(String username) {
@@ -72,8 +70,7 @@ public class UtilityMethods {
   /**
    * Any null.
    *
-   * @param args
-   *          the args
+   * @param args the args
    * @return true, if successful
    */
   public static boolean anyNull(Object... args) {
@@ -88,20 +85,15 @@ public class UtilityMethods {
   /**
    * Query database.
    *
-   * @param ds
-   *          the ds
-   * @param querySql
-   *          the query sql
-   * @param allowNull
-   *          the allow null
-   * @param args
-   *          the args
+   * @param ds        the ds
+   * @param querySql  the query sql
+   * @param allowNull the allow null
+   * @param args      the args
    * @return the string[]
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   public static String[] queryDatabase(BasicDataSource ds, String querySql, final boolean allowNull, Object... args)
-      throws SQLException {
+    throws SQLException {
     QueryRunner runner = new QueryRunner(ds);
     return runner.query(querySql, new ResultSetHandler<String[]>() {
       @Override
@@ -127,14 +119,13 @@ public class UtilityMethods {
   /**
    * Gets the data source from conf.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the data source from conf
    */
   public static BasicDataSource getDataSourceFromConf(Configuration conf) {
     BasicDataSource tmp = new BasicDataSource();
     tmp.setDriverClassName(conf.get(LensConfConstants.SERVER_DB_DRIVER_NAME,
-        LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
+      LensConfConstants.DEFAULT_SERVER_DB_DRIVER_NAME));
     tmp.setUrl(conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
     tmp.setUsername(conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER));
     tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
@@ -144,8 +135,7 @@ public class UtilityMethods {
   /**
    * Conf to string.
    *
-   * @param conf
-   *          the conf
+   * @param conf the conf
    * @return the string
    */
   public static String confToString(Configuration conf) {

@@ -22,24 +22,26 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.HashMap;
 
-import liquibase.Liquibase;
-import liquibase.database.jvm.HsqlConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.FileSystemResourceAccessor;
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.lens.api.LensException;
-import org.apache.lens.server.LensServerConf;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.util.UtilityMethods;
+
 import org.hsqldb.server.Server;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import liquibase.Liquibase;
+import liquibase.database.jvm.HsqlConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.FileSystemResourceAccessor;
 
 /**
  * The Class TestUserConfigLoader.
@@ -56,7 +58,6 @@ public class TestUserConfigLoader {
    */
   @BeforeTest(alwaysRun = true)
   public void init() {
-    LensServerConf.conf = null;
     conf = new HiveConf(LensServerConf.get());
   }
 
@@ -72,8 +73,7 @@ public class TestUserConfigLoader {
   /**
    * Test fixed.
    *
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Test
   public void testFixed() throws LensException {
@@ -90,14 +90,13 @@ public class TestUserConfigLoader {
   /**
    * Test property based.
    *
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Test
   public void testPropertyBased() throws LensException {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/propertybased.xml"));
     conf.set(LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME,
-        TestUserConfigLoader.class.getResource("/user/propertybased.data").getPath());
+      TestUserConfigLoader.class.getResource("/user/propertybased.data").getPath());
     UserConfigLoaderFactory.init(conf);
     Assert.assertEquals(UserConfigLoaderFactory.getUserConfig("user1"), new HashMap<String, String>() {
       {
@@ -116,16 +115,11 @@ public class TestUserConfigLoader {
   /**
    * Setup hsql db.
    *
-   * @param dbName
-   *          the db name
-   * @param path
-   *          the path
-   * @param changeLogPath
-   *          the change log path
-   * @throws SQLException
-   *           the SQL exception
-   * @throws LiquibaseException
-   *           the liquibase exception
+   * @param dbName        the db name
+   * @param path          the path
+   * @param changeLogPath the change log path
+   * @throws SQLException       the SQL exception
+   * @throws LiquibaseException the liquibase exception
    */
   private void setupHsqlDb(String dbName, String path, String changeLogPath) throws SQLException, LiquibaseException {
     Server server = new Server();
@@ -138,19 +132,16 @@ public class TestUserConfigLoader {
     BasicDataSource ds = UtilityMethods.getDataSourceFromConf(conf);
 
     Liquibase liquibase = new Liquibase(UserConfigLoader.class.getResource(changeLogPath).getFile(),
-        new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
+      new FileSystemResourceAccessor(), new HsqlConnection(ds.getConnection()));
     liquibase.update("");
   }
 
   /**
    * Test database.
    *
-   * @throws LensException
-   *           the lens exception
-   * @throws SQLException
-   *           the SQL exception
-   * @throws LiquibaseException
-   *           the liquibase exception
+   * @throws LensException      the lens exception
+   * @throws SQLException       the SQL exception
+   * @throws LiquibaseException the liquibase exception
    */
   @Test
   public void testDatabase() throws LensException, SQLException, LiquibaseException {
@@ -159,9 +150,12 @@ public class TestUserConfigLoader {
     conf.addResource(TestUserConfigLoader.class.getResourceAsStream("/user/database.xml"));
     UserConfigLoaderFactory.init(conf);
     setupHsqlDb(dbName, path, "/user/db_changelog.xml");
-    String[][] valuesToVerify = new String[][] { { "user1", "clusteruser1", "queue12" },
-        { "user2", "clusteruser2", "queue12" }, { "user3", "clusteruser3", "queue34" },
-        { "user4", "clusteruser4", "queue34" }, };
+    String[][] valuesToVerify = new String[][]{
+      {"user1", "clusteruser1", "queue12"},
+      {"user2", "clusteruser2", "queue12"},
+      {"user3", "clusteruser3", "queue34"},
+      {"user4", "clusteruser4", "queue34"},
+    };
     for (final String[] sa : valuesToVerify) {
       Assert.assertEquals(UserConfigLoaderFactory.getUserConfig(sa[0]), new HashMap<String, String>() {
         {
@@ -175,8 +169,7 @@ public class TestUserConfigLoader {
   /**
    * Test custom.
    *
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Test
   public void testCustom() throws LensException {

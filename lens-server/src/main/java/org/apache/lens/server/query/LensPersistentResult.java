@@ -39,12 +39,9 @@ public class LensPersistentResult extends PersistentResultSet {
   /**
    * Instantiates a new lens persistent result.
    *
-   * @param metadata
-   *          the metadata
-   * @param outputPath
-   *          the output path
-   * @param numRows
-   *          the num rows
+   * @param metadata   the metadata
+   * @param outputPath the output path
+   * @param numRows    the num rows
    */
   public LensPersistentResult(LensResultSetMetadata metadata, String outputPath, int numRows) {
     this.metadata = metadata;
@@ -59,7 +56,7 @@ public class LensPersistentResult extends PersistentResultSet {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.driver.LensResultSet#size()
    */
   @Override

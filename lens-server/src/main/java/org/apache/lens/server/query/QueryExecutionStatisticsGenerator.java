@@ -27,6 +27,7 @@ import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryEnded;
 import org.apache.lens.server.stats.event.query.QueryDriverStatistics;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +48,8 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
   /**
    * Instantiates a new query execution statistics generator.
    *
-   * @param queryService
-   *          the query service
-   * @param eventService
-   *          the event service
+   * @param queryService the query service
+   * @param eventService the event service
    */
   public QueryExecutionStatisticsGenerator(QueryExecutionServiceImpl queryService, LensEventService eventService) {
     this.queryService = queryService;
@@ -59,7 +58,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
    */
   @Override
@@ -72,7 +71,7 @@ public class QueryExecutionStatisticsGenerator extends AsyncEventListener<QueryE
     QueryContext ctx = queryService.getQueryContext(handle);
     if (ctx == null) {
       LOG.warn("Could not find the context for " + handle + " for event:" + ended.getCurrentValue()
-          + ". No stat generated");
+        + ". No stat generated");
       return;
     }
     event.setEndTime(ctx.getEndTime());

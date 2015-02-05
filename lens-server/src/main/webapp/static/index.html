@@ -49,228 +49,236 @@
     <![endif]-->
 </head>
 <body>
-	<div id="queryui" class="container">
-		<nav class="navbar navbar-inverse" role="navigation">
-			<div class="container-fluid">
-				<!-- Brand and toggle get grouped for better mobile display -->
-				<div class="navbar-header">
-					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-						<span class="sr-only">Toggle navigation</span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-						<span class="icon-bar"></span>
-					</button>
-					<a class="navbar-brand" href="#">Lens UI</a>
-				</div>
+<div id="queryui" class="container">
+    <nav class="navbar navbar-inverse" role="navigation">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse"
+                        data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Lens UI</a>
+            </div>
 
-				<!-- Collect the nav links, forms, and other content for toggling -->
-				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-					<ul id="navlinks" class="nav navbar-nav">
-						<li><a href="#query">Query</a></li>
-						<li><a href="#history">Query History</a></li>
-					</ul>
-					<button id="log-out" type="button">LogOut</button>
-				</div><!-- /.navbar-collapse -->
-			</div><!-- /.container-fluid -->
-		</nav>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul id="navlinks" class="nav navbar-nav">
+                    <li><a href="#query">Query</a></li>
+                    <li><a href="#history">Query History</a></li>
+                </ul>
+                <button id="log-out" type="button">LogOut</button>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container-fluid -->
+    </nav>
 
-		<!-- Main Content -->
-		<div id="query-ui-content" class="row">
-			<!-- Sidebar -->
-			<div class="col-md-3">
-				<div class="input-group">
-					<input id="meta-input" type="text" class="form-control" placeholder="Filter..">
-					<span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
-				</div>
-				<ul id="meta-views" class="list-group">
-					<li class="list-group-item list-group-item-info">Cube</li>
-					<li class="list-group-item list-group-item-info">Cube</li>
-					<li class="list-group-item list-group-item-success">Dimension</li>
-					<li class="list-group-item list-group-item-success">Dimension</li>
-				</ul>
-			</div>
+    <!-- Main Content -->
+    <div id="query-ui-content" class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="input-group">
+                <input id="meta-input" type="text" class="form-control" placeholder="Filter..">
+                <span class="input-group-addon"><i class="glyphicon glyphicon-search"></i></span>
+            </div>
+            <ul id="meta-views" class="list-group">
+                <li class="list-group-item list-group-item-info">Cube</li>
+                <li class="list-group-item list-group-item-info">Cube</li>
+                <li class="list-group-item list-group-item-success">Dimension</li>
+                <li class="list-group-item list-group-item-success">Dimension</li>
+            </ul>
+        </div>
 
-			<!-- Query content -->
-			<div class="col-md-9">
-				<!-- Query Submit Form -->
-				<form role="form" id="query-form">
-					<h3>Query</h3>
-					<div class="form-group">
-						<label>Enter your SQL query below</label>
-						<textarea id="query" class="form-control" rows="3"></textarea>
-					</div>
-					<button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-play-circle"></span> Submit Query</button>
-					<img class="loading" src="http://preloaders.net/preloaders/335/Thin%20broken%20ring.gif">
-				</form>
+        <!-- Query content -->
+        <div class="col-md-9">
+            <!-- Query Submit Form -->
+            <form role="form" id="query-form">
+                <h3>Query</h3>
 
-				<!-- Results -->
-				<h3>Results</h3>
-				
-				<!--<ul class="pagination">
-					<li><a href="#">&laquo;</a></li>
-					<li><a href="#">1</a></li>
-					<li><a href="#">2</a></li>
-					<li><a href="#">3</a></li>
-					<li><a href="#">4</a></li>
-					<li><a href="#">5</a></li>
-					<li><a href="#">&raquo;</a></li>
-				</ul>-->
-			</div>
-		</div>
-
-		<div id="historyui" class="row">
-			<div class="col-md-12"></div>
-		</div>
-	</div>
-
-	<div id="loginui" class="container">
-	    <div class="row">
-			<div class="col-md-4 col-md-offset-4">
-	    		<div class="panel panel-default">
-				  	<div class="panel-heading">
-				    	<h3 class="panel-title">Lens UI Login</h3>
-				 	</div>
-				  	<div class="panel-body">
-				    	<form id="login-form" accept-charset="UTF-8" role="form">
-	                    <fieldset>
-				    	  	<div class="form-group">
-				    		    <input id="email" class="form-control" placeholder="E-mail" name="email" type="text">
-				    		</div>
-				    		<div class="form-group">
-				    			<input id="password" class="form-control" placeholder="Password" name="password" type="password" value="">
-				    		</div>
-				    		<div class="checkbox">
-				    	    	<label>
-				    	    		<input name="remember" type="checkbox" value="Remember Me"> Remember Me
-				    	    	</label>
-				    	    </div>
-				    		<input id="login-btn" class="btn btn-lg btn-success btn-block" type="submit" value="Login">
-				    	</fieldset>
-				      	</form>
-				    </div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-    <!-- Modal for Histogram-->
-    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+                <div class="form-group">
+                    <label>Enter your SQL query below</label>
+                    <textarea id="query" class="form-control" rows="3"></textarea>
                 </div>
-                <div class="modal-body" id="myModalCanvas">
-                    ...
+                <button type="submit" class="btn btn-success"><span class="glyphicon glyphicon-play-circle"></span>
+                    Submit Query
+                </button>
+                <img class="loading" src="http://preloaders.net/preloaders/335/Thin%20broken%20ring.gif">
+            </form>
+
+            <!-- Results -->
+            <h3>Results</h3>
+
+            <!--<ul class="pagination">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">4</a></li>
+                <li><a href="#">5</a></li>
+                <li><a href="#">&raquo;</a></li>
+            </ul>-->
+        </div>
+    </div>
+
+    <div id="historyui" class="row">
+        <div class="col-md-12"></div>
+    </div>
+</div>
+
+<div id="loginui" class="container">
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Lens UI Login</h3>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <div class="panel-body">
+                    <form id="login-form" accept-charset="UTF-8" role="form">
+                        <fieldset>
+                            <div class="form-group">
+                                <input id="email" class="form-control" placeholder="E-mail" name="email" type="text">
+                            </div>
+                            <div class="form-group">
+                                <input id="password" class="form-control" placeholder="Password" name="password"
+                                       type="password" value="">
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input name="remember" type="checkbox" value="Remember Me"> Remember Me
+                                </label>
+                            </div>
+                            <input id="login-btn" class="btn btn-lg btn-success btn-block" type="submit" value="Login">
+                        </fieldset>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-	<!-- Additional stylsheets -->
-	<link rel="stylesheet" href="css/codemirror.min.css">
-	<style type="text/css">
-	.CodeMirror {
-		border: 1px solid #ccc;
-		height: 75px;
-	}
-	#query-form button {
-		margin-right: 10px;
-	}
-	#query-form .loading {
-		margin-right: 10px;
-	}
-	#loginui {
-		margin-top: 50px;
-	}
-	button#log-out {
-		float: right;
-		margin-top: 10px;
-		margin-left: 0px;
-	}
-	.panel-body .CodeMirror {
-		height: auto;
-	}
-	.panel-body .CodeMirror-scroll {
-		height: auto;
-		overflow-y: hidden;
-		overflow-x: auto;
-	}
-	.panel-footer button {
-		margin-left: 20px;
-	}
-	#meta-views li {
-		cursor: pointer;
-        visibility : visible;
-	}
-	#historyui .CodeMirror {
-		height: 50px;
-	}
-	#historyui div table th:nth-child(1), #historyui div table th:nth-child(3) {
-		cursor: pointer;
-	}
-    #myModalCanvas {
-        width: 450px;
-        height: 400px;
-        position: relative;
+<!-- Modal for Histogram-->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span
+                        class="sr-only">Close</span></button>
+                <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+            </div>
+            <div class="modal-body" id="myModalCanvas">
+                ...
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Additional stylsheets -->
+<link rel="stylesheet" href="css/codemirror.min.css">
+<style type="text/css">
+    .CodeMirror {
+    border: 1px solid #ccc;
+    height: 75px;
     }
-    #bar_tooltip {
-        font-size: 13px;
-        position: absolute;
-        display: none;
-        padding: 2px;
-        border: 2px solid;
-        -webkit-border-radius: 5px;
-        border-radius: 5px;
-        background-color: #FFF;
-        opacity: 0.8;
+    #query-form button {
+    margin-right: 10px;
+    }
+    #query-form .loading {
+    margin-right: 10px;
+    }
+    #loginui {
+    margin-top: 50px;
+    }
+    button#log-out {
+    float: right;
+    margin-top: 10px;
+    margin-left: 0px;
+    }
+    .panel-body .CodeMirror {
+    height: auto;
+    }
+    .panel-body .CodeMirror-scroll {
+    height: auto;
+    overflow-y: hidden;
+    overflow-x: auto;
+    }
+    .panel-footer button {
+    margin-left: 20px;
     }
     #meta-views li {
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        -khtml-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
+    cursor: pointer;
+    visibility : visible;
+    }
+    #historyui .CodeMirror {
+    height: 50px;
+    }
+    #historyui div table th:nth-child(1), #historyui div table th:nth-child(3) {
+    cursor: pointer;
+    }
+    #myModalCanvas {
+    width: 450px;
+    height: 400px;
+    position: relative;
+    }
+    #bar_tooltip {
+    font-size: 13px;
+    position: absolute;
+    display: none;
+    padding: 2px;
+    border: 2px solid;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    background-color: #FFF;
+    opacity: 0.8;
+    }
+    #meta-views li {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     }
     #meta-views li > span {
-        margin-right: 10px;
+    margin-right: 10px;
     }
-	#historyui div table th span {
-		margin-left: 10px;
-	}
-	#historyui div table td:nth-child(4) .btn {
-		margin-right: 10px;
-	}
-	.pagination li {
-		cursor: pointer;
-	}
-	</style>
+    #historyui div table th span {
+    margin-left: 10px;
+    }
+    #historyui div table td:nth-child(4) .btn {
+    margin-right: 10px;
+    }
+    .pagination li {
+    cursor: pointer;
+    }
+</style>
 
-	<!-- Additional Scripts -->
-	<script src="js/libs/codemirror.min.js"></script>
-	<script src="js/libs/sql.js"></script>
-	<script type="text/javascript" src="js/libs/moment.js"></script>
-	<script type="text/javascript" src="js/libs/stupidtable.min.js"></script>
+<!-- Additional Scripts -->
+<script src="js/libs/codemirror.min.js"></script>
+<script src="js/libs/sql.js"></script>
+<script type="text/javascript" src="js/libs/moment.js"></script>
+<script type="text/javascript" src="js/libs/stupidtable.min.js"></script>
 
-	<script type="text/javascript" src="js/util.js"></script>
+<script type="text/javascript" src="js/util.js"></script>
 
-    <script type="text/javascript" src="js/models/meta.js"></script>
-	<script type="text/javascript" src="js/models/session.js"></script>
-	<script type="text/javascript" src="js/models/query.js"></script>
-	<script type="text/javascript" src="js/models/row.js"></script>
-	<script type="text/javascript" src="js/models/resultset.js"></script>	
+<script type="text/javascript" src="js/models/meta.js"></script>
+<script type="text/javascript" src="js/models/session.js"></script>
+<script type="text/javascript" src="js/models/query.js"></script>
+<script type="text/javascript" src="js/models/row.js"></script>
+<script type="text/javascript" src="js/models/resultset.js"></script>
 
-	<script type="text/javascript" src="js/historyrowview.js"></script>
-	<script type="text/javascript" src="js/historytableview.js"></script>
-	<script type="text/javascript" src="js/metaview.js"></script>
-	
-	<script type="text/javascript" src="js/index.js"></script>
-    <script type="text/javascript" src="js/libs/jquery.flot.js"></script>
+<script type="text/javascript" src="js/historyrowview.js"></script>
+<script type="text/javascript" src="js/historytableview.js"></script>
+<script type="text/javascript" src="js/metaview.js"></script>
+
+<script type="text/javascript" src="js/index.js"></script>
+<script type="text/javascript" src="js/libs/jquery.flot.js"></script>
 
 </body>
 

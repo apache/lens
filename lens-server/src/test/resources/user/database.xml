@@ -29,6 +29,9 @@
   </property>
   <property>
     <name>lens.server.user.resolver.db.query</name>
-    <value>select user_clusteruser.clusteruser, department_queue.queue from user_clusteruser, user_department, department_queue where user_clusteruser.username=user_department.username and user_department.department=department_queue.department and user_clusteruser.username=?</value>
+    <value>select user_clusteruser.clusteruser, department_queue.queue from user_clusteruser, user_department,
+      department_queue where user_clusteruser.username=user_department.username and
+      user_department.department=department_queue.department and user_clusteruser.username=?
+    </value>
   </property>
 </configuration>

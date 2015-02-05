@@ -18,18 +18,19 @@
  */
 package org.apache.lens.server.stats.store;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.stats.event.LensStatistics;
+
+import org.apache.hadoop.conf.Configuration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Top level class used to persist the Statistics event.
  *
- * @param <T>
- *          the generic type
+ * @param <T> the generic type
  */
 public abstract class StatisticsStore<T extends LensStatistics> extends AsyncEventListener<T> {
 
@@ -39,16 +40,14 @@ public abstract class StatisticsStore<T extends LensStatistics> extends AsyncEve
   /**
    * Initialize the store.
    *
-   * @param conf
-   *          configuration for the store
+   * @param conf configuration for the store
    */
   public abstract void initialize(Configuration conf);
 
   /**
    * Start the Store.
    *
-   * @param service
-   *          the service
+   * @param service the service
    */
   public void start(LensEventService service) {
     if (service == null) {
@@ -59,8 +58,7 @@ public abstract class StatisticsStore<T extends LensStatistics> extends AsyncEve
   /**
    * Stop the store.
    *
-   * @param service
-   *          the service
+   * @param service the service
    */
   public void stop(LensEventService service) {
     if (service == null) {

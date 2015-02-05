@@ -28,7 +28,7 @@ public class StatisticsLogLayout extends SimpleLayout {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.log4j.SimpleLayout#format(org.apache.log4j.spi.LoggingEvent)
    */
   @Override

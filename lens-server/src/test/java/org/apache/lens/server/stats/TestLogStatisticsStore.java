@@ -18,18 +18,21 @@
  */
 package org.apache.lens.server.stats;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.ql.metadata.Table;
+import java.io.StringWriter;
+
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.log.LogStatisticsStore;
 import org.apache.lens.server.stats.store.log.StatisticsLogLayout;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.log4j.Logger;
 import org.apache.log4j.WriterAppender;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-import java.io.StringWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * The Class TestLogStatisticsStore.
@@ -45,8 +48,7 @@ public class TestLogStatisticsStore {
     /**
      * Instantiates a new my loggable lens.
      *
-     * @param eventTime
-     *          the event time
+     * @param eventTime the event time
      */
     public MyLoggableLens(long eventTime) {
       super(eventTime);
@@ -54,7 +56,7 @@ public class TestLogStatisticsStore {
 
     /*
      * (non-Javadoc)
-     * 
+     *
      * @see org.apache.lens.server.stats.event.LoggableLensStatistics#getHiveTable(org.apache.hadoop.conf.Configuration)
      */
     @Override
@@ -71,8 +73,7 @@ public class TestLogStatisticsStore {
   /**
    * Test log statistics store.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testLogStatisticsStore() throws Exception {

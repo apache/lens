@@ -18,13 +18,13 @@
  */
 package org.apache.lens.server;
 
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 /**
  * Initialize the webapp.
@@ -40,8 +40,7 @@ public class LensServletContextListener implements ServletContextListener {
    * * Notification that the web application initialization * process is starting. * All ServletContextListeners are
    * notified of context * initialization before any filter or servlet in the web * application is initialized.
    *
-   * @param sce
-   *          the sce
+   * @param sce the sce
    */
   @Override
   public void contextInitialized(ServletContextEvent sce) {
@@ -77,8 +76,7 @@ public class LensServletContextListener implements ServletContextListener {
    * * Notification that the servlet context is about to be shut down. * All servlets and filters have been destroy()ed
    * before any * ServletContextListeners are notified of context * destruction.
    *
-   * @param sce
-   *          the sce
+   * @param sce the sce
    */
   @Override
   public void contextDestroyed(ServletContextEvent sce) {

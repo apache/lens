@@ -45,6 +45,6 @@
   </property>
   <property>
     <name>lens.driver.jdbc.explain.keyword</name>
-    <value>explain plan for </value>
+    <value>explain plan for</value>
   </property>
 </configuration>

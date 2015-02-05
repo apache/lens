@@ -31,7 +31,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see javax.ws.rs.container.ContainerRequestFilter#filter(javax.ws.rs.container.ContainerRequestContext)
    */
   @Override
@@ -57,7 +57,7 @@ public class ServerModeFilter implements ContainerRequestFilter {
       // Does not allows DROP on metastore, all other request are allowed
       if (requestContext.getUriInfo().getPath().startsWith("/metastore")) {
         if (requestContext.getMethod().equals("DELETE")) {
-          throw new NotAllowedException("Metastore is in nodrop mode", "GET", new String[] { "PUT", "POST" });
+          throw new NotAllowedException("Metastore is in nodrop mode", "GET", new String[]{"PUT", "POST"});
         }
       }
       break;

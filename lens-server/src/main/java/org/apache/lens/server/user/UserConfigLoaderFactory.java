@@ -18,16 +18,19 @@
  */
 package org.apache.lens.server.user;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+import java.util.Map;
+
 import org.apache.lens.server.api.LensConfConstants;
 
-import java.util.Map;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 /**
  * A factory for creating UserConfigLoader objects.
  */
-public class UserConfigLoaderFactory {
+public final class UserConfigLoaderFactory {
+  private UserConfigLoaderFactory() {
 
+  }
   /** The conf. */
   private static HiveConf conf;
 
@@ -37,8 +40,7 @@ public class UserConfigLoaderFactory {
   /**
    * Inits the.
    *
-   * @param c
-   *          the c
+   * @param c the c
    */
   public static void init(HiveConf c) {
     conf = c;
@@ -87,8 +89,7 @@ public class UserConfigLoaderFactory {
   /**
    * Gets the query user resolver.
    *
-   * @param resolverType
-   *          the resolver type
+   * @param resolverType the resolver type
    * @return the query user resolver
    */
   public static UserConfigLoader getQueryUserResolver(RESOLVER_TYPE resolverType) {
@@ -110,8 +111,7 @@ public class UserConfigLoaderFactory {
   /**
    * Gets the user config.
    *
-   * @param loggedInUser
-   *          the logged in user
+   * @param loggedInUser the logged in user
    * @return the user config
    */
   public static Map<String, String> getUserConfig(String loggedInUser) {

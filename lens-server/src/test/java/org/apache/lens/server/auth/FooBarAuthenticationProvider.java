@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.auth;
 
-import org.apache.hive.service.auth.PasswdAuthenticationProvider;
-
 import javax.security.sasl.AuthenticationException;
+
+import org.apache.hive.service.auth.PasswdAuthenticationProvider;
 
 /**
  * The Class FooBarAuthenticationProvider.
@@ -28,15 +28,16 @@ import javax.security.sasl.AuthenticationException;
 public class FooBarAuthenticationProvider implements PasswdAuthenticationProvider {
 
   /** The msg. */
-  public static String MSG = "<username,password>!=<foo@localhost,bar>";
+  public static final String MSG = "<username,password>!=<foo@localhost,bar>";
 
   /** The allowed combinations. */
-  private final String[][] allowedCombinations = new String[][] { { "foo", "bar" }, { "anonymous", "" }, };
+  private final String[][] allowedCombinations = new String[][]{{"foo", "bar"}, {"anonymous", ""}};
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.auth.PasswdAuthenticationProvider#Authenticate(java.lang.String, java.lang.String)
+   * SUSPEND CHECKSTYLE CHECK MethodName
    */
   @Override
   public void Authenticate(String username, String password) throws AuthenticationException {
@@ -47,4 +48,5 @@ public class FooBarAuthenticationProvider implements PasswdAuthenticationProvide
     }
     throw new AuthenticationException(MSG);
   }
+  // RESUME CHECKSTYLE CHECK MethodName
 }

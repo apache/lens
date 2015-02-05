@@ -18,11 +18,17 @@
  */
 package org.apache.lens.server.stats;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogFileScannerTask;
+
 import org.apache.log4j.FileAppender;
 import org.apache.log4j.Logger;
+
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -30,10 +36,6 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * The Class TestStatisticsLogFileScannerTask.
@@ -50,8 +52,7 @@ public class TestStatisticsLogFileScannerTask {
   /**
    * Creates the test log file.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @BeforeMethod
   public void createTestLogFile() throws Exception {
@@ -64,8 +65,7 @@ public class TestStatisticsLogFileScannerTask {
   /**
    * Delete test file.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @AfterMethod
   public void deleteTestFile() throws Exception {
@@ -76,8 +76,7 @@ public class TestStatisticsLogFileScannerTask {
   /**
    * Test scanner.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testScanner() throws Exception {

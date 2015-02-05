@@ -21,11 +21,14 @@ package org.apache.lens.server.common;
 
 import java.io.File;
 
-public class LensServerTestFileUtils {
+public final class LensServerTestFileUtils {
+  private LensServerTestFileUtils() {
+
+  }
 
   public static void deleteFile(final File file) throws LenServerTestException {
     if (!file.delete()) {
-      throw new LenServerTestException("Could not delete file:"+file.getPath());
+      throw new LenServerTestException("Could not delete file:" + file.getPath());
     }
   }
 }

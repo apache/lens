@@ -25,8 +25,13 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import lombok.Getter;
-import lombok.Setter;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.ServiceProvider;
+import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.session.LensSessionImpl;
+import org.apache.lens.server.stats.StatisticsService;
+import org.apache.lens.server.user.UserConfigLoaderFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -38,13 +43,9 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.cli.CLIService;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.ServiceProvider;
-import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.session.LensSessionImpl;
-import org.apache.lens.server.stats.StatisticsService;
-import org.apache.lens.server.user.UserConfigLoaderFactory;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Manage lifecycle of all Lens services
@@ -61,7 +62,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
   private static final String FS_AUTOMATIC_CLOSE = "fs.automatic.close";
 
   /** The instance. */
-  private static LensServices INSTANCE = new LensServices(LENS_SERVICES_NAME);
+  private static LensServices instance = new LensServices(LENS_SERVICES_NAME);
 
   /** The conf. */
   private HiveConf conf;
@@ -109,13 +110,12 @@ public class LensServices extends CompositeService implements ServiceProvider {
     METASTORE_NODROP, // DELETE requests on metastore are not accepted
     /** The open. */
     OPEN // All requests are accepted
-  };
+  }
 
   /**
    * Instantiates a new lens services.
    *
-   * @param name
-   *          the name
+   * @param name the name
    */
   public LensServices(String name) {
     super(name);
@@ -123,12 +123,12 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   // This is only for test, to simulate a restart of the server
   static void setInstance(LensServices newInstance) {
-    INSTANCE = newInstance;
+    instance = newInstance;
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#init(org.apache.hadoop.hive.conf.HiveConf)
    */
   @SuppressWarnings("unchecked")
@@ -140,7 +140,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
       conf.addResource("lens-site.xml");
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(LensConfConstants.SERVER_MODE,
-          SERVICE_MODE.valueOf(LensConfConstants.DEFAULT_SERVER_MODE));
+        SERVICE_MODE.valueOf(LensConfConstants.DEFAULT_SERVER_MODE));
       cliService = new CLIService();
 
       // Add default services
@@ -168,7 +168,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
             Class<? extends LensService> serviceClass = (Class<? extends LensService>) cls;
             LOG.info("Adding " + sName + " service with " + serviceClass);
             Constructor<?> constructor = serviceClass.getConstructor(CLIService.class);
-            LensService service = (LensService) constructor.newInstance(new Object[] { cliService });
+            LensService service = (LensService) constructor.newInstance(new Object[]{cliService});
             addService(service);
             lensServices.add(service);
           } else if (Service.class.isAssignableFrom(cls)) {
@@ -194,7 +194,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
       // setup persisted state
       String persistPathStr = conf.get(LensConfConstants.SERVER_STATE_PERSIST_LOCATION,
-          LensConfConstants.DEFAULT_SERVER_STATE_PERSIST_LOCATION);
+        LensConfConstants.DEFAULT_SERVER_STATE_PERSIST_LOCATION);
       persistDir = new Path(persistPathStr);
       try {
         Configuration configuration = new Configuration(conf);
@@ -206,7 +206,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
         throw new RuntimeException("Could not recover from persisted state", e);
       }
       snapShotInterval = conf.getLong(LensConfConstants.SERVER_SNAPSHOT_INTERVAL,
-          LensConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
+        LensConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized services: " + services.keySet().toString());
       UserConfigLoaderFactory.init(conf);
       timer = new Timer("lens-server-snapshotter", true);
@@ -215,7 +215,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#start()
    */
   public synchronized void start() {
@@ -238,14 +238,12 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /**
    * Setup persisted state.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
-   * @throws ClassNotFoundException
-   *           the class not found exception
+   * @throws IOException            Signals that an I/O exception has occurred.
+   * @throws ClassNotFoundException the class not found exception
    */
   private void setupPersistedState() throws IOException, ClassNotFoundException {
     if (conf.getBoolean(LensConfConstants.SERVER_RECOVER_ON_RESTART,
-        LensConfConstants.DEFAULT_SERVER_RECOVER_ON_RESTART)) {
+      LensConfConstants.DEFAULT_SERVER_RECOVER_ON_RESTART)) {
 
       for (LensService service : lensServices) {
         ObjectInputStream in = null;
@@ -270,8 +268,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /**
    * Persist lens service state.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private synchronized void persistLensServiceState() throws IOException {
     if (conf.getBoolean(LensConfConstants.SERVER_RESTART_ENABLED, LensConfConstants.DEFAULT_SERVER_RESTART_ENABLED)) {
@@ -303,8 +300,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /**
    * Gets the service persist path.
    *
-   * @param service
-   *          the service
+   * @param service the service
    * @return the service persist path
    */
   private Path getServicePersistPath(LensService service) {
@@ -313,7 +309,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hive.service.CompositeService#stop()
    */
   public synchronized void stop() {
@@ -357,12 +353,12 @@ public class LensServices extends CompositeService implements ServiceProvider {
    * @return the lens services
    */
   public static LensServices get() {
-    return INSTANCE;
+    return instance;
   }
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.ServiceProvider#getService(java.lang.String)
    */
   @Override

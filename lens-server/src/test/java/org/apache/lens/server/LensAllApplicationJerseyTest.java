@@ -20,7 +20,6 @@ package org.apache.lens.server;
 
 import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.LensApplication;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
@@ -31,7 +30,7 @@ public abstract class LensAllApplicationJerseyTest extends LensJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#configure()
    */
   @Override
@@ -41,7 +40,7 @@ public abstract class LensAllApplicationJerseyTest extends LensJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#configureClient(org.glassfish.jersey.client.ClientConfig)
    */
   @Override

@@ -22,6 +22,7 @@ import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.ServerErrorException;
 
 import org.apache.lens.server.api.metrics.MetricsService;
+
 import org.glassfish.jersey.server.monitoring.RequestEvent;
 import org.glassfish.jersey.server.monitoring.RequestEventListener;
 
@@ -55,10 +56,10 @@ public class LensRequestListener implements RequestEventListener {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
-   * org.glassfish.jersey.server.monitoring.RequestEventListener#onEvent(org.glassfish.jersey.server.monitoring.RequestEvent
-   * )
+   * org.glassfish.jersey.server.monitoring.RequestEventListener
+   * #onEvent(org.glassfish.jersey.server.monitoring.RequestEvent)
    */
   @Override
   public void onEvent(RequestEvent event) {

@@ -23,51 +23,53 @@
 
 <configuration>
 
-<property>
-  <name>lens.driver.hive.connection.class</name>
-  <value>org.apache.lens.driver.hive.RemoteThriftConnection</value>
-  <description>The connection class from HiveDriver to HiveServer. </description>
-</property>
+  <property>
+    <name>lens.driver.hive.connection.class</name>
+    <value>org.apache.lens.driver.hive.RemoteThriftConnection</value>
+    <description>The connection class from HiveDriver to HiveServer.</description>
+  </property>
 
-<property>
-  <name>hive.metastore.local</name>
-  <value>true</value>
-</property>
+  <property>
+     
+    <name>hive.metastore.local</name>
+     
+    <value>true</value>
+  </property>
 
-<property>
-  <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
-</property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/tmp/hive/warehouse</value>
+  </property>
 
-<property>
-  <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
-  <description>JDBC connect string for a JDBC metastore</description>
-</property>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
+    <description>JDBC connect string for a JDBC metastore</description>
+  </property>
 
-<property>
-  <name>hive.lock.manager</name>
-  <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
-</property>
+  <property>
+    <name>hive.lock.manager</name>
+    <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.bind.host</name>
-  <value>localhost</value>
-</property>
+  <property>
+    <name>hive.server2.thrift.bind.host</name>
+    <value>localhost</value>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.port</name>
-  <value>12345</value>
-</property>
+  <property>
+    <name>hive.server2.thrift.port</name>
+    <value>12345</value>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.client.retry.limit</name>
-  <value>3</value>
-</property>
+  <property>
+    <name>hive.server2.thrift.client.retry.limit</name>
+    <value>3</value>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.client.connect.retry.limit</name>
-  <value>3</value>
-</property>
+  <property>
+    <name>hive.server2.thrift.client.connect.retry.limit</name>
+    <value>3</value>
+  </property>
 
 </configuration>

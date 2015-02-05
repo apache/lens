@@ -19,7 +19,9 @@
 package org.apache.lens.server;
 
 import org.apache.lens.server.api.metrics.MetricsService;
+
 import org.apache.log4j.Logger;
+
 import org.glassfish.jersey.server.monitoring.ApplicationEvent;
 import org.glassfish.jersey.server.monitoring.ApplicationEventListener;
 import org.glassfish.jersey.server.monitoring.RequestEvent;
@@ -44,7 +46,7 @@ public class LensApplicationListener implements ApplicationEventListener {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.glassfish.jersey.server.monitoring.ApplicationEventListener#onRequest(org.glassfish.jersey.server.monitoring
    * .RequestEvent)
@@ -64,7 +66,7 @@ public class LensApplicationListener implements ApplicationEventListener {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see
    * org.glassfish.jersey.server.monitoring.ApplicationEventListener#onEvent(org.glassfish.jersey.server.monitoring.
    * ApplicationEvent)

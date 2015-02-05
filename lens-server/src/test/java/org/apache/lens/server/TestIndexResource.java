@@ -21,7 +21,6 @@ package org.apache.lens.server;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 
-import org.apache.lens.server.IndexApp;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -35,7 +34,7 @@ public class TestIndexResource extends LensJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#setUp()
    */
   @BeforeTest
@@ -45,7 +44,7 @@ public class TestIndexResource extends LensJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#tearDown()
    */
   @AfterTest
@@ -55,7 +54,7 @@ public class TestIndexResource extends LensJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#configure()
    */
   @Override

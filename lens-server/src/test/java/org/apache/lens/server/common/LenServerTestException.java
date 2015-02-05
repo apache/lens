@@ -24,7 +24,8 @@ public class LenServerTestException extends Exception {
   public LenServerTestException(final String errorMsg) {
     super(errorMsg);
   }
+
   public LenServerTestException(final String errorMsg, final Throwable cause) {
-    super(errorMsg,cause);
+    super(errorMsg, cause);
   }
 }

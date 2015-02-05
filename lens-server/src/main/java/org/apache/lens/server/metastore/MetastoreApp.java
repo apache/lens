@@ -19,16 +19,16 @@
 package org.apache.lens.server.metastore;
 
 
-import org.apache.lens.server.LensApplicationListener;
-import org.glassfish.jersey.filter.LoggingFilter;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-
-
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;
+
+import org.apache.lens.server.LensApplicationListener;
+
+import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 
 @ApplicationPath("/")
 public class MetastoreApp extends Application {

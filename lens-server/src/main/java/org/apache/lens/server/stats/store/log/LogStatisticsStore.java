@@ -18,17 +18,20 @@
  */
 package org.apache.lens.server.stats.store.log;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.StatisticsStore;
+
+import org.apache.hadoop.conf.Configuration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * The Class LogStatisticsStore.
@@ -60,7 +63,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.stats.store.StatisticsStore#initialize(org.apache.hadoop.conf.Configuration)
    */
   public void initialize(Configuration conf) {
@@ -74,7 +77,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.api.events.AsyncEventListener#process(org.apache.lens.server.api.events.LensEvent)
    */
   @Override
@@ -84,7 +87,8 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
       String representation = null;
       try {
         representation = mapper.writeValueAsString(event);
-      } catch (JsonProcessingException ignored) {
+      } catch (JsonProcessingException e) {
+        LOG.error("json processing exception", e);
       }
       if (representation != null) {
         rollupHandler.addToScanTask(eventClass.getName());
@@ -100,7 +104,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.stats.store.StatisticsStore#start(org.apache.lens.server.api.events.LensEventService)
    */
   public void start(LensEventService service) {
@@ -117,7 +121,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.server.stats.store.StatisticsStore#stop(org.apache.lens.server.api.events.LensEventService)
    */
   public void stop(LensEventService service) {

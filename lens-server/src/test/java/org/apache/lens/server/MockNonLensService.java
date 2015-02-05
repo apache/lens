@@ -28,8 +28,7 @@ public class MockNonLensService extends AbstractService {
   /**
    * Instantiates a new mock non lens service.
    *
-   * @param name
-   *          the name
+   * @param name the name
    */
   public MockNonLensService(String name) {
     super(name);

@@ -23,32 +23,32 @@
   xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
   http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 
-    <display-name>Lens Server</display-name>
-    <description>Unified Analytics</description>
+  <display-name>Lens Server</display-name>
+  <description>Unified Analytics</description>
 
-    <servlet>
-        <servlet-name>LensAPI</servlet-name>
-        <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
-        <init-param>
-            <param-name>javax.ws.rs.Application</param-name>
-            <param-value>org.apache.lens.server.LensApplication</param-value>
-        </init-param>        
-        <load-on-startup>1</load-on-startup>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>LensAPI</servlet-name>
-        <url-pattern>/*</url-pattern>
-    </servlet-mapping>
+  <servlet>
+    <servlet-name>LensAPI</servlet-name>
+    <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>
+    <init-param>
+      <param-name>javax.ws.rs.Application</param-name>
+      <param-value>org.apache.lens.server.LensApplication</param-value>
+    </init-param>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>LensAPI</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
 
-    <!-- Servlet Configuration -->
-    <context-param>
-        <param-name>lens.server.log4j.properties</param-name>
-        <param-value>WEB-INF/log4j.properties</param-value>
-    </context-param>
+  <!-- Servlet Configuration -->
+  <context-param>
+    <param-name>lens.server.log4j.properties</param-name>
+    <param-value>WEB-INF/log4j.properties</param-value>
+  </context-param>
 
-    <!-- Servlet context listener to initialize the webapp -->
-    <listener>
-        <listener-class>org.apache.lens.server.LensServletContextListener</listener-class>
-    </listener>
+  <!-- Servlet context listener to initialize the webapp -->
+  <listener>
+    <listener-class>org.apache.lens.server.LensServletContextListener</listener-class>
+  </listener>
 
 </web-app>

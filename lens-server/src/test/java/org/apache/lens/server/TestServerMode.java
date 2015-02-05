@@ -35,8 +35,8 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensServices.SERVICE_MODE;
+
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -53,7 +53,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#setUp()
    */
   @BeforeTest
@@ -63,7 +63,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.glassfish.jersey.test.JerseyTest#tearDown()
    */
   @AfterTest
@@ -75,8 +75,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   /**
    * Test read only mode.
    *
-   * @throws InterruptedException
-   *           the interrupted exception
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void testReadOnlyMode() throws InterruptedException {
@@ -86,8 +85,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   /**
    * Test metastore no drop mode.
    *
-   * @throws InterruptedException
-   *           the interrupted exception
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void testMetastoreNoDropMode() throws InterruptedException {
@@ -97,8 +95,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   /**
    * Test metastore read only mode.
    *
-   * @throws InterruptedException
-   *           the interrupted exception
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void testMetastoreReadOnlyMode() throws InterruptedException {
@@ -108,8 +105,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   /**
    * Test open mode.
    *
-   * @throws InterruptedException
-   *           the interrupted exception
+   * @throws InterruptedException the interrupted exception
    */
   @Test
   public void testOpenMode() throws InterruptedException {
@@ -119,10 +115,8 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
   /**
    * Test mode.
    *
-   * @param mode
-   *          the mode
-   * @throws InterruptedException
-   *           the interrupted exception
+   * @param mode the mode
+   * @throws InterruptedException the interrupted exception
    */
   private void testMode(SERVICE_MODE mode) throws InterruptedException {
     LensServices.get().setServiceMode(mode);
@@ -134,10 +128,10 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
-        new LensConf(), MediaType.APPLICATION_XML_TYPE));
+      new LensConf(), MediaType.APPLICATION_XML_TYPE));
 
     final LensSessionHandle lensSessionId = target.request().post(
-        Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
+      Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), LensSessionHandle.class);
     Assert.assertNotNull(lensSessionId);
 
     // creata a database
@@ -145,7 +139,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
     try {
       APIResult result = dbTarget.queryParam("sessionid", lensSessionId).request(MediaType.APPLICATION_XML_TYPE)
-          .post(Entity.xml("newdb"), APIResult.class);
+        .post(Entity.xml("newdb"), APIResult.class);
       assertNotNull(result);
       assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
@@ -164,7 +158,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
       assertEquals(drop.getStatus(), APIResult.Status.SUCCEEDED);
     } catch (NotAllowedException nae) {
       if (mode.equals(SERVICE_MODE.READ_ONLY) || mode.equals(SERVICE_MODE.METASTORE_READONLY)
-          || mode.equals(SERVICE_MODE.METASTORE_NODROP)) {
+        || mode.equals(SERVICE_MODE.METASTORE_NODROP)) {
         // expected
         System.out.println("Drop databse not allowed in mode:" + mode);
       } else {
@@ -178,11 +172,11 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     final FormDataMultiPart query = new FormDataMultiPart();
 
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-        MediaType.APPLICATION_XML_TYPE));
+      MediaType.APPLICATION_XML_TYPE));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select name from table"));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     query.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
-        new LensConf(), MediaType.APPLICATION_XML_TYPE));
+      new LensConf(), MediaType.APPLICATION_XML_TYPE));
 
     QueryHandle qhandle = null;
     try {
@@ -198,22 +192,22 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
     // Get all queries; should always pass
     List<QueryHandle> allQueriesXML = queryTarget.queryParam("sessionid", lensSessionId)
-        .request(MediaType.APPLICATION_XML).get(new GenericType<List<QueryHandle>>() {
-        });
+      .request(MediaType.APPLICATION_XML).get(new GenericType<List<QueryHandle>>() {
+      });
     Assert.assertTrue(allQueriesXML.size() >= 1);
 
     if (!mode.equals(SERVICE_MODE.READ_ONLY)) {
       assertNotNull(qhandle);
       // wait for query completion if mode is not read only
       LensQuery ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
-          .get(LensQuery.class);
+        .get(LensQuery.class);
       // Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.QUEUED);
 
       // wait till the query finishes
       QueryStatus stat = ctx.getStatus();
       while (!stat.isFinished()) {
         ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
-            .get(LensQuery.class);
+          .get(LensQuery.class);
         stat = ctx.getStatus();
         Thread.sleep(1000);
       }

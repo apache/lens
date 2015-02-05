@@ -23,47 +23,49 @@
 
 <configuration>
 
-<!-- This configuration is for HiveServer in tests -->
+  <!-- This configuration is for HiveServer in tests -->
 
-<property>
-  <name>hive.metastore.local</name>
-  <value>true</value>
-</property>
+  <property>
+     
+    <name>hive.metastore.local</name>
+     
+    <value>true</value>
+  </property>
 
-<property>
-  <name>hive.metastore.warehouse.dir</name>
-  <value>/tmp/hive/warehouse</value>
-</property>
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>/tmp/hive/warehouse</value>
+  </property>
 
-<property>
-  <name>mapreduce.framework.name</name>
-  <value>local</value>
-</property>
+  <property>
+    <name>mapreduce.framework.name</name>
+    <value>local</value>
+  </property>
 
-<property>
-  <name>mapred.job.tracker</name>
-  <value>local</value>
-</property>
+  <property>
+    <name>mapred.job.tracker</name>
+    <value>local</value>
+  </property>
 
-<property>
-  <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
-  <description>JDBC connect string for a JDBC metastore</description>
-</property>
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:derby:;databaseName=target/metastore_db;create=true</value>
+    <description>JDBC connect string for a JDBC metastore</description>
+  </property>
 
-<property>
-  <name>hive.lock.manager</name>
-  <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
-</property>
+  <property>
+    <name>hive.lock.manager</name>
+    <value>org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager</value>
+  </property>
 
-<property>
-  <name>hive.server2.async.exec.threads</name>
-  <value>5</value>
-</property>
+  <property>
+    <name>hive.server2.async.exec.threads</name>
+    <value>5</value>
+  </property>
 
-<property>
-  <name>hive.server2.query.log.dir</name>
-  <value>target/query_logs</value>
-</property>
+  <property>
+    <name>hive.server2.query.log.dir</name>
+    <value>target/query_logs</value>
+  </property>
 
 </configuration>

@@ -29,8 +29,7 @@ public abstract class LensStatistics extends LensEvent {
   /**
    * Instantiates a new lens statistics.
    *
-   * @param eventTime
-   *          the event time
+   * @param eventTime the event time
    */
   public LensStatistics(long eventTime) {
     super(eventTime);

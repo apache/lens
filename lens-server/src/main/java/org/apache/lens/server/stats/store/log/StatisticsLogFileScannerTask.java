@@ -18,22 +18,24 @@
  */
 package org.apache.lens.server.stats.store.log;
 
-import lombok.Setter;
-
-import org.apache.lens.api.LensException;
-import org.apache.lens.server.LensServices;
-import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.log4j.FileAppender;
-import org.apache.log4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.apache.lens.api.LensException;
+import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.metrics.MetricsService;
+
+import org.apache.log4j.FileAppender;
+import org.apache.log4j.Logger;
+
+import org.slf4j.LoggerFactory;
+
+import lombok.Setter;
 
 /**
  * Timer class for monitoring log file rollup.
@@ -58,7 +60,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.util.TimerTask#run()
    */
   @Override
@@ -87,10 +89,8 @@ public class StatisticsLogFileScannerTask extends TimerTask {
   /**
    * Gets the part map.
    *
-   * @param fileName
-   *          the file name
-   * @param latestLogFiles
-   *          the latest log files
+   * @param fileName       the file name
+   * @param latestLogFiles the latest log files
    * @return the part map
    */
   private HashMap<String, String> getPartMap(String fileName, File[] latestLogFiles) {
@@ -104,8 +104,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
   /**
    * Gets the latest log file.
    *
-   * @param value
-   *          the value
+   * @param value the value
    * @return the latest log file
    */
   private File[] getLatestLogFile(String value) {
@@ -123,8 +122,7 @@ public class StatisticsLogFileScannerTask extends TimerTask {
   /**
    * Adds the log file.
    *
-   * @param event
-   *          the event
+   * @param event the event
    */
   public void addLogFile(String event) {
     if (scanSet.containsKey(event)) {
