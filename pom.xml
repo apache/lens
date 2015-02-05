@@ -447,7 +447,7 @@
               <includeTestSourceDirectory>true</includeTestSourceDirectory>
               <configLocation>checkstyle.xml</configLocation>
               <headerLocation>checkstyle-java-header.txt</headerLocation>
-              <failOnViolation>false</failOnViolation>
+              <failOnViolation>true</failOnViolation>
             </configuration>
           </execution>
         </executions>
@@ -929,6 +929,40 @@
               <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
               <redirectTestOutputToFile>true</redirectTestOutputToFile>
             </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>no-checkstyle</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.lens</groupId>
+                <artifactId>checkstyle</artifactId>
+                <version>${lens.checkstyle.version}</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>checkstyle-check</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <phase>package</phase>
+                <configuration>
+                  <consoleOutput>true</consoleOutput>
+                  <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                  <configLocation>checkstyle.xml</configLocation>
+                  <headerLocation>checkstyle-java-header.txt</headerLocation>
+                  <failOnViolation>false</failOnViolation>
+                </configuration>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>

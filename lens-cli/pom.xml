@@ -186,33 +186,6 @@
           <argLine>-Xms256m -Xmx512m -XX:PermSize=256m -XX:MaxPermSize=256m</argLine>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.lens</groupId>
-            <artifactId>checkstyle</artifactId>
-            <version>${lens.checkstyle.version}</version>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <id>checkstyle-check</id>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <phase>package</phase>
-            <configuration>
-              <consoleOutput>true</consoleOutput>
-              <includeTestSourceDirectory>true</includeTestSourceDirectory>
-              <configLocation>checkstyle.xml</configLocation>
-              <headerLocation>checkstyle-java-header.txt</headerLocation>
-              <failOnViolation>true</failOnViolation>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
     </plugins>
   </build>
 
