@@ -33,7 +33,7 @@ Welcome to Lens!
 
 	* <<Lens application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
 
-	* <<Driver based architecture>> allows plugging in reporting systems like Hive, Columnar data warehouses, Redshift, Impala etc.
+	* <<Driver based architecture>> allows plugging in reporting systems like Hive, Columnar data warehouses, Redshift etc.
 
 	* <<Cost based engine selection>> - allows optimal use of resources by selecting the best execution engine for a given query based on the query cost.
 
