@@ -110,7 +110,7 @@ public class TimeRange {
   }
 
   public void validate() throws SemanticException {
-    if (partitionColumn == null || fromDate == null || toDate == null) {
+    if (partitionColumn == null || fromDate == null || toDate == null || fromDate.equals(toDate)) {
       throw new SemanticException(ErrorMsg.INVALID_TIME_RANGE);
     }
 

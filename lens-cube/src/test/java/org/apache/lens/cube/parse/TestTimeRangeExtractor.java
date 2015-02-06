@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
 
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
@@ -44,7 +45,6 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
     driver = new CubeQueryRewriter(new HiveConf());
     dateTwoDaysBack = getDateUptoHours(TWODAYS_BACK);
     dateNow = getDateUptoHours(NOW);
-
   }
 
   @AfterTest
@@ -61,12 +61,24 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
     String timeRange2 = " time_range_in(dt, '" + dateNow + "','" + dateTwoDaysBack + "')";
     try {
       // this should throw exception because from date is after to date
-      CubeQueryContext rewrittenQuery =
-        driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + timeRange2);
+      driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + timeRange2);
       Assert.fail("Should not reach here");
     } catch (SemanticException exc) {
-      exc.printStackTrace();
       Assert.assertNotNull(exc);
+      Assert.assertEquals(exc.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FROM_AFTER_TO.getErrorCode());
+    }
+  }
+
+  @Test
+  public void testEqualTimeRangeValidation() throws Exception {
+    String equalTimeRange = " time_range_in(dt, '" + dateNow + "','" + dateNow + "')";
+    try {
+      // this should throw exception because from date and to date are same
+      driver.rewrite("SELECT cityid, testCube.msr2 from" + " testCube where " + equalTimeRange);
+      Assert.fail("Should not reach here");
+    } catch (SemanticException exc) {
+      Assert.assertNotNull(exc);
+      Assert.assertEquals(exc.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.INVALID_TIME_RANGE.getErrorCode());
     }
   }
 
