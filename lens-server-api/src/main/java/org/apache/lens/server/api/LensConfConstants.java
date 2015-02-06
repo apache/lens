@@ -763,4 +763,14 @@ public final class LensConfConstants {
    * The Constant SERVICE_PROVIDER_FACTORY.
    */
   public static final String SERVICE_PROVIDER_FACTORY = SERVER_PFX + "service.provider.factory";
+
+  /**
+   * Key for reading Output Stream Buffer Size used in writing lens server state to file system
+   */
+  public static final String STATE_PERSIST_OUT_STREAM_BUFF_SIZE = SERVER_PFX + "state.persist.out.stream.buffer.size";
+
+  /**
+   * Default Output Stream Buffer Size used in writing lens server state to file system: 1MB
+   */
+  public static final int DEFAULT_STATE_PERSIST_OUT_STREAM_BUFF_SIZE = 1048576;
 }

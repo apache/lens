@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server;
 
+import static org.apache.lens.server.api.LensConfConstants.*;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -27,6 +29,13 @@ import java.util.*;
 
 import lombok.Getter;
 import lombok.Setter;
+
+import org.apache.lens.server.api.ServiceProvider;
+import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.session.LensSessionImpl;
+import org.apache.lens.server.stats.StatisticsService;
+import org.apache.lens.server.user.UserConfigLoaderFactory;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -38,13 +47,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.Service;
 import org.apache.hive.service.cli.CLIService;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.ServiceProvider;
-import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.metrics.MetricsService;
-import org.apache.lens.server.session.LensSessionImpl;
-import org.apache.lens.server.stats.StatisticsService;
-import org.apache.lens.server.user.UserConfigLoaderFactory;
 
 /**
  * Manage lifecycle of all Lens services
@@ -59,6 +61,7 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /** Constant for FileSystem auto close on shutdown config */
   private static final String FS_AUTOMATIC_CLOSE = "fs.automatic.close";
+  private static final String FS_IO_FILE_BUFFER_SIZE = "io.file.buffer.size";
 
   /** The instance. */
   private static LensServices INSTANCE = new LensServices(LENS_SERVICES_NAME);
@@ -94,6 +97,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   /** The timer. */
   private Timer timer;
+
+  /* Lock for synchronizing persistence of LensServices state */
+  private final Object statePersistenceLock = new Object();
 
   /**
    * The Enum SERVICE_MODE.
@@ -139,8 +145,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
       conf.addResource("lensserver-default.xml");
       conf.addResource("lens-site.xml");
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
-      serviceMode = conf.getEnum(LensConfConstants.SERVER_MODE,
-          SERVICE_MODE.valueOf(LensConfConstants.DEFAULT_SERVER_MODE));
+      serviceMode = conf.getEnum(SERVER_MODE,
+        SERVICE_MODE.valueOf(DEFAULT_SERVER_MODE));
       cliService = new CLIService();
 
       // Add default services
@@ -151,11 +157,11 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
       // Add configured services, these are instances of LensService which need a CLIService instance
       // for session management
-      String[] serviceNames = conf.getStrings(LensConfConstants.SERVICE_NAMES);
+      String[] serviceNames = conf.getStrings(SERVICE_NAMES);
       for (String sName : serviceNames) {
         try {
 
-          String serviceClassName = conf.get(LensConfConstants.getServiceImplConfKey(sName));
+          String serviceClassName = conf.get(getServiceImplConfKey(sName));
 
           if (StringUtils.isBlank(serviceClassName)) {
             LOG.warn("Invalid class for service " + sName + " class=" + serviceClassName);
@@ -193,20 +199,25 @@ public class LensServices extends CompositeService implements ServiceProvider {
       super.init(conf);
 
       // setup persisted state
-      String persistPathStr = conf.get(LensConfConstants.SERVER_STATE_PERSIST_LOCATION,
-          LensConfConstants.DEFAULT_SERVER_STATE_PERSIST_LOCATION);
+      String persistPathStr = conf.get(SERVER_STATE_PERSIST_LOCATION,
+        DEFAULT_SERVER_STATE_PERSIST_LOCATION);
       persistDir = new Path(persistPathStr);
       try {
         Configuration configuration = new Configuration(conf);
         configuration.setBoolean(FS_AUTOMATIC_CLOSE, false);
+
+        int outStreamBufferSize = conf.getInt(STATE_PERSIST_OUT_STREAM_BUFF_SIZE,
+            DEFAULT_STATE_PERSIST_OUT_STREAM_BUFF_SIZE);
+        configuration.setInt(FS_IO_FILE_BUFFER_SIZE, outStreamBufferSize);
+        LOG.info("STATE_PERSIST_OUT_STREAM_BUFF_SIZE IN BYTES:"+outStreamBufferSize);
         persistenceFS = FileSystem.newInstance(persistDir.toUri(), configuration);
         setupPersistedState();
       } catch (Exception e) {
         LOG.error("Could not recover from persisted state", e);
         throw new RuntimeException("Could not recover from persisted state", e);
       }
-      snapShotInterval = conf.getLong(LensConfConstants.SERVER_SNAPSHOT_INTERVAL,
-          LensConfConstants.DEFAULT_SERVER_SNAPSHOT_INTERVAL);
+      snapShotInterval = conf.getLong(SERVER_SNAPSHOT_INTERVAL,
+        DEFAULT_SERVER_SNAPSHOT_INTERVAL);
       LOG.info("Initialized services: " + services.keySet().toString());
       UserConfigLoaderFactory.init(conf);
       timer = new Timer("lens-server-snapshotter", true);
@@ -244,8 +255,8 @@ public class LensServices extends CompositeService implements ServiceProvider {
    *           the class not found exception
    */
   private void setupPersistedState() throws IOException, ClassNotFoundException {
-    if (conf.getBoolean(LensConfConstants.SERVER_RECOVER_ON_RESTART,
-        LensConfConstants.DEFAULT_SERVER_RECOVER_ON_RESTART)) {
+    if (conf.getBoolean(SERVER_RECOVER_ON_RESTART,
+      DEFAULT_SERVER_RECOVER_ON_RESTART)) {
 
       for (LensService service : lensServices) {
         ObjectInputStream in = null;
@@ -273,30 +284,33 @@ public class LensServices extends CompositeService implements ServiceProvider {
    * @throws IOException
    *           Signals that an I/O exception has occurred.
    */
-  private synchronized void persistLensServiceState() throws IOException {
-    if (conf.getBoolean(LensConfConstants.SERVER_RESTART_ENABLED, LensConfConstants.DEFAULT_SERVER_RESTART_ENABLED)) {
-      if (persistDir != null) {
-        LOG.info("Persisting server state in " + persistDir);
+  private void persistLensServiceState() throws IOException {
 
-        for (LensService service : lensServices) {
-          LOG.info("Persisting state of service:" + service.getName());
-          Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
-          ObjectOutputStream out = null;
-          try {
-            out = new ObjectOutputStream(persistenceFS.create(serviceWritePath));
-            service.writeExternal(out);
-          } finally {
-            if (out != null) {
-              out.close();
+    synchronized (statePersistenceLock) {
+      if (conf.getBoolean(SERVER_RESTART_ENABLED, DEFAULT_SERVER_RESTART_ENABLED)) {
+        if (persistDir != null) {
+          LOG.info("Persisting server state in " + persistDir);
+
+          for (LensService service : lensServices) {
+            LOG.info("Persisting state of service:" + service.getName());
+            Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
+            ObjectOutputStream out = null;
+            try {
+              out = new ObjectOutputStream(persistenceFS.create(serviceWritePath));
+              service.writeExternal(out);
+            } finally {
+              if (out != null) {
+                out.close();
+              }
             }
+            Path servicePath = getServicePersistPath(service);
+            persistenceFS.rename(serviceWritePath, servicePath);
+            LOG.info("Persisted service " + service.getName() + " to " + servicePath);
           }
-          Path servicePath = getServicePersistPath(service);
-          persistenceFS.rename(serviceWritePath, servicePath);
-          LOG.info("Persisted service " + service.getName() + " to " + servicePath);
         }
+      } else {
+        LOG.info("Server restart is not enabled. Not persisting the server state");
       }
-    } else {
-      LOG.info("Server restart is not enabled. Not persisting the server state");
     }
   }
 
