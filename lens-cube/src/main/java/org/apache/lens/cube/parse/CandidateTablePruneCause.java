@@ -16,26 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- *
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- *
- */
 package org.apache.lens.cube.parse;
 
 import java.util.*;
@@ -55,8 +35,11 @@ import lombok.NoArgsConstructor;
 
 public class CandidateTablePruneCause {
   public enum CandidateTablePruneCode {
+    MORE_WEIGHT("Picked table had more weight than minimum."),
+    // cube table has more partitions
+    MORE_PARTITIONS("Picked table has more partitions than minimum"),
     // invalid cube table
-    INVALID("Invalid cube Table provided in query"),
+    INVALID("Invalid cube table provided in query"),
     // column not valid in cube table
     COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
@@ -98,9 +81,6 @@ public class CandidateTablePruneCause {
         return new String[]{columns.toString()};
       }
     },
-    MORE_WEIGHT("Picked table Had more weight than minimum."),
-    // cube table has more partitions
-    MORE_PARTITIONS("Picked Table has more partitions than minimum"),
     // cube table is an aggregated fact and queried column is not under default
     // aggregate
     MISSING_DEFAULT_AGGREGATE("Columns: [%s] are missing default aggregate") {

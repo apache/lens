@@ -361,6 +361,15 @@ class StorageTableResolver implements ContextRewriter {
       if (cfact.numQueriedParts == 0 || (failOnPartialData && (noPartsForRange || !nonExistingParts.isEmpty()))) {
         LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
           + cubeql.getTimeRanges());
+        /*
+         * This fact is getting discarded because of any of following reasons:
+         * 1. Storage tables are not partitioned by timedim partition column
+         * 2. Has missing partitions, and CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS is true - which can populate
+         *  all missing partitions
+         * 3. Has missing partitions, and CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS is false - will populate only
+         *  the first missing partition.
+         * 4. Storage tables do not have the update period for the timerange queried.
+         */
         if (!skipStorageCauses.isEmpty()) {
           CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
@@ -507,15 +516,17 @@ class StorageTableResolver implements ContextRewriter {
           newset.remove(interval);
           if (!getPartitions(fact, dt, cal.getTime(), partCol, null, partitions, newset, false, skipStorageCauses,
             nonExistingParts)) {
+
+            // Add non existing partitions for all cases of whether we populate all non existing or not.
+            LOG.info("Adding non existing partition" + part);
+            nonExistingParts.add(part.getPartString());
             if (addNonExistingParts) {
-              LOG.info("Adding non existing partition" + part);
               if (!failOnPartialData) {
                 partitions.add(part);
                 foundPart = true;
                 // add all storage tables as the answering tables
                 part.getStorageTables().addAll(storageTbls);
               }
-              nonExistingParts.add(part.getPartString());
             } else {
               LOG.info("No finer granual partitions exist for" + part);
               return false;
