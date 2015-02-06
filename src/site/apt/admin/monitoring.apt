@@ -37,9 +37,37 @@ Lens server monitoring
   
   * Total number of cancelled queries;
   
-  Lens server also emits jvm, gc, memory and thread level metrics.
+  * Number of result formatting error
 
-  Ganglia metrics can be enabled by configuring the parameters :
+
+ Lens server also emits following metrics for other services
+
+  * Number of exceptions
+
+  * Number of HTTP client error
+
+  * Number of HTTP error
+
+  * Number of HTTP server error
+
+  * Number of HTTP unknown error
+
+  * Number of HTTP request started
+
+  * Number of HTTP requests finished
+
+  * Number of statistics store errors
+
+  * Number of statistics log partition handler errors
+
+  * Number of statistics log file scanner errors
+
+  * Number of email notification errors
+
+
+ Lens server also emits jvm, gc, memory and thread level metrics.
+
+ Ganglia metrics can be enabled by configuring the parameters :
   <lens.server.enable.gangla.metrics>, <lens.server.metrics.ganglia.serverName>, <lens.server.metrics.ganglia.port>,
    <lens.server.metrics.reporting.period>.
   
