@@ -291,9 +291,10 @@ public class LensServices extends CompositeService implements ServiceProvider {
         if (persistDir != null) {
           LOG.info("Persisting server state in " + persistDir);
 
+          long now = System.currentTimeMillis();
           for (LensService service : lensServices) {
             LOG.info("Persisting state of service:" + service.getName());
-            Path serviceWritePath = new Path(persistDir, service.getName() + ".out");
+            Path serviceWritePath = new Path(persistDir, service.getName() + ".out" + "." + now);
             ObjectOutputStream out = null;
             try {
               out = new ObjectOutputStream(persistenceFS.create(serviceWritePath));
@@ -304,12 +305,21 @@ public class LensServices extends CompositeService implements ServiceProvider {
               }
             }
             Path servicePath = getServicePersistPath(service);
-            persistenceFS.rename(serviceWritePath, servicePath);
-            LOG.info("Persisted service " + service.getName() + " to " + servicePath);
+            if (persistenceFS.exists(servicePath)) {
+              // delete the destination first, because rename is no-op in HDFS, if destination exists
+              if (!persistenceFS.delete(servicePath, true)) {
+                LOG.error("Failed to delete [" + servicePath + "]");
+              }
+            }
+            if (!persistenceFS.rename(serviceWritePath, servicePath)) {
+              LOG.error("Failed to persist " + service.getName() + " to [" + servicePath + "]");
+            } else {
+              LOG.info("Persisted service " + service.getName() + " to [" + servicePath + "]");
+            }
           }
+        } else {
+          LOG.info("Server restart is not enabled. Not persisting the server state");
         }
-      } else {
-        LOG.info("Server restart is not enabled. Not persisting the server state");
       }
     }
   }
