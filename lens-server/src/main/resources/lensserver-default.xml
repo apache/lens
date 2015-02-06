@@ -584,4 +584,10 @@
     </description>
   </property>
 
+  <property>
+    <name>lens.server.state.persist.out.stream.buffer.size</name>
+    <value>1048576</value>
+    <description>Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.</description>
+  </property>
+
 </configuration>
