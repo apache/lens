@@ -167,7 +167,7 @@ public final class JAXBUtils {
         dimRefs.add(new TableReference(xRef.getTable(), xRef.getColumn()));
       }
 
-      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().name().toLowerCase(),
+      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
         xd.getDescription()),
         xd.getDisplayString(),
         dimRefs,
@@ -176,7 +176,7 @@ public final class JAXBUtils {
         null
       );
     } else if (xd.getRefSpec() != null && xd.getRefSpec().getChainRefColumn() != null) {
-      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().name().toLowerCase(),
+      hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
         xd.getDescription()),
         xd.getDisplayString(),
         xd.getRefSpec().getChainRefColumn().getChainName(),
@@ -186,7 +186,7 @@ public final class JAXBUtils {
         null
       );
     } else {
-      hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType().name().toLowerCase(),
+      hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
         xd.getDescription()),
         xd.getDisplayString(),
         startDate,
@@ -253,7 +253,7 @@ public final class JAXBUtils {
 
     XExprColumn xe = XCF.createXExprColumn();
     xe.setName(ec.getName());
-    xe.setType(XColumnType.valueOf(ec.getType().toUpperCase()));
+    xe.setType(ec.getType());
     xe.setDescription(ec.getDescription());
     xe.setDisplayString(ec.getDisplayString());
     xe.setExpr(ec.getExpr());
@@ -283,10 +283,10 @@ public final class JAXBUtils {
         refspec.getTableReferences().getTableReference().addAll(xTabReferencesFromHiveTabReferences(dimRefs));
       }
       xd.setRefSpec(refspec);
-      xd.setType(XColumnType.valueOf(rd.getType().toUpperCase()));
+      xd.setType(rd.getType());
     } else if (cd instanceof BaseDimAttribute) {
       BaseDimAttribute bd = (BaseDimAttribute) cd;
-      xd.setType(XColumnType.valueOf(bd.getType().toUpperCase()));
+      xd.setType(bd.getType());
     }
     return xd;
   }
@@ -382,7 +382,7 @@ public final class JAXBUtils {
   }
 
   public static ExprColumn hiveExprColumnFromXExprColumn(XExprColumn xe) throws ParseException {
-    ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType().name().toLowerCase(),
+    ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType().toLowerCase(),
       xe.getDescription()),
       xe.getDisplayString(),
       xe.getExpr());
@@ -426,7 +426,7 @@ public final class JAXBUtils {
       return null;
     }
 
-    return new FieldSchema(c.getName(), c.getType().name().toLowerCase(), c.getComment());
+    return new FieldSchema(c.getName(), c.getType().toLowerCase(), c.getComment());
   }
 
   public static XColumn columnFromFieldSchema(FieldSchema fs) {
@@ -435,7 +435,7 @@ public final class JAXBUtils {
     }
     XColumn c = XCF.createXColumn();
     c.setName(fs.getName());
-    c.setType(XColumnType.valueOf(fs.getType().toUpperCase()));
+    c.setType(fs.getType());
     c.setComment(fs.getComment());
     return c;
   }
