@@ -249,13 +249,14 @@
       </xs:documentation>
     </xs:annotation>
     <xs:attribute type="xs:string" name="name" use="required" />
-    <xs:attribute type="x_column_type" name="type" use="required">
+    <xs:attribute type="xs:string" name="type" use="required">
       <xs:annotation>
         <xs:documentation>
-          The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN,
-          TINYINT,
-          SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DECIMAL, STRING, CHAR, VARCHAR, DATE, TIMESTAMP, BINARY, ARRAY,
-          MAP, STRUCT
+          The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN, TINYINT,
+          SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DECIMAL, STRING, CHAR, VARCHAR, DATE, TIMESTAMP, BINARY, ARRAY, MAP,
+          STRUCT, UNION
+          See hive represenation for specifying complex types -
+          https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
@@ -317,7 +318,17 @@
       </xs:element>
     </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required" />
-    <xs:attribute type="x_column_type" name="type" use="required" />
+    <xs:attribute type="xs:string" name="type" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN,TINYINT,
+          SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DECIMAL, STRING, CHAR, VARCHAR, DATE, TIMESTAMP, BINARY, ARRAY, MAP,
+          STRUCT, UNION
+          See hive represenation for specifying complex types -
+          https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
     <xs:attribute type="xs:string" name="description" />
     <xs:attribute type="xs:string" name="display_string">
       <xs:annotation>
@@ -557,36 +568,19 @@
       </xs:documentation>
     </xs:annotation>
     <xs:attribute name="name" type="xs:string" use="required" />
-    <xs:attribute name="type" type="x_column_type" use="required" />
+    <xs:attribute type="xs:string" name="type" use="required">
+      <xs:annotation>
+        <xs:documentation>
+          The type indicating what the evaluation of expression will produce. Allowed types are BOOLEAN, TINYINT,
+          SMALLINT, INT, BIGINT, FLOAT, DOUBLE, DECIMAL, STRING, CHAR, VARCHAR, DATE, TIMESTAMP, BINARY, ARRAY, MAP,
+          STRUCT, UNION
+          See hive represenation for specifying complex types -
+          https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Types#LanguageManualTypes-ComplexTypes
+        </xs:documentation>
+      </xs:annotation>
+      </xs:attribute>
     <xs:attribute name="comment" type="xs:string" />
   </xs:complexType>
-
-  <xs:simpleType name="x_column_type">
-    <xs:annotation>
-      <xs:documentation>
-        Column Types allowed.
-      </xs:documentation>
-    </xs:annotation>
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="BOOLEAN" />
-      <xs:enumeration value="TINYINT" />
-      <xs:enumeration value="SMALLINT" />
-      <xs:enumeration value="INT" />
-      <xs:enumeration value="BIGINT" />
-      <xs:enumeration value="FLOAT" />
-      <xs:enumeration value="DOUBLE" />
-      <xs:enumeration value="DECIMAL" />
-      <xs:enumeration value="STRING" />
-      <xs:enumeration value="CHAR" />
-      <xs:enumeration value="VARCHAR" />
-      <xs:enumeration value="DATE" />
-      <xs:enumeration value="TIMESTAMP" />
-      <xs:enumeration value="BINARY" />
-      <xs:enumeration value="ARRAY" />
-      <xs:enumeration value="MAP" />
-      <xs:enumeration value="STRUCT" />
-    </xs:restriction>
-  </xs:simpleType>
 
   <xs:simpleType name="x_measure_type">
     <xs:annotation>

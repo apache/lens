@@ -262,7 +262,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("dim1");
-    xd1.setType(XColumnType.STRING);
+    xd1.setType("STRING");
     xd1.setDescription("first dimension");
     xd1.setDisplayString("Dimension1");
     // Don't set endtime on this dim to validate null handling on server side
@@ -270,7 +270,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("dim2");
-    xd2.setType(XColumnType.INT);
+    xd2.setType("INT");
     xd2.setDescription("second dimension");
     xd2.setDisplayString("Dimension2");
     // Don't set start time on this dim to validate null handling on server side
@@ -278,7 +278,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimAttribute xd3 = cubeObjectFactory.createXDimAttribute();
     xd3.setName("testdim2col2");
-    xd3.setType(XColumnType.STRING);
+    xd3.setType("STRING");
     xd3.setDescription("ref chained dimension");
     xd3.setDisplayString("Chained Dimension");
     XChainColumn xcc = new XChainColumn();
@@ -287,9 +287,17 @@ public class TestMetastoreService extends LensJerseyTest {
     xd3.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
     xd3.getRefSpec().setChainRefColumn(xcc);
 
+    // add attribute with complex type
+    XDimAttribute xd4 = cubeObjectFactory.createXDimAttribute();
+    xd4.setName("dim4");
+    xd4.setType("struct<a:INT,b:array<string>,c:map<int,array<struct<x:int,y:array<int>>>");
+    xd4.setDescription("complex attribute");
+    xd4.setDisplayString("Complex Attribute");
+
     cube.getDimAttributes().getDimAttribute().add(xd1);
     cube.getDimAttributes().getDimAttribute().add(xd2);
     cube.getDimAttributes().getDimAttribute().add(xd3);
+    cube.getDimAttributes().getDimAttribute().add(xd4);
 
     XMeasure xm1 = new XMeasure();
     xm1.setName("msr1");
@@ -356,7 +364,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("expr1");
-    xe1.setType(XColumnType.DOUBLE);
+    xe1.setType("DOUBLE");
     xe1.setDescription("first expression");
     xe1.setDisplayString("Expression1");
     xe1.setExpr("msr1/1000");
@@ -601,9 +609,11 @@ public class TestMetastoreService extends LensJerseyTest {
       assertNotNull(hcube.getDimAttributeByName("testdim2col2"));
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDisplayString(), "Chained Dimension");
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDescription(), "ref chained dimension");
-      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getType(), "string");
-      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
-      assertEquals(((ReferencedDimAtrribute)hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
+      assertEquals(((BaseDimAttribute)hcube.getDimAttributeByName("dim4")).getType(),
+          "struct<a:int,b:array<string>,c:map<int,array<struct<x:int,y:array<int>>>");
+      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getType(), "string");
+      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
+      assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
       assertNotNull(hcube.getMeasureByName("msr1"));
       assertEquals(hcube.getMeasureByName("msr1").getDescription(), "first measure");
       assertEquals(hcube.getMeasureByName("msr1").getDisplayString(), "Measure1");
@@ -728,7 +738,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
       xd2.setName("dim3");
-      xd2.setType(XColumnType.STRING);
+      xd2.setType("STRING");
       cube.getDimAttributes().getDimAttribute().add(xd2);
 
       XProperty xp = new XProperty();
@@ -745,8 +755,8 @@ public class TestMetastoreService extends LensJerseyTest {
       JAXBElement<XCube> got =
           target.path(cubeName)
           .queryParam("sessionid", lensSessionId).request(mediaType).get(new GenericType<JAXBElement<XCube>>() {});
-      XBaseCube actual = (XBaseCube)got.getValue();
-      assertEquals(actual.getDimAttributes().getDimAttribute().size(), 4);
+      XBaseCube actual = (XBaseCube) got.getValue();
+      assertEquals(actual.getDimAttributes().getDimAttribute().size(), 5);
       assertEquals(actual.getMeasures().getMeasure().size(), 3);
 
       CubeInterface hcube = JAXBUtils.hiveCubeFromXCube(actual, null);
@@ -872,7 +882,7 @@ public class TestMetastoreService extends LensJerseyTest {
     for (String timePartColName : timePartColNames) {
       XColumn partCol = cubeObjectFactory.createXColumn();
       partCol.setName(timePartColName);
-      partCol.setType(XColumnType.STRING);
+      partCol.setType("STRING");
       partCol.setComment("partition column");
       xs1.getPartCols().getColumn().add(partCol);
       xs1.getTimePartCols().add(timePartColName);
@@ -909,12 +919,12 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XColumn c1 = cubeObjectFactory.createXColumn();
     c1.setName("col1");
-    c1.setType(XColumnType.STRING);
+    c1.setType("STRING");
     c1.setComment("Fisrt column");
     dt.getColumns().getColumn().add(c1);
     XColumn c2 = cubeObjectFactory.createXColumn();
     c2.setName("col2");
-    c2.setType(XColumnType.INT);
+    c2.setType("INT");
     c2.setComment("Second column");
     dt.getColumns().getColumn().add(c2);
 
@@ -960,7 +970,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("col1");
-    xd1.setType(XColumnType.STRING);
+    xd1.setType("STRING");
     xd1.setDescription("first column");
     xd1.setDisplayString("Column1");
     // Don't set endtime on this dim to validate null handling on server side
@@ -968,7 +978,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("col2");
-    xd2.setType(XColumnType.INT);
+    xd2.setType("INT");
     xd2.setDescription("second column");
     xd2.setDisplayString("Column2");
     // Don't set start time on this dim to validate null handling on server side
@@ -980,7 +990,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XExprColumn xe1 = new XExprColumn();
     xe1.setName("dimexpr");
-    xe1.setType(XColumnType.STRING);
+    xe1.setType("STRING");
     xe1.setDescription("dimension expression");
     xe1.setDisplayString("Dim Expression");
     xe1.setExpr("substr(col1, 3)");
@@ -1090,7 +1100,7 @@ public class TestMetastoreService extends LensJerseyTest {
       testDim.getAttributes().getDimAttribute().remove(1);
       XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
       xd1.setName("col3");
-      xd1.setType(XColumnType.STRING);
+      xd1.setType("STRING");
       testDim.getAttributes().getDimAttribute().add(xd1);
 
       APIResult result = target.path("testdim")
@@ -1208,7 +1218,7 @@ public class TestMetastoreService extends LensJerseyTest {
       // Add a column
       XColumn c = cubeObjectFactory.createXColumn();
       c.setName("col3");
-      c.setType(XColumnType.STRING);
+      c.setType("STRING");
       c.setComment("Added column");
       dt2.getColumns().getColumn().add(c);
 
@@ -1229,8 +1239,8 @@ public class TestMetastoreService extends LensJerseyTest {
       List<XColumn> colList = dt3.getColumns().getColumn();
       boolean foundCol = false;
       for (XColumn col : colList) {
-        if (col.getName().equals("col3") && col.getType().equals(XColumnType.STRING) &&
-            "Added column".equalsIgnoreCase(col.getComment())) {
+        if (col.getName().equals("col3") && col.getType().equals("string")
+          && "Added column".equalsIgnoreCase(col.getComment())) {
           foundCol = true;
           break;
         }
@@ -1417,13 +1427,13 @@ public class TestMetastoreService extends LensJerseyTest {
 
     XColumn c1 = cubeObjectFactory.createXColumn();
     c1.setName("c1");
-    c1.setType(XColumnType.STRING);
+    c1.setType("STRING");
     c1.setComment("col1");
     f.getColumns().getColumn().add(c1);
 
     XColumn c2 = cubeObjectFactory.createXColumn();
     c2.setName("c2");
-    c2.setType(XColumnType.STRING);
+    c2.setType("STRING");
     c2.setComment("col2");
     f.getColumns().getColumn().add(c2);
 
@@ -2086,19 +2096,20 @@ public class TestMetastoreService extends LensJerseyTest {
 
       assertEquals(tables, new HashSet<String>(Arrays.asList("flattestcube", "testdim", "testdim2")));
       assertEquals(colSet, new HashSet<String>(Arrays.asList(
-          "flattestcube.msr1",
-          "flattestcube.msr2",
-          "flattestcube.dim1",
-          "flattestcube.dim2",
-          "flattestcube.testdim2col2",
-          "flattestcube.expr1",
-          "chain1-testdim.col2",
-          "chain1-testdim.col1",
-          "chain1-testdim.dimexpr",
-          "dim2chain-testdim2.col2",
-          "dim2chain-testdim2.col1",
-          "dim2chain-testdim2.dimexpr"
-          )));
+        "flattestcube.msr1",
+        "flattestcube.msr2",
+        "flattestcube.dim1",
+        "flattestcube.dim2",
+        "flattestcube.testdim2col2",
+        "flattestcube.dim4",
+        "flattestcube.expr1",
+        "chain1-testdim.col2",
+        "chain1-testdim.col1",
+        "chain1-testdim.dimexpr",
+        "dim2chain-testdim2.col2",
+        "dim2chain-testdim2.col1",
+        "dim2chain-testdim2.dimexpr"
+      )));
 
       // Now test flattened view for dimension
       final WebTarget flatDimTarget = target().path("metastore").path("flattened").path("testdim");
