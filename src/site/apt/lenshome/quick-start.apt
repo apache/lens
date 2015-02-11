@@ -19,7 +19,7 @@
 
 Getting started with Lens
 
-  Start with installation steps described {{{./install-steps.html}here}} and try out 
+  Start with installation steps described {{{./install-and-run.html}here}} and try out
   {{{./pseudo-distributed-setup.html}pseudo distributed setup}}. Refer to 
   {{{../admin/index.html} Admin documentation}} for more information on server components
   and configuration. Refer to  {{{../user/index.html} User documentation}} for starting to

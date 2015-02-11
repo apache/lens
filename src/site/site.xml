@@ -41,9 +41,9 @@
  <body>
     <menu name="Lens" >
       <item name="Overview" href="index.html" />
-      <item name="Getting Started" href="./gettingstarted/quick-start.html" />
-      <item name="Install and Run" href="./gettingstarted/install-steps.html" />
-      <item name="Pseudo Distributed Setup" href="./gettingstarted/pseudo-distributed-setup.html" />
+      <item name="Getting Started" href="./lenshome/quick-start.html" />
+      <item name="Installing and Running Lens" href="./lenshome/install-and-run.html" />
+      <item name="Pseudo Distributed Setup" href="./lenshome/pseudo-distributed-setup.html" />
     </menu>
       <menu name="Releases" >
       <item name="Download" href="./releases/download.html" />

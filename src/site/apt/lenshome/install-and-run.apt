@@ -17,40 +17,77 @@
 ~~ under the License.
 ~~
 
-Installing and running lens
+Installing and Running Lens
 
-%{toc|section=1|fromDepth=0}
+%{toc|section=1-2|fromDepth=0}
 
-* Building Lens from source
+* Installation
 
-  Here are the commands to build from source.
+** Downloading
+
+  Download a release of Apache Lens from {{{/releases/download.html}here}}.
+  Lens depends on Hive forked from Apache Hive. Download a release of hive from {{{https://github.com/InMobi/hive/releases}https://github.com/InMobi/hive/releases}}.
+
+** Installing Lens
+
+  Unpack the tarball.
 
 +---+
 
-   git clone https://git-wip-us.apache.org/repos/asf/incubator-lens.git
+  tar zxvf lens-dist-<verison>-bin.tar.gz
 
-   cd incubator-lens
-
-   git checkout master
-
-   mvn clean package
-   
 +---+
 
-  Once above package command completes successfully, <lens-dist/target> will have <lens-dist-${project.version}-server> and <lens-client-dist/target> will have <lens-client-dist-${project.version}-client> packaged directories for client and server. The build will also produce debian for both client and server in <lens-client-dist/target> and <lens-dist/target>, respectively.
+  This will result in the creation of a directory named lens-dist-<verison>-bin (where <version> is the release number).
 
-* Installing and running lens-server
++---+
+  lens-dist-<verison>-bin
+  ├── client
+  ├── examples
+  └── server
++---+
 
-  Users can <cd> into the above server and client distribution directories built from source and try it out. Or install the debs from an apt repo or the debians built from source directly. Server and client debians will be installed in </usr/local/lens> and </usr/local/lens-client> respectively.
+ <lens-dist-verison-bin/client> can be used as the Lens client installation directory and <lens-dist-verison-bin/server> can be used as the Lens server installation directory to {{{#Running_Lens}run}} lens client and lens server respectively.
 
-  Let us go over how the install looks, in the subsections below.
-  
-  Users can also use the docker container to mount the src base directory into the container.
-  
+** Installing Hive
 
-** Server install and configuration
+  Unpack the tarball.
 
-  The directory structure of the server installation :
++---+
+
+  tar -xzvf hive-hive-release-<version>-inm.tar.gz
+
++---+
+
+  This will result in the creation of a directory named hive-hive-release-<version>-inm. This directory contains hive source code. Build hive binary using below commands.
+
++---+
+
+  cd hive-hive-release-<version>-inm
+  mvn clean package -DskipTests -Phadoop-2,dist
+
++---+
+
+  This will result in creation of hive binary, which can be found at location packaging/target/apache-hive-<version>-inm-bin.tar.gz.
+  Unpack the created hive tarball in the directory where you want to install hive.
+
++---+
+  tar zxvf apache-hive-<version>-inm-bin.tar.gz
++---+
+
+  This will result in creation of directory apache-hive-<version>-inm-bin.
+  Set HIVE_HOME.
+
++---+
+  cd apache-hive-<version>-inm-bin
+  export HIVE_HOME=`pwd`
++---+
+
+* Running Lens
+
+** Running Lens Server
+
+*** Structure of Lens server installation directory
 
 +---+
 
@@ -74,42 +111,24 @@ Installing and running lens
       └── lens-server.war
 +---+
 
-  The <bin> folder provides <lens-ctl> which provides commands for starting and stopping the lens server. Other .sh files in <bin> are the scripts used by lens-ctl.
+  We will refer to Lens server installation directory as <lens-install-dir> in rest of the page. The <bin> folder provides <lens-ctl> which provides commands for starting and stopping the lens server. Other .sh files in <bin> are the scripts used by lens-ctl.
 
-  The server war is available in webapp/ folder, which would be expanded in the same directory, if not overridden. And the lib folder contains all the dependent libraries.
+  The server war is available in webapp/ folder, which would be expanded in the same directory. War would be expanded either by postinst script of debian or if debian is not used for installation, then it will be expanded on first server start. The lib folder contains all the dependent libraries.
 
   Server configuration can be overridden in lens-site.xml. See {{{../admin/config.html}server configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
-  The server logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
-
-  Lens server dependes on hive which is forked from {{{http://github.com/apache/hive}Apache Hive}} into {{{http://github.com/inmobi/hive} InMobi Hive}}. See {{{https://github.com/InMobi/hive/releases}here}} for all the latest releases.
-
-  Build it from source and set HIVE_HOME.
-
-+---+
-
-   git clone https://github.com/inmobi/hive.git
-
-   cd hive
-
-   git checkout <release-tag>
-
-   mvn clean package -DskipTests -Phadoop-2,dist
-
-+---+
-
-  Once above package command completes successfully, packaging/target will have apache-hive-$project.version-bin. This build also produces source, binary tar.gz files and deb package for hive.
-
-  <<Ex:>> export <<HIVE_HOME>>=$\{hive-source-location\}/packaging/target/apache-hive-$project.version-bin/apache-hive-$project.version-bin/
+  The server logs go into logs/ folder in the <lens-install-dir> directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
 
 *** Driver configuration
 
   If server has HiveDriver as one of the drivers, the configuration for hive driver should be set up in hive-site.xml.
-   All the available configuration of the HiveDriver can be found {{{../admin/hivedriver-config.html}here}}.
+  All the available configuration of the HiveDriver can be found {{{../admin/hivedriver-config.html}here}}.
 
-** Running the server
+*** Setting Environment Variables
 
-  Before starting the server, you need to set <<HADOOP_HOME>> and <<HIVE_HOME>> environment variables. These should point to the Hadoop and Hive installation locations on the server.
+  Before starting the server, you need to set <<HADOOP_HOME>> and <<HIVE_HOME>> environment variables. These should point to the Hadoop and Hive installation directories.
+
+*** Starting Lens server
 
   Once env variables are set, you can use the following command to start the server:
 
@@ -133,9 +152,9 @@ Installing and running lens
 
 +---+
 
-** Client install and configuration
+** Running Lens Client
 
-  The directory structure of the client installation :
+*** Structure of Lens client installation directory
 
 +---+
   ├── bin
@@ -174,7 +193,7 @@ Installing and running lens
   └── lib
       ├── ST4-4.0.4.jar
        …….
-      └── xmlenc-0.52.jar 
+      └── xmlenc-0.52.jar
 +---+
 
   The <bin> folder provides various scripts for the client.
@@ -182,42 +201,23 @@ Installing and running lens
     * <<run-examples.sh>> provides commands to run examples - create a sample metastore, populate metastore with sample data and run some example queries. This would validate your server is all up and running fine.
 
     * <<lens-cli.sh>> provides CLI shell for running various commands. Its usage is more described in CLI user guide.
-    
+
     * <<lens-config.sh>> is used internally by other scripts
-    
+
   Client configuration can be overridden in lens-client-site.xml. See {{{../user/client-config.html}client configuration}} for all the configuration parameters available and their default values. You can set up the environment variables such as JAVA_HOME, java options, heap size and etc in lens-env.sh.
 
   The client logs go into logs/ folder in the install directory, unless overridden. The proper logging configuration can be provided in log4j.properties file.
-  
+
   Examples folder contains sample resource files, data files and query files which will be used by <<run-examples.sh>> script.
-  
-* Running Lens in Docker
 
-  Lens docker files are located in 
+*** Starting Lens Client
 
 +---+
-  incubator-lens/lens-docker/lens-test
-+---+
 
-  The above directory contains the lens docker images that can be used for development and testing.
-
-  To build the image
+  bin/lens-cli.sh
 
 +---+
-  cd tools/scripts
-  ./build-docker.sh
-+---+
 
-  Before running the build docker must be installed in the system. The above script will build the lens docker image and download the dependent images of hive and hadoop.
-
-  To run the image
-
-+---+
-  cd tools/scripts
-  ./run-docker.sh
-+---+
-
-  This will start the docker container and the container will have its Lens directories mounted to your actual checked out code, allowing you to modify and recompile your Lens source and have them immediately usable in the docker images (without rebuilding the image).
 
 
 
