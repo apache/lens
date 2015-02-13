@@ -89,11 +89,6 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     super.tearDown();
   }
 
-  @Override
-  protected int getTestPort() {
-    return 8091;
-  }
-
   /** The file created. */
   private boolean fileCreated;
 
@@ -111,7 +106,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       return;
     }
 
-    dataFile = new File("target/testdata.txt");
+    dataFile = new File("target/testdata.data");
     dataFile.deleteOnExit();
 
     PrintWriter dataFileOut = new PrintWriter(dataFile);
@@ -144,7 +139,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.loadData("test_server_restart", "target/testdata.data", target(), lensSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -242,7 +237,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.txt", target(), lensSessionId);
+    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.data", target(), lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -274,15 +269,15 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     TestRemoteHiveDriver.stopHS2Service();
 
     // Wait for server to stop
-    while (TestRemoteHiveDriver.server.getServiceState() != Service.STATE.STOPPED) {
-      LOG.info("Waiting for HS2 to stop. Current state " + TestRemoteHiveDriver.server.getServiceState());
+    while (TestRemoteHiveDriver.getServerState() != Service.STATE.STOPPED) {
+      LOG.info("Waiting for HS2 to stop. Current state " + TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
 
     TestRemoteHiveDriver.createHS2Service();
     // Wait for server to come up
-    while (Service.STATE.STARTED != TestRemoteHiveDriver.server.getServiceState()) {
-      LOG.info("Waiting for HS2 to start " + TestRemoteHiveDriver.server.getServiceState());
+    while (Service.STATE.STARTED != TestRemoteHiveDriver.getServerState()) {
+      LOG.info("Waiting for HS2 to start " + TestRemoteHiveDriver.getServerState());
       Thread.sleep(1000);
     }
     Thread.sleep(10000);

@@ -72,11 +72,6 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     super.tearDown();
   }
 
-  @Override
-  protected int getTestPort() {
-    return 8090;
-  }
-
   /**
    * Test read only mode.
    *

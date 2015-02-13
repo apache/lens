@@ -18,13 +18,14 @@
  */
 package org.apache.lens.driver.hive;
 
+import org.apache.lens.api.LensException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIServiceClient;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.thrift.RetryingThriftCLIServiceClient;
-import org.apache.lens.api.LensException;
 
 /**
  * Connect to a remote Hive Server 2 service to run driver queries.
@@ -49,7 +50,7 @@ public class RemoteThriftConnection implements ThriftConnection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.driver.hive.ThriftConnection#getClient(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
@@ -57,11 +58,11 @@ public class RemoteThriftConnection implements ThriftConnection {
     if (!connected) {
       try {
         LOG.info("HiveDriver connecting to HiveServer @ "
-            + conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST) + ":"
-            + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
+          + conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST) + ":"
+          + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
         hs2Client = RetryingThriftCLIServiceClient.newRetryingCLIServiceClient(conf);
         LOG.info("HiveDriver connected to HiveServer @ " + conf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_BIND_HOST)
-            + ":" + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
+          + ":" + conf.getIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT));
 
       } catch (HiveSQLException e) {
         throw new LensException(e);
@@ -73,7 +74,7 @@ public class RemoteThriftConnection implements ThriftConnection {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.io.Closeable#close()
    */
   @Override

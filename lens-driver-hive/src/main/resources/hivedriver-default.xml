@@ -23,72 +23,75 @@
 
 <configuration>
 
-<property>
-  <name>lens.driver.hive.connection.class</name>
-  <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>
-  <description>The connection class from HiveDriver to HiveServer. The default is
-   an embedded connection which does not require a remote hive server.
-   For connecting to a hiveserver end point, remote connection should be used.
-  The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection
-   and org.apache.lens.driver.hive.RemoteThriftConnection. </description>
-</property>
+  <property>
+    <name>lens.driver.hive.connection.class</name>
+    <value>org.apache.lens.driver.hive.EmbeddedThriftConnection</value>
+    <description>The connection class from HiveDriver to HiveServer. The default is
+      an embedded connection which does not require a remote hive server.
+      For connecting to a hiveserver end point, remote connection should be used.
+      The possible values are org.apache.lens.driver.hive.EmbeddedThriftConnection
+      and org.apache.lens.driver.hive.RemoteThriftConnection.
+    </description>
+  </property>
 
-<property>
-  <name>lens.driver.hive.hs2.connection.expiry.delay</name>
-  <value>600000</value>
-  <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
-</property>
+  <property>
+    <name>lens.driver.hive.hs2.connection.expiry.delay</name>
+    <value>600000</value>
+    <description>The idle time (in milliseconds) for expiring connection from hivedriver to HiveServer2</description>
+  </property>
 
-<!-- Hive server client params -->
+  <!-- Hive server client params -->
 
-<property>
-  <name>hive.server2.thrift.bind.host</name>
-  <value></value>
-  <description>The host on which hive server is running</description>
-</property>
+  <property>
+    <name>hive.server2.thrift.bind.host</name>
+    <value></value>
+    <description>The host on which hive server is running</description>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.port</name>
-  <value>10000</value>
-  <description>The port on which hive server is running</description>
-</property>
+  <property>
+    <name>hive.server2.thrift.port</name>
+    <value>10000</value>
+    <description>The port on which hive server is running</description>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.client.retry.limit</name>
-  <value>1</value>
-  <description>Number of times to retry a Thrift service call upon failure </description>
-</property>
+  <property>
+    <name>hive.server2.thrift.client.retry.limit</name>
+    <value>1</value>
+    <description>Number of times to retry a Thrift service call upon failure</description>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.client.connect.retry.limit</name>
-  <value>1</value>
-  <description>Number of times to retry a connection to a Thrift hive server</description>
-</property>
+  <property>
+    <name>hive.server2.thrift.client.connect.retry.limit</name>
+    <value>1</value>
+    <description>Number of times to retry a connection to a Thrift hive server</description>
+  </property>
 
-<property>
-  <name>hive.server2.thrift.client.retry.delay.seconds</name>
-  <value>1</value>
-  <description>Number of seconds the client should wait between connection attempts.</description>
-</property>
+  <property>
+    <name>hive.server2.thrift.client.retry.delay.seconds</name>
+    <value>1</value>
+    <description>Number of seconds the client should wait between connection attempts.</description>
+  </property>
 
-<property>
-  <name>hive.server.tcp.keepalive</name>
-  <value>true</value>
-  <description>TCP Keep alive socket option for HiveServer connection</description>
-</property>
+  <property>
+    <name>hive.server.tcp.keepalive</name>
+    <value>true</value>
+    <description>TCP Keep alive socket option for HiveServer connection</description>
+  </property>
 
-<property>
-  <name>hive.server.read.socket.timeout</name>
-  <value>10</value>
-  <description>Socket timeout for the client connection</description>
-</property>
+  <property>
+    <name>hive.server.read.socket.timeout</name>
+    <value>10</value>
+    <description>Socket timeout for the client connection</description>
+  </property>
 
-<!-- query params -->
+  <!-- query params -->
 
   <property>
     <name>lens.cube.query.driver.supported.storages</name>
     <value></value>
-    <description>List of comma separated storage names that supported by a driver. If no value is specified, all storages are valid</description>
+    <description>List of comma separated storage names that supported by a driver. If no value is specified, all
+      storages are valid
+    </description>
   </property>
 
   <property>
@@ -118,10 +121,10 @@
       The cost is calculated based on partition weights and fact weights. The interpretation of the
       default config is: \
       \
-      cost \&lt;= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \       Priority = VERY_HIGH  \
-      7 \&lt; cost \&lt;= 30\ \ \ \ \ \ \ :\ \ \ \ \       Priority = HIGH       \
-      30 \&lt; cost \&lt;= 90\ \ \ \ \ \ :\ \ \ \ \       Priority = NORMAL     \
-      90 \&lt; cost\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \       Priority = LOW        \
+      cost \&lt;= 7\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \ Priority = VERY_HIGH \
+      7 \&lt; cost \&lt;= 30\ \ \ \ \ \ \ :\ \ \ \ \ Priority = HIGH \
+      30 \&lt; cost \&lt;= 90\ \ \ \ \ \ :\ \ \ \ \ Priority = NORMAL \
+      90 \&lt; cost\ \ \ \ \ \ \ \ \ \ \ :\ \ \ \ \ Priority = LOW \
       \
       Some perspective wrt default weights and default ranges(1 for hourly, 0.75 for daily, 0.5 for monthly):\
       For exclusively hourly data this translates to VERY_HIGH,7days,HIGH,30days,NORMAL,90days,LOW. \

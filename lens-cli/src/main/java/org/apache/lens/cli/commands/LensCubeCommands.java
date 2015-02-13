@@ -18,19 +18,20 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.lens.api.APIResult;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 
 /**
  * The Class LensCubeCommands.
@@ -56,13 +57,12 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
   /**
    * Creates the cube.
    *
-   * @param cubeSpec
-   *          the cube spec
+   * @param cubeSpec the cube spec
    * @return the string
    */
   @CliCommand(value = "create cube", help = "Create a new Cube")
   public String createCube(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<path to cube-spec file>") String cubeSpec) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<path to cube-spec file>") String cubeSpec) {
     File f = new File(cubeSpec);
 
     if (!f.exists()) {
@@ -80,13 +80,12 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
   /**
    * Drop cube.
    *
-   * @param cube
-   *          the cube
+   * @param cube the cube
    * @return the string
    */
   @CliCommand(value = "drop cube", help = "drop cube")
   public String dropCube(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "cube name to be dropped") String cube) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "cube name to be dropped") String cube) {
     APIResult result = getClient().dropCube(cube);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + cube + "!!!";
@@ -98,13 +97,13 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
   /**
    * Update cube.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the string
    */
   @CliCommand(value = "update cube", help = "update cube")
   public String updateCube(
-      @CliOption(key = { "", "cube" }, mandatory = true, help = "<cube-name> <path to cube-spec file>") String specPair) {
+    @CliOption(key = {"", "cube"}, mandatory = true, help =
+      "<cube-name> <path to cube-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
@@ -128,12 +127,11 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
   /**
    * Describe cube.
    *
-   * @param cubeName
-   *          the cube name
+   * @param cubeName the cube name
    * @return the string
    */
   @CliCommand(value = "describe cube", help = "describe cube")
-  public String describeCube(@CliOption(key = { "", "cube" }, mandatory = true, help = "<cube-name>") String cubeName) {
+  public String describeCube(@CliOption(key = {"", "cube"}, mandatory = true, help = "<cube-name>") String cubeName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getCube(cubeName)));
 

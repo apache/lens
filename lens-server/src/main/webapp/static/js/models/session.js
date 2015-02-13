@@ -49,6 +49,9 @@ var Session = function() {
             url: util.SESSION_URL,
             type: 'POST',
             dataType: 'json',
+            headers: {
+               Accept : "application/json",
+            },
             contentType: false,
             processData: false,
             cache: false,

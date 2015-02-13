@@ -60,7 +60,7 @@ import org.testng.annotations.Test;
 @Test(groups = "unit-test")
 public class TestResultFormatting extends LensJerseyTest {
 
-  private static final String TEST_DATA_FILE = "./testdata/testdata2.txt";
+  private static final String TEST_DATA_FILE = "./testdata/testdata2.data";
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -115,11 +115,6 @@ public class TestResultFormatting extends LensJerseyTest {
 
   /** The test table. */
   private static String testTable = "RESULT_TEST_TABLE";
-
-  @Override
-  protected int getTestPort() {
-    return 8888;
-  }
 
   // test with execute async post with result formatter, get query, get results
   /**

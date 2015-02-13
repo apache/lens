@@ -18,15 +18,16 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URL;
 
 /**
  * The Class TestLensCubeCommands.
@@ -64,29 +65,29 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
   /**
    * Test update command.
    *
-   * @param f
-   *          the f
+   * @param f the file
    * @param command
    *          the command
+   * @throws IOException
    */
-  private void testUpdateCommand(File f, LensCubeCommands command) {
+  private void testUpdateCommand(File f, LensCubeCommands command) throws IOException {
+    StringBuilder sb = new StringBuilder();
+    BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
+    String s;
+    while ((s = bufferedReader.readLine()) != null) {
+      sb.append(s).append("\n");
+    }
+
+    bufferedReader.close();
+
+    String xmlContent = sb.toString();
+
+    xmlContent = xmlContent.replace("<property name=\"sample_cube.prop\" value=\"sample\" />\n",
+        "<property name=\"sample_cube.prop\" value=\"sample\" />"
+            + "\n<property name=\"sample_cube.prop1\" value=\"sample1\" />\n");
+
+    File newFile = new File("/tmp/sample_cube1.xml");
     try {
-      StringBuilder sb = new StringBuilder();
-      BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
-      String s;
-      while ((s = bufferedReader.readLine()) != null) {
-        sb.append(s).append("\n");
-      }
-
-      bufferedReader.close();
-
-      String xmlContent = sb.toString();
-
-      xmlContent = xmlContent.replace("<properties name=\"sample_cube.prop\" value=\"sample\" />\n",
-          "<properties name=\"sample_cube.prop\" value=\"sample\" />"
-              + "\n<properties name=\"sample_cube.prop1\" value=\"sample1\" />\n");
-
-      File newFile = new File("/tmp/sample_cube1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
       writer.write(xmlContent);
       writer.close();
@@ -104,12 +105,8 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
       LOG.debug(desc);
       Assert.assertTrue(desc.contains(propString));
       Assert.assertTrue(desc.contains(propString1));
-
+    } finally {
       newFile.delete();
-
-    } catch (Throwable t) {
-      t.printStackTrace();
-      Assert.fail("Testing update cube failed with exception" + t.getMessage());
     }
   }
 }

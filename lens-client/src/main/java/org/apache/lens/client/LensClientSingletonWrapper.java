@@ -18,9 +18,10 @@
  */
 package org.apache.lens.client;
 
+import org.apache.lens.client.exceptions.LensClientServerConnectionException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lens.client.exceptions.LensClientServerConnectionException;
 
 /**
  * The Enum LensClientSingletonWrapper.
@@ -31,7 +32,7 @@ public enum LensClientSingletonWrapper {
   INSTANCE;
 
   /** The log. */
-  private Log LOG = LogFactory.getLog(LensClientSingletonWrapper.class);
+  private static final Log LOG = LogFactory.getLog(LensClientSingletonWrapper.class);
 
   /** The client. */
   private LensClient client;
@@ -68,8 +69,7 @@ public enum LensClientSingletonWrapper {
   /**
    * Explain failed attempt.
    *
-   * @param e
-   *          the e
+   * @param e the e
    */
   public void explainFailedAttempt(LensClientServerConnectionException e) {
     LOG.error("failed login attempt", e);

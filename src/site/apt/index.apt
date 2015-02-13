@@ -33,7 +33,7 @@ Welcome to Lens!
 
 	* <<Lens application server>> - a REST server which allows users to query data, make schema changes, scheduling queries and enforcing quota limits on queries.
 
-	* <<Driver based architecture>> allows plugging in reporting systems like Hive, Columnar data warehouses, Redshift, Impala etc.
+	* <<Driver based architecture>> allows plugging in reporting systems like Hive, Columnar data warehouses, Redshift etc.
 
 	* <<Cost based engine selection>> - allows optimal use of resources by selecting the best execution engine for a given query based on the query cost.
 
@@ -41,3 +41,11 @@ Welcome to Lens!
 	The following diagram shows Lens architecture.
 
 [/images/arch.png] Lens Architecture
+
+Disclaimer
+
+  Apache Lens is an effort undergoing incubation at The Apache Software Foundation (ASF), sponsored by Apache
+Incubator.Incubation is required of all newly accepted projects until a further review indicates that the
+infrastructure, communications, and decision making process have stabilized in a manner consistent with other successful
+ASF projects. While incubation status is not necessarily a reflection of the completeness or stability of the code, it
+does indicate that the project has yet to be fully endorsed by the ASF.

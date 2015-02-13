@@ -22,7 +22,7 @@ package org.apache.lens.ml;
  * The Interface MLTestMetric.
  */
 public interface MLTestMetric {
-  public String getName();
+  String getName();
 
-  public String getDescription();
+  String getDescription();
 }

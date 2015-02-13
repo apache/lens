@@ -22,6 +22,7 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hive.hcatalog.data.HCatRecord;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.mllib.regression.LabeledPoint;
+
 import scala.Tuple2;
 
 /**
@@ -31,7 +32,7 @@ public abstract class FeatureFunction implements Function<Tuple2<WritableCompara
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
    */
   @Override

@@ -54,7 +54,7 @@ import org.apache.hadoop.hive.ql.parse.QBJoinTree;
 import org.apache.hadoop.hive.ql.parse.QBParseInfo;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.*;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.codehaus.jackson.map.ObjectMapper;
 
 public class CubeQueryContext {
@@ -1035,7 +1035,7 @@ public class CubeQueryContext {
    * 
    * @param pruneCause
    */
-  public void pruneCandidateFactSet(CubeTableCause pruneCause) {
+  public void pruneCandidateFactSet(CandidateTablePruneCode pruneCause) {
     // remove candidate fact sets that have missing facts
     for (Iterator<Set<CandidateFact>> i = candidateFactSets.iterator(); i.hasNext();) {
       Set<CandidateFact> cfacts = i.next();
@@ -1055,7 +1055,7 @@ public class CubeQueryContext {
    * 
    * @param pruneCause
    */
-  public void pruneCandidateFactWithCandidateSet(CubeTableCause pruneCause) {
+  public void pruneCandidateFactWithCandidateSet(CandidateTablePruneCode pruneCause) {
     // remove candidate facts that are not part of any covering set
     Set<CandidateFact> allCoveringFacts = new HashSet<CandidateFact>();
     for (Set<CandidateFact> set : candidateFactSets) {

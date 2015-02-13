@@ -18,13 +18,14 @@
  */
 package org.apache.lens.jdbc;
 
+import java.util.Map;
+
 import org.apache.lens.client.LensClientConfig;
 import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.jdbc.JDBCUtils;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.Map;
 
 /**
  * The Class JDBCUrlParserTest.
@@ -49,9 +50,9 @@ public class JDBCUrlParserTest {
     String uri = "jdbc:lens:///;username=johndoe;password=blah?conf1=blah1;conf2=blah2#var1=123;var2=456";
     LensConnectionParams params = JDBCUtils.parseUrl(uri);
     Assert.assertEquals(LensClientConfig.DEFAULT_DBNAME_VALUE, params.getDbName(),
-        "The database should be default database");
+      "The database should be default database");
     Assert.assertEquals(LensClientConfig.DEFAULT_SERVER_BASE_URL, params.getBaseConnectionUrl(),
-        "The base url should be default");
+      "The base url should be default");
 
     Map<String, String> sessionVars = params.getSessionVars();
     Assert.assertEquals(2, sessionVars.size(), "You should have two session variable");

@@ -28,10 +28,8 @@ public class LogitRegressionClassificationModel extends BaseSparkClassificationM
   /**
    * Instantiates a new logit regression classification model.
    *
-   * @param modelId
-   *          the model id
-   * @param model
-   *          the model
+   * @param modelId the model id
+   * @param model   the model
    */
   public LogitRegressionClassificationModel(String modelId, LogisticRegressionModel model) {
     super(modelId, model);

@@ -35,34 +35,29 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
 
 /**
  * The Class ExampleUtils.
  */
-public class ExampleUtils {
+public final class ExampleUtils {
+  private ExampleUtils() {
+  }
+
   private static final Log LOG = LogFactory.getLog(ExampleUtils.class);
 
   /**
    * Creates the example table.
    *
-   * @param conf
-   *          the conf
-   * @param database
-   *          the database
-   * @param tableName
-   *          the table name
-   * @param sampleDataFile
-   *          the sample data file
-   * @param labelColumn
-   *          the label column
-   * @param features
-   *          the features
-   * @throws HiveException
-   *           the hive exception
+   * @param conf           the conf
+   * @param database       the database
+   * @param tableName      the table name
+   * @param sampleDataFile the sample data file
+   * @param labelColumn    the label column
+   * @param features       the features
+   * @throws HiveException the hive exception
    */
   public static void createTable(HiveConf conf, String database, String tableName, String sampleDataFile,
-      String labelColumn, Map<String, String> tableParams, String... features) throws HiveException {
+    String labelColumn, Map<String, String> tableParams, String... features) throws HiveException {
 
     Path dataFilePath = new Path(sampleDataFile);
     Path partDir = dataFilePath.getParent();

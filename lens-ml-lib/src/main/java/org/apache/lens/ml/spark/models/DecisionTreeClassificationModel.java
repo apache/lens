@@ -26,10 +26,8 @@ public class DecisionTreeClassificationModel extends BaseSparkClassificationMode
   /**
    * Instantiates a new decision tree classification model.
    *
-   * @param modelId
-   *          the model id
-   * @param model
-   *          the model
+   * @param modelId the model id
+   * @param model   the model
    */
   public DecisionTreeClassificationModel(String modelId, SparkDecisionTreeModel model) {
     super(modelId, model);

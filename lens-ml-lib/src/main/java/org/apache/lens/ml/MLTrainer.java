@@ -25,36 +25,29 @@ import org.apache.lens.api.LensException;
  * The Interface MLTrainer.
  */
 public interface MLTrainer {
-  public String getName();
+  String getName();
 
-  public String getDescription();
+  String getDescription();
 
   /**
    * Configure.
    *
-   * @param configuration
-   *          the configuration
+   * @param configuration the configuration
    */
-  public void configure(LensConf configuration);
+  void configure(LensConf configuration);
 
-  public LensConf getConf();
+  LensConf getConf();
 
   /**
    * Train.
    *
-   * @param conf
-   *          the conf
-   * @param db
-   *          the db
-   * @param table
-   *          the table
-   * @param modelId
-   *          the model id
-   * @param params
-   *          the params
+   * @param conf    the conf
+   * @param db      the db
+   * @param table   the table
+   * @param modelId the model id
+   * @param params  the params
    * @return the ML model
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
-  public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException;
+  MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException;
 }

@@ -18,12 +18,14 @@
  */
 package org.apache.lens.cli;
 
-import org.apache.lens.server.LensAllApplicationJerseyTest;
-import org.testng.annotations.AfterTest;
-import org.testng.annotations.BeforeTest;
+import java.net.URI;
 
 import javax.ws.rs.core.UriBuilder;
-import java.net.URI;
+
+import org.apache.lens.server.LensAllApplicationJerseyTest;
+
+import org.testng.annotations.AfterTest;
+import org.testng.annotations.BeforeTest;
 
 /**
  * The Class LensCliApplicationTest.
@@ -32,7 +34,7 @@ public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
 
   @Override
   protected int getTestPort() {
-    return 9999;
+    return 10001;
   }
 
   @Override

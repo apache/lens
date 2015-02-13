@@ -37,8 +37,10 @@ import org.apache.lens.client.LensConnectionParams;
 /**
  * The Class JDBCUtils.
  */
-public class JDBCUtils {
+public final class JDBCUtils {
+  private JDBCUtils() {
 
+  }
   /** Property key for the Database name. */
   static final String DB_PROPERTY_KEY = "DBNAME";
   /**
@@ -56,8 +58,8 @@ public class JDBCUtils {
   /** The Constant URI_JDBC_PREFIX. */
   private static final String URI_JDBC_PREFIX = "jdbc:";
 
-  /** The Constant keyValueRegex. */
-  private static final String keyValueRegex = "([^;]*)=([^;]*)[;]?";
+  /** The Constant KEY_VALUE_REGEX. */
+  private static final String KEY_VALUE_REGEX = "([^;]*)=([^;]*)[;]?";
 
   /**
    * Parses the JDBC Connection URL.
@@ -75,14 +77,13 @@ public class JDBCUtils {
    * Examples :-
    * </p>
    * <code>
-   * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?[optional configuration settings for connection]#[optional variables to be used in query]
+   * jdbc:lens://hostname:port/dbname;[optional key value pair of session settings]?
+   * [optional configuration settings for connection]#[optional variables to be used in query]
    * </code>
    *
-   * @param uri
-   *          to be used to connect to lens server
+   * @param uri to be used to connect to lens server
    * @return final list of connection parameters
-   * @throws IllegalArgumentException
-   *           if URI provided is malformed
+   * @throws IllegalArgumentException if URI provided is malformed
    */
   public static LensConnectionParams parseUrl(String uri) throws IllegalArgumentException {
     LensConnectionParams params = new LensConnectionParams();
@@ -101,7 +102,7 @@ public class JDBCUtils {
      * if (jdbcUri.getHost() != null) { params.setHost(jdbcUri.getHost()); } if (jdbcUri.getPort() > 0) {
      * params.setPort(jdbcUri.getPort()); }
      */
-    Pattern pattern = Pattern.compile(keyValueRegex);
+    Pattern pattern = Pattern.compile(KEY_VALUE_REGEX);
     // dbname and session settings
     String sessVars = jdbcUri.getPath();
     if ((sessVars != null) && !sessVars.isEmpty()) {
@@ -153,8 +154,7 @@ public class JDBCUtils {
   /**
    * Load manifest attributes.
    *
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private static synchronized void loadManifestAttributes() throws IOException {
     if (manifestAttributes != null) {
@@ -173,11 +173,9 @@ public class JDBCUtils {
   /**
    * Fetch manifest attribute.
    *
-   * @param attributeName
-   *          the attribute name
+   * @param attributeName the attribute name
    * @return the string
-   * @throws IOException
-   *           Signals that an I/O exception has occurred.
+   * @throws IOException Signals that an I/O exception has occurred.
    */
   private static String fetchManifestAttribute(Attributes.Name attributeName) throws IOException {
     loadManifestAttributes();
@@ -187,8 +185,7 @@ public class JDBCUtils {
   /**
    * Gets the version.
    *
-   * @param tokenPosition
-   *          the token position
+   * @param tokenPosition the token position
    * @return the version
    */
   static int getVersion(int tokenPosition) {
@@ -210,13 +207,10 @@ public class JDBCUtils {
   /**
    * Parses the url for property info.
    *
-   * @param url
-   *          the url
-   * @param info
-   *          the info
+   * @param url  the url
+   * @param info the info
    * @return the properties
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   static Properties parseUrlForPropertyInfo(String url, Properties info) throws SQLException {
 
@@ -237,11 +231,9 @@ public class JDBCUtils {
   /**
    * Gets the SQL type.
    *
-   * @param type
-   *          the type
+   * @param type the type
    * @return the SQL type
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   public static int getSQLType(String type) throws SQLException {
 
@@ -287,11 +279,9 @@ public class JDBCUtils {
   /**
    * Column display size.
    *
-   * @param columnType
-   *          the column type
+   * @param columnType the column type
    * @return the int
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   static int columnDisplaySize(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
@@ -313,10 +303,10 @@ public class JDBCUtils {
     case Types.TIMESTAMP:
       return columnPrecision(columnType);
 
-      // see http://download.oracle.com/javase/6/docs/api/constant-values.html#java.lang.Float.MAX_EXPONENT
+    // see http://download.oracle.com/javase/6/docs/api/constant-values.html#java.lang.Float.MAX_EXPONENT
     case Types.FLOAT:
       return 24; // e.g. -(17#).e-###
-      // see http://download.oracle.com/javase/6/docs/api/constant-values.html#java.lang.Double.MAX_EXPONENT
+    // see http://download.oracle.com/javase/6/docs/api/constant-values.html#java.lang.Double.MAX_EXPONENT
     case Types.DOUBLE:
       return 25; // e.g. -(17#).e-####
     case Types.DECIMAL:
@@ -333,11 +323,9 @@ public class JDBCUtils {
   /**
    * Column precision.
    *
-   * @param columnType
-   *          the column type
+   * @param columnType the column type
    * @return the int
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   static int columnPrecision(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
@@ -379,11 +367,9 @@ public class JDBCUtils {
   /**
    * Column scale.
    *
-   * @param columnType
-   *          the column type
+   * @param columnType the column type
    * @return the int
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   static int columnScale(int columnType) throws SQLException {
     // according to hiveTypeToSqlType possible options are:
@@ -418,11 +404,9 @@ public class JDBCUtils {
   /**
    * Column class name.
    *
-   * @param columnType
-   *          the column type
+   * @param columnType the column type
    * @return the string
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   static String columnClassName(int columnType) throws SQLException {
     switch (columnType) {

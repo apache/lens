@@ -18,12 +18,14 @@
  */
 package org.apache.lens.driver.hive;
 
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.apache.hive.service.cli.ColumnDescriptor;
+import java.util.List;
+
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
-import java.util.List;
+import org.apache.hive.service.cli.ColumnDescriptor;
+
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * The top level Result Set metadata class which is used by the jackson to

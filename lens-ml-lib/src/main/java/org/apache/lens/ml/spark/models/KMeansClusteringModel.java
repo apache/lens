@@ -19,6 +19,7 @@
 package org.apache.lens.ml.spark.models;
 
 import org.apache.lens.ml.MLModel;
+
 import org.apache.spark.mllib.clustering.KMeansModel;
 import org.apache.spark.mllib.linalg.Vectors;
 
@@ -36,10 +37,8 @@ public class KMeansClusteringModel extends MLModel<Integer> {
   /**
    * Instantiates a new k means clustering model.
    *
-   * @param modelId
-   *          the model id
-   * @param model
-   *          the model
+   * @param modelId the model id
+   * @param model   the model
    */
   public KMeansClusteringModel(String modelId, KMeansModel model) {
     this.model = model;
@@ -48,7 +47,7 @@ public class KMeansClusteringModel extends MLModel<Integer> {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.lens.ml.MLModel#predict(java.lang.Object[])
    */
   @Override

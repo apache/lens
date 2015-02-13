@@ -39,8 +39,7 @@ public class LensJdbcStatement implements Statement {
   /**
    * Instantiates a new lens jdbc statement.
    *
-   * @param connection
-   *          the connection
+   * @param connection the connection
    */
   public LensJdbcStatement(LensJdbcConnection connection) {
     this.connection = connection;
@@ -49,7 +48,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeQuery(java.lang.String)
    */
   @Override
@@ -60,7 +59,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#close()
    */
   @Override
@@ -71,7 +70,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#cancel()
    */
   @Override
@@ -82,8 +81,7 @@ public class LensJdbcStatement implements Statement {
   /**
    * Kill underlying lens query.
    *
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   private void killUnderlyingLensQuery() throws SQLException {
     if (closed) {
@@ -100,7 +98,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#execute(java.lang.String)
    */
   @Override
@@ -163,7 +161,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#clearWarnings()
    */
   @Override
@@ -172,7 +170,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#unwrap(java.lang.Class)
    */
   @Override
@@ -182,7 +180,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Wrapper#isWrapperFor(java.lang.Class)
    */
   @Override
@@ -225,7 +223,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeUpdate(java.lang.String)
    */
   @Override
@@ -235,7 +233,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#addBatch(java.lang.String)
    */
   @Override
@@ -245,7 +243,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#clearBatch()
    */
   @Override
@@ -255,7 +253,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeBatch()
    */
   @Override
@@ -265,7 +263,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#getMoreResults(int)
    */
   @Override
@@ -280,7 +278,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeUpdate(java.lang.String, int)
    */
   @Override
@@ -290,7 +288,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeUpdate(java.lang.String, int[])
    */
   @Override
@@ -300,7 +298,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#executeUpdate(java.lang.String, java.lang.String[])
    */
   @Override
@@ -310,7 +308,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#execute(java.lang.String, int)
    */
   @Override
@@ -320,7 +318,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#execute(java.lang.String, int[])
    */
   @Override
@@ -330,7 +328,7 @@ public class LensJdbcStatement implements Statement {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Statement#execute(java.lang.String, java.lang.String[])
    */
   @Override
@@ -356,8 +354,7 @@ public class LensJdbcStatement implements Statement {
   /**
    * Close on completion.
    *
-   * @throws SQLException
-   *           the SQL exception
+   * @throws SQLException the SQL exception
    */
   public void closeOnCompletion() throws SQLException {
     throw new SQLException("Operation not supported!!!");

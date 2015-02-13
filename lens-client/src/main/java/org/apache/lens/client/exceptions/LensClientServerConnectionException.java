@@ -32,8 +32,7 @@ public class LensClientServerConnectionException extends LensClientException {
   /**
    * Instantiates a new lens client server connection exception.
    *
-   * @param errorCode
-   *          the error code
+   * @param errorCode the error code
    */
   public LensClientServerConnectionException(int errorCode) {
     super("Server Connection gave error code " + errorCode);
@@ -43,10 +42,8 @@ public class LensClientServerConnectionException extends LensClientException {
   /**
    * Instantiates a new lens client server connection exception.
    *
-   * @param message
-   *          the message
-   * @param e
-   *          the e
+   * @param message the message
+   * @param e       the e
    */
   public LensClientServerConnectionException(String message, Exception e) {
     super(message, e);

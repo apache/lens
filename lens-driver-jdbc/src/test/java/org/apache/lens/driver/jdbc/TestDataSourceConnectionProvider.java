@@ -18,6 +18,9 @@
  */
 package org.apache.lens.driver.jdbc;
 
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
+
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,14 +28,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.lens.driver.jdbc.DataSourceConnectionProvider;
-import org.apache.lens.driver.jdbc.JDBCDriverConfConstants;
 import org.apache.log4j.Logger;
+
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 /**
  * The Class TestDataSourceConnectionProvider.
@@ -45,8 +44,7 @@ public class TestDataSourceConnectionProvider {
   /**
    * Test get connection hsql.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testGetConnectionHSQL() throws Exception {
@@ -58,7 +56,7 @@ public class TestDataSourceConnectionProvider {
     final DataSourceConnectionProvider cp = new DataSourceConnectionProvider();
 
     int numThreads = 50;
-    Thread threads[] = new Thread[numThreads];
+    Thread[] threads = new Thread[numThreads];
     final AtomicInteger passed = new AtomicInteger(0);
     final Semaphore sem = new Semaphore(1);
 
@@ -109,8 +107,7 @@ public class TestDataSourceConnectionProvider {
   /**
    * Test get connection timeout.
    *
-   * @throws Exception
-   *           the exception
+   * @throws Exception the exception
    */
   @Test
   public void testGetConnectionTimeout() throws Exception {

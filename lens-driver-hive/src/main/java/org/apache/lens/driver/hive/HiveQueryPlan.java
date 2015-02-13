@@ -23,15 +23,16 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.lens.api.query.QueryCost;
+import org.apache.lens.api.query.QueryPrepareHandle;
+import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.driver.DriverQueryPlan;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.lens.api.query.QueryCost;
-import org.apache.lens.api.query.QueryPrepareHandle;
-import org.apache.lens.server.api.LensConfConstants;
-import org.apache.lens.server.api.driver.DriverQueryPlan;
 
 /**
  * The Class HiveQueryPlan.
@@ -87,22 +88,18 @@ public class HiveQueryPlan extends DriverQueryPlan {
 
     /** CREATE TABLE if destination is a table */
     CREATE
-  };
+  }
 
   /**
    * Instantiates a new hive query plan.
    *
-   * @param explainOutput
-   *          the explain output
-   * @param prepared
-   *          the prepared
-   * @param metastoreConf
-   *          the metastore conf
-   * @throws HiveException
-   *           the hive exception
+   * @param explainOutput the explain output
+   * @param prepared      the prepared
+   * @param metastoreConf the metastore conf
+   * @throws HiveException the hive exception
    */
   public HiveQueryPlan(List<String> explainOutput, QueryPrepareHandle prepared, HiveConf metastoreConf)
-      throws HiveException {
+    throws HiveException {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
@@ -114,12 +111,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
   /**
    * Extract plan details.
    *
-   * @param explainOutput
-   *          the explain output
-   * @param metastoreConf
-   *          the metastore conf
-   * @throws HiveException
-   *           the hive exception
+   * @param explainOutput the explain output
+   * @param metastoreConf the metastore conf
+   * @throws HiveException the hive exception
    */
   private void extractPlanDetails(List<String> explainOutput, HiveConf metastoreConf) throws HiveException {
     ParserState state = ParserState.BEGIN;
@@ -229,10 +223,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
   /**
    * Next state.
    *
-   * @param tr
-   *          the tr
-   * @param state
-   *          the state
+   * @param tr    the tr
+   * @param state the state
    * @return the parser state
    */
   private ParserState nextState(String tr, ParserState state) {

@@ -18,21 +18,25 @@
  */
 package org.apache.lens.ml;
 
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
 import org.apache.lens.server.ml.MLService;
 import org.apache.lens.server.ml.MLServiceImpl;
 
-public class MLUtils {
+import org.apache.hadoop.hive.conf.HiveConf;
 
-  private static final HiveConf hiveConf;
+public final class MLUtils {
+  private MLUtils() {
+  }
+
+  private static final HiveConf HIVE_CONF;
+
   static {
-    hiveConf = new HiveConf();
+    HIVE_CONF = new HiveConf();
     // Add default config so that we know the service provider implementation
-    hiveConf.addResource("lensserver-default.xml");
-    hiveConf.addResource("lens-site.xml");
+    HIVE_CONF.addResource("lensserver-default.xml");
+    HIVE_CONF.addResource("lens-site.xml");
   }
 
   public static String getTrainerName(Class<? extends MLTrainer> trainerClass) {
@@ -48,8 +52,8 @@ public class MLUtils {
   }
 
   public static ServiceProvider getServiceProvider() throws Exception {
-    Class<? extends ServiceProviderFactory> spfClass = hiveConf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
-        null, ServiceProviderFactory.class);
+    Class<? extends ServiceProviderFactory> spfClass = HIVE_CONF.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY,
+      null, ServiceProviderFactory.class);
     ServiceProviderFactory spf = spfClass.newInstance();
     return spf.getServiceProvider();
   }

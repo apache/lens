@@ -82,8 +82,4 @@ public class TestLensApplication extends LensJerseyTest {
 
     assertEquals(reporters.size(), 1, "mismatch in the number of reporters");
   }
-  @Override
-  protected int getTestPort() {
-    return 19998;
-  }
 }

@@ -51,8 +51,7 @@ public class LensConnectionParams {
   /**
    * Construct parameters required to connect to lens server from values passed in configuration.
    *
-   * @param conf
-   *          from which connection parameters are defined.
+   * @param conf from which connection parameters are defined.
    */
   public LensConnectionParams(LensClientConfig conf) {
     this.conf = conf;
@@ -132,15 +131,15 @@ public class LensConnectionParams {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Object#toString()
    */
   @Override
   public String toString() {
     return new StringBuilder("LensConnectionParams{").append("dbName='").append(this.conf.getLensDatabase())
-        .append('\'').append(", baseUrl='").append(this.conf.getBaseURL()).append('\'').append(", user=")
-        .append(this.conf.getUser()).append(", lensConfs=").append(lensConfs).append(", lensVars=").append(lensVars)
-        .append(", sessionVars=").append(sessionVars).append('}').toString();
+      .append('\'').append(", baseUrl='").append(this.conf.getBaseURL()).append('\'').append(", user=")
+      .append(this.conf.getUser()).append(", lensConfs=").append(lensConfs).append(", lensVars=").append(lensVars)
+      .append(", sessionVars=").append(sessionVars).append('}').toString();
   }
 
   public void setBaseUrl(String baseUrl) {

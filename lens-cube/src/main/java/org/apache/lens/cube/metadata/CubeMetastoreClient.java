@@ -1434,11 +1434,11 @@ public class CubeMetastoreClient {
       CubeFactTable fact = getFactTable(factName);
       if (cascade) {
         for (String storage : fact.getStorages()) {
-          dropStorageFromFact(factName, storage);
+          dropStorageFromFact(factName, storage, false);
         }
       }
-      updateFactCache(factName);
       dropHiveTable(factName);
+      allFactTables.remove(factName.toLowerCase());
     } else {
       throw new HiveException(factName + " is not a CubeFactTable");
     }
@@ -1460,6 +1460,17 @@ public class CubeMetastoreClient {
     updateFactCache(factName);
   }
 
+  // updateFact will be false when fact is fully dropped
+  private void dropStorageFromFact(String factName, String storage, boolean updateFact) throws HiveException {
+    CubeFactTable cft = getFactTable(factName);
+    dropHiveTable(MetastoreUtil.getFactStorageTableName(factName, storage));
+    if (updateFact) {
+      cft.dropStorage(storage);
+      alterCubeTable(factName, getTable(factName), cft);
+      updateFactCache(factName);
+    }
+  }
+
   /**
    * Drop a storage from dimension
    * 
@@ -1468,11 +1479,18 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public void dropStorageFromDim(String dimTblName, String storage) throws HiveException {
+    dropStorageFromDim(dimTblName, storage, true);
+  }
+
+  // updateDimTbl will be false when dropping dimTbl
+  private void dropStorageFromDim(String dimTblName, String storage, boolean updateDimTbl) throws HiveException {
     CubeDimensionTable cdt = getDimensionTable(dimTblName);
-    cdt.dropStorage(storage);
     dropHiveTable(MetastoreUtil.getDimStorageTableName(dimTblName, storage));
-    alterCubeTable(dimTblName, getTable(dimTblName), cdt);
-    updateDimCache(dimTblName);
+    if (updateDimTbl) {
+      cdt.dropStorage(storage);
+      alterCubeTable(dimTblName, getTable(dimTblName), cdt);
+      updateDimCache(dimTblName);
+    }
   }
 
   /**
@@ -1487,10 +1505,10 @@ public class CubeMetastoreClient {
   public void dropDimensionTable(String dimTblName, boolean cascade) throws HiveException {
     if (isDimensionTable(dimTblName)) {
       CubeDimensionTable dim = getDimensionTable(dimTblName);
-      Set<String> dimStorages = new HashSet<String>();
-      dimStorages.addAll(dim.getStorages());
-      for (String storage : dimStorages) {
-        dropStorageFromDim(dimTblName, storage);
+      if (cascade) {
+        for (String storage : dim.getStorages()) {
+          dropStorageFromDim(dimTblName, storage, false);
+        }
       }
       dropHiveTable(dimTblName);
       allDimTables.remove(dimTblName.toLowerCase());

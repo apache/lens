@@ -18,9 +18,9 @@
  */
 package org.apache.lens.ml.spark;
 
-import org.apache.spark.api.java.function.Function;
-
 import java.io.Serializable;
+
+import org.apache.spark.api.java.function.Function;
 
 /**
  * Map a feature value to a Double value usable by MLLib.
@@ -29,7 +29,7 @@ public abstract class FeatureValueMapper implements Function<Object, Double>, Se
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.spark.api.java.function.Function#call(java.lang.Object)
    */
   public abstract Double call(Object input);

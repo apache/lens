@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
+
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
@@ -54,15 +55,20 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   }
 
   public BriefAndDetailedError toJsonObject() {
-    final HashMap<String, CandidateTablePruneCause> detailedMessage= new HashMap<String, CandidateTablePruneCause>();
+    final HashMap<String, List<CandidateTablePruneCause>> detailedMessage
+      = new HashMap<String, List<CandidateTablePruneCause>>();
     for(Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
-      detailedMessage.put(StringUtils.join(entry.getValue(), ","), entry.getKey());
+      String key = StringUtils.join(entry.getValue(), ",");
+      if(detailedMessage.get(key) == null) {
+        detailedMessage.put(key, new ArrayList<CandidateTablePruneCause>());
+      }
+      detailedMessage.get(key).add(entry.getKey());
     }
     return new BriefAndDetailedError(getBriefCause(), detailedMessage);
   }
 
   public String getBriefCause() {
-    CandidateTablePruneCause.CubeTableCause maxCause = CandidateTablePruneCause.CubeTableCause.values()[0];
+    CandidateTablePruneCause.CandidateTablePruneCode maxCause = CandidateTablePruneCause.CandidateTablePruneCode.values()[0];
     for(CandidateTablePruneCause cause: getReversed().keySet()) {
       if(cause.getCause().compareTo(maxCause) > 0) {
         maxCause = cause.getCause();
@@ -87,6 +93,6 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   @NoArgsConstructor
   public static final class BriefAndDetailedError {
     public String brief;
-    public HashMap<String, CandidateTablePruneCause> details;
+    public HashMap<String, List<CandidateTablePruneCause>> details;
   }
 }

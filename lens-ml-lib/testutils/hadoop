@@ -29,7 +29,7 @@ bin=`cd "$bin"; pwd`
 export MALLOC_ARENA_MAX=${MALLOC_ARENA_MAX:-4}
 
 JAVA=$JAVA_HOME/bin/java
-JAVA_HEAP_MAX=-Xmx1000m 
+JAVA_HEAP_MAX=-Xmx1000m
 
 # check envvars which might override default args
 if [ "$HADOOP_HEAPSIZE" != "" ]; then
@@ -65,7 +65,7 @@ HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.id.str=$HADOOP_IDENT_STRING"
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.root.logger=${HADOOP_ROOT_LOGGER:-INFO,console}"
 if [ "x$JAVA_LIBRARY_PATH" != "x" ]; then
   HADOOP_OPTS="$HADOOP_OPTS -Djava.library.path=$JAVA_LIBRARY_PATH"
-fi  
+fi
 HADOOP_OPTS="$HADOOP_OPTS -Dhadoop.policy.file=$HADOOP_POLICYFILE"
 
 # Disable ipv6 as it can cause issues

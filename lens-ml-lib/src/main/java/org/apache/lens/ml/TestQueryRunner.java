@@ -33,8 +33,7 @@ public abstract class TestQueryRunner {
   /**
    * Instantiates a new test query runner.
    *
-   * @param sessionHandle
-   *          the session handle
+   * @param sessionHandle the session handle
    */
   public TestQueryRunner(LensSessionHandle sessionHandle) {
     this.sessionHandle = sessionHandle;
@@ -43,11 +42,9 @@ public abstract class TestQueryRunner {
   /**
    * Run query.
    *
-   * @param query
-   *          the query
+   * @param query the query
    * @return the query handle
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   public abstract QueryHandle runQuery(String query) throws LensException;
 }

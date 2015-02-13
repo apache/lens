@@ -20,7 +20,7 @@
 Lens server deployment
 
   This document describes the deployment of lens server in a distributed cluster.
-  Make sure you have finished {{{../gettingstarted/install-steps.html} Install and run}} doc,
+  Make sure you have finished {{{../lenshome/install-and-run.html} Install and Run}} documentation,
   before proceeding.
 
   Lens server requires Hive metastore for providing OLAP cube metastore. Its also requires a DB for storing system

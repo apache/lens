@@ -44,8 +44,7 @@ public class LensConnectionBuilder {
   /**
    * Base url.
    *
-   * @param baseUrl
-   *          the base url
+   * @param baseUrl the base url
    * @return the lens connection builder
    */
   public LensConnectionBuilder baseUrl(String baseUrl) {
@@ -56,8 +55,7 @@ public class LensConnectionBuilder {
   /**
    * Database.
    *
-   * @param database
-   *          the database
+   * @param database the database
    * @return the lens connection builder
    */
   public LensConnectionBuilder database(String database) {
@@ -68,8 +66,7 @@ public class LensConnectionBuilder {
   /**
    * User.
    *
-   * @param user
-   *          the user
+   * @param user the user
    * @return the lens connection builder
    */
   public LensConnectionBuilder user(String user) {
@@ -80,8 +77,7 @@ public class LensConnectionBuilder {
   /**
    * Password.
    *
-   * @param password
-   *          the password
+   * @param password the password
    * @return the lens connection builder
    */
   public LensConnectionBuilder password(String password) {

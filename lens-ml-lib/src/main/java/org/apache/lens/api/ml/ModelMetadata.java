@@ -18,11 +18,12 @@
  */
 package org.apache.lens.api.ml;
 
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /**
  * The Class ModelMetadata.
@@ -97,7 +98,7 @@ public class ModelMetadata {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.lang.Object#toString()
    */
   @Override

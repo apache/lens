@@ -24,6 +24,14 @@ die() {
     exit 1
 }
 
+usage="usage: generated-site-public.sh <target site location on svn>"
+
+# if no args specified, show usage
+if [ $# != 1 ]; then
+  echo $usage
+  exit 1
+fi
+
 SVN_TARGET=$1
 TMP=/tmp/lens-site-stage
 STAGE=`pwd`/target/staging
@@ -55,6 +63,8 @@ echo "Copying REST docs from " $REST_DIR
 # Delete index.html from the source wsdocs as it conflitcs with maven index.html
 echo "DELETE $REST_DIR/index.html"
 rm $REST_DIR/index.html
+echo "removing generated jars from the REST directory"
+rm $REST_DIR/*.jar
 echo "Copy enunciate documentation"
 cp -r $REST_DIR/* .
 cp -r $REST_DIR/* current/ || die "unable to copy REST to current"

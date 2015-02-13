@@ -18,20 +18,6 @@
  */
 package org.apache.lens.client;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.lens.api.LensException;
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.ml.ModelMetadata;
-import org.apache.lens.api.ml.TestReport;
-import org.apache.lens.ml.LensML;
-import org.apache.lens.ml.MLModel;
-import org.apache.lens.ml.MLTestReport;
-import org.apache.lens.ml.MLTrainer;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -43,6 +29,21 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.core.Form;
+
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.ml.ModelMetadata;
+import org.apache.lens.api.ml.TestReport;
+import org.apache.lens.ml.LensML;
+import org.apache.lens.ml.MLModel;
+import org.apache.lens.ml.MLTestReport;
+import org.apache.lens.ml.MLTrainer;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Client side implementation of LensML
@@ -56,8 +57,7 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Instantiates a new lens ml client.
    *
-   * @param clientConf
-   *          the client conf
+   * @param clientConf the client conf
    */
   public LensMLClient(LensConnectionParams clientConf, String password) {
     client = new LensMLJerseyClient(new LensConnection(clientConf), password);
@@ -67,8 +67,7 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Instantiates a new lens ml client.
    *
-   * @param clientConf
-   *          the client conf
+   * @param clientConf the client conf
    */
   public LensMLClient(LensConnectionParams clientConf, LensSessionHandle sessionHandle) {
     client = new LensMLJerseyClient(new LensConnection(clientConf, sessionHandle), sessionHandle);
@@ -88,8 +87,7 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get user friendly information about parameters accepted by the algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return map of param key to its help message
    */
   @Override
@@ -107,11 +105,9 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get a trainer object instance which could be used to generate a model of the given algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the trainer for name
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public MLTrainer getTrainerForName(String algorithm) throws LensException {
@@ -122,15 +118,11 @@ public class LensMLClient implements LensML, Closeable {
    * Create a model using the given HCatalog table as input. The arguments should contain information needeed to
    * generate the model.
    *
-   * @param table
-   *          the table
-   * @param algorithm
-   *          the algorithm
-   * @param args
-   *          the args
+   * @param table     the table
+   * @param algorithm the algorithm
+   * @param args      the args
    * @return Unique ID of the model created after training is complete
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public String train(String table, String algorithm, String[] args) throws LensException {
@@ -145,11 +137,9 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get model IDs for the given algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the models
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public List<String> getModels(String algorithm) throws LensException {
@@ -159,13 +149,10 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get a model instance given the algorithm name and model ID.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelId
-   *          the model id
+   * @param algorithm the algorithm
+   * @param modelId   the model id
    * @return the model
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public MLModel getModel(String algorithm, String modelId) throws LensException {
@@ -201,10 +188,8 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get the FS location where model instance is saved.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return the model path
    */
   @Override
@@ -216,21 +201,16 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Evaluate model by running it against test data contained in the given table.
    *
-   * @param session
-   *          the session
-   * @param table
-   *          the table
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
+   * @param session   the session
+   * @param table     the table
+   * @param algorithm the algorithm
+   * @param modelID   the model id
    * @return Test report object containing test output table, and various evaluation metrics
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public MLTestReport testModel(LensSessionHandle session, String table, String algorithm, String modelID,
-      String outputTable) throws LensException {
+    String outputTable) throws LensException {
     String reportID = client.testModel(table, algorithm, modelID, outputTable);
     return getTestReport(algorithm, reportID);
   }
@@ -238,11 +218,9 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get test reports for an algorithm.
    *
-   * @param algorithm
-   *          the algorithm
+   * @param algorithm the algorithm
    * @return the test reports
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public List<String> getTestReports(String algorithm) throws LensException {
@@ -252,13 +230,10 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Get a test report by ID.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
+   * @param algorithm the algorithm
+   * @param reportID  the report id
    * @return the test report
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public MLTestReport getTestReport(String algorithm, String reportID) throws LensException {
@@ -280,15 +255,11 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Online predict call given a model ID, algorithm name and sample feature values.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @param features
-   *          the features
+   * @param algorithm the algorithm
+   * @param modelID   the model id
+   * @param features  the features
    * @return prediction result
-   * @throws LensException
-   *           the lens exception
+   * @throws LensException the lens exception
    */
   @Override
   public Object predict(String algorithm, String modelID, Object[] features) throws LensException {
@@ -298,12 +269,9 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Permanently delete a model instance.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param modelID
-   *          the model id
-   * @throws LensException
-   *           the lens exception
+   * @param algorithm the algorithm
+   * @param modelID   the model id
+   * @throws LensException the lens exception
    */
   @Override
   public void deleteModel(String algorithm, String modelID) throws LensException {
@@ -313,12 +281,9 @@ public class LensMLClient implements LensML, Closeable {
   /**
    * Permanently delete a test report instance.
    *
-   * @param algorithm
-   *          the algorithm
-   * @param reportID
-   *          the report id
-   * @throws LensException
-   *           the lens exception
+   * @param algorithm the algorithm
+   * @param reportID  the report id
+   * @throws LensException the lens exception
    */
   @Override
   public void deleteTestReport(String algorithm, String reportID) throws LensException {

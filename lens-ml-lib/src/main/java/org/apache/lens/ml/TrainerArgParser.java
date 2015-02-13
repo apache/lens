@@ -18,33 +18,33 @@
  */
 package org.apache.lens.ml;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * The Class TrainerArgParser.
  */
-public class TrainerArgParser {
+public final class TrainerArgParser {
+  private TrainerArgParser() {
+  }
 
   /**
    * The Class CustomArgParser.
    *
-   * @param <E>
-   *          the element type
+   * @param <E> the element type
    */
   public abstract static class CustomArgParser<E> {
 
     /**
      * Parses the.
      *
-     * @param value
-     *          the value
+     * @param value the value
      * @return the e
      */
     public abstract E parse(String value);
@@ -57,10 +57,8 @@ public class TrainerArgParser {
    * Extracts feature names. If the trainer has any parameters associated with @TrainerParam annotation, those are set
    * as well.
    *
-   * @param trainer
-   *          the trainer
-   * @param args
-   *          the args
+   * @param trainer the trainer
+   * @param args    the args
    * @return List of feature column names.
    */
   public static List<String> parseArgs(MLTrainer trainer, String[] args) {
@@ -99,7 +97,7 @@ public class TrainerArgParser {
             String customParserClass = trainer.getConf().getProperties().get("lens.ml.args." + key);
             if (customParserClass != null) {
               Class<? extends CustomArgParser<?>> clz = (Class<? extends CustomArgParser<?>>) Class
-                  .forName(customParserClass);
+                .forName(customParserClass);
               CustomArgParser<?> parser = clz.newInstance();
               f.set(trainer, parser.parse(value));
             } else {

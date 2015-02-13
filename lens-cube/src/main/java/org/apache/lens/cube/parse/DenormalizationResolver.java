@@ -45,7 +45,7 @@ import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.Dimension;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
 import org.apache.lens.cube.metadata.TableReference;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 
 /**
  * This class resolves all the reference columns that are queried.
@@ -383,7 +383,7 @@ public class DenormalizationResolver implements ContextRewriter {
           throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, cubeql.getColumnsQueried(cubeql.getCube().getName())
               .toString());
         }
-        cubeql.pruneCandidateFactSet(CubeTableCause.COLUMN_NOT_FOUND);
+        cubeql.pruneCandidateFactSet(CandidateTablePruneCode.COLUMN_NOT_FOUND);
       }
       if (cubeql.getDimensions() != null && !cubeql.getDimensions().isEmpty()) {
         for (Dimension dim : cubeql.getDimensions()) {

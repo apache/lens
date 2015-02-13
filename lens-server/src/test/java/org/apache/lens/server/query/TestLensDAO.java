@@ -87,11 +87,6 @@ public class TestLensDAO extends LensJerseyTest {
     Assert.assertEquals(daoTestQueryHandles.get(0).getHandleId().toString(), finishedHandle);
   }
 
-  @Override
-  protected int getTestPort() {
-    return 101010;
-  }
-
   /*
    * (non-Javadoc)
    * 

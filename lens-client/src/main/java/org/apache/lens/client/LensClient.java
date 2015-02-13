@@ -18,16 +18,17 @@
  */
 package org.apache.lens.client;
 
-import com.google.common.collect.Maps;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
+import org.apache.lens.api.query.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.lens.api.APIResult;
-import org.apache.lens.api.query.*;
 
-import java.util.HashMap;
-import java.util.List;
+import com.google.common.collect.Maps;
 
 
 public class LensClient {
@@ -38,7 +39,7 @@ public class LensClient {
   private String password;
   private LensConnection conn;
   private final HashMap<QueryHandle, LensStatement> statementMap =
-      Maps.newHashMap();
+    Maps.newHashMap();
   private final LensStatement statement;
 
   public LensClient() {
@@ -57,7 +58,7 @@ public class LensClient {
     this.conf = conf;
     conf.setUser(username);
     this.password = password;
-    if(this.conf.get(LensClientConfig.SESSION_CLUSTER_USER) == null) {
+    if (this.conf.get(LensClientConfig.SESSION_CLUSTER_USER) == null) {
       this.conf.set(LensClientConfig.SESSION_CLUSTER_USER, System.getProperty("user.name"));
     }
     connectToLensServer();
@@ -87,7 +88,7 @@ public class LensClient {
     private final LensQuery query;
 
     public LensClientResultSetWithStats(LensClientResultSet resultSet,
-        LensQuery query) {
+      LensQuery query) {
       this.resultSet = resultSet;
       this.query = query;
     }
@@ -109,14 +110,14 @@ public class LensClient {
 
   private LensClientResultSetWithStats getResultsFromStatement(LensStatement statement) {
     QueryStatus.Status status = statement.getStatus().getStatus();
-    if(status != QueryStatus.Status.SUCCESSFUL) {
+    if (status != QueryStatus.Status.SUCCESSFUL) {
       throw new IllegalStateException(statement.getStatus().getStatusMessage()
-          + " cause:" + statement.getStatus().getErrorMessage());
+        + " cause:" + statement.getStatus().getErrorMessage());
     }
     LensClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new LensClientResultSet(statement.getResultSet(),
-          statement.getResultSetMetaData());
+        statement.getResultSetMetaData());
     }
     return new LensClientResultSetWithStats(result, statement.getQuery());
   }
@@ -124,13 +125,13 @@ public class LensClient {
   private LensClientResultSetWithStats getResultsFromHandle(QueryHandle q) {
     LensQuery query = statement.getQuery(q);
     if (query.getStatus().getStatus()
-        == QueryStatus.Status.FAILED) {
+      == QueryStatus.Status.FAILED) {
       throw new IllegalStateException(query.getStatus().getErrorMessage());
     }
     LensClientResultSet result = null;
     if (statement.getStatus().isResultSetAvailable()) {
       result = new LensClientResultSet(statement.getResultSet(),
-          statement.getResultSetMetaData());
+        statement.getResultSetMetaData());
     }
     return new LensClientResultSetWithStats(result, statement.getQuery());
   }
@@ -165,7 +166,7 @@ public class LensClient {
     if (!status.isResultSetAvailable()) {
       LOG.debug("Current status of the query is " + status);
       throw new IllegalStateException("Resultset for the query "
-          + query + " is not available, its current status is " + status);
+        + query + " is not available, its current status is " + status);
     }
     return getLensStatement(query).getResultSet();
   }
@@ -273,9 +274,8 @@ public class LensClient {
     return this.conn.removeResourceFromConnection("file", path);
   }
 
-  public APIResult createFactTable(String factSpec,
-      String storageSpecPath) {
-    return mc.createFactTable(factSpec, storageSpecPath);
+  public APIResult createFactTable(String factSpec) {
+    return mc.createFactTable(factSpec);
   }
 
   public APIResult createCube(String cubeSpec) {
@@ -290,8 +290,8 @@ public class LensClient {
     return mc.createDimension(dimSpec);
   }
 
-  public APIResult createDimensionTable(String dimSpec, String storageSpec) {
-    return mc.createDimensionTable(dimSpec, storageSpec);
+  public APIResult createDimensionTable(String dimSpec) {
+    return mc.createDimensionTable(dimSpec);
   }
 
   public List<String> getAllStorages() {
@@ -338,15 +338,15 @@ public class LensClient {
     return mc.updateDimension(dimName, dimSpec);
   }
 
-  public FactTable getFactTable(String factName) {
+  public XFactTable getFactTable(String factName) {
     return mc.getFactTable(factName);
   }
 
-  public DimensionTable getDimensionTable(String dimName) {
+  public XDimensionTable getDimensionTable(String dimName) {
     return mc.getDimensionTable(dimName);
   }
 
-  public NativeTable getNativeTable(String tblName) {
+  public XNativeTable getNativeTable(String tblName) {
     return mc.getNativeTable(tblName);
   }
 
@@ -473,6 +473,10 @@ public class LensClient {
 
   public boolean isConnectionOpen() {
     return this.conn.isOpen();
+  }
+
+  public List<String> listResources(String type) {
+    return this.conn.listResourcesFromConnection(type);
   }
 
 }

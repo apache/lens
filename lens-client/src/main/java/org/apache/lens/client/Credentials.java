@@ -35,31 +35,24 @@ package org.apache.lens.client;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import java.io.Console;
+
+import lombok.Data;
 
 /**
  * The Class Credentials.
+ * It's not a utility class. checkstyle thinks it is.
+ * SUSPEND CHECKSTYLE CHECK HideUtilityClassConstructorCheck
  */
+@Data
 public class Credentials {
 
   /** The username. */
-  public String username;
+  private final String username;
 
   /** The password. */
-  public String password;
-
-  /**
-   * Instantiates a new credentials.
-   *
-   * @param username
-   *          the username
-   * @param password
-   *          the password
-   */
-  public Credentials(String username, String password) {
-    this.username = username;
-    this.password = password;
-  }
+  private final String password;
 
   /**
    * Prompt.
@@ -74,24 +67,9 @@ public class Credentials {
     }
     console.printf("username:");
     String username = console.readLine().trim();
-    char passwordArray[] = console.readPassword("password for %s:", username);
+    char[] passwordArray = console.readPassword("password for %s:", username);
     String password = new String(passwordArray);
     return new Credentials(username, password);
   }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
 }
+// RESUME CHECKSTYLE CHECK HideUtilityClassConstructorCheck

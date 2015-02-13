@@ -73,8 +73,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   /**
    * The is driver persistent.
    */
-  @Getter
-  private final boolean isDriverPersistent;
+  @Getter private boolean isDriverPersistent;
 
   /**
    * The status.
@@ -320,13 +319,27 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   }
 
   public boolean isResultAvailableInDriver() {
+    // result is available in driver if driverStatus.isResultSetAvailable() - will be true for fetching inmemory
+    // result set.
+    // if result is persisted in driver driverStatus.isResultSetAvailable() will be false
+    // so, for select queries, if result is persisted in driver, we return true sothat the result can be fetched thru
+    // persistent resultset
     return isDriverPersistent() || driverStatus.isResultSetAvailable();
+  }
+
+  /**
+   * Set whether result is persisted on driver to false. Set by drivers when drivers are not persisting
+   *
+   * @return true/false
+   */
+  public void unSetDriverPersistent() {
+    isDriverPersistent = false;
   }
 
   /*
    * Introduced for Recovering finished query.
    */
-  public void setStatusSkippingTransitionTest(QueryStatus newStatus) throws LensException {
+  void setStatusSkippingTransitionTest(QueryStatus newStatus) throws LensException {
     this.status = newStatus;
   }
 

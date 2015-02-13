@@ -32,8 +32,6 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.net.URI;
 import java.util.Set;
 
@@ -65,28 +63,6 @@ public class TestStaticFileResource extends LensJerseyTest {
   @AfterTest
   public void tearDown() throws Exception {
     super.tearDown();
-  }
-
-  @Override
-  protected int getTestPort() {
-    int port = 20000;
-    ServerSocket socket = null;
-    try {
-      socket = new ServerSocket(0);
-      port = socket.getLocalPort();
-    } catch (IOException e) {
-      LOG.info("Exception occured while creating socket."
-          + " Use a default port number " +  port);
-    } finally {
-      try {
-        if (socket != null) {
-          socket.close();
-        }
-      } catch (IOException e) {
-        LOG.info("Exception occured while closing the socket ", e);
-      }
-    }
-    return port;
   }
 
   /*

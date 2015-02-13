@@ -49,7 +49,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
-import org.apache.lens.cube.parse.CandidateTablePruneCause.CubeTableCause;
+import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CubeQueryContext.OptionalDimCtx;
 
 /**
@@ -755,6 +755,8 @@ class JoinResolver implements ContextRewriter {
       }
       // prune allPaths with qdims
       LOG.info("pruning allPaths before generating all permutations.");
+      LOG.info("allPaths: " + allPaths);
+      LOG.info("qdims: " + qdims);
       pruneAllPathsWithQueriedDims(allPaths, qdims);
 
       // Number of paths in each path set
@@ -824,13 +826,11 @@ class JoinResolver implements ContextRewriter {
     private void pruneAllPathsWithQueriedDims
       (Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths, Set<Dimension> qdims) {
       Iterator<Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>>> iter = allPaths.entrySet().iterator();
-      while(iter.hasNext()) {
+      while (iter.hasNext()) {
         Map.Entry<Aliased<Dimension>, List<SchemaGraph.JoinPath>> cur = iter.next();
-        if(cur.getKey().getAlias() == null) {
-          if(!qdims.contains(cur.getKey().getObject())) {
-            LOG.info("removing from allPaths: " + cur);
-            iter.remove();
-          }
+        if (!qdims.contains(cur.getKey().getObject())) {
+          LOG.info("removing from allPaths: " + cur);
+          iter.remove();
         }
       }
     }
@@ -1063,14 +1063,14 @@ class JoinResolver implements ContextRewriter {
                   LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
                   cubeql.getCandidateFactTables().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
-                    CubeTableCause.COLUMN_NOT_FOUND));
+                    CandidateTablePruneCode.COLUMN_NOT_FOUND));
                 }
               } else if (cubeql.getCandidateDimTables().containsKey(((CandidateDim) candidate).getBaseTable())) {
                 LOG.info("Not considering dimtable:" + candidate + " as there is no join path to " + joinee);
                 cubeql.getCandidateDimTables().get(((CandidateDim) candidate).getBaseTable()).remove(candidate);
                 cubeql.addDimPruningMsgs(
                   (Dimension) candidate.getBaseTable(), (CubeDimensionTable) candidate.getTable(),
-                    new CandidateTablePruneCause(CubeTableCause.COLUMN_NOT_FOUND)
+                    new CandidateTablePruneCause(CandidateTablePruneCode.COLUMN_NOT_FOUND)
                 );
               }
             }

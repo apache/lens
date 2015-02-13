@@ -18,6 +18,8 @@
  */
 package org.apache.lens.ml;
 
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.exec.Description;
@@ -34,14 +36,15 @@ import org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectIn
 import org.apache.hadoop.hive.serde2.objectinspector.primitive.StringObjectInspector;
 import org.apache.hadoop.mapred.JobConf;
 
-import java.io.IOException;
-
 /**
  * Generic UDF to laod ML Models saved in HDFS and apply the model on list of columns passed as argument.
  */
-@Description(name = "predict", value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given "
+@Description(name = "predict",
+  value = "_FUNC_(algorithm, modelID, features...) - Run prediction algorithm with given "
     + "algorithm name, model ID and input feature columns")
-public class HiveMLUDF extends GenericUDF {
+public final class HiveMLUDF extends GenericUDF {
+  private HiveMLUDF() {
+  }
 
   /** The Constant UDF_NAME. */
   public static final String UDF_NAME = "predict";
@@ -64,18 +67,16 @@ public class HiveMLUDF extends GenericUDF {
   /**
    * Currently we only support double as the return value.
    *
-   * @param objectInspectors
-   *          the object inspectors
+   * @param objectInspectors the object inspectors
    * @return the object inspector
-   * @throws UDFArgumentException
-   *           the UDF argument exception
+   * @throws UDFArgumentException the UDF argument exception
    */
   @Override
   public ObjectInspector initialize(ObjectInspector[] objectInspectors) throws UDFArgumentException {
     // We require algo name, model id and at least one feature
     if (objectInspectors.length < 3) {
       throw new UDFArgumentLengthException("Algo name, model ID and at least one feature should be passed to "
-          + UDF_NAME);
+        + UDF_NAME);
     }
     LOG.info(UDF_NAME + " initialized");
     return PrimitiveObjectInspectorFactory.javaDoubleObjectInspector;
@@ -83,7 +84,7 @@ public class HiveMLUDF extends GenericUDF {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#evaluate(org.apache.hadoop.hive.ql.udf.generic.GenericUDF.
    * DeferredObject[])
    */
@@ -92,7 +93,7 @@ public class HiveMLUDF extends GenericUDF {
     String algorithm = soi.getPrimitiveJavaObject(deferredObjects[0].get());
     String modelId = soi.getPrimitiveJavaObject(deferredObjects[1].get());
 
-    Double features[] = new Double[deferredObjects.length - 2];
+    Double[] features = new Double[deferredObjects.length - 2];
     for (int i = 2; i < deferredObjects.length; i++) {
       LazyDouble lazyDouble = (LazyDouble) deferredObjects[i].get();
       features[i - 2] = (lazyDouble == null) ? 0d : doi.get(lazyDouble);
@@ -111,7 +112,7 @@ public class HiveMLUDF extends GenericUDF {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#getDisplayString(java.lang.String[])
    */
   @Override
@@ -121,7 +122,7 @@ public class HiveMLUDF extends GenericUDF {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see org.apache.hadoop.hive.ql.udf.generic.GenericUDF#configure(org.apache.hadoop.hive.ql.exec.MapredContext)
    */
   @Override

@@ -23,9 +23,10 @@ import java.io.IOException;
 import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.APIResult;
-import org.apache.lens.client.*;
-
 import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.client.LensClientSingletonWrapper;
+import org.apache.lens.client.LensMetadataClient;
+
 
 public class PopulateSampleMetastore {
   private LensMetadataClient metaClient;
@@ -66,7 +67,7 @@ public class PopulateSampleMetastore {
   }
 
   public void populateDimTables() throws JAXBException, IOException {
-    XPartition partition = (XPartition)SampleMetastore.readFromXML("dim1-local-part.xml");
+    XPartition partition = (XPartition) SampleMetastore.readFromXML("dim1-local-part.xml");
     String partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
@@ -78,7 +79,7 @@ public class PopulateSampleMetastore {
     } else {
       System.out.println("Added partition from:dim1-local-part.xml");
     }
-    partition = (XPartition)SampleMetastore.readFromXML("dim2-local-part.xml");
+    partition = (XPartition) SampleMetastore.readFromXML("dim2-local-part.xml");
     partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
@@ -91,7 +92,7 @@ public class PopulateSampleMetastore {
       System.out.println("Added partition from:dim2-local-part.xml");
     }
 
-    partition = (XPartition)SampleMetastore.readFromXML("dim4-local-part.xml");
+    partition = (XPartition) SampleMetastore.readFromXML("dim4-local-part.xml");
     partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
@@ -114,7 +115,7 @@ public class PopulateSampleMetastore {
   }
 
   private void createFactPartition(String fileName, String fact, String storage) throws JAXBException, IOException {
-    XPartition partition = (XPartition)SampleMetastore.readFromXML(fileName);
+    XPartition partition = (XPartition) SampleMetastore.readFromXML(fileName);
     String partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);

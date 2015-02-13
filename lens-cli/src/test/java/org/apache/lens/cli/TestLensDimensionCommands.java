@@ -18,16 +18,17 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URISyntaxException;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * The Class TestLensDimensionCommands.
@@ -103,9 +104,9 @@ public class TestLensDimensionCommands extends LensCliApplicationTest {
 
       String xmlContent = sb.toString();
 
-      xmlContent = xmlContent.replace("<properties name=\"test_dim.prop\" value=\"test\" />\n",
-          "<properties name=\"test_dim.prop\" value=\"test\" />"
-              + "\n<properties name=\"test_dim.prop1\" value=\"test1\" />\n");
+      xmlContent = xmlContent.replace("<property name=\"test_dim.prop\" value=\"test\" />\n",
+          "<property name=\"test_dim.prop\" value=\"test\" />"
+              + "\n<property name=\"test_dim.prop1\" value=\"test1\" />\n");
 
       File newFile = new File("/tmp/test_dim1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

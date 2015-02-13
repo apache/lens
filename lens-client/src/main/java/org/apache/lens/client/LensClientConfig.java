@@ -49,7 +49,7 @@ public class LensClientConfig extends Configuration {
   private static final String QUERY_POLL_INTERVAL_KEY = CLIENT_PFX + "query.poll.interval";
 
   /** The Constant DEFAULT_QUERY_POLL_INTERVAL. */
-  private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000l;
+  private static final long DEFAULT_QUERY_POLL_INTERVAL = 10 * 1000L;
 
   /** The Constant USER_NAME. */
   private static final String USER_NAME = CLIENT_PFX + "user.name";
@@ -71,7 +71,7 @@ public class LensClientConfig extends Configuration {
   public static final String SERVER_BASE_URL = "lens.server.base.url";
 
   /** The Constant DEFAULT_SERVER_BASE_URL. */
-  public static final String DEFAULT_SERVER_BASE_URL = "http://localhost:9999/lensapi";
+  public static final String DEFAULT_SERVER_BASE_URL = "http://0.0.0.0:9999/lensapi";
 
   /** The Constant SESSION_CLUSTER_USER. */
   public static final String SESSION_CLUSTER_USER = "lens.session.cluster.user";
@@ -109,7 +109,7 @@ public class LensClientConfig extends Configuration {
 
   /**
    * Returns the session service path on lens server
-   * 
+   *
    * @return web app fragment pointing to session service, defaults to session
    */
   public String getSessionResourcePath() {
@@ -118,7 +118,7 @@ public class LensClientConfig extends Configuration {
 
   /**
    * Returns the query service path on lens server
-   * 
+   *
    * @return web app fragment pointing to query service, defaults to queryapi
    */
   public String getQueryResourcePath() {
@@ -127,9 +127,8 @@ public class LensClientConfig extends Configuration {
 
   /**
    * Sets the database to connect on lens server
-   * 
-   * @param dbName
-   *          database to connect to
+   *
+   * @param dbName database to connect to
    */
   public void setLensDatabase(String dbName) {
     this.set(DBNAME_KEY, dbName);

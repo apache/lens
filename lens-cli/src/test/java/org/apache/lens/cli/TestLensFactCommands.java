@@ -18,15 +18,16 @@
  */
 package org.apache.lens.cli;
 
+import java.io.*;
+import java.net.URL;
+
 import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.io.*;
-import java.net.URL;
 
 /**
  * The Class TestLensFactCommands.
@@ -44,9 +45,10 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
   /**
    * Test fact commands.
+   * @throws IOException
    */
   @Test
-  public void testFactCommands() {
+  public void testFactCommands() throws IOException {
     addFact1Table();
     updateFact1Table();
     testFactStorageActions();
@@ -65,18 +67,17 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
   /**
    * Adds the fact1 table.
+   * @throws IOException
    */
-  public static void addFact1Table() {
+  public static void addFact1Table() throws IOException {
     LensFactCommands command = getCommand();
     String factList = command.showFacts();
     Assert.assertEquals("No Facts Found", factList, "Fact tables should not be found");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
     URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
-    URL factStorageSpec = TestLensFactCommands.class.getClassLoader().getResource("fact1-storage-spec.xml");
     try {
-      command.createFact(new File(factSpec.toURI()).getAbsolutePath() + " "
-          + new File(factStorageSpec.toURI()).getAbsolutePath());
+      command.createFact(new File(factSpec.toURI()).getAbsolutePath());
     } catch (Exception e) {
       Assert.fail("Unable to create fact table" + e.getMessage());
     }
@@ -102,8 +103,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       String xmlContent = sb.toString();
 
-      xmlContent = xmlContent.replace("<properties name=\"fact1.prop\" value=\"f1\"/>\n",
-          "<properties name=\"fact1.prop\" value=\"f1\"/>" + "\n<properties name=\"fact1.prop1\" value=\"f2\"/>\n");
+      xmlContent = xmlContent.replace("<property name=\"fact1.prop\" value=\"f1\" />\n",
+          "<property name=\"fact1.prop\" value=\"f1\"/>" + "\n<property name=\"fact1.prop1\" value=\"f2\"/>\n");
 
       File newFile = new File("/tmp/local-fact1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));

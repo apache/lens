@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import lombok.Getter;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +30,8 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
+
+import lombok.Getter;
 
 /**
  * Table specification for running test on a table.
@@ -75,7 +75,8 @@ public class TableTestingSpec {
   @Getter
   private boolean outputTableExists;
 
-  public String testID;
+  @Getter
+  private String testID;
 
   private HashMap<String, FieldSchema> columnNameToFieldSchema;
 
@@ -97,8 +98,7 @@ public class TableTestingSpec {
     /**
      * Database.
      *
-     * @param database
-     *          the database
+     * @param database the database
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder database(String database) {
@@ -109,8 +109,7 @@ public class TableTestingSpec {
     /**
      * Set the input table
      *
-     * @param table
-     *          the table
+     * @param table the table
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder inputTable(String table) {
@@ -121,8 +120,7 @@ public class TableTestingSpec {
     /**
      * Partition filter for input table
      *
-     * @param partFilter
-     *          the part filter
+     * @param partFilter the part filter
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder partitionFilter(String partFilter) {
@@ -133,8 +131,7 @@ public class TableTestingSpec {
     /**
      * Feature columns.
      *
-     * @param featureColumns
-     *          the feature columns
+     * @param featureColumns the feature columns
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder featureColumns(List<String> featureColumns) {
@@ -145,11 +142,10 @@ public class TableTestingSpec {
     /**
      * Labe column.
      *
-     * @param labelColumn
-     *          the label column
+     * @param labelColumn the label column
      * @return the table testing spec builder
      */
-    public TableTestingSpecBuilder labeColumn(String labelColumn) {
+    public TableTestingSpecBuilder lableColumn(String labelColumn) {
       spec.labelColumn = labelColumn;
       return this;
     }
@@ -157,8 +153,7 @@ public class TableTestingSpec {
     /**
      * Output column.
      *
-     * @param outputColumn
-     *          the output column
+     * @param outputColumn the output column
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder outputColumn(String outputColumn) {
@@ -169,8 +164,7 @@ public class TableTestingSpec {
     /**
      * Output table.
      *
-     * @param table
-     *          the table
+     * @param table the table
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder outputTable(String table) {
@@ -181,8 +175,7 @@ public class TableTestingSpec {
     /**
      * Hive conf.
      *
-     * @param conf
-     *          the conf
+     * @param conf the conf
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder hiveConf(HiveConf conf) {
@@ -193,8 +186,7 @@ public class TableTestingSpec {
     /**
      * Algorithm.
      *
-     * @param algorithm
-     *          the algorithm
+     * @param algorithm the algorithm
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder algorithm(String algorithm) {
@@ -205,8 +197,7 @@ public class TableTestingSpec {
     /**
      * Model id.
      *
-     * @param modelID
-     *          the model id
+     * @param modelID the model id
      * @return the table testing spec builder
      */
     public TableTestingSpecBuilder modelID(String modelID) {
@@ -304,11 +295,11 @@ public class TableTestingSpec {
 
     // We always insert a dynamic partition
     StringBuilder q = new StringBuilder("INSERT OVERWRITE TABLE " + outputTable + " PARTITION (part_testid='" + testID
-        + "')  SELECT ");
+      + "')  SELECT ");
     String featureCols = StringUtils.join(featureColumns, ",");
     q.append(featureCols).append(",").append(labelColumn).append(", ").append("predict(").append("'").append(algorithm)
-        .append("', ").append("'").append(modelID).append("', ").append(featureCols).append(") ").append(outputColumn)
-        .append(" FROM ").append(inputTable);
+      .append("', ").append("'").append(modelID).append("', ").append(featureCols).append(") ").append(outputColumn)
+      .append(" FROM ").append(inputTable);
 
     return q.toString();
   }

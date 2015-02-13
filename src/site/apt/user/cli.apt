@@ -47,6 +47,10 @@ User CLI Commands
 *--+--+
 | remove file <path to file> | remove the file resource from the session|
 *--+--+
+| list resources \[type\] | list resources from the session for a given resource type.\ |
+|     | Lists all resources if resource type is not mentioned. <<type>> of resource can be either <<jar>> or <<file>>.\ |
+|     | <<help:>> type <<list resources -->> for getting available options in the command|
+*--+--+
 | close| Closes the session on the lens server and exits the shell. It is mandatory to call close to release all the resource of the session|
 *--+--+
   <<Lens Session Management Command list>>

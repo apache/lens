@@ -41,7 +41,7 @@ public class LensJdbcDriver implements Driver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Driver#connect(java.lang.String, java.util.Properties)
    */
   @Override
@@ -51,7 +51,7 @@ public class LensJdbcDriver implements Driver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Driver#acceptsURL(java.lang.String)
    */
   @Override
@@ -61,7 +61,7 @@ public class LensJdbcDriver implements Driver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Driver#getPropertyInfo(java.lang.String, java.util.Properties)
    */
   @Override
@@ -73,21 +73,21 @@ public class LensJdbcDriver implements Driver {
       info = JDBCUtils.parseUrlForPropertyInfo(url, info);
     }
     DriverPropertyInfo hostProp = new DriverPropertyInfo(JDBCUtils.HOST_PROPERTY_KEY,
-        info.getProperty(JDBCUtils.HOST_PROPERTY_KEY));
+      info.getProperty(JDBCUtils.HOST_PROPERTY_KEY));
     hostProp.required = false;
     hostProp.description = "Hostname of Lens Server. Defaults to localhost";
 
     DriverPropertyInfo portProp = new DriverPropertyInfo(JDBCUtils.PORT_PROPERTY_KEY,
-        info.getProperty(JDBCUtils.PORT_PROPERTY_KEY));
+      info.getProperty(JDBCUtils.PORT_PROPERTY_KEY));
     portProp.required = false;
     portProp.description = "Portnumber where lens server runs. " + "Defaults to 8080";
 
     DriverPropertyInfo dbProp = new DriverPropertyInfo(JDBCUtils.DB_PROPERTY_KEY,
-        info.getProperty(JDBCUtils.DB_PROPERTY_KEY));
+      info.getProperty(JDBCUtils.DB_PROPERTY_KEY));
     dbProp.required = false;
     dbProp.description = "Database to connect to on lens server. " + "Defaults to 'default'";
 
-    return new DriverPropertyInfo[] { hostProp, portProp, dbProp };
+    return new DriverPropertyInfo[]{hostProp, portProp, dbProp};
   }
 
   @Override
@@ -102,7 +102,7 @@ public class LensJdbcDriver implements Driver {
 
   /*
    * (non-Javadoc)
-   * 
+   *
    * @see java.sql.Driver#jdbcCompliant()
    */
   @Override

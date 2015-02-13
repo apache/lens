@@ -20,6 +20,7 @@ package org.apache.lens.cli;
 
 import org.apache.lens.cli.commands.LensDatabaseCommands;
 import org.apache.lens.client.LensClient;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
@@ -53,6 +54,9 @@ public class TestLensDatabaseCommands extends LensCliApplicationTest {
 
     result = command.switchDatabase(myDatabase);
     Assert.assertEquals("Successfully switched to my_db", result);
+
+    result = command.switchDatabase("default");
+    Assert.assertEquals("Successfully switched to default", result);
 
     result = command.dropDatabase(myDatabase);
     Assert.assertEquals("drop database my_db successful", result);

@@ -230,7 +230,7 @@
       <directory>../lens-examples/src/main/resources/</directory>
       <outputDirectory>/examples/queries</outputDirectory>
       <includes>
-        <include>*.txt</include>
+        <include>*.sql</include>
       </includes>
     </fileSet>
 

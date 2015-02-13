@@ -18,19 +18,20 @@
  */
 package org.apache.lens.cli.commands;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 import org.apache.lens.api.APIResult;
+
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
 
 /**
  * The Class LensDimensionCommands.
@@ -56,13 +57,13 @@ public class LensDimensionCommands extends BaseLensCommand implements CommandMar
   /**
    * Creates the dimension.
    *
-   * @param dimensionSpec
-   *          the dimension spec
+   * @param dimensionSpec the dimension spec
    * @return the string
    */
   @CliCommand(value = "create dimension", help = "Create a new Dimension")
   public String createDimension(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "<path to dimension-spec file>") String dimensionSpec) {
+    @CliOption(key = {"", "table"}, mandatory = true, help =
+      "<path to dimension-spec file>") String dimensionSpec) {
     File f = new File(dimensionSpec);
 
     if (!f.exists()) {
@@ -80,13 +81,12 @@ public class LensDimensionCommands extends BaseLensCommand implements CommandMar
   /**
    * Drop dimension.
    *
-   * @param dimension
-   *          the dimension
+   * @param dimension the dimension
    * @return the string
    */
   @CliCommand(value = "drop dimension", help = "drop dimension")
   public String dropDimension(
-      @CliOption(key = { "", "table" }, mandatory = true, help = "dimension name to be dropped") String dimension) {
+    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension name to be dropped") String dimension) {
     APIResult result = getClient().dropDimension(dimension);
     if (result.getStatus() == APIResult.Status.SUCCEEDED) {
       return "Successfully dropped " + dimension + "!!!";
@@ -98,13 +98,13 @@ public class LensDimensionCommands extends BaseLensCommand implements CommandMar
   /**
    * Update dimension.
    *
-   * @param specPair
-   *          the spec pair
+   * @param specPair the spec pair
    * @return the string
    */
   @CliCommand(value = "update dimension", help = "update dimension")
   public String updateDimension(
-      @CliOption(key = { "", "dimension" }, mandatory = true, help = "<dimension-name> <path to dimension-spec file>") String specPair) {
+    @CliOption(key = {"", "dimension"}, mandatory = true, help
+      = "<dimension-name> <path to dimension-spec file>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
     String[] pair = Iterables.toArray(parts, String.class);
     if (pair.length != 2) {
@@ -128,13 +128,12 @@ public class LensDimensionCommands extends BaseLensCommand implements CommandMar
   /**
    * Describe dimension.
    *
-   * @param dimensionName
-   *          the dimension name
+   * @param dimensionName the dimension name
    * @return the string
    */
   @CliCommand(value = "describe dimension", help = "describe dimension")
   public String describeDimension(
-      @CliOption(key = { "", "dimension" }, mandatory = true, help = "<dimension-name>") String dimensionName) {
+    @CliOption(key = {"", "dimension"}, mandatory = true, help = "<dimension-name>") String dimensionName) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimension(dimensionName)));
     } catch (IOException e) {

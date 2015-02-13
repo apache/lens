@@ -1,40 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
 
-      http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-    KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
 
 -->
-<x_dimension name="sample_dim"
- xmlns="uri:lens:cube:0.1"
- xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<x_dimension name="sample_dim" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <attributes>
-    <dim_attributes name="id" type="int"/>
-    <dim_attributes name="name" type="string" />
-    <dim_attributes name="detail" type="string" start_time='2013-12-01-00:00'/>
-    <dim_attributes name="d2id" type="int" start_time='2013-12-01-00:00'>
-      <references>
-        <table_references dest_table="sample_dim2" dest_column="id"/>
-      </references>
-    </dim_attributes>
+    <dim_attribute name="id" type="INT"/>
+    <dim_attribute name="name" type="STRING"/>
+    <dim_attribute name="detail" type="STRING" start_time='2013-12-01-00:00'/>
+    <dim_attribute name="d2id" type="INT" start_time='2013-12-01-00:00'>
+      <ref_spec>
+        <table_references>
+          <table_reference table="sample_dim2" column="id"/>
+        </table_references>
+      </ref_spec>
+    </dim_attribute>
   </attributes>
   <properties>
-    <properties name="sample_dim.prop" value="sample" />
-    <properties name="dimension.sample_dim.timed.dimension" value="dt" />
+    <property name="dimension.sample_dim.timed.dimension" value="dt"/>
   </properties>
 </x_dimension>

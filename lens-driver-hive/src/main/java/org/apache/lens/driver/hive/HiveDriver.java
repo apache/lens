@@ -22,7 +22,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -30,18 +33,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.TaskStatus;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.service.cli.*;
-import org.apache.hive.service.cli.thrift.TOperationHandle;
-import org.apache.hive.service.cli.thrift.TProtocolVersion;
-import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
@@ -56,7 +47,20 @@ import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.TaskStatus;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
+import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hive.service.cli.*;
+import org.apache.hive.service.cli.thrift.TOperationHandle;
+import org.apache.hive.service.cli.thrift.TProtocolVersion;
+import org.apache.hive.service.cli.thrift.TSessionHandle;
 import org.apache.log4j.Logger;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -162,8 +166,8 @@ public class HiveDriver implements LensDriver {
     }
   }
 
-  /** The Constant connectionCounter. */
-  private static final AtomicInteger connectionCounter = new AtomicInteger();
+  /** The Constant CONNECTION_COUNTER. */
+  private static final AtomicInteger CONNECTION_COUNTER = new AtomicInteger();
 
   /**
    * The Class ExpirableConnection.
@@ -194,7 +198,7 @@ public class HiveDriver implements LensDriver {
     public ExpirableConnection(ThriftConnection conn, long timeout) {
       this.conn = conn;
       this.timeout = timeout;
-      connId = connectionCounter.incrementAndGet();
+      connId = CONNECTION_COUNTER.incrementAndGet();
       accessTime = System.currentTimeMillis();
     }
 
@@ -316,7 +320,7 @@ public class HiveDriver implements LensDriver {
     final String explainQuery = "EXPLAIN EXTENDED " + explainCtx.getDriverQuery(this);
 
     QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery,
-        explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
+      explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
@@ -340,8 +344,8 @@ public class HiveDriver implements LensDriver {
    * (non-Javadoc)
    *
    * @see
-   * org.apache.lens.server.api.driver.LensDriver#explainAndPrepare(org.apache.lens.server.api.query.PreparedQueryContext
-   * )
+   * org.apache.lens.server.api.driver.LensDriver#explainAndPrepare
+   * (org.apache.lens.server.api.query.PreparedQueryContext)
    */
   @Override
   public DriverQueryPlan explainAndPrepare(PreparedQueryContext pContext) throws LensException {
@@ -751,11 +755,11 @@ public class HiveDriver implements LensDriver {
    */
   void addPersistentPath(QueryContext context) throws IOException {
     String hiveQuery;
-    if (context.isDriverPersistent()
-      && context.getConf().getBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE,
-      LensConfConstants.DEFAULT_ADD_INSERT_OVEWRITE)
+    boolean addInsertOverwrite = context.getConf().getBoolean(
+      LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, LensConfConstants.DEFAULT_ADD_INSERT_OVEWRITE);
+    if (context.isDriverPersistent() && addInsertOverwrite
       && (context.getSelectedDriverQuery().startsWith("SELECT")
-          || context.getSelectedDriverQuery().startsWith("select"))) {
+      || context.getSelectedDriverQuery().startsWith("select"))) {
       // store persistent data into user specified location
       // If absent, take default home directory
       Path resultSetPath = context.getHDFSResultDir();
@@ -770,6 +774,7 @@ public class HiveDriver implements LensDriver {
       builder.append(' ').append(context.getSelectedDriverQuery()).append(' ');
       hiveQuery = builder.toString();
     } else {
+      context.unSetDriverPersistent();
       hiveQuery = context.getSelectedDriverQuery();
     }
     LOG.info("Hive driver query:" + hiveQuery);
@@ -926,11 +931,12 @@ public class HiveDriver implements LensDriver {
    * (non-Javadoc)
    *
    * @see
-   * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification(org.apache.lens.api.query.QueryHandle
-   * , long, org.apache.lens.server.api.driver.QueryCompletionListener)
+   * org.apache.lens.server.api.driver.LensDriver#registerForCompletionNotification
+   * (org.apache.lens.api.query.QueryHandle, long, org.apache.lens.server.api.driver.QueryCompletionListener)
    */
   @Override
-  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
+  public void registerForCompletionNotification(
+    QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
     throws LensException {
     Thread th = new Thread(new QueryCompletionNotifier(handle, timeoutMillis, listener));
     th.start();
