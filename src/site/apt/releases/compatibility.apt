@@ -1,0 +1,47 @@
+~~
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+~~
+
+Compatibility in Apache Lens
+
+  Apache Lens tries to offer backward compatibility across releases with respect to the following
+
+  * <<lens-api>> module dependency :
+  {{{http://lens.incubator.apache.org/apidocs/index.html} API for org.apache.lens.api.*}}
+
+  * REST api provided : {{{http://lens.incubator.apache.org/rest.html} Published REST api}}
+
+  * Configuration options provided at {{{../user/client-config.html} Client configuration}},
+  {{{../user/olap-query-conf.html} OLAP query configuration}} and
+  {{{../admin/config-server.html} Server configuration}}.
+
+  * Deployment stack : Published at {{{../admin/deployment.html} Suggested deployment}}
+
+  []
+
+
+  For any changes proposed in <<lens-api>>, <<REST api>> and <<configuration options>>, Apache Lens community will do
+  atleast one release with backward compatibility making current usage deprecated.
+
+  If there are any incompatibilities with respect to the above in any release, the major version will be called out as
+  incompatible with earlier version and tools/documentation will be provided to upgrade to newer version.
+
+  The api <org.apache.lens.client.*> and <org.apache.lens.server.api.*>  are still evolving, once they are stable, they
+  will be added to the above list.
+
+  See {{{./release-history.html} all releases table}} for all release details, compatibility tools provided.
