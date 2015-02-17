@@ -34,6 +34,26 @@
   <description>Packaging and distribution</description>
 
   <dependencies>
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-cli</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.lens</groupId>
+        <artifactId>lens-examples</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-common</artifactId>
+        <scope>runtime</scope>
+      </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-api</artifactId>
@@ -74,7 +94,7 @@
         <configuration>
           <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
           <descriptors>
-            <descriptor>src/main/assembly/server-dist.xml</descriptor>
+            <descriptor>src/main/assembly/bin-dist.xml</descriptor>
           </descriptors>
         </configuration>
         <executions>
@@ -99,33 +119,65 @@
               <goal>jdeb</goal>
             </goals>
             <configuration>
-              <installDir>${mvn.lens.install.dir}</installDir>
-              <controlDir>${mvn.deb.build.dir}/control</controlDir>
+              <installDir>${mvn.lens.install.dir}/server</installDir>
+              <controlDir>${mvn.deb.build.dir}/control/server-control</controlDir>
               <deb>${project.build.directory}/lens-server_${project.version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/lens-dist-${project.version}-server</src>
+                  <src>target/lens-dist-${project.version}-bin/server</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>${mvn.lens.install.dir}</prefix>
+                    <prefix>${mvn.lens.install.dir}/server</prefix>
                   </mapper>
                 </data>
                 <data>
-                  <src>target/lens-dist-${project.version}-server/bin</src>
+                  <src>target/lens-dist-${project.version}-bin/server/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>${mvn.lens.bin.dir}</prefix>
+                    <prefix>${mvn.lens.install.dir}/server/bin</prefix>
+                    <filemode>755</filemode>
+                  </mapper>
+                </data>
+              </dataSet>
+            </configuration>
+          </execution>
+          <execution>
+            <id>client</id>
+            <phase>package</phase>
+            <goals>
+              <goal>jdeb</goal>
+            </goals>
+            <configuration>
+              <installDir>${mvn.lens.install.dir}/client</installDir>
+              <controlDir>${mvn.deb.build.dir}/control/client-control</controlDir>
+              <deb>${project.build.directory}/lens-client_${project.version}.deb</deb>
+              <dataSet>
+                <data>
+                  <src>target/lens-dist-${project.version}-bin/client</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>${mvn.lens.install.dir}/client</prefix>
+                  </mapper>
+                </data>
+                <data>
+                  <src>target/lens-dist-${project.version}-bin/client/bin</src>
+                  <type>directory</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>${mvn.lens.install.dir}/client/bin</prefix>
                     <filemode>755</filemode>
                   </mapper>
                 </data>
                 <data>
-                  <src>target/lens-dist-${project.version}-server/webapp</src>
+                  <src>target/lens-dist-${project.version}-bin/examples</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
-                    <prefix>${mvn.lens.webapp.dir}</prefix>
+                    <prefix>${mvn.lens.install.dir}/client/examples</prefix>
+                    <filemode>644</filemode>
                   </mapper>
                 </data>
               </dataSet>

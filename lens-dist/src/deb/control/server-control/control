@@ -16,12 +16,12 @@
 # specific language governing permissions and limitations
 # under the License.
 #
-Package: lens-client
+Package: apache-lens-server
 Version: [[project.version]] 
 Section:  misc
 Priority: high
 Architecture: all 
 Depends: sun-java6-jre | java2-runtime
-Maintainer: Lens dev 
-Description: Lens Client
-Distribution: aplha
+Maintainer: dev@lens.incubator.apache.org
+Description: Apache Lens Server Distribution
+Distribution: alpha
