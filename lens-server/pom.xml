@@ -72,12 +72,17 @@
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-driver-jdbc</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
       <artifactId>lens-query-lib</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.lens</groupId>
+      <artifactId>lens-storage-db</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
