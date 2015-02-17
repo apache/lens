@@ -71,6 +71,7 @@ public class SampleQueries {
    */
   public static void main(String[] args) throws Exception {
     SampleQueries queries = null;
+    long start = System.currentTimeMillis();
     try {
       queries = new SampleQueries();
       if (args.length > 0) {
@@ -88,6 +89,8 @@ public class SampleQueries {
       if (queries != null) {
         queries.close();
       }
+      long end = System.currentTimeMillis();
+      System.out.println("Total time for running examples(in millis) :" + (end-start));
     }
   }
 
