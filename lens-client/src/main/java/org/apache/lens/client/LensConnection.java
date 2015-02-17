@@ -134,6 +134,10 @@ public class LensConnection {
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), params.getUser()));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), password));
+
+    String database = params.getDbName();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("database").build(), database));
+
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
       params.getSessionConf(), MediaType.APPLICATION_XML_TYPE));
     try {
@@ -154,12 +158,7 @@ public class LensConnection {
       }
     }
 
-    APIResult result = attachDatabaseToSession();
     LOG.debug("Successfully switched to database " + params.getDbName());
-    if (result.getStatus() != APIResult.Status.SUCCEEDED) {
-      throw new IllegalStateException("Unable to connect to lens database " + params.getDbName());
-    }
-
     open.set(true);
 
     return sessionHandle;

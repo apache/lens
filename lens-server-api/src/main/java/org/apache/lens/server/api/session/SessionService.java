@@ -27,7 +27,7 @@ import org.apache.lens.api.LensSessionHandle;
 
 public interface SessionService {
 
-  /** The Constant NAME. */
+  /** Name of session service */
   String NAME = "session";
 
   /**
@@ -35,12 +35,14 @@ public interface SessionService {
    *
    * @param username      the username
    * @param password      the password
+   * @param database      Set current database to the supplied value
    * @param configuration the configuration
    * @return the lens session handle
    * @throws LensException the lens exception
    */
 
-  LensSessionHandle openSession(String username, String password, Map<String, String> configuration)
+  LensSessionHandle openSession(String username, String password, String database,
+                                Map<String, String> configuration)
     throws LensException;
 
   /**

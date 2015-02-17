@@ -101,6 +101,7 @@ public class SessionUIResource {
    *
    * @param username    User name of the Lens server user
    * @param password    Password of the Lens server user
+   * @param database    (Optional) Set current database to supplied value
    * @param sessionconf Key-value properties which will be used to configure this session
    * @return A Session handle unique to this session
    */
@@ -108,7 +109,9 @@ public class SessionUIResource {
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   public LensSessionHandle openSession(@FormDataParam("username") String username,
-    @FormDataParam("password") String password, @FormDataParam("sessionconf") LensConf sessionconf) {
+    @FormDataParam("password") String password,
+    @FormDataParam("database") @DefaultValue("") String database,
+    @FormDataParam("sessionconf") LensConf sessionconf) {
     try {
       Map<String, String> conf;
       if (sessionconf != null) {
@@ -116,7 +119,7 @@ public class SessionUIResource {
       } else {
         conf = new HashMap<String, String>();
       }
-      LensSessionHandle handle = sessionService.openSession(username, password, conf);
+      LensSessionHandle handle = sessionService.openSession(username, password, database, conf);
       openSessions.put(handle.getPublicId(), handle);
       return handle;
     } catch (LensException e) {

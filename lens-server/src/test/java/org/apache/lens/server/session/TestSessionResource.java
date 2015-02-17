@@ -42,6 +42,9 @@ import org.apache.lens.server.common.LensServerTestFileUtils;
 import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.metastore.api.Database;
+import org.apache.hadoop.hive.ql.metadata.Hive;
 
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -378,6 +381,54 @@ public class TestSessionResource extends LensJerseyTest {
 
     if (!result.getStatus().equals(Status.SUCCEEDED)) {
       throw new RuntimeException("Could not add resource:" + result);
+    }
+  }
+
+  @Test
+  public void testOpenSessionWithDatabase() throws Exception {
+    // TEST1 - Check if call with database parameter sets current database
+    // Create the test DB
+    Hive hive = Hive.get(new HiveConf());
+    final String testDbName = TestSessionResource.class.getSimpleName();
+    Database testOpenDb = new Database();
+    testOpenDb.setName(testDbName);
+    hive.createDatabase(testOpenDb, true);
+
+    final WebTarget target = target().path("session");
+    final FormDataMultiPart mp = new FormDataMultiPart();
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("database").build(), testDbName));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+      new LensConf(), MediaType.APPLICATION_XML_TYPE));
+
+    final LensSessionHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+      LensSessionHandle.class);
+    Assert.assertNotNull(handle);
+
+    // Check if DB set in session service.
+    HiveSessionService service = LensServices.get().getService(SessionService.NAME);
+    LensSessionImpl session = service.getSession(handle);
+    Assert.assertEquals(session.getCurrentDatabase(), testDbName, "Expected current DB to be set to " + testDbName);
+
+
+    // TEST 2 - Try set database with invalid db name
+    final String invalidDB = testDbName + "_invalid_db";
+    final FormDataMultiPart form2 = new FormDataMultiPart();
+
+    form2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("username").build(), "foo"));
+    form2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("password").build(), "bar"));
+    form2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("database").build(), invalidDB));
+    form2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionconf").fileName("sessionconf").build(),
+      new LensConf(), MediaType.APPLICATION_XML_TYPE));
+
+    try {
+      final LensSessionHandle handle2 = target.request().post(Entity.entity(form2, MediaType.MULTIPART_FORM_DATA_TYPE),
+        LensSessionHandle.class);
+      Assert.fail("Expected above call to fail with not found exception");
+    } catch (NotFoundException nfe) {
+      // PASS
     }
   }
 
