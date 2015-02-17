@@ -21,25 +21,26 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-  <id>client</id>
+  <id>bin</id>
 
   <formats>
     <format>dir</format>
+    <format>tar.gz</format>
   </formats>
 
-  <baseDirectory>lens-client-${project.version}</baseDirectory>
+  <baseDirectory>apache-lens</baseDirectory>
   <includeBaseDirectory>false</includeBaseDirectory>
 
   <dependencySets>
     <dependencySet>
       <unpack>false</unpack>
       <scope>runtime</scope>
-      <outputDirectory>lib</outputDirectory>
+      <outputDirectory>server/lib</outputDirectory>
       <includes>
-        <include>org.apache.lens:lens-api</include>
-        <include>org.apache.lens:lens-cli</include>
-        <include>org.apache.lens:lens-client</include>
-        <include>org.apache.lens:lens-examples</include>
+        <include>org.apache.lens:lens-driver-jdbc</include>
+        <include>org.apache.lens:lens-storage-db</include>
+        <include>org.hsqldb:hsqldb</include>
+        <include>org.apache.commons:commons-lang</include>
       </includes>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <useTransitiveDependencies>true</useTransitiveDependencies>
@@ -47,14 +48,30 @@
     <dependencySet>
       <unpack>false</unpack>
       <scope>runtime</scope>
-      <outputDirectory>lib</outputDirectory>
+      <outputDirectory>client/lib</outputDirectory>
       <includes>
+        <include>org.apache.lens:lens-api</include>
+        <include>org.apache.lens:lens-cli</include>
+        <include>org.apache.lens:lens-client</include>
+        <include>org.apache.lens:lens-examples</include>
         <include>org.apache.hadoop:hadoop-common</include>
+        <include>org.glassfish.jersey.core:jersey-client</include>
       </includes>
-      <useTransitiveFiltering>false</useTransitiveFiltering>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
   </dependencySets>
+
+  <moduleSets>
+    <moduleSet>
+      <includes>
+        <include>org.apache.lens:lens-server</include>
+      </includes>
+      <binaries>
+        <unpack>false</unpack>
+      </binaries>
+    </moduleSet>
+  </moduleSets>
 
   <fileSets>
     <fileSet>
@@ -70,20 +87,18 @@
     </fileSet>
 
     <fileSet>
-      <fileMode>755</fileMode>  
+      <fileMode>755</fileMode>
       <directory>../tools/scripts</directory>
-      <outputDirectory>/bin/</outputDirectory>
+      <outputDirectory>/server/bin/</outputDirectory>
       <includes>
-        <include>run-examples.sh</include>
         <include>lens-config.sh</include>
-        <include>lens-cli.sh</include>
-        <include>lens-cli</include>
+        <include>lens-ctl</include>
       </includes>
     </fileSet>
-    
+
     <fileSet>
       <directory>../tools/conf/</directory>
-      <outputDirectory>/conf/</outputDirectory>
+      <outputDirectory>/server/conf/</outputDirectory>
       <includes>
         <include>lens-env.sh</include>
       </includes>
@@ -91,7 +106,51 @@
 
     <fileSet>
       <directory>../tools/conf-pseudo-distr/</directory>
-      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
+      <outputDirectory>/server/conf-pseudo-distr/</outputDirectory>
+      <includes>
+        <include>lens-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/server</directory>
+      <outputDirectory>/server/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf-pseudo-distr/server</directory>
+      <outputDirectory>/server/conf-pseudo-distr/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <fileMode>755</fileMode>
+      <directory>../tools/scripts</directory>
+      <outputDirectory>/client/bin/</outputDirectory>
+      <includes>
+        <include>run-examples.sh</include>
+        <include>lens-config.sh</include>
+        <include>lens-cli.sh</include>
+        <include>lens-cli</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/</directory>
+      <outputDirectory>/client/conf/</outputDirectory>
+      <includes>
+        <include>lens-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf-pseudo-distr/</directory>
+      <outputDirectory>/client/conf-pseudo-distr/</outputDirectory>
       <includes>
         <include>lens-env.sh</include>
       </includes>
@@ -230,13 +289,13 @@
       <directory>../lens-examples/src/main/resources/</directory>
       <outputDirectory>/examples/queries</outputDirectory>
       <includes>
-        <include>*.sql</include>
+        <include>*.txt</include>
       </includes>
     </fileSet>
 
     <fileSet>
       <directory>../tools/conf/client</directory>
-      <outputDirectory>/conf/</outputDirectory>
+      <outputDirectory>/client/conf/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>
@@ -244,10 +303,19 @@
 
     <fileSet>
       <directory>../tools/conf-pseudo-distr/client</directory>
-      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
+      <outputDirectory>/client/conf-pseudo-distr/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>
     </fileSet>
   </fileSets>
+
+  <files>
+    <file>
+      <source>../lens-server/target/lens-server-${project.version}.war</source>
+      <outputDirectory>/server/webapp/</outputDirectory>
+      <destName>lens-server.war</destName>
+    </file>
+  </files>
+
 </assembly>

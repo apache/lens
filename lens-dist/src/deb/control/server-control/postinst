@@ -47,7 +47,7 @@ manage_war_expansion () {
         return 1
     fi
 
-    cd $OLDPWD
+    cd -
     if [ $? -ne 0 ]; then
         echo "Could not move back from the changed directory"
         return 1
