@@ -291,8 +291,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
     APIResult result;
     if (pair.length == 2) {
       result = getClient().dropAllPartitionsOfFact(pair[0], pair[1]);
-    }
-    if (pair.length == 3) {
+    } else if (pair.length == 3) {
       result = getClient().dropAllPartitionsOfFact(pair[0], pair[1], pair[2]);
     } else {
       return "Syntax error, please try in following "

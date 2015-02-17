@@ -190,7 +190,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     }
     result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertTrue(result.contains("HOURLY"));
-    command.dropAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    String dropPartitionsStatus = command.dropAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    Assert.assertFalse(dropPartitionsStatus.contains("Syntax error, please try in following"));
     result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
   }
