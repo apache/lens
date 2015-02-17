@@ -149,7 +149,7 @@ class TimerangeResolver implements ContextRewriter {
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (column == null) {
           if (!cubeql.getCube().getTimedDimensions().contains(col)) {
-            throw new SemanticException(ErrorMsg.NOT_A_CUBE_COLUMN);
+            throw new SemanticException(ErrorMsg.NOT_A_CUBE_COLUMN, col);
           }
           continue;
         }
