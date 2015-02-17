@@ -47,8 +47,8 @@
     </menu>
       <menu name="Releases" >
       <item name="Download" href="./releases/download.html" />
-      <item name="Compatibility" href="./releases/incompatibility.html" />
-      <item name="Release Notes" href="./releases/release-note.html" />
+      <item name="Compatibility" href="./releases/compatibility.html" />
+      <item name="All Releases" href="./releases/release-history.html" />
       </menu>
 		<menu name="User Documentation">
       <item name="Lens User Guide" href="./user/index.html" />
