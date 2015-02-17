@@ -34,55 +34,99 @@
   <description>Packaging and distribution</description>
 
   <dependencies>
-      <dependency>
-        <groupId>org.apache.lens</groupId>
-        <artifactId>lens-cli</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lens</groupId>
-        <artifactId>lens-client</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.lens</groupId>
-        <artifactId>lens-examples</artifactId>
-        <version>${project.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-        <scope>runtime</scope>
-      </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
-      <artifactId>lens-api</artifactId>
+      <artifactId>lens-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
-      <artifactId>lens-server-api</artifactId>
+      <artifactId>lens-client</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.apache.lens</groupId>
-      <artifactId>lens-driver-hive</artifactId>
+      <artifactId>lens-examples</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.apache.lens</groupId>
-      <artifactId>lens-cube</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.lens</groupId>
-      <artifactId>lens-driver-jdbc</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.lens</groupId>
-      <artifactId>lens-storage-db</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <scope>runtime</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-json</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-server</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-compiler</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>tomcat</groupId>
+          <artifactId>jasper-runtime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet.jsp</groupId>
+          <artifactId>jsp-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.java.dev.jets3t</groupId>
+          <artifactId>jets3t</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-util</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.servlet</groupId>
+          <artifactId>servlet-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.jcraft</groupId>
+          <artifactId>jsch</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.zookeeper</groupId>
+          <artifactId>zookeeper</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-cli</groupId>
+          <artifactId>commons-cli</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 
@@ -92,6 +136,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
+          <finalName>apache-lens-${project.version}</finalName>
           <ignoreDirFormatExtensions>true</ignoreDirFormatExtensions>
           <descriptors>
             <descriptor>src/main/assembly/bin-dist.xml</descriptor>
@@ -124,7 +169,7 @@
               <deb>${project.build.directory}/lens-server_${project.version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/lens-dist-${project.version}-bin/server</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/server</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -132,7 +177,7 @@
                   </mapper>
                 </data>
                 <data>
-                  <src>target/lens-dist-${project.version}-bin/server/bin</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/server/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -155,7 +200,7 @@
               <deb>${project.build.directory}/lens-client_${project.version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/lens-dist-${project.version}-bin/client</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/client</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -163,21 +208,12 @@
                   </mapper>
                 </data>
                 <data>
-                  <src>target/lens-dist-${project.version}-bin/client/bin</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/client/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
                     <prefix>${mvn.lens.install.dir}/client/bin</prefix>
                     <filemode>755</filemode>
-                  </mapper>
-                </data>
-                <data>
-                  <src>target/lens-dist-${project.version}-bin/examples</src>
-                  <type>directory</type>
-                  <mapper>
-                    <type>perm</type>
-                    <prefix>${mvn.lens.install.dir}/client/examples</prefix>
-                    <filemode>644</filemode>
                   </mapper>
                 </data>
               </dataSet>

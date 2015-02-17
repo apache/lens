@@ -480,8 +480,10 @@ public class LensMetadataClient {
       }
       return Joiner.on("\n").skipNulls().join(content);
     } catch (IOException e) {
+      LOG.error("IO Error reading content ", e);
       throw new IllegalStateException(e);
     } catch (URISyntaxException e) {
+      LOG.error("URI Error reading content ", e);
       throw new IllegalStateException(e);
     }
   }
