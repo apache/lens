@@ -62,6 +62,8 @@ public class TestLensDAO extends LensJerseyTest {
     finishedLensQuery.setStatus(QueryStatus.Status.SUCCESSFUL.name());
     String finishedHandle = finishedLensQuery.getHandle();
     service.lensServerDao.insertFinishedQuery(finishedLensQuery);
+    // Re-insert should be a no-op on the db.
+    service.lensServerDao.insertFinishedQuery(finishedLensQuery);
     FinishedLensQuery actual = service.lensServerDao.getQuery(finishedHandle);
     Assert.assertEquals(actual.getHandle(), finishedHandle);
 

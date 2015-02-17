@@ -112,22 +112,34 @@ public class LensServerDAO {
    * DAO method to insert a new Finished query into Table.
    *
    * @param query to be inserted
-   * @throws Exception the exception
+   * @throws SQLException the exception
    */
-  public void insertFinishedQuery(FinishedLensQuery query) throws Exception {
-    String sql = "insert into finished_queries (handle, userquery,submitter,"
-      + "starttime,endtime,result,status,metadata,rows,"
-      + "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)"
-      + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-    QueryRunner runner = new QueryRunner(ds);
-    try {
+  public void insertFinishedQuery(FinishedLensQuery query) throws SQLException {
+    FinishedLensQuery alreadyExisting = getQuery(query.getHandle());
+    if (alreadyExisting == null) {
+      // The expected case
+      String sql = "insert into finished_queries (handle, userquery,submitter,"
+        + "starttime,endtime,result,status,metadata,rows,"
+        + "errormessage,driverstarttime,driverendtime, metadataclass, queryname, submissiontime)"
+        + " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      QueryRunner runner = new QueryRunner(ds);
       runner.update(sql, query.getHandle(), query.getUserQuery(), query.getSubmitter(), query.getStartTime(),
         query.getEndTime(), query.getResult(), query.getStatus(), query.getMetadata(), query.getRows(),
         query.getErrorMessage(), query.getDriverStartTime(), query.getDriverEndTime(), query.getMetadataClass(),
         query.getQueryName(), query.getSubmissionTime());
-    } catch (SQLException e) {
-      throw new Exception(e);
+    } else {
+      LOG.warn("Re insert happening in purge: " + Thread.currentThread().getStackTrace());
+      if (alreadyExisting.equals(query)) {
+        // This is also okay
+        LOG.warn("Skipping Re-insert. Finished Query found in DB while trying to insert, handle=" + query.getHandle());
+      } else {
+        String msg = "Found different value pre-existing in DB while trying to insert finished query. "
+          + "Old = " + alreadyExisting + "\nNew = " + query;
+        throw new SQLException(msg);
+      }
     }
+
+
   }
 
   /**
