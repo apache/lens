@@ -527,3 +527,39 @@ Developer Documentation : How to contribute to Apache Lens?
 
   Run the command mvn apache-rat:check. If check needs to be excluded for any file, it should be put in excludes section
   in parent project pom's apache-rat-plugin.
+
+** What is versioning strategy in Lens?
+
+  Lens follows three number versioning which is major.minor.revision. If the current release is 2.0.0, the next usual
+  development release will be 2.1.0. If there needs to be separate release on released version and not from development
+  branch (usually critical patch release), it will be 2.0.1. If the next release is not compatible with previous
+  release, then the major version needs to be incremented, then it would become 3.0.0. This way all 2.x.x releases will
+  be compatible with one another. And incompatibility is clearly communicated to users through major version number
+  change.
+
+  The jira fix version for all the issues in 2.0.x is called 2.0, and 2.1.x is called 2.1. For patch releases from
+  release branch, the jira fix version can be exact patch release version number.
+
+** What is the branching strategy in Lens?
+
+  Lens has two main branches - <<master>> and <<current-release-line>>. All the day to day development happens on
+  <<master>> branch. <<current-release-line>> branch is used to make releases. When <<master>> branch is ready for
+  release (all improvements/features/bug fixes marked for release are fixed and all tests passing), <<master>> will be
+  merged to <<current-release-line>>. The version number on <<master>> will be incremented to next development version.
+  The only issues that can be cherry-picked into <<current-release-line>> till release is rolled are
+  critical/blocker bugs, documentation changes and test case changes. Once all the issues are verified for the release,
+  and release will be triggered from <<current-release-line>>.
+
+  If a critical release (not pulling code from master) needs to be made, a new branch will be created with release
+  number, by checking out <<current-release-line>> branch. And changes will be put on the branch. Once the branch is
+  ready they will merged to <<current-release-line>> and released. The changes should be cherry-picked back into
+  <<master>> from <<current-release-line>> once the release is made and resolving conflicts in <<master>> if any.
+  Having two main branches makes all release tags to be created on <current-release-line> branch and removes the pile
+  up of old and stale branches, which are created by one for each release.
+
+  For major version increments, <<current-release-line>> will be branched to a a <$major.x-line> and
+   <<current-release-line>> and master will be moved to next major version.
+
+  There can be feature branches created from <<master>>, if feature is not actively developed in <<master>> branch
+  directly. For a feature branch to be created a contirbutor can start discuss thread on dev list for consensus on
+  whether it is required.
