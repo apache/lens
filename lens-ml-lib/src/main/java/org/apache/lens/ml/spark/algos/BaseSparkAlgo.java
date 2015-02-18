@@ -16,17 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.AlgoParam;
 import org.apache.lens.ml.Algorithm;
+import org.apache.lens.ml.MLAlgo;
 import org.apache.lens.ml.MLModel;
-import org.apache.lens.ml.MLTrainer;
-import org.apache.lens.ml.TrainerParam;
+
 import org.apache.lens.ml.spark.TableTrainingSpec;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 
@@ -38,12 +39,12 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 /**
- * The Class BaseSparkTrainer.
+ * The Class BaseSparkAlgo.
  */
-public abstract class BaseSparkTrainer implements MLTrainer {
+public abstract class BaseSparkAlgo implements MLAlgo {
 
   /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(BaseSparkTrainer.class);
+  public static final Log LOG = LogFactory.getLog(BaseSparkAlgo.class);
 
   /** The name. */
   private final String name;
@@ -61,31 +62,31 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   protected transient LensConf conf;
 
   /** The training fraction. */
-  @TrainerParam(name = "trainingFraction", help = "% of dataset to be used for training", defaultValue = "0")
+  @AlgoParam(name = "trainingFraction", help = "% of dataset to be used for training", defaultValue = "0")
   protected double trainingFraction;
 
   /** The use training fraction. */
   private boolean useTrainingFraction;
 
   /** The label. */
-  @TrainerParam(name = "label", help = "Name of column which is used as a training label for supervised learning")
+  @AlgoParam(name = "label", help = "Name of column which is used as a training label for supervised learning")
   protected String label;
 
   /** The partition filter. */
-  @TrainerParam(name = "partition", help = "Partition filter used to create create HCatInputFormats")
+  @AlgoParam(name = "partition", help = "Partition filter used to create create HCatInputFormats")
   protected String partitionFilter;
 
   /** The features. */
-  @TrainerParam(name = "feature", help = "Column name(s) which are to be used as sample features")
+  @AlgoParam(name = "feature", help = "Column name(s) which are to be used as sample features")
   protected List<String> features;
 
   /**
-   * Instantiates a new base spark trainer.
+   * Instantiates a new base spark algo.
    *
    * @param name        the name
    * @param description the description
    */
-  public BaseSparkTrainer(String name, String description) {
+  public BaseSparkAlgo(String name, String description) {
     this.name = name;
     this.description = description;
   }
@@ -102,7 +103,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLTrainer#configure(org.apache.lens.api.LensConf)
+   * @see org.apache.lens.ml.MLAlgo#configure(org.apache.lens.api.LensConf)
    */
   @Override
   public void configure(LensConf configuration) {
@@ -112,7 +113,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLTrainer#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
+   * @see org.apache.lens.ml.MLAlgo#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
    * java.lang.String, java.lang.String[])
    */
   @Override
@@ -195,7 +196,7 @@ public abstract class BaseSparkTrainer implements MLTrainer {
       partitionFilter = params.containsKey("partition") ? params.get("partition") : params.get("p");
     }
 
-    parseTrainerParams(params);
+    parseAlgoParams(params);
   }
 
   /**
@@ -252,16 +253,16 @@ public abstract class BaseSparkTrainer implements MLTrainer {
       usage.put("Algorithm Description", algorithm.description());
     }
 
-    // Get all trainer params including base trainer params
+    // Get all algo params including base algo params
     while (clz != null) {
       for (Field field : clz.getDeclaredFields()) {
-        TrainerParam param = field.getAnnotation(TrainerParam.class);
+        AlgoParam param = field.getAnnotation(AlgoParam.class);
         if (param != null) {
           usage.put("[param] " + param.name(), param.help() + " Default Value = " + param.defaultValue());
         }
       }
 
-      if (clz.equals(BaseSparkTrainer.class)) {
+      if (clz.equals(BaseSparkAlgo.class)) {
         break;
       }
       clz = clz.getSuperclass();
@@ -270,11 +271,11 @@ public abstract class BaseSparkTrainer implements MLTrainer {
   }
 
   /**
-   * Parses the trainer params.
+   * Parses the algo params.
    *
    * @param params the params
    */
-  public abstract void parseTrainerParams(Map<String, String> params);
+  public abstract void parseAlgoParams(Map<String, String> params);
 
   /**
    * Train internal.

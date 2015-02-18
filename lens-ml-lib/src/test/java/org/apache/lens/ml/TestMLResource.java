@@ -28,10 +28,10 @@ import javax.ws.rs.core.Application;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.LensMLClient;
-import org.apache.lens.ml.spark.trainers.DecisionTreeTrainer;
-import org.apache.lens.ml.spark.trainers.LogisticRegressionTrainer;
-import org.apache.lens.ml.spark.trainers.NaiveBayesTrainer;
-import org.apache.lens.ml.spark.trainers.SVMTrainer;
+import org.apache.lens.ml.spark.algos.DecisionTreeAlgo;
+import org.apache.lens.ml.spark.algos.LogisticRegressionAlgo;
+import org.apache.lens.ml.spark.algos.NaiveBayesAlgo;
+import org.apache.lens.ml.spark.algos.SVMAlgo;
 import org.apache.lens.ml.task.MLTask;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServerConf;
@@ -54,6 +54,7 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
+
 import org.apache.hive.service.Service;
 
 import org.glassfish.jersey.client.ClientConfig;
@@ -137,26 +138,26 @@ public class TestMLResource extends LensJerseyTest {
   }
 
   @Test
-  public void testGetTrainers() throws Exception {
-    List<String> trainerNames = mlClient.getAlgorithms();
-    Assert.assertNotNull(trainerNames);
+  public void testGetAlgos() throws Exception {
+    List<String> algoNames = mlClient.getAlgorithms();
+    Assert.assertNotNull(algoNames);
 
-    Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(NaiveBayesTrainer.class)),
-      MLUtils.getTrainerName(NaiveBayesTrainer.class));
+    Assert.assertTrue(algoNames.contains(MLUtils.getAlgoName(NaiveBayesAlgo.class)),
+      MLUtils.getAlgoName(NaiveBayesAlgo.class));
 
-    Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(SVMTrainer.class)),
-      MLUtils.getTrainerName(SVMTrainer.class));
+    Assert.assertTrue(algoNames.contains(MLUtils.getAlgoName(SVMAlgo.class)),
+      MLUtils.getAlgoName(SVMAlgo.class));
 
-    Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(LogisticRegressionTrainer.class)),
-      MLUtils.getTrainerName(LogisticRegressionTrainer.class));
+    Assert.assertTrue(algoNames.contains(MLUtils.getAlgoName(LogisticRegressionAlgo.class)),
+      MLUtils.getAlgoName(LogisticRegressionAlgo.class));
 
-    Assert.assertTrue(trainerNames.contains(MLUtils.getTrainerName(DecisionTreeTrainer.class)),
-      MLUtils.getTrainerName(DecisionTreeTrainer.class));
+    Assert.assertTrue(algoNames.contains(MLUtils.getAlgoName(DecisionTreeAlgo.class)),
+      MLUtils.getAlgoName(DecisionTreeAlgo.class));
   }
 
   @Test
-  public void testGetTrainerParams() throws Exception {
-    Map<String, String> params = mlClient.getAlgoParamDescription(MLUtils.getTrainerName(DecisionTreeTrainer.class));
+  public void testGetAlgoParams() throws Exception {
+    Map<String, String> params = mlClient.getAlgoParamDescription(MLUtils.getAlgoName(DecisionTreeAlgo.class));
     Assert.assertNotNull(params);
     Assert.assertFalse(params.isEmpty());
 
@@ -168,7 +169,7 @@ public class TestMLResource extends LensJerseyTest {
   @Test
   public void trainAndEval() throws Exception {
     LOG.info("Starting train & eval");
-    final String algoName = MLUtils.getTrainerName(NaiveBayesTrainer.class);
+    final String algoName = MLUtils.getAlgoName(NaiveBayesAlgo.class);
     HiveConf conf = new HiveConf();
     String database = "default";
     String tableName = "naivebayes_training_table";

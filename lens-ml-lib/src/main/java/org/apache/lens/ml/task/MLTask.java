@@ -49,7 +49,7 @@ public class MLTask implements Runnable {
   private State taskState;
 
   /**
-   * Name of the trainer/algorithm.
+   * Name of the algo/algorithm.
    */
   @Getter
   private String algorithm;
@@ -253,10 +253,10 @@ public class MLTask implements Runnable {
       LOG.info("Working in Lens server");
     }
 
-    String[] trainerArgs = buildTrainingArgs();
-    LOG.info("Starting task " + taskID + " trainer args: " + Arrays.toString(trainerArgs));
+    String[] algoArgs = buildTrainingArgs();
+    LOG.info("Starting task " + taskID + " algo args: " + Arrays.toString(algoArgs));
 
-    modelID = ml.train(trainingTable, algorithm, trainerArgs);
+    modelID = ml.train(trainingTable, algorithm, algoArgs);
     printModelMetadata(taskID, modelID);
 
     LOG.info("Starting test " + taskID);

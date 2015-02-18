@@ -35,9 +35,9 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.ml.ModelMetadata;
 import org.apache.lens.api.ml.TestReport;
 import org.apache.lens.ml.LensML;
+import org.apache.lens.ml.MLAlgo;
 import org.apache.lens.ml.MLModel;
 import org.apache.lens.ml.MLTestReport;
-import org.apache.lens.ml.MLTrainer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -81,7 +81,7 @@ public class LensMLClient implements LensML, Closeable {
    */
   @Override
   public List<String> getAlgorithms() {
-    return client.getTrainerNames();
+    return client.getAlgoNames();
   }
 
   /**
@@ -92,7 +92,7 @@ public class LensMLClient implements LensML, Closeable {
    */
   @Override
   public Map<String, String> getAlgoParamDescription(String algorithm) {
-    List<String> paramDesc = client.getParamDescriptionOfTrainer(algorithm);
+    List<String> paramDesc = client.getParamDescriptionOfAlgo(algorithm);
     // convert paramDesc to map
     Map<String, String> paramDescMap = new LinkedHashMap<String, String>();
     for (String str : paramDesc) {
@@ -103,15 +103,15 @@ public class LensMLClient implements LensML, Closeable {
   }
 
   /**
-   * Get a trainer object instance which could be used to generate a model of the given algorithm.
+   * Get a algo object instance which could be used to generate a model of the given algorithm.
    *
    * @param algorithm the algorithm
-   * @return the trainer for name
+   * @return the algo for name
    * @throws LensException the lens exception
    */
   @Override
-  public MLTrainer getTrainerForName(String algorithm) throws LensException {
-    throw new UnsupportedOperationException("MLTrainer cannot be accessed from client");
+  public MLAlgo getAlgoForName(String algorithm) throws LensException {
+    throw new UnsupportedOperationException("MLAlgo cannot be accessed from client");
   }
 
   /**

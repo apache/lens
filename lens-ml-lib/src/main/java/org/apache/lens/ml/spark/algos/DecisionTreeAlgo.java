@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.AlgoParam;
 import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.TrainerParam;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.spark.models.DecisionTreeClassificationModel;
 import org.apache.lens.ml.spark.models.SparkDecisionTreeModel;
@@ -40,42 +40,42 @@ import org.apache.spark.rdd.RDD;
 import scala.Enumeration;
 
 /**
- * The Class DecisionTreeTrainer.
+ * The Class DecisionTreeAlgo.
  */
-@Algorithm(name = "spark_decision_tree", description = "Spark Decision Tree classifier trainer")
-public class DecisionTreeTrainer extends BaseSparkTrainer {
+@Algorithm(name = "spark_decision_tree", description = "Spark Decision Tree classifier algo")
+public class DecisionTreeAlgo extends BaseSparkAlgo {
 
   /** The algo. */
-  @TrainerParam(name = "algo", help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
+  @AlgoParam(name = "algo", help = "Decision tree algorithm. Allowed values are 'classification' and 'regression'")
   private Enumeration.Value algo;
 
   /** The decision tree impurity. */
-  @TrainerParam(name = "impurity", help = "Impurity measure used by the decision tree. "
+  @AlgoParam(name = "impurity", help = "Impurity measure used by the decision tree. "
     + "Allowed values are 'gini', 'entropy' and 'variance'")
   private Impurity decisionTreeImpurity;
 
   /** The max depth. */
-  @TrainerParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.",
+  @AlgoParam(name = "maxDepth", help = "Max depth of the decision tree. Integer values expected.",
     defaultValue = "100")
   private int maxDepth;
 
   /**
-   * Instantiates a new decision tree trainer.
+   * Instantiates a new decision tree algo.
    *
    * @param name        the name
    * @param description the description
    */
-  public DecisionTreeTrainer(String name, String description) {
+  public DecisionTreeAlgo(String name, String description) {
     super(name, description);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#parseAlgoParams(java.util.Map)
    */
   @Override
-  public void parseTrainerParams(Map<String, String> params) {
+  public void parseAlgoParams(Map<String, String> params) {
     String dtreeAlgoName = params.get("algo");
     if ("classification".equalsIgnoreCase(dtreeAlgoName)) {
       algo = Algo$.MODULE$.Classification();
@@ -98,7 +98,7 @@ public class DecisionTreeTrainer extends BaseSparkTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
