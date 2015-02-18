@@ -25,7 +25,7 @@
   <name>Lens Distribution</name>
 
   <parent>
-    <artifactId>lens-parent</artifactId>
+    <artifactId>apache-lens</artifactId>
     <groupId>org.apache.lens</groupId>
     <version>2.1.0-incubating-SNAPSHOT</version>
   </parent>
@@ -169,7 +169,7 @@
               <deb>${project.build.directory}/lens-server_${project.version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/server</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}-bin/server</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -177,7 +177,7 @@
                   </mapper>
                 </data>
                 <data>
-                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/server/bin</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}-bin/server/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -200,7 +200,7 @@
               <deb>${project.build.directory}/lens-client_${project.version}.deb</deb>
               <dataSet>
                 <data>
-                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/client</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}-bin/client</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
@@ -208,11 +208,21 @@
                   </mapper>
                 </data>
                 <data>
-                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}/client/bin</src>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}-bin/client/bin</src>
                   <type>directory</type>
                   <mapper>
                     <type>perm</type>
                     <prefix>${mvn.lens.install.dir}/client/bin</prefix>
+                    <filemode>755</filemode>
+                  </mapper>
+                </data>
+                <data>
+                  <src>target/apache-lens-${project.version}-bin/apache-lens-${project.version}-bin/client/bin/lens-cli
+                  </src>
+                  <type>file</type>
+                  <mapper>
+                    <type>perm</type>
+                    <prefix>/usr/bin/</prefix>
                     <filemode>755</filemode>
                   </mapper>
                 </data>

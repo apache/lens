@@ -102,14 +102,13 @@
 
     <!-- installation -->
     <mvn.lens.install.dir>/usr/local/lens</mvn.lens.install.dir>
-    <mvn.lens.bin.dir>${mvn.lens.install.dir}/bin</mvn.lens.bin.dir>
-    <mvn.lens.webapp.dir>${mvn.lens.install.dir}/webapp</mvn.lens.webapp.dir>
+    <mvn.lens.webapp.dir>${mvn.lens.install.dir}/server/webapp</mvn.lens.webapp.dir>
     <mvn.lens.server.dir>${mvn.lens.webapp.dir}/lens-server</mvn.lens.server.dir>
 
   </properties>
 
   <groupId>org.apache.lens</groupId>
-  <artifactId>lens-parent</artifactId>
+  <artifactId>apache-lens</artifactId>
   <version>2.1.0-incubating-SNAPSHOT</version>
   <name>Lens</name>
   <packaging>pom</packaging>
@@ -1083,7 +1082,23 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>apache-release</id>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-ganglia</artifactId>
+            <version>${metrics.version}</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.acplt</groupId>
+                <artifactId>oncrpc</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+    </profile>
   </profiles>
-
-
 </project>

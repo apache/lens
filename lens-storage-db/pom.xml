@@ -25,7 +25,7 @@
   <name>Lens DB storage</name>
 
   <parent>
-    <artifactId>lens-parent</artifactId>
+    <artifactId>apache-lens</artifactId>
     <groupId>org.apache.lens</groupId>
     <version>2.1.0-incubating-SNAPSHOT</version>
   </parent>

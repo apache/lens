@@ -28,7 +28,7 @@
     <format>tar.gz</format>
   </formats>
 
-  <baseDirectory>apache-lens-${project.version}</baseDirectory>
+  <baseDirectory>apache-lens-${project.version}-bin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
 
   <dependencySets>
