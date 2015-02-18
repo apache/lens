@@ -33,4 +33,14 @@
   <name>lens.server.drivers</name>
   <value>org.apache.lens.driver.hive.HiveDriver,org.apache.lens.driver.jdbc.JDBCDriver</value>
 </property>
+
+<property>
+  <name>lens.query.enable.persistent.resultset</name>
+  <value>false</value>
+</property>
+
+<property>
+  <name>lens.query.enable.persistent.resultset.indriver</name>
+  <value>false</value>
+</property>
 </configuration>
