@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.util.List;
 
@@ -44,10 +44,10 @@ import org.apache.spark.mllib.linalg.Vectors;
 import scala.Tuple2;
 
 /**
- * The Class KMeansTrainer.
+ * The Class KMeansAlgo.
  */
-@Algorithm(name = "spark_kmeans_trainer", description = "Spark MLLib KMeans trainer")
-public class KMeansTrainer implements MLTrainer {
+@Algorithm(name = "spark_kmeans_algo", description = "Spark MLLib KMeans algo")
+public class KMeansAlgo implements MLAlgo {
 
   /** The conf. */
   private transient LensConf conf;
@@ -56,23 +56,23 @@ public class KMeansTrainer implements MLTrainer {
   private JavaSparkContext sparkContext;
 
   /** The part filter. */
-  @TrainerParam(name = "partition", help = "Partition filter to be used while constructing table RDD")
+  @AlgoParam(name = "partition", help = "Partition filter to be used while constructing table RDD")
   private String partFilter = null;
 
   /** The k. */
-  @TrainerParam(name = "k", help = "Number of cluster")
+  @AlgoParam(name = "k", help = "Number of cluster")
   private int k;
 
   /** The max iterations. */
-  @TrainerParam(name = "maxIterations", help = "Maximum number of iterations", defaultValue = "100")
+  @AlgoParam(name = "maxIterations", help = "Maximum number of iterations", defaultValue = "100")
   private int maxIterations = 100;
 
   /** The runs. */
-  @TrainerParam(name = "runs", help = "Number of parallel run", defaultValue = "1")
+  @AlgoParam(name = "runs", help = "Number of parallel run", defaultValue = "1")
   private int runs = 1;
 
   /** The initialization mode. */
-  @TrainerParam(name = "initializationMode",
+  @AlgoParam(name = "initializationMode",
     help = "initialization model, either \"random\" or \"k-means||\" (default).", defaultValue = "k-means||")
   private String initializationMode = "k-means||";
 
@@ -89,7 +89,7 @@ public class KMeansTrainer implements MLTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLTrainer#configure(org.apache.lens.api.LensConf)
+   * @see org.apache.lens.ml.MLAlgo#configure(org.apache.lens.api.LensConf)
    */
   @Override
   public void configure(LensConf configuration) {
@@ -104,12 +104,12 @@ public class KMeansTrainer implements MLTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLTrainer#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
+   * @see org.apache.lens.ml.MLAlgo#train(org.apache.lens.api.LensConf, java.lang.String, java.lang.String,
    * java.lang.String, java.lang.String[])
    */
   @Override
   public MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException {
-    List<String> features = TrainerArgParser.parseArgs(this, params);
+    List<String> features = AlgoArgParser.parseArgs(this, params);
     final int[] featurePositions = new int[features.size()];
     final int NUM_FEATURES = features.size();
 
@@ -143,7 +143,7 @@ public class KMeansTrainer implements MLTrainer {
       KMeansModel model = KMeans.train(trainableRDD.rdd(), k, maxIterations, runs, initializationMode);
       return new KMeansClusteringModel(modelId, model);
     } catch (Exception e) {
-      throw new LensException("KMeans trainer failed for " + db + "." + table, e);
+      throw new LensException("KMeans algo failed for " + db + "." + table, e);
     }
   }
 

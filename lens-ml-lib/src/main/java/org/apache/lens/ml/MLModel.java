@@ -44,10 +44,10 @@ public abstract class MLModel<PREDICTION> implements Serializable {
   @Setter
   private Date createdAt;
 
-  /** The trainer name. */
+  /** The algo name. */
   @Getter
   @Setter
-  private String trainerName;
+  private String algoName;
 
   /** The table. */
   @Getter

@@ -29,21 +29,21 @@ import org.apache.lens.api.LensException;
 public interface MLDriver {
 
   /**
-   * Checks if is trainer supported.
+   * Checks if is algo supported.
    *
-   * @param trainer the trainer
-   * @return true, if is trainer supported
+   * @param algo the algo
+   * @return true, if is algo supported
    */
-  boolean isTrainerSupported(String trainer);
+  boolean isAlgoSupported(String algo);
 
   /**
-   * Gets the trainer instance.
+   * Gets the algo instance.
    *
-   * @param trainer the trainer
-   * @return the trainer instance
+   * @param algo the algo
+   * @return the algo instance
    * @throws LensException the lens exception
    */
-  MLTrainer getTrainerInstance(String trainer) throws LensException;
+  MLAlgo getAlgoInstance(String algo) throws LensException;
 
   /**
    * Inits the.
@@ -67,5 +67,5 @@ public interface MLDriver {
    */
   void stop() throws LensException;
 
-  List<String> getTrainerNames();
+  List<String> getAlgoNames();
 }

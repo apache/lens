@@ -48,13 +48,13 @@ public interface LensML {
   Map<String, String> getAlgoParamDescription(String algorithm);
 
   /**
-   * Get a trainer object instance which could be used to generate a model of the given algorithm.
+   * Get a algo object instance which could be used to generate a model of the given algorithm.
    *
    * @param algorithm the algorithm
-   * @return the trainer for name
+   * @return the algo for name
    * @throws LensException the lens exception
    */
-  MLTrainer getTrainerForName(String algorithm) throws LensException;
+  MLAlgo getAlgoForName(String algorithm) throws LensException;
 
   /**
    * Create a model using the given HCatalog table as input. The arguments should contain information needeed to

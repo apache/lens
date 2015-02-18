@@ -134,9 +134,9 @@ public class LensMLJerseyClient {
     }
   }
 
-  public List<String> getTrainerNames() {
-    StringList trainerNames = getMLWebTarget().path("trainers").request().get(StringList.class);
-    return trainerNames == null ? null : trainerNames.getElements();
+  public List<String> getAlgoNames() {
+    StringList algoNames = getMLWebTarget().path("algos").request().get(StringList.class);
+    return algoNames == null ? null : algoNames.getElements();
   }
 
   /**
@@ -234,14 +234,14 @@ public class LensMLJerseyClient {
   }
 
   /**
-   * Gets the param description of trainer.
+   * Gets the param description of algo.
    *
    * @param algorithm the algorithm
-   * @return the param description of trainer
+   * @return the param description of algo
    */
-  public List<String> getParamDescriptionOfTrainer(String algorithm) {
+  public List<String> getParamDescriptionOfAlgo(String algorithm) {
     try {
-      StringList paramHelp = getMLWebTarget().path("trainers").path(algorithm).request(MediaType.APPLICATION_XML)
+      StringList paramHelp = getMLWebTarget().path("algos").path(algorithm).request(MediaType.APPLICATION_XML)
         .get(StringList.class);
       return paramHelp.getElements();
     } catch (NotFoundException exc) {

@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.AlgoParam;
 import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.TrainerParam;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.spark.models.LogitRegressionClassificationModel;
 
@@ -32,40 +32,40 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 /**
- * The Class LogisticRegressionTrainer.
+ * The Class LogisticRegressionAlgo.
  */
-@Algorithm(name = "spark_logistic_regression", description = "Spark logistic regression trainer")
-public class LogisticRegressionTrainer extends BaseSparkTrainer {
+@Algorithm(name = "spark_logistic_regression", description = "Spark logistic regression algo")
+public class LogisticRegressionAlgo extends BaseSparkAlgo {
 
   /** The iterations. */
-  @TrainerParam(name = "iterations", help = "Max number of iterations", defaultValue = "100")
+  @AlgoParam(name = "iterations", help = "Max number of iterations", defaultValue = "100")
   private int iterations;
 
   /** The step size. */
-  @TrainerParam(name = "stepSize", help = "Step size", defaultValue = "1.0d")
+  @AlgoParam(name = "stepSize", help = "Step size", defaultValue = "1.0d")
   private double stepSize;
 
   /** The min batch fraction. */
-  @TrainerParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
+  @AlgoParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
   private double minBatchFraction;
 
   /**
-   * Instantiates a new logistic regression trainer.
+   * Instantiates a new logistic regression algo.
    *
    * @param name        the name
    * @param description the description
    */
-  public LogisticRegressionTrainer(String name, String description) {
+  public LogisticRegressionAlgo(String name, String description) {
     super(name, description);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#parseAlgoParams(java.util.Map)
    */
   @Override
-  public void parseTrainerParams(Map<String, String> params) {
+  public void parseAlgoParams(Map<String, String> params) {
     iterations = getParamValue("iterations", 100);
     stepSize = getParamValue("stepSize", 1.0d);
     minBatchFraction = getParamValue("minBatchFraction", 1.0d);
@@ -74,7 +74,7 @@ public class LogisticRegressionTrainer extends BaseSparkTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
