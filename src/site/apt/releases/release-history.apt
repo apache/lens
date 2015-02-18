@@ -25,3 +25,9 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |2.0.0| First release in Apache| {{{../versions/2.0.0-incubating/index.html} 2.0.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328990} 2.0 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.0-incubating/} Download}} | - | - |
 *--+--+---+--+--+--+--+
+
+* NOTES
+
+  Binary distribution of the release does not include dependency org.acplt:oncrpc:jar:1.0.7, as its licensing (LGPL) is
+  not in compliance with Apache licensing which is required for ganglia metrics reporting. If user is interested in
+  ganglia metrics reporting, the jar needs to be downloaded and used.

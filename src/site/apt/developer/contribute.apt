@@ -110,11 +110,20 @@ Developer Documentation : How to contribute to Apache Lens?
    mvn clean package -DskipTests
 +---+
 
-  Once one of the above sets of commands completes successfully, the build will produce <lens-dist/target/lens-dist-version-bin/server> and <lens-dist/target/lens-dist-version-bin/client>. Former can be used as the Lens server installation directory and later can be used as Lens client installation directory to {{{/lenshome/install-and-run.html#Running_Lens} run}} lens server and lens client.
+  Once one of the above sets of commands completes successfully, the build will produce
+  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/server> and
+  <lens-dist/target/apache-lens-<version>-bin/apache-lens-<version>-bin/client>. Former can be used as the Lens server
+   installation directory and later can be used as Lens client installation directory to
+   {{{/lenshome/install-and-run.html#Running_Lens} run}} lens server and lens client.
 
-  The build will also produce debians for both client and server in <lens-dist/target>. Client debian uses </usr/local/lens-client> as the Lens client installation directory and Server debian uses </usr/local/lens> as the Lens server installation directory.
+  The build will also produce debians for both client and server in <lens-dist/target>. Client debian uses
+  </usr/local/lens/client> as the Lens client installation directory and Server debian uses </usr/local/lens/server> as
+  the Lens server installation directory.
 
-  Apache Lens depends on Hive. Please {{{#Building_Hive_from_Source} build}} Hive from Source or install it using the documentation {{{/lenshome/install-and-run.html#Installing_Hive} here}}. After installing Lens and Hive, refer {{{/lenshome/install-and-run.html#Running_Lens} here}} for running lens client and lens server from installation directories.
+  Apache Lens depends on Hive. Please {{{#Building_Hive_from_Source} build}} Hive from Source or install it using the
+  documentation {{{/lenshome/install-and-run.html#Installing_Hive} here}}. After installing Lens and Hive,
+  refer {{{/lenshome/install-and-run.html#Running_Lens} here}} for running lens client and lens server from
+  installation directories.
 
 ** Building Hive from Source
 
@@ -130,7 +139,8 @@ Developer Documentation : How to contribute to Apache Lens?
 
 +---+
 
-  Once above package command completes successfully, <packaging/target> will have <apache-hive-$project.version-bin>. This build also produces source, binary tar.gz files and deb package for hive.
+  Once above package command completes successfully, <packaging/target> will have <apache-hive-$project.version-bin>.
+  This build also produces source, binary tar.gz files and deb package for hive.
 
   Set the environment variable HIVE_HOME to point to the Hive installation directory built from source:
 

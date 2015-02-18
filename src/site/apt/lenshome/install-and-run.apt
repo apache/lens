@@ -38,10 +38,10 @@ Installing and Running Lens
 
 +---+
 
-  This will result in the creation of a directory named apache-lens-<verison> (where <version> is the release number).
+  This will result in the creation of a directory named apache-lens-<verison>-bin (where <version> is the release number).
 
 +---+
-  apache-lens-<verison>
+  apache-lens-<verison>-bin
   ├── client
   ├── LICENSE
   ├── NOTICE
@@ -51,7 +51,7 @@ Installing and Running Lens
   └── server
 +---+
 
- <apache-lens-<verison>/client> can be used as the Lens client installation directory and <apache-lens-<verison>/server> can be used as the Lens server installation directory to {{{#Running_Lens}run}} lens client and lens server respectively.
+ <apache-lens-<verison>-bin/client> can be used as the Lens client installation directory and <apache-lens-<verison>-bin/server> can be used as the Lens server installation directory to {{{#Running_Lens}run}} lens client and lens server respectively.
 
 ** Installing Hive
 
@@ -146,6 +146,9 @@ Installing and Running Lens
   To check all other services are up and running, try <baseurl>/session, <baseurl>/queryapi, <baseurl>/metastore and all of them will respond with respective service is up.
 
   You can try out examples described below or use the REST api <link> for each service.
+
+  Lens server also comes with simple UI service which can be used to browse catalog and submit queries. Once the server
+  starts up, you can open the UI service on http://<serverhost>:19999/index.html and browse.
 
   The command to stop the server:
 

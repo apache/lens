@@ -1,1 +1,61 @@
-README for binary distribution 
+Apache Lens
+=====
+
+Apache Lens is a unified Analytics Platform. Lens aims to cut the Data Analytics silos by providing a single view of data
+across multiple tiered data stores and optimal execution environment for the analytical query.
+
+This distribution is a convenient binary distribution for users to try out server and client packages of Apache Lens.
+
+Detailed install and run steps available at http://lens.incubator.apache.org/lenshome/install-and-run.html and
+docker setup details available at http://lens.incubator.apache.org/lenshome/pseudo-distributed-setup.html
+
+Detailed documentation for the project is available at https://lens.incubator.apache.org
+
+Here are quick start steps :
+
+Before starting the server, you need to set HADOOP_HOME and HIVE_HOME environment variables. These should point to
+the Hadoop and Hive installation directories. Lens depends on a forked version of Hive which is available at
+https://github.com/inmobi/hive. So, Hive needs to be built and HIVE_HOME should be set as packaged directory from
+build.
+
+Building hive :
+$ git clone https://github.com/inmobi/hive
+$ git checkout hive-release-0.13.3-inm
+$ mvn clean package -DskipTests -Phadoop-2,dist
+
+Server packaging is server/ folder.
+$ cd server
+
+Starting lens server :
+bin/lens-ctl start
+
+Lens server also comes with simple UI service which can be used to browse catalog and submit queries. Once the server
+starts up, you can open the UI service on http://<serverhost>:19999/index.html and browse.
+
+Client distribution is in client/ folder.
+
+$ cd client
+
+Running examples :
+$ bin/run-examples sample-metastore
+$ bin/run-examples populate-metastore
+$ bin/run-examples runqueries
+
+Starting lens cli :
+bin/lens-cli.sh
+
+Stopping Lens server :
+bin/lens-ctl stop
+
+------
+
+LICENSE files included in the distribution are to be in compliance with bundled dependent jars. All the jars
+bundled are in compliance with Apache license. Most of the jars are available in dual license of which at least
+one license is in compliance with Apache license. The license of all the bundled jars are summarized at
+https://cwiki.apache.org/confluence/display/LENS/Licensing+in+Apache+Lens
+
+NOTE:
+Binary distribution of the release does not include dependency org.acplt:oncrpc:jar:1.0.7, as its licensing is
+not in compliance with Apache licensing. It would be required for ganglia metrics reporting. If user is
+interested in ganglia metrics reporting, the jar needs to be downloaded and used.
+
