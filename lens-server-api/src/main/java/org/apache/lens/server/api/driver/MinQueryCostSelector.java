@@ -21,6 +21,7 @@ package org.apache.lens.server.api.driver;
 import java.util.Collections;
 import java.util.Comparator;
 
+import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 import org.apache.hadoop.conf.Configuration;
@@ -42,13 +43,13 @@ public class MinQueryCostSelector implements DriverSelector {
     return Collections.min(ctx.getDriverContext().getDrivers(), new Comparator<LensDriver>() {
       @Override
       public int compare(LensDriver d1, LensDriver d2) {
-        return comparePlans(ctx.getDriverContext().getDriverQueryPlan(d1), ctx
-          .getDriverContext().getDriverQueryPlan(d2));
+        return compareCosts(ctx.getDriverContext().getDriverQueryCost(d1), ctx
+          .getDriverContext().getDriverQueryCost(d2));
       }
     });
   }
 
-  int comparePlans(DriverQueryPlan c1, DriverQueryPlan c2) {
+  int compareCosts(QueryCost c1, QueryCost c2) {
     if (c1 == null && c2 == null) {
       return 0;
     } else if (c1 == null && c2 != null) {
@@ -56,6 +57,6 @@ public class MinQueryCostSelector implements DriverSelector {
     } else if (c1 != null && c2 == null) {
       return -1;
     }
-    return c1.getCost().compareTo(c2.getCost());
+    return c1.compareTo(c2);
   }
 }

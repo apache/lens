@@ -22,32 +22,37 @@
 package org.apache.lens.api.query;
 
 /**
- * The Enum SubmitOp.
+ * The Enum for query submit operations.
  */
 public enum SubmitOp {
 
   /**
-   * The execute.
+   * Estimate query cost
+   */
+  ESTIMATE,
+
+  /**
+   * Execute the query
    */
   EXECUTE,
 
   /**
-   * The explain.
+   * Explain the query.
    */
   EXPLAIN,
 
   /**
-   * The prepare.
+   * Prepare the query.
    */
   PREPARE,
 
   /**
-   * The explain and prepare.
+   * Explain and prepare the query.
    */
   EXPLAIN_AND_PREPARE,
 
   /**
-   * The execute with timeout.
+   * Execute query and return result within timeout, if query is successful.
    */
   EXECUTE_WITH_TIMEOUT
 }

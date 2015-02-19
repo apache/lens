@@ -134,8 +134,8 @@ public class QueryServiceResource {
   }
 
   /** The submit clue. */
-  static String submitClue = ". supported values are:" + SubmitOp.EXPLAIN + ", " + SubmitOp.EXECUTE + " and "
-    + SubmitOp.EXECUTE_WITH_TIMEOUT;
+  static String submitClue = ". supported values are:" + SubmitOp.ESTIMATE + ", " + SubmitOp.EXPLAIN + ", "
+    + SubmitOp.EXECUTE + " and " + SubmitOp.EXECUTE_WITH_TIMEOUT;
 
   /** The prepare clue. */
   static String prepareClue = ". supported values are:" + SubmitOp.PREPARE + " and " + SubmitOp.EXPLAIN_AND_PREPARE;
@@ -181,6 +181,8 @@ public class QueryServiceResource {
         throw new BadRequestException("Invalid operation type: " + operation + submitClue);
       }
       switch (sop) {
+      case ESTIMATE:
+        return queryServer.estimate(sessionid, query, conf);
       case EXECUTE:
         return queryServer.executeAsync(sessionid, query, conf, queryName);
       case EXPLAIN:

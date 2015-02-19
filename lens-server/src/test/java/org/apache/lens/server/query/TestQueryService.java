@@ -1310,12 +1310,69 @@ public class TestQueryService extends LensJerseyTest {
     for (LensDriver driver : queryService.getDrivers()) {
       driverQueries.put(driver, query);
     }
-    ctx.setDriverQueriesAndPlans(driverQueries);
+    ctx.setDriverQueries(driverQueries);
 
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(), ctx.getConf()
       .getClassLoader());
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(),
       ctx.getDriverContext().getDriverConf(queryService.getDrivers().iterator().next()).getClassLoader());
-    Assert.assertTrue(ctx.isSelectedDriverQueryExplicitlySet());
+    Assert.assertTrue(ctx.isDriverQueryExplicitlySet());
   }
+
+  /**
+   * Test estimate native query.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testEstimateNativeQuery() throws InterruptedException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    // estimate native query
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    final EstimateResult result = target.request()
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), EstimateResult.class);
+    Assert.assertNotNull(result);
+    Assert.assertFalse(result.isError());
+    Assert.assertNotNull(result.getCost());
+    Assert.assertEquals(result.getCost().getEstimatedExecTimeMillis(), 1L);
+    Assert.assertEquals(result.getCost().getEstimatedResourceUsage(), 1.0);
+  }
+
+  /**
+   * Test estimate failing native query.
+   *
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testEstimateFailingNativeQuery() throws InterruptedException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    // estimate native query
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from nonexist"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    final EstimateResult result = target.request()
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), EstimateResult.class);
+    Assert.assertNotNull(result);
+    Assert.assertNull(result.getCost());
+    Assert.assertTrue(result.isError());
+    Assert.assertTrue(result.getErrorMsg().contains("Driver :org.apache.lens.driver.hive.HiveDriver Cause :Error while"
+      + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'"));
+    Assert.assertTrue(result.getErrorMsg().contains("Driver :org.apache.lens.driver.jdbc.JDBCDriver Cause :user"
+      + " lacks privilege or object not found: NONEXIST"));
+  }
+
 }

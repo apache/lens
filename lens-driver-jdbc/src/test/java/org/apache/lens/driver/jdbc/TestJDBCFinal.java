@@ -24,7 +24,6 @@ import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
@@ -188,12 +187,6 @@ public class TestJDBCFinal {
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc";
 
     QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
-    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
-      {
-        put(driver, query);
-      }
-    });
-    context.setSelectedDriver(driver);
 
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
@@ -250,12 +243,6 @@ public class TestJDBCFinal {
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold  desc ";
 
     QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
-    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
-      {
-        put(driver, query);
-      }
-    });
-    context.setSelectedDriver(driver);
     LensResultSet resultSet = driver.execute(context);
     assertNotNull(resultSet);
 

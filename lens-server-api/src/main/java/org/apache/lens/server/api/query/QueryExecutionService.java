@@ -38,6 +38,20 @@ public interface QueryExecutionService {
   String NAME = "query";
 
   /**
+   * Estimate the cost of given query.
+   *
+   * @param sessionHandle the session handle
+   * @param query         The query should be in HiveQL(SQL like)
+   * @param conf          The query configuration
+   *
+   * @return The query cost, if no failure
+   *         The error message, incase of failure
+   *
+   * @throws LensException the lens exception
+   */
+  EstimateResult estimate(LensSessionHandle sessionHandle, String query, LensConf conf) throws LensException;
+
+  /**
    * Explain the given query.
    *
    * @param sessionHandle the session handle

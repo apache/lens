@@ -45,6 +45,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
   /** The partitions. */
   private Map<String, List<String>> partitions;
 
+  static final QueryCost HIVE_DRIVER_COST = new QueryCost(1, 1.0);
+
   /**
    * The Enum ParserState.
    */
@@ -266,7 +268,7 @@ public class HiveQueryPlan extends DriverQueryPlan {
     /*
      * Return query cost as 1 so that if JDBC storage and other storage is present, JDBC is given preference.
      */
-    return new QueryCost(1, 1);
+    return HIVE_DRIVER_COST;
   }
 
   @Override

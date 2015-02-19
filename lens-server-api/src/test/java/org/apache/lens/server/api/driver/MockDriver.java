@@ -362,4 +362,9 @@ public class MockDriver implements LensDriver {
     return ioTestVal;
   }
 
+  @Override
+  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
+    return new QueryCost(0L, 0.0);
+  }
+
 }

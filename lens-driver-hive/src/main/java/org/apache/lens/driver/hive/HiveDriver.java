@@ -36,6 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
@@ -306,6 +307,26 @@ public class HiveDriver implements LensDriver {
     );
   }
 
+  @Override
+  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
+    LOG.info("Estimate: " + qctx.getDriverQuery(this));
+    if (qctx.getDriverQuery(this) == null) {
+      throw new NullPointerException("Null driver query for " + qctx.getUserQuery());
+    }
+    if (qctx.getDriverContext().getDriverQueryCost(this) != null) {
+      // estimate called again and again
+      return qctx.getDriverContext().getDriverQueryCost(this);
+    }
+    if (qctx.isOlapQuery()) {
+      // if query is olap query and rewriting takes care of semantic validation
+      // estimate is not doing anything as of now
+      return HiveQueryPlan.HIVE_DRIVER_COST;
+    } else {
+      // its native table query. Do explain and return cost
+      return explain(qctx).getCost();
+    }
+  }
+
   /*
    * (non-Javadoc)
    *
@@ -313,6 +334,13 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public HiveQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
+    if (explainCtx.getDriverQuery(this) == null) {
+      throw new NullPointerException("Null driver query for " + explainCtx.getUserQuery());
+    }
+    if (explainCtx.getDriverContext().getDriverQueryPlan(this) != null) {
+      // explain called again and again
+      return (HiveQueryPlan) explainCtx.getDriverContext().getDriverQueryPlan(this);
+    }
     LOG.info("Explain: " + explainCtx.getDriverQuery(this));
     HiveConf explainConf = new HiveConf(explainCtx.getDriverConf(this), this.getClass());
     explainConf.setClassLoader(explainCtx.getConf().getClassLoader());
@@ -329,7 +357,9 @@ public class HiveDriver implements LensDriver {
     }
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
-      return new HiveQueryPlan(explainOutput, null, explainConf);
+      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, explainConf);
+      explainCtx.getDriverContext().setDriverQueryPlan(this, hqp);
+      return hqp;
     } catch (HiveException e) {
       throw new LensException("Unable to create hive query plan", e);
     }
@@ -426,6 +456,8 @@ public class HiveDriver implements LensDriver {
       LOG.info("whetherCalculatePriority: " + whetherCalculatePriority);
       if (whetherCalculatePriority) {
         try {
+          // call explain for the plan to be filled
+          explain(ctx);
           // Inside try since non-data fetching queries can also be executed by async method.
           String priority = queryPriorityDecider.decidePriority(ctx).toString();
           ctx.getSelectedDriverConf().set("mapred.job.priority", priority);

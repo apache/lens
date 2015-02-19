@@ -26,6 +26,7 @@ import java.util.*;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
+import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
 import org.apache.lens.server.api.LensConfConstants;
@@ -35,6 +36,7 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -135,12 +137,6 @@ public class TestHiveDriver {
     QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, drivers);
     // session id has to be set before calling setDriverQueriesAndPlans
     context.setLensSessionIdentifier(sessionid);
-    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
-      {
-        put(driver, query);
-      }
-    });
-    context.setSelectedDriver(driver);
     return context;
   }
 
@@ -623,8 +619,38 @@ public class TestHiveDriver {
     }
   }
 
-  // explain
+  @Test
+  public void testEstimateNativeQuery() throws Exception {
+    createTestTable("test_estimate");
+    SessionState.setCurrentSessionState(ss);
+    QueryCost cost = driver.estimate(createExplainContext("SELECT ID FROM test_estimate", conf));
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 1);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 1.0);
+  }
 
+  @Test
+  public void testEstimateOlapQuery() throws Exception {
+    SessionState.setCurrentSessionState(ss);
+    ExplainQueryContext ctx = createExplainContext("cube SELECT ID FROM test_cube", conf);
+    ctx.setOlapQuery(true);
+    QueryCost cost = driver.estimate(ctx);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 1);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 1.0);
+  }
+
+  @Test
+  public void testEstimateNativeFailingQuery() throws Exception {
+    SessionState.setCurrentSessionState(ss);
+    try {
+      driver.estimate(createExplainContext("SELECT ID FROM nonexist", conf));
+      Assert.fail("Should not reach here");
+    } catch (LensException e) {
+      Assert.assertEquals(LensUtil.getCauseMessage(e), "Error while"
+        + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'");
+    }
+  }
+
+  // explain
   /**
    * Test explain.
    *
@@ -791,7 +817,7 @@ public class TestHiveDriver {
       };
       AbstractQueryContext ctx = new MockQueryContext("driverQuery1", new LensConf(), conf,
         driverQuery1.keySet());
-      ctx.setDriverQueriesAndPlans(driverQuery1);
+      ctx.getDriverContext().setDriverQueryPlans(driverQuery1, ctx);
       ctx.setSelectedDriver(mockDriver);
 
       ((MockDriver.MockQueryPlan) ctx.getDriverContext().getDriverQueryPlan(mockDriver)).setPartitions(

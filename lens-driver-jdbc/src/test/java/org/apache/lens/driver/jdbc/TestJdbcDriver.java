@@ -25,13 +25,13 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.*;
@@ -39,6 +39,7 @@ import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -109,12 +110,6 @@ public class TestJdbcDriver {
 
   private QueryContext createQueryContext(final String query) throws LensException {
     QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
-    context.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
-      {
-        put(driver, query);
-      }
-    });
-    context.setSelectedDriver(driver);
     return context;
   }
 
@@ -228,6 +223,37 @@ public class TestJdbcDriver {
   }
 
   /**
+   * Test estimate.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testEstimate() throws Exception {
+    createTable("estimate_test"); // Create table
+    insertData("estimate_test"); // Insert some data into table
+    String query1 = "SELECT * FROM estimate_test"; // Select query against existing table
+    QueryCost cost = driver.estimate(createExplainContext(query1, baseConf));
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+  }
+
+  /**
+   * Test estimate failing
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testEstimateFailing() throws Exception {
+    String query2 = "SELECT * FROM estimate_test2"; // Select query against non existing table
+    try {
+      driver.estimate(createExplainContext(query2, baseConf));
+      Assert.fail("Running estimate on a non existing table.");
+    } catch (LensException ex) {
+      Assert.assertEquals(LensUtil.getCauseMessage(ex), "user lacks privilege or object not found: ESTIMATE_TEST2");
+    }
+  }
+
+  /**
    * Test explain.
    *
    * @throws Exception the exception
@@ -298,12 +324,6 @@ public class TestJdbcDriver {
 
     final String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
-    pContext.setDriverQueriesAndPlans(new HashMap<LensDriver, String>() {
-      {
-        put(driver, query);
-      }
-    });
-    pContext.setSelectedDriver(driver);
     driver.prepare(pContext);
   }
 

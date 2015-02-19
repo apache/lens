@@ -524,6 +524,7 @@ public class JDBCDriver implements LensDriver {
     return rewrittenQuery;
   }
 
+  private static final QueryCost JDBC_DRIVER_COST = new QueryCost(0, 0);
   /**
    * Dummy JDBC query Plan class to get min cost selector working.
    */
@@ -536,8 +537,13 @@ public class JDBCDriver implements LensDriver {
     @Override
     public QueryCost getCost() {
       // this means that JDBC driver is only selected for tables with just DB storage.
-      return new QueryCost(0, 0);
+      return JDBC_DRIVER_COST;
     }
+  }
+
+  @Override
+  public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
+    return explain(qctx).getCost();
   }
 
   /**
@@ -549,6 +555,13 @@ public class JDBCDriver implements LensDriver {
    */
   @Override
   public DriverQueryPlan explain(AbstractQueryContext explainCtx) throws LensException {
+    if (explainCtx.getDriverQuery(this) == null) {
+      throw new NullPointerException("Null driver query for " + explainCtx.getUserQuery());
+    }
+    if (explainCtx.getDriverContext().getDriverQueryPlan(this) != null) {
+      // explain called again and again
+      return explainCtx.getDriverContext().getDriverQueryPlan(this);
+    }
     checkConfigured();
     String explainQuery;
     String rewrittenQuery = rewriteQuery(explainCtx.getDriverQuery(this), conf);
@@ -580,8 +593,9 @@ public class JDBCDriver implements LensDriver {
         result.close();
       }
     }
-
-    return new JDBCQueryPlan();
+    JDBCQueryPlan jqp = new JDBCQueryPlan();
+    explainCtx.getDriverContext().setDriverQueryPlan(this, jqp);
+    return jqp;
   }
 
   /**

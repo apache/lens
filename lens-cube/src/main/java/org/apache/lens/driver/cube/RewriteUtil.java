@@ -222,10 +222,15 @@ public final class RewriteUtil {
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
         for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
-          CubeQueryRewriter rewriter = getCubeRewriter(ctx.getDriverContext().getDriverConf(driver));
           StringBuilder builder = new StringBuilder();
           int start = 0;
           try {
+            CubeQueryRewriter rewriter = null;
+            if (cubeQueries.size() > 0) {
+              // avoid creating rewriter if there are no cube queries
+              rewriter = getCubeRewriter(ctx.getDriverContext().getDriverConf(driver));
+              ctx.setOlapQuery(true);
+            }
             for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
               LOG.debug("Rewriting cube query:" + cqi.query);
               if (start != cqi.startPos) {

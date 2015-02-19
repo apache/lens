@@ -456,7 +456,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
                 // acquire session before any query operation.
                 acquire(ctx.getLensSessionIdentifier());
                 // the check to see if the query was already rewritten and selected driver's rewritten query is set
-                if (!ctx.isSelectedDriverQueryExplicitlySet()) {
+                if (!ctx.isDriverQueryExplicitlySet()) {
                   rewriteAndSelect(ctx);
                 } else {
                   LOG.info("Submitting to already selected driver");
@@ -947,7 +947,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void rewriteAndSelect(AbstractQueryContext ctx) throws LensException {
-    ctx.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(ctx));
+    ctx.setDriverQueries(RewriteUtil.rewriteQuery(ctx));
+    ctx.estimateCostForDrivers();
 
     // 2. select driver to run the query
     LensDriver driver = driverSelector.select(ctx, conf);
@@ -1021,11 +1022,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         if (resultSet == null) {
           if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
             resultSets
-              .put(queryHandle,
-                new LensPersistentResult(
-                  ctx.getQueryOutputFormatter().getMetadata(),
-                  ctx.getQueryOutputFormatter().getFinalOutputPath(),
-                  ctx.getQueryOutputFormatter().getNumRows()));
+            .put(queryHandle,
+              new LensPersistentResult(
+                ctx.getQueryOutputFormatter().getMetadata(),
+                ctx.getQueryOutputFormatter().getFinalOutputPath(),
+                ctx.getQueryOutputFormatter().getNumRows()));
           } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
             resultSet = allQueries.get(queryHandle).getSelectedDriver().fetchResultSet(allQueries.get(queryHandle));
             resultSets.put(queryHandle, resultSet);
@@ -1745,6 +1746,39 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /*
    * (non-Javadoc)
    *
+   * @see org.apache.lens.server.api.query.QueryExecutionService#estimate(org.apache.lens.api.LensSessionHandle,
+   * java.lang.String, org.apache.lens.api.LensConf)
+   */
+  @Override
+  public EstimateResult estimate(LensSessionHandle sessionHandle, String query, LensConf lensConf)
+    throws LensException {
+    try {
+      LOG.info("Estimate: " + sessionHandle.toString() + " query:" + query);
+      acquire(sessionHandle);
+      Configuration qconf = getLensConf(sessionHandle, lensConf);
+      ExplainQueryContext estimateQueryContext = new ExplainQueryContext(query,
+        getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
+
+      accept(query, qconf, SubmitOp.ESTIMATE);
+      rewriteAndSelect(estimateQueryContext);
+      return new EstimateResult(estimateQueryContext.getSelectedDriverQueryCost());
+    } catch (LensException e) {
+      LOG.error("Error during estimate for :" + query, e);
+      EstimateResult error;
+      if (e.getCause() != null && e.getCause().getMessage() != null) {
+        error = new EstimateResult(e.getCause().getMessage());
+      } else {
+        error = new EstimateResult(e.getMessage());
+      }
+      return error;
+    } finally {
+      release(sessionHandle);
+    }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
    * @see org.apache.lens.server.api.query.QueryExecutionService#explain(org.apache.lens.api.LensSessionHandle,
    * java.lang.String, org.apache.lens.api.LensConf)
    */
@@ -1758,10 +1792,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
 
       accept(query, qconf, SubmitOp.EXPLAIN);
-      explainQueryContext.setDriverQueriesAndPlans(RewriteUtil.rewriteQuery(explainQueryContext));
-      // select driver to run the query
-      explainQueryContext.setSelectedDriver(driverSelector.select(explainQueryContext, qconf));
-      return explainQueryContext.getSelectedDriverQueryPlan().toQueryPlan();
+      rewriteAndSelect(explainQueryContext);
+      return explainQueryContext.getSelectedDriver().explain(explainQueryContext).toQueryPlan();
     } catch (LensException e) {
       LOG.error("Error during explain :", e);
       QueryPlan plan;

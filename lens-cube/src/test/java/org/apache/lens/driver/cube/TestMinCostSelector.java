@@ -40,14 +40,16 @@ public class TestMinCostSelector {
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
     Map<LensDriver, String> driverQueries) throws LensException {
     MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
-    ctx.setDriverQueriesAndPlans(driverQueries);
+    ctx.setDriverQueries(driverQueries);
+    ctx.estimateCostForDrivers();
     return ctx;
   }
 
   private MockQueryContext createMockContext(String query, Configuration conf, LensConf lensConf,
     List<LensDriver> drivers, Map<LensDriver, String> driverQueries) throws LensException {
     MockQueryContext ctx = new MockQueryContext(query, lensConf, conf, driverQueries.keySet());
-    ctx.setDriverQueriesAndPlans(driverQueries);
+    ctx.setDriverQueries(driverQueries);
+    ctx.estimateCostForDrivers();
     return ctx;
   }
 

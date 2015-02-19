@@ -24,8 +24,11 @@ import java.util.Map;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
+import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -87,13 +90,20 @@ public abstract class AbstractQueryContext implements Serializable {
   private String lensSessionIdentifier;
 
   /**
-   * Will be set to true when the selected driver query is set other than user query
+   * Will be set to true when the driver queries are explicitly set
    * This will help avoiding rewrites in case of system restarts.
    */
-  @Getter private boolean isSelectedDriverQueryExplicitlySet = false;
+  @Getter private boolean isDriverQueryExplicitlySet = false;
+
+  /**
+   * Is olap cube query or not
+   */
+  @Getter
+  @Setter
+  private boolean olapQuery = false;
 
   protected AbstractQueryContext(final String query, final String user, final LensConf qconf, final Configuration conf,
-      final Collection<LensDriver> drivers) {
+    final Collection<LensDriver> drivers) {
     driverContext = new DriverSelectorQueryContext(query, conf, drivers);
     userQuery = query;
     this.lensConf = qconf;
@@ -108,14 +118,48 @@ public abstract class AbstractQueryContext implements Serializable {
   }
 
   /**
-   * Set driver queries, and updates for plan from each driver in the context
+   * Set driver queries
    *
    * @param driverQueries Map of LensDriver to driver's query
    * @throws LensException
    */
-  public void setDriverQueriesAndPlans(Map<LensDriver, String> driverQueries) throws LensException {
-    driverContext.setDriverQueriesAndPlans(driverQueries, this);
-    isSelectedDriverQueryExplicitlySet = true;
+  public void setDriverQueries(Map<LensDriver, String> driverQueries) throws LensException {
+    driverContext.setDriverQueries(driverQueries);
+    isDriverQueryExplicitlySet = true;
+  }
+
+  /**
+   * Estimate cost for each driver and set in context
+   *
+   * @throws LensException
+   */
+  public void estimateCostForDrivers() throws LensException {
+    StringBuilder detailedFailureCause = new StringBuilder();
+    String failureCause = null;
+    boolean useBuilder = false;
+    boolean succeededOnAtleastOneDriver = false;
+    for (LensDriver driver : driverContext.getDrivers()) {
+      final DriverQueryContext driverQueryContext = driverContext.driverQueryContextMap.get(driver);
+      try {
+        driverQueryContext.setDriverCost(driver.estimate(this));
+        succeededOnAtleastOneDriver = true;
+      } catch (Exception e) {
+        LOG.error("Setting driver cost failed for driver " + driver, e);
+        String expMsg = LensUtil.getCauseMessage(e);
+        driverQueryContext.setDriverQueryCostEstimateError(e);
+        detailedFailureCause.append("\n Driver :").append(driver.getClass().getName());
+        detailedFailureCause.append(" Cause :" + expMsg);
+        if (failureCause != null && !failureCause.equals(expMsg)) {
+          useBuilder = true;
+        }
+        if (failureCause == null) {
+          failureCause = expMsg;
+        }
+      }
+    }
+    if (!succeededOnAtleastOneDriver) {
+      throw new LensException(useBuilder ? detailedFailureCause.toString() : failureCause);
+    }
   }
 
   /**
@@ -161,7 +205,7 @@ public abstract class AbstractQueryContext implements Serializable {
     this.selectedDriverQuery = driverQuery;
     if (driverContext != null) {
       driverContext.setSelectedDriverQuery(driverQuery);
-      isSelectedDriverQueryExplicitlySet = true;
+      isDriverQueryExplicitlySet = true;
     }
   }
 
@@ -201,4 +245,12 @@ public abstract class AbstractQueryContext implements Serializable {
     }
     return null;
   }
+
+  public QueryCost getSelectedDriverQueryCost() throws LensException {
+    if (driverContext != null) {
+      return driverContext.getSelectedDriverQueryCost();
+    }
+    return null;
+  }
+
 }
