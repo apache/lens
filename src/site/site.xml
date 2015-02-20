@@ -57,6 +57,7 @@
       <item name="Lens CLI" href="./user/cli.html" />
 			<item name="Java Client Library" href="./user/java-client.html"/>
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
+      <item name="Lens ML" href="./user/ml.html" />
 			<item name="FAQ" href="./user/faq.html"/>
 		</menu>
 		<menu name="Developer Documentation">

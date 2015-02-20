@@ -1,0 +1,67 @@
+~~
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+~~
+
+Lens API for Machine Learning (Lens-ML)
+
+  Please Note - This is an experimental feature - API is subject to change
+
+* Introduction
+
+  The Lens-ML component allows users to call machine learning libraries as UDFs in Lens queries. At present, we integrate the MLLib library provided in Apache Spark.
+
+  With this feature, users can build machine learning models backed by Hive tables, and later call these models via Hive UDFs. Actual model building is done in Spark. Lens takes care of initializing and invoking the Spark code (Lens acts as a Spark shell).
+
+* Lens-ML Server API
+
+  The Lens-ML component provides a set of REST endpoints for listing, creation and validation of machine learning models and algorithms. Some of them are described below
+
+  * /ml/algorithms - give a list of machine learning algorithms which are supported by Lens
+
+  * /ml/train - Create a model using an algorithm and backed by a Hive table. This also takes parameters such as list of columns which act as feature variables, name of label column (in case of supervised learning) and algorithm specific tuning parameters. This call creates a Spark RDD backed by the Hive table using HCatInputFormat, and runs corresponding trainer in Spark. The eventual model object returned by the Spark environment is associated with a unique ID, and is persisted to HDFS.
+
+  * /ml/test - Evaluate a model created in the /train call against a Hive table, and store results into another Hive table. This call takes the model ID, and a Hive table which is used for evaluation purposes. It is assumed that the evaluation table contains all columns (feature and label columns) which were used to generate the model. It creates a Lens query against the evaluation table and applies the model UDF on each record in the table. Output of the query is associated with a test report ID, and stored as a partition (with the same ID) in an output table. This call returns the report ID to the user.
+
+  * /ml/models - Retrieve model metadata for an algorithm and by model ID
+
+  * /ml/reports - Retrieve model evaluation reports by algorithm or report ID
+
+* Lens-ML Client API
+
+  We also provide a client library to call the server side REST api. The LensML interface can be used to invoke server side REST APIs. The same interface can also be used by other Lens server modules to invoke these APIs in the Lens server process itself. To access an instance of the Lens-ML service in the Lens server, user can use the ServiceProvider interface.
+
+* Model UDF
+
+  Each train call creates an ML model which can be identified by a unique ID. This model can be invoked in any Hive query using the predict UDF. This UDF take the model ID and feature and label column names. Once a model is generated it can be invoked in any Lens query (at the time of writing only queries which run on the Hive backend are supported) without having to invoke Spark again.
+
+* Deployment
+
+  * Enable the ML service by adding it to the list of services brought up by lens-server. (lens.server.servicenames)
+
+  * Enable the ML resource by adding it to the list of resources brought up by lens-server (lens.server.ws.resourcenames)
+
+  * Lens-ML specific configuration -
+
+  * ML Driver - lens.ml.drivers - Currently only org.apache.lens.ml.spark.SparkMLDriver is available.
+
+  * Spark master setting - lens.ml.sparkdriver.spark.master - Specify the mode in which Spark will be invoked this can take values acceptable by the Spark master config variable in Apache Spark (for local, standalone, and Yarn modes)
+
+	An example config is provided in lens-ml-lib/resources/test/lens-site.xml
+
+  Spark dependencies need to be provided at run time when starting the Lens server. Care should be taken to make sure that the Spark version matches with the Hadoop and Hive versions used to build Apache Lens. Users may have to rebuild Spark for their version of Hadoop. SPARK_HOME environment variable should be set which points to the Spark installation.
+
