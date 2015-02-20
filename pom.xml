@@ -107,7 +107,7 @@
 
   <groupId>org.apache.lens</groupId>
   <artifactId>apache-lens</artifactId>
-  <version>2.0.0-incubating</version>
+  <version>2.0.1-incubating-SNAPSHOT</version>
   <name>Lens</name>
   <packaging>pom</packaging>
   <description>Unified Analytics Platform</description>
@@ -170,7 +170,7 @@
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</developerConnection>
     <url>https://git-wip-us.apache.org/repos/asf/incubator-falcon.git</url>
-    <tag>apache-lens-2.0.0-incubating</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <reporting>
@@ -430,7 +430,7 @@
           <dependency>
             <groupId>org.apache.lens</groupId>
             <artifactId>checkstyle</artifactId>
-            <version>2.0.0-incubating</version>
+            <version>2.0.1-incubating-SNAPSHOT</version>
           </dependency>
         </dependencies>
         <executions>
@@ -1057,7 +1057,7 @@
               <dependency>
                 <groupId>org.apache.lens</groupId>
                 <artifactId>checkstyle</artifactId>
-                <version>2.0.0-incubating</version>
+                <version>2.0.1-incubating-SNAPSHOT</version>
               </dependency>
             </dependencies>
             <executions>
