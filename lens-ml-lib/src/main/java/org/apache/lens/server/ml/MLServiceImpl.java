@@ -80,11 +80,11 @@ public class MLServiceImpl extends CompositeService implements MLService {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.LensML#getTrainerForName(java.lang.String)
+   * @see org.apache.lens.ml.LensML#getAlgoForName(java.lang.String)
    */
   @Override
-  public MLTrainer getTrainerForName(String algorithm) throws LensException {
-    return ml.getTrainerForName(algorithm);
+  public MLAlgo getAlgoForName(String algorithm) throws LensException {
+    return ml.getAlgoForName(algorithm);
   }
 
   /*

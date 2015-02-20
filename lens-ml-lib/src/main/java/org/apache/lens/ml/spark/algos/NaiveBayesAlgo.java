@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.AlgoParam;
 import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.TrainerParam;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.spark.models.NaiveBayesClassificationModel;
 
@@ -31,39 +31,39 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 /**
- * The Class NaiveBayesTrainer.
+ * The Class NaiveBayesAlgo.
  */
-@Algorithm(name = "spark_naive_bayes", description = "Spark Naive Bayes classifier trainer")
-public class NaiveBayesTrainer extends BaseSparkTrainer {
+@Algorithm(name = "spark_naive_bayes", description = "Spark Naive Bayes classifier algo")
+public class NaiveBayesAlgo extends BaseSparkAlgo {
 
   /** The lambda. */
-  @TrainerParam(name = "lambda", help = "Lambda parameter for naive bayes learner", defaultValue = "1.0d")
+  @AlgoParam(name = "lambda", help = "Lambda parameter for naive bayes learner", defaultValue = "1.0d")
   private double lambda = 1.0;
 
   /**
-   * Instantiates a new naive bayes trainer.
+   * Instantiates a new naive bayes algo.
    *
    * @param name        the name
    * @param description the description
    */
-  public NaiveBayesTrainer(String name, String description) {
+  public NaiveBayesAlgo(String name, String description) {
     super(name, description);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#parseAlgoParams(java.util.Map)
    */
   @Override
-  public void parseTrainerParams(Map<String, String> params) {
+  public void parseAlgoParams(Map<String, String> params) {
     lambda = getParamValue("lambda", 1.0d);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)

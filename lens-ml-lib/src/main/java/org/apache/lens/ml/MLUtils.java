@@ -39,12 +39,12 @@ public final class MLUtils {
     HIVE_CONF.addResource("lens-site.xml");
   }
 
-  public static String getTrainerName(Class<? extends MLTrainer> trainerClass) {
-    Algorithm annotation = trainerClass.getAnnotation(Algorithm.class);
+  public static String getAlgoName(Class<? extends MLAlgo> algoClass) {
+    Algorithm annotation = algoClass.getAnnotation(Algorithm.class);
     if (annotation != null) {
       return annotation.name();
     }
-    throw new IllegalArgumentException("Trainer should be decorated with annotation - " + Algorithm.class.getName());
+    throw new IllegalArgumentException("Algo should be decorated with annotation - " + Algorithm.class.getName());
   }
 
   public static MLServiceImpl getMLService() throws Exception {

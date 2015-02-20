@@ -17,10 +17,10 @@
 
 FROM inmobi/docker-hive
 
-ENV LENS_VERSION 2.0.0-incubating-SNAPSHOT
+ENV LENS_VERSION apache-lens-2.0.0-incubating-SNAPSHOT
 ENV BASEDIR /opt/lens
-ENV LENS_HOME $BASEDIR/lens-dist/target/lens-dist-${LENS_VERSION}-server/
-ENV LENS_CLIENT $BASEDIR/lens-client-dist/target/lens-client-dist-${LENS_VERSION}-client/
+ENV LENS_HOME $BASEDIR/lens-dist/target/${LENS_VERSION}-bin/${LENS_VERSION}-bin/server
+ENV LENS_CLIENT $BASEDIR/lens-dist/target/${LENS_VERSION}-bin/${LENS_VERSION}-bin/client
 
 ENV LENS_SERVER_CONF $LENS_HOME/conf-pseudo-distr/
 ENV LENS_CLIENT_CONF $LENS_CLIENT/conf-pseudo-distr/

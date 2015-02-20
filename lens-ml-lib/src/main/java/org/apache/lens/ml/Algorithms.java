@@ -32,41 +32,41 @@ import org.apache.lens.api.LensException;
 public class Algorithms {
 
   /** The algorithm classes. */
-  private final Map<String, Class<? extends MLTrainer>> algorithmClasses
-    = new HashMap<String, Class<? extends MLTrainer>>();
+  private final Map<String, Class<? extends MLAlgo>> algorithmClasses
+    = new HashMap<String, Class<? extends MLAlgo>>();
 
   /**
    * Register.
    *
-   * @param trainerClass the trainer class
+   * @param algoClass the algo class
    */
-  public void register(Class<? extends MLTrainer> trainerClass) {
-    if (trainerClass != null && trainerClass.getAnnotation(Algorithm.class) != null) {
-      algorithmClasses.put(trainerClass.getAnnotation(Algorithm.class).name(), trainerClass);
+  public void register(Class<? extends MLAlgo> algoClass) {
+    if (algoClass != null && algoClass.getAnnotation(Algorithm.class) != null) {
+      algorithmClasses.put(algoClass.getAnnotation(Algorithm.class).name(), algoClass);
     } else {
-      throw new IllegalArgumentException("Not a valid algorithm class: " + trainerClass);
+      throw new IllegalArgumentException("Not a valid algorithm class: " + algoClass);
     }
   }
 
   /**
-   * Gets the trainer for name.
+   * Gets the algo for name.
    *
    * @param name the name
-   * @return the trainer for name
+   * @return the algo for name
    * @throws LensException the lens exception
    */
-  public MLTrainer getTrainerForName(String name) throws LensException {
-    Class<? extends MLTrainer> trainerClass = algorithmClasses.get(name);
-    if (trainerClass == null) {
+  public MLAlgo getAlgoForName(String name) throws LensException {
+    Class<? extends MLAlgo> algoClass = algorithmClasses.get(name);
+    if (algoClass == null) {
       return null;
     }
-    Algorithm algoAnnotation = trainerClass.getAnnotation(Algorithm.class);
+    Algorithm algoAnnotation = algoClass.getAnnotation(Algorithm.class);
     String description = algoAnnotation.description();
     try {
-      Constructor<? extends MLTrainer> trainerConstructor = trainerClass.getConstructor(String.class, String.class);
-      return trainerConstructor.newInstance(name, description);
+      Constructor<? extends MLAlgo> algoConstructor = algoClass.getConstructor(String.class, String.class);
+      return algoConstructor.newInstance(name, description);
     } catch (Exception exc) {
-      throw new LensException("Unable to get trainer: " + name, exc);
+      throw new LensException("Unable to get algo: " + name, exc);
     }
   }
 

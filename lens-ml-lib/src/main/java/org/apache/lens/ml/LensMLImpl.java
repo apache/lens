@@ -35,7 +35,7 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.ml.spark.SparkMLDriver;
-import org.apache.lens.ml.spark.trainers.BaseSparkTrainer;
+import org.apache.lens.ml.spark.algos.BaseSparkAlgo;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.IOUtils;
@@ -93,25 +93,25 @@ public class LensMLImpl implements LensML {
   }
 
   public List<String> getAlgorithms() {
-    List<String> trainers = new ArrayList<String>();
+    List<String> algos = new ArrayList<String>();
     for (MLDriver driver : drivers) {
-      trainers.addAll(driver.getTrainerNames());
+      algos.addAll(driver.getAlgoNames());
     }
-    return trainers;
+    return algos;
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.LensML#getTrainerForName(java.lang.String)
+   * @see org.apache.lens.ml.LensML#getAlgoForName(java.lang.String)
    */
-  public MLTrainer getTrainerForName(String algorithm) throws LensException {
+  public MLAlgo getAlgoForName(String algorithm) throws LensException {
     for (MLDriver driver : drivers) {
-      if (driver.isTrainerSupported(algorithm)) {
-        return driver.getTrainerInstance(algorithm);
+      if (driver.isAlgoSupported(algorithm)) {
+        return driver.getAlgoInstance(algorithm);
       }
     }
-    throw new LensException("Trainer not supported " + algorithm);
+    throw new LensException("Algo not supported " + algorithm);
   }
 
   /*
@@ -120,11 +120,11 @@ public class LensMLImpl implements LensML {
    * @see org.apache.lens.ml.LensML#train(java.lang.String, java.lang.String, java.lang.String[])
    */
   public String train(String table, String algorithm, String[] args) throws LensException {
-    MLTrainer trainer = getTrainerForName(algorithm);
+    MLAlgo algo = getAlgoForName(algorithm);
 
     String modelId = UUID.randomUUID().toString();
 
-    LOG.info("Begin training model " + modelId + ", trainer=" + algorithm + ", table=" + table + ", params="
+    LOG.info("Begin training model " + modelId + ", algo=" + algorithm + ", table=" + table + ", params="
       + Arrays.toString(args));
 
     String database = null;
@@ -134,33 +134,33 @@ public class LensMLImpl implements LensML {
       database = "default";
     }
 
-    MLModel model = trainer.train(toLensConf(conf), database, table, modelId, args);
+    MLModel model = algo.train(toLensConf(conf), database, table, modelId, args);
 
     LOG.info("Done training model: " + modelId);
 
     model.setCreatedAt(new Date());
-    model.setTrainerName(algorithm);
+    model.setAlgoName(algorithm);
 
     Path modelLocation = null;
     try {
       modelLocation = persistModel(model);
-      LOG.info("Model saved: " + modelId + ", trainer: " + algorithm + ", path: " + modelLocation);
+      LOG.info("Model saved: " + modelId + ", algo: " + algorithm + ", path: " + modelLocation);
       return model.getId();
     } catch (IOException e) {
-      throw new LensException("Error saving model " + modelId + " for trainer " + algorithm, e);
+      throw new LensException("Error saving model " + modelId + " for algo " + algorithm, e);
     }
   }
 
   /**
-   * Gets the trainer dir.
+   * Gets the algo dir.
    *
-   * @param trainerName the trainer name
-   * @return the trainer dir
+   * @param algoName the algo name
+   * @return the algo dir
    * @throws IOException Signals that an I/O exception has occurred.
    */
-  private Path getTrainerDir(String trainerName) throws IOException {
+  private Path getAlgoDir(String algoName) throws IOException {
     String modelSaveBaseDir = conf.get(ModelLoader.MODEL_PATH_BASE_DIR, ModelLoader.MODEL_PATH_BASE_DIR_DEFAULT);
-    return new Path(new Path(modelSaveBaseDir), trainerName);
+    return new Path(new Path(modelSaveBaseDir), algoName);
   }
 
   /**
@@ -172,14 +172,14 @@ public class LensMLImpl implements LensML {
    */
   private Path persistModel(MLModel model) throws IOException {
     // Get model save path
-    Path trainerDir = getTrainerDir(model.getTrainerName());
-    FileSystem fs = trainerDir.getFileSystem(conf);
+    Path algoDir = getAlgoDir(model.getAlgoName());
+    FileSystem fs = algoDir.getFileSystem(conf);
 
-    if (!fs.exists(trainerDir)) {
-      fs.mkdirs(trainerDir);
+    if (!fs.exists(algoDir)) {
+      fs.mkdirs(algoDir);
     }
 
-    Path modelSavePath = new Path(trainerDir, model.getId());
+    Path modelSavePath = new Path(algoDir, model.getId());
     ObjectOutputStream outputStream = null;
 
     try {
@@ -202,15 +202,15 @@ public class LensMLImpl implements LensML {
    */
   public List<String> getModels(String algorithm) throws LensException {
     try {
-      Path trainerDir = getTrainerDir(algorithm);
-      FileSystem fs = trainerDir.getFileSystem(conf);
-      if (!fs.exists(trainerDir)) {
+      Path algoDir = getAlgoDir(algorithm);
+      FileSystem fs = algoDir.getFileSystem(conf);
+      if (!fs.exists(algoDir)) {
         return null;
       }
 
       List<String> models = new ArrayList<String>();
 
-      for (FileStatus stat : fs.listStatus(trainerDir)) {
+      for (FileStatus stat : fs.listStatus(algoDir)) {
         models.add(stat.getPath().getName());
       }
 
@@ -563,15 +563,15 @@ public class LensMLImpl implements LensML {
    * @see org.apache.lens.ml.LensML#getAlgoParamDescription(java.lang.String)
    */
   public Map<String, String> getAlgoParamDescription(String algorithm) {
-    MLTrainer trainer = null;
+    MLAlgo algo = null;
     try {
-      trainer = getTrainerForName(algorithm);
+      algo = getAlgoForName(algorithm);
     } catch (LensException e) {
       LOG.error("Error getting algo description : " + algorithm, e);
       return null;
     }
-    if (trainer instanceof BaseSparkTrainer) {
-      return ((BaseSparkTrainer) trainer).getArgUsage();
+    if (algo instanceof BaseSparkAlgo) {
+      return ((BaseSparkAlgo) algo).getArgUsage();
     }
     return null;
   }

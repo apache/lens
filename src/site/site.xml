@@ -47,8 +47,8 @@
     </menu>
       <menu name="Releases" >
       <item name="Download" href="./releases/download.html" />
-      <item name="Compatibility" href="./releases/incompatibility.html" />
-      <item name="Release Notes" href="./releases/release-note.html" />
+      <item name="Compatibility" href="./releases/compatibility.html" />
+      <item name="All Releases" href="./releases/release-history.html" />
       </menu>
 		<menu name="User Documentation">
       <item name="Lens User Guide" href="./user/index.html" />
@@ -57,6 +57,7 @@
       <item name="Lens CLI" href="./user/cli.html" />
 			<item name="Java Client Library" href="./user/java-client.html"/>
 			<item name="JDBC Client" href="./user/jdbc-client.html"/>
+      <item name="Lens ML" href="./user/ml.html" />
 			<item name="FAQ" href="./user/faq.html"/>
 		</menu>
 		<menu name="Developer Documentation">

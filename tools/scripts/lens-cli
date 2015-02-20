@@ -19,4 +19,4 @@
 # under the License.
 #
 
-exec /usr/local/lens-client/bin/lens-cli.sh "$@"
+exec /usr/local/lens/client/bin/lens-cli.sh "$@"

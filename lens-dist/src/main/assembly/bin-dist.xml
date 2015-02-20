@@ -21,69 +21,65 @@
 <assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
-  <id>client</id>
+  <id>bin</id>
 
   <formats>
     <format>dir</format>
+    <format>tar.gz</format>
   </formats>
 
-  <baseDirectory>lens-client-${project.version}</baseDirectory>
-  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>apache-lens-${project.version}-bin</baseDirectory>
+  <includeBaseDirectory>true</includeBaseDirectory>
 
   <dependencySets>
     <dependencySet>
       <unpack>false</unpack>
       <scope>runtime</scope>
-      <outputDirectory>lib</outputDirectory>
+      <outputDirectory>client/lib</outputDirectory>
       <includes>
-        <include>org.apache.lens:lens-api</include>
         <include>org.apache.lens:lens-cli</include>
         <include>org.apache.lens:lens-client</include>
         <include>org.apache.lens:lens-examples</include>
+        <include>org.apache.hadoop:hadoop-common</include>
       </includes>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
-    <dependencySet>
-      <unpack>false</unpack>
-      <scope>runtime</scope>
-      <outputDirectory>lib</outputDirectory>
-      <includes>
-        <include>org.apache.hadoop:hadoop-common</include>
-      </includes>
-      <useTransitiveFiltering>false</useTransitiveFiltering>
-      <useTransitiveDependencies>false</useTransitiveDependencies>
-    </dependencySet>
   </dependencySets>
+
+  <moduleSets>
+    <moduleSet>
+      <includes>
+        <include>org.apache.lens:lens-server</include>
+      </includes>
+      <binaries>
+        <unpack>false</unpack>
+      </binaries>
+    </moduleSet>
+  </moduleSets>
 
   <fileSets>
     <fileSet>
-      <directory>../doc/</directory>
-      <outputDirectory>/doc/</outputDirectory>
+      <directory>../bin-dist-files/</directory>
+      <outputDirectory>/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>
-      <excludes>
-        <exclude>target/**</exclude>
-        <exclude>lib/**</exclude>
-      </excludes>
     </fileSet>
 
     <fileSet>
-      <fileMode>755</fileMode>  
+      <fileMode>755</fileMode>
       <directory>../tools/scripts</directory>
-      <outputDirectory>/bin/</outputDirectory>
+      <outputDirectory>/server/bin/</outputDirectory>
       <includes>
-        <include>run-examples.sh</include>
         <include>lens-config.sh</include>
-        <include>lens-cli.sh</include>
-        <include>lens-cli</include>
+        <include>lens-ctl</include>
       </includes>
     </fileSet>
-    
+
     <fileSet>
       <directory>../tools/conf/</directory>
-      <outputDirectory>/conf/</outputDirectory>
+      <outputDirectory>/server/conf/</outputDirectory>
       <includes>
         <include>lens-env.sh</include>
       </includes>
@@ -91,7 +87,51 @@
 
     <fileSet>
       <directory>../tools/conf-pseudo-distr/</directory>
-      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
+      <outputDirectory>/server/conf-pseudo-distr/</outputDirectory>
+      <includes>
+        <include>lens-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/server</directory>
+      <outputDirectory>/server/conf/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf-pseudo-distr/server</directory>
+      <outputDirectory>/server/conf-pseudo-distr/</outputDirectory>
+      <includes>
+        <include>**</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <fileMode>755</fileMode>
+      <directory>../tools/scripts</directory>
+      <outputDirectory>/client/bin/</outputDirectory>
+      <includes>
+        <include>run-examples.sh</include>
+        <include>lens-config.sh</include>
+        <include>lens-cli.sh</include>
+        <include>lens-cli</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf/</directory>
+      <outputDirectory>/client/conf/</outputDirectory>
+      <includes>
+        <include>lens-env.sh</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../tools/conf-pseudo-distr/</directory>
+      <outputDirectory>/client/conf-pseudo-distr/</outputDirectory>
       <includes>
         <include>lens-env.sh</include>
       </includes>
@@ -99,7 +139,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/resources</outputDirectory>
+      <outputDirectory>/client/examples/resources</outputDirectory>
       <includes>
         <include>*.xml</include>
         <include>*.sql</include>
@@ -108,7 +148,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/dim1_local</outputDirectory>
+      <outputDirectory>/client/examples/data/dim1_local</outputDirectory>
       <includes>
         <include>dim1-local.data</include>
       </includes>
@@ -116,7 +156,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/dim2_local</outputDirectory>
+      <outputDirectory>/client/examples/data/dim2_local</outputDirectory>
       <includes>
         <include>dim2-local.data</include>
       </includes>
@@ -124,7 +164,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/dim4_local</outputDirectory>
+      <outputDirectory>/client/examples/data/dim4_local</outputDirectory>
       <includes>
         <include>dim4-local.data</include>
       </includes>
@@ -132,7 +172,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact1_local1</outputDirectory>
+      <outputDirectory>/client/examples/data/fact1_local1</outputDirectory>
       <includes>
         <include>fact1-local1*.data</include>
       </includes>
@@ -140,7 +180,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact1_local2</outputDirectory>
+      <outputDirectory>/client/examples/data/fact1_local2</outputDirectory>
       <includes>
         <include>fact1-local2*.data</include>
       </includes>
@@ -148,7 +188,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact1_local3</outputDirectory>
+      <outputDirectory>/client/examples/data/fact1_local3</outputDirectory>
       <includes>
         <include>fact1-local3*.data</include>
       </includes>
@@ -156,7 +196,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact2_local1</outputDirectory>
+      <outputDirectory>/client/examples/data/fact2_local1</outputDirectory>
       <includes>
         <include>fact2-local1*.data</include>
       </includes>
@@ -164,7 +204,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact2_local2</outputDirectory>
+      <outputDirectory>/client/examples/data/fact2_local2</outputDirectory>
       <includes>
         <include>fact2-local2*.data</include>
       </includes>
@@ -172,7 +212,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/fact2_local3</outputDirectory>
+      <outputDirectory>/client/examples/data/fact2_local3</outputDirectory>
       <includes>
         <include>fact2-local3*.data</include>
       </includes>
@@ -180,7 +220,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local1</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local1</outputDirectory>
       <includes>
         <include>raw-local1*.data</include>
       </includes>
@@ -188,7 +228,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local2</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local2</outputDirectory>
       <includes>
         <include>raw-local2*.data</include>
       </includes>
@@ -196,7 +236,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local3</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local3</outputDirectory>
       <includes>
         <include>raw-local3*.data</include>
       </includes>
@@ -204,7 +244,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local4</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local4</outputDirectory>
       <includes>
         <include>raw-local4*.data</include>
       </includes>
@@ -212,7 +252,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local5</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local5</outputDirectory>
       <includes>
         <include>raw-local5*.data</include>
       </includes>
@@ -220,7 +260,7 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/data/raw_local6</outputDirectory>
+      <outputDirectory>/client/examples/data/raw_local6</outputDirectory>
       <includes>
         <include>raw-local6*.data</include>
       </includes>
@@ -228,15 +268,15 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
-      <outputDirectory>/examples/queries</outputDirectory>
+      <outputDirectory>/client/examples/queries</outputDirectory>
       <includes>
-        <include>*.sql</include>
+        <include>*.txt</include>
       </includes>
     </fileSet>
 
     <fileSet>
       <directory>../tools/conf/client</directory>
-      <outputDirectory>/conf/</outputDirectory>
+      <outputDirectory>/client/conf/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>
@@ -244,10 +284,26 @@
 
     <fileSet>
       <directory>../tools/conf-pseudo-distr/client</directory>
-      <outputDirectory>/conf-pseudo-distr/</outputDirectory>
+      <outputDirectory>/client/conf-pseudo-distr/</outputDirectory>
       <includes>
         <include>**</include>
       </includes>
     </fileSet>
   </fileSets>
+
+  <files>
+    <file>
+      <source>../lens-server/target/lens-server-${project.version}.war</source>
+      <outputDirectory>/server/webapp/</outputDirectory>
+      <destName>lens-server.war</destName>
+    </file>
+
+    <file>
+      <source>../DISCLAIMER</source>
+      <outputDirectory>/</outputDirectory>
+      <destName>DISCLAIMER</destName>
+    </file>
+
+  </files>
+
 </assembly>

@@ -1,0 +1,56 @@
+Apache Lens (incubating)
+
+Copyright 2014-2015 The Apache Software Foundation
+
+This product includes software developed at
+The Apache Software Foundation (http://www.apache.org/).
+
+
+This product includes jquery.flot.js (http://www.flotcharts.org/)
+
+This product includes moment.js(http://momentjs.com/)
+
+This product includes sql.js, codemirror.min.js, codemirror.min.css (http://codemirror.net/)
+
+This product includes stupidtable.min.js (http://joequery.github.io/Stupid-Table-Plugin/)
+
+This product includes javax.mail library. The details on how to obtain the library is available at
+https://glassfish.java.net/javaee5/mail/
+
+This product includes jersey libraries : jersey-server, jersey-client, jersey-media-multipart, jersey-media-json-jackson,
+jersey-media-moxy, jersey-container-grizzly2-servlet, jersey-container-grizzly2-http, jersey-container-servlet,
+jersey-container-servlet-core, jersey-entity-filtering and jersey-common. The details on how to obtain those modules
+are available at https://jersey.java.net/.
+
+This product includes grizzly libraries : grizzly-http-server, grizzly-framework, grizzly-http, grizzly-http-servlet.
+The details on how to obtain those libraries is available at https://grizzly.java.net/.
+
+This product includes javax.ws.rs-api library. The details on how to obtain the library is available at
+http://jax-rs-spec.java.net.
+
+This product includes jaxb-api library. The details on how to obtain the library is available at https://jaxb.java.net/.
+
+This product includes javax.servlet library. The details on how to obtain the library is available at
+http://servlet-spec.java.net/.
+
+This product includes HK2 libraries : hk2-locator, asm-all-repackaged, cglib, hk2-utils, hk2-api, javax.inject
+and osgi-resource-locator. The details on how to obtain those libraries is available at https://hk2.java.net/.
+
+This product includes mimepull library. The details on how to obtain the library is available at
+http://mimepull.java.net.
+
+This product includes javax.annotation API. The details on how to obtain the library is available at
+http://jcp.org/en/jsr/detail?id=250.
+
+This product includes EclipseLink libraries : org.eclipse.persistence.moxy, org.eclipse.persistence.core,
+org.eclipse.persistence.asm and org.eclipse.persistence.antlr. The details on how to obtain those libraries is
+available at http://www.eclipse.org/eclipselink.
+
+This product includes JavaBeans Activation Framework(javax.activation:activation). The details on how to obtain the
+library is available at http://java.sun.com/products/javabeans/jaf/index.jsp.
+
+This product includes c3p0 library. The details on how to obtain the library is available at
+http://www.mchange.com/projects/c3p0/.
+
+This product includes mchange-commons-java. The details on how to obtain the library is available at
+https://github.com/swaldman/mchange-commons-java.

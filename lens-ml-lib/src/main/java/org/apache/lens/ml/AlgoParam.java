@@ -18,36 +18,36 @@
  */
 package org.apache.lens.ml;
 
-import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
- * The Interface MLTrainer.
+ * The Interface AlgoParam.
  */
-public interface MLTrainer {
-  String getName();
-
-  String getDescription();
-
-  /**
-   * Configure.
-   *
-   * @param configuration the configuration
-   */
-  void configure(LensConf configuration);
-
-  LensConf getConf();
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
+public @interface AlgoParam {
 
   /**
-   * Train.
+   * Name.
    *
-   * @param conf    the conf
-   * @param db      the db
-   * @param table   the table
-   * @param modelId the model id
-   * @param params  the params
-   * @return the ML model
-   * @throws LensException the lens exception
+   * @return the string
    */
-  MLModel train(LensConf conf, String db, String table, String modelId, String... params) throws LensException;
+  String name();
+
+  /**
+   * Help.
+   *
+   * @return the string
+   */
+  String help();
+
+  /**
+   * Default value.
+   *
+   * @return the string
+   */
+  String defaultValue() default "None";
 }

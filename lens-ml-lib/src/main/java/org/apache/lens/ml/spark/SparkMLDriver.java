@@ -26,9 +26,9 @@ import java.util.List;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.ml.Algorithms;
+import org.apache.lens.ml.MLAlgo;
 import org.apache.lens.ml.MLDriver;
-import org.apache.lens.ml.MLTrainer;
-import org.apache.lens.ml.spark.trainers.*;
+import org.apache.lens.ml.spark.algos.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -90,46 +90,46 @@ public class SparkMLDriver implements MLDriver {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLDriver#isTrainerSupported(java.lang.String)
+   * @see org.apache.lens.ml.MLDriver#isAlgoSupported(java.lang.String)
    */
   @Override
-  public boolean isTrainerSupported(String name) {
+  public boolean isAlgoSupported(String name) {
     return algorithms.isAlgoSupported(name);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.MLDriver#getTrainerInstance(java.lang.String)
+   * @see org.apache.lens.ml.MLDriver#getAlgoInstance(java.lang.String)
    */
   @Override
-  public MLTrainer getTrainerInstance(String name) throws LensException {
+  public MLAlgo getAlgoInstance(String name) throws LensException {
     checkStarted();
 
-    if (!isTrainerSupported(name)) {
+    if (!isAlgoSupported(name)) {
       return null;
     }
 
-    MLTrainer trainer = null;
+    MLAlgo algo = null;
     try {
-      trainer = algorithms.getTrainerForName(name);
-      if (trainer instanceof BaseSparkTrainer) {
-        ((BaseSparkTrainer) trainer).setSparkContext(sparkContext);
+      algo = algorithms.getAlgoForName(name);
+      if (algo instanceof BaseSparkAlgo) {
+        ((BaseSparkAlgo) algo).setSparkContext(sparkContext);
       }
     } catch (LensException exc) {
-      LOG.error("Error creating trainer object", exc);
+      LOG.error("Error creating algo object", exc);
     }
-    return trainer;
+    return algo;
   }
 
   /**
-   * Register trainers.
+   * Register algos.
    */
-  private void registerTrainers() {
-    algorithms.register(NaiveBayesTrainer.class);
-    algorithms.register(SVMTrainer.class);
-    algorithms.register(LogisticRegressionTrainer.class);
-    algorithms.register(DecisionTreeTrainer.class);
+  private void registerAlgos() {
+    algorithms.register(NaiveBayesAlgo.class);
+    algorithms.register(SVMAlgo.class);
+    algorithms.register(LogisticRegressionAlgo.class);
+    algorithms.register(DecisionTreeAlgo.class);
   }
 
   /*
@@ -140,7 +140,7 @@ public class SparkMLDriver implements MLDriver {
   @Override
   public void init(LensConf conf) throws LensException {
     sparkConf = new SparkConf();
-    registerTrainers();
+    registerAlgos();
     for (String key : conf.getProperties().keySet()) {
       if (key.startsWith("lens.ml.sparkdriver.")) {
         sparkConf.set(key.substring("lens.ml.sparkdriver.".length()), conf.getProperties().get(key));
@@ -253,7 +253,7 @@ public class SparkMLDriver implements MLDriver {
   }
 
   @Override
-  public List<String> getTrainerNames() {
+  public List<String> getAlgoNames() {
     return algorithms.getAlgorithmNames();
   }
 

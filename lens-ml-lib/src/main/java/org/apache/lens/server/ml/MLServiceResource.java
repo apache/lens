@@ -129,15 +129,15 @@ public class MLServiceResource {
   }
 
   /**
-   * Get a list of trainers available
+   * Get a list of algos available
    *
    * @return
    */
   @GET
-  @Path("trainers")
-  public StringList getTrainerNames() {
-    List<String> trainers = getMlService().getAlgorithms();
-    StringList result = new StringList(trainers);
+  @Path("algos")
+  public StringList getAlgoNames() {
+    List<String> algos = getMlService().getAlgorithms();
+    StringList result = new StringList(algos);
     return result;
   }
 
@@ -148,7 +148,7 @@ public class MLServiceResource {
    * @return the param description
    */
   @GET
-  @Path("trainers/{algorithm}")
+  @Path("algos/{algorithm}")
   public StringList getParamDescription(@PathParam("algorithm") String algorithm) {
     Map<String, String> paramDesc = getMlService().getAlgoParamDescription(algorithm);
     if (paramDesc == null) {
@@ -196,7 +196,7 @@ public class MLServiceResource {
       throw new NotFoundException("Model not found " + modelID + ", algo=" + algorithm);
     }
 
-    ModelMetadata meta = new ModelMetadata(model.getId(), model.getTable(), model.getTrainerName(), StringUtils.join(
+    ModelMetadata meta = new ModelMetadata(model.getId(), model.getTable(), model.getAlgoName(), StringUtils.join(
       model.getParams(), ' '), model.getCreatedAt().toString(), getMlService().getModelPath(algorithm, modelID),
       model.getLabelColumn(), StringUtils.join(model.getFeatureColumns(), ","));
     return meta;
@@ -243,9 +243,9 @@ public class MLServiceResource {
   public String train(@PathParam("algorithm") String algorithm, MultivaluedMap<String, String> form)
     throws LensException {
 
-    // Check if trainer is valid
-    if (getMlService().getTrainerForName(algorithm) == null) {
-      throw new NotFoundException("Trainer for algo: " + algorithm + " not found");
+    // Check if algo is valid
+    if (getMlService().getAlgoForName(algorithm) == null) {
+      throw new NotFoundException("Algo for algo: " + algorithm + " not found");
     }
 
     if (isBlank(form.getFirst("table"))) {
@@ -264,7 +264,7 @@ public class MLServiceResource {
       throw new BadRequestException("At least one feature is required");
     }
 
-    List<String> trainerArgs = new ArrayList<String>();
+    List<String> algoArgs = new ArrayList<String>();
     Set<Map.Entry<String, List<String>>> paramSet = form.entrySet();
 
     for (Map.Entry<String, List<String>> e : paramSet) {
@@ -274,19 +274,19 @@ public class MLServiceResource {
         continue;
       } else if ("feature".equals(p)) {
         for (String feature : values) {
-          trainerArgs.add("feature");
-          trainerArgs.add(feature);
+          algoArgs.add("feature");
+          algoArgs.add(feature);
         }
       } else if ("label".equals(p)) {
-        trainerArgs.add("label");
-        trainerArgs.add(values.get(0));
+        algoArgs.add("label");
+        algoArgs.add(values.get(0));
       } else {
-        trainerArgs.add(p);
-        trainerArgs.add(values.get(0));
+        algoArgs.add(p);
+        algoArgs.add(values.get(0));
       }
     }
-    LOG.info("Training table " + table + " with algo " + algorithm + " params=" + trainerArgs.toString());
-    String modelId = getMlService().train(table, algorithm, trainerArgs.toArray(new String[]{}));
+    LOG.info("Training table " + table + " with algo " + algorithm + " params=" + algoArgs.toString());
+    String modelId = getMlService().train(table, algorithm, algoArgs.toArray(new String[]{}));
     LOG.info("Done training " + table + " modelid = " + modelId);
     return modelId;
   }

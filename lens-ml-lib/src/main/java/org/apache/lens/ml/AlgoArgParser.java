@@ -28,10 +28,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * The Class TrainerArgParser.
+ * The Class AlgoArgParser.
  */
-public final class TrainerArgParser {
-  private TrainerArgParser() {
+public final class AlgoArgParser {
+  private AlgoArgParser() {
   }
 
   /**
@@ -51,25 +51,25 @@ public final class TrainerArgParser {
   }
 
   /** The Constant LOG. */
-  public static final Log LOG = LogFactory.getLog(TrainerArgParser.class);
+  public static final Log LOG = LogFactory.getLog(AlgoArgParser.class);
 
   /**
-   * Extracts feature names. If the trainer has any parameters associated with @TrainerParam annotation, those are set
+   * Extracts feature names. If the algo has any parameters associated with @AlgoParam annotation, those are set
    * as well.
    *
-   * @param trainer the trainer
+   * @param algo the algo
    * @param args    the args
    * @return List of feature column names.
    */
-  public static List<String> parseArgs(MLTrainer trainer, String[] args) {
+  public static List<String> parseArgs(MLAlgo algo, String[] args) {
     List<String> featureColumns = new ArrayList<String>();
-    Class<? extends MLTrainer> trainerClass = trainer.getClass();
+    Class<? extends MLAlgo> algoClass = algo.getClass();
     // Get param fields
     Map<String, Field> fieldMap = new HashMap<String, Field>();
 
-    for (Field fld : trainerClass.getDeclaredFields()) {
+    for (Field fld : algoClass.getDeclaredFields()) {
       fld.setAccessible(true);
-      TrainerParam paramAnnotation = fld.getAnnotation(TrainerParam.class);
+      AlgoParam paramAnnotation = fld.getAnnotation(AlgoParam.class);
       if (paramAnnotation != null) {
         fieldMap.put(paramAnnotation.name(), fld);
       }
@@ -85,28 +85,28 @@ public final class TrainerArgParser {
         } else if (fieldMap.containsKey(key)) {
           Field f = fieldMap.get(key);
           if (String.class.equals(f.getType())) {
-            f.set(trainer, value);
+            f.set(algo, value);
           } else if (Integer.TYPE.equals(f.getType())) {
-            f.setInt(trainer, Integer.parseInt(value));
+            f.setInt(algo, Integer.parseInt(value));
           } else if (Double.TYPE.equals(f.getType())) {
-            f.setDouble(trainer, Double.parseDouble(value));
+            f.setDouble(algo, Double.parseDouble(value));
           } else if (Long.TYPE.equals(f.getType())) {
-            f.setLong(trainer, Long.parseLong(value));
+            f.setLong(algo, Long.parseLong(value));
           } else {
-            // check if the trainer provides a deserializer for this param
-            String customParserClass = trainer.getConf().getProperties().get("lens.ml.args." + key);
+            // check if the algo provides a deserializer for this param
+            String customParserClass = algo.getConf().getProperties().get("lens.ml.args." + key);
             if (customParserClass != null) {
               Class<? extends CustomArgParser<?>> clz = (Class<? extends CustomArgParser<?>>) Class
                 .forName(customParserClass);
               CustomArgParser<?> parser = clz.newInstance();
-              f.set(trainer, parser.parse(value));
+              f.set(algo, parser.parse(value));
             } else {
               LOG.warn("Ignored param " + key + "=" + value + " as no parser found");
             }
           }
         }
       } catch (Exception exc) {
-        LOG.error("Error while setting param " + key + " to " + value + " for trainer " + trainer);
+        LOG.error("Error while setting param " + key + " to " + value + " for algo " + algo);
       }
     }
     return featureColumns;

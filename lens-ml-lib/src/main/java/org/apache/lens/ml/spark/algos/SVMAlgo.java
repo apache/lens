@@ -16,13 +16,13 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.ml.spark.trainers;
+package org.apache.lens.ml.spark.algos;
 
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.ml.AlgoParam;
 import org.apache.lens.ml.Algorithm;
-import org.apache.lens.ml.TrainerParam;
 import org.apache.lens.ml.spark.models.BaseSparkClassificationModel;
 import org.apache.lens.ml.spark.models.SVMClassificationModel;
 
@@ -32,44 +32,44 @@ import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.rdd.RDD;
 
 /**
- * The Class SVMTrainer.
+ * The Class SVMAlgo.
  */
-@Algorithm(name = "spark_svm", description = "Spark SVML classifier trainer")
-public class SVMTrainer extends BaseSparkTrainer {
+@Algorithm(name = "spark_svm", description = "Spark SVML classifier algo")
+public class SVMAlgo extends BaseSparkAlgo {
 
   /** The min batch fraction. */
-  @TrainerParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
+  @AlgoParam(name = "minBatchFraction", help = "Fraction for batched learning", defaultValue = "1.0d")
   private double minBatchFraction;
 
   /** The reg param. */
-  @TrainerParam(name = "regParam", help = "regularization parameter for gradient descent", defaultValue = "1.0d")
+  @AlgoParam(name = "regParam", help = "regularization parameter for gradient descent", defaultValue = "1.0d")
   private double regParam;
 
   /** The step size. */
-  @TrainerParam(name = "stepSize", help = "Iteration step size", defaultValue = "1.0d")
+  @AlgoParam(name = "stepSize", help = "Iteration step size", defaultValue = "1.0d")
   private double stepSize;
 
   /** The iterations. */
-  @TrainerParam(name = "iterations", help = "Number of iterations", defaultValue = "100")
+  @AlgoParam(name = "iterations", help = "Number of iterations", defaultValue = "100")
   private int iterations;
 
   /**
-   * Instantiates a new SVM trainer.
+   * Instantiates a new SVM algo.
    *
    * @param name        the name
    * @param description the description
    */
-  public SVMTrainer(String name, String description) {
+  public SVMAlgo(String name, String description) {
     super(name, description);
   }
 
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#parseTrainerParams(java.util.Map)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#parseAlgoParams(java.util.Map)
    */
   @Override
-  public void parseTrainerParams(Map<String, String> params) {
+  public void parseAlgoParams(Map<String, String> params) {
     minBatchFraction = getParamValue("minBatchFraction", 1.0);
     regParam = getParamValue("regParam", 1.0);
     stepSize = getParamValue("stepSize", 1.0);
@@ -79,7 +79,7 @@ public class SVMTrainer extends BaseSparkTrainer {
   /*
    * (non-Javadoc)
    *
-   * @see org.apache.lens.ml.spark.trainers.BaseSparkTrainer#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
+   * @see org.apache.lens.ml.spark.algos.BaseSparkAlgo#trainInternal(java.lang.String, org.apache.spark.rdd.RDD)
    */
   @Override
   protected BaseSparkClassificationModel trainInternal(String modelId, RDD<LabeledPoint> trainingRDD)
