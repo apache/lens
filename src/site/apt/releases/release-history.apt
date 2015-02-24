@@ -23,7 +23,7 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
-|2.0.0| First release in Apache| {{{../versions/2.0.0-incubating/index.html} 2.0.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328990} 2.0 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.0-incubating/} Download}} | - | - |
+|2.0.1-beta-incubating| First release in Apache| {{{../versions/2.0.1-beta-incubating/index.html} 2.0.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328990} 2.0 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.0-beta-incubating/} Download}} | - | - |
 *--+--+---+--+--+--+--+
 
 * NOTES
