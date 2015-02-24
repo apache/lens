@@ -30,7 +30,7 @@
   <groupId>org.apache.lens</groupId>
   <artifactId>checkstyle</artifactId>
   <name>Lens Checkstyle Rules</name>
-  <version>2.1.0-incubating-SNAPSHOT</version>
+  <version>2.1.0-beta-incubating-SNAPSHOT</version>
 
   <build>
     <plugins>

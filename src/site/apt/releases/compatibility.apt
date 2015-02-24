@@ -38,10 +38,10 @@ Compatibility in Apache Lens
   For any changes proposed in <<lens-api>>, <<REST api>> and <<configuration options>>, Apache Lens community will do
   atleast one release with backward compatibility making current usage deprecated.
 
-  If there are any incompatibilities with respect to the above in any release, the major version will be called out as
-  incompatible with earlier version and tools/documentation will be provided to upgrade to newer version.
+  If there are any incompatibilities with respect to the above in any release, the major version will be upgraded and
+  called out as incompatible with earlier version. Major version number upgrade is optional for alpha/beta releases. For
+  all incompatible changes in a release, tools/documentation will be provided to upgrade to newer version. See
+  {{{./release-history.html} all releases table}} for all release details, compatibility tools provided.
 
   The api <org.apache.lens.client.*> and <org.apache.lens.server.api.*>  are still evolving, once they are stable, they
   will be added to the above list.
-
-  See {{{./release-history.html} all releases table}} for all release details, compatibility tools provided.
