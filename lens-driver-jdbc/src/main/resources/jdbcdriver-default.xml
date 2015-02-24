@@ -144,4 +144,10 @@
     <description>Fetch size for JDBC result set</description>
   </property>
 
+  <property>
+    <name>lens.driver.jdbc.validate.through.prepare</name>
+    <value>true</value>
+    <description>Flag to enable query syntactic and semantic validation using prepared statement.</description>
+  </property>
+
 </configuration>

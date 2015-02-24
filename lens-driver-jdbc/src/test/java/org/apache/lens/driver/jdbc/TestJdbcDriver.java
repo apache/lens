@@ -274,6 +274,7 @@ public class TestJdbcDriver {
     }
   }
 
+
   /**
    * Test execute.
    *
@@ -324,7 +325,27 @@ public class TestJdbcDriver {
 
     final String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
+    //run prepare
     driver.prepare(pContext);
+    //run validate
+    driver.validate(pContext);
+  }
+
+  /**
+   * Test prepare failing
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testPrepareFailing() throws Exception {
+    String query = "SELECT * FROM prepare_test2"; // Select query against non existing table
+    try {
+      PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
+      driver.prepare(pContext);
+      Assert.fail("Running prepare on a non existing table.");
+    } catch (LensException ex) {
+      Assert.assertEquals(LensUtil.getCauseMessage(ex), "user lacks privilege or object not found: PREPARE_TEST2");
+    }
   }
 
   /**

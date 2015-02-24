@@ -60,4 +60,6 @@ Jdbc driver configuration
 *--+--+---+--+
 |18|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
 *--+--+---+--+
+|19|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+*--+--+---+--+
 The configuration parameters and their default values
