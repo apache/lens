@@ -46,103 +46,103 @@ Lens server configuration
 *--+--+---+--+
 |11|lens.server.consistentState.ws.filter.impl|org.apache.lens.server.ConsistentStateFilter|Implementation class for ConsistentState Filter|
 *--+--+---+--+
-|12|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored. Also used for database based user config loaders|
+|12|lens.server.database.resource.dir|/tmp/lens/resources|Top level directory to store database specific static resources which are added to each database. To add a static resource for a DB, create a directory with the same name as that of the DB under this directory, and place the resources inside the DB directory. Any subdirectories under the DB directory and the resources under them will be ignored|
 *--+--+---+--+
-|13|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
+|13|lens.server.db.driver.name|org.hsqldb.jdbcDriver|Database driver for database where Finished queries have to be stored. Also used for database based user config loaders|
 *--+--+---+--+
-|14|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located. Also used for database based user config loaders|
+|14|lens.server.db.jdbc.pass| |JDBC Password for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|15|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
+|15|lens.server.db.jdbc.url|jdbc:hsqldb:/tmp/lensserver/queries.db|JDBC URL where the database for storing finished queries is located. Also used for database based user config loaders|
 *--+--+---+--+
-|16|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
+|16|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|17|lens.server.drivers|org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
+|17|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+
-|18|lens.server.enable.console.metrics|false|Enable metrics to be reported on console|
+|18|lens.server.drivers|org.apache.lens.driver.hive.HiveDriver|Drivers enabled for this lens server instance|
 *--+--+---+--+
-|19|lens.server.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
+|19|lens.server.enable.console.metrics|false|Enable metrics to be reported on console|
 *--+--+---+--+
-|20|lens.server.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
+|20|lens.server.enable.ganglia.metrics|false|Enable metrics to be reported on ganglia|
 *--+--+---+--+
-|21|lens.server.index.ws.resource.impl|org.apache.lens.server.IndexResource|Implementation class for Index Resource|
+|21|lens.server.event.service.thread.pool.size| |The size of thread pool for notifying events. The no value is specified, it uses the available processors as the number.|
 *--+--+---+--+
-|22|lens.server.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
+|22|lens.server.index.ws.resource.impl|org.apache.lens.server.IndexResource|Implementation class for Index Resource|
 *--+--+---+--+
-|23|lens.server.mail.host|mail-host.company.com|SMTP Host for sending mail|
+|23|lens.server.mail.from.address|blah@company.com|The from field in the notifier mail to the submitter.|
 *--+--+---+--+
-|24|lens.server.mail.port|25|SMTP Port|
+|24|lens.server.mail.host|mail-host.company.com|SMTP Host for sending mail|
 *--+--+---+--+
-|25|lens.server.mail.smtp.connectiontimeout|15000|Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.|
+|25|lens.server.mail.port|25|SMTP Port|
 *--+--+---+--+
-|26|lens.server.mail.smtp.timeout|30000|Socket read timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 30 seconds.|
+|26|lens.server.mail.smtp.connectiontimeout|15000|Socket connection timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 15 seconds.|
 *--+--+---+--+
-|27|lens.server.max.finished.queries|100|Maximum number of finished queries which lens server will keep in memory before purging.|
+|27|lens.server.mail.smtp.timeout|30000|Socket read timeout value in milliseconds. This timeout is implemented by java.net.Socket. Default is 30 seconds.|
 *--+--+---+--+
-|28|lens.server.metastore.service.impl|org.apache.lens.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
+|28|lens.server.max.finished.queries|100|Maximum number of finished queries which lens server will keep in memory before purging.|
 *--+--+---+--+
-|29|lens.server.metastore.ws.resource.impl|org.apache.lens.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
+|29|lens.server.metastore.service.impl|org.apache.lens.server.metastore.CubeMetastoreServiceImpl|Implementation class for metastore service|
 *--+--+---+--+
-|30|lens.server.metrics.ganglia.host| |The ganglia host name|
+|30|lens.server.metastore.ws.resource.impl|org.apache.lens.server.metastore.MetastoreResource|Implementation class for Metastore Resource|
 *--+--+---+--+
-|31|lens.server.metrics.ganglia.port| |The ganglia port|
+|31|lens.server.metrics.ganglia.host| |The ganglia host name|
 *--+--+---+--+
-|32|lens.server.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
+|32|lens.server.metrics.ganglia.port| |The ganglia port|
 *--+--+---+--+
-|33|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.|
+|33|lens.server.metrics.reporting.period|10|The reporting period for metrics. The value is in seconds|
 *--+--+---+--+
-|34|lens.server.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
+|34|lens.server.mode|OPEN|The mode in which server should run. Allowed values are OPEN, READ_ONLY, METASTORE_READONLY, METASTORE_NODROP. OPEN mode will allow all requests. READ_ONLY mode will allow all requests on session resouce and only GET requests on all other resources. METASTORE_READONLY will allow GET on metastore and all other requests in other services. METASTORE_NODROP will not allow DELETE on metastore, will allow all other requests.|
 *--+--+---+--+
-|35|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location|
+|35|lens.server.multipart.ws.feature.impl|org.glassfish.jersey.media.multipart.MultiPartFeature|Implementation class for query scheduler resource|
 *--+--+---+--+
-|36|lens.server.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
+|36|lens.server.persist.location|file:///tmp/lensserver|The directory in which lens server will persist its state when it is going down. The location be on any Hadoop compatible file system. Server will read from the location when it is restarted and recovery is enabled. So, Server should have both read and write permissions to the location|
 *--+--+---+--+
-|37|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger|
+|37|lens.server.query.service.impl|org.apache.lens.server.query.QueryExecutionServiceImpl|Implementation class for query execution service|
 *--+--+---+--+
-|38|lens.server.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
+|38|lens.server.query.state.logger.enabled|true|Disable or enable the query state logger with this config. The location for the logger can be specified in log4j properties for the class org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger|
 *--+--+---+--+
-|39|lens.server.quota.service.impl|org.apache.lens.server.quota.QuotaServiceImpl|Implementation class for quota service|
+|39|lens.server.query.ws.resource.impl|org.apache.lens.server.query.QueryServiceResource|Implementation class for Query Resource|
 *--+--+---+--+
-|40|lens.server.quota.ws.resource.impl|org.apache.lens.server.quota.QuotaResource|Implementation class for Quota Resource|
+|40|lens.server.quota.service.impl|org.apache.lens.server.quota.QuotaServiceImpl|Implementation class for quota service|
 *--+--+---+--+
-|41|lens.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
+|41|lens.server.quota.ws.resource.impl|org.apache.lens.server.quota.QuotaResource|Implementation class for Quota Resource|
 *--+--+---+--+
-|42|lens.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed.|
+|42|lens.server.recover.onrestart|true|If the flag is enabled, all the services will be started from last saved state, if disabled all the services will start afresh|
 *--+--+---+--+
-|43|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
+|43|lens.server.restart.enabled|true|If flag is enabled, all the services will be persisted to persistent location passed.|
 *--+--+---+--+
-|44|lens.server.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
+|44|lens.server.scheduler.service.impl|org.apache.lens.server.scheduler.QuerySchedulerServiceImpl|Implementation class for query scheduler service|
 *--+--+---+--+
-|45|lens.server.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
+|45|lens.server.scheduler.ws.resource.impl|org.apache.lens.server.scheduler.ScheduleResource|Implementation class for query scheduler resource|
 *--+--+---+--+
-|46|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used to lookup the factory implementation class name that would provide an instance of ServiceProvider. Users should instantiate the class to obtain its instance. Example -- Class spfClass = conf.getClass("lens.server.service.provider.factory", null, ServiceProviderFactory.class); ServiceProviderFactory spf = spfClass.newInstance(); ServiceProvider serviceProvider = spf.getServiceProvider(); -- This is not supposed to be overridden by users.|
+|46|lens.server.serverMode.ws.filter.impl|org.apache.lens.server.ServerModeFilter|Implementation class for ServerMode Filter|
 *--+--+---+--+
-|47|lens.server.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when lens-server starts up|
+|47|lens.server.service.provider.factory|org.apache.lens.server.ServiceProviderFactoryImpl|Service provider factory implementation class. This parameter is used to lookup the factory implementation class name that would provide an instance of ServiceProvider. Users should instantiate the class to obtain its instance. Example -- Class spfClass = conf.getClass("lens.server.service.provider.factory", null, ServiceProviderFactory.class); ServiceProviderFactory spf = spfClass.newInstance(); ServiceProvider serviceProvider = spf.getServiceProvider(); -- This is not supposed to be overridden by users.|
 *--+--+---+--+
-|48|lens.server.session.service.impl|org.apache.lens.server.session.HiveSessionService|Implementation class for session service|
+|48|lens.server.servicenames|session,query,metastore,scheduler,quota|These services would be started in the specified order when lens-server starts up|
 *--+--+---+--+
-|49|lens.server.session.timeout.seconds|86400|Lens session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
+|49|lens.server.session.service.impl|org.apache.lens.server.session.HiveSessionService|Implementation class for session service|
 *--+--+---+--+
-|50|lens.server.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
+|50|lens.server.session.timeout.seconds|86400|Lens session timeout in seconds.If there is no activity on the session for this period then the session will be closed.Default timeout is one day.|
 *--+--+---+--+
-|51|lens.server.snapshot.interval|300000|Snapshot interval time in miliseconds for saving lens server state.|
+|51|lens.server.session.ws.resource.impl|org.apache.lens.server.session.SessionResource|Implementation class for Session Resource|
 *--+--+---+--+
-|52|lens.server.state.persist.out.stream.buffer.size|1048576|Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.|
+|52|lens.server.snapshot.interval|300000|Snapshot interval time in miliseconds for saving lens server state.|
 *--+--+---+--+
-|53|lens.server.statistics.db|lensstats|Database to which statistics tables are created and partitions are added.|
+|53|lens.server.state.persist.out.stream.buffer.size|1048576|Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.|
 *--+--+---+--+
-|54|lens.server.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
+|54|lens.server.statistics.db|lensstats|Database to which statistics tables are created and partitions are added.|
 *--+--+---+--+
-|55|lens.server.statistics.store.class|org.apache.lens.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Lens Statistics.|
+|55|lens.server.statistics.log.rollover.interval|3600000|Default rate which log statistics store scans for rollups in milliseconds.|
 *--+--+---+--+
-|56|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
+|56|lens.server.statistics.store.class|org.apache.lens.server.stats.store.log.LogStatisticsStore|Default implementation of class used to persist Lens Statistics.|
 *--+--+---+--+
-|57|lens.server.ui.base.uri|http://0.0.0.0:19999/|The base url for the Lens UI Server|
+|57|lens.server.statistics.warehouse.dir|file:///tmp/lens/statistics/warehouse|Default top level location where stats are moved by the log statistics store.|
 *--+--+---+--+
-|58|lens.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
+|58|lens.server.ui.base.uri|http://0.0.0.0:19999/|The base url for the Lens UI Server|
 *--+--+---+--+
-|59|lens.server.ui.static.dir|webapp/lens-server/static|The base directory to server UI static files from|
+|59|lens.server.ui.enable.caching|true|Set this to false to disable static file caching in the UI server|
 *--+--+---+--+
-|60|lens.server.ui.enable|true|Bringing up the ui server is optional. By default it brings up UI server|
+|60|lens.server.ui.static.dir|webapp/lens-server/static|The base directory to server UI static files from|
 *--+--+---+--+
 |61|lens.server.user.resolver.custom.class|full.package.name.Classname|Required for CUSTOM user resolver. In case the provided implementations are not sufficient for user config resolver, a custom classname can be provided. Class should extend org.apache.lens.server.user.UserConfigLoader|
 *--+--+---+--+

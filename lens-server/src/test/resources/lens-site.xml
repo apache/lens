@@ -149,4 +149,9 @@
     <description>Logging filter</description>
   </property>
 
+  <property>
+    <name>lens.server.database.resource.dir</name>
+    <value>target/resources</value>
+  </property>
+
 </configuration>

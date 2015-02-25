@@ -29,7 +29,9 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.util.UtilityMethods;
 
 import org.apache.commons.logging.Log;
@@ -41,6 +43,11 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.SessionHandle;
 import org.apache.hive.service.cli.session.HiveSessionImpl;
 import org.apache.hive.service.cli.thrift.TProtocolVersion;
+
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * The Class LensSessionImpl.
@@ -61,6 +68,17 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   /** The conf. */
   private Configuration conf = createDefaultConf();
+
+
+  /**
+   * Cache of database specific class loaders for this session
+   * This is updated lazily on add/remove resource calls and switch database calls.
+   */
+  private final Map<String, ClassLoader> sessionDbClassLoaders = new HashMap<String, ClassLoader>();
+
+  @Setter(AccessLevel.PROTECTED)
+  private DatabaseResourceService dbResService;
+
 
   /**
    * Inits the persist info.
@@ -162,6 +180,8 @@ public class LensSessionImpl extends HiveSessionImpl {
   public synchronized void acquire() {
     try {
       super.acquire();
+      // Update thread's class loader with current DBs class loader
+      Thread.currentThread().setContextClassLoader(getClassLoader(getCurrentDatabase()));
     } catch (HiveSQLException e) {
       throw new NotFoundException("Could not acquire the session", e);
     }
@@ -206,6 +226,7 @@ public class LensSessionImpl extends HiveSessionImpl {
         itr.remove();
       }
     }
+    updateSessionDbClassLoader(getSessionState().getCurrentDatabase());
   }
 
   /**
@@ -216,6 +237,10 @@ public class LensSessionImpl extends HiveSessionImpl {
    */
   public void addResource(String type, String path) {
     persistInfo.getResources().add(new ResourceEntry(type, path));
+    synchronized (sessionDbClassLoaders) {
+      // Update all DB class loaders
+      updateSessionDbClassLoader(getSessionState().getCurrentDatabase());
+    }
   }
 
   protected List<ResourceEntry> getResources() {
@@ -229,6 +254,57 @@ public class LensSessionImpl extends HiveSessionImpl {
   public void setCurrentDatabase(String currentDatabase) {
     persistInfo.setDatabase(currentDatabase);
     getSessionState().setCurrentDatabase(currentDatabase);
+    // Merge if resources are added
+    synchronized (sessionDbClassLoaders) {
+      updateSessionDbClassLoader(currentDatabase);
+    }
+  }
+
+  private void updateSessionDbClassLoader(String database) {
+    ClassLoader updatedClassLoader = getDbResService().loadDBJars(database, persistInfo.getResources());
+    if (updatedClassLoader != null) {
+      sessionDbClassLoaders.put(database, updatedClassLoader);
+    }
+  }
+
+  private boolean areResourcesAdded() {
+    return persistInfo.getResources() != null && !persistInfo.getResources().isEmpty();
+  }
+
+  private DatabaseResourceService getDbResService() {
+    if (dbResService == null) {
+      HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
+      return sessionService.getDatabaseResourceService();
+    } else {
+      return dbResService;
+    }
+  }
+
+  protected ClassLoader getClassLoader(String database) {
+    synchronized (sessionDbClassLoaders) {
+      if (sessionDbClassLoaders.containsKey(database)) {
+        return sessionDbClassLoaders.get(database);
+      } else {
+        try {
+          ClassLoader classLoader = getDbResService().getClassLoader(database);
+          if (classLoader == null) {
+            LOG.warn("DB resource service gave null class loader for " + database);
+          } else {
+            if (areResourcesAdded()) {
+              // We need to update DB specific classloader with added resources
+              updateSessionDbClassLoader(database);
+              classLoader = sessionDbClassLoaders.get(database);
+            }
+          }
+
+          return classLoader == null ? getSessionState().getConf().getClassLoader() : classLoader;
+        } catch (LensException e) {
+          LOG.error("Error getting classloader for database " + database + " for session "
+            + getSessionHandle().getSessionId() + " defaulting to session state class loader", e);
+          return getSessionState().getConf().getClassLoader();
+        }
+      }
+    }
   }
 
   public String getCurrentDatabase() {
@@ -266,17 +342,28 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   /**
+   * Return resources which are added statically to the current database
+   * @return
+   */
+  public Collection<ResourceEntry> getCurrentDBResources() {
+    return getDbResService().getResourcesForDatabase(getCurrentDatabase());
+  }
+
+  /**
    * The Class ResourceEntry.
    */
   public static class ResourceEntry {
 
     /** The type. */
+    @Getter
     final String type;
 
     /** The location. */
+    @Getter
     final String location;
     // For tests
     /** The restore count. */
+    @Getter
     transient int restoreCount;
 
     /**
@@ -292,24 +379,11 @@ public class LensSessionImpl extends HiveSessionImpl {
       this.type = type;
       this.location = location;
     }
-
-    public String getLocation() {
-      return location;
-    }
-
-    public String getType() {
-      return type;
-    }
-
     /**
      * Restored resource.
      */
     public void restoredResource() {
       restoreCount++;
-    }
-
-    public int getRestoreCount() {
-      return restoreCount;
     }
 
     /*
@@ -321,11 +395,26 @@ public class LensSessionImpl extends HiveSessionImpl {
     public String toString() {
       return "type=" + type + " path=" + location;
     }
+
+    @Override
+    public int hashCode() {
+      return type.hashCode() + 31 * location.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj instanceof ResourceEntry) {
+        ResourceEntry other = (ResourceEntry) obj;
+        return type.equals(other.type) && location.equals(other.location);
+      }
+      return false;
+    }
   }
 
   /**
    * The Class LensSessionPersistInfo.
    */
+  @Data
   public static class LensSessionPersistInfo implements Externalizable {
 
     /** The resources. */
@@ -348,62 +437,6 @@ public class LensSessionImpl extends HiveSessionImpl {
 
     /** The last access time. */
     private long lastAccessTime;
-
-    public String getUsername() {
-      return username;
-    }
-
-    public void setUsername(String username) {
-      this.username = username;
-    }
-
-    public List<ResourceEntry> getResources() {
-      return resources;
-    }
-
-    public void setResources(List<ResourceEntry> resources) {
-      this.resources = resources;
-    }
-
-    public Map<String, String> getConfig() {
-      return config;
-    }
-
-    public void setConfig(Map<String, String> config) {
-      this.config = config;
-    }
-
-    public String getDatabase() {
-      return database;
-    }
-
-    public void setDatabase(String database) {
-      this.database = database;
-    }
-
-    public LensSessionHandle getSessionHandle() {
-      return sessionHandle;
-    }
-
-    public void setSessionHandle(LensSessionHandle sessionHandle) {
-      this.sessionHandle = sessionHandle;
-    }
-
-    public String getPassword() {
-      return password;
-    }
-
-    public void setPassword(String password) {
-      this.password = password;
-    }
-
-    public void setLastAccessTime(long accessTime) {
-      lastAccessTime = accessTime;
-    }
-
-    public long getLastAccessTime() {
-      return lastAccessTime;
-    }
 
     public void setSessionConf(Map<String, String> sessionConf) {
       UtilityMethods.mergeMaps(config, sessionConf, true);

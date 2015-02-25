@@ -590,4 +590,13 @@
     <description>Output Stream Buffer Size used in writing lens server state to file system. Size is in bytes.</description>
   </property>
 
+  <property>
+    <name>lens.server.database.resource.dir</name>
+    <value>/tmp/lens/resources</value>
+    <description>Top level directory to store database specific static resources which are added to each database.
+    To add a static resource for a DB, create a directory with the same name as that of the DB under this directory, and
+    place the resources inside the DB directory. Any subdirectories under the DB directory and the resources under them
+    will be ignored</description>
+  </property>
+
 </configuration>

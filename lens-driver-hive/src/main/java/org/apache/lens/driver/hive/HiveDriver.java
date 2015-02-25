@@ -125,6 +125,8 @@ public class HiveDriver implements LensDriver {
   // Store mapping of Lens session ID to Hive session identifier
   /** The lens to hive session. */
   private Map<String, SessionHandle> lensToHiveSession;
+  /** Keep track of resources added to the Hive session */
+  private Map<SessionHandle, Boolean> resourcesAddedForSession;
 
   /** The driver listeners. */
   private List<LensEventListener<DriverEvent>> driverListeners;
@@ -132,6 +134,26 @@ public class HiveDriver implements LensDriver {
 
   // package-local. Test case can change.
   boolean whetherCalculatePriority;
+
+  /**
+   * Return true if resources have been added to this Hive session
+   * @param sessionHandle
+   * @return
+   */
+  public boolean areRsourcesAddedForSession(String sessionHandle) {
+    SessionHandle hiveSession = lensToHiveSession.get(sessionHandle);
+    return hiveSession != null
+      && resourcesAddedForSession.containsKey(hiveSession)
+      && resourcesAddedForSession.get(hiveSession);
+  }
+
+  /**
+   * Tell Hive driver that resources have been added for this session
+   * @param sessionHandle
+   */
+  public void setResourcesAddedForSession(String sessionHandle) {
+    resourcesAddedForSession.put(lensToHiveSession.get(sessionHandle), Boolean.TRUE);
+  }
 
   /**
    * The Class ConnectionExpiryRunnable.
@@ -272,6 +294,7 @@ public class HiveDriver implements LensDriver {
     this.sessionLock = new ReentrantLock();
     this.connectionLock = new ReentrantLock();
     lensToHiveSession = new HashMap<String, SessionHandle>();
+    resourcesAddedForSession = new HashMap<SessionHandle, Boolean>();
     connectionExpiryThread.setDaemon(true);
     connectionExpiryThread.setName("HiveDriver-ConnectionExpiryThread");
     connectionExpiryThread.start();
@@ -1143,6 +1166,7 @@ public class HiveDriver implements LensDriver {
           LOG.error("Error closing hive session " + hiveSession.getHandleIdentifier() + " for lens session "
             + sessionHandle.getPublicId(), e);
         }
+        resourcesAddedForSession.remove(hiveSession);
       }
     } finally {
       sessionLock.unlock();

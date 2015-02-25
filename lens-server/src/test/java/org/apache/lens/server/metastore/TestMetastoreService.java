@@ -186,13 +186,16 @@ public class TestMetastoreService extends LensJerseyTest {
       .queryParam("sessionid", lensSessionId).request(mediaType)
       .get(StringList.class);
     System.out.println("ALL DBs:" + allDbs.getElements());
-    assertEquals(allDbs.getElements().size(), 4);
+
+    for (String db : dbsToCreate) {
+      Assert.assertTrue(allDbs.getElements().contains(db));
+    }
 
     List<String> expected = new ArrayList<String>(Arrays.asList(dbsToCreate));
     // Default is always there
     expected.add("default");
 
-    assertEquals(allDbs.getElements(), expected);
+    assertTrue(allDbs.getElements().containsAll(expected));
 
     for (String name : dbsToCreate) {
       dbTarget.path(name).queryParam("cascade", "true").queryParam("sessionid", lensSessionId).request().delete();

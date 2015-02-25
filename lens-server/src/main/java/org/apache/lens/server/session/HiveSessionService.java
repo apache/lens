@@ -44,12 +44,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
+
+import lombok.AccessLevel;
+import lombok.Getter;
 
 /**
  * The Class HiveSessionService.
@@ -68,6 +72,10 @@ public class HiveSessionService extends LensService implements SessionService {
 
   /** The session expiry runnable. */
   private Runnable sessionExpiryRunnable = new SessionExpiryRunnable();
+
+  /** Service to manage database specific resources */
+  @Getter(AccessLevel.PROTECTED)
+  private DatabaseResourceService databaseResourceService;
 
   /**
    * Instantiates a new hive session service.
@@ -292,6 +300,18 @@ public class HiveSessionService extends LensService implements SessionService {
     } finally {
       release(sessionid);
     }
+  }
+
+  /*
+   * (non-Javadoc)
+   *
+   * @see org.apache.hive.service.CompositeService#init()
+   */
+  @Override
+  public synchronized void init(HiveConf hiveConf) {
+    this.databaseResourceService = new DatabaseResourceService(DatabaseResourceService.NAME);
+    addService(this.databaseResourceService);
+    super.init(hiveConf);
   }
 
   /*

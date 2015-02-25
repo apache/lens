@@ -101,6 +101,9 @@ public abstract class LensJerseyTest extends JerseyTest {
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_ASYNC_EXEC_THREADS, 5);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_CONNECTION_RETRY_LIMIT, 3);
     hiveConf.setIntVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_RETRY_LIMIT, 3);
+
+    LensTestUtil.createTestDatabaseResources(new String[]{LensTestUtil.DB_WITH_JARS}, hiveConf);
+
     LensServices.get().init(LensServerConf.get());
     LensServices.get().start();
 

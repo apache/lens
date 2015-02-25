@@ -16,35 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server;
-
-import org.apache.hadoop.hive.conf.HiveConf;
-
-/**
- * The Class LensServerConf.
- * SUSPEND CHECKSTYLE CHECK HideUtilityClassConstructorCheck
- */
-public final class LensServerConf {
-  private LensServerConf() {
-
-  }
-  private static final class ConfHolder {
-    public static final HiveConf CONF = new HiveConf();
-    static {
-      CONF.addResource("lensserver-default.xml");
-      CONF.addResource("lens-site.xml");
-    }
-  }
-
-  /**
-   *
-   * @return the hive conf
-   */
-  public static HiveConf get() {
-    return ConfHolder.CONF;
-  }
-
-  public static HiveConf create() {
-    return new HiveConf(ConfHolder.CONF);
-  }
+/** Test class which is added to test2.jar used in TestDatabaseResourceService */
+public class ClassLoaderTestClass2 {
+  public static final boolean TEST_FIELD = true;
 }
+

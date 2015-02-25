@@ -783,4 +783,13 @@ public final class LensConfConstants {
    * Default Output Stream Buffer Size used in writing lens server state to file system: 1MB
    */
   public static final int DEFAULT_STATE_PERSIST_OUT_STREAM_BUFF_SIZE = 1048576;
+
+  /**
+   * Key for top level dir of database specific resources
+   */
+  public static final String DATABASE_RESOURCE_DIR = SERVER_PFX + "database.resource.dir";
+  /**
+   * Default value of top level dir for database specific resources
+   */
+  public static final String DEFAULT_DATABASE_RESOURCE_DIR = "/tmp/lens/resources";
 }

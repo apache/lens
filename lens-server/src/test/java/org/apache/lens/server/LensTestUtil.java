@@ -20,6 +20,8 @@ package org.apache.lens.server;
 
 import static org.testng.Assert.assertTrue;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +38,10 @@ import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.api.LensConfConstants;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
+import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -51,6 +56,9 @@ import org.testng.Assert;
  * The Class LensTestUtil.
  */
 public final class LensTestUtil {
+
+  public static final String DB_WITH_JARS = "test_db_static_jars";
+
   private LensTestUtil() {
 
   }
@@ -216,4 +224,30 @@ public final class LensTestUtil {
     Hive.get().dropTable(tableName);
   }
 
+  public static void createTestDatabaseResources(String[] testDatabases, HiveConf conf) throws Exception {
+    File resDir = new File("target/resources");
+    if (!resDir.exists()) {
+      resDir.mkdir();
+    }
+
+    // Create databases and resource dirs
+    Hive hive = Hive.get(conf);
+    File testJarFile = new File("testdata/test.jar");
+
+    for (String db : testDatabases) {
+      Database database = new Database();
+      database.setName(db);
+      hive.createDatabase(database, true);
+      File dbDir = new File(resDir, db);
+      if (!dbDir.exists()) {
+        dbDir.mkdir();
+      }
+      // Add a jar in the directory
+      try {
+        FileUtils.copyFile(testJarFile, new File(dbDir, db + ".jar"));
+      } catch (FileNotFoundException fnf) {
+        fnf.printStackTrace();
+      }
+    }
+  }
 }

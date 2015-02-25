@@ -47,6 +47,9 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.session.HiveSessionService;
+import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1373,6 +1376,79 @@ public class TestQueryService extends LensJerseyTest {
       + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'"));
     Assert.assertTrue(result.getErrorMsg().contains("Driver :org.apache.lens.driver.jdbc.JDBCDriver Cause :user"
       + " lacks privilege or object not found: NONEXIST"));
+  }
+
+
+  /**
+   * Check if DB static jars get passed to Hive driver
+   * @throws Exception
+   */
+  @Test
+  public void testHiveDriverGetsDBJars() throws Exception {
+    // Set DB to a db with static jars
+    HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
+
+    // Open session with a DB which has static jars
+    LensSessionHandle sessionHandle =
+      sessionService.openSession("foo@localhost", "bar", LensTestUtil.DB_WITH_JARS, new HashMap<String, String>());
+
+    LOG.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
+
+    final String tableInDBWithJars = "testHiveDriverGetsDBJars";
+    LensTestUtil.createTable(tableInDBWithJars, target(), sessionHandle);
+    LensTestUtil.loadData(tableInDBWithJars, TEST_DATA_FILE, target(), sessionHandle);
+
+    try {
+      // Run a test query
+      final WebTarget target = target().path("queryapi/queries");
+
+      final FormDataMultiPart mp = new FormDataMultiPart();
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), sessionHandle,
+        MediaType.APPLICATION_XML_TYPE));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
+        + tableInDBWithJars));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+        MediaType.APPLICATION_XML_TYPE));
+      final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        QueryHandle.class);
+
+      LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request()
+        .get(LensQuery.class);
+
+      LOG.info("@@@ Submitted query: " + ctx.getQueryHandle());
+
+      // wait till the query finishes
+      QueryStatus stat = ctx.getStatus();
+      while (!stat.isFinished()) {
+        ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request().get(LensQuery.class);
+        stat = ctx.getStatus();
+        Thread.sleep(1000);
+      }
+      // TODO Above query fails because we have excluded protobuf dependency in main lens pom.xml.
+      // Since result of query is not related to verifying if jars are added or not, we are not adding an assert
+      // on the query status. Once the exclusion issue is resolved we can re-enable assert on query status
+
+      LOG.info("@@@ Final query status " + stat.getStatus());
+
+      // Get the session
+      LensSessionImpl session = sessionService.getSession(sessionHandle);
+
+      boolean addedToHiveDriver = false;
+
+      for (LensDriver driver : queryService.getDrivers()) {
+        if (driver instanceof HiveDriver) {
+          addedToHiveDriver = ((HiveDriver) driver).areRsourcesAddedForSession(sessionHandle.getPublicId().toString());
+        }
+      }
+
+      // Hive driver should have got the resources
+      Assert.assertTrue(addedToHiveDriver, "Hive driver should say resources added for session");
+
+    } finally {
+      LensTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
+      sessionService.closeSession(sessionHandle);
+    }
   }
 
 }
