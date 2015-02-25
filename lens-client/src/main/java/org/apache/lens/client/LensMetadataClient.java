@@ -817,7 +817,7 @@ public class LensMetadataClient {
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
-      .path("storages").path(storage).path("partitions")
+      .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .post(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
@@ -828,19 +828,39 @@ public class LensMetadataClient {
     String partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("dimtables").path(dimTblName)
-      .path("storages").path(storage).path("partitions")
+      .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .post(Entity.xml(getContent(partition)), APIResult.class);
     return result;
   }
+  public APIResult addPartitionsToDimensionTable(String dimTblName, String storage,
+    XPartitionList partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimtables").path(dimTblName)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
+    return result;
+  }
 
+  public APIResult addPartitionsToDimensionTable(String dimTblName, String storage,
+    String partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("dimtables").path(dimTblName)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(getContent(partitions)), APIResult.class);
+    return result;
+  }
 
   public APIResult addPartitionToFactTable(String fact, String storage,
     XPartition partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("facts").path(fact)
-      .path("storages").path(storage).path("partitions")
+      .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .post(Entity.xml(objFact.createXPartition(partition)), APIResult.class);
@@ -851,11 +871,31 @@ public class LensMetadataClient {
     String partition) {
     WebTarget target = getMetastoreWebTarget();
     APIResult result = target.path("facts").path(fact)
-      .path("storages").path(storage).path("partitions")
+      .path("storages").path(storage).path("partition")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .post(Entity.xml(getContent(partition)), APIResult.class);
     return result;
   }
+  public APIResult addPartitionsToFactTable(String fact, String storage,
+    XPartitionList partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(objFact.createXPartitionList(partitions)), APIResult.class);
+    return result;
+  }
 
+  public APIResult addPartitionsToFactTable(String fact, String storage,
+    String partitions) {
+    WebTarget target = getMetastoreWebTarget();
+    APIResult result = target.path("facts").path(fact)
+      .path("storages").path(storage).path("partitions")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .post(Entity.xml(getContent(partitions)), APIResult.class);
+    return result;
+  }
 }

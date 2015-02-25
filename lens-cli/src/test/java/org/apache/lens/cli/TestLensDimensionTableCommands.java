@@ -55,6 +55,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   /**
    * Test dim table commands.
+   *
    * @throws IOException
    * @throws URISyntaxException
    */
@@ -70,12 +71,9 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
   /**
    * Adds the dim1 table.
    *
-   * @param tableName
-   *          the table name
-   * @param specName
-   *          the spec name
-   * @param storageName
-   *          the storage name
+   * @param tableName   the table name
+   * @param specName    the spec name
+   * @param storageName the storage name
    * @throws IOException
    */
   public static synchronized void addDim1Table(String tableName, String specName, String storageName)
@@ -99,6 +97,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   /**
    * Update dim1 table.
+   *
    * @throws IOException
    */
   private static void updateDim1Table() throws IOException {
@@ -116,7 +115,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     String xmlContent = sb.toString();
 
     xmlContent = xmlContent.replace("<property name=\"dim2.prop\" value=\"d2\" />",
-        "<property name=\"dim2.prop\" value=\"d1\"/>" + "\n<property name=\"dim2.prop1\" value=\"d2\"/>\n");
+      "<property name=\"dim2.prop\" value=\"d1\"/>" + "\n<property name=\"dim2.prop1\" value=\"d2\"/>\n");
 
     File newFile = new File("/tmp/local-dim1.xml");
     try {
@@ -144,6 +143,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   /**
    * Test dim storage actions.
+   *
    * @throws URISyntaxException
    */
   private static void testDimStorageActions() throws URISyntaxException {
@@ -164,6 +164,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   /**
    * Adds the local storage to dim.
+   *
    * @throws URISyntaxException
    */
   private static void addLocalStorageToDim() throws URISyntaxException {
@@ -187,34 +188,31 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     String result;
     result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
-    addPartitionToStorage("dim_table2", DIM_LOCAL, "dim1-local-part.xml");
-    result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
+    try {
+      command.addPartitionToFact("dim_table2" + " " + DIM_LOCAL + " " + new File(
+        TestLensFactCommands.class.getClassLoader().getResource("dim1-local-part.xml").toURI()).getAbsolutePath());
+    } catch (Throwable t) {
+      t.printStackTrace();
+      Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
+    }
+    verifyAndDeletePartition();
+    try {
+      command.addPartitionsToFact("dim_table2" + " " + DIM_LOCAL + " " + new File(
+        TestLensFactCommands.class.getClassLoader().getResource("dim1-local-parts.xml").toURI()).getAbsolutePath());
+    } catch (Throwable t) {
+      t.printStackTrace();
+      Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
+    }
+    verifyAndDeletePartition();
+  }
+
+  private static void verifyAndDeletePartition() {
+    String result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     String partString = "DAILY";
     Assert.assertTrue(result.contains(partString));
     command.dropAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
-  }
-
-  /**
-   * Adds the partition to storage.
-   *
-   * @param tableName
-   *          the table name
-   * @param storageName
-   *          the storage name
-   * @param localPartSpec
-   *          the local part spec
-   */
-  public static void addPartitionToStorage(String tableName, String storageName, String localPartSpec) {
-    LensDimensionTableCommands command = getCommand();
-    URL resource = TestLensFactCommands.class.getClassLoader().getResource(localPartSpec);
-    try {
-      command.addPartitionToFact(tableName + " " + storageName + " " + new File(resource.toURI()).getAbsolutePath());
-    } catch (Throwable t) {
-      t.printStackTrace();
-      Assert.fail("Unable to locate the storage part file for adding new storage to dim table dim_table2");
-    }
   }
 
   /**

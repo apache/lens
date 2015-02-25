@@ -715,9 +715,22 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       getClient(sessionid).addPartition(
         JAXBUtils.storagePartSpecFromXPartition(partition),
         storageName);
-      LOG.info("Added partition for fact " + fact + " on storage:" + storageName
-        + " dates: " + partition.getTimePartitionSpec() + " spec:"
-        + partition.getNonTimePartitionSpec() + " update period: " + partition.getUpdatePeriod());
+    } catch (HiveException exc) {
+      throw new LensException(exc);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void addPartitionsToFactStorage(LensSessionHandle sessionid, String fact, String storageName,
+    XPartitionList partitions) throws LensException {
+    try {
+      acquire(sessionid);
+      checkFactStorage(sessionid, fact, storageName);
+      getClient(sessionid).addPartitions(
+        JAXBUtils.storagePartSpecListFromXPartitionList(partitions),
+        storageName);
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {
@@ -775,6 +788,22 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
         JAXBUtils.storagePartSpecFromXPartition(partition),
         storageName);
       LOG.info("Added partition for dimension: " + dimTblName + " storage: " + storageName);
+    } catch (HiveException exc) {
+      throw new LensException(exc);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
+  public void addPartitionsToDimStorage(LensSessionHandle sessionid,
+    String dimTblName, String storageName, XPartitionList partitions) throws LensException {
+    try {
+      acquire(sessionid);
+      checkDimensionStorage(sessionid, dimTblName, storageName);
+      getClient(sessionid).addPartitions(
+        JAXBUtils.storagePartSpecListFromXPartitionList(partitions),
+        storageName);
     } catch (HiveException exc) {
       throw new LensException(exc);
     } finally {

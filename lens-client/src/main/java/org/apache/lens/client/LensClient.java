@@ -437,9 +437,15 @@ public class LensClient {
   public APIResult addPartitionToFact(String table, String storage, String partSpec) {
     return mc.addPartitionToFactTable(table, storage, partSpec);
   }
+  public APIResult addPartitionsToFact(String table, String storage, String partsSpec) {
+    return mc.addPartitionsToFactTable(table, storage, partsSpec);
+  }
 
   public APIResult addPartitionToDim(String table, String storage, String partSpec) {
     return mc.addPartitionToDimensionTable(table, storage, partSpec);
+  }
+  public APIResult addPartitionsToDim(String table, String storage, String partsSpec) {
+    return mc.addPartitionsToDimensionTable(table, storage, partsSpec);
   }
 
   public QueryPrepareHandle prepare(String sql, String queryName) {

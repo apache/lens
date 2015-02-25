@@ -1081,24 +1081,24 @@ public class TestCubeMetastoreClient {
     timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     timeParts.put(itPart.getName(), now);
     timeParts.put(etPart.getName(), now);
-    StoragePartitionDesc partSpec = new StoragePartitionDesc(cubeFact.getName(), timeParts, null, UpdatePeriod.HOURLY);
-    client.addPartition(partSpec, c1);
-    Assert.assertEquals(client.getAllParts(storageTableName).size(), 4);
+    final StoragePartitionDesc partSpec1 = new StoragePartitionDesc(cubeFact.getName(), timeParts, null,
+      UpdatePeriod.HOURLY);
 
     Map<String, Date> timeParts2 = new HashMap<String, Date>();
     timeParts2.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     timeParts2.put(etPart.getName(), nowPlus1);
     Map<String, String> nonTimeSpec = new HashMap<String, String>();
     nonTimeSpec.put(itPart.getName(), "default");
-    partSpec = new StoragePartitionDesc(cubeFact.getName(), timeParts2, nonTimeSpec, UpdatePeriod.HOURLY);
-    client.addPartition(partSpec, c1);
-    Assert.assertEquals(client.getAllParts(storageTableName).size(), 5);
+    final StoragePartitionDesc partSpec2 = new StoragePartitionDesc(cubeFact.getName(), timeParts2, nonTimeSpec,
+      UpdatePeriod.HOURLY);
 
     Map<String, Date> timeParts3 = new HashMap<String, Date>();
     timeParts3.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     timeParts3.put(etPart.getName(), now);
-    partSpec = new StoragePartitionDesc(cubeFact.getName(), timeParts3, nonTimeSpec, UpdatePeriod.HOURLY);
-    client.addPartition(partSpec, c1);
+    final StoragePartitionDesc partSpec3 = new StoragePartitionDesc(cubeFact.getName(), timeParts3, nonTimeSpec,
+      UpdatePeriod.HOURLY);
+
+    client.addPartitions(Arrays.asList(partSpec1, partSpec2, partSpec3), c1);
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 6);
 
     Assert.assertTrue(client.latestPartitionExists(cubeFact.getName(), c1,
@@ -1134,16 +1134,18 @@ public class TestCubeMetastoreClient {
     timeParts4.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     timeParts4.put(itPart.getName(), nowPlus1);
     timeParts4.put(etPart.getName(), nowMinus1);
-    partSpec = new StoragePartitionDesc(cubeFact.getName(), timeParts4, null, UpdatePeriod.HOURLY);
-    client.addPartition(partSpec, c1);
-    Assert.assertEquals(client.getAllParts(storageTableName).size(), 7);
+    final StoragePartitionDesc partSpec4 = new StoragePartitionDesc(cubeFact.getName(), timeParts4, null,
+      UpdatePeriod.HOURLY);
+
 
     Map<String, Date> timeParts5 = new HashMap<String, Date>();
     timeParts5.put(TestCubeMetastoreClient.getDatePartitionKey(), nowPlus1);
     timeParts5.put(itPart.getName(), nowMinus1);
     timeParts5.put(etPart.getName(), nowMinus2);
-    partSpec = new StoragePartitionDesc(cubeFact.getName(), timeParts5, null, UpdatePeriod.HOURLY);
-    client.addPartition(partSpec, c1);
+    final StoragePartitionDesc partSpec5 = new StoragePartitionDesc(cubeFact.getName(), timeParts5, null,
+      UpdatePeriod.HOURLY);
+
+    client.addPartitions(Arrays.asList(partSpec4, partSpec5), c1);
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 8);
 
     Assert.assertTrue(client.latestPartitionExists(cubeFact.getName(), c1,

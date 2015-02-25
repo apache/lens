@@ -326,7 +326,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
   }
 
   /**
-   * Adds the partition to fact.
+   * Adds the partition to dim table.
    *
    * @param specPair the spec pair
    * @return the string
@@ -356,4 +356,34 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     }
   }
 
+  /**
+   * Adds  partitions to dim table.
+   *
+   * @param specPair the spec pair
+   * @return the string
+   */
+  @CliCommand(value = "dimtable add partitions", help = "add a partition to dim table")
+  public String addPartitionsToFact(
+    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
+      + " <path to partitions specification>") String specPair) {
+    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
+    String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
+    if (pair.length != 3) {
+      return "Syntax error, please try in following "
+        + "format. dimtable add partition <table> <storage> <partition spec>";
+    }
+
+    File f = new File(pair[2]);
+    if (!f.exists()) {
+      return "Partition spec does not exist";
+    }
+
+    result = getClient().addPartitionsToDim(pair[0], pair[1], pair[2]);
+    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
+      return "Successfully added partition to " + pair[0];
+    } else {
+      return "failure in  addition of partition to " + pair[0];
+    }
+  }
 }

@@ -764,6 +764,15 @@ public final class JAXBUtils {
     return partDesc;
   }
 
+  public static List<StoragePartitionDesc> storagePartSpecListFromXPartitionList(
+    final XPartitionList xpartList) {
+    ArrayList<StoragePartitionDesc> ret = new ArrayList<StoragePartitionDesc>();
+    for (XPartition xpart : xpartList.getPartition()) {
+      ret.add(storagePartSpecFromXPartition(xpart));
+    }
+    return ret;
+  }
+
   public static Dimension dimensionFromXDimension(XDimension dimension) throws ParseException {
     Set<CubeDimAttribute> dims = new LinkedHashSet<CubeDimAttribute>();
     for (XDimAttribute xd : dimension.getAttributes().getDimAttribute()) {

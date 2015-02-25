@@ -874,7 +874,7 @@
   <xs:complexType name="x_partition_list">
     <xs:annotation>
       <xs:documentation>
-        LENS uses this type to return the list of all partitions. Should not be used by end-user directly.
+        Compact data structure for storing List of partitions.
       </xs:documentation>
     </xs:annotation>
     <xs:sequence>

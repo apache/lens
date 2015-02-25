@@ -335,4 +335,32 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
     }
   }
 
+  /**
+   * Adds the partitions to fact.
+   *
+   * @param specPair the spec pair
+   * @return the string
+   */
+  @CliCommand(value = "fact add partitions", help = "add a partitions to fact table")
+  public String addPartitionsToFact(
+    @CliOption(key = {"", "table"}, mandatory = true, help
+      = "<table> <storage> <path to partitions spec>") String specPair) {
+    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
+    String[] pair = Iterables.toArray(parts, String.class);
+    APIResult result;
+    if (pair.length != 3) {
+      return "Syntax error, please try in following " + "format. fact add partition <table> <storage> <partition spec>";
+    }
+
+    File f = new File(pair[2]);
+    if (!f.exists()) {
+      return "Partition spec does not exist";
+    }
+    result = getClient().addPartitionsToFact(pair[0], pair[1], pair[2]);
+    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
+      return "Successfully added partition to " + pair[0];
+    } else {
+      return "failure in  addition of partition to " + pair[0];
+    }
+  }
 }

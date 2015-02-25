@@ -45,6 +45,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
   /**
    * Test fact commands.
+   *
    * @throws IOException
    */
   @Test
@@ -67,6 +68,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
   /**
    * Adds the fact1 table.
+   *
    * @throws IOException
    */
   public static void addFact1Table() throws IOException {
@@ -104,7 +106,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       String xmlContent = sb.toString();
 
       xmlContent = xmlContent.replace("<property name=\"fact1.prop\" value=\"f1\" />\n",
-          "<property name=\"fact1.prop\" value=\"f1\"/>" + "\n<property name=\"fact1.prop1\" value=\"f2\"/>\n");
+        "<property name=\"fact1.prop\" value=\"f1\"/>" + "\n<property name=\"fact1.prop1\" value=\"f2\"/>\n");
 
       File newFile = new File("/tmp/local-fact1.xml");
       Writer writer = new OutputStreamWriter(new FileOutputStream(newFile));
@@ -181,14 +183,26 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     String result;
     result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
-    URL resource = TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml");
     try {
-      command.addPartitionToFact("fact1 " + FACT_LOCAL + " " + new File(resource.toURI()).getAbsolutePath());
+      command.addPartitionToFact("fact1 " + FACT_LOCAL + " " + new File(
+        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
-    result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    verifyAndDeletePartitions();
+    try {
+      command.addPartitionsToFact("fact1 " + FACT_LOCAL + " " + new File(
+        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
+    } catch (Throwable t) {
+      t.printStackTrace();
+      Assert.fail("Unable to locate the storage part file for adding new storage to fact table fact1");
+    }
+    verifyAndDeletePartitions();
+  }
+
+  private void verifyAndDeletePartitions() {
+    String result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertTrue(result.contains("HOURLY"));
     String dropPartitionsStatus = command.dropAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertFalse(dropPartitionsStatus.contains("Syntax error, please try in following"));

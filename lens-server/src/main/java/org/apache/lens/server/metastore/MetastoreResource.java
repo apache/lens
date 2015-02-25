@@ -59,6 +59,14 @@ public class MetastoreResource {
     }
   }
 
+  private void checkNonNullArgs(String message, Object... args) {
+    for (Object arg : args) {
+      if (arg == null) {
+        throw new BadRequestException(message);
+      }
+    }
+  }
+
   /**
    * API to know if metastore service is up and running
    *
@@ -113,8 +121,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param dbName    The db name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if set was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if set has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if set was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if set has failed
    */
   @PUT
   @Path("databases/current")
@@ -132,14 +140,13 @@ public class MetastoreResource {
   }
 
   /**
-   * Delete the db specified by name. Deleting underlying tables is optional.
-   * If db does not exist, delete is ignored.
+   * Delete the db specified by name. Deleting underlying tables is optional. If db does not exist, delete is ignored.
    *
    * @param sessionid The sessionid in which user is working
    * @param dbName    The db name
    * @param cascade   if true, all the tables inside the db will also be dropped.
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if delete has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if delete was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if delete has failed
    */
   @DELETE
   @Path("databases/{dbName}")
@@ -161,11 +168,10 @@ public class MetastoreResource {
    * Create a new database
    *
    * @param sessionid        The sessionid in which user is working
-   * @param ignoreIfExisting If true, create will be ignored if db already exists,
-   *                         otherwise it fails.
+   * @param ignoreIfExisting If true, create will be ignored if db already exists, otherwise it fails.
    * @param dbName           The db name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("databases")
@@ -188,11 +194,9 @@ public class MetastoreResource {
    * Get all native tables.
    *
    * @param sessionid The sessionid in which user is working
-   * @param dbOption  The options available are 'current' and 'all'.
-   *                  If option is current, gives all tables from current db.
-   *                  If option is all, gives all tables from all databases.
-   *                  If dbname is passed, dbOption is ignored.
-   *                  If no dbOption or dbname are passed, then default is to get tables from current db.
+   * @param dbOption  The options available are 'current' and 'all'. If option is current, gives all tables from current
+   *                  db. If option is all, gives all tables from all databases. If dbname is passed, dbOption is
+   *                  ignored. If no dbOption or dbname are passed, then default is to get tables from current db.
    * @param dbName    The db name. If not empty, the tables in the db will be returned
    * @return StringList consisting of all table names.
    * @throws LensException
@@ -223,7 +227,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param tableName The native table name
-   * @return JAXB representation of {@link NativeTable}
+   * @return JAXB representation of {@link XNativeTable}
    * @throws LensException
    */
   @GET
@@ -244,8 +248,7 @@ public class MetastoreResource {
    * Get all cubes in the metastores, of the specified type
    *
    * @param sessionid The sessionid in which user is working
-   * @param cubeTypes The type of cubes. Accepted values are
-   *                  'all' or 'base' or 'derived' or 'queryable'
+   * @param cubeTypes The type of cubes. Accepted values are 'all' or 'base' or 'derived' or 'queryable'
    * @return StringList consisting of all cubes names
    */
   @GET
@@ -276,9 +279,8 @@ public class MetastoreResource {
    * Delete all cubes
    *
    * @param sessionid The sessionid in which user is working
-   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@link Status#FAILED} in case of delete failure.
-   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete. APIResult with state {@link
+   * Status#FAILED} in case of delete failure. APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE
   @Path("cubes")
@@ -317,8 +319,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param cube      The {@link XCube} representation of the cube definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("cubes")
@@ -353,8 +355,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param cubeName  The cube name
    * @param cube      The {@link XCube} representation of the updated cube definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if udpate has failed
    */
   @PUT
   @Path("/cubes/{cubeName}")
@@ -401,8 +403,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param cubeName  The cube name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/cubes/{cubeName}")
@@ -443,8 +445,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param storage   The XStorage representation of storage
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("storages")
@@ -463,9 +465,8 @@ public class MetastoreResource {
    * Delete all storages in metastore
    *
    * @param sessionid The sessionid in which user is working
-   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@link Status#FAILED} in case of delete failure.
-   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete. APIResult with state {@link
+   * Status#FAILED} in case of delete failure. APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE
   @Path("storages")
@@ -505,8 +506,8 @@ public class MetastoreResource {
    * @param sessionid   The sessionid in which user is working
    * @param storageName The storage name
    * @param storage     The {@link XStorage} representation of the updated storage definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if update has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/storages/{storageName}")
@@ -548,8 +549,8 @@ public class MetastoreResource {
    *
    * @param sessionid   The sessionid in which user is working
    * @param storageName The storage name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/storages/{storage}")
@@ -590,8 +591,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param dimension The XDimension representation of dimension
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("dimensions")
@@ -610,9 +611,8 @@ public class MetastoreResource {
    * Delete all dimensions in metastore
    *
    * @param sessionid The sessionid in which user is working
-   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@link Status#FAILED} in case of delete failure.
-   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete. APIResult with state {@link
+   * Status#FAILED} in case of delete failure. APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE
   @Path("dimensions")
@@ -652,8 +652,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param dimName   The dimension name
    * @param dimension The {@link XDimension} representation of the updated dimension definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if update has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if update has failed
    */
   @PUT
   @Path("/dimensions/{dimName}")
@@ -695,8 +695,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param dimName   The dimension name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimensions/{dimName}")
@@ -718,7 +718,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param cubeName  name of the base cube or derived cube
-   * @return List of {@link FactTable} objects
+   * @return List of {@link XFactTable} objects
    */
   @GET
   @Path("/cubes/{cubeName}/facts")
@@ -751,11 +751,10 @@ public class MetastoreResource {
    * Delete all fact tables
    *
    * @param sessionid The sessionid in which user is working
-   * @param cascade   if set to true, all the underlying tables will be dropped,
-   *                  if set to false, only the fact table will be dropped
-   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete.
-   * APIResult with state {@link Status#FAILED} in case of delete failure.
-   * APIResult with state {@link Status#PARTIAL} in case of partial delete.
+   * @param cascade   if set to true, all the underlying tables will be dropped, if set to false, only the fact table
+   *                  will be dropped
+   * @return APIResult with state {@link Status#SUCCEEDED} in case of successful delete. APIResult with state {@link
+   * Status#FAILED} in case of delete failure. APIResult with state {@link Status#PARTIAL} in case of partial delete.
    */
   @DELETE
   @Path("facts")
@@ -795,7 +794,7 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
-   * @return JAXB representation of {@link FactTable}
+   * @return JAXB representation of {@link XFactTable}
    */
   @GET
   @Path("/facts/{factName}")
@@ -815,9 +814,9 @@ public class MetastoreResource {
    * Create a new fact tabble
    *
    * @param sessionid The sessionid in which user is working
-   * @param fact      The {@link FactTable} representation of the fact table definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @param fact      The {@link XFactTable} representation of the fact table definition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @POST
@@ -841,9 +840,9 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  name of the fact table
-   * @param fact      The {@link FactTable} representation of the updated fact table definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
+   * @param fact      The {@link XFactTable} representation of the updated fact table definition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if udpate has failed
    */
   @PUT
   @Path("/facts/{factName}")
@@ -867,8 +866,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param cascade   If true, all the storage tables of the fact will also be dropped
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/facts/{factName}")
@@ -913,8 +912,8 @@ public class MetastoreResource {
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/facts/{factName}/storages")
@@ -937,8 +936,8 @@ public class MetastoreResource {
    * @param sessionid    The sessionid in which user is working
    * @param factName     The fact table name
    * @param storageTable The storage table description
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
    */
   @POST
   @Path("/facts/{factName}/storages")
@@ -962,8 +961,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param storage   The storage name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/facts/{factName}/storages/{storage}")
@@ -999,15 +998,14 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all partitions of the fact table in the specified storage;
-   * can be filtered as well.
+   * Get all partitions of the fact table in the specified storage; can be filtered as well.
    *
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter
-   *                  for ex: x &lt "xxx" and y &gt "yyy"
-   * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   *                  "yyy"
+   * @return JAXB representation of {@link XPartitionList} containing {@link XPartition} objects
    */
   @GET
   @Path("/facts/{factName}/storages/{storage}/partitions")
@@ -1033,10 +1031,10 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param factName  The fact table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter
-   *                  for ex: x &lt "xxx" and y &gt "yyy"
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   *                  "yyy"
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/facts/{factName}/storages/{storage}/partitions")
@@ -1062,18 +1060,47 @@ public class MetastoreResource {
    * @param factName  fact table name
    * @param storage   storage name
    * @param partition {@link XPartition} representation of partition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
    */
   @POST
-  @Path("/facts/{factName}/storages/{storage}/partitions")
+  @Path("/facts/{factName}/storages/{storage}/partition")
   public APIResult addPartitionToFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("factName") String factName,
     @PathParam("storage") String storage,
     XPartition partition) {
     checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
     try {
       getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition);
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /**
+   * Batch Add partitions for a storage of fact
+   *
+   * @param sessionid  The sessionid in which user is working
+   * @param factName   fact table name
+   * @param storage    storage name
+   * @param partitions {@link XPartitionList} representation of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
+   */
+  @POST
+  @Path("/facts/{factName}/storages/{storage}/partitions")
+  public APIResult addPartitionsToFactStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition List is null", partitions);
+    try {
+      getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions);
     } catch (LensException exc) {
       checkTableNotFound(exc, factName);
       LOG.error("Error adding partition to storage of fact" + factName + ":" + storage, exc);
@@ -1089,8 +1116,8 @@ public class MetastoreResource {
    * @param factName  The fact table name
    * @param storage   The storage name
    * @param values    Comma separated values
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/facts/{factName}/storages/{storage}/partition")
@@ -1127,9 +1154,9 @@ public class MetastoreResource {
    * Create a new dimension table
    *
    * @param sessionid      The sessionid in which user is working
-   * @param dimensionTable The {@link DimensionTable} representation of the dimension table definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if create has failed
+   * @param dimensionTable The {@link XDimensionTable} representation of the dimension table definition
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if create was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if create has failed
    */
   @POST
   @Path("/dimtables")
@@ -1150,8 +1177,8 @@ public class MetastoreResource {
    *
    * @param sessionid      The sessionid in which user is working
    * @param dimensionTable The {@link XDimensionTable} representation of the updated dim table definition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if udpate has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if update was successful. {@link APIResult} with
+   * state {@link Status#FAILED}, if udpate has failed
    */
   @PUT
   @Path("/dimtables/{dimTableName}")
@@ -1175,8 +1202,8 @@ public class MetastoreResource {
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
    * @param cascade   if true, all the storage tables of dimension table will also be dropped
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimtables/{dimTableName}")
@@ -1199,7 +1226,7 @@ public class MetastoreResource {
    *
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The cube name
-   * @return JAXB representation of {@link DimensionTable}
+   * @return JAXB representation of {@link XDimensionTable}
    */
   @GET
   @Path("/dimtables/{dimTableName}")
@@ -1238,8 +1265,8 @@ public class MetastoreResource {
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storageTbl   The Storage table description
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
    */
   @POST
   @Path("/dimtables/{dimTableName}/storages")
@@ -1279,8 +1306,8 @@ public class MetastoreResource {
    *
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The dimension table name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimtables/{dimTableName}/storages")
@@ -1303,8 +1330,8 @@ public class MetastoreResource {
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage      The storage name
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimtables/{dimTableName}/storages/{storage}")
@@ -1323,15 +1350,14 @@ public class MetastoreResource {
   }
 
   /**
-   * Get all partition of the dimension table in the specified storage;
-   * can be filtered
+   * Get all partition of the dimension table in the specified storage; can be filtered
    *
    * @param sessionid The sessionid in which user is working
    * @param dimension The dimension table name
    * @param storage   The storage name
-   * @param filter    The filter for partitions, string representation of the filter
-   *                  for ex: x &lt "xxx" and y &gt "yyy"
-   * @return JAXB representation of {@link PartitionList} containing {@link XPartition} objects
+   * @param filter    The filter for partitions, string representation of the filter for ex: x &lt "xxx" and y &gt
+   *                  "yyy"
+   * @return JAXB representation of {@link XPartitionList} containing {@link XPartition} objects
    */
   @GET
   @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
@@ -1353,10 +1379,10 @@ public class MetastoreResource {
    * @param sessionid    The sessionid in which user is working
    * @param dimTableName The dimension table name
    * @param storage      The storage name
-   * @param filter       The filter for partitions, string representation of the filter
-   *                     for ex: x &lt 'xxx' and y &gt 'yyy'
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @param filter       The filter for partitions, string representation of the filter for ex: x &lt 'xxx' and y &gt
+   *                     'yyy'
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
@@ -1381,8 +1407,8 @@ public class MetastoreResource {
    * @param dimTableName The dimension table name
    * @param storage      The storage name
    * @param values       Comma separated values
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if drop has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if drop was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if drop has failed
    */
   @DELETE
   @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
@@ -1408,18 +1434,46 @@ public class MetastoreResource {
    * @param dimTableName dimension table name
    * @param storage      storage name
    * @param partition    {@link XPartition} representation of partition
-   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful.
-   * {@link APIResult} with state {@link Status#FAILED}, if add has failed
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
    */
   @POST
-  @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partition")
   public APIResult addPartitionToDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
     @PathParam("dimTableName") String dimTableName,
     @PathParam("storage") String storage,
     XPartition partition) {
     checkSessionId(sessionid);
+    checkNonNullArgs("Partition is null", partition);
     try {
       getSvc().addPartitionToDimStorage(sessionid, dimTableName, storage, partition);
+    } catch (LensException exc) {
+      LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
+      return new APIResult(Status.FAILED, exc.getMessage());
+    }
+    return SUCCESS;
+  }
+
+  /**
+   * Add new partitions for a storage of dimension
+   *
+   * @param sessionid    The sessionid in which user is working
+   * @param dimTableName dimension table name
+   * @param storage      storage name
+   * @param partitions   {@link XPartitionList} representation of list of partitions
+   * @return {@link APIResult} with state {@link Status#SUCCEEDED}, if add was successful. {@link APIResult} with state
+   * {@link Status#FAILED}, if add has failed
+   */
+  @POST
+  @Path("/dimtables/{dimTableName}/storages/{storage}/partitions")
+  public APIResult addPartitionsToDimStorage(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("dimTableName") String dimTableName,
+    @PathParam("storage") String storage,
+    XPartitionList partitions) {
+    checkSessionId(sessionid);
+    checkNonNullArgs("Partition list is null", partitions);
+    try {
+      getSvc().addPartitionsToDimStorage(sessionid, dimTableName, storage, partitions);
     } catch (LensException exc) {
       LOG.error("Error adding partition to storage of dimension table " + dimTableName + ":" + storage, exc);
       return new APIResult(Status.FAILED, exc.getMessage());

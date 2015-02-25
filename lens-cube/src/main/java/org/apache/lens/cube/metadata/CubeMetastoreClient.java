@@ -258,14 +258,13 @@ public class CubeMetastoreClient {
   /**
    * Create a cube dimension table
    *
-   * @param dimName             The dimension name to which the dim-table belongs to
-   * @param dimTblName          dimension table name
-   * @param columns             Columns of the dimension table
-   * @param weight              Weight of the dimension table
-   * @param dimensionReferences References to other dimensions
-   * @param storages            Storages on which dimension is available without any dumps
-   * @param properties          Properties of dimension table
-   * @param storageTableDescs   Map of storage to its storage table description
+   * @param dimName           The dimension name to which the dim-table belongs to
+   * @param dimTblName        dimension table name
+   * @param columns           Columns of the dimension table
+   * @param weight            Weight of the dimension table
+   * @param storageNames      Storages on which dimension is available without any dumps
+   * @param properties        Properties of dimension table
+   * @param storageTableDescs Map of storage to its storage table description
    * @throws HiveException
    */
   public void createCubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
@@ -279,14 +278,13 @@ public class CubeMetastoreClient {
   /**
    * Create a cube dimension table
    *
-   * @param dimName             The dimension name to which the dim-table belongs to
-   * @param dimTblName          dimension table name
-   * @param columns             Columns of the dimension table
-   * @param weight              Weight of the dimension table
-   * @param dimensionReferences References to other dimensions
-   * @param dumpPeriods         Storage names and their dump periods on which dimension is available
-   * @param properties          properties of dimension table
-   * @param storageTableDescs   Map of storage to its storage table description
+   * @param dimName           The dimension name to which the dim-table belongs to
+   * @param dimTblName        dimension table name
+   * @param columns           Columns of the dimension table
+   * @param weight            Weight of the dimension table
+   * @param dumpPeriods       Storage names and their dump periods on which dimension is available
+   * @param properties        properties of dimension table
+   * @param storageTableDescs Map of storage to its storage table description
    * @throws HiveException
    */
   public void createCubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
@@ -353,8 +351,8 @@ public class CubeMetastoreClient {
   /**
    * Add a partition specified by the storage partition desc on the storage passed.
    *
-   * @param partSpec The storage partition description
-   * @param storage  The storage object
+   * @param partSpec    The storage partition description
+   * @param storageName The storage object
    * @throws HiveException
    */
   public void addPartition(StoragePartitionDesc partSpec, String storageName) throws HiveException {
@@ -363,6 +361,14 @@ public class CubeMetastoreClient {
 
     getStorage(storageName).addPartition(getClient(), partSpec,
       getLatestInfo(storageTableName, partSpec.getTimePartSpec(), partSpec.getUpdatePeriod()));
+  }
+
+  public void addPartitions(List<StoragePartitionDesc> storagePartitionDescs, String storageName) throws HiveException {
+    //TODO: improve this in later jira. Just providing naive implementation for now.
+    // Should ideally do some optimization because the list has been provided together, not one by one.
+    for (StoragePartitionDesc partSpec : storagePartitionDescs) {
+      addPartition(partSpec, storageName);
+    }
   }
 
   private LatestInfo getLatestInfo(String storageTableName, Map<String, Date> partitionTimestamps,
@@ -479,8 +485,11 @@ public class CubeMetastoreClient {
   /**
    * Add a partition specified by the storage partition desc on the storage passed.
    *
-   * @param partSpec The storage partition description
-   * @param storage  The storage object
+   * @param cubeTableName   cube fact/dimension table name
+   * @param storageName     storage name
+   * @param timePartSpec    time partitions
+   * @param nonTimePartSpec non time partitions
+   * @param updatePeriod    update period of the partition
    * @throws HiveException
    */
   public void dropPartition(String cubeTableName, String storageName, Map<String, Date> timePartSpec,
@@ -1217,7 +1226,7 @@ public class CubeMetastoreClient {
    * Alter dimension specified by the dimension name to new definition
    *
    * @param dimName The cube name to be altered
-   * @param cube    The new dimension definition
+   * @param newDim  The new dimension definition
    * @throws HiveException
    * @throws InvalidOperationException
    */
@@ -1286,7 +1295,7 @@ public class CubeMetastoreClient {
   /**
    * Drop a dimension
    *
-   * @param cubeName
+   * @param dimName dimension name to be dropped
    * @throws HiveException
    */
   public void dropDimension(String dimName) throws HiveException {
