@@ -20,23 +20,23 @@
 Lens server monitoring
 
   Lens server emits following metrics for query service
-  
+
   * Number of queued queries;
-  
+
   * Number of running queries;
-  
+
   * Number of finished queries in server's memory;
-  
+
   * Total number of accepted queries;
-  
+
   * Total number of successful queries;
-  
+
   * Total number of finished queries;
-  
+
   * Total number of failed queries;
-  
+
   * Total number of cancelled queries;
-  
+
   * Number of result formatting error
 
 
@@ -65,26 +65,54 @@ Lens server monitoring
   * Number of email notification errors
 
 
+ Lens server can be configured to emit metrics for resource methods. By default it's disabled, can be enabled by the
+ property <lens.server.enable.resource.method.metering>. Metrics for
+ resource methods are created lazily(as and when required) and consist of the following things:
+
+  * Number of hits
+
+  * Timer for successful executions.
+
+  * Timer for failed executions.
+
+
+
+ A timer can provide running averages, statistical values like mean/median/quartiles etc, histograms.
+
  Lens server also emits jvm, gc, memory and thread level metrics.
 
- Ganglia metrics can be enabled by configuring the parameters :
-  <lens.server.enable.gangla.metrics>, <lens.server.metrics.ganglia.serverName>, <lens.server.metrics.ganglia.port>,
-   <lens.server.metrics.reporting.period>.
-  
+ Supported reporting methods for the metrics emitted are the following:
+
+  * Console reporting. Can be enabled by:
+    <lens.server.enable.console.metrics>
+
+  * CSV reporting. Can be configured by:
+    <lens.server.enable.csv.metrics>, <lens.server.metrics.csv.directory.path>
+
+  * Ganglia reporting. Can be configured by the parameters :
+    <lens.server.enable.ganglia.metrics>, <lens.server.metrics.ganglia.host>, <lens.server.metrics.ganglia.port>
+
+  * Graphite reporting. Can be configured by the parameters:
+    <lens.server.enable.graphite.metrics>, <lens.server.metrics.graphite.host>, <lens.server.metrics.graphite.port>
+
+ Reporting to the chosen reporting methods will happen periodically. That period can be configured by:
+ <lens.server.metrics.reporting.period>
+
+
 * REST end points
 
   Lens server provides admin endpoint at <host>:<port>/admin. It provides
   end points for ping, metrics, threads and healthcheck.
-  
+
   * ping : admin/ping will respond with pong, if server is up
-  
+
   * metrics : admin/metrics will respond with all metrics in a text file, written in json
-  
+
   * healthcheck : admin/healthcheck is not implemented yet.
-  
+
   * threads : admin/threads will give a thread dump of the server
 
 * Query Statistics:
 
   Lens Server can be configured to emit query related statistics to a hive table <QueryExecutionStatistics>.The statistics service can be configured by providing values to <lens.statistics.warehouse.dir> set to a HDFS location where your query statistics log file will be persisted, <lens.statistics.db> the database which will contain all statistics related tables and <lens.log.rollover.interval> time interval which service will be monitoring for rollover in log file.The statistics can be disabled by setting, <lens.server.statistics.store.class> to empty string. The statistics service works by monitoring for rollups of <query-stats.log> file by log4j and adds an appropriate partition based on the rolled over file. The statistics can be queried using Hive queries.
-  
+
