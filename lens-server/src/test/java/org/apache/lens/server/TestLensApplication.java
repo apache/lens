@@ -27,6 +27,7 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.metrics.MetricsServiceImpl;
 
 import org.testng.Assert;
 import org.testng.annotations.BeforeTest;

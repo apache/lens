@@ -110,8 +110,8 @@ public class TestQueryService extends LensJerseyTest {
     sessionconf.put("test.session.key", "svalue");
     lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); // @localhost should be removed
     // automatically
-    createTable(testTable);
-    loadData(testTable, TEST_DATA_FILE);
+    createTable(TEST_TABLE);
+    loadData(TEST_TABLE, TEST_DATA_FILE);
   }
 
   /*
@@ -121,7 +121,7 @@ public class TestQueryService extends LensJerseyTest {
    */
   @AfterTest
   public void tearDown() throws Exception {
-    dropTable(testTable);
+    dropTable(TEST_TABLE);
     queryService.closeSession(lensSessionId);
     for (LensDriver driver : queryService.getDrivers()) {
       if (driver instanceof HiveDriver) {
@@ -152,7 +152,7 @@ public class TestQueryService extends LensJerseyTest {
   }
 
   /** The test table. */
-  private static String testTable = "TEST_TABLE";
+  public static final String TEST_TABLE = "TEST_TABLE";
 
   /** The Constant TEST_DATA_FILE. */
   public static final String TEST_DATA_FILE = "./testdata/testdata2.data";
@@ -262,7 +262,7 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
@@ -358,7 +358,7 @@ public class TestQueryService extends LensJerseyTest {
     /**
      * We are not passing session id in this test
      */
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
@@ -386,7 +386,7 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -395,7 +395,7 @@ public class TestQueryService extends LensJerseyTest {
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
+    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNull(plan.getPrepareHandle());
 
     // Test explain and prepare
@@ -404,7 +404,8 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp2 = new FormDataMultiPart();
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
+      "select ID from " + TEST_TABLE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain_and_prepare"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -413,7 +414,7 @@ public class TestQueryService extends LensJerseyTest {
       QueryPlan.class);
     Assert.assertEquals(plan2.getNumSels(), 1);
     Assert.assertEquals(plan2.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan2.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
+    Assert.assertTrue(plan2.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNotNull(plan2.getPrepareHandle());
   }
 
@@ -432,7 +433,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-      "select NO_ID from " + testTable));
+      "select NO_ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -451,7 +452,7 @@ public class TestQueryService extends LensJerseyTest {
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select NO_ID from "
-      + testTable));
+      + TEST_TABLE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain_and_prepare"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -484,7 +485,7 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "prepare"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("queryName").build(), "testQuery1"));
 
@@ -503,8 +504,8 @@ public class TestQueryService extends LensJerseyTest {
 
     LensPreparedQuery ctx = target.path(pHandle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensPreparedQuery.class);
-    Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + testTable));
-    Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + testTable));
+    Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
+    Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
     Assert.assertEquals(ctx.getSelectedDriverClassName(),
       org.apache.lens.driver.hive.HiveDriver.class.getCanonicalName());
     Assert.assertNull(ctx.getConf().getProperties().get("my.property"));
@@ -584,7 +585,7 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "explain_and_prepare"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -593,13 +594,13 @@ public class TestQueryService extends LensJerseyTest {
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
     Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
-    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(testTable.toLowerCase()));
+    Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNotNull(plan.getPrepareHandle());
 
     LensPreparedQuery ctx = target.path(plan.getPrepareHandle().toString()).queryParam("sessionid", lensSessionId)
       .request().get(LensPreparedQuery.class);
-    Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + testTable));
-    Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + testTable));
+    Assert.assertTrue(ctx.getUserQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
+    Assert.assertTrue(ctx.getDriverQuery().equalsIgnoreCase("select ID from " + TEST_TABLE));
     Assert.assertEquals(ctx.getSelectedDriverClassName(),
       org.apache.lens.driver.hive.HiveDriver.class.getCanonicalName());
     Assert.assertNull(ctx.getConf().getProperties().get("my.property"));
@@ -685,7 +686,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
@@ -752,7 +753,7 @@ public class TestQueryService extends LensJerseyTest {
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp3.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
@@ -792,7 +793,7 @@ public class TestQueryService extends LensJerseyTest {
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
@@ -1024,7 +1025,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
@@ -1110,7 +1111,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(),
-      "create table temp_output as select ID, IDSTR from " + testTable));
+      "create table temp_output as select ID, IDSTR from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
@@ -1244,7 +1245,7 @@ public class TestQueryService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
     // set a timeout value enough for tests
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), "300000"));
@@ -1263,7 +1264,7 @@ public class TestQueryService extends LensJerseyTest {
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + testTable));
+      + TEST_TABLE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
     // set a timeout value enough for tests
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), "300000"));
@@ -1307,7 +1308,7 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertFalse(Boolean.parseBoolean(queryService.getHiveConf().get("hive.server2.log.redirection.enabled")));
     Assert.assertEquals(queryService.getHiveConf().get("hive.server2.query.log.dir"), "target/query-logs");
 
-    final String query = "select ID from " + testTable;
+    final String query = "select ID from " + TEST_TABLE;
     QueryContext ctx = new QueryContext(query, null, queryConf, conf, queryService.getDrivers());
     Map<LensDriver, String> driverQueries = new HashMap<LensDriver, String>();
     for (LensDriver driver : queryService.getDrivers()) {
@@ -1335,7 +1336,7 @@ public class TestQueryService extends LensJerseyTest {
     final FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
       MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + testTable));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));

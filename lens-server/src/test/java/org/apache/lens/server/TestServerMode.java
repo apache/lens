@@ -68,7 +68,6 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
    */
   @AfterTest
   public void tearDown() throws Exception {
-    LensServices.get().setServiceMode(SERVICE_MODE.OPEN);
     super.tearDown();
   }
 
@@ -216,5 +215,6 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
     // close the session
     APIResult sessionclose = target.queryParam("sessionid", lensSessionId).request().delete(APIResult.class);
     Assert.assertEquals(sessionclose.getStatus(), APIResult.Status.SUCCEEDED);
+    LensServices.get().setServiceMode(SERVICE_MODE.OPEN);
   }
 }

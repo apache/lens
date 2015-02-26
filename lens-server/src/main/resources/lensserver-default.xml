@@ -112,6 +112,18 @@
   </property>
 
   <property>
+    <name>lens.server.enable.csv.metrics</name>
+    <value>false</value>
+    <description>Enable metrics to be reported as csv files in a directory</description>
+  </property>
+
+  <property>
+    <name>lens.server.metrics.csv.directory.path</name>
+    <value>metrics/</value>
+    <description>Path of the directory in which to report metrics as separate csv files. </description>
+  </property>
+
+  <property>
     <name>lens.server.enable.ganglia.metrics</name>
     <value>false</value>
     <description>Enable metrics to be reported on ganglia</description>
@@ -127,6 +139,30 @@
     <name>lens.server.metrics.ganglia.port</name>
     <value></value>
     <description>The ganglia port</description>
+  </property>
+
+  <property>
+    <name>lens.server.enable.graphite.metrics</name>
+    <value>false</value>
+    <description>Enable metrics to be reported on graphite</description>
+  </property>
+
+  <property>
+    <name>lens.server.metrics.graphite.host</name>
+    <value></value>
+    <description>The graphite host name</description>
+  </property>
+
+  <property>
+    <name>lens.server.metrics.graphite.port</name>
+    <value></value>
+    <description>The graphite port</description>
+  </property>
+
+  <property>
+    <name>lens.server.enable.resource.method.metering</name>
+    <value>false</value>
+    <description>Whether to Enable metering for all resource methods.</description>
   </property>
 
   <property>

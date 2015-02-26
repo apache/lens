@@ -30,6 +30,7 @@ import java.util.*;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
@@ -47,7 +48,6 @@ import org.apache.hive.service.cli.CLIService;
 
 import lombok.Getter;
 import lombok.Setter;
-
 
 
 /**
@@ -208,9 +208,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
         configuration.setBoolean(FS_AUTOMATIC_CLOSE, false);
 
         int outStreamBufferSize = conf.getInt(STATE_PERSIST_OUT_STREAM_BUFF_SIZE,
-            DEFAULT_STATE_PERSIST_OUT_STREAM_BUFF_SIZE);
+          DEFAULT_STATE_PERSIST_OUT_STREAM_BUFF_SIZE);
         configuration.setInt(FS_IO_FILE_BUFFER_SIZE, outStreamBufferSize);
-        LOG.info("STATE_PERSIST_OUT_STREAM_BUFF_SIZE IN BYTES:"+outStreamBufferSize);
+        LOG.info("STATE_PERSIST_OUT_STREAM_BUFF_SIZE IN BYTES:" + outStreamBufferSize);
         persistenceFS = FileSystem.newInstance(persistDir.toUri(), configuration);
         setupPersistedState();
       } catch (Exception e) {

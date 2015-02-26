@@ -169,12 +169,12 @@ public final class LensConfConstants {
   /**
    * The Constant
    */
-  public static final String  SERVER_UI_ENABLE = SERVER_PFX + "ui.enable";
+  public static final String SERVER_UI_ENABLE = SERVER_PFX + "ui.enable";
 
   /**
    * The Constant
    */
-  public static final boolean  DEFAULT_SERVER_UI_ENABLE = true;
+  public static final boolean DEFAULT_SERVER_UI_ENABLE = true;
 
   /**
    * The Constant SERVER_UI_URI.
@@ -449,6 +449,12 @@ public final class LensConfConstants {
    */
   public static final String ENABLE_CONSOLE_METRICS = SERVER_PFX + "enable.console.metrics";
 
+  /** Whether to enable CSV metrics */
+  public static final String ENABLE_CSV_METRICS = SERVER_PFX + "enable.csv.metrics";
+
+  /** The directory in which to send CSV metrics */
+  public static final String CSV_METRICS_DIRECTORY_PATH = SERVER_PFX + "metrics.csv.directory.path";
+
   /**
    * The Constant ENABLE_GANGLIA_METRICS.
    */
@@ -463,6 +469,24 @@ public final class LensConfConstants {
    * The Constant GANGLIA_PORT.
    */
   public static final String GANGLIA_PORT = SERVER_PFX + "metrics.ganglia.port";
+
+  /** default ganglia port */
+  public static final int DEFAULT_GANGLIA_PORT = 8080;
+
+  /** whether to report metrics to graphite or not */
+  public static final String ENABLE_GRAPHITE_METRICS = SERVER_PFX + "enable.graphite.metrics";
+
+  /** graphite server hostname */
+  public static final String GRAPHITE_SERVERNAME = SERVER_PFX + "metrics.graphite.host";
+
+  /** graphite server port */
+  public static final String GRAPHITE_PORT = SERVER_PFX + "metrics.graphite.port";
+
+  /** default graphite port */
+  public static final int DEFAULT_GRAPHITE_PORT = 8080;
+
+  /** whether to enable per resource method metering */
+  public static final String ENABLE_RESOURCE_METHOD_METERING = SERVER_PFX + "enable.resource.method.metering";
 
   /**
    * The Constant REPORTING_PERIOD.

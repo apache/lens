@@ -1309,8 +1309,8 @@ public class TestMetastoreService extends LensJerseyTest {
   public void testAddAndDropDimensionStorages() throws Exception {
     final String table = "test_add_drop_storage";
     final String DB = dbPFX + "test_add_drop_dim_storage_db";
-    String prevDb = getCurrentDatabase();
     createDatabase(DB);
+    String prevDb = getCurrentDatabase();
     setCurrentDatabase(DB);
     createStorage("test");
     createStorage("test2");

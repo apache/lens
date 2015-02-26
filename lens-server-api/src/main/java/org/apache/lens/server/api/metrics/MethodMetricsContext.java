@@ -16,35 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server;
-
-import org.apache.hadoop.hive.conf.HiveConf;
+package org.apache.lens.server.api.metrics;
 
 /**
- * The Class LensServerConf.
+ * Metrics context for a method. Has methods to start/end measuring metrics and one callback for errors
  */
-public final class LensServerConf {
-  private LensServerConf() {
+public interface MethodMetricsContext {
 
-  }
+  /** Error came. Mark it. */
+  void markError();
 
-  private static final class ConfHolder {
-    public static final HiveConf CONF = new HiveConf();
-
-    static {
-      CONF.addResource("lensserver-default.xml");
-      CONF.addResource("lens-site.xml");
-    }
-  }
-
-  /**
-   * @return the hive conf
-   */
-  public static HiveConf get() {
-    return ConfHolder.CONF;
-  }
-
-  public static HiveConf create() {
-    return new HiveConf(ConfHolder.CONF);
-  }
+  /** Method succeeded. mark it. */
+  void markSuccess();
 }

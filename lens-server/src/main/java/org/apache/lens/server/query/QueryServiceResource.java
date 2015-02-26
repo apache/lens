@@ -31,6 +31,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.*;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.annotations.MultiPurposeResource;
 import org.apache.lens.server.api.query.QueryExecutionService;
 
 import org.apache.commons.lang.StringUtils;
@@ -164,6 +165,7 @@ public class QueryServiceResource {
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @MultiPurposeResource(formParamName = "operation")
   public QuerySubmitResult query(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("query") String query, @FormDataParam("operation") String operation,
     @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
@@ -295,6 +297,7 @@ public class QueryServiceResource {
   @Path("preparedqueries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @MultiPurposeResource(formParamName = "operation")
   public QuerySubmitResult prepareQuery(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @FormDataParam("query") String query, @DefaultValue("") @FormDataParam("operation") String operation,
     @FormDataParam("conf") LensConf conf, @DefaultValue("") @FormDataParam("queryName") String queryName) {
@@ -588,6 +591,7 @@ public class QueryServiceResource {
   @Path("preparedqueries/{prepareHandle}")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
+  @MultiPurposeResource(formParamName = "operation")
   public QuerySubmitResult executePrepared(@FormDataParam("sessionid") LensSessionHandle sessionid,
     @PathParam("prepareHandle") String prepareHandle,
     @DefaultValue("EXECUTE") @FormDataParam("operation") String operation, @FormDataParam("conf") LensConf conf,

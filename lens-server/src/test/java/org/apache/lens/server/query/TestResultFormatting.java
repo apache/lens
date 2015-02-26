@@ -229,6 +229,13 @@ public class TestResultFormatting extends LensJerseyTest {
 
     if (status.equals(QueryStatus.Status.SUCCESSFUL)) {
       QueryContext qctx = queryService.getQueryContext(handle);
+      if (qctx == null) {
+        // This shouldn't occur. But seems like this is appearing intermittently. So adding extra logs
+        // for debugging in the future.
+        LOG.info("successful query's QueryContext is null");
+        LOG.info("query handle: " + handle);
+        LOG.info("allQueries: " + queryService.allQueries);
+      }
       if (!isDir) {
         // isDir is true if the formatter is skipped due to result being the max size allowed
         if (qctx.isDriverPersistent()) {

@@ -31,6 +31,10 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
  * Server api for OLAP Cube Metastore.
  */
 public interface CubeMetastoreService {
+
+  /** The constant NAME */
+  String NAME = "metastore";
+
   /**
    * Get current database used by the CubeMetastoreClient
    *
@@ -345,7 +349,7 @@ public interface CubeMetastoreService {
    * @param sessionid   The sessionid
    * @param dimTblName  The dimension table name
    * @param storageName The storage name
-   * @param partition   {@link org.apache.lens.api.metastore.XPartitionList}
+   * @param partition   {@link XPartition}
    * @throws LensException
    */
   void addPartitionToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,

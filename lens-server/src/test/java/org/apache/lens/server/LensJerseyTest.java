@@ -57,6 +57,14 @@ public abstract class LensJerseyTest extends JerseyTest {
     return port != -1;
   }
 
+  public void setUp() throws Exception {
+    LOG.info("setUp in class: " + this.getClass().getCanonicalName());
+    super.setUp();
+  }
+  public void tearDown() throws Exception {
+    LOG.info("tearDown in class: " + this.getClass().getCanonicalName());
+    super.tearDown();
+  }
   protected int getTestPort() {
     if (!isPortAlreadyFound()) {
       return port;
@@ -88,6 +96,10 @@ public abstract class LensJerseyTest extends JerseyTest {
     return UriBuilder.fromUri(getUri()).path("lens-server").build();
   }
 
+  public HiveConf getServerConf() {
+    return LensServerConf.get();
+  }
+
   /**
    * Start all.
    *
@@ -95,6 +107,7 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   @BeforeSuite
   public void startAll() throws Exception {
+    LOG.info("Before suite");
     TestRemoteHiveDriver.createHS2Service();
     System.out.println("Remote hive server started!");
     HiveConf hiveConf = new HiveConf();
@@ -122,6 +135,7 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   @AfterSuite
   public void stopAll() throws Exception {
+    LOG.info("After suite");
     verifyMetrics();
     LensServices.get().stop();
     System.out.println("Lens services stopped!");
@@ -159,14 +173,13 @@ public abstract class LensJerseyTest extends JerseyTest {
 
     assertEquals(queriesFinished, queriesSuccessful + queriesFailed + queriesCancelled,
       "Total finished queries should be sum of successful, failed and cancelled queries");
-
   }
 
   /**
    * Restart lens server.
    */
   public void restartLensServer() {
-    HiveConf h = LensServerConf.get();
+    HiveConf h = getServerConf();
     h.set(LensConfConstants.MAX_NUMBER_OF_FINISHED_QUERY, "0");
     restartLensServer(h);
   }

@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server.api.metrics;
 
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.model.ResourceMethod;
+
 /**
  * The Interface MetricsService.
  */
@@ -40,7 +43,8 @@ public interface MetricsService {
   void incrCounter(String counter);
 
   /**
-   * Increment a counter with the name constructed using given class and counter name Actual name of the counter will be
+   * Increment a counter with the name constructed using given class and counter name Actual name of the counter will
+   * be
    * <p/>
    * <pre>MetricRegistry.name(cls, counter)
    * <p/>
@@ -141,4 +145,16 @@ public interface MetricsService {
    * Publish report.
    */
   void publishReport();
+
+  /**
+   * API method for getting metrics measuring context for given resource method and container request
+   *
+   * @param method           the resource method
+   * @param containerRequest container request
+   * @return method metrics context.
+   * @see org.glassfish.jersey.server.ContainerRequest
+   * @see org.glassfish.jersey.server.model.ResourceMethod
+   * @see MethodMetricsContext
+   */
+  MethodMetricsContext getMethodMetricsContext(ResourceMethod method, ContainerRequest containerRequest);
 }

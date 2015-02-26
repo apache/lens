@@ -16,17 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server;
+package org.apache.lens.server.metrics;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lens.api.query.QueryStatus.Status;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.metrics.DisabledMethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
@@ -35,8 +43,13 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.AbstractService;
 import org.apache.log4j.Logger;
 
+import org.glassfish.jersey.server.ContainerRequest;
+import org.glassfish.jersey.server.model.ResourceMethod;
+
 import com.codahale.metrics.*;
 import com.codahale.metrics.ganglia.GangliaReporter;
+import com.codahale.metrics.graphite.Graphite;
+import com.codahale.metrics.graphite.GraphiteReporter;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
@@ -50,9 +63,6 @@ import lombok.Getter;
  */
 public class MetricsServiceImpl extends AbstractService implements MetricsService {
 
-  /** The Constant METRICS_SVC_NAME. */
-  public static final String METRICS_SVC_NAME = "metrics";
-
   /** The Constant LOG. */
   public static final Logger LOG = Logger.getLogger(MetricsService.class);
 
@@ -64,6 +74,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   private MetricRegistry metricRegistry;
 
   /** The reporters. */
+  @Getter
   private List<ScheduledReporter> reporters;
 
   /** The health check. */
@@ -94,14 +105,26 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
   /** The finished queries. */
   private Gauge<Long> finishedQueries;
 
+  /** All method meters. Factory for creation + caching */
+  @Getter
+  private MethodMetricsFactory methodMetricsFactory;
+
+  @Getter
+  private boolean enableResourceMethodMetering;
+
+  public void setEnableResourceMethodMetering(boolean enableResourceMethodMetering) {
+    LOG.info("setEnableResourceMethodMetering: " + enableResourceMethodMetering);
+    this.enableResourceMethodMetering = enableResourceMethodMetering;
+    if (!enableResourceMethodMetering) {
+      methodMetricsFactory.clear();
+    }
+  }
+
   /**
    * The listener interface for receiving asyncQueryStatus events. The class that is interested in processing a
    * asyncQueryStatus event implements this interface, and the object created with that class is registered with a
-   * component using the component's <code>addAsyncQueryStatusListener<code> method. When
-   * the asyncQueryStatus event occurs, that object's appropriate
-   * method is invoked.
-   *
-   * @see AsyncQueryStatusEvent
+   * component using the component's <code>addAsyncQueryStatusListener<code> method. When the asyncQueryStatus event
+   * occurs, that object's appropriate method is invoked.
    */
   public class AsyncQueryStatusListener extends AsyncEventListener<StatusChange> {
 
@@ -149,7 +172,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
    * @param name the name
    */
   public MetricsServiceImpl(String name) {
-    super(METRICS_SVC_NAME);
+    super(NAME);
   }
 
   private QueryExecutionService getQuerySvc() {
@@ -170,6 +193,8 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
     metricRegistry = new MetricRegistry();
+    methodMetricsFactory = new MethodMetricsFactory(metricRegistry);
+    setEnableResourceMethodMetering(hiveConf.getBoolean(LensConfConstants.ENABLE_RESOURCE_METHOD_METERING, false));
     healthCheck = new HealthCheckRegistry();
     initCounters();
     timeBetweenPolls = hiveConf.getInt(LensConfConstants.REPORTING_PERIOD, 10);
@@ -181,18 +206,43 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
         .convertDurationsTo(TimeUnit.MILLISECONDS).build();
       reporters.add(reporter);
     }
-
+    if (hiveConf.getBoolean(LensConfConstants.ENABLE_CSV_METRICS, false)) {
+      File f = new File(hiveConf.get(LensConfConstants.CSV_METRICS_DIRECTORY_PATH, "metrics/"));
+      f.mkdirs();
+      CsvReporter reporter = CsvReporter.forRegistry(metricRegistry)
+        .formatFor(Locale.US)
+        .convertRatesTo(TimeUnit.SECONDS)
+        .convertDurationsTo(TimeUnit.MILLISECONDS)
+        .build(f);
+      reporters.add(reporter);
+    }
     if (hiveConf.getBoolean(LensConfConstants.ENABLE_GANGLIA_METRICS, false)) {
       GMetric ganglia;
       try {
         ganglia = new GMetric(hiveConf.get(LensConfConstants.GANGLIA_SERVERNAME), hiveConf.getInt(
-          LensConfConstants.GANGLIA_PORT, 8080), UDPAddressingMode.MULTICAST, 1);
+          LensConfConstants.GANGLIA_PORT, LensConfConstants.DEFAULT_GANGLIA_PORT), UDPAddressingMode.MULTICAST, 1);
         GangliaReporter greporter = GangliaReporter.forRegistry(metricRegistry).convertRatesTo(TimeUnit.SECONDS)
           .convertDurationsTo(TimeUnit.MILLISECONDS).build(ganglia);
 
         reporters.add(greporter);
       } catch (IOException e) {
         LOG.error("Could not start ganglia reporter", e);
+      }
+    }
+    if (hiveConf.getBoolean(LensConfConstants.ENABLE_GRAPHITE_METRICS, false)) {
+      final GraphiteReporter reporter;
+      try {
+        Graphite graphite = new Graphite(new InetSocketAddress(hiveConf.get(LensConfConstants.GRAPHITE_SERVERNAME),
+          hiveConf.getInt(LensConfConstants.GRAPHITE_PORT, LensConfConstants.DEFAULT_GRAPHITE_PORT)));
+        reporter = GraphiteReporter.forRegistry(metricRegistry)
+          .prefixedWith(InetAddress.getLocalHost().getHostName())
+          .convertRatesTo(TimeUnit.SECONDS)
+          .convertDurationsTo(TimeUnit.MILLISECONDS)
+          .filter(MetricFilter.ALL)
+          .build(graphite);
+        reporters.add(reporter);
+      } catch (UnknownHostException e) {
+        LOG.error("Couldn't get localhost. So couldn't setup graphite reporting");
       }
     }
     LOG.info("Started metrics service");
@@ -246,6 +296,23 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     metricRegistry.register("memory", new MemoryUsageGaugeSet());
     metricRegistry.register("threads", new ThreadStatesGaugeSet());
     metricRegistry.register("jvm", new JvmAttributeGaugeSet());
+  }
+
+  /**
+   * Called by LensRequestListener in start event. marks the method meter, starts a timer, returns timer context
+   * returned by the start timer call.
+   *
+   * @param method           the resource method
+   * @param containerRequest container request
+   * @return
+   * @see org.apache.lens.server.api.metrics.MetricsService#getMethodMetricsContext(
+   *org.glassfish.jersey.server.model.ResourceMethod, org.glassfish.jersey.server.ContainerRequest)
+   */
+  @Override
+  public MethodMetricsContext getMethodMetricsContext(ResourceMethod method, ContainerRequest containerRequest) {
+    // if method is null then it means no matching resource method was found.
+    return enableResourceMethodMetering ? methodMetricsFactory.get(method, containerRequest).newContext()
+      : DisabledMethodMetricsContext.getInstance();
   }
 
   /*
@@ -336,7 +403,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
    */
   @Override
   public long getCounter(String counter) {
-    return metricRegistry.counter(MetricRegistry.name(MetricsService.class, counter)).getCount();
+    return getCounter(MetricsService.class, counter);
   }
 
   /*
@@ -403,7 +470,4 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     return totalSuccessfulQueries.getCount();
   }
 
-  protected List<ScheduledReporter> getReporters() {
-    return reporters;
-  }
 }

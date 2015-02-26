@@ -29,6 +29,8 @@ import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.ui.UIApp;
 
 import org.apache.commons.logging.Log;
@@ -44,7 +46,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.codahale.metrics.servlets.AdminServlet;
-
 import lombok.Getter;
 
 /**
@@ -65,8 +66,7 @@ public class LensServer {
   final HiveConf conf;
 
   /**
-   * This flag indicates that the lens server can run,
-   * When this is set to false, main thread bails out.
+   * This flag indicates that the lens server can run, When this is set to false, main thread bails out.
    */
   volatile boolean canRun = true;
 
@@ -91,14 +91,14 @@ public class LensServer {
     startServices(conf);
     String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
     HttpServer server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(),
-        false);
+      false);
     serverList.add(server);
 
     WebappContext adminCtx = new WebappContext("admin", "");
     adminCtx.setAttribute("com.codahale.metrics.servlets.MetricsServlet.registry", ((MetricsServiceImpl) LensServices
-      .get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getMetricRegistry());
+      .get().getService(MetricsService.NAME)).getMetricRegistry());
     adminCtx.setAttribute("com.codahale.metrics.servlets.HealthCheckServlet.registry",
-      ((MetricsServiceImpl) LensServices.get().getService(MetricsServiceImpl.METRICS_SVC_NAME)).getHealthCheck());
+      ((MetricsServiceImpl) LensServices.get().getService(MetricsService.NAME)).getHealthCheck());
 
     final ServletRegistration sgMetrics = adminCtx.addServlet("admin", new AdminServlet());
     sgMetrics.addMapping("/admin/*");
@@ -106,10 +106,10 @@ public class LensServer {
     adminCtx.deploy(server);
 
     if (conf.getBoolean(LensConfConstants.SERVER_UI_ENABLE,
-        LensConfConstants.DEFAULT_SERVER_UI_ENABLE)) {
+      LensConfConstants.DEFAULT_SERVER_UI_ENABLE)) {
       String uiServerURI = conf.get(LensConfConstants.SERVER_UI_URI, LensConfConstants.DEFAULT_SERVER_UI_URI);
       HttpServer uiServer = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(uiServerURI).build(),
-          getUIApp(), false);
+        getUIApp(), false);
       serverList.add(uiServer);
     }
   }
@@ -161,10 +161,8 @@ public class LensServer {
   }
 
   /**
-   * This keeps the server running till a shutdown is
-   * triggered. Either through a shutdown sequence initiated
-   * by an administrator or if applications encounters a
-   * fatal exception or it enters an unrecoverable state.
+   * This keeps the server running till a shutdown is triggered. Either through a shutdown sequence initiated by an
+   * administrator or if applications encounters a fatal exception or it enters an unrecoverable state.
    */
   private void join() {
     while (canRun) {
@@ -245,8 +243,7 @@ public class LensServer {
   }
 
   /**
-   * Registering a shutdown hook to listen to SIGTERM events.
-   * Upon receiving a SIGTERM, notify the server, which is put
+   * Registering a shutdown hook to listen to SIGTERM events. Upon receiving a SIGTERM, notify the server, which is put
    * on wait state.
    */
   private static void registerShutdownHook(final LensServer thisServer) {

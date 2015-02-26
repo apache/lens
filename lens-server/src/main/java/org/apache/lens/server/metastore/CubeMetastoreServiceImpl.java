@@ -48,7 +48,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
 
   public CubeMetastoreServiceImpl(CLIService cliService) {
-    super("metastore", cliService);
+    super(NAME, cliService);
   }
 
   synchronized CubeMetastoreClient getClient(LensSessionHandle sessionid) throws LensException {

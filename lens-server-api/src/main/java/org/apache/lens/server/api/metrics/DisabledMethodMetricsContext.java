@@ -16,35 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server;
-
-import org.apache.hadoop.hive.conf.HiveConf;
+package org.apache.lens.server.api.metrics;
 
 /**
- * The Class LensServerConf.
+ * Dummy implementation of MethodMetricsContext. All the methods do nothing. A singleton. Instead of returning null when
+ * return type is MethodMetricsContext, return {@link DisabledMethodMetricsContext.InstanceHolder#getInstance()} instead
+ * of null/Optional object.
  */
-public final class LensServerConf {
-  private LensServerConf() {
+public class DisabledMethodMetricsContext implements MethodMetricsContext {
+  private DisabledMethodMetricsContext() {
 
   }
 
-  private static final class ConfHolder {
-    public static final HiveConf CONF = new HiveConf();
-
-    static {
-      CONF.addResource("lensserver-default.xml");
-      CONF.addResource("lens-site.xml");
-    }
+  public static class InstanceHolder {
+    private static final DisabledMethodMetricsContext INSTANCE = new DisabledMethodMetricsContext();
   }
 
-  /**
-   * @return the hive conf
-   */
-  public static HiveConf get() {
-    return ConfHolder.CONF;
+  public static DisabledMethodMetricsContext getInstance() {
+    return InstanceHolder.INSTANCE;
   }
 
-  public static HiveConf create() {
-    return new HiveConf(ConfHolder.CONF);
+  @Override
+  public void markError() {
+    // no-op
+  }
+
+  @Override
+  public void markSuccess() {
+    // no-op
   }
 }

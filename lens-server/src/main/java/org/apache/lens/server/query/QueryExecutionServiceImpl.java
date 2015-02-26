@@ -144,7 +144,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * The all queries.
    */
-  private ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<QueryHandle, QueryContext>();
+  protected ConcurrentMap<QueryHandle, QueryContext> allQueries = new ConcurrentHashMap<QueryHandle, QueryContext>();
 
   /**
    * The conf.
@@ -766,6 +766,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             } catch (Exception e) {
               LOG.warn("Exception while closing query with selected driver.", e);
             }
+            LOG.info("Purging: " + finished.getCtx().getQueryHandle());
             allQueries.remove(finished.getCtx().getQueryHandle());
             resultSets.remove(finished.getCtx().getQueryHandle());
           }
