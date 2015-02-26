@@ -88,6 +88,14 @@ Committer Guide
 
 +---+
 
+  * Keep yourself as committer and the contributor as the author of the commit.
+
++---+
+
+    git commit -a --author "Amareshwari Sriramadasu <amareshwari@apache.org>"
+
++---+
+
   * Push the commit to master branch
 
   * Resolve the issue as fixed, thanking the contributor. Always set the "Fix Version" at this point.
@@ -99,14 +107,14 @@ Committer Guide
 
 * Backporting patches
 
-  Once the patch is pushed to master, it can be cherry-picked and applied on other major version lines. 
+  Once the patch is pushed to master, it can be cherry-picked and applied on other major version lines.
   If the patch is not applicable for master and only applicable to the release version, then above guide lines of
   review and commit needs to be followed with change of committing branch to be the release branch.
 
   Fix version needs to include this release version as well.
 
 * Updating Lens site
- 
+
   Lens uses Apache SVN Pub-Sub system to maintain its website. The script tools/scripts/generate-site-public.sh can be used to generate the
 	documentation, which has to be committed to website svn. Steps are as follows -
 
