@@ -150,8 +150,8 @@ public class QueryServiceResource {
    * @param sessionid     The session in which user is submitting the query. Any configuration set in the session will
    *                      be picked up.
    * @param query         The query to run
-   * @param operation     The operation on the query. Supported operations are values: {@value SubmitOp#EXPLAIN},
-   *                      {@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
+   * @param operation     The operation on the query. Supported operations are values: {@value SubmitOp#ESTIMATE},
+   *                      {@value SubmitOp#EXPLAIN},{@value SubmitOp#EXECUTE} and {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
    * @param conf          The configuration for the query
    * @param timeoutmillis The timeout for the query, honored only in case of value {@value
    *                      SubmitOp#EXECUTE_WITH_TIMEOUT} operation
