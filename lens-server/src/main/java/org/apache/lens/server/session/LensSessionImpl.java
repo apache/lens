@@ -350,6 +350,14 @@ public class LensSessionImpl extends HiveSessionImpl {
   }
 
   /**
+   * Get effective class loader for this session
+   * @return
+   */
+  public ClassLoader getClassLoader() {
+    return getClassLoader(getCurrentDatabase());
+  }
+
+  /**
    * The Class ResourceEntry.
    */
   public static class ResourceEntry {

@@ -1316,6 +1316,8 @@ public class TestQueryService extends LensJerseyTest {
     }
     ctx.setDriverQueries(driverQueries);
 
+    // This still holds since current database is default
+    Assert.assertEquals(queryService.getSession(lensSessionId).getCurrentDatabase(), "default");
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(), ctx.getConf()
       .getClassLoader());
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(),
@@ -1432,8 +1434,11 @@ public class TestQueryService extends LensJerseyTest {
 
       LOG.info("@@@ Final query status " + stat.getStatus());
 
-      // Get the session
+      // Make sure correct class loader gets set in query conf
       LensSessionImpl session = sessionService.getSession(sessionHandle);
+      QueryExecutionServiceImpl queryService = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
+      QueryContext queryContext = queryService.getQueryContext(ctx.getQueryHandle());
+      Assert.assertEquals(queryContext.getConf().getClassLoader(), session.getClassLoader());
 
       boolean addedToHiveDriver = false;
 

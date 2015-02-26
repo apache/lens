@@ -161,6 +161,7 @@ public class DatabaseResourceService extends AbstractService {
       try {
         createClassLoader(db);
         loadDBJars(db, dbResEntryMap.get(db), true);
+        LOG.info("Loaded resources for db " + db + " resources: " + dbResEntryMap.get(db));
       } catch (LensException exc) {
         LOG.warn("Failed to load resources for db " + db, exc);
         classLoaderCache.remove(db);
