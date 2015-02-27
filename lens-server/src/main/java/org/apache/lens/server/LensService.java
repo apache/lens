@@ -29,6 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotAuthorizedException;
+import javax.ws.rs.NotFoundException;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
@@ -227,6 +228,10 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @return the session
    */
   public LensSessionImpl getSession(LensSessionHandle sessionHandle) {
+    if (sessionHandle == null) {
+      throw new ClientErrorException("Session is null " + sessionHandle, 400);
+    }
+
     try {
       return ((LensSessionImpl) getSessionManager().getSession(getHiveSessionHandle(sessionHandle)));
     } catch (HiveSQLException exc) {
@@ -254,7 +259,13 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @param sessionHandle public UUID of the session
    */
   public void acquire(String sessionHandle) {
-    acquire(sessionMap.get(sessionHandle));
+    LensSessionHandle handle = sessionMap.get(sessionHandle);
+
+    if (handle == null) {
+      throw new NotFoundException("Session handle not found " + sessionHandle);
+    }
+
+    acquire(handle);
   }
 
   /**
@@ -276,7 +287,10 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @throws LensException if session cannot be released
    */
   public void release(String sessionHandle) throws LensException {
-    getSession(sessionMap.get(sessionHandle)).release();
+    LensSessionHandle handle = sessionMap.get(sessionHandle);
+    if (handle != null) {
+      getSession(handle).release();
+    }
   }
 
   /**

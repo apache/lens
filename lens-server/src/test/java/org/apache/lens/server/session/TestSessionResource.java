@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.HashMap;
 
 import javax.ws.rs.ClientErrorException;
 import javax.ws.rs.NotFoundException;
@@ -428,6 +429,39 @@ public class TestSessionResource extends LensJerseyTest {
         LensSessionHandle.class);
       Assert.fail("Expected above call to fail with not found exception");
     } catch (NotFoundException nfe) {
+      // PASS
+    }
+  }
+
+  /**
+   * Test acquire and release behaviour for closed sessions
+   */
+  @Test
+  public void testAcquireReleaseClosedSession() throws Exception {
+    HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
+
+    LensSessionHandle sessionHandle = sessionService.openSession("foo@localhost", "bar", new HashMap<String, String>());
+    Assert.assertNotNull(sessionHandle, "Expected session to be opened");
+
+    sessionService.closeSession(sessionHandle);
+    final String sessionIdentifier = sessionHandle.getPublicId().toString();
+
+    try {
+      sessionService.acquire(sessionIdentifier);
+      // Above statement should throw notfound exception
+      Assert.fail("Should not reach here since above statement should have thrown NotFoundException");
+    } catch (NotFoundException nfe) {
+      // Pass
+    } finally {
+      // Should not do anything
+      sessionService.release(sessionIdentifier);
+    }
+
+    // Get session for null handle should throw bad request
+    try {
+      sessionService.getSession(sessionHandle);
+      Assert.fail("Above statement should have thrown erorr");
+    } catch (ClientErrorException cee) {
       // PASS
     }
   }
