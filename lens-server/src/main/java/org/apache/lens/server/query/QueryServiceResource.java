@@ -159,7 +159,7 @@ public class QueryServiceResource {
    * @param queryName     human readable query name set by user (optional parameter)
    * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation. {@link QueryPlan} in case of {@value
    * SubmitOp#EXPLAIN} operation. {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
-   * operation.
+   * operation. {@link EstimateResult} in case of {@value SubmitOp#ESTIMATE} operation.
    */
   @POST
   @Path("queries")
