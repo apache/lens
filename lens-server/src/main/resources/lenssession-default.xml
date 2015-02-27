@@ -34,7 +34,7 @@
 
   <property>
     <name>lens.query.result.parent.dir</name>
-    <value>/tmp/lensreports</value>
+    <value>file:///tmp/lensreports</value>
     <description>The directory for storing persisted result of query. This
       directory should exist and should have writable permissions by lens server
     </description>
