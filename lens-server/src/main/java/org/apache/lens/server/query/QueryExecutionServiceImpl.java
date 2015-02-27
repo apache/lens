@@ -1090,6 +1090,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     accept(query, conf, op);
     PreparedQueryContext prepared = new PreparedQueryContext(query, getSession(sessionHandle).getLoggedInUser(), conf,
       lensConf, drivers.values());
+    prepared.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     rewriteAndSelect(prepared);
     preparedQueries.put(prepared.getPrepareHandle(), prepared);
     preparedQueryQueue.add(prepared);
@@ -1795,7 +1796,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       Configuration qconf = getLensConf(sessionHandle, lensConf);
       ExplainQueryContext explainQueryContext = new ExplainQueryContext(query,
         getSession(sessionHandle).getLoggedInUser(), lensConf, qconf, drivers.values());
-
+      explainQueryContext.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       accept(query, qconf, SubmitOp.EXPLAIN);
       rewriteAndSelect(explainQueryContext);
       maybeAddSessionResourcesToDriver(explainQueryContext);
@@ -2195,18 +2196,31 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     // Add resources if either they haven't been marked as added on the session, or if Hive driver says they need
     // to be added to the corresponding hive driver
     if (!hiveDriver.areRsourcesAddedForSession(sessionIdentifier)) {
-      LOG.info("Proceeding to add resources for DB "
-        + session.getCurrentDatabase() + " for query " + queryHandle);
       Collection<LensSessionImpl.ResourceEntry> dbResources = session.getCurrentDBResources();
       if (dbResources != null && !dbResources.isEmpty()) {
+        Map<String, LinkedHashSet<String>> resourceMap = new HashMap<String, LinkedHashSet<String>>();
+
         for (LensSessionImpl.ResourceEntry resource : dbResources) {
+          LinkedHashSet<String> typeResources = resourceMap.get(resource.getType());
+          if (typeResources == null) {
+            typeResources = new LinkedHashSet<String>();
+            resourceMap.put(resource.getType(), typeResources);
+          }
+          typeResources.add(resource.getLocation());
+        }
+
+        LOG.info("Proceeding to add resources for DB "
+          + session.getCurrentDatabase() + " for query " + queryHandle + " resources: " + resourceMap);
+
+        for (String resType : resourceMap.keySet()) {
           try {
-            String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
+            String command = "add " + resType + "s " + StringUtils.join(resourceMap.get(resType), " ");
             hiveDriver.execute(createResourceQuery(command, sessionHandle, driver));
-            LOG.info("Added resource to hive driver " + resource);
+            LOG.info("Added resources to hive driver for session "
+              + sessionIdentifier + " cmd: " + command);
           } catch (LensException exc) {
-            LOG.warn("Failed to add resource to hive driver for session: "
-              + sessionIdentifier + " resource:" + resource.toString(), exc);
+            LOG.error("Error adding resources for session "
+              + sessionIdentifier + " resources: " + resourceMap.get(resType), exc.getCause());
           }
         }
       } else {

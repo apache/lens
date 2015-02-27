@@ -20,14 +20,17 @@ package org.apache.lens.server.session;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -124,24 +127,53 @@ public class DatabaseResourceService extends AbstractService {
   }
 
   private void findResourcesInDir(FileSystem serverFs, String database, Path dbDirPath) throws IOException {
-    for (FileStatus dbResFile : serverFs.listStatus(dbDirPath)) {
-      // Skip subdirectories
-      if (serverFs.isDirectory(dbResFile.getPath())) {
-        continue;
+    // Check if order file is present in the directory
+    List<String> jars = null;
+    Path jarOrderFile = new Path(dbDirPath, "jar_order");
+    if (serverFs.exists(jarOrderFile)) {
+      InputStream jarOrderInputStream = null;
+      try {
+        jarOrderInputStream = serverFs.open(jarOrderFile);
+        jars = IOUtils.readLines(jarOrderInputStream, Charset.forName("UTF-8"));
+      } catch (IOException ioexc) {
+        LOG.error("Unable to load jar order file for " + dbDirPath, ioexc);
+      } finally {
+        IOUtils.closeQuietly(jarOrderInputStream);
       }
+    }
 
-      String dbResName = dbResFile.getPath().getName();
-      String dbResUri = dbResFile.getPath().toUri().toString();
+    if (jars != null && !jars.isEmpty()) {
+      LOG.info(database + " picking jar in jar_order: " + jars);
+      for (String jar : jars) {
+        Path jarFilePath = new Path(dbDirPath, jar);
+        if (!jar.endsWith(".jar") || !serverFs.exists(jarFilePath)) {
+          LOG.info("Resource skipped " + jarFilePath + " for db " + database);
+          continue;
+        }
+        addResourceEntry(new LensSessionImpl.ResourceEntry("jar", jarFilePath.toUri().toString()), database);
+      }
+    } else {
+      LOG.info(database + " picking jars in file list order");
+      for (FileStatus dbResFile : serverFs.listStatus(dbDirPath)) {
+        // Skip subdirectories
+        if (serverFs.isDirectory(dbResFile.getPath())) {
+          continue;
+        }
 
-      if (dbResName.endsWith(".jar")) {
-        addResourceEntry(new LensSessionImpl.ResourceEntry("jar", dbResUri), database);
-      } else {
-        LOG.info("Resource skipped " + dbResFile.getPath() + " for db " + database);
+        String dbResName = dbResFile.getPath().getName();
+        String dbResUri = dbResFile.getPath().toUri().toString();
+
+        if (dbResName.endsWith(".jar")) {
+          addResourceEntry(new LensSessionImpl.ResourceEntry("jar", dbResUri), database);
+        } else {
+          LOG.info("Resource skipped " + dbResFile.getPath() + " for db " + database);
+        }
       }
     }
   }
 
   private void addResourceEntry(LensSessionImpl.ResourceEntry entry, String dbName) {
+    LOG.info("Adding resource entry " + entry.getLocation() + " for " + dbName);
     synchronized (dbResEntryMap) {
       List<LensSessionImpl.ResourceEntry> dbEntryList = dbResEntryMap.get(dbName);
       if (dbEntryList == null) {

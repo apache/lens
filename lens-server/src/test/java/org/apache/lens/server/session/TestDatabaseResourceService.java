@@ -20,6 +20,9 @@ package org.apache.lens.server.session;
 
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
@@ -99,6 +102,28 @@ public class TestDatabaseResourceService {
     // Verify DB1 loader does not contain DB2's jar and vice versa
     Assert.assertFalse(isJarLoaded(dbResService.getClassLoader(DB2), DB1));
     Assert.assertFalse(isJarLoaded(dbResService.getClassLoader(DB1), DB2));
+  }
+
+  @Test
+  public void testJarOrder() throws Exception {
+    Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService.getResourcesForDatabase(DB1);
+    List<String> actualOrderList = new ArrayList<String>();
+
+    for (LensSessionImpl.ResourceEntry res : actualOrder) {
+      actualOrderList.add(res.getLocation());
+    }
+
+    String[] expectedOrderArr = {
+      "z_" + DB1 + ".jar",
+      "y_" + DB1 + ".jar",
+      "x_" + DB1 + ".jar",
+    };
+
+    // Verify order
+    for (int i = 0; i < expectedOrderArr.length; i++) {
+      Assert.assertTrue(actualOrderList.get(i).contains(expectedOrderArr[i]),
+        actualOrderList.get(i) + " > " + expectedOrderArr[i]);
+    }
   }
 
   @Test
