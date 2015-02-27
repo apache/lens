@@ -632,8 +632,10 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             LOG.error("Status update failed for " + handle, exc);
           }
           // query is successfully executed by driver and
-          // if query result need not persisted, move the query to succeeded state
-          if (ctx.getStatus().getStatus().equals(QueryStatus.Status.EXECUTED) && !ctx.isPersistent()) {
+          // if query result need not be persisted or there is no result available in driver, move the query to
+          // succeeded state immediately, otherwise result formatter will format the result and move it to succeeded
+          if (ctx.getStatus().getStatus().equals(QueryStatus.Status.EXECUTED) && (!ctx.isPersistent()
+            || !ctx.isResultAvailableInDriver())) {
             setSuccessState(ctx);
           } else {
             if (ctx.getStatus().isFinished()) {

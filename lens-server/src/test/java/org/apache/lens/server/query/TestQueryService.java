@@ -1498,4 +1498,18 @@ public class TestQueryService extends LensJerseyTest {
       Assert.assertNull(ctx.getDriverQueryCost(driver));
     }
   }
+
+  @Test
+  public void testNonSelectQueriesWithPersistResult() throws InterruptedException {
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
+    String tblName = "testNonSelectQueriesWithPersistResult";
+    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "true");
+    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
+    LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+  }
 }

@@ -166,6 +166,21 @@ public final class LensTestUtil {
     throws InterruptedException {
     LensConf conf = new LensConf();
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    dropTableWithConf(tblName, parent, lensSessionId, conf);
+  }
+
+  /**
+   * Drop table with conf passed.
+   *
+   * @param tblName       the tbl name
+   * @param parent        the parent
+   * @param lensSessionId the lens session id
+   * @param conf          the query conf
+   *
+   * @throws InterruptedException
+   */
+  public static void dropTableWithConf(String tblName, WebTarget parent, LensSessionHandle lensSessionId,
+    LensConf conf) throws InterruptedException {
     final WebTarget target = parent.path("queryapi/queries");
 
     final FormDataMultiPart mp = new FormDataMultiPart();

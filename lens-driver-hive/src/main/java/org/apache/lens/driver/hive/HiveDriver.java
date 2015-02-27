@@ -520,7 +520,7 @@ public class HiveDriver implements LensDriver {
       // Get operation status from hive server
       LOG.debug("GetStatus hiveHandle: " + hiveHandle);
       OperationStatus opStatus = getClient().getOperationStatus(hiveHandle);
-      LOG.debug("GetStatus on hiveHandle: " + hiveHandle + " returned state:" + opStatus);
+      LOG.debug("GetStatus on hiveHandle: " + hiveHandle + " returned state:" + opStatus.getState().name());
 
       switch (opStatus.getState()) {
       case CANCELED:
