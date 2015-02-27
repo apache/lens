@@ -303,7 +303,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     return eventService;
   }
 
-  private synchronized MetricsService getMetrics() {
+  private MetricsService getMetrics() {
     if (metricsService == null) {
       metricsService = (MetricsService) LensServices.get().getService(MetricsService.NAME);
       if (metricsService == null) {
@@ -313,7 +313,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     return metricsService;
   }
 
-  private synchronized StatisticsService getStatisticsService() {
+  private StatisticsService getStatisticsService() {
     if (statisticsService == null) {
       statisticsService = (StatisticsService) LensServices.get().getService(StatisticsService.STATS_SVC_NAME);
       if (statisticsService == null) {
