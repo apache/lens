@@ -398,6 +398,8 @@ public class TestRewriting {
       th = e;
     }
     Assert.assertNotNull(th);
+    Assert.assertNotNull(ctx.getDriverRewriteError(driver));
+    Assert.assertNotNull(ctx.getDriverRewriteError(driver2));
     Assert.assertTrue(
       th.getMessage().contains("Rewriting failed, cause :No driver accepted the query, because Mock fail"));
   }

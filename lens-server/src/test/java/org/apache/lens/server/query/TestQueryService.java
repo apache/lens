@@ -1457,4 +1457,45 @@ public class TestQueryService extends LensJerseyTest {
     }
   }
 
+  @Test
+  public void testRewriteFailure() {
+    final WebTarget target = target().path("queryapi/queries");
+
+    // estimate cube query which fails semantic analysis
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "cube select ID from nonexist"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    final EstimateResult result = target.request()
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), EstimateResult.class);
+    Assert.assertNotNull(result);
+    Assert.assertNull(result.getCost());
+    Assert.assertTrue(result.isError());
+    System.out.println("ERROR for REWRITE:" + result.getErrorMsg());
+    Assert.assertTrue(result.getErrorMsg().contains("No driver accepted the query, because Neither cube nor dimensions"
+      + " accessed in the query"));
+  }
+
+  @Test
+  public void testDriverEstimateSkippingForRewritefailure() throws LensException {
+    Configuration conf = queryService.getLensConf(lensSessionId, new LensConf());
+    QueryContext ctx = new QueryContext("cube select ID from nonexist", "user", new LensConf(), conf,
+      queryService.getDrivers());
+    for (LensDriver driver : queryService.getDrivers()) {
+      ctx.setDriverRewriteError(driver, new LensException());
+    }
+    try {
+      ctx.estimateCostForDrivers();
+      Assert.fail("estimate should have failed");
+    } catch (LensException e) {
+      // expected
+    }
+    for (LensDriver driver : queryService.getDrivers()) {
+      Assert.assertNull(ctx.getDriverQueryCost(driver));
+    }
+  }
 }

@@ -98,6 +98,11 @@ public class DriverSelectorQueryContext {
 
     @Getter
     @Setter
+    /** exceptions occurred while rewriting query for driver */
+    protected Exception driverQueryRewriteError;
+
+    @Getter
+    @Setter
     /** exceptions occurred while trying to estimate cost */
     protected Exception driverQueryCostEstimateError;
 

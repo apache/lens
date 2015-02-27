@@ -140,6 +140,10 @@ public abstract class AbstractQueryContext implements Serializable {
     boolean succeededOnAtleastOneDriver = false;
     for (LensDriver driver : driverContext.getDrivers()) {
       final DriverQueryContext driverQueryContext = driverContext.driverQueryContextMap.get(driver);
+      if (driverQueryContext.getDriverQueryRewriteError() != null) {
+        // skip estimate
+        continue;
+      }
       try {
         driverQueryContext.setDriverCost(driver.estimate(this));
         succeededOnAtleastOneDriver = true;
@@ -176,14 +180,37 @@ public abstract class AbstractQueryContext implements Serializable {
     return null;
   }
 
+  /**
+   * Get driver query
+   *
+   * @param driver
+   *
+   * @return query
+   */
   public String getDriverQuery(LensDriver driver) {
     return driverContext.getDriverQuery(driver);
   }
 
+  /**
+   * Get driver conf
+   *
+   * @param driver
+   *
+   * @return Configuration
+   */
   public Configuration getDriverConf(LensDriver driver) {
     return driverContext.getDriverConf(driver);
   }
 
+  /**
+   * Get query cost for the driver
+   *
+   * @param driver
+   * @return QueryCost
+   */
+  public QueryCost getDriverQueryCost(LensDriver driver) {
+    return driverContext.getDriverQueryCost(driver);
+  }
   /**
    * Wrapper method for convenience on driver context
    *
@@ -246,11 +273,37 @@ public abstract class AbstractQueryContext implements Serializable {
     return null;
   }
 
+  /**
+   * Get selected driver's cost
+   *
+   * @return QueryCost
+   * @throws LensException
+   */
   public QueryCost getSelectedDriverQueryCost() throws LensException {
     if (driverContext != null) {
       return driverContext.getSelectedDriverQueryCost();
     }
     return null;
+  }
+
+  /**
+   * Set exception during rewrite.
+   *
+   * @param driver
+   * @param exp
+   */
+  public void setDriverRewriteError(LensDriver driver, Exception exp) {
+    driverContext.driverQueryContextMap.get(driver).setDriverQueryRewriteError(exp);
+  }
+
+  /**
+   * Get exception during rewrite.
+   *
+   * @param driver
+   * @return exp
+   */
+  public Exception getDriverRewriteError(LensDriver driver) {
+    return driverContext.driverQueryContextMap.get(driver).getDriverQueryRewriteError();
   }
 
 }
