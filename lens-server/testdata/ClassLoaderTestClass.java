@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/** Test class which is added to test.jar used in TestDatabaseResourceService */
+/** Test class which is added to test2.jar used in TestDatabaseResourceService */
 public class ClassLoaderTestClass {
   public static final boolean TEST_FIELD = true;
 }

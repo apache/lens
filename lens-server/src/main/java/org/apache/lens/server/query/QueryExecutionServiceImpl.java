@@ -2197,30 +2197,26 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     // to be added to the corresponding hive driver
     if (!hiveDriver.areRsourcesAddedForSession(sessionIdentifier)) {
       Collection<LensSessionImpl.ResourceEntry> dbResources = session.getCurrentDBResources();
+
       if (dbResources != null && !dbResources.isEmpty()) {
-        Map<String, LinkedHashSet<String>> resourceMap = new HashMap<String, LinkedHashSet<String>>();
-
-        for (LensSessionImpl.ResourceEntry resource : dbResources) {
-          LinkedHashSet<String> typeResources = resourceMap.get(resource.getType());
-          if (typeResources == null) {
-            typeResources = new LinkedHashSet<String>();
-            resourceMap.put(resource.getType(), typeResources);
-          }
-          typeResources.add(resource.getLocation());
-        }
-
         LOG.info("Proceeding to add resources for DB "
-          + session.getCurrentDatabase() + " for query " + queryHandle + " resources: " + resourceMap);
+          + session.getCurrentDatabase() + " for query " + queryHandle + " resources: " + dbResources);
 
-        for (String resType : resourceMap.keySet()) {
+        for (LensSessionImpl.ResourceEntry res : dbResources) {
+          String uri = res.getLocation();
           try {
-            String command = "add " + resType + "s " + StringUtils.join(resourceMap.get(resType), " ");
+            // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
+            // See: org.apache.hadoop.hive.ql.exec.Utilities.addToClassPath
+            if (uri.startsWith("file:") && !uri.startsWith("file://")) {
+              uri = "file://" + uri.substring("file:".length());
+            }
+            String command = "add " + res.getType().toLowerCase() + " " + uri;
             hiveDriver.execute(createResourceQuery(command, sessionHandle, driver));
-            LOG.info("Added resources to hive driver for session "
+            LOG.info("Added resource to hive driver for session "
               + sessionIdentifier + " cmd: " + command);
           } catch (LensException exc) {
             LOG.error("Error adding resources for session "
-              + sessionIdentifier + " resources: " + resourceMap.get(resType), exc.getCause());
+              + sessionIdentifier + " resources: " + uri, exc.getCause());
           }
         }
       } else {

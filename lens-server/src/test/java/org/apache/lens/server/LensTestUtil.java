@@ -245,6 +245,7 @@ public final class LensTestUtil {
     // Create databases and resource dirs
     Hive hive = Hive.get(conf);
     File testJarFile = new File("testdata/test.jar");
+    File serdeJarFile = new File("testdata/serde.jar");
 
     for (String db : testDatabases) {
       Database database = new Database();
@@ -261,15 +262,18 @@ public final class LensTestUtil {
           "x_" + db + ".jar",
           "y_" + db + ".jar",
           "z_" + db + ".jar",
+          "serde.jar",
         };
 
         // Jar order is -> z, y, x, File listing order is x, y, z
         // We are explicitly specifying jar order
-        FileUtils.writeLines(new File(dbDir, "jar_order"), Arrays.asList(jarOrder[2], jarOrder[1], jarOrder[0]));
+        FileUtils.writeLines(new File(dbDir, "jar_order"), Arrays.asList(jarOrder[2], jarOrder[1],
+          jarOrder[0], jarOrder[3]));
 
         FileUtils.copyFile(testJarFile, new File(dbDir, jarOrder[0]));
         FileUtils.copyFile(testJarFile, new File(dbDir, jarOrder[1]));
         FileUtils.copyFile(testJarFile, new File(dbDir, jarOrder[2]));
+        FileUtils.copyFile(serdeJarFile, new File(dbDir, jarOrder[3]));
       } catch (FileNotFoundException fnf) {
         fnf.printStackTrace();
       }
