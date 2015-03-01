@@ -20,6 +20,9 @@ package org.apache.lens.driver.jdbc;
 
 import static org.testng.Assert.*;
 
+import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
@@ -49,6 +52,7 @@ import org.testng.annotations.Test;
 public class TestColumnarSQLRewriter {
 
   HiveConf conf = new HiveConf();
+  HiveConf queryConf = new HiveConf();
   ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
   /**
@@ -774,19 +778,33 @@ public class TestColumnarSQLRewriter {
    */
   @Test
   public void testReplaceDBName() throws Exception {
-    conf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
+    File jarDir = new File("testdata");
+    File testJarFile = new File(jarDir, "test.jar");
+    File serdeJarFile = new File(jarDir, "serde.jar");
+
+    URL[] serdeUrls = new URL[2];
+    serdeUrls[0] = new URL("file:" + testJarFile.getAbsolutePath());
+    serdeUrls[1] = new URL("file:" + serdeJarFile.getAbsolutePath());
+
+    URLClassLoader createTableClassLoader = new URLClassLoader(serdeUrls, conf.getClassLoader());
+    conf.setClassLoader(createTableClassLoader);
     SessionState.start(conf);
 
     // Create test table
     Database database = new Database();
     database.setName("mydb");
-    Hive.get().createDatabase(database);
-    createTable("mydb", "mytable", "testDB", "testTable_1");
-    createTable("mydb", "mytable_2", "testDB", "testTable_2");
-    createTable("default", "mytable_3", "testDB", "testTable_3");
+
+    Hive.get(conf).createDatabase(database);
+    createTable(conf, "mydb", "mytable", "testDB", "testTable_1");
+    createTable(conf, "mydb", "mytable_2", "testDB", "testTable_2");
+    createTable(conf, "default", "mytable_3", "testDB", "testTable_3");
 
     String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id "
       + " left outer join mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
+
+    queryConf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
+    // Test fails without setting this class loader as now metastore lookup is done using queryConf
+    queryConf.setClassLoader(createTableClassLoader);
 
     ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
     rewriter.init(conf);
@@ -798,7 +816,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -816,7 +834,7 @@ public class TestColumnarSQLRewriter {
       && joinTreeAfterRewrite.contains("testtable_3"));
 
     // Rewrite one more query where table and db name is not set
-    createTable("mydb", "mytable_4", null, null);
+    createTable(conf, "mydb", "mytable_4", null, null);
     String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
     rewriter.ast = HQLParser.parseHQL(query2);
     rewriter.query = query2;
@@ -826,7 +844,7 @@ public class TestColumnarSQLRewriter {
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -838,14 +856,14 @@ public class TestColumnarSQLRewriter {
     database = new Database();
     database.setName("examples");
     Hive.get().createDatabase(database);
-    createTable("examples", "mytable", "default", null);
+    createTable(conf, "examples", "mytable", "default", null);
 
     String defaultQuery = "SELECT * FROM examples.mytable t1 WHERE A = 100";
     rewriter.ast = HQLParser.parseHQL(defaultQuery);
     rewriter.query = defaultQuery;
     rewriter.analyzeInternal();
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
@@ -868,9 +886,9 @@ public class TestColumnarSQLRewriter {
    * @param utable the utable
    * @throws Exception the exception
    */
-  void createTable(String db, String table, String udb, String utable) throws Exception {
+  void createTable(HiveConf conf, String db, String table, String udb, String utable) throws Exception {
     Table tbl1 = new Table(db, table);
-
+    tbl1.setSerializationLib("DatabaseJarSerde");
     if (StringUtils.isNotBlank(udb)) {
       tbl1.setProperty(LensConfConstants.NATIVE_DB_NAME, udb);
     }
@@ -883,7 +901,7 @@ public class TestColumnarSQLRewriter {
     columns.add(new FieldSchema("name", "string", "col2"));
     tbl1.setFields(columns);
 
-    Hive.get().createTable(tbl1);
+    Hive.get(conf).createTable(tbl1);
     System.out.println("Created table " + table);
   }
 }

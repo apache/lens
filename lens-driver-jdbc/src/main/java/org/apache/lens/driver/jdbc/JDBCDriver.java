@@ -567,7 +567,7 @@ public class JDBCDriver implements LensDriver {
     }
     checkConfigured();
     String explainQuery;
-    String rewrittenQuery = rewriteQuery(explainCtx.getDriverQuery(this), conf);
+    String rewrittenQuery = rewriteQuery(explainCtx.getDriverQuery(this), explainCtx.getDriverConf(this));
     Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
       false);

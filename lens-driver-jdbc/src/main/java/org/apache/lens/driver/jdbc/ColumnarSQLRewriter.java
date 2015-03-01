@@ -45,9 +45,6 @@ import org.antlr.runtime.CommonToken;
  */
 public class ColumnarSQLRewriter implements QueryRewriter {
 
-  /** The conf. */
-  private HiveConf conf;
-
   /** The clause name. */
   private String clauseName = null;
 
@@ -167,7 +164,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
 
   @Override
   public void init(Configuration conf) {
-    this.conf = new HiveConf(conf, ColumnarSQLRewriter.class);
   }
 
   public String getClause() {
@@ -825,9 +821,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @throws HiveException the hive exception
    */
-  public void buildQuery() throws HiveException {
+  public void buildQuery(HiveConf queryConf) throws HiveException {
     analyzeInternal();
-    replaceWithUnderlyingStorage(fromAST);
+    replaceWithUnderlyingStorage(queryConf, fromAST);
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST);
@@ -1034,6 +1030,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    */
   @Override
   public synchronized String rewrite(String query, Configuration conf) throws LensException {
+    HiveConf  queryConf = new HiveConf(conf, ColumnarSQLRewriter.class);
+    queryConf.setClassLoader(conf.getClassLoader());
     this.query = query;
     StringBuilder mergedQuery;
     rewrittenQuery.setLength(0);
@@ -1047,7 +1045,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         for (int i = 0; i < queries.length; i++) {
           LOG.info("Union Query Part " + i + " : " + queries[i]);
           ast = HQLParser.parseHQL(queries[i]);
-          buildQuery();
+          buildQuery(queryConf);
           mergedQuery = rewrittenQuery.append(" union all ");
           finalRewrittenQuery = mergedQuery.toString().substring(0, mergedQuery.lastIndexOf("union all"));
           reset();
@@ -1057,7 +1055,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       } else {
         ast = HQLParser.parseHQL(query);
-        buildQuery();
+        buildQuery(queryConf);
         queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
         LOG.info("Input Query : " + query);
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
@@ -1080,7 +1078,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @param tree the AST tree
    */
-  protected void replaceWithUnderlyingStorage(ASTNode tree) {
+  protected void replaceWithUnderlyingStorage(HiveConf queryConf, ASTNode tree) {
     if (tree == null) {
       return;
     }
@@ -1094,8 +1092,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
           String lensTable = dbIdentifier.getText() + "." + tableIdentifier.getText();
-          String table = getUnderlyingTableName(lensTable);
-          String db = getUnderlyingDBName(lensTable);
+          String table = getUnderlyingTableName(queryConf, lensTable);
+          String db = getUnderlyingDBName(queryConf, lensTable);
 
           // Replace both table and db names
           if ("default".equalsIgnoreCase(db)) {
@@ -1111,14 +1109,14 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
           String lensTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(lensTable);
+          String table = getUnderlyingTableName(queryConf, lensTable);
           // Replace table name
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
           }
 
           // Add db name as a new child
-          String dbName = getUnderlyingDBName(lensTable);
+          String dbName = getUnderlyingDBName(queryConf, lensTable);
           if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
             dbIdentifier.setParent(tree);
@@ -1130,7 +1128,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
-        replaceWithUnderlyingStorage((ASTNode) tree.getChild(i));
+        replaceWithUnderlyingStorage(queryConf, (ASTNode) tree.getChild(i));
       }
     }
   }
@@ -1142,8 +1140,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying db name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingDBName(String table) throws HiveException {
-    Table tbl = Hive.get(this.conf).getTable(table);
+  String getUnderlyingDBName(HiveConf queryConf, String table) throws HiveException {
+    Table tbl = Hive.get(queryConf).getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
@@ -1154,8 +1152,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying table name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingTableName(String table) throws HiveException {
-    Table tbl = Hive.get(this.conf).getTable(table);
+  String getUnderlyingTableName(HiveConf queryConf, String table) throws HiveException {
+    Table tbl = Hive.get(queryConf).getTable(table);
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 
