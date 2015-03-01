@@ -465,5 +465,4 @@ public class TestSessionResource extends LensJerseyTest {
       // PASS
     }
   }
-
 }

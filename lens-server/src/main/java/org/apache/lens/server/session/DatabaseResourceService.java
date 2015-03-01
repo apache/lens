@@ -31,6 +31,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -145,6 +146,10 @@ public class DatabaseResourceService extends AbstractService {
     if (jars != null && !jars.isEmpty()) {
       LOG.info(database + " picking jar in jar_order: " + jars);
       for (String jar : jars) {
+        if (StringUtils.isBlank(jar)) {
+          // skipping empty lines. usually the last line could be empty
+          continue;
+        }
         Path jarFilePath = new Path(dbDirPath, jar);
         if (!jar.endsWith(".jar") || !serverFs.exists(jarFilePath)) {
           LOG.info("Resource skipped " + jarFilePath + " for db " + database);

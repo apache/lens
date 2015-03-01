@@ -166,7 +166,14 @@ public class LensSessionImpl extends HiveSessionImpl {
 
   public CubeMetastoreClient getCubeMetastoreClient() throws LensException {
     try {
-      return CubeMetastoreClient.getInstance(getHiveConf());
+      CubeMetastoreClient cubeClient = CubeMetastoreClient.getInstance(getHiveConf());
+      // since cube client's configuration is a copy of the session conf passed, setting classloader in cube client's
+      // configuration does not modify session conf's classloader.
+      // We are doing this on the cubeClient instance than doing a copy of conf and setting classloader and pass it to
+      // cube metastore client because CubeMetastoreClient would have been cached and refreshing the classloader
+      // should not result in invalidating the CubeMetastoreClient cache.
+      cubeClient.getConf().setClassLoader(getClassLoader());
+      return cubeClient;
     } catch (HiveException e) {
       throw new LensException(e);
     }

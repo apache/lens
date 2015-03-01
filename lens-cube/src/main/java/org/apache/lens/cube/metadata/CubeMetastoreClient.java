@@ -47,7 +47,7 @@ public class CubeMetastoreClient {
   private final boolean enableCaching;
 
   private CubeMetastoreClient(HiveConf conf) {
-    this.config = conf;
+    this.config = new HiveConf(conf);
     this.enableCaching = conf.getBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, true);
   }
 
@@ -87,6 +87,15 @@ public class CubeMetastoreClient {
 
   private Hive getClient() throws HiveException {
     return Hive.get(config);
+  }
+
+  /**
+   * Get cube metastore client conf
+   *
+   * @return HiveConf
+   */
+  public HiveConf getConf() {
+    return config;
   }
 
   /**
