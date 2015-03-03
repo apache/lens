@@ -86,12 +86,12 @@ public class DatabaseResourceService extends AbstractService {
     FileSystem serverFs = null;
 
     try {
-      serverFs = FileSystem.get(getHiveConf());
       String resTopDir =
         getHiveConf().get(LensConfConstants.DATABASE_RESOURCE_DIR, LensConfConstants.DEFAULT_DATABASE_RESOURCE_DIR);
       LOG.info("Database specific resources at " + resTopDir);
 
       Path resTopDirPath = new Path(resTopDir);
+      serverFs = FileSystem.newInstance(resTopDirPath.toUri(), getHiveConf());
       if (!serverFs.exists(resTopDirPath)) {
         LOG.warn("Database resource location does not exist - " + resTopDir + ". Database jars will not be available");
         return;
