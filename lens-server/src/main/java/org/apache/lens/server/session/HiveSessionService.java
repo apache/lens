@@ -46,7 +46,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIService;
@@ -200,23 +199,36 @@ public class HiveSessionService extends LensService implements SessionService {
     throws LensException {
     LensSessionHandle sessionid = super.openSession(username, password, configuration);
     LOG.info("Opened session " + sessionid + " for user " + username);
-    // add auxuiliary jars
-    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(LensConfConstants.AUX_JARS);
 
     // Set current database
     if (StringUtils.isNotBlank(database)) {
       try {
         if (!Hive.get(getSession(sessionid).getHiveConf()).databaseExists(database)) {
+          closeSession(sessionid);
+          LOG.info("Closed session " + sessionid.getPublicId().toString() + " as db " + database + " does not exist");
           throw new NotFoundException("Database " + database + " does not exist");
         }
-      } catch (HiveException e) {
-        LOG.error("Error in checking if database exists " + database, e);
-        throw new LensException(e);
+      } catch (Exception e) {
+        if (!(e instanceof NotFoundException)) {
+          try {
+            closeSession(sessionid);
+          } catch (LensException e2) {
+            LOG.error("Error closing session " + sessionid.getPublicId().toString(), e2);
+          }
+
+          LOG.error("Error in checking if database exists " + database, e);
+          throw new LensException("Error in checking if database exists" + database, e);
+        } else {
+          throw (NotFoundException) e;
+        }
       }
 
       getSession(sessionid).setCurrentDatabase(database);
       LOG.info("Set database to " + database + " for session " + sessionid.getPublicId());
     }
+
+    // add auxuiliary jars
+    String[] auxJars = getSession(sessionid).getSessionConf().getStrings(LensConfConstants.AUX_JARS);
 
     if (auxJars != null) {
       LOG.info("Adding aux jars:" + auxJars);
