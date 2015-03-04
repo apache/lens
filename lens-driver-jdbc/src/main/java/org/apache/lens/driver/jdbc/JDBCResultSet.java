@@ -40,6 +40,10 @@ import org.apache.hive.service.cli.TypeDescriptor;
 import org.apache.hive.service.cli.TypeQualifiers;
 import org.apache.log4j.Logger;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+import lombok.*;
+
 /**
  * The Class JDBCResultSet.
  */
@@ -101,26 +105,68 @@ public class JDBCResultSet extends InMemoryResultSet {
   @Override
   public synchronized LensResultSetMetadata getMetadata() throws LensException {
     if (lensResultMeta == null) {
-      lensResultMeta = new LensResultSetMetadata() {
-        @Override
-        public List<ColumnDescriptor> getColumns() {
-          try {
-            ResultSetMetaData rsmeta = getRsMetadata();
-            List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(rsmeta.getColumnCount());
-            for (int i = 1; i <= rsmeta.getColumnCount(); i++) {
-              FieldSchema col = new FieldSchema(rsmeta.getColumnName(i), TypeInfoUtils.getTypeInfoFromTypeString(
-                getHiveTypeForSQLType(i, rsmeta)).getTypeName(), rsmeta.getColumnTypeName(i));
-              columns.add(new ColumnDescriptor(col, i));
-            }
-            return columns;
-          } catch (Exception e) {
-            LOG.error("Error getting JDBC type information: " + e.getMessage(), e);
-            return null;
-          }
+      JDBCResultSetMetadata jdbcResultSetMetadata = new JDBCResultSetMetadata();
+      jdbcResultSetMetadata.setFieldSchemas(new ArrayList<FieldSchemaData>());
+      try {
+        ResultSetMetaData rsmeta = getRsMetadata();
+
+        for (int i = 1; i <= rsmeta.getColumnCount(); i++) {
+          FieldSchemaData col = new FieldSchemaData(rsmeta.getColumnName(i),
+            TypeInfoUtils.getTypeInfoFromTypeString(getHiveTypeForSQLType(i, rsmeta)).getTypeName(),
+            rsmeta.getColumnTypeName(i));
+          jdbcResultSetMetadata.getFieldSchemas().add(col);
         }
-      };
+      } catch (Exception e) {
+        LOG.error("Error getting JDBC type information: " + e.getMessage(), e);
+        jdbcResultSetMetadata.setFieldSchemas(null);
+      }
+      lensResultMeta = jdbcResultSetMetadata;
     }
     return lensResultMeta;
+  }
+
+  /**
+   * FieldSchemaData is created so that we don't save FieldSchema as some classes used by it don't have
+   * default constructors which are required by jackson
+   */
+  @Data
+  @NoArgsConstructor
+  public static class FieldSchemaData {
+    private String name;
+    private String type;
+    private String comment;
+
+    public FieldSchemaData(String name, String type, String comment) {
+      this.name = name;
+      this.type = type;
+      this.comment = comment;
+    }
+
+    public FieldSchema toFieldSchema() {
+      return new FieldSchema(name, type, comment);
+    }
+  }
+
+  /**
+   * Result set metadata of a JDBC query
+   */
+  public static class JDBCResultSetMetadata extends LensResultSetMetadata {
+    @Getter @Setter
+    private List<FieldSchemaData> fieldSchemas;
+
+    @JsonIgnore
+    @Override
+    public List<ColumnDescriptor> getColumns() {
+      if (fieldSchemas == null) {
+        return null;
+      }
+      List<ColumnDescriptor> columns = new ArrayList<ColumnDescriptor>(fieldSchemas.size());
+
+      for (int i = 0; i < fieldSchemas.size(); i++) {
+        columns.add(new ColumnDescriptor(fieldSchemas.get(i).toFieldSchema(), i + 1));
+      }
+      return columns;
+    }
   }
 
   /**

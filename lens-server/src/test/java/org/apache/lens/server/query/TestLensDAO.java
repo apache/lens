@@ -18,6 +18,10 @@
  */
 package org.apache.lens.server.query;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,6 +32,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.driver.jdbc.JDBCResultSet;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.query.FinishedLensQuery;
@@ -35,6 +40,7 @@ import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -60,11 +66,57 @@ public class TestLensDAO extends LensJerseyTest {
     queryContext.setQueryName("daoTestQuery1");
     FinishedLensQuery finishedLensQuery = new FinishedLensQuery(queryContext);
     finishedLensQuery.setStatus(QueryStatus.Status.SUCCESSFUL.name());
+
+    // Validate JDBC driver RS Meta can be deserialized
+
+    // Create a valid JDBCResultSet
+    Connection conn = null;
+    Statement stmt = null;
+    final ObjectMapper MAPPER = new ObjectMapper();
+
+    try {
+      conn = service.lensServerDao.getConnection();
+      stmt = conn.createStatement();
+      ResultSet rs = stmt.executeQuery("SELECT handle FROM finished_queries");
+
+      JDBCResultSet jdbcResultSet = new JDBCResultSet(null, rs, false);
+      JDBCResultSet.JDBCResultSetMetadata jdbcRsMeta =
+        (JDBCResultSet.JDBCResultSetMetadata) jdbcResultSet.getMetadata();
+
+      String jsonMetadata = MAPPER.writeValueAsString(jdbcRsMeta);
+
+      LOG.info("@@@JSON " + jsonMetadata);
+
+      finishedLensQuery.setMetadata(MAPPER.writeValueAsString(jdbcRsMeta));
+      finishedLensQuery.setMetadataClass(JDBCResultSet.JDBCResultSetMetadata.class.getName());
+    } catch (SQLException ex) {
+      LOG.error("Error creating result set ", ex);
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+      if (conn != null) {
+        conn.close();
+      }
+    }
+
     String finishedHandle = finishedLensQuery.getHandle();
+
     service.lensServerDao.insertFinishedQuery(finishedLensQuery);
     // Re-insert should be a no-op on the db.
     service.lensServerDao.insertFinishedQuery(finishedLensQuery);
+
     FinishedLensQuery actual = service.lensServerDao.getQuery(finishedHandle);
+
+    // Try to read back result set metadata class, should not throw deserialize exception
+    JDBCResultSet.JDBCResultSetMetadata actualRsMeta = MAPPER.readValue(actual.getMetadata(),
+      JDBCResultSet.JDBCResultSetMetadata.class);
+    // Assert
+    Assert.assertNotNull(actualRsMeta, "Should be able to read back metadata for jdbc queries");
+    // Validate metadat
+    Assert.assertEquals(actualRsMeta.getColumns().size(), 1);
+    Assert.assertEquals(actualRsMeta.getColumns().get(0).getName().toLowerCase(), "handle");
+
     Assert.assertEquals(actual.getHandle(), finishedHandle);
 
     // Test find finished queries
