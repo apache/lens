@@ -124,6 +124,12 @@
     <value>jdbc:hsqldb:target/queries.db</value>
   </property>
 
+  <property>
+    <name>lens.server.db.validation.query</name>
+    <value>select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</value>
+    <description>Validation query for hsql
+    </description>
+  </property>
 
   <property>
     <name>lens.server.servicenames</name>

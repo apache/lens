@@ -72,7 +72,7 @@ public enum LensClientSingletonWrapper {
    * @param e the e
    */
   public void explainFailedAttempt(LensClientServerConnectionException e) {
-    LOG.error("failed login attempt", e);
+//    LOG.error("failed login attempt", e);
     switch (e.getErrorCode()) {
     case 401:
       System.console().printf("username/password combination incorrect.\n");

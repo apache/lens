@@ -22,6 +22,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.dbcp.BasicDataSource;
@@ -92,7 +94,7 @@ public final class UtilityMethods {
    * @return the string[]
    * @throws SQLException the SQL exception
    */
-  public static String[] queryDatabase(BasicDataSource ds, String querySql, final boolean allowNull, Object... args)
+  public static String[] queryDatabase(DataSource ds, String querySql, final boolean allowNull, Object... args)
     throws SQLException {
     QueryRunner runner = new QueryRunner(ds);
     return runner.query(querySql, new ResultSetHandler<String[]>() {
@@ -129,6 +131,8 @@ public final class UtilityMethods {
     tmp.setUrl(conf.get(LensConfConstants.SERVER_DB_JDBC_URL, LensConfConstants.DEFAULT_SERVER_DB_JDBC_URL));
     tmp.setUsername(conf.get(LensConfConstants.SERVER_DB_JDBC_USER, LensConfConstants.DEFAULT_SERVER_DB_USER));
     tmp.setPassword(conf.get(LensConfConstants.SERVER_DB_JDBC_PASS, LensConfConstants.DEFAULT_SERVER_DB_PASS));
+    tmp.setValidationQuery(conf.get(LensConfConstants.SERVER_DB_VALIDATION_QUERY,
+      LensConfConstants.DEFAULT_SERVER_DB_VALIDATION_QUERY));
     return tmp;
   }
 

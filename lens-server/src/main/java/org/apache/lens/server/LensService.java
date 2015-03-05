@@ -121,6 +121,7 @@ public abstract class LensService extends CompositeService implements Externaliz
         sessionConf.putAll(configuration);
       }
       Map<String, String> userConfig = UserConfigLoaderFactory.getUserConfig(username);
+      LOG.info("Got user config: " + userConfig);
       UtilityMethods.mergeMaps(sessionConf, userConfig, false);
       sessionConf.put(LensConfConstants.SESSION_LOGGEDIN_USER, username);
       if (sessionConf.get(LensConfConstants.SESSION_CLUSTER_USER) == null) {

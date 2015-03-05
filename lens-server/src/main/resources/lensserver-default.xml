@@ -279,6 +279,15 @@
     </description>
   </property>
   <property>
+    <name>lens.server.db.validation.query</name>
+    <value>select 1</value>
+    <description>BasicDatasource has a config parameter called validationQuery. This query is run before passing
+      the Datasource to the application to verify if connection is valid.\
+      {{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}} \
+      {{{http://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases}validationquery for different databases}} \
+    </description>
+  </property>
+  <property>
     <name>lens.server.snapshot.interval</name>
     <value>300000</value>
     <description>Snapshot interval time in miliseconds for saving lens server state.</description>

@@ -788,6 +788,13 @@ public final class LensConfConstants {
    */
   public static final String SERVER_DB_JDBC_PASS = SERVER_PFX + "db.jdbc.pass";
 
+  /** Validation query to check db pool is valid before passing to the application */
+  public static final String SERVER_DB_VALIDATION_QUERY = SERVER_PFX + "db.validation.query";
+
+  /** default value of the validation query */
+  public static final String DEFAULT_SERVER_DB_VALIDATION_QUERY = "select 1";
+
+
   /**
    * The Constant DEFAULT_SERVER_DB_PASS.
    */
