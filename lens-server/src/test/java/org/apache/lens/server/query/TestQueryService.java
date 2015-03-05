@@ -1278,6 +1278,36 @@ public class TestQueryService extends LensJerseyTest {
   }
 
   /**
+   * Test execute with timeout query.
+   *
+   * @throws IOException          Signals that an I/O exception has occurred.
+   * @throws InterruptedException the interrupted exception
+   */
+  @Test
+  public void testExecuteWithTimeoutFailingQuery() throws IOException, InterruptedException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from nonexist"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute_with_timeout"));
+    // set a timeout value enough for tests
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("timeoutmillis").build(), "300000"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    QueryHandleWithResultSet result = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+      QueryHandleWithResultSet.class);
+    Assert.assertNotNull(result.getQueryHandle());
+    Assert.assertNull(result.getResult());
+
+    LensQuery ctx = target.path(result.getQueryHandle().toString()).queryParam("sessionid", lensSessionId).request()
+      .get(LensQuery.class);
+    Assert.assertEquals(ctx.getStatus().getStatus(), Status.FAILED);
+  }
+
+  /**
    * Test default config.
    *
    * @throws LensException the lens exception

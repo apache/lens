@@ -1435,6 +1435,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     }
     QueryCompletionListener listener = new QueryCompletionListenerImpl(handle);
+    if (getQueryContext(sessionHandle, handle).getSelectedDriver() == null) {
+      return result;
+    }
     getQueryContext(sessionHandle, handle).getSelectedDriver()
       .registerForCompletionNotification(handle, timeoutMillis, listener);
     try {
@@ -1448,7 +1451,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       result.setResult(getResultset(handle).toQueryResult());
     }
     return result;
-
   }
 
   /**
