@@ -69,7 +69,9 @@ class ColumnResolver implements ContextRewriter {
     for (String table : cubeql.getTblAliasToColumns().keySet()) {
       try {
         if (!CubeQueryContext.DEFAULT_TABLE.equalsIgnoreCase(table)) {
-          cubeql.addQueriedTable(table);
+          if (!cubeql.addQueriedTable(table)) {
+            throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+          }
         }
       } catch (HiveException e) {
         throw new SemanticException(e);

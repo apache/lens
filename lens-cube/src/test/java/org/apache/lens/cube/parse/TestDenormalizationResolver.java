@@ -201,4 +201,11 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     Assert.assertEquals(e.getMessage(),
       "No dimension table has the queried columns for citydim, columns: [name, statename, nocandidatecol]");
   }
+
+  @Test
+  public void testNonExistingDimension() throws Exception {
+    SemanticException e = getSemanticExceptionInRewrite("select nonexist.name, msr2 from testCube where "
+      + TWO_DAYS_RANGE, conf);
+    Assert.assertEquals(e.getMessage(), "Neither cube nor dimensions accessed in the query");
+  }
 }

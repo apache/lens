@@ -102,7 +102,9 @@ class ExpressionResolver implements ContextRewriter {
 
   private ASTNode getExprAST(final CubeQueryContext cubeql, String table, String column) throws SemanticException {
     if (cubeql.getQueriedTable(table) == null) {
-      cubeql.addQueriedTable(table);
+      if (!cubeql.addQueriedTable(table)) {
+        throw new SemanticException(ErrorMsg.NEITHER_CUBE_NOR_DIMENSION);
+      }
     }
     if (!(cubeql.getQueriedTable(table) instanceof AbstractBaseTable)) {
       return null;
