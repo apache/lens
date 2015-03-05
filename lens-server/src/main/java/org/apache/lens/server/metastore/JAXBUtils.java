@@ -276,7 +276,11 @@ public final class JAXBUtils {
         XChainColumn xcc = new XChainColumn();
         xcc.setChainName(rd.getChainName());
         xcc.setRefCol(rd.getRefColumn());
-        xcc.setDestTable(baseTable.getChainByName(rd.getChainName()).getDestTable());
+        if (baseTable.getChainByName(rd.getChainName()) == null) {
+          LOG.error("Missing chain definition for " + rd.getChainName());
+        } else {
+          xcc.setDestTable(baseTable.getChainByName(rd.getChainName()).getDestTable());
+        }
         refspec.setChainRefColumn(xcc);
       } else {
         refspec.setTableReferences(new XTableReferences());
