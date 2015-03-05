@@ -115,7 +115,6 @@ public class ZipFileFormatter extends AbstractFileFormatter {
     } else {
       out = new OutputStreamWriter(zipOut, encoding);
     }
-    System.out.println("Setup outputs done");
   }
 
   private String getQueryResultFileName() {
@@ -143,10 +142,12 @@ public class ZipFileFormatter extends AbstractFileFormatter {
   @Override
   public void close() throws IOException {
     if (!closed) {
-      out.flush();
-      zipOut.closeEntry();
-      zipOut.close();
-      out.close();
+      if (out != null) {
+        out.flush();
+        zipOut.closeEntry();
+        zipOut.close();
+        out.close();
+      }
       closed = true;
     }
   }
