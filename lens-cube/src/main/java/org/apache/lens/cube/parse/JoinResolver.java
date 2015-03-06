@@ -664,7 +664,7 @@ class JoinResolver implements ContextRewriter {
           for (AbstractCubeTable refTable : jp.getAllTables()) {
             List<String> cols = jp.getColumnsForTable(refTable);
             if (refTable instanceof Dimension) {
-              if (cols != null && !dimColumns.get(refTable).containsAll(cols)) {
+              if (cols != null && (dimColumns.get(refTable) == null || !dimColumns.get(refTable).containsAll(cols))) {
                 // This path requires some columns from the cube which are not present in any candidate dim
                 // Remove this path
                 LOG.info("Removing join path:" + jp + " as columns :" + cols + " dont exist");
