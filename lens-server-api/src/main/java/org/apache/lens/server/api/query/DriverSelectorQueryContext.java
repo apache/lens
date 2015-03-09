@@ -22,10 +22,12 @@ import java.util.*;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.util.LensUtil;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -61,6 +63,11 @@ public class DriverSelectorQueryContext {
     for (LensDriver driver : drivers) {
       DriverQueryContext ctx = new DriverQueryContext(driver);
       ctx.setDriverSpecificConf(mergeConf(driver, queryConf));
+      String metricId = ctx.driverSpecificConf.get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
+      if (!StringUtils.isBlank(metricId)) {
+        ctx.driverSpecificConf.set(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME,
+          metricId + "-" + driver.getClass().getSimpleName());
+      }
       ctx.setQuery(userQuery);
       driverQueryContextMap.put(driver, ctx);
     }

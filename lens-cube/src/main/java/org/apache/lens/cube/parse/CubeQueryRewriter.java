@@ -22,6 +22,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
@@ -176,9 +179,20 @@ public class CubeQueryRewriter {
     return rewrite(tree);
   }
 
+  private static final String ITER_STR = "-ITER-";
+
   private void rewrite(List<ContextRewriter> rewriters, CubeQueryContext ctx) throws SemanticException {
+    int i = 0;
     for (ContextRewriter rewriter : rewriters) {
+      /*
+       * Adding iteration number as part of gauge name since some rewriters are have more than one phase, and having
+       * iter number gives the idea which iteration the rewriter was run
+       */
+      MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getHiveConf(), true,
+        rewriter.getClass().getCanonicalName() + ITER_STR + i);
       rewriter.rewriteContext(ctx);
+      mgauge.markSuccess();
+      i++;
     }
   }
 

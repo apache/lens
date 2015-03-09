@@ -21,12 +21,16 @@ package org.apache.lens.server.api.query;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.UUID;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
 import org.apache.lens.server.api.util.LensUtil;
 
@@ -104,6 +108,11 @@ public abstract class AbstractQueryContext implements Serializable {
 
   protected AbstractQueryContext(final String query, final String user, final LensConf qconf, final Configuration conf,
     final Collection<LensDriver> drivers) {
+    if (conf.getBoolean(LensConfConstants.ENABLE_QUERY_METRICS, LensConfConstants.DEFAULT_ENABLE_QUERY_METRICS)) {
+      UUID metricId = UUID.randomUUID();
+      conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, metricId.toString());
+      LOG.info("Generated metric id: " + metricId + " for query: " + query);
+    }
     driverContext = new DriverSelectorQueryContext(query, conf, drivers);
     userQuery = query;
     this.lensConf = qconf;
@@ -140,6 +149,8 @@ public abstract class AbstractQueryContext implements Serializable {
     boolean succeededOnAtleastOneDriver = false;
     for (LensDriver driver : driverContext.getDrivers()) {
       final DriverQueryContext driverQueryContext = driverContext.driverQueryContextMap.get(driver);
+      MethodMetricsContext estimateGauge = MethodMetricsFactory.createMethodGauge(getDriverConf(driver), true,
+        "driverEstimate");
       if (driverQueryContext.getDriverQueryRewriteError() != null) {
         // skip estimate
         continue;
@@ -160,6 +171,7 @@ public abstract class AbstractQueryContext implements Serializable {
           failureCause = expMsg;
         }
       }
+      estimateGauge.markSuccess();
     }
     if (!succeededOnAtleastOneDriver) {
       throw new LensException(useBuilder ? detailedFailureCause.toString() : failureCause);
@@ -305,5 +317,4 @@ public abstract class AbstractQueryContext implements Serializable {
   public Exception getDriverRewriteError(LensDriver driver) {
     return driverContext.driverQueryContextMap.get(driver).getDriverQueryRewriteError();
   }
-
 }

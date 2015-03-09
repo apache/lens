@@ -28,6 +28,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.metrics.LensMetricsUtil;
 import org.apache.lens.server.api.metrics.MetricsService;
 
 import org.apache.commons.logging.Log;
@@ -191,6 +192,7 @@ public abstract class LensJerseyTest extends JerseyTest {
    */
   public void restartLensServer(HiveConf conf) {
     LensServices.get().stop();
+    LensMetricsUtil.clearRegistry();
     System.out.println("Lens services stopped!");
     LensServices.setInstance(new LensServices(LensServices.LENS_SERVICES_NAME));
     LensServices.get().init(conf);

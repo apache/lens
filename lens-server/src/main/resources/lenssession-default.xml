@@ -206,6 +206,15 @@
   </property>
 
   <property>
+    <name>lens.query.enable.metrics.per.query</name>
+    <value>false</value>
+    <description>Generates gauge metrics for each query to measure time taken with unique id appended for each query.
+    Should be enabled only for performance measurements. Should not be enabled in day to day production environment.
+    </description>
+  </property>
+
+  <!--  properties for session -->
+  <property>
     <name>lens.session.aux.jars</name>
     <value></value>
     <description>List of comma separated jar paths, which will added to the session</description>

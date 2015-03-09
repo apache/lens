@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.metrics;
+package org.apache.lens.server.api.metrics;
 
 
 import static com.codahale.metrics.MetricRegistry.name;
@@ -24,9 +24,12 @@ import static com.codahale.metrics.MetricRegistry.name;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.model.LensContainerRequest;
 import org.apache.lens.server.model.LensResourceMethod;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.server.ContainerRequest;
@@ -80,15 +83,12 @@ public class MethodMetricsFactory {
     if (result == null) {
       synchronized (this) {
         result = methodMetricsMap.get(name);
-        if (result == null) {
-          LOG.info("Creating MethodMetrics of name: " + name);
-          result = new MethodMetrics(
-            metricRegistry.meter(name(name, "meter")),
-            metricRegistry.timer(name(name, "timer")),
-            metricRegistry.timer(name(name, "exception.timer"))
-          );
-          methodMetricsMap.put(name, result);
-        }
+        LOG.info("Creating MethodMetrics of name: " + name);
+        result = new MethodMetrics(
+          metricRegistry.meter(name(name, "meter")),
+          metricRegistry.timer(name(name, "timer")),
+          metricRegistry.timer(name(name, "exception.timer")));
+        methodMetricsMap.put(name, result);
       }
     }
     //RESUME CHECKSTYLE CHECK DoubleCheckedLockingCheck
@@ -154,5 +154,36 @@ public class MethodMetricsFactory {
       }
       methodMetricsMap.clear();
     }
+  }
+
+  /**
+   * Get query metric gauge name.
+   *
+   * @param conf
+   * @param appendToStackName
+   * @param gaugeSuffix
+   * @return
+   */
+  public static MethodMetricsContext createMethodGauge(@NonNull Configuration conf, boolean appendToStackName,
+    String gaugeSuffix) {
+    String uid = conf.get(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
+    if (StringUtils.isBlank(uid)) {
+      return DisabledMethodMetricsContext.getInstance();
+    }
+    LOG.info("query metricid:" + uid);
+    StringBuilder metricName = new StringBuilder();
+    if (appendToStackName) {
+      String stackName = conf.get(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME);
+      LOG.info("query metric stackname:" + stackName);
+      metricName.append(stackName);
+      metricName.append("-");
+    } else {
+      metricName.append(uid);
+      metricName.append("-");
+    }
+    metricName.append(gaugeSuffix);
+    String metricGaugeName = metricName.toString();
+    MethodMetricGauge mg = new MethodMetricGauge(LensMetricsRegistry.getStaticRegistry(), metricGaugeName);
+    return mg;
   }
 }

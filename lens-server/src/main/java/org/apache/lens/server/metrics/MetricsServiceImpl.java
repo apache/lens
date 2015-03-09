@@ -34,7 +34,9 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.DisabledMethodMetricsContext;
+import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
@@ -192,7 +194,7 @@ public class MetricsServiceImpl extends AbstractService implements MetricsServic
     queryStatusListener = new AsyncQueryStatusListener();
     LensEventService eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
     eventService.addListenerForType(queryStatusListener, StatusChange.class);
-    metricRegistry = new MetricRegistry();
+    metricRegistry = LensMetricsRegistry.getStaticRegistry();
     methodMetricsFactory = new MethodMetricsFactory(metricRegistry);
     setEnableResourceMethodMetering(hiveConf.getBoolean(LensConfConstants.ENABLE_RESOURCE_METHOD_METERING, false));
     healthCheck = new HealthCheckRegistry();

@@ -43,6 +43,8 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;
 import org.apache.lens.server.session.LensSessionImpl;
@@ -944,6 +946,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     prepareQueryPurger.start();
   }
 
+  private static final String ALL_REWRITES_GAUGE = "ALL_CUBE_REWRITES";
+  private static final String ALL_DRIVERS_ESTIMATE_GAUGE = "ALL_DRIVER_ESTIMATES";
+  private static final String DRIVER_SELECTOR_GAUGE = "DRIVER_SELECTION";
   /**
    * Rewrite and select.
    *
@@ -951,11 +956,20 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void rewriteAndSelect(AbstractQueryContext ctx) throws LensException {
+    MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), false,
+      ALL_REWRITES_GAUGE);
     ctx.setDriverQueries(RewriteUtil.rewriteQuery(ctx));
+    rewriteGauge.markSuccess();
+    MethodMetricsContext estimateGauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), false,
+      ALL_DRIVERS_ESTIMATE_GAUGE);
     ctx.estimateCostForDrivers();
+    estimateGauge.markSuccess();
 
+    MethodMetricsContext selectGauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), false,
+      DRIVER_SELECTOR_GAUGE);
     // 2. select driver to run the query
     LensDriver driver = driverSelector.select(ctx, conf);
+    selectGauge.markSuccess();
 
     ctx.setSelectedDriver(driver);
   }
@@ -1325,6 +1339,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         if (query == null) {
           throw new NotFoundException("Query not found " + queryHandle);
         }
+        // pass the query conf instead of service conf
         return query.toQueryContext(conf, drivers.values());
       }
       updateStatus(queryHandle);

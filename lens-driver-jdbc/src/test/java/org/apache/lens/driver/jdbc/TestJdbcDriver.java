@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -34,8 +35,10 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.ResultRow;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
+import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.query.ExplainQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -51,6 +54,8 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * The Class TestJdbcDriver.
@@ -251,6 +256,27 @@ public class TestJdbcDriver {
     } catch (LensException ex) {
       Assert.assertEquals(LensUtil.getCauseMessage(ex), "user lacks privilege or object not found: ESTIMATE_TEST2");
     }
+  }
+
+  /**
+   * Test estimate failing
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void testEstimateGauges() throws Exception {
+    createTable("estimate_test_gauge"); // Create table
+    insertData("estimate_test_gauge"); // Insert some data into table
+    String query1 = "SELECT * FROM estimate_test_gauge"; // Select query against existing table
+    Configuration metricConf = new Configuration(baseConf);
+    metricConf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestJdbcDriver.class.getSimpleName());
+    driver.estimate(createExplainContext(query1, metricConf));
+    MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
+
+    Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-columnar-sql-rewrite",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-prepare-statement",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare")));
   }
 
   /**

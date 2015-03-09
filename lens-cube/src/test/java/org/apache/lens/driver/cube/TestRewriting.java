@@ -21,6 +21,7 @@ package org.apache.lens.driver.cube;
 import static org.mockito.Matchers.any;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -29,8 +30,10 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
+import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
@@ -51,6 +54,8 @@ import org.testng.Assert;
 import org.testng.IObjectFactory;
 import org.testng.annotations.ObjectFactory;
 import org.testng.annotations.Test;
+
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * The Class TestRewriting.
@@ -167,6 +172,8 @@ public class TestRewriting {
     QueryContext ctx = new QueryContext(q1, null, lensConf, conf, drivers);
     RewriteUtil.rewriteQuery(ctx);
 
+    conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestRewriting.class.getSimpleName());
+    driver.configure(conf);
     String q2 = "cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2);
@@ -174,6 +181,12 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.get(0).query, "cube select name from table");
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     RewriteUtil.rewriteQuery(ctx);
+    MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
+
+    Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
+      "lens.MethodMetricGauge.TestRewriting-MockDriver-org.apache.lens.driver.cube.RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestRewriting-MockDriver-org.apache.lens.driver.cube.RewriteUtil-rewriteQuery-toHQL")));
+    conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "insert overwrite directory '/tmp/rewrite' cube select name from table";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));

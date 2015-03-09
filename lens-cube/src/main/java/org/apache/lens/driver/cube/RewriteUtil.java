@@ -26,9 +26,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 import org.apache.hadoop.conf.Configuration;
@@ -200,6 +203,9 @@ public final class RewriteUtil {
     return query.replaceAll("[\\n\\r]", " ").replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ").trim();
   }
 
+  private static final String REWRITE_QUERY_GAUGE = RewriteUtil.class.getCanonicalName() + "-rewriteQuery";
+  private static final String TOHQL_GAUGE = RewriteUtil.class.getCanonicalName() + "-rewriteQuery-toHQL";
+
   /**
    * Rewrite query.
    *
@@ -222,6 +228,8 @@ public final class RewriteUtil {
       } else {
         List<RewriteUtil.CubeQueryInfo> cubeQueries = findCubePositions(replacedQuery);
         for (LensDriver driver : ctx.getDriverContext().getDrivers()) {
+          MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
+            REWRITE_QUERY_GAUGE);
           StringBuilder builder = new StringBuilder();
           int start = 0;
           try {
@@ -236,7 +244,11 @@ public final class RewriteUtil {
               if (start != cqi.startPos) {
                 builder.append(replacedQuery.substring(start, cqi.startPos));
               }
-              String hqlQuery = rewriter.rewrite(cqi.query).toHQL();
+              CubeQueryContext cqc = rewriter.rewrite(cqi.query);
+              MethodMetricsContext toHQLGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
+                TOHQL_GAUGE);
+              String hqlQuery = cqc.toHQL();
+              toHQLGauge.markSuccess();
               LOG.debug("Rewritten query:" + hqlQuery);
               builder.append(hqlQuery);
               start = cqi.endPos;
@@ -259,6 +271,7 @@ public final class RewriteUtil {
               failureCause = e.getLocalizedMessage();
             }
           }
+          rewriteGauge.markSuccess();
         }
       }
       if (driverQueries.isEmpty()) {

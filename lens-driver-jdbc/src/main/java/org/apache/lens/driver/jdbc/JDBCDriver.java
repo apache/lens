@@ -42,6 +42,8 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
+import org.apache.lens.server.api.metrics.MethodMetricsContext;
+import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
@@ -543,9 +545,15 @@ public class JDBCDriver implements LensDriver {
     }
   }
 
+  private static final String VALIDATE_GAUGE = "validate-thru-prepare";
+  private static final String COLUMNAR_SQL_REWRITE_GAUGE = "columnar-sql-rewrite";
+  private static final String JDBC_PREPARE_GAUGE = "jdbc-prepare-statement";
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
+    MethodMetricsContext validateGauge = MethodMetricsFactory.createMethodGauge(qctx.getDriverConf(this), true,
+      VALIDATE_GAUGE);
     validate(qctx);
+    validateGauge.markSuccess();
     return JDBC_DRIVER_COST;
   }
 
@@ -641,7 +649,12 @@ public class JDBCDriver implements LensDriver {
     }
     checkConfigured();
     // Only create a prepared statement and then close it
+    MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
+      COLUMNAR_SQL_REWRITE_GAUGE);
     String rewrittenQuery = rewriteQuery(pContext.getDriverQuery(this), pContext.getDriverConf(this));
+    sqlRewriteGauge.markSuccess();
+    MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
+      JDBC_PREPARE_GAUGE);
     Connection conn = null;
     PreparedStatement stmt = null;
     try {
@@ -660,6 +673,7 @@ public class JDBCDriver implements LensDriver {
           LOG.error("Error closing connection: " + rewrittenQuery, e);
         }
       }
+      jdbcPrepareGauge.markSuccess();
     }
     LOG.info("Prepared: " + rewrittenQuery);
     return stmt;

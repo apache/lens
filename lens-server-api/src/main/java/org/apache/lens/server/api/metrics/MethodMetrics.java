@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.metrics;
+package org.apache.lens.server.api.metrics;
 
-import org.apache.lens.server.api.metrics.MethodMetricsContext;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;

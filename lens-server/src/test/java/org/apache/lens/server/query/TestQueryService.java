@@ -45,6 +45,7 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.session.SessionService;
@@ -70,6 +71,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.codahale.metrics.MetricRegistry;
 
 /**
  * The Class TestQueryService.
@@ -1505,5 +1508,32 @@ public class TestQueryService extends LensJerseyTest {
     LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, "false");
     LensTestUtil.dropTableWithConf(tblName, target(), lensSessionId, conf);
+  }
+
+  @Test
+  public void testEstimateGauges() {
+    final WebTarget target = target().path("queryapi/queries");
+
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, "TestQueryService-testEstimateGauges");
+    // estimate native query
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID from " + TEST_TABLE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "estimate"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+      MediaType.APPLICATION_XML_TYPE));
+
+    final EstimateResult result = target.request()
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), EstimateResult.class);
+    Assert.assertNotNull(result);
+
+    MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
+
+    Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-ALL_CUBE_REWRITES",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-ALL_DRIVER_ESTIMATES",
+      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION")));
   }
 }

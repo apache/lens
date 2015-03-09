@@ -41,6 +41,7 @@ import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
+import org.apache.lens.server.api.metrics.MethodMetrics;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
 import org.apache.lens.server.query.TestQueryService;

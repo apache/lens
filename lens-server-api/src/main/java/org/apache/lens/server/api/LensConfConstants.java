@@ -823,4 +823,28 @@ public final class LensConfConstants {
    * Default value of top level dir for database specific resources
    */
   public static final String DEFAULT_DATABASE_RESOURCE_DIR = "/tmp/lens/resources";
+
+  /**
+   * Key for enabling metrics for each query to be different
+   */
+  public static final String ENABLE_QUERY_METRICS = QUERY_PFX + "enable.metrics.per.query";
+
+  /**
+   * Default value for query wise metrics
+   */
+  public static final boolean DEFAULT_ENABLE_QUERY_METRICS = false;
+
+  /**
+   * Key used to hold value of unique id for query metrics. This wont be passed by user, will be generated and set.
+   * This is to pass unique id for query across the code flow.
+   */
+  public static final String QUERY_METRIC_UNIQUE_ID_CONF_KEY = QUERY_PFX + "metric.unique.id";
+
+  /**
+   * Key used to hold value query metric name in the stack. This wont be passed by user, will be generated and set.
+   * When each query looked at by driver, the metric needs to be different for each driver. This name capture the stack
+   * from which driver the code reached there.
+   */
+  public static final String QUERY_METRIC_DRIVER_STACK_NAME = QUERY_PFX + "metric.driver.stack.name";
+
 }

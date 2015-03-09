@@ -33,8 +33,9 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * model object to wrap ContainerRequest. provides functions useful in server code. making a wrapper ensures separation
- * of concerns.
+ * Wrapper class for ContainerRequest.
+ *
+ * Has helper methods to give form data values for the request. More helper methods can be included.
  */
 @AllArgsConstructor
 public class LensContainerRequest {

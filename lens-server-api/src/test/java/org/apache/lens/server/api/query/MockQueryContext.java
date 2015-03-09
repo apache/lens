@@ -16,16 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server.api.driver;
+package org.apache.lens.server.api.query;
 
 import java.util.Collection;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.server.api.query.AbstractQueryContext;
+import org.apache.lens.server.api.driver.LensDriver;
 
 import org.apache.hadoop.conf.Configuration;
 
 public class MockQueryContext extends AbstractQueryContext {
+
+  private static final long serialVersionUID = 1L;
 
   public MockQueryContext(final String query, final LensConf qconf,
     final Configuration conf, final Collection<LensDriver> drivers) {
