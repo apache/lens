@@ -170,11 +170,9 @@ public class MethodMetricsFactory {
     if (StringUtils.isBlank(uid)) {
       return DisabledMethodMetricsContext.getInstance();
     }
-    LOG.info("query metricid:" + uid);
     StringBuilder metricName = new StringBuilder();
     if (appendToStackName) {
       String stackName = conf.get(LensConfConstants.QUERY_METRIC_DRIVER_STACK_NAME);
-      LOG.info("query metric stackname:" + stackName);
       metricName.append(stackName);
       metricName.append("-");
     } else {
