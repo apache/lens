@@ -1343,41 +1343,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
       throw new BadRequestException("cubeName : " + cubeName + " is not a base cube.");
     }
     Cube c = (Cube) ci;
-    String partitionColumn = c.getPartitionColumnOfTimeDim(timeDimension);
-
-    // getting all facts->storages->partitions and iterating over them to get
-    // latest date
-    List<XFactTable> factTables = getAllFactsOfCube(sessionid, cubeName);
-
-    Date latestDate = null;
-    if (factTables != null && !factTables.isEmpty()) {
-      for (XFactTable factTable : factTables) {
-        List<String> storages = getStoragesOfFact(sessionid, factTable.getName());
-
-        if (storages != null && !storages.isEmpty()) {
-          for (String storage : storages) {
-            String storageTableName = MetastoreUtil.getFactStorageTableName(factTable.getName(), storage);
-            List<Partition> parts = new LinkedList<Partition>();
-            try {
-              parts = getClient(sessionid).getPartitionsByFilter(storageTableName,
-                StorageConstants.getLatestPartFilter(partitionColumn));
-            } catch (HiveException e) {
-              LOG.info("Storage Table " + storageTableName + " skipped while finding latestDate due to exception: ", e);
-            }
-            if (parts.size() == 1) {
-              Date tmpDate = getClient(sessionid).getLatestTimeStamp(parts.get(0), partitionColumn);
-              if (latestDate == null || latestDate.before(tmpDate)) {
-                latestDate = tmpDate;
-              }
-            } else if (parts.size() > 1) {
-              throw new LensException("CubeMetastoreClient return more than 1 partitions for filter "
-                + partitionColumn + "='latest'");
-            }
-          }
-        }
-      }
-    }
+    Date latest = getClient(sessionid).getLatestDateOfCube(c, timeDimension);
     release(sessionid);
-    return latestDate;
+    return latest;
   }
 }

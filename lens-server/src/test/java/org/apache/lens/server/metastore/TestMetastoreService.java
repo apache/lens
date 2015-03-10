@@ -273,7 +273,6 @@ public class TestMetastoreService extends LensJerseyTest {
     cube.setMeasures(new XMeasures());
     cube.setJoinChains(new XJoinChains());
     cube.setProperties(new XProperties());
-
     XDimAttribute xd1 = cubeObjectFactory.createXDimAttribute();
     xd1.setName("dim1");
     xd1.setType("STRING");
@@ -1795,6 +1794,7 @@ public class TestMetastoreService extends LensJerseyTest {
       XFactTable f = createFactTable(table);
       f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
       f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "HOURLY"));
       final FormDataMultiPart mp = new FormDataMultiPart();
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
         lensSessionId, medType));
@@ -1830,7 +1830,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       XPartitionList partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 1);
 
       DateTime date =
         target().path("metastore/cubes").path("testCube").path("latestdate").queryParam("timeDimension", "dt")
@@ -1875,7 +1875,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       partitions = partitionsElement.getValue();
       assertNotNull(partitions);
-      assertEquals(partitions.getPartition().size(), 2);
+      assertEquals(partitions.getPartition().size(), 1);
 
       // Drop again by values
       String[] val = new String[]{UpdatePeriod.HOURLY.format().format(partDate)};

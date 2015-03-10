@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
 import org.apache.hadoop.hive.ql.ErrorMsg;

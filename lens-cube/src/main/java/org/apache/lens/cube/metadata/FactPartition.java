@@ -17,24 +17,33 @@
  * under the License.
  */
 
-package org.apache.lens.cube.parse;
+package org.apache.lens.cube.metadata;
 
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.apache.lens.cube.metadata.UpdatePeriod;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
+@EqualsAndHashCode
 public class FactPartition implements Comparable<FactPartition> {
+  @Getter
   private final String partCol;
+  @Getter
   private final Date partSpec;
+  @Getter
   private final Set<String> storageTables = new LinkedHashSet<String>();
+  @Getter
   private final UpdatePeriod period;
-  private final FactPartition containingPart;
+  @Getter
+  @Setter
+  private FactPartition containingPart;
   private final DateFormat partFormat;
 
-  FactPartition(String partCol, Date partSpec, UpdatePeriod period,
+  public FactPartition(String partCol, Date partSpec, UpdatePeriod period,
     FactPartition containingPart, DateFormat partFormat) {
     this.partCol = partCol;
     this.partSpec = partSpec;
@@ -43,7 +52,7 @@ public class FactPartition implements Comparable<FactPartition> {
     this.partFormat = partFormat;
   }
 
-  FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart,
+  public FactPartition(String partCol, Date partSpec, UpdatePeriod period, FactPartition containingPart,
     DateFormat partFormat, Set<String> storageTables) {
     this(partCol, partSpec, period, containingPart, partFormat);
     this.storageTables.addAll(storageTables);
@@ -53,16 +62,8 @@ public class FactPartition implements Comparable<FactPartition> {
     return containingPart != null;
   }
 
-  public String getPartCol() {
-    return partCol;
-  }
-
-  public UpdatePeriod getPeriod() {
-    return period;
-  }
-
-  public Date getPartSpec() {
-    return partSpec;
+  public boolean found() {
+    return !getStorageTables().isEmpty();
   }
 
   public String getFormattedPartSpec() {
@@ -75,10 +76,6 @@ public class FactPartition implements Comparable<FactPartition> {
 
   public String getPartString() {
     return period.format().format(partSpec);
-  }
-
-  public Set<String> getStorageTables() {
-    return storageTables;
   }
 
   public String getFormattedFilter(String tableName) {

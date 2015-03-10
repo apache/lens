@@ -347,16 +347,16 @@ public class MetastoreUtil {
   // Utils ///
   // /////////////////////////
   public static <E extends Named> String getNamedStr(Collection<E> set) {
-    if (set == null || set.isEmpty()) {
+    if (set == null) {
       return "";
     }
+    String sep = "";
     StringBuilder valueStr = new StringBuilder();
     Iterator<E> it = set.iterator();
-    for (int i = 0; i < (set.size() - 1); i++) {
-      valueStr.append(it.next().getName());
-      valueStr.append(",");
+    while (it.hasNext()) {
+      valueStr.append(sep).append(it.next().getName());
+      sep = ",";
     }
-    valueStr.append(it.next().getName());
     return valueStr.toString();
   }
 
@@ -456,5 +456,17 @@ public class MetastoreUtil {
     } else {
       cols.add(dim.getName().toLowerCase());
     }
+  }
+
+  public static String getPartitionInfoKeyPrefix(UpdatePeriod updatePeriod, String partCol) {
+    return STORAGE_PFX + PARTITION_TIMELINE_CACHE + updatePeriod.getName() + "." + partCol + ".";
+  }
+
+  public static String getPartitionTimelineStorageClassKey(UpdatePeriod updatePeriod, String partCol) {
+    return getPartitionInfoKeyPrefix(updatePeriod, partCol) + STORAGE_CLASS;
+  }
+
+  public static String getPartitoinTimelineCachePresenceKey() {
+    return STORAGE_PFX + PARTITION_TIMELINE_CACHE + "present";
   }
 }

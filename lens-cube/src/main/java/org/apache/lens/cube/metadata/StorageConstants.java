@@ -43,6 +43,10 @@ public final class StorageConstants {
     return partCol + "='" + LATEST_PARTITION_VALUE + "'";
   }
 
+  public static String getPartFilter(String partCol, String value) {
+    return partCol + "='" + value + "'";
+  }
+
   /**
    * Get the latest partition value as List
    *

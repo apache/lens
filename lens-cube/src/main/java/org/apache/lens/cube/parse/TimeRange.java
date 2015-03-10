@@ -18,11 +18,16 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.util.Calendar;
 import java.util.Date;
+
+import org.apache.lens.cube.metadata.UpdatePeriod;
 
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import lombok.Getter;
 
 /**
  * Timerange data structure
@@ -122,5 +127,87 @@ public class TimeRange {
   @Override
   public String toString() {
     return partitionColumn + " [" + fromDate + ":" + toDate + "]";
+  }
+
+  /** iterable from fromDate(including) to toDate(excluding) incrementing increment units of updatePeriod */
+  public static Iterable iterable(Date fromDate, Date toDate, UpdatePeriod updatePeriod, int increment) {
+    return TimeRange.getBuilder().fromDate(fromDate).toDate(toDate).build().iterable(updatePeriod, increment);
+  }
+
+  /** iterable from fromDate(including) incrementing increment units of updatePeriod. Do this numIters times */
+  public static Iterable iterable(Date fromDate, int numIters, UpdatePeriod updatePeriod, int increment) {
+    return TimeRange.getBuilder().fromDate(fromDate).build().iterable(updatePeriod, numIters, increment);
+  }
+
+  private Iterable iterable(UpdatePeriod updatePeriod, int numIters, int increment) {
+    return new Iterable(updatePeriod, numIters, increment);
+  }
+
+  public Iterable iterable(UpdatePeriod updatePeriod, int increment) {
+    if (increment == 0) {
+      throw new UnsupportedOperationException("Can't iterate if iteration increment is zero");
+    }
+    long numIters = DateUtil.getTimeDiff(fromDate, toDate, updatePeriod) / increment;
+    return new Iterable(updatePeriod, numIters, increment);
+  }
+
+  /** Iterable so that foreach is supported */
+  public class Iterable implements java.lang.Iterable<Date> {
+    private UpdatePeriod updatePeriod;
+    private long numIters;
+    private int increment;
+
+    public Iterable(UpdatePeriod updatePeriod, long numIters, int increment) {
+      this.updatePeriod = updatePeriod;
+      this.numIters = numIters;
+      if (this.numIters < 0) {
+        this.numIters = 0;
+      }
+      this.increment = increment;
+    }
+
+    @Override
+    public Iterator iterator() {
+      return new Iterator();
+    }
+
+    public class Iterator implements java.util.Iterator<Date> {
+      Calendar calendar;
+      // Tracks the index of the item returned after the last next() call.
+      // Index here refers to the index if the iterator were iterated and converted into a list.
+      @Getter
+      int counter = -1;
+
+      public Iterator() {
+        calendar = Calendar.getInstance();
+        calendar.setTime(fromDate);
+      }
+
+      @Override
+      public boolean hasNext() {
+        return counter < numIters - 1;
+      }
+
+      @Override
+      public Date next() {
+        Date cur = calendar.getTime();
+        calendar.add(updatePeriod.calendarField(), increment);
+        counter++;
+        return cur;
+      }
+
+      public Date peekNext() {
+        return calendar.getTime();
+      }
+
+      @Override
+      public void remove() {
+        throw new UnsupportedOperationException("remove from timerange iterator");
+      }
+
+      public long getNumIters() {
+        return numIters;
+      }
+    }
   }
 }

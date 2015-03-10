@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import org.apache.lens.cube.metadata.FactPartition;
+
 public final class TimeRangeUtils {
   private TimeRangeUtils() {
 

@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
+import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.StorageConstants;
 
 import org.apache.commons.logging.Log;
@@ -29,6 +30,7 @@ public final class StorageUtil {
   private StorageUtil() {
 
   }
+
   private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
   public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
@@ -50,6 +52,19 @@ public final class StorageUtil {
       sep = " OR ";
     }
     return partStr.toString();
+  }
+
+  public static String getWherePartClauseWithIn(String timeDimName, String tableName, List<String> parts) {
+    if (parts.size() == 0) {
+      return "";
+    }
+    StringBuilder inClause = new StringBuilder();
+    String sep = "";
+    for (String part : parts) {
+      inClause.append(sep).append("'").append(part).append("'");
+      sep = ",";
+    }
+    return tableName + "." + timeDimName + " IN (" + inClause + ")";
   }
 
   public static String getNotLatestClauseForDimensions(String alias, Set<String> timedDimensions, String partCol) {

@@ -20,6 +20,8 @@ package org.apache.lens.cube.parse;
 
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.FactPartition;
+
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 public interface TimeRangeWriter {

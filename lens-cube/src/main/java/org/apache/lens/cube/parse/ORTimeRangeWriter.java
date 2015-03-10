@@ -22,6 +22,8 @@ package org.apache.lens.cube.parse;
 import java.util.Iterator;
 import java.util.Set;
 
+import org.apache.lens.cube.metadata.FactPartition;
+
 /**
  * Writes timerange partitions as an OR expression.
  */

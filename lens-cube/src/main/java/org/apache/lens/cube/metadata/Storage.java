@@ -326,35 +326,38 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
       String dbName = SessionState.get().getCurrentDatabase();
       Table storageTbl = client.getTable(storageTableName);
       // update latest info
-      for (Map.Entry<String, LatestInfo> entry : updateLatestInfo.entrySet()) {
-        String latestPartCol = entry.getKey();
-        // symlink this partition to latest
-        List<Partition> latestParts;
-        try {
-          latestParts = client.getPartitionsByFilter(storageTbl, StorageConstants.getLatestPartFilter(latestPartCol));
-        } catch (Exception e) {
-          throw new HiveException("Could not get latest partition", e);
-        }
-        if (!latestParts.isEmpty()) {
-          client.dropPartition(storageTbl.getTableName(), latestParts.get(0).getValues(), false);
-        }
-        LatestInfo latest = entry.getValue();
-        if (latest != null && latest.part != null) {
-          AddPartitionDesc latestPart = new AddPartitionDesc(dbName, storageTableName, true);
-          latestPart.addPartition(StorageConstants.getLatestPartSpec(latest.part.getSpec(), latestPartCol),
-            latest.part.getLocation());
-          latestPart.getPartition(0).setPartParams(
-            latest.latestParts.get(latestPartCol).getPartParams(latest.part.getParameters()));
-          latestPart.getPartition(0).setInputFormat(latest.part.getInputFormatClass().getCanonicalName());
-          latestPart.getPartition(0).setOutputFormat(latest.part.getOutputFormatClass().getCanonicalName());
-          latestPart.getPartition(0).setNumBuckets(latest.part.getBucketCount());
-          latestPart.getPartition(0).setCols(latest.part.getCols());
-          latestPart.getPartition(0).setSerializationLib(
-            latest.part.getTPartition().getSd().getSerdeInfo().getSerializationLib());
-          latestPart.getPartition(0).setSerdeParams(latest.part.getTPartition().getSd().getSerdeInfo().getParameters());
-          latestPart.getPartition(0).setBucketCols(latest.part.getBucketCols());
-          latestPart.getPartition(0).setSortCols(latest.part.getSortCols());
-          client.createPartitions(latestPart);
+      if (updateLatestInfo != null) {
+        for (Map.Entry<String, LatestInfo> entry : updateLatestInfo.entrySet()) {
+          String latestPartCol = entry.getKey();
+          // symlink this partition to latest
+          List<Partition> latestParts;
+          try {
+            latestParts = client.getPartitionsByFilter(storageTbl, StorageConstants.getLatestPartFilter(latestPartCol));
+          } catch (Exception e) {
+            throw new HiveException("Could not get latest partition", e);
+          }
+          if (!latestParts.isEmpty()) {
+            client.dropPartition(storageTbl.getTableName(), latestParts.get(0).getValues(), false);
+          }
+          LatestInfo latest = entry.getValue();
+          if (latest != null && latest.part != null) {
+            AddPartitionDesc latestPart = new AddPartitionDesc(dbName, storageTableName, true);
+            latestPart.addPartition(StorageConstants.getLatestPartSpec(latest.part.getSpec(), latestPartCol),
+              latest.part.getLocation());
+            latestPart.getPartition(0).setPartParams(
+              latest.latestParts.get(latestPartCol).getPartParams(latest.part.getParameters()));
+            latestPart.getPartition(0).setInputFormat(latest.part.getInputFormatClass().getCanonicalName());
+            latestPart.getPartition(0).setOutputFormat(latest.part.getOutputFormatClass().getCanonicalName());
+            latestPart.getPartition(0).setNumBuckets(latest.part.getBucketCount());
+            latestPart.getPartition(0).setCols(latest.part.getCols());
+            latestPart.getPartition(0).setSerializationLib(
+              latest.part.getTPartition().getSd().getSerdeInfo().getSerializationLib());
+            latestPart.getPartition(0).setSerdeParams(
+              latest.part.getTPartition().getSd().getSerdeInfo().getParameters());
+            latestPart.getPartition(0).setBucketCols(latest.part.getBucketCols());
+            latestPart.getPartition(0).setSortCols(latest.part.getSortCols());
+            client.createPartitions(latestPart);
+          }
         }
       }
       commitDropPartition(storageTableName, partVals);

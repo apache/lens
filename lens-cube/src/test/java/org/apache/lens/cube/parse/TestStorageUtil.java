@@ -21,6 +21,7 @@ package org.apache.lens.cube.parse;
 
 import java.util.*;
 
+import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
 import org.apache.hadoop.conf.Configuration;

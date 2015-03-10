@@ -271,8 +271,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testCubeWhereQuery() throws Exception {
-    String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, getConf());
-    String expected =
+    String hqlQuery, expected;
+    hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, getConf());
+    expected =
       getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
         getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
@@ -1192,8 +1193,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     Configuration conf = getConf();
     conf.set(CubeQueryConfUtil.PROCESS_TIME_PART_COL, "pt");
+    conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS, AbridgedTimeRangeWriter.class, TimeRangeWriter.class);
     String hqlQuery = rewrite("select dim1, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
     System.out.println("Query With process time col:" + hqlQuery);
+    String expected = getExpectedQuery(cubeName, "select testcube.dim1, max(testcube.msr3), sum(testcube.msr2) FROM ",
+      null, " GROUP BY ( testcube . dim1 )",
+      getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary1"),
+      getNotLatestConditions(cubeName, "it", "C2_summary1"));
     // TODO compare queries
     // compareQueries(expected, hqlQuery);
     hqlQuery =
@@ -1480,8 +1486,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     // Run explain on this command, it should pass successfully.
     CommandProcessorResponse inExplainResponse = runExplain(hqlWithInClause, conf);
     Assert.assertNotNull(inExplainResponse);
-    Assert.assertTrue(hqlWithInClause.contains("in")
-      && (hqlWithInClause.contains("OR") || hqlWithInClause.contains("or")));
+    Assert.assertTrue(hqlWithInClause.contains("in"));
 
     // Test 2 - check for single part column
     // Verify for large number of partitions, single column. This is just to check if we don't see
