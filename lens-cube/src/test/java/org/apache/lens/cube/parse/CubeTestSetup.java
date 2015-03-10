@@ -722,6 +722,8 @@ public class CubeTestSetup {
     measures.add("msr13");
     measures.add("msr14");
     dimensions = new HashSet<String>();
+    dimensions.add("cityid");
+    dimensions.add("stateid");
     dimensions.add("dim1");
     dimensions.add("dim2");
     dimensions.add("dim11");

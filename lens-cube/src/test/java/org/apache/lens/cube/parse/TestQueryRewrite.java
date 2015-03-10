@@ -84,8 +84,8 @@ public abstract class TestQueryRewrite {
 
   protected SemanticException getSemanticExceptionInRewrite(String query, Configuration conf) throws ParseException {
     try {
-      rewrite(query, conf);
-      Assert.fail("Should have thrown exception");
+      String hql = rewrite(query, conf);
+      Assert.fail("Should have thrown exception. But rewrote the query : " + hql);
       // unreachable
       return null;
     } catch (SemanticException e) {

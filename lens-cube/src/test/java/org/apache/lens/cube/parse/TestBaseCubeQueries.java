@@ -58,11 +58,26 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
     Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("msr1"));
 
-    e = getSemanticExceptionInRewrite("select dim2, cityid, SUM(msr2) from basecube" + " where " + TWO_DAYS_RANGE,
+    e = getSemanticExceptionInRewrite("select cityStateCapital, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
+      conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("citystatecapital") && e.getMessage().contains("msr1"));
+
+    e = getSemanticExceptionInRewrite("select cityState.name, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
+      conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("citystate.name") && e.getMessage().contains("msr1"));
+
+    e = getSemanticExceptionInRewrite("select cubeState.name, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
+      conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    Assert.assertTrue(e.getMessage().contains("cubestate.name") && e.getMessage().contains("msr1"));
+
+    e = getSemanticExceptionInRewrite("select dim2, countryid, SUM(msr2) from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("cityid"));
+    Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("countryid"));
 
     e = getSemanticExceptionInRewrite("select newmeasure from basecube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
