@@ -56,10 +56,10 @@ Lens server configuration
 *--+--+---+--+
 |16|lens.server.db.jdbc.user|SA|JDBC User for Finished queries table. Also used for database based user config loaders|
 *--+--+---+--+
-|17|lens.server.db.validation.query|select 1|BasicDatasource has a config parameter called validationQuery. This query is run before passing the Datasource to the application to verify if connection is valid.\ |
-|  |                               |        |{{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}}                                                                           \ |
-|  |                               |        |{{{http://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases}validationquery for different databases}}                              \ |
-|  |                               |        |                                                                                                                                                                     |
+|17|lens.server.db.validation.query|select 1 from INFORMATION_SCHEMA.SYSTEM_USERS|BasicDatasource has a config parameter called validationQuery. This query is run before passing the Datasource to the application to verify if connection is valid.\ |
+|  |                               |                                             |{{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}}                                                                           \ |
+|  |                               |                                             |{{{http://stackoverflow.com/questions/10684244/dbcp-validationquery-for-different-databases}validationquery for different databases}}                              \ |
+|  |                               |                                             |                                                                                                                                                                     |
 *--+--+---+--+
 |18|lens.server.domain|company.com|Server domain. This will be used in authentication and Sending emails to users. For the server, the username will be without domain and domain will come through conf.|
 *--+--+---+--+

@@ -792,7 +792,7 @@ public final class LensConfConstants {
   public static final String SERVER_DB_VALIDATION_QUERY = SERVER_PFX + "db.validation.query";
 
   /** default value of the validation query */
-  public static final String DEFAULT_SERVER_DB_VALIDATION_QUERY = "select 1";
+  public static final String DEFAULT_SERVER_DB_VALIDATION_QUERY = "select 1 from INFORMATION_SCHEMA.SYSTEM_USERS";
 
 
   /**

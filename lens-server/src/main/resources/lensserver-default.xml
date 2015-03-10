@@ -280,7 +280,7 @@
   </property>
   <property>
     <name>lens.server.db.validation.query</name>
-    <value>select 1</value>
+    <value>select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</value>
     <description>BasicDatasource has a config parameter called validationQuery. This query is run before passing
       the Datasource to the application to verify if connection is valid.\
       {{{http://commons.apache.org/proper/commons-dbcp/configuration.html}dbcp configuration}} \

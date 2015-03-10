@@ -125,13 +125,6 @@
   </property>
 
   <property>
-    <name>lens.server.db.validation.query</name>
-    <value>select 1 from INFORMATION_SCHEMA.SYSTEM_USERS</value>
-    <description>Validation query for hsql
-    </description>
-  </property>
-
-  <property>
     <name>lens.server.servicenames</name>
     <value>session,query,metastore,scheduler,quota,mocknonlens</value>
   </property>
