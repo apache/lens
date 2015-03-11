@@ -78,6 +78,7 @@ public class StoreAllPartitionTimeline extends PartitionTimeline {
 
   @Override
   public boolean initFromProperties(Map<String, String> properties) throws LensException {
+    allPartitions.clear();
     String partitionsStr = properties.get("partitions");
     if (partitionsStr == null) {
       return true;

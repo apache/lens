@@ -43,7 +43,7 @@ import lombok.NonNull;
 @Data
 public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   private TimePartition first;
-  private TreeSet<TimePartition> holes = new TreeSet<TimePartition>();
+  private TreeSet<TimePartition> holes = Sets.newTreeSet();
   private TimePartition latest;
 
   public EndsAndHolesPartitionTimeline(CubeMetastoreClient client, String storageTableName, UpdatePeriod updatePeriod,
@@ -122,10 +122,19 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
 
   @Override
   public boolean initFromProperties(Map<String, String> properties) throws LensException {
-    first = TimePartition.of(getUpdatePeriod(), properties.get("first"));
-    latest = TimePartition.of(getUpdatePeriod(), properties.get("latest"));
-    holes = Sets.newTreeSet();
+    first = null;
+    latest = null;
+    holes.clear();
+    String firstStr = properties.get("first");
+    String latestStr = properties.get("latest");
     String holesStr = properties.get("holes");
+    if (!Strings.isNullOrEmpty(firstStr)) {
+      first = TimePartition.of(getUpdatePeriod(), firstStr);
+    }
+    if (!Strings.isNullOrEmpty(latestStr)) {
+      latest = TimePartition.of(getUpdatePeriod(), latestStr);
+    }
+    holes = Sets.newTreeSet();
     if (!Strings.isNullOrEmpty(holesStr)) {
       for (String hole : properties.get("holes").split("\\s*,\\s*")) {
         holes.add(TimePartition.of(getUpdatePeriod(), hole));

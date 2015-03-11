@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Represents the in-memory data structure that represents timeline of all existing partitions for a given storage
@@ -40,6 +41,7 @@ import lombok.NonNull;
  * @see org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline
  */
 @Data
+@CommonsLog
 public abstract class PartitionTimeline implements Iterable<TimePartition> {
   private final CubeMetastoreClient client;
   private final String storageTableName;
@@ -84,7 +86,9 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
         props.put(entry.getKey().substring(prefix.length()), entry.getValue());
       }
     }
+    log.info("initializing timeline: " + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
     initFromProperties(props);
+    log.info("initialized to " + toProperties());
   }
 
   /**
@@ -111,6 +115,7 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     }
     boolean result = add(getAll());
     all = null;
+    log.info("after commit batch additions, timeline is: " + this);
     return result;
   }
 

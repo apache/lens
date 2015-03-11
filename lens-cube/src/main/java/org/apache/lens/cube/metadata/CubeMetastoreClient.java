@@ -172,6 +172,7 @@ public class CubeMetastoreClient {
       throws HiveException, LensException {
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
       if (get(storageTableName) == null) {
+        log.info("loading timeline from all partitions for storage table: " + storageTableName);
         // not found in memory, try loading from table properties.
         Table storageTable = getTable(storageTableName);
         if (storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()) == null) {
@@ -256,7 +257,9 @@ public class CubeMetastoreClient {
         get(storageTable).get(updatePeriod).put(partitionColumn, PartitionTimelineFactory.get(
           CubeMetastoreClient.this, storageTable, updatePeriod, partitionColumn));
       }
-      return get(storageTable).get(updatePeriod).get(partitionColumn);
+      PartitionTimeline ret = get(storageTable).get(updatePeriod).get(partitionColumn);
+      log.info("ensured entry " + ret);
+      return ret;
     }
 
     /**
