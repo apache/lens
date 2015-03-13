@@ -46,20 +46,36 @@ Jdbc driver configuration
 *--+--+---+--+
 |11|lens.driver.jdbc.enable.resultset.streaming.retrieval|false|Flag to enable row by row retrieval of result set from the database server. This is used to enable streaming result sets for MySQL. This is set to false by default.|
 *--+--+---+--+
-|12|lens.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+|12|lens.driver.jdbc.estimate.db.password| |The database user's password, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.password would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|13|lens.driver.jdbc.fetch.size|1000|Fetch size for JDBC result set|
+|13|lens.driver.jdbc.estimate.db.uri| |JDBC connection URL in the format jdbc:dbms://host:port/dbname for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.uri will be used.|
 *--+--+---+--+
-|14|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+|14|lens.driver.jdbc.estimate.db.user| |The database user on whose behalf the connection is being made, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.db.user would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|15|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+|15|lens.driver.jdbc.estimate.driver.class| |Type of JDBC driver used to connect backend database for estimate queries. If This property is not specified, value for lens.driver.jdbc.driver.class will be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|16|lens.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+|16|lens.driver.jdbc.estimate.get.connection.timeout| |Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket , for estimate queries. If this property is not specified, value for lens.driver.jdbc.get.connection.timeout would be used. Override this property to tune estimate connection pool.|
 *--+--+---+--+
-|17|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+|17|lens.driver.jdbc.estimate.pool.idle.time| |Maximum idle time in sec before a connection is closed, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.idle.time would be used. Override this property to tune estimate connection pool.|
 *--+--+---+--+
-|18|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+|18|lens.driver.jdbc.estimate.pool.max.size| |Maximum number of concurrent connections allowed in pool, for estimate queries. If this property is unspecified, value for lens.driver.jdbc.pool.max.size would be used. Override this property to tune estimate connection pool|
 *--+--+---+--+
-|19|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
+|19|lens.driver.jdbc.estimate.pool.max.statements| |Maximum number of prepared statements to cache per connection, for estimate queries. If this property is not specified, value for lens.driver.jdbc.pool.max.statements would be used.|
+*--+--+---+--+
+|20|lens.driver.jdbc.explain.keyword|Explain|Explain keyword used to get the query plan of underlying database|
+*--+--+---+--+
+|21|lens.driver.jdbc.fetch.size|1000|Fetch size for JDBC result set|
+*--+--+---+--+
+|22|lens.driver.jdbc.get.connection.timeout|10000|Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket|
+*--+--+---+--+
+|23|lens.driver.jdbc.pool.idle.time|600|Maximum idle time in sec before a connection is closed|
+*--+--+---+--+
+|24|lens.driver.jdbc.pool.max.size|15|Maximum number of concurrent connections allowed in pool|
+*--+--+---+--+
+|25|lens.driver.jdbc.pool.max.statements|20|Maximum number of prepared statements to cache per connection|
+*--+--+---+--+
+|26|lens.driver.jdbc.query.rewriter|org.apache.lens.driver.jdbc.ColumnarSQLRewriter|Rewriting the HQL to optimized sql queries|
+*--+--+---+--+
+|27|lens.driver.jdbc.validate.through.prepare|true|Flag to enable query syntactic and semantic validation using prepared statement.|
 *--+--+---+--+
 The configuration parameters and their default values

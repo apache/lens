@@ -1391,6 +1391,7 @@ public class TestQueryService extends LensJerseyTest {
    */
   @Test
   public void testEstimateFailingNativeQuery() throws InterruptedException {
+    LOG.info("@#@#testEstimateFailingNativeQuery");
     final WebTarget target = target().path("queryapi/queries");
 
     // estimate native query
@@ -1404,13 +1405,15 @@ public class TestQueryService extends LensJerseyTest {
 
     final EstimateResult result = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), EstimateResult.class);
+    LOG.info("@#@#testEstimateFailingNativeQuery got response");
     Assert.assertNotNull(result);
     Assert.assertNull(result.getCost());
     Assert.assertTrue(result.isError());
     Assert.assertTrue(result.getErrorMsg().contains("Driver :org.apache.lens.driver.hive.HiveDriver Cause :Error while"
-      + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'"));
+        + " compiling statement: FAILED: SemanticException [Error 10001]: Line 1:32 Table not found 'nonexist'"),
+      result.getErrorMsg());
     Assert.assertTrue(result.getErrorMsg().contains("Driver :org.apache.lens.driver.jdbc.JDBCDriver Cause :user"
-      + " lacks privilege or object not found: NONEXIST"));
+      + " lacks privilege or object not found: NONEXIST"), result.getErrorMsg());
   }
 
 

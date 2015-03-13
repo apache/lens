@@ -49,6 +49,7 @@ import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryRewriter;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -86,6 +87,11 @@ public class JDBCDriver implements LensDriver {
 
   /** The conf. */
   private Configuration conf;
+
+  /** Configuration for estimate connection pool */
+  private Configuration estimateConf;
+  /** Estimate connection provider */
+  private ConnectionProvider estimateConnectionProvider;
 
   /**
    * Data related to a query submitted to JDBCDriver.
@@ -426,6 +432,7 @@ public class JDBCDriver implements LensDriver {
       DataSourceConnectionProvider.class, ConnectionProvider.class);
     try {
       connectionProvider = cpClass.newInstance();
+      estimateConnectionProvider = cpClass.newInstance();
     } catch (Exception e) {
       LOG.error("Error initializing connection provider: " + e.getMessage(), e);
       throw new LensException(e);
@@ -548,6 +555,7 @@ public class JDBCDriver implements LensDriver {
   private static final String VALIDATE_GAUGE = "validate-thru-prepare";
   private static final String COLUMNAR_SQL_REWRITE_GAUGE = "columnar-sql-rewrite";
   private static final String JDBC_PREPARE_GAUGE = "jdbc-prepare-statement";
+
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
     MethodMetricsContext validateGauge = MethodMetricsFactory.createMethodGauge(qctx.getDriverConf(this), true,
@@ -622,7 +630,14 @@ public class JDBCDriver implements LensDriver {
     boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE,
         DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
     if (validateThroughPrepare) {
-      PreparedStatement stmt = prepareInternal(pContext);
+      PreparedStatement stmt = null;
+      try {
+        // Estimate queries need to get connection from estimate pool to make sure
+        // we are not blocked by data queries.
+        stmt = prepareInternal(pContext, getEstimateConnection(), true);
+      } catch (SQLException e) {
+        throw new LensException(e);
+      }
       if (stmt != null) {
         try {
           stmt.close();
@@ -631,6 +646,66 @@ public class JDBCDriver implements LensDriver {
         }
       }
     }
+  }
+
+  // Get key used for estimate key config
+  protected String getEstimateKey(String jdbcKey) {
+    return JDBC_DRIVER_PFX + "estimate." + jdbcKey.substring(JDBC_DRIVER_PFX.length());
+  }
+
+  // If 'key' is set in conf, return its value.
+  // Otherwise, return value specified for fallBackKey
+  private String getKeyOrFallBack(Configuration conf, String key, String fallBackKey) {
+    String val = conf.get(key);
+    if (StringUtils.isBlank(val)) {
+      val = conf.get(fallBackKey);
+    }
+    return val;
+  }
+
+  // Get connection config used by estimate pool.
+  protected final Configuration getEstimateConnectionConf() {
+    if (estimateConf == null) {
+      Configuration tmpConf = new Configuration(conf);
+      // Override JDBC settings in estimate conf, if set by user explicitly. Otherwise fall back to default JDBC pool
+      // config
+      tmpConf.set(JDBC_DB_URI, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_DB_URI), JDBC_DB_URI));
+      tmpConf.set(JDBC_DRIVER_CLASS, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_DRIVER_CLASS), JDBC_DRIVER_CLASS));
+      tmpConf.set(JDBC_USER, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_USER), JDBC_USER));
+
+      String password = getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_PASSWORD), JDBC_PASSWORD);
+      /* We need to set password as empty string if it is not provided. Setting null on conf is not allowed */
+      if (password == null) {
+        password = "";
+      }
+      tmpConf.set(JDBC_PASSWORD, password);
+
+      tmpConf.set(JDBC_POOL_MAX_SIZE, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_POOL_MAX_SIZE),
+        JDBC_POOL_MAX_SIZE));
+      tmpConf.set(JDBC_POOL_IDLE_TIME, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_POOL_IDLE_TIME),
+        JDBC_POOL_IDLE_TIME));
+      tmpConf.set(JDBC_MAX_STATEMENTS_PER_CONNECTION, getKeyOrFallBack(tmpConf,
+          getEstimateKey(JDBC_MAX_STATEMENTS_PER_CONNECTION), JDBC_MAX_STATEMENTS_PER_CONNECTION));
+      tmpConf.set(JDBC_GET_CONNECTION_TIMEOUT, getKeyOrFallBack(tmpConf,
+        getEstimateKey(JDBC_GET_CONNECTION_TIMEOUT), JDBC_GET_CONNECTION_TIMEOUT));
+
+      estimateConf = tmpConf;
+    }
+    return estimateConf;
+  }
+
+  protected final Connection getEstimateConnection() throws SQLException {
+    return estimateConnectionProvider.getConnection(getEstimateConnectionConf());
+  }
+
+  // For tests
+  protected final ConnectionProvider getEstimateConnectionProvider() {
+    return estimateConnectionProvider;
+  }
+
+  // For tests
+  protected final ConnectionProvider getConnectionProvider() {
+    return connectionProvider;
   }
 
   private final Map<QueryPrepareHandle, PreparedStatement> preparedQueries =
@@ -648,6 +723,21 @@ public class JDBCDriver implements LensDriver {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
+    return prepareInternal(pContext, getConnection(), false);
+  }
+
+
+  private PreparedStatement prepareInternal(AbstractQueryContext pContext, final Connection conn,
+                                            boolean checkConfigured) throws LensException {
+    // Caller might have already verified configured status and driver query, so we don't have
+    // to do this check twice. Caller must set checkConfigured to false in that case.
+    if (checkConfigured) {
+      if (pContext.getDriverQuery(this) == null) {
+        throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
+      }
+      checkConfigured();
+    }
+
     // Only create a prepared statement and then close it
     MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       COLUMNAR_SQL_REWRITE_GAUGE);
@@ -655,10 +745,8 @@ public class JDBCDriver implements LensDriver {
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       JDBC_PREPARE_GAUGE);
-    Connection conn = null;
     PreparedStatement stmt = null;
     try {
-      conn = getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
       if (stmt.getWarnings() != null) {
         throw new LensException(stmt.getWarnings());

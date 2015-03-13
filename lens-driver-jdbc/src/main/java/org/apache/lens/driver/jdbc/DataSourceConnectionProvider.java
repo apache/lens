@@ -207,4 +207,8 @@ public class DataSourceConnectionProvider implements ConnectionProvider {
     LOG.info("Closed datasource connection provider");
   }
 
+  protected final ComboPooledDataSource getDataSource(Configuration conf) {
+    return dataSourceMap.get(getDriverConfigfromConf(conf));
+  }
+
 }

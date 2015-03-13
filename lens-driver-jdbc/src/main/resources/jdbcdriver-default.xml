@@ -83,6 +83,69 @@
     </description>
   </property>
 
+  <!-- Estimate query connection pool settings -->
+  <property>
+    <name>lens.driver.jdbc.estimate.driver.class</name>
+    <value></value>
+    <description>Type of JDBC driver used to connect backend database for estimate queries. If
+    This property is not specified, value for lens.driver.jdbc.driver.class will be used.
+      Override this property to tune estimate connection pool</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.db.uri</name>
+    <value></value>
+    <description>JDBC connection URL in the format jdbc:dbms://host:port/dbname for estimate queries.
+    If this property is unspecified, value for lens.driver.jdbc.db.uri will be used.</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.db.user</name>
+    <value></value>
+    <description>The database user on whose behalf the connection is being made, for estimate queries.
+    If this property is unspecified, value for lens.driver.jdbc.db.user would be used.
+      Override this property to tune estimate connection pool</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.db.password</name>
+    <value></value>
+    <description>The database user's password, for estimate queries. If this property is unspecified,
+      value for lens.driver.jdbc.db.password would be used.
+      Override this property to tune estimate connection pool</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.pool.max.size</name>
+    <value></value>
+    <description>Maximum number of concurrent connections allowed in pool, for estimate queries.
+    If this property is unspecified, value for lens.driver.jdbc.pool.max.size would be used.
+      Override this property to tune estimate connection pool</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.pool.idle.time</name>
+    <value></value>
+    <description>Maximum idle time in sec before a connection is closed, for estimate queries.
+    If this property is not specified, value for lens.driver.jdbc.pool.idle.time would be used.
+      Override this property to tune estimate connection pool.</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.pool.max.statements</name>
+    <value></value>
+    <description>Maximum number of prepared statements to cache per connection, for estimate queries.
+    If this property is not specified, value for lens.driver.jdbc.pool.max.statements would be used.</description>
+  </property>
+
+  <property>
+    <name>lens.driver.jdbc.estimate.get.connection.timeout</name>
+    <value></value>
+    <description>Response timeout in milliseconds of any JDBC call invoking data transmission over a connection socket
+    , for estimate queries. If this property is not specified, value for lens.driver.jdbc.get.connection.timeout
+    would be used. Override this property to tune estimate connection pool.</description>
+  </property>
+
   <property>
     <name>lens.driver.jdbc.explain.keyword</name>
     <value>Explain</value>
