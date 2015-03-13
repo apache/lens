@@ -170,50 +170,56 @@ public class CubeMetastoreClient {
      */
     public TreeMap<UpdatePeriod, CaseInsensitiveStringHashMap<PartitionTimeline>> get(String fact, String storage)
       throws HiveException, LensException {
+      // SUSPEND CHECKSTYLE CHECK DoubleCheckedLockingCheck
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
       if (get(storageTableName) == null) {
-        log.info("loading timeline from all partitions for storage table: " + storageTableName);
-        // not found in memory, try loading from table properties.
-        Table storageTable = getTable(storageTableName);
-        if (storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()) == null) {
-          // Not found in table properties either, compute from all partitions of the fact-storage table.
-          // First make sure all combinations of update period and partition column have an entry even
-          // if no partitions exist
-          if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
-            storage) != null) {
-            for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
-              for (String partCol : getTimePartsOfTable(storageTable)) {
-                partitionTimelineCache.ensureEntry(storageTableName, updatePeriod, partCol);
+        synchronized (this) {
+          if (get(storageTableName) == null) {
+            log.info("loading timeline from all partitions for storage table: " + storageTableName);
+            // not found in memory, try loading from table properties.
+            Table storageTable = getTable(storageTableName);
+            if (storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()) == null) {
+              // Not found in table properties either, compute from all partitions of the fact-storage table.
+              // First make sure all combinations of update period and partition column have an entry even
+              // if no partitions exist
+              if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
+                storage) != null) {
+                for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
+                  for (String partCol : getTimePartsOfTable(storageTable)) {
+                    partitionTimelineCache.ensureEntry(storageTableName, updatePeriod, partCol);
+                  }
+                }
               }
-            }
-          }
-          // Then add all existing partitions for batch addition in respective timelines.
-          List<String> timeParts = getTimePartsOfTable(storageTable);
-          List<FieldSchema> partCols = storageTable.getPartCols();
-          for (Partition partition : getPartitionsByFilter(storageTableName, null)) {
-            UpdatePeriod period = deduceUpdatePeriod(partition);
-            List<String> values = partition.getValues();
-            for (int i = 0; i < partCols.size(); i++) {
-              if (timeParts.contains(partCols.get(i).getName())) {
-                partitionTimelineCache.addForBatchAddition(storageTableName, period, partCols.get(i).getName(),
-                  values.get(i));
+              // Then add all existing partitions for batch addition in respective timelines.
+              List<String> timeParts = getTimePartsOfTable(storageTable);
+              List<FieldSchema> partCols = storageTable.getPartCols();
+              for (Partition partition : getPartitionsByFilter(storageTableName, null)) {
+                UpdatePeriod period = deduceUpdatePeriod(partition);
+                List<String> values = partition.getValues();
+                for (int i = 0; i < partCols.size(); i++) {
+                  if (timeParts.contains(partCols.get(i).getName())) {
+                    partitionTimelineCache.addForBatchAddition(storageTableName, period, partCols.get(i).getName(),
+                      values.get(i));
+                  }
+                }
               }
-            }
-          }
-          // commit all batch addition for the storage table, which will in-turn commit all batch additions in all it's
-          // timelines.
-          commitAllBatchAdditions(storageTableName);
-        } else {
-          // found in table properties, load from there.
-          for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
-            for (String partCol : getTimePartsOfTable(storageTableName)) {
-              ensureEntry(storageTableName, updatePeriod, partCol).init(storageTable);
+              // commit all batch addition for the storage table,
+              // which will in-turn commit all batch additions in all it's timelines.
+              commitAllBatchAdditions(storageTableName);
+            } else {
+              // found in table properties, load from there.
+              for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
+                for (String partCol : getTimePartsOfTable(storageTableName)) {
+                  ensureEntry(storageTableName, updatePeriod, partCol).init(storageTable);
+                }
+              }
             }
           }
         }
       }
       // return the final value from memory
       return get(storageTableName);
+      // RESUME CHECKSTYLE CHECK DoubleCheckedLockingCheck
     }
 
     /**
