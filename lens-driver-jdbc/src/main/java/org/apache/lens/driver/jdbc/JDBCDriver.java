@@ -38,7 +38,6 @@ import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryPrepareHandle;
 import org.apache.lens.cube.parse.HQLParser;
-import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.events.LensEventListener;
@@ -51,6 +50,7 @@ import org.apache.lens.server.api.query.QueryRewriter;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -377,7 +377,7 @@ public class JDBCDriver implements LensDriver {
      * (java.lang.String, org.apache.hadoop.conf.Configuration)
      */
     @Override
-    public String rewrite(String query, Configuration queryConf) throws LensException {
+    public String rewrite(String query, Configuration queryConf, HiveConf metastoreConf) throws LensException {
       return query;
     }
 
@@ -519,7 +519,7 @@ public class JDBCDriver implements LensDriver {
       CHECK_ALLOWED_QUERY);
     // check if it is select query
     try {
-      ASTNode ast = HQLParser.parseHQL(query);
+      ASTNode ast = HQLParser.parseHQL(query, ctx.getHiveConf());
       if (ast.getToken().getType() != HiveParser.TOK_QUERY) {
         throw new LensException("Not allowed statement:" + query);
       } else {
@@ -536,7 +536,7 @@ public class JDBCDriver implements LensDriver {
     checkForAllowedQuery.markSuccess();
 
     QueryRewriter rewriter = getQueryRewriter();
-    String rewrittenQuery = rewriter.rewrite(query, driverQueryConf);
+    String rewrittenQuery = rewriter.rewrite(query, driverQueryConf, ctx.getHiveConf());
     ctx.setFinalDriverQuery(this, rewrittenQuery);
     return rewrittenQuery;
   }
@@ -591,9 +591,7 @@ public class JDBCDriver implements LensDriver {
     checkConfigured();
     String explainQuery;
     String rewrittenQuery = rewriteQuery(explainCtx);
-    Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
-    explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
-      false);
+    Configuration explainConf = explainCtx.getDriverConf(this);
     String explainKeyword = explainConf.get(JDBC_EXPLAIN_KEYWORD_PARAM,
       DEFAULT_JDBC_EXPLAIN_KEYWORD);
     boolean explainBeforeSelect = explainConf.getBoolean(JDBC_EXPLAIN_KEYWORD_BEFORE_SELECT,
@@ -607,7 +605,7 @@ public class JDBCDriver implements LensDriver {
     }
     LOG.info("Explain Query : " + explainQuery);
     QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery, null,
-      new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
+      new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier(), false);
     QueryResult result = null;
     try {
       result = executeInternal(explainQueryCtx, explainQuery);

@@ -31,7 +31,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.*;
@@ -929,7 +928,6 @@ class JoinResolver implements ContextRewriter {
   private Map<AbstractCubeTable, JoinType> tableJoinTypeMap;
   private boolean partialJoinChain;
   private AbstractCubeTable target;
-  private HiveConf conf;
   private HashMap<Dimension, List<JoinChain>> dimensionInJoinChain = new HashMap<Dimension, List<JoinChain>>();
 
 
@@ -941,7 +939,6 @@ class JoinResolver implements ContextRewriter {
     partialJoinConditions = new HashMap<AbstractCubeTable, String>();
     tableJoinTypeMap = new HashMap<AbstractCubeTable, JoinType>();
     try {
-      conf = cubeql.getHiveConf();
       resolveJoins(cubeql);
     } catch (HiveException e) {
       throw new SemanticException(e);
@@ -949,9 +946,9 @@ class JoinResolver implements ContextRewriter {
   }
 
   private void resolveJoins(CubeQueryContext cubeql) throws HiveException {
-    QB cubeQB = cubeql.getQB();
+    QB cubeQB = cubeql.getQb();
     boolean joinResolverDisabled =
-      conf.getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
+      cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
     if (joinResolverDisabled) {
       if (cubeql.getJoinTree() != null) {
         cubeQB.setQbJoinTree(genJoinTree(cubeQB, cubeql.getJoinTree(), cubeql));
@@ -990,14 +987,14 @@ class JoinResolver implements ContextRewriter {
     processJoinChains(cubeql);
     Set<Dimension> dimensions = cubeql.getNonChainedDimensions();
     // Add dimensions specified in the partial join tree
-    ASTNode joinClause = cubeql.getQB().getParseInfo().getJoinExpr();
+    ASTNode joinClause = cubeql.getQb().getParseInfo().getJoinExpr();
     if (joinClause == null) {
       // Only cube in the query
       if (cubeql.hasCubeInQuery()) {
         target = (AbstractCubeTable) cubeql.getCube();
       } else {
-        String targetDimAlias = cubeql.getQB().getTabAliases().iterator().next();
-        String targetDimTable = cubeql.getQB().getTabNameForAlias(targetDimAlias);
+        String targetDimAlias = cubeql.getQb().getTabAliases().iterator().next();
+        String targetDimTable = cubeql.getQb().getTabNameForAlias(targetDimAlias);
         if (targetDimTable == null) {
           LOG.warn("Null table for alias " + targetDimAlias);
         }
@@ -1100,7 +1097,7 @@ class JoinResolver implements ContextRewriter {
     }
     AutoJoinContext joinCtx =
       new AutoJoinContext(multipleJoinPaths, cubeql.optionalDimensions, partialJoinConditions, partialJoinChain,
-        tableJoinTypeMap, target, conf.get(CubeQueryConfUtil.JOIN_TYPE_KEY), true);
+        tableJoinTypeMap, target, cubeql.getConf().get(CubeQueryConfUtil.JOIN_TYPE_KEY), true);
     cubeql.setAutoJoinCtx(joinCtx);
   }
 

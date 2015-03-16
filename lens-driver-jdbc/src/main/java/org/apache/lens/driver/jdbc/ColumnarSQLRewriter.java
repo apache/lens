@@ -183,9 +183,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @throws SemanticException the semantic exception
    */
-  public void analyzeInternal() throws SemanticException {
-    HiveConf conf = new HiveConf();
-    CubeSemanticAnalyzer c1 = new CubeSemanticAnalyzer(conf);
+  public void analyzeInternal(Configuration conf, HiveConf hconf) throws SemanticException {
+    CubeSemanticAnalyzer c1 = new CubeSemanticAnalyzer(conf, hconf);
 
     QB qb = new QB(null, null, false);
 
@@ -481,7 +480,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         ASTNode right = (ASTNode) node.getChild(1);
 
         ASTNode parentNode = (ASTNode) node.getParent();
-        HQLParser.printAST(parentNode);
 
         // Skip the join conditions used as "and" while building subquery
         // eg. inner join fact.id1 = dim.id and fact.id2 = dim.id
@@ -489,7 +487,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           && parentNode.getChild(0).getChild(1).getType() == HiveParser.DOT
           && parentNode.getChild(1).getChild(0).getType() == HiveParser.DOT
           && parentNode.getChild(1).getChild(1).getType() == HiveParser.DOT) {
-          HQLParser.printAST(parentNode);
           return;
         }
 
@@ -821,9 +818,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @throws SemanticException
    */
-  public void buildQuery(HiveConf queryConf) throws SemanticException {
-    analyzeInternal();
-    replaceWithUnderlyingStorage(queryConf, fromAST);
+  public void buildQuery(Configuration conf, HiveConf hconf) throws SemanticException {
+    analyzeInternal(conf, hconf);
+    replaceWithUnderlyingStorage(hconf, fromAST);
     replaceAliasInAST();
     getFilterInJoinCond(fromAST);
     getAggregateColumns(selectAST);
@@ -1029,9 +1026,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @see org.apache.lens.server.api.query.QueryRewriter#rewrite(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public synchronized String rewrite(String query, Configuration conf) throws LensException {
-    HiveConf  queryConf = new HiveConf(conf, ColumnarSQLRewriter.class);
-    queryConf.setClassLoader(conf.getClassLoader());
+  public synchronized String rewrite(String query, Configuration conf, HiveConf metastoreConf) throws LensException {
     this.query = query;
     StringBuilder mergedQuery;
     rewrittenQuery.setLength(0);
@@ -1044,8 +1039,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         String[] queries = query.toLowerCase().split("union all");
         for (int i = 0; i < queries.length; i++) {
           LOG.info("Union Query Part " + i + " : " + queries[i]);
-          ast = HQLParser.parseHQL(queries[i]);
-          buildQuery(queryConf);
+          ast = HQLParser.parseHQL(queries[i], metastoreConf);
+          buildQuery(conf, metastoreConf);
           mergedQuery = rewrittenQuery.append(" union all ");
           finalRewrittenQuery = mergedQuery.toString().substring(0, mergedQuery.lastIndexOf("union all"));
           reset();
@@ -1054,8 +1049,8 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Input Query : " + query);
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       } else {
-        ast = HQLParser.parseHQL(query);
-        buildQuery(queryConf);
+        ast = HQLParser.parseHQL(query, metastoreConf);
+        buildQuery(conf, metastoreConf);
         queryReplacedUdf = replaceUDFForDB(rewrittenQuery.toString());
         LOG.info("Input Query : " + query);
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
@@ -1076,7 +1071,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    *
    * @param tree the AST tree
    */
-  protected void replaceWithUnderlyingStorage(HiveConf queryConf, ASTNode tree) {
+  protected void replaceWithUnderlyingStorage(HiveConf metastoreConf, ASTNode tree) {
     if (tree == null) {
       return;
     }
@@ -1090,9 +1085,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
           String lensTable = dbIdentifier.getText() + "." + tableIdentifier.getText();
-          Table tbl = CubeMetastoreClient.getInstance(queryConf).getHiveTable(lensTable);
-          String table = getUnderlyingTableName(queryConf, tbl);
-          String db = getUnderlyingDBName(queryConf, tbl);
+          Table tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(lensTable);
+          String table = getUnderlyingTableName(tbl);
+          String db = getUnderlyingDBName(tbl);
 
           // Replace both table and db names
           if ("default".equalsIgnoreCase(db)) {
@@ -1108,15 +1103,15 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
           String lensTable = tableIdentifier.getText();
-          Table tbl = CubeMetastoreClient.getInstance(queryConf).getHiveTable(lensTable);
-          String table = getUnderlyingTableName(queryConf, tbl);
+          Table tbl = CubeMetastoreClient.getInstance(metastoreConf).getHiveTable(lensTable);
+          String table = getUnderlyingTableName(tbl);
           // Replace table name
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
           }
 
           // Add db name as a new child
-          String dbName = getUnderlyingDBName(queryConf, tbl);
+          String dbName = getUnderlyingDBName(tbl);
           if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
             dbIdentifier.setParent(tree);
@@ -1128,7 +1123,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       }
     } else {
       for (int i = 0; i < tree.getChildCount(); i++) {
-        replaceWithUnderlyingStorage(queryConf, (ASTNode) tree.getChild(i));
+        replaceWithUnderlyingStorage(metastoreConf, (ASTNode) tree.getChild(i));
       }
     }
   }
@@ -1140,7 +1135,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying db name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingDBName(HiveConf queryConf, Table tbl) throws HiveException {
+  String getUnderlyingDBName(Table tbl) throws HiveException {
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
@@ -1151,7 +1146,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying table name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingTableName(HiveConf queryConf, Table tbl) throws HiveException {
+  String getUnderlyingTableName(Table tbl) throws HiveException {
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 

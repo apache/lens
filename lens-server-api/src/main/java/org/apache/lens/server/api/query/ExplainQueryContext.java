@@ -39,6 +39,6 @@ public class ExplainQueryContext extends AbstractQueryContext {
    */
   public ExplainQueryContext(String query, final String user, LensConf conf, Configuration qconf,
       Collection<LensDriver> drivers) {
-    super(query, user, conf, qconf, drivers);
+    super(query, user, conf, qconf, drivers, true);
   }
 }

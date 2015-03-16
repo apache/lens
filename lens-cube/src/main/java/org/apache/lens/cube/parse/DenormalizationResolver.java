@@ -320,11 +320,11 @@ public class DenormalizationResolver implements ContextRewriter {
    */
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
-    DenormalizationContext denormCtx = cubeql.getDenormCtx();
+    DenormalizationContext denormCtx = cubeql.getDeNormCtx();
     if (denormCtx == null) {
       // Adds all the reference dimensions as eligible for denorm fields
       denormCtx = new DenormalizationContext(cubeql);
-      cubeql.setDenormCtx(denormCtx);
+      cubeql.setDeNormCtx(denormCtx);
       for (Map.Entry<String, Set<String>> entry : cubeql.getTblAliasToColumns().entrySet()) {
         // skip default alias
         if (entry.getKey() == CubeQueryContext.DEFAULT_TABLE) {

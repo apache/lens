@@ -166,7 +166,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    * @param conf  the conf
    */
   public QueryContext(String query, String user, LensConf qconf, Configuration conf, Collection<LensDriver> drivers) {
-    this(query, user, qconf, conf, drivers, null);
+    this(query, user, qconf, conf, drivers, null, true);
   }
 
   /**
@@ -179,7 +179,7 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    */
   public QueryContext(PreparedQueryContext prepared, String user, LensConf qconf, Configuration conf) {
     this(prepared.getUserQuery(), user, qconf, mergeConf(prepared.getConf(), conf), prepared.getDriverContext()
-      .getDriverQueryContextMap().keySet(), prepared.getDriverContext().getSelectedDriver());
+      .getDriverQueryContextMap().keySet(), prepared.getDriverContext().getSelectedDriver(), true);
     setDriverContext(prepared.getDriverContext());
     setSelectedDriverQuery(prepared.getSelectedDriverQuery());
   }
@@ -195,8 +195,8 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    * @param selectedDriver SelectedDriver
    */
   private QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
-      Collection<LensDriver> drivers, LensDriver selectedDriver) {
-    this(userQuery, user, qconf, conf, drivers, selectedDriver, System.currentTimeMillis());
+      Collection<LensDriver> drivers, LensDriver selectedDriver, boolean mergeDriverConf) {
+    this(userQuery, user, qconf, conf, drivers, selectedDriver, System.currentTimeMillis(), mergeDriverConf);
   }
   /**
    * Instantiates a new query context.
@@ -210,8 +210,8 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    * @param submissionTime the submission time
    */
   QueryContext(String userQuery, String user, LensConf qconf, Configuration conf,
-    Collection<LensDriver> drivers, LensDriver selectedDriver, long submissionTime) {
-    super(userQuery, user, qconf, conf, drivers);
+    Collection<LensDriver> drivers, LensDriver selectedDriver, long submissionTime, boolean mergeDriverConf) {
+    super(userQuery, user, qconf, conf, drivers, mergeDriverConf);
     this.submissionTime = submissionTime;
     this.queryHandle = new QueryHandle(UUID.randomUUID());
     this.status = new QueryStatus(0.0f, Status.NEW, "Query just got created", false, null, null);
@@ -243,8 +243,8 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
    * @return QueryContext object
    */
   public static QueryContext createContextWithSingleDriver(String query, String user, LensConf qconf,
-      Configuration conf, LensDriver driver, String lensSessionPublicId) {
-    QueryContext ctx = new QueryContext(query, user, qconf, conf, Lists.newArrayList(driver), driver);
+      Configuration conf, LensDriver driver, String lensSessionPublicId, boolean mergeDriverConf) {
+    QueryContext ctx = new QueryContext(query, user, qconf, conf, Lists.newArrayList(driver), driver, mergeDriverConf);
     ctx.setLensSessionIdentifier(lensSessionPublicId);
     return ctx;
   }

@@ -111,16 +111,25 @@ public final class HQLParser {
     return ARITHMETIC_OPERATORS.contains(tokenType);
   }
 
-  public static ASTNode parseHQL(String query) throws ParseException {
+  public static ASTNode parseHQL(String query, HiveConf conf) throws ParseException {
     ParseDriver driver = new ParseDriver();
     ASTNode tree = null;
+    Context ctx = null;
     try {
-      tree = driver.parse(query, new Context(new HiveConf()));
+      ctx = new Context(conf);
+      tree = driver.parse(query, ctx);
+      tree = ParseUtils.findRootNonNullToken(tree);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    } finally {
+      if (ctx != null) {
+        try {
+          ctx.clear();
+        } catch (IOException e) {
+          // ignoring exception in clear
+        }
+      }
     }
-    tree = ParseUtils.findRootNonNullToken(tree);
-    // printAST(tree);
     return tree;
   }
 
@@ -575,7 +584,7 @@ public final class HQLParser {
   }
 
   public static void main(String[] args) throws Exception {
-    ASTNode ast = parseHQL("select * from default_table ");
+    ASTNode ast = parseHQL("select * from default_table ", new HiveConf());
 
     printAST(getHiveTokenMapping(), ast, 0, 0);
   }

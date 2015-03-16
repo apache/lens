@@ -70,6 +70,7 @@ public class TestJdbcDriver {
   /** The base conf. */
   Configuration baseConf;
 
+  HiveConf hConf;
   /** The driver. */
   JDBCDriver driver;
 
@@ -88,6 +89,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
     baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
+    hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
     driver.configure(baseConf);

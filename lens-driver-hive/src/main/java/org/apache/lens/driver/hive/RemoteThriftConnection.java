@@ -41,11 +41,18 @@ public class RemoteThriftConnection implements ThriftConnection {
   /** The hs2 client. */
   private CLIServiceClient hs2Client;
 
+  private HiveConf conf;
   /**
    * Instantiates a new remote thrift connection.
    */
   public RemoteThriftConnection() {
 
+  }
+
+  public void init(HiveConf conf, String user) {
+    // new HiveConf() is getting created because connection will be different for each user
+    this.conf = new HiveConf(conf);
+    this.conf.setVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_USER, user);
   }
 
   /*
@@ -54,7 +61,7 @@ public class RemoteThriftConnection implements ThriftConnection {
    * @see org.apache.lens.driver.hive.ThriftConnection#getClient(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
-  public CLIServiceClient getClient(HiveConf conf) throws LensException {
+  public CLIServiceClient getClient() throws LensException {
     if (!connected) {
       try {
         LOG.info("HiveDriver connecting to HiveServer @ "

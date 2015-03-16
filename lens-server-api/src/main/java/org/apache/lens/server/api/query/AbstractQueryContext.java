@@ -37,6 +37,7 @@ import org.apache.lens.server.api.util.LensUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -61,6 +62,11 @@ public abstract class AbstractQueryContext implements Serializable {
   @Getter
   @Setter
   protected transient Configuration conf;
+
+  /**
+   * The hive Conf.
+   */
+  protected transient HiveConf hiveConf;
 
   /**
    * The query conf.
@@ -107,13 +113,13 @@ public abstract class AbstractQueryContext implements Serializable {
   private boolean olapQuery = false;
 
   protected AbstractQueryContext(final String query, final String user, final LensConf qconf, final Configuration conf,
-    final Collection<LensDriver> drivers) {
+    final Collection<LensDriver> drivers, boolean mergeDriverConf) {
     if (conf.getBoolean(LensConfConstants.ENABLE_QUERY_METRICS, LensConfConstants.DEFAULT_ENABLE_QUERY_METRICS)) {
       UUID metricId = UUID.randomUUID();
       conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, metricId.toString());
       LOG.info("Generated metric id: " + metricId + " for query: " + query);
     }
-    driverContext = new DriverSelectorQueryContext(query, conf, drivers);
+    driverContext = new DriverSelectorQueryContext(query, conf, drivers, mergeDriverConf);
     userQuery = query;
     this.lensConf = qconf;
     this.conf = conf;
@@ -321,6 +327,26 @@ public abstract class AbstractQueryContext implements Serializable {
     return driverContext.driverQueryContextMap.get(driver).getDriverQueryRewriteError();
   }
 
+  /**
+   * Gets HiveConf corresponding to query conf.
+   *
+   * Should be called judiciously, because constructing HiveConf from conf object is costly.
+   * @return
+   */
+  public synchronized HiveConf getHiveConf() {
+    if (hiveConf == null) {
+      hiveConf = new HiveConf(this.conf, this.getClass());
+      hiveConf.setClassLoader(this.conf.getClassLoader());
+    }
+    return hiveConf;
+  }
+
+  /**
+   * Set final driver rewritten query for the driver.
+   *
+   * @param driver
+   * @param rewrittenQuery
+   */
   public void setFinalDriverQuery(LensDriver driver, String rewrittenQuery) {
     driverContext.driverQueryContextMap.get(driver).setFinalDriverQuery(rewrittenQuery);
   }

@@ -1869,7 +1869,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     qconf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
     QueryContext addQuery = QueryContext.createContextWithSingleDriver(command,
       getSession(sessionHandle).getLoggedInUser(), qconf, getLensConf(
-        sessionHandle, qconf), driver, sessionHandle.getPublicId().toString());
+        sessionHandle, qconf), driver, sessionHandle.getPublicId().toString(), true);
     return addQuery;
   }
 

@@ -186,7 +186,8 @@ public class FinishedLensQuery {
   }
 
   public QueryContext toQueryContext(Configuration conf, Collection<LensDriver> drivers) throws LensException {
-    QueryContext qctx = new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, null, submissionTime);
+    QueryContext qctx = new QueryContext(userQuery, submitter, new LensConf(), conf, drivers, null, submissionTime,
+      false);
     qctx.setQueryHandle(QueryHandle.fromString(handle));
     qctx.setEndTime(getEndTime());
     qctx.setStatusSkippingTransitionTest(new QueryStatus(0.0, QueryStatus.Status.valueOf(getStatus()),

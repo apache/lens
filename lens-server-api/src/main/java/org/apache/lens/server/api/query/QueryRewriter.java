@@ -22,6 +22,7 @@ package org.apache.lens.server.api.query;
 import org.apache.lens.api.LensException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 /**
  * The Interface QueryRewriter.
@@ -30,13 +31,15 @@ public interface QueryRewriter {
 
   /**
    * Rewrite.
-   *
-   * @param queryConf the query configuration
    * @param query     the query
+   * @param queryConf the query configuration
+   * @param metastoreConf The metastore configuration. If rewriters requires to access metastore, this configuration
+   *  needs to passed
+   *
    * @return the string
    * @throws LensException the lens exception
    */
-  String rewrite(String query, Configuration queryConf) throws LensException;
+  String rewrite(String query, Configuration queryConf, HiveConf metastoreConf) throws LensException;
 
   /**
    * Set conf for the rewriter

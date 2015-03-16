@@ -30,21 +30,24 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.parse.*;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Rewrites given cube query into simple storage table HQL.
  */
+@Slf4j
 public class CubeQueryRewriter {
   private final Configuration conf;
   private final List<ContextRewriter> rewriters = new ArrayList<ContextRewriter>();
   private final HiveConf hconf;
-  private Context ctx = null;
+  private Context qlCtx = null;
   private boolean lightFactFirst;
 
-  public CubeQueryRewriter(Configuration conf) {
+  public CubeQueryRewriter(Configuration conf, HiveConf hconf) {
     this.conf = conf;
-    hconf = new HiveConf(conf, HiveConf.class);
+    this.hconf = hconf;
     try {
-      ctx = new Context(hconf);
+      qlCtx = new Context(conf);
     } catch (IOException e) {
       // IOException is ignorable
     }
@@ -162,8 +165,8 @@ public class CubeQueryRewriter {
   }
 
   public CubeQueryContext rewrite(ASTNode astnode) throws SemanticException {
-    CubeSemanticAnalyzer analyzer = new CubeSemanticAnalyzer(hconf);
-    analyzer.analyze(astnode, ctx);
+    CubeSemanticAnalyzer analyzer = new CubeSemanticAnalyzer(conf, hconf);
+    analyzer.analyze(astnode, qlCtx);
     CubeQueryContext ctx = analyzer.getQueryContext();
     rewrite(rewriters, ctx);
     return ctx;
@@ -174,7 +177,7 @@ public class CubeQueryRewriter {
       command = command.replace("\n", "");
     }
     ParseDriver pd = new ParseDriver();
-    ASTNode tree = pd.parse(command, ctx, false);
+    ASTNode tree = pd.parse(command, qlCtx, false);
     tree = ParseUtils.findRootNonNullToken(tree);
     return rewrite(tree);
   }
@@ -188,7 +191,7 @@ public class CubeQueryRewriter {
        * Adding iteration number as part of gauge name since some rewriters are have more than one phase, and having
        * iter number gives the idea which iteration the rewriter was run
        */
-      MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getHiveConf(), true,
+      MethodMetricsContext mgauge = MethodMetricsFactory.createMethodGauge(ctx.getConf(), true,
         rewriter.getClass().getCanonicalName() + ITER_STR + i);
       rewriter.rewriteContext(ctx);
       mgauge.markSuccess();
@@ -197,6 +200,17 @@ public class CubeQueryRewriter {
   }
 
   public Context getQLContext() {
-    return ctx;
+    return qlCtx;
+  }
+
+  public void clear() {
+    try {
+      if (qlCtx != null) {
+        qlCtx.clear();
+      }
+    } catch (IOException e) {
+      log.info("Ignoring exception in clearing qlCtx:", e);
+      // ignoring exception in clear
+    }
   }
 }

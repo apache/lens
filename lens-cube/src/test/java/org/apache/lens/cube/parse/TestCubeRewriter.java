@@ -1325,8 +1325,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     final String query = "SELECT cycledim1.name, msr2 FROM testCube where " + TWO_DAYS_RANGE;
     try {
-      CubeQueryRewriter rewriter = new CubeQueryRewriter(testConf);
-      CubeQueryContext context = rewriter.rewrite(query);
+      CubeQueryContext context = rewriteCtx(query, testConf);
       System.out.println("TestJoinPathTimeRange: " + context.toHQL());
       Assert.fail("Expected query to fail because of invalid column life");
     } catch (SemanticException exc) {
@@ -1347,20 +1346,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
         col.getCost());
     cube.alterDimension(newDim2);
     client.alterCube(cubeName, cube);
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(testConf);
-    CubeQueryContext context = rewriter.rewrite(query);
-    String hql = context.toHQL();
+    String hql = rewrite(query, testConf);
     Assert.assertNotNull(hql);
   }
 
   @Test
   public void testCubeQueryWithSpaceInAlias() throws Exception {
     String query = "SELECT sum(msr2) as `a measure` from testCube where " + TWO_DAYS_RANGE;
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(getConf());
     try {
-      HQLParser.printAST(HQLParser.parseHQL(query));
-      CubeQueryContext ctx = rewriter.rewrite(query);
-      String hql = ctx.toHQL();
+      String hql = rewrite(query, getConf());
       Assert.assertNotNull(hql);
       // test that quotes are preserved
       Assert.assertTrue(hql.contains("`a measure`"));
@@ -1385,7 +1379,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     hconf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2,C3,C4");
     hconf.setBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, true);
 
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter rewriter = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext context = rewriter.rewrite(query);
     String hql = context.toHQL();
     System.out.println("@@" + hql);
@@ -1401,7 +1395,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     // Rewrite with setting disabled
     hconf.setBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, false);
-    rewriter = new CubeQueryRewriter(hconf);
+    rewriter = new CubeQueryRewriter(hconf, hconf);
     context = rewriter.rewrite(query);
     hql = context.toHQL();
     System.out.println("@@2 " + hql);
@@ -1411,12 +1405,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testAliasNameSameAsColumnName() throws Exception {
     String query = "SELECT msr2 as msr2 from testCube WHERE " + TWO_DAYS_RANGE;
-    HQLParser.printAST(HQLParser.parseHQL(query));
-    HiveConf hiveConf = new HiveConf(getConf(), TestCubeRewriter.class);
     try {
-      CubeQueryRewriter rewriter = new CubeQueryRewriter(hiveConf);
-      CubeQueryContext ctx = rewriter.rewrite(query);
-      String hql = ctx.toHQL();
+      String hql = rewrite(query, getConf());
       Assert.assertNotNull(hql);
       System.out.println("@@HQL " + hql);
     } catch (NullPointerException npe) {
@@ -1428,29 +1418,18 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testDimAttributeQueryWithFact() throws Exception {
     String query = "select count (distinct dim1) from testCube where " + TWO_DAYS_RANGE;
-    HiveConf conf = new HiveConf(getConf(), TestCubeRewriter.class);
-    CubeQueryRewriter cubeQueryRewriter = new CubeQueryRewriter(conf);
-    CubeQueryContext ctx = cubeQueryRewriter.rewrite(query);
-    String rewrittenQuery = ctx.toHQL();
-    System.out.println("##testDimAttributeQueryWithFact " + rewrittenQuery);
-    Assert.assertTrue(rewrittenQuery.contains("summary1"));
+    String hql = rewrite(query, getConf());
+    Assert.assertTrue(hql.contains("summary1"));
   }
 
   @Test
   public void testSelectDimonlyJoinOnCube() throws Exception {
     String query = "SELECT count (distinct citydim.name) from testCube where " + TWO_DAYS_RANGE;
-    HiveConf conf = new HiveConf(getConf(), TestCubeRewriter.class);
+    Configuration conf = new Configuration(getConf());
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
-    try {
-      CubeQueryRewriter rewriter = new CubeQueryRewriter(conf);
-      CubeQueryContext context = rewriter.rewrite(query);
-      String hql = context.toHQL();
-      System.out.println("@@ HQL = " + hql);
-      Assert.assertNotNull(hql);
-    } catch (Exception exc) {
-      exc.printStackTrace();
-      Assert.fail("Query should be rewritten successfully.");
-    }
+    String hql = rewrite(query, conf);
+    System.out.println("@@ HQL = " + hql);
+    Assert.assertNotNull(hql);
   }
 
   @Test
@@ -1478,9 +1457,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
       AbridgedTimeRangeWriter.class.asSubclass(TimeRangeWriter.class), TimeRangeWriter.class);
 
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(conf);
-    CubeQueryContext context = rewriter.rewrite(query);
-    String hqlWithInClause = context.toHQL();
+    String hqlWithInClause = rewrite(query, conf);
     System.out.println("@@ HQL with IN and OR: " + hqlWithInClause);
 
     // Run explain on this command, it should pass successfully.
@@ -1496,9 +1473,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     largeConf.setClass(CubeQueryConfUtil.TIME_RANGE_WRITER_CLASS,
       AbridgedTimeRangeWriter.class.asSubclass(TimeRangeWriter.class), TimeRangeWriter.class);
 
-    CubeQueryRewriter largePartQueryRewriter = new CubeQueryRewriter(largeConf);
-    CubeQueryContext largePartQueryContext = largePartQueryRewriter.rewrite(largePartQuery);
-    String largePartRewrittenQuery = largePartQueryContext.toHQL();
+    String largePartRewrittenQuery = rewrite(largePartQuery, largeConf);
     CommandProcessorResponse response = runExplain(largePartRewrittenQuery, largeConf);
     Assert.assertNotNull(response);
     Assert.assertTrue(largePartRewrittenQuery.contains("in"));

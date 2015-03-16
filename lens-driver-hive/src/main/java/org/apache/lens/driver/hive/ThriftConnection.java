@@ -33,9 +33,16 @@ public interface ThriftConnection extends Closeable {
   /**
    * Gets the client.
    *
-   * @param conf the conf
    * @return the client
    * @throws LensException the lens exception
    */
-  CLIServiceClient getClient(HiveConf conf) throws LensException;
+  CLIServiceClient getClient() throws LensException;
+
+  /**
+   * Initializes connection with conf.
+   *
+   * @param conf
+   * @param user
+   */
+  void init(HiveConf conf, String user);
 }

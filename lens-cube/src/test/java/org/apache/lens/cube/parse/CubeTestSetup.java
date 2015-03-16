@@ -2053,7 +2053,7 @@ public class CubeTestSetup {
   public static void printQueryAST(String query, String label) throws ParseException {
     System.out.println("--" + label + "--AST--");
     System.out.println("--query- " + query);
-    HQLParser.printAST(HQLParser.parseHQL(query));
+    HQLParser.printAST(HQLParser.parseHQL(query, new HiveConf()));
   }
 
 

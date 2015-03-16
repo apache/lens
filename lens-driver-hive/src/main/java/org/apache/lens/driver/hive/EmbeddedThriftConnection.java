@@ -43,7 +43,7 @@ public class EmbeddedThriftConnection implements ThriftConnection {
    * @see org.apache.lens.driver.hive.ThriftConnection#getClient(org.apache.hadoop.hive.conf.HiveConf)
    */
   @Override
-  public ThriftCLIServiceClient getClient(HiveConf conf) throws LensException {
+  public ThriftCLIServiceClient getClient() throws LensException {
     if (!connected) {
       client = new ThriftCLIServiceClient(new EmbeddedThriftBinaryCLIService());
       connected = true;
@@ -59,5 +59,9 @@ public class EmbeddedThriftConnection implements ThriftConnection {
   @Override
   public void close() throws IOException {
     // Does nothing
+  }
+
+  @Override
+  public void init(HiveConf conf, String user) {
   }
 }

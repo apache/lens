@@ -58,7 +58,7 @@ class AggregateResolver implements ContextRewriter {
     }
 
     boolean nonDefaultAggregates = false;
-    boolean aggregateResolverDisabled = cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER,
+    boolean aggregateResolverDisabled = cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER,
       CubeQueryConfUtil.DEFAULT_DISABLE_AGGREGATE_RESOLVER);
     // Check if the query contains measures
     // 1. not inside default aggregate expressions
@@ -95,7 +95,7 @@ class AggregateResolver implements ContextRewriter {
 
     resolveClause(cubeql, cubeql.getHavingAST());
 
-    Configuration distConf = cubeql.getHiveConf();
+    Configuration distConf = cubeql.getConf();
     boolean isDimOnlyDistinctEnabled = distConf.getBoolean(CubeQueryConfUtil.ENABLE_ATTRFIELDS_ADD_DISTINCT,
       CubeQueryConfUtil.DEFAULT_ATTR_FIELDS_ADD_DISTINCT);
     if (isDimOnlyDistinctEnabled) {
