@@ -119,7 +119,11 @@ public class TestJdbcDriver {
   }
 
   private QueryContext createQueryContext(final String query) throws LensException {
-    QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
+    return createQueryContext(query, baseConf);
+  }
+
+  private QueryContext createQueryContext(final String query, Configuration conf) throws LensException {
+    QueryContext context = new QueryContext(query, "SA", new LensConf(), conf, drivers);
     return context;
   }
 
@@ -202,7 +206,7 @@ public class TestJdbcDriver {
 
     Throwable th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -213,7 +217,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -224,7 +228,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -235,7 +239,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -253,9 +257,12 @@ public class TestJdbcDriver {
     createTable("estimate_test", driver.getEstimateConnection()); // Create table
     insertData("estimate_test", driver.getEstimateConnection()); // Insert some data into table
     String query1 = "SELECT * FROM estimate_test"; // Select query against existing table
-    QueryCost cost = driver.estimate(createExplainContext(query1, baseConf));
+    ExplainQueryContext ctx = createExplainContext(query1, baseConf);
+    Assert.assertNull(ctx.getFinalDriverQuery(driver));
+    QueryCost cost = driver.estimate(ctx);
     Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
     Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
   }
 
   /**
@@ -292,7 +299,22 @@ public class TestJdbcDriver {
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
       "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-columnar-sql-rewrite",
       "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-prepare-statement",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare")));
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-check-allowed-query")));
+  }
+
+  @Test
+  public void testMetricsEnabled() throws Exception {
+    createTable("test_metrics", driver.getEstimateConnection()); // Create table
+    insertData("test_metrics", driver.getEstimateConnection()); // Insert some data into table
+    createTable("test_metrics"); // Create table
+    insertData("test_metrics"); // Insert some data into table
+    String query1 = "SELECT * FROM test_metrics"; // Select query against existing table
+    Configuration metricConf = new Configuration(baseConf);
+    metricConf.setBoolean(LensConfConstants.ENABLE_QUERY_METRICS, true);
+    QueryContext ctx = createQueryContext(query1, metricConf);
+    driver.estimate(ctx);
+    driver.execute(ctx);
   }
 
   /**
@@ -306,7 +328,10 @@ public class TestJdbcDriver {
     insertData("explain_test"); // Insert some data into table
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
-    driver.explain(createExplainContext(query1, baseConf));
+    ExplainQueryContext ctx = createExplainContext(query1, baseConf);
+    Assert.assertNull(ctx.getFinalDriverQuery(driver));
+    driver.explain(ctx);
+    Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
 
     try {
       driver.explain(createExplainContext(query2, baseConf));

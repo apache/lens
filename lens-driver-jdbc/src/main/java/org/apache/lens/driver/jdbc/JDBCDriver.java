@@ -509,7 +509,14 @@ public class JDBCDriver implements LensDriver {
    * @return the string
    * @throws LensException the lens exception
    */
-  protected String rewriteQuery(String query, Configuration conf) throws LensException {
+  protected String rewriteQuery(AbstractQueryContext ctx) throws LensException {
+    if (ctx.getFinalDriverQuery(this) != null) {
+      return ctx.getFinalDriverQuery(this);
+    }
+    String query = ctx.getDriverQuery(this);
+    Configuration driverQueryConf = ctx.getDriverConf(this);
+    MethodMetricsContext checkForAllowedQuery = MethodMetricsFactory.createMethodGauge(driverQueryConf, true,
+      CHECK_ALLOWED_QUERY);
     // check if it is select query
     try {
       ASTNode ast = HQLParser.parseHQL(query);
@@ -526,12 +533,11 @@ public class JDBCDriver implements LensDriver {
     } catch (ParseException e) {
       throw new LensException(e);
     }
+    checkForAllowedQuery.markSuccess();
 
     QueryRewriter rewriter = getQueryRewriter();
-    String rewrittenQuery = rewriter.rewrite(query, conf);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Query: " + query + " rewrittenQuery: " + rewrittenQuery);
-    }
+    String rewrittenQuery = rewriter.rewrite(query, driverQueryConf);
+    ctx.setFinalDriverQuery(this, rewrittenQuery);
     return rewrittenQuery;
   }
 
@@ -555,6 +561,7 @@ public class JDBCDriver implements LensDriver {
   private static final String VALIDATE_GAUGE = "validate-thru-prepare";
   private static final String COLUMNAR_SQL_REWRITE_GAUGE = "columnar-sql-rewrite";
   private static final String JDBC_PREPARE_GAUGE = "jdbc-prepare-statement";
+  private static final String CHECK_ALLOWED_QUERY = "jdbc-check-allowed-query";
 
   @Override
   public QueryCost estimate(AbstractQueryContext qctx) throws LensException {
@@ -583,7 +590,7 @@ public class JDBCDriver implements LensDriver {
     }
     checkConfigured();
     String explainQuery;
-    String rewrittenQuery = rewriteQuery(explainCtx.getDriverQuery(this), explainCtx.getDriverConf(this));
+    String rewrittenQuery = rewriteQuery(explainCtx);
     Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER,
       false);
@@ -741,7 +748,7 @@ public class JDBCDriver implements LensDriver {
     // Only create a prepared statement and then close it
     MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       COLUMNAR_SQL_REWRITE_GAUGE);
-    String rewrittenQuery = rewriteQuery(pContext.getDriverQuery(this), pContext.getDriverConf(this));
+    String rewrittenQuery = rewriteQuery(pContext);
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       JDBC_PREPARE_GAUGE);
@@ -827,8 +834,7 @@ public class JDBCDriver implements LensDriver {
   public LensResultSet execute(QueryContext context) throws LensException {
     checkConfigured();
 
-    String rewrittenQuery = rewriteQuery(context.getSelectedDriverQuery(), context
-      .getSelectedDriverConf());
+    String rewrittenQuery = rewriteQuery(context);
     LOG.info("Execute " + context.getQueryHandle());
     QueryResult result = executeInternal(context, rewrittenQuery);
     return result.getLensResultSet(true);
@@ -864,8 +870,7 @@ public class JDBCDriver implements LensDriver {
     checkConfigured();
     // Always use the driver rewritten query not user query. Since the
     // conf we are passing here is query context conf, we need to add jdbc xml in resource path
-    String rewrittenQuery = rewriteQuery(context.getSelectedDriverQuery(), context.getDriverContext()
-      .getSelectedDriverConf());
+    String rewrittenQuery = rewriteQuery(context);
     JdbcQueryContext jdbcCtx = new JdbcQueryContext(context);
     jdbcCtx.setRewrittenQuery(rewrittenQuery);
     try {

@@ -123,6 +123,10 @@ public class DriverSelectorQueryContext {
     /** driver query */
     protected String query;
 
+    @Getter
+    @Setter
+    /** final driver query - after driver rewrites the query*/
+    protected String finalDriverQuery;
   }
 
   /**
@@ -291,6 +295,11 @@ public class DriverSelectorQueryContext {
   public String getDriverQuery(LensDriver driver) {
     return driverQueryContextMap.get(driver) != null
         ? driverQueryContextMap.get(driver).getQuery() : null;
+  }
+
+  public String getFinalDriverQuery(LensDriver driver) {
+    return driverQueryContextMap.get(driver) != null
+        ? driverQueryContextMap.get(driver).getFinalDriverQuery() : null;
   }
 
   public QueryCost getDriverQueryCost(LensDriver driver) {

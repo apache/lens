@@ -203,6 +203,9 @@ public abstract class AbstractQueryContext implements Serializable {
     return driverContext.getDriverQuery(driver);
   }
 
+  public String getFinalDriverQuery(LensDriver driver) {
+    return driverContext.getFinalDriverQuery(driver);
+  }
   /**
    * Get driver conf
    *
@@ -316,5 +319,9 @@ public abstract class AbstractQueryContext implements Serializable {
    */
   public Exception getDriverRewriteError(LensDriver driver) {
     return driverContext.driverQueryContextMap.get(driver).getDriverQueryRewriteError();
+  }
+
+  public void setFinalDriverQuery(LensDriver driver, String rewrittenQuery) {
+    driverContext.driverQueryContextMap.get(driver).setFinalDriverQuery(rewrittenQuery);
   }
 }
