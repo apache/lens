@@ -26,7 +26,6 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
 
@@ -795,14 +794,14 @@ public class TestColumnarSQLRewriter {
     database.setName("mydb");
 
     Hive.get(conf).createDatabase(database);
+    SessionState.get().setCurrentDatabase("mydb");
     createTable(conf, "mydb", "mytable", "testDB", "testTable_1");
     createTable(conf, "mydb", "mytable_2", "testDB", "testTable_2");
     createTable(conf, "default", "mytable_3", "testDB", "testTable_3");
 
-    String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id "
-      + " left outer join mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
+    String query = "SELECT * FROM mydb.mytable t1 JOIN mytable_2 t2 ON t1.t2id = t2.id "
+      + " left outer join default.mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
 
-    queryConf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
     // Test fails without setting this class loader as now metastore lookup is done using queryConf
     queryConf.setClassLoader(createTableClassLoader);
 
@@ -818,7 +817,7 @@ public class TestColumnarSQLRewriter {
     // Rewrite
     rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
-    System.out.println(joinTreeAfterRewrite);
+    System.out.println("joinTreeAfterRewrite:" + joinTreeAfterRewrite);
 
     // Tests
     assertTrue(joinTreeBeforeRewrite.contains("mydb"));
@@ -875,6 +874,7 @@ public class TestColumnarSQLRewriter {
     Hive.get().dropTable("mydb", "mytable_4");
     Hive.get().dropDatabase("mydb", true, true, true);
     Hive.get().dropDatabase("examples", true, true, true);
+    SessionState.get().setCurrentDatabase("default");
   }
 
   /**

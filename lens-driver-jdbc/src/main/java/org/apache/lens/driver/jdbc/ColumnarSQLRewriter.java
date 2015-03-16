@@ -23,6 +23,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
@@ -33,7 +34,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
-import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.*;
@@ -784,7 +784,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @throws HiveException
    */
 
-  public void replaceAliasInAST() throws HiveException {
+  public void replaceAliasInAST() {
     updateAliasFromAST(fromAST);
     if (fromTree != null) {
       replaceAlias(fromAST);
@@ -819,9 +819,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
   /**
    * Builds the query.
    *
-   * @throws HiveException the hive exception
+   * @throws SemanticException
    */
-  public void buildQuery(HiveConf queryConf) throws HiveException {
+  public void buildQuery(HiveConf queryConf) throws SemanticException {
     analyzeInternal();
     replaceWithUnderlyingStorage(queryConf, fromAST);
     replaceAliasInAST();
@@ -1064,8 +1064,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
       throw new LensException(e);
     } catch (SemanticException e) {
       throw new LensException(e);
-    } catch (HiveException e) {
-      throw new LensException(e);
     }
     return queryReplacedUdf;
   }
@@ -1092,8 +1090,9 @@ public class ColumnarSQLRewriter implements QueryRewriter {
           ASTNode dbIdentifier = (ASTNode) tree.getChild(0);
           ASTNode tableIdentifier = (ASTNode) tree.getChild(1);
           String lensTable = dbIdentifier.getText() + "." + tableIdentifier.getText();
-          String table = getUnderlyingTableName(queryConf, lensTable);
-          String db = getUnderlyingDBName(queryConf, lensTable);
+          Table tbl = CubeMetastoreClient.getInstance(queryConf).getHiveTable(lensTable);
+          String table = getUnderlyingTableName(queryConf, tbl);
+          String db = getUnderlyingDBName(queryConf, tbl);
 
           // Replace both table and db names
           if ("default".equalsIgnoreCase(db)) {
@@ -1109,14 +1108,15 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         } else {
           ASTNode tableIdentifier = (ASTNode) tree.getChild(0);
           String lensTable = tableIdentifier.getText();
-          String table = getUnderlyingTableName(queryConf, lensTable);
+          Table tbl = CubeMetastoreClient.getInstance(queryConf).getHiveTable(lensTable);
+          String table = getUnderlyingTableName(queryConf, tbl);
           // Replace table name
           if (StringUtils.isNotBlank(table)) {
             tableIdentifier.getToken().setText(table);
           }
 
           // Add db name as a new child
-          String dbName = getUnderlyingDBName(queryConf, lensTable);
+          String dbName = getUnderlyingDBName(queryConf, tbl);
           if (StringUtils.isNotBlank(dbName) && !"default".equalsIgnoreCase(dbName)) {
             ASTNode dbIdentifier = new ASTNode(new CommonToken(HiveParser.Identifier, dbName));
             dbIdentifier.setParent(tree);
@@ -1140,8 +1140,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying db name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingDBName(HiveConf queryConf, String table) throws HiveException {
-    Table tbl = Hive.get(queryConf).getTable(table);
+  String getUnderlyingDBName(HiveConf queryConf, Table tbl) throws HiveException {
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_DB_NAME);
   }
 
@@ -1152,8 +1151,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @return the underlying table name
    * @throws HiveException the hive exception
    */
-  String getUnderlyingTableName(HiveConf queryConf, String table) throws HiveException {
-    Table tbl = Hive.get(queryConf).getTable(table);
+  String getUnderlyingTableName(HiveConf queryConf, Table tbl) throws HiveException {
     return tbl == null ? null : tbl.getProperty(LensConfConstants.NATIVE_TABLE_NAME);
   }
 
