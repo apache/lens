@@ -91,16 +91,6 @@ public class CandidateTablePruneCause {
         }
         return new String[]{columns.toString()};
       }
-    },
-    // missing partitions for cube table
-    MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
-      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        List<List<String>> missingPartitions = new ArrayList<List<String>>();
-        for (CandidateTablePruneCause cause : causes) {
-          missingPartitions.add(cause.getMissingPartitions());
-        }
-        return new String[]{missingPartitions.toString()};
-      }
     };
 
 
@@ -135,6 +125,8 @@ public class CandidateTablePruneCause {
     NO_CANDIDATE_PERIODS,
     // storage table has no partitions queried
     NO_PARTITIONS,
+    // storage table has missing partitions among the ones queried
+    MISSING_PARTITIONS,
     // partition column does not exist
     PART_COL_DOES_NOT_EXIST,
     // storage is not supported by execution engine
@@ -157,6 +149,9 @@ public class CandidateTablePruneCause {
     private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
     private List<String> nonExistantPartCols;
 
+    // populated only incase of missing partitions cause
+    private List<String> missingPartitions;
+
     public SkipStorageCause(SkipStorageCode cause) {
       this.cause = cause;
     }
@@ -175,6 +170,16 @@ public class CandidateTablePruneCause {
       ret.updatePeriodRejectionCause = causes;
       return ret;
     }
+    public static SkipStorageCause missingPartitions(List<String> nonExistingParts) {
+      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.MISSING_PARTITIONS);
+      ret.setMissingPartitions(nonExistingParts);
+      return ret;
+    }
+    public static SkipStorageCause missingPartitions(String... nonExistingParts) {
+      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.MISSING_PARTITIONS);
+      ret.setMissingPartitions(Arrays.asList(nonExistingParts));
+      return ret;
+    }
   }
 
   // cause for cube table
@@ -182,8 +187,6 @@ public class CandidateTablePruneCause {
   // storage to skip storage cause
   private Map<String, SkipStorageCause> storageCauses;
 
-  // populated only incase of missing partitions cause
-  private List<String> missingPartitions;
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
@@ -213,13 +216,6 @@ public class CandidateTablePruneCause {
       colList.add(column);
     }
     return columnNotFound(colList);
-  }
-
-  public static CandidateTablePruneCause missingPartitions(List<String> nonExistingParts) {
-    CandidateTablePruneCause cause =
-      new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
-    cause.setMissingPartitions(nonExistingParts);
-    return cause;
   }
 
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {

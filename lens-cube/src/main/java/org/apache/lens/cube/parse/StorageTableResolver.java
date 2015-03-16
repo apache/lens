@@ -378,13 +378,9 @@ class StorageTableResolver implements ContextRewriter {
           CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
           cubeql.addFactPruningMsgs(cfact.fact, cause);
         } else {
-          if (!nonExistingParts.isEmpty()) {
-            cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
-          } else {
-            CandidateTablePruneCause cause =
-              new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
-            cubeql.addFactPruningMsgs(cfact.fact, cause);
-          }
+          CandidateTablePruneCause cause =
+            new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
+          cubeql.addFactPruningMsgs(cfact.fact, cause);
         }
         i.remove();
         continue;
@@ -561,6 +557,9 @@ class StorageTableResolver implements ContextRewriter {
             }
           } else {
             LOG.info("No finer granual partitions exist for" + part);
+            for(String storageTable: storageTbls) {
+              skipStorageCauses.put(storageTable, SkipStorageCause.missingPartitions(part.getFormattedPartSpec()))C;
+            }
             return false;
           }
         } else {
