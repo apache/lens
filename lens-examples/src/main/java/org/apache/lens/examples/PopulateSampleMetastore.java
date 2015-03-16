@@ -34,11 +34,11 @@ public class PopulateSampleMetastore {
   private int retCode = 0;
 
   public PopulateSampleMetastore() throws JAXBException {
-    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.instance().getClient().getConnection());
   }
 
   public void close() {
-    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.instance().getClient().closeConnection();
   }
 
   public static void main(String[] args) throws Exception {
