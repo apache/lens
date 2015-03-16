@@ -50,7 +50,7 @@ public class FactHQLContext extends DimHQLContext {
   protected String getPostSelectionWhereClause() throws SemanticException {
     return StorageUtil.getNotLatestClauseForDimensions(
       query.getAliasForTabName(query.getCube().getName()),
-      fact.getTimePartCols(),
+      fact.getTimePartCols(query),
       query.getTimeRanges().iterator().next().getPartitionColumn());
   }
 

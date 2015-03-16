@@ -24,7 +24,7 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.StatisticsStore;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +66,7 @@ public class LogStatisticsStore extends StatisticsStore<LoggableLensStatistics> 
    *
    * @see org.apache.lens.server.stats.store.StatisticsStore#initialize(org.apache.hadoop.conf.Configuration)
    */
-  public void initialize(Configuration conf) {
+  public void initialize(HiveConf conf) {
     LOG.info("Creating new Partition handler");
     handler = new StatisticsLogPartitionHandler();
     handler.initialize(conf);

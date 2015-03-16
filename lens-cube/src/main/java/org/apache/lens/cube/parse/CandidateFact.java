@@ -32,7 +32,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -371,7 +370,7 @@ class CandidateFact implements CandidateTable {
     return null;
   }
 
-  public Set<String> getTimePartCols() throws SemanticException {
+  public Set<String> getTimePartCols(CubeQueryContext query) throws SemanticException {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
@@ -380,7 +379,7 @@ class CandidateFact implements CandidateTable {
     }
     List<FieldSchema> partitionKeys = null;
     try {
-      partitionKeys = Hive.get().getTable(singleStorageTable).getPartitionKeys();
+      partitionKeys = query.getMetastoreClient().getTable(singleStorageTable).getPartitionKeys();
     } catch (HiveException e) {
       throw new SemanticException(e);
     }

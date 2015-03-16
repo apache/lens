@@ -1196,7 +1196,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     try {
       acquire(sessionid);
       if (!StringUtils.isBlank(dbName)) {
-        if (!Hive.get().databaseExists(dbName)) {
+        if (!Hive.get(getSession(sessionid).getHiveConf()).databaseExists(dbName)) {
           throw new NotFoundException("Database " + dbName + " does not exist");
         }
       }
