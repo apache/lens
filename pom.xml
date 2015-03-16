@@ -165,7 +165,119 @@
       <archive>http://mail-archives.apache.org/mod_mbox/lens-commits/</archive>
     </mailingList>
   </mailingLists>
+  <developers>
+    <developer>
+      <id>amareshwari</id>
+      <email>amareshwari@apache.org</email>
+      <name>Amareshwari Sriramadasu</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
 
+    <developer>
+      <id>gunther</id>
+      <email>gunther@apache.org</email>
+      <name>Gunther Hagleitner</name>
+      <organization>Hortonworks</organization>
+      <timezone>-8</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>jdhok</id>
+      <email>jdhok@apache.org</email>
+      <name>Jaideep Dhok</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>raghavsingh</id>
+      <email>raghavsingh@apache.org</email>
+      <name>Raghavendra Singh</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>prongs</id>
+      <email>prongs@apache.org</email>
+      <name>Rajat Khandelwal</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sharad</id>
+      <email>sharad@apache.org</email>
+      <name>Sharad Agarwal</name>
+      <organization>Flipkart</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sreekanth</id>
+      <email>sreekanth@apache.org</email>
+      <name>Sreekanth Ramakrishnan</name>
+      <organization>SoftwareAG</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sriksun</id>
+      <email>sriksun@apache.org</email>
+      <name>Srikanth Sundarrajan</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>sumasai</id>
+      <email>sumasai@apache.org</email>
+      <name>Suma Shivaprasad</name>
+      <organization>InMobi</organization>
+      <timezone>+5.5</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>vikram</id>
+      <email>vikram@apache.org</email>
+      <name>Vikram Dixit</name>
+      <organization>Hortonworks</organization>
+      <timezone>-8</timezone>
+      <roles>
+        <role>PPMC</role>
+        <role>Committer</role>
+      </roles>
+    </developer>
+  </developers>
   <scm>
     <connection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</connection>
     <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/incubator-lens.git</developerConnection>
