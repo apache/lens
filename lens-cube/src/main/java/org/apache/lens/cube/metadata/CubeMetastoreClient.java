@@ -178,7 +178,8 @@ public class CubeMetastoreClient {
             log.info("loading timeline from all partitions for storage table: " + storageTableName);
             // not found in memory, try loading from table properties.
             Table storageTable = getTable(storageTableName);
-            if (storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()) == null) {
+            if (!"true".equalsIgnoreCase(
+              storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()))) {
               // Not found in table properties either, compute from all partitions of the fact-storage table.
               // First make sure all combinations of update period and partition column have an entry even
               // if no partitions exist
