@@ -639,7 +639,7 @@ public class JDBCDriver implements LensDriver {
       try {
         // Estimate queries need to get connection from estimate pool to make sure
         // we are not blocked by data queries.
-        stmt = prepareInternal(pContext, getEstimateConnection(), true);
+        stmt = prepareInternal(pContext, getEstimateConnection(), true, "validate-");
       } catch (SQLException e) {
         throw new LensException(e);
       }
@@ -728,12 +728,12 @@ public class JDBCDriver implements LensDriver {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
-    return prepareInternal(pContext, getConnection(), false);
+    return prepareInternal(pContext, getConnection(), false, "prepare-");
   }
 
 
   private PreparedStatement prepareInternal(AbstractQueryContext pContext, final Connection conn,
-                                            boolean checkConfigured) throws LensException {
+                                            boolean checkConfigured, String metricCallStack) throws LensException {
     // Caller might have already verified configured status and driver query, so we don't have
     // to do this check twice. Caller must set checkConfigured to false in that case.
     if (checkConfigured) {
@@ -745,11 +745,11 @@ public class JDBCDriver implements LensDriver {
 
     // Only create a prepared statement and then close it
     MethodMetricsContext sqlRewriteGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
-      COLUMNAR_SQL_REWRITE_GAUGE);
+      metricCallStack + COLUMNAR_SQL_REWRITE_GAUGE);
     String rewrittenQuery = rewriteQuery(pContext);
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
-      JDBC_PREPARE_GAUGE);
+      metricCallStack + JDBC_PREPARE_GAUGE);
     PreparedStatement stmt = null;
     try {
       stmt = conn.prepareStatement(rewrittenQuery);
@@ -783,6 +783,10 @@ public class JDBCDriver implements LensDriver {
    */
   @Override
   public void prepare(PreparedQueryContext pContext) throws LensException {
+    if (preparedQueries.containsKey(pContext.getPrepareHandle())) {
+      // already prepared
+      return;
+    }
     PreparedStatement stmt = prepareInternal(pContext);
     if (stmt != null) {
       preparedQueries.put(pContext.getPrepareHandle(), stmt);

@@ -299,8 +299,8 @@ public class TestJdbcDriver {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-columnar-sql-rewrite",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-prepare-statement",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-columnar-sql-rewrite",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-jdbc-prepare-statement",
       "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare",
       "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-check-allowed-query")));
   }
@@ -314,9 +314,29 @@ public class TestJdbcDriver {
     String query1 = "SELECT * FROM test_metrics"; // Select query against existing table
     Configuration metricConf = new Configuration(baseConf);
     metricConf.setBoolean(LensConfConstants.ENABLE_QUERY_METRICS, true);
+    // run estimate and execute - because server would first run estimate and then execute with same context
     QueryContext ctx = createQueryContext(query1, metricConf);
-    driver.estimate(ctx);
-    driver.execute(ctx);
+    QueryCost cost = driver.estimate(ctx);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    LensResultSet result = driver.execute(ctx);
+    Assert.assertNotNull(result);
+
+    // test prepare
+    // run estimate and prepare - because server would first run estimate and then prepare with same context
+    PreparedQueryContext pContext = new PreparedQueryContext(query1, "SA", metricConf, drivers);
+    cost = driver.estimate(pContext);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    driver.prepare(pContext);
+
+    // test explain and prepare
+    PreparedQueryContext pContext2 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
+    cost = driver.estimate(pContext2);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    driver.prepare(pContext2);
+    driver.explainAndPrepare(pContext2);
   }
 
   /**
@@ -399,10 +419,10 @@ public class TestJdbcDriver {
 
     final String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
-    //run prepare
-    driver.prepare(pContext);
     //run validate
     driver.validate(pContext);
+    //run prepare
+    driver.prepare(pContext);
   }
 
   /**

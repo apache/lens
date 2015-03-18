@@ -79,6 +79,21 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     testShowPersistentResultSet(qCom);
     testPurgedFinishedResultSet(qCom);
     testFailPreparedQuery(qCom);
+    // run all query commands with query metrics enabled.
+    client = new LensClient();
+    client.setConnectionParam("lens.query.enable.persistent.resultset.indriver", "false");
+    client.setConnectionParam("lens.query.enable.metrics.per.query", "true");
+    qCom.setClient(client);
+    String result = qCom.getAllPreparedQueries("all", "", -1, -1);
+    Assert.assertEquals(result, "No prepared queries");
+    testExecuteSyncQuery(qCom);
+    testExecuteAsyncQuery(qCom);
+    testExplainQuery(qCom);
+    testExplainFailQuery(qCom);
+    testPreparedQuery(qCom);
+    testShowPersistentResultSet(qCom);
+    testPurgedFinishedResultSet(qCom);
+    testFailPreparedQuery(qCom);
   }
 
   /**
@@ -92,7 +107,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id, name from test_dim";
     String result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
 
-    Assert.assertEquals("No prepared queries", result);
+    Assert.assertEquals(result, "No prepared queries");
     final String qh = qCom.prepare(sql, "testPreparedName");
     result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, System.currentTimeMillis());
     Assert.assertEquals(qh, result);
@@ -123,6 +138,9 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
+    result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
+
+    Assert.assertEquals(result, "No prepared queries");
 
     final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(qh2.contains(explainPlan));
@@ -131,6 +149,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     String handles2 = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, submitTime - 1);
     Assert.assertFalse(handles2.contains(qh), handles2);
+    result = qCom.destroyPreparedQuery(handles);
+    Assert.assertEquals("Successfully destroyed " + handles, result);
   }
 
   /**

@@ -1077,12 +1077,18 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   @Override
   public QueryPrepareHandle prepare(LensSessionHandle sessionHandle, String query, LensConf lensConf, String queryName)
     throws LensException {
+    PreparedQueryContext prepared = null;
     try {
       acquire(sessionHandle);
-      PreparedQueryContext prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
+      prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.PREPARE);
       prepared.setQueryName(queryName);
       prepared.getSelectedDriver().prepare(prepared);
       return prepared.getPrepareHandle();
+    } catch (LensException e) {
+      if (prepared != null) {
+        destroyPreparedQuery(prepared);
+      }
+      throw e;
     } finally {
       release(sessionHandle);
     }
@@ -1122,16 +1128,20 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   @Override
   public QueryPlan explainAndPrepare(LensSessionHandle sessionHandle, String query, LensConf lensConf, String queryName)
     throws LensException {
+    PreparedQueryContext prepared = null;
     try {
       LOG.info("ExplainAndPrepare: " + sessionHandle.toString() + " query: " + query);
       acquire(sessionHandle);
-      PreparedQueryContext prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
+      prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
       maybeAddSessionResourcesToDriver(prepared);
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
     } catch (LensException e) {
+      if (prepared != null) {
+        destroyPreparedQuery(prepared);
+      }
       LOG.error("Explain and prepare failed", e);
       QueryPlan plan;
       if (e.getCause() != null && e.getCause().getMessage() != null) {
@@ -1760,7 +1770,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void destroyPreparedQuery(PreparedQueryContext ctx) throws LensException {
-    ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
+    if (ctx.getSelectedDriver() != null) {
+      ctx.getSelectedDriver().closePreparedQuery(ctx.getPrepareHandle());
+    }
     preparedQueries.remove(ctx.getPrepareHandle());
     preparedQueryQueue.remove(ctx);
     decrCounter(PREPARED_QUERIES_COUNTER);
