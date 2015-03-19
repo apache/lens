@@ -152,4 +152,13 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
         .getCanonicalName() : null, getDriverContext().getSelectedDriverQuery(),
       lensConf);
   }
+
+  /**
+   * Get prepared query handle string
+   * @return
+   */
+  @Override
+  public String getLogHandle() {
+    return prepareHandle.getPrepareHandleId().toString();
+  }
 }

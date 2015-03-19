@@ -47,6 +47,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.LensMetricsRegistry;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.session.HiveSessionService;
@@ -1476,8 +1477,8 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertNull(result.getCost());
     Assert.assertTrue(result.isError());
     System.out.println("ERROR for REWRITE:" + result.getErrorMsg());
-    Assert.assertTrue(result.getErrorMsg().contains("No driver accepted the query, because Neither cube nor dimensions"
-      + " accessed in the query"));
+    Assert.assertTrue(result.getErrorMsg().contains("Cause :Neither cube nor dimensions accessed in the query"),
+      result.getErrorMsg());
   }
 
   @Test
@@ -1488,12 +1489,14 @@ public class TestQueryService extends LensJerseyTest {
     for (LensDriver driver : queryService.getDrivers()) {
       ctx.setDriverRewriteError(driver, new LensException());
     }
-    try {
-      ctx.estimateCostForDrivers();
-      Assert.fail("estimate should have failed");
-    } catch (LensException e) {
-      // expected
+
+    // All estimates should be skipped.
+    Map<LensDriver, AbstractQueryContext.DriverEstimateRunnable> estimateRunnables = ctx.getDriverEstimateRunnables();
+    for (LensDriver driver : estimateRunnables.keySet()) {
+      estimateRunnables.get(driver).run();
+      Assert.assertFalse(estimateRunnables.get(driver).isSucceeded(), driver + " estimate should have been skipped");
     }
+
     for (LensDriver driver : queryService.getDrivers()) {
       Assert.assertNull(ctx.getDriverQueryCost(driver));
     }
@@ -1535,8 +1538,16 @@ public class TestQueryService extends LensJerseyTest {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-ALL_CUBE_REWRITES",
-      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-ALL_DRIVER_ESTIMATES",
-      "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION")));
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-DRIVER_SELECTION",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-CUBE_REWRITE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-DRIVER_ESTIMATE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-HiveDriver-"
+          + "org.apache.lens.driver.cube.RewriteUtil-rewriteQuery",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-CUBE_REWRITE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-DRIVER_ESTIMATE",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-"
+          + "org.apache.lens.driver.cube.RewriteUtil-rewriteQuery",
+        "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-PARALLEL_ESTIMATE")),
+      reg.getGauges().keySet().toString());
   }
 }

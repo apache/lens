@@ -390,4 +390,14 @@ public class QueryContext extends AbstractQueryContext implements Comparable<Que
   public String getClusterUser() {
     return conf.get(LensConfConstants.SESSION_CLUSTER_USER, getSubmittedUser());
   }
+
+
+  /**
+   * Get query handle string
+   * @return
+   */
+  @Override
+  public String getLogHandle() {
+    return queryHandle.getHandleId().toString();
+  }
 }

@@ -163,9 +163,13 @@ public class DriverSelectorQueryContext {
    */
   void setDriverQueries(Map<LensDriver, String> driverQueries) {
     for (LensDriver driver : driverQueries.keySet()) {
-      final DriverQueryContext driverQueryContext = driverQueryContextMap.get(driver);
-      driverQueryContext.setQuery(driverQueries.get(driver));
+      setDriverQuery(driver, driverQueries.get(driver));
     }
+  }
+
+  public void setDriverQuery(LensDriver driver, String driverQuery) {
+    final DriverQueryContext driverQueryContext = driverQueryContextMap.get(driver);
+    driverQueryContext.setQuery(driverQuery);
   }
 
   /**

@@ -644,4 +644,34 @@
     will be ignored</description>
   </property>
 
+  <property>
+    <name>lens.server.estimate.timeout.millis</name>
+    <value>300000</value>
+    <description>Timeout for parallel query estimate calls in milliseconds.
+      A driver needs to comeback with a query estimate within this timeout. If the timeout is reached, only the drivers
+      that have provided an estimate would be considered for query selection. If the timeout is reached and none
+      of the drivers have provided an estimate then estimate calls fails with an exception.
+    </description>
+  </property>
+
+  <property>
+    <name>lens.server.estimate.pool.min.threads</name>
+    <value>3</value>
+    <description>Minimum number of threads in the estimate thread pool</description>
+  </property>
+
+  <property>
+    <name>lens.server.estimate.pool.max.threads</name>
+    <value>100</value>
+    <description>Maximum number of threads in the estimate thread pool</description>
+  </property>
+
+  <property>
+    <name>lens.server.estimate.pool.keepalive.millis</name>
+    <value>60000</value>
+    <description>Thread keep alive time in milliseconds for the estimate thread pool.
+      If there are no estimate requests for this period,then cached threads are released from the pool.
+    </description>
+  </property>
+
 </configuration>
