@@ -40,7 +40,9 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.thrift.TException;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -308,12 +310,13 @@ public class CubeMetastoreClient {
 
     /** update partition timeline cache for addition of time partition */
     public void updateForAddition(String cubeTableName, String storageName, UpdatePeriod updatePeriod,
-      Map<String, Date> timePartSpec)
+      Map<String, TreeSet<Date>> timePartSpec)
       throws HiveException, LensException {
-      for (Map.Entry<String, Date> entry : timePartSpec.entrySet()) {
+      for (Map.Entry<String, TreeSet<Date>> entry : timePartSpec.entrySet()) {
         //Assume timelines has all the time part columns.
-        get(cubeTableName, storageName, updatePeriod, entry.getKey()).add(TimePartition.of(updatePeriod,
-          entry.getValue()));
+        for (Date dt : entry.getValue()) {
+          get(cubeTableName, storageName, updatePeriod, entry.getKey()).add(TimePartition.of(updatePeriod, dt));
+        }
       }
     }
 
@@ -626,23 +629,67 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public void addPartition(StoragePartitionDesc partSpec, String storageName) throws HiveException, LensException {
-    String storageTableName = MetastoreUtil.getStorageTableName(partSpec.getCubeTableName(), Storage.getPrefix(
-      storageName));
-    if (getDimensionTable(partSpec.getCubeTableName()) != null) {
+    addPartitions(Arrays.asList(partSpec), storageName);
+  }
+
+  /** batch addition */
+  public void addPartitions(List<StoragePartitionDesc> storagePartitionDescs, String storageName)
+    throws HiveException, LensException {
+    for (Map.Entry<String, Map<UpdatePeriod, List<StoragePartitionDesc>>> group : groupPartitionDescs(
+      storagePartitionDescs).entrySet()) {
+      String fact = group.getKey();
+      for (Map.Entry<UpdatePeriod, List<StoragePartitionDesc>> entry : group.getValue().entrySet()) {
+        addPartitions(fact, storageName, entry.getKey(), entry.getValue());
+      }
+    }
+  }
+
+  private void addPartitions(String fact, String storageName, UpdatePeriod updatePeriod,
+    List<StoragePartitionDesc> storagePartitionDescs) throws HiveException, LensException {
+    String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storageName));
+    if (getDimensionTable(fact) != null) {
       // Adding partition in dimension table.
-      getStorage(storageName).addPartition(getClient(), partSpec,
-        getDimTableLatestInfo(storageTableName, partSpec.getTimePartSpec(), partSpec.getUpdatePeriod())
+      getStorage(storageName).addPartitions(getClient(), fact, updatePeriod, storagePartitionDescs,
+        getDimTableLatestInfo(storageTableName, getTimePartSpecs(storagePartitionDescs), updatePeriod)
       );
     } else {
       // first update in memory, then add to hive table's partitions. delete is reverse.
-      partitionTimelineCache.updateForAddition(partSpec.getCubeTableName(), storageName, partSpec.getUpdatePeriod(),
-        partSpec.getTimePartSpec());
+      partitionTimelineCache.updateForAddition(fact, storageName, updatePeriod,
+        getTimePartSpecs(storagePartitionDescs));
       // Adding partition in fact table.
-      getStorage(storageName).addPartition(getClient(), partSpec, null);
+      getStorage(storageName).addPartitions(getClient(), fact, updatePeriod, storagePartitionDescs, null);
       // update hive table
-      alterTablePartitionCache(MetastoreUtil.getStorageTableName(partSpec.getCubeTableName(), Storage.getPrefix(
-        storageName)));
+      alterTablePartitionCache(MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storageName)));
     }
+  }
+
+  private Map<String, TreeSet<Date>> getTimePartSpecs(List<StoragePartitionDesc> storagePartitionDescs) {
+    Map<String, TreeSet<Date>> timeSpecs = Maps.newHashMap();
+    for (StoragePartitionDesc storagePartitionDesc : storagePartitionDescs) {
+      for (Map.Entry<String, Date> entry : storagePartitionDesc.getTimePartSpec().entrySet()) {
+        if (!timeSpecs.containsKey(entry.getKey())) {
+          timeSpecs.put(entry.getKey(), Sets.<Date>newTreeSet());
+        }
+        timeSpecs.get(entry.getKey()).add(entry.getValue());
+      }
+    }
+    return timeSpecs;
+  }
+
+  private Map<String, Map<UpdatePeriod, List<StoragePartitionDesc>>> groupPartitionDescs(
+    List<StoragePartitionDesc> partitionDescs) {
+    Map<String, Map<UpdatePeriod, List<StoragePartitionDesc>>> ret = Maps.newHashMap();
+    for (StoragePartitionDesc partitionDesc : partitionDescs) {
+      if (ret.get(partitionDesc.getCubeTableName()) == null) {
+        ret.put(partitionDesc.getCubeTableName(), Maps.<UpdatePeriod, List<StoragePartitionDesc>>newHashMap());
+      }
+      if (ret.get(partitionDesc.getCubeTableName()).get(partitionDesc.getUpdatePeriod()) == null) {
+        ret.get(partitionDesc.getCubeTableName()).put(partitionDesc.getUpdatePeriod(),
+          Lists.<StoragePartitionDesc>newArrayList());
+      }
+      ret.get(partitionDesc.getCubeTableName()).get(partitionDesc.getUpdatePeriod()).add(partitionDesc);
+    }
+    return ret;
   }
 
   /**
@@ -671,17 +718,7 @@ public class CubeMetastoreClient {
     return UpdatePeriod.valueOf(partition.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD));
   }
 
-  /** batch addition */
-  public void addPartitions(List<StoragePartitionDesc> storagePartitionDescs, String storageName)
-    throws HiveException, LensException {
-    //TODO: improve this in later jira. Just providing naive implementation for now.
-    // Should ideally do some optimization because the list has been provided together, not one by one.
-    for (StoragePartitionDesc partSpec : storagePartitionDescs) {
-      addPartition(partSpec, storageName);
-    }
-  }
-
-  private LatestInfo getDimTableLatestInfo(String storageTableName, Map<String, Date> partitionTimestamps,
+  private LatestInfo getDimTableLatestInfo(String storageTableName, Map<String, TreeSet<Date>> partitionTimestamps,
     UpdatePeriod updatePeriod) throws HiveException {
     Table hiveTable = getHiveTable(storageTableName);
     String timePartColsStr = hiveTable.getTTable().getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
@@ -689,12 +726,12 @@ public class CubeMetastoreClient {
       LatestInfo latest = new LatestInfo();
       String[] timePartCols = StringUtils.split(timePartColsStr, ',');
       for (String partCol : timePartCols) {
-        Date pTimestamp = partitionTimestamps.get(partCol);
-        if (pTimestamp == null) {
+        if (!partitionTimestamps.containsKey(partCol)) {
           continue;
         }
         boolean makeLatest = true;
         Partition part = getLatestPart(storageTableName, partCol);
+        Date pTimestamp = partitionTimestamps.get(partCol).last();
         Date latestTimestamp = getLatestTimeStampOfDimtable(part, partCol);
         if (latestTimestamp != null && pTimestamp.before(latestTimestamp)) {
           makeLatest = false;

@@ -34,19 +34,19 @@ public class HDFSStorage extends Storage {
   }
 
   @Override
-  public void preAddPartition(StoragePartitionDesc addPartitionDesc) throws HiveException {
+  public void preAddPartitions(List<StoragePartitionDesc> addPartitionDesc) throws HiveException {
     // No op
 
   }
 
   @Override
-  public void commitAddPartition(StoragePartitionDesc addPartitionDesc) throws HiveException {
+  public void commitAddPartitions(List<StoragePartitionDesc> addPartitionDesc) throws HiveException {
     // No op
 
   }
 
   @Override
-  public void rollbackAddPartition(StoragePartitionDesc addPartitionDesc) throws HiveException {
+  public void rollbackAddPartitions(List<StoragePartitionDesc> addPartitionDesc) throws HiveException {
     // No op
 
   }

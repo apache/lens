@@ -27,26 +27,26 @@ public interface PartitionMetahook {
   /**
    * Called before calling add partition
    *
-   * @param StoragePartitionDesc
+   * @param storagePartitionDesc
    * @throws HiveException
    */
-  void preAddPartition(StoragePartitionDesc storagePartitionDesc) throws HiveException;
+  void preAddPartitions(List<StoragePartitionDesc> storagePartitionDesc) throws HiveException;
 
   /**
    * Called after successfully adding the partition
    *
-   * @param StoragePartitionDesc
+   * @param storagePartitionDesc
    * @throws HiveException
    */
-  void commitAddPartition(StoragePartitionDesc storagePartitionDesc) throws HiveException;
+  void commitAddPartitions(List<StoragePartitionDesc> storagePartitionDesc) throws HiveException;
 
   /**
    * Called if add partition fails.
    *
-   * @param StoragePartitionDesc
+   * @param storagePartitionDesc
    * @throws HiveException
    */
-  void rollbackAddPartition(StoragePartitionDesc storagePartitionDesc) throws HiveException;
+  void rollbackAddPartitions(List<StoragePartitionDesc> storagePartitionDesc) throws HiveException;
 
   /**
    * Called before calling drop partition

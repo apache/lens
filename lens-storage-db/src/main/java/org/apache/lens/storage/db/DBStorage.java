@@ -111,7 +111,7 @@ public class DBStorage extends Storage {
    * .StoragePartitionDesc)
    */
   @Override
-  public void commitAddPartition(StoragePartitionDesc arg0) throws HiveException {
+  public void commitAddPartitions(List<StoragePartitionDesc> arg0) throws HiveException {
 
   }
 
@@ -134,7 +134,7 @@ public class DBStorage extends Storage {
    * .StoragePartitionDesc)
    */
   @Override
-  public void preAddPartition(StoragePartitionDesc arg0) throws HiveException {
+  public void preAddPartitions(List<StoragePartitionDesc> arg0) throws HiveException {
 
   }
 
@@ -151,11 +151,11 @@ public class DBStorage extends Storage {
    * (non-Javadoc)
    *
    * @see
-   * org.apache.lens.cube.metadata.PartitionMetahook#rollbackAddPartition(org.apache.lens.cube.metadata
+   * org.apache.lens.cube.metadata.PartitionMetahook#rollbackAddPartitions(org.apache.lens.cube.metadata
    * .StoragePartitionDesc)
    */
   @Override
-  public void rollbackAddPartition(StoragePartitionDesc arg0) throws HiveException {
+  public void rollbackAddPartitions(List<StoragePartitionDesc> arg0) throws HiveException {
   }
 
   /*
