@@ -1867,6 +1867,8 @@ public class TestCubeMetastoreClient {
     FieldSchema newcol = new FieldSchema("newcol", "int", "new col for part");
 
     // test partition
+    String storageTableName = MetastoreUtil.getDimStorageTableName(dimName, c1);
+    Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
     Map<String, Date> timeParts = new HashMap<String, Date>();
     timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     StoragePartitionDesc sPartSpec = new StoragePartitionDesc(cubeDim.getName(), timeParts, null, UpdatePeriod.HOURLY);
@@ -1874,8 +1876,8 @@ public class TestCubeMetastoreClient {
     Assert.assertTrue(client.dimPartitionExists(cubeDim.getName(), c1, timeParts));
     Assert
       .assertTrue(client.latestPartitionExists(cubeDim.getName(), c1, TestCubeMetastoreClient.getDatePartitionKey()));
-    String storageTableName = MetastoreUtil.getDimStorageTableName(dimName, c1);
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 2);
+    Assert.assertTrue(client.dimTableLatestPartitionExists(storageTableName));
     List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
     Assert.assertEquals(1, parts.size());
     Assert
@@ -1913,6 +1915,7 @@ public class TestCubeMetastoreClient {
     Assert.assertFalse(client.dimPartitionExists(cubeDim.getName(), c1, timeParts2));
     Assert
       .assertTrue(client.latestPartitionExists(cubeDim.getName(), c1, TestCubeMetastoreClient.getDatePartitionKey()));
+    Assert.assertTrue(client.dimTableLatestPartitionExists(storageTableName));
     parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
     Assert.assertEquals(1, parts.size());
     Assert
@@ -1927,6 +1930,12 @@ public class TestCubeMetastoreClient {
     Assert.assertFalse(client.latestPartitionExists(cubeDim.getName(), c1,
       TestCubeMetastoreClient.getDatePartitionKey()));
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 0);
+    Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
+
+    client.addPartition(sPartSpec2, c1);
+    Assert.assertTrue(client.dimTableLatestPartitionExists(storageTableName));
+    client.dropStorageFromDim(cubeDim.getName(), c1);
+    Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
   }
 
   @Test(priority = 2)

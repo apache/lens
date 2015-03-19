@@ -332,7 +332,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
    * @return the string
    */
   @CliCommand(value = "dimtable add partition", help = "add a partition to dim table")
-  public String addPartitionToFact(
+  public String addPartitionToDimTable(
     @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
       + " <path to partition specification>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
@@ -362,8 +362,8 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
    * @param specPair the spec pair
    * @return the string
    */
-  @CliCommand(value = "dimtable add partitions", help = "add a partition to dim table")
-  public String addPartitionsToFact(
+  @CliCommand(value = "dimtable add partitions", help = "add partitions to dim table")
+  public String addPartitionsToDimTable(
     @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
       + " <path to partitions specification>") String specPair) {
     Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);

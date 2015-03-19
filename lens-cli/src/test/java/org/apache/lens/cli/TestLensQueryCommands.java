@@ -20,18 +20,25 @@ package org.apache.lens.cli;
 
 import java.io.File;
 import java.net.URL;
+import java.util.GregorianCalendar;
 import java.util.UUID;
 
 import javax.ws.rs.BadRequestException;
+import javax.xml.datatype.DatatypeFactory;
 
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XTimePartSpec;
+import org.apache.lens.api.metastore.XTimePartSpecElement;
+import org.apache.lens.api.metastore.XUpdatePeriod;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.driver.hive.TestHiveDriver;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -289,17 +296,20 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     TestLensDimensionCommands.createDimension();
     TestLensDimensionTableCommands.addDim1Table("dim_table", "dim_table.xml", "local");
 
-    URL dataFile = TestLensQueryCommands.class.getClassLoader().getResource("data.data");
-
-    QueryHandle qh = client.executeQueryAsynch(
-      "LOAD DATA LOCAL INPATH '" + new File(dataFile.toURI()).getAbsolutePath()
-        + "' OVERWRITE INTO TABLE local_dim_table partition(dt='latest')", null);
-
-    while (!client.getQueryStatus(qh).isFinished()) {
-      Thread.sleep(5000);
-    }
-
-    Assert.assertEquals(client.getQueryStatus(qh).getStatus(), QueryStatus.Status.SUCCESSFUL);
+    // Add partition
+    URL dataDir = TestLensQueryCommands.class.getClassLoader().getResource("dim2-part");
+    XPartition xp = new XPartition();
+    xp.setFactOrDimensionTableName("dim_table");
+    xp.setLocation(new Path(dataDir.toURI()).toString());
+    xp.setUpdatePeriod(XUpdatePeriod.HOURLY);
+    XTimePartSpec timePart = new XTimePartSpec();
+    XTimePartSpecElement partElement = new XTimePartSpecElement();
+    partElement.setKey("dt");
+    partElement.setValue(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+    timePart.getPartSpecElement().add(partElement);
+    xp.setTimePartitionSpec(timePart);
+    APIResult result = client.addPartitionToDim("dim_table", "local", xp);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   /**

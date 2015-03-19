@@ -189,7 +189,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     result = command.getAllPartitionsOfDim("dim_table2 " + DIM_LOCAL);
     Assert.assertTrue(result.trim().isEmpty());
     try {
-      command.addPartitionToFact("dim_table2" + " " + DIM_LOCAL + " " + new File(
+      command.addPartitionToDimTable("dim_table2" + " " + DIM_LOCAL + " " + new File(
         TestLensFactCommands.class.getClassLoader().getResource("dim1-local-part.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();
@@ -197,7 +197,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     }
     verifyAndDeletePartition();
     try {
-      command.addPartitionsToFact("dim_table2" + " " + DIM_LOCAL + " " + new File(
+      command.addPartitionsToDimTable("dim_table2" + " " + DIM_LOCAL + " " + new File(
         TestLensFactCommands.class.getClassLoader().getResource("dim1-local-parts.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();

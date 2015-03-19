@@ -251,13 +251,13 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    *                              column
    * @throws HiveException
    */
-  public void addPartitions(Hive client, String fact, UpdatePeriod updatePeriod,
+  public void addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
     List<StoragePartitionDesc> storagePartitionDescs, LatestInfo latestInfo) throws HiveException {
     preAddPartitions(storagePartitionDescs);
     Map<String, Integer> latestPartIndexForPartCols = Maps.newHashMap();
     boolean success = false;
     try {
-      String tableName = MetastoreUtil.getStorageTableName(fact, this.getPrefix());
+      String tableName = MetastoreUtil.getStorageTableName(factOrDimTable, this.getPrefix());
       String dbName = SessionState.get().getCurrentDatabase();
       AddPartitionDesc addParts = new AddPartitionDesc(dbName, tableName, true);
       Table storageTbl = client.getTable(dbName, tableName);

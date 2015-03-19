@@ -956,6 +956,11 @@ public class TestMetastoreService extends LensJerseyTest {
   }
 
   private XDimensionTable createDimTable(String dimTableName) throws Exception {
+    XDimension dimension = createDimension("testdim");
+    APIResult result = target().path("metastore").path("dimensions")
+      .queryParam("sessionid", lensSessionId).request(
+      mediaType).post(Entity.xml(cubeObjectFactory.createXDimension(dimension)), APIResult.class);
+    assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
     XDimensionTable dt = createDimTable("testdim", dimTableName);
     dt.getStorageTables().getStorageTable().add(createStorageTblElement("test", dimTableName, "HOURLY"));
     final FormDataMultiPart mp = new FormDataMultiPart();
@@ -964,7 +969,7 @@ public class TestMetastoreService extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(
       FormDataContentDisposition.name("dimensionTable").fileName("dimtable").build(),
       cubeObjectFactory.createXDimensionTable(dt), medType));
-    APIResult result = target()
+    result = target()
       .path("metastore")
       .path("dimtables")
       .request(mediaType)

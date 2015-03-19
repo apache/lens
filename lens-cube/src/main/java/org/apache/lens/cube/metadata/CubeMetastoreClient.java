@@ -43,6 +43,7 @@ import org.apache.thrift.TException;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -75,6 +76,8 @@ public class CubeMetastoreClient {
   // dbname to client mapping
   private static final Map<String, CubeMetastoreClient> CLIENT_MAPPING = Maps.newHashMap();
   private SchemaGraph schemaGraph;
+  // Set of all storage table names for which latest partitions exist
+  private final Set<String> latestLookupCache = Sets.newHashSet();
 
   /** extract storage name from fact and storage table name. String operation */
   private String extractStorageName(CubeFactTable fact, String storageTableName) throws LensException {
@@ -644,22 +647,22 @@ public class CubeMetastoreClient {
     }
   }
 
-  private void addPartitions(String fact, String storageName, UpdatePeriod updatePeriod,
+  private void addPartitions(String factOrDimTable, String storageName, UpdatePeriod updatePeriod,
     List<StoragePartitionDesc> storagePartitionDescs) throws HiveException, LensException {
-    String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storageName));
-    if (getDimensionTable(fact) != null) {
+    String storageTableName = MetastoreUtil.getStorageTableName(factOrDimTable, Storage.getPrefix(storageName));
+    if (getDimensionTable(factOrDimTable) != null) {
       // Adding partition in dimension table.
-      getStorage(storageName).addPartitions(getClient(), fact, updatePeriod, storagePartitionDescs,
-        getDimTableLatestInfo(storageTableName, getTimePartSpecs(storagePartitionDescs), updatePeriod)
-      );
+      getStorage(storageName).addPartitions(getClient(), factOrDimTable, updatePeriod, storagePartitionDescs,
+        getDimTableLatestInfo(storageTableName, getTimePartSpecs(storagePartitionDescs), updatePeriod));
+      latestLookupCache.add(storageTableName.toLowerCase());
     } else {
       // first update in memory, then add to hive table's partitions. delete is reverse.
-      partitionTimelineCache.updateForAddition(fact, storageName, updatePeriod,
+      partitionTimelineCache.updateForAddition(factOrDimTable, storageName, updatePeriod,
         getTimePartSpecs(storagePartitionDescs));
       // Adding partition in fact table.
-      getStorage(storageName).addPartitions(getClient(), fact, updatePeriod, storagePartitionDescs, null);
+      getStorage(storageName).addPartitions(getClient(), factOrDimTable, updatePeriod, storagePartitionDescs, null);
       // update hive table
-      alterTablePartitionCache(MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storageName)));
+      alterTablePartitionCache(MetastoreUtil.getStorageTableName(factOrDimTable, Storage.getPrefix(storageName)));
     }
   }
 
@@ -860,6 +863,7 @@ public class CubeMetastoreClient {
     if (isDimensionTable(cubeTableName)) {
       String timePartColsStr = hiveTable.getTTable().getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
       Map<String, LatestInfo> latest = new HashMap<String, Storage.LatestInfo>();
+      boolean latestAvailable = false;
       if (timePartColsStr != null) {
         List<String> timePartCols = Arrays.asList(StringUtils.split(timePartColsStr, ','));
         for (String timeCol : timePartSpec.keySet()) {
@@ -869,8 +873,8 @@ public class CubeMetastoreClient {
           int timeColIndex = partColNames.indexOf(timeCol);
           Partition part = getLatestPart(storageTableName, timeCol);
 
-          // check if partition being dropped is the latest partition
           boolean isLatest = true;
+          // check if partition being dropped is the latest partition
           for (int i = 0; i < partVals.size(); i++) {
             if (i != timeColIndex) {
               if (!part.getValues().get(i).equals(partVals.get(i))) {
@@ -889,8 +893,11 @@ public class CubeMetastoreClient {
             }
             if (latestTimestamp != null && dropTimestamp.equals(latestTimestamp)) {
               LatestInfo latestInfo = getNextLatestOfDimtable(hiveTable, timeCol, timeColIndex);
+              latestAvailable = (latestInfo != null && latestInfo.part != null);
               latest.put(timeCol, latestInfo);
             }
+          } else {
+            latestAvailable = true;
           }
         }
       } else {
@@ -898,8 +905,11 @@ public class CubeMetastoreClient {
           throw new HiveException("Not time part columns" + timePartSpec.keySet());
         }
       }
-      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals,
-        latest);
+      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, latest);
+      if (!latestAvailable) {
+        // dropping latest and could not find latest, removing the entry from latest lookup cache
+        latestLookupCache.remove(storageTableName.toLowerCase());
+      }
     } else {
       // dropping fact partition
       getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null);
@@ -945,13 +955,19 @@ public class CubeMetastoreClient {
   }
 
   public boolean partitionExistsByFilter(String storageTableName, String filter) throws HiveException {
-    List<Partition> parts;
+    int parts;
+    Table tbl = null;
     try {
-      parts = getClient().getPartitionsByFilter(getTable(storageTableName), filter);
+      tbl = getTable(storageTableName);
+    } catch (Exception e) {
+      return false;
+    }
+    try {
+      parts = getClient().getNumPartitionsByFilter(tbl, filter);
     } catch (Exception e) {
       throw new HiveException("Could not find partitions for given filter", e);
     }
-    return !(parts.isEmpty());
+    return parts > 0;
   }
 
   public List<Partition> getAllParts(String storageTableName) throws HiveException {
@@ -993,14 +1009,22 @@ public class CubeMetastoreClient {
       partitionTimestamps);
   }
 
-  boolean latestPartitionExists(String factName, String storageName, String latestPartCol)
+  boolean latestPartitionExists(String factOrDimTblName, String storageName, String latestPartCol)
     throws HiveException, LensException {
-    String storageTableName = MetastoreUtil.getFactStorageTableName(factName, storageName);
-    if (isDimensionTable(factName)) {
-      return partitionExistsByFilter(storageTableName, StorageConstants.getLatestPartFilter(latestPartCol));
+    String storageTableName = MetastoreUtil.getStorageTableName(factOrDimTblName, Storage.getPrefix(storageName));
+    if (isDimensionTable(factOrDimTblName)) {
+      return dimLatestPartitionExists(storageTableName, StorageConstants.getLatestPartFilter(latestPartCol));
     } else {
-      return !partitionTimelineCache.noPartitionsExist(factName, storageName, latestPartCol);
+      return !partitionTimelineCache.noPartitionsExist(factOrDimTblName, storageName, latestPartCol);
     }
+  }
+
+  private boolean dimLatestPartitionExists(String storageTableName, String latestPartCol) throws HiveException {
+    return partitionExistsByFilter(storageTableName, StorageConstants.getLatestPartFilter(latestPartCol));
+  }
+
+  public boolean dimTableLatestPartitionExists(String storageTableName) {
+    return latestLookupCache.contains(storageTableName.toLowerCase());
   }
 
   Partition getLatestPart(String storageTableName, String latestPartCol) throws HiveException {
@@ -1210,6 +1234,15 @@ public class CubeMetastoreClient {
         dimTable = getDimensionTable(tbl);
         if (enableCaching) {
           allDimTables.put(tableName.toLowerCase(), dimTable);
+          // update latest partition cache for all storages
+          for (String storageName : dimTable.getStorages()) {
+            if (dimTable.hasStorageSnapshots(storageName)) {
+              String storageTableName = MetastoreUtil.getDimStorageTableName(dimTable.getName(), storageName);
+              if (dimLatestPartitionExists(storageTableName, getDimension(dimTable.getDimName()).getTimedDimension())) {
+                latestLookupCache.add(storageTableName.toLowerCase());
+              }
+            }
+          }
         }
       }
     }
@@ -1756,7 +1789,9 @@ public class CubeMetastoreClient {
   // updateDimTbl will be false when dropping dimTbl
   private void dropStorageFromDim(String dimTblName, String storage, boolean updateDimTbl) throws HiveException {
     CubeDimensionTable cdt = getDimensionTable(dimTblName);
-    dropHiveTable(MetastoreUtil.getDimStorageTableName(dimTblName, storage));
+    String storageTableName = MetastoreUtil.getDimStorageTableName(dimTblName, storage);
+    dropHiveTable(storageTableName);
+    latestLookupCache.remove(storageTableName.toLowerCase());
     if (updateDimTbl) {
       cdt.dropStorage(storage);
       alterCubeTable(dimTblName, getTable(dimTblName), cdt);

@@ -181,15 +181,6 @@ class StorageTableResolver implements ContextRewriter {
         for (String storage : dimtable.getStorages()) {
           if (isStorageSupported(storage)) {
             String tableName = MetastoreUtil.getDimStorageTableName(dimtable.getName(), storage).toLowerCase();
-            try {
-              if (!client.tableExists(tableName)) {
-                LOG.info("Not considering dim storage table:" + tableName + ", as it does not exist");
-                skipStorageCauses.put(tableName, new SkipStorageCause(SkipStorageCode.TABLE_NOT_EXIST));
-                continue;
-              }
-            } catch (HiveException e) {
-              throw new SemanticException(e);
-            }
             if (validDimTables != null && !validDimTables.contains(tableName)) {
               LOG.info("Not considering dim storage table:" + tableName + " as it is not a valid dim storage");
               skipStorageCauses.put(tableName, new SkipStorageCause(SkipStorageCode.INVALID));
@@ -198,22 +189,13 @@ class StorageTableResolver implements ContextRewriter {
 
             if (dimtable.hasStorageSnapshots(storage)) {
               // check if partition exists
-              int numParts;
-              try {
-                numParts =
-                  client.getNumPartitionsByFilter(tableName,
-                    getDimFilter(dim.getTimedDimension(), StorageConstants.LATEST_PARTITION_VALUE));
-              } catch (Exception e) {
-                e.printStackTrace();
-                throw new SemanticException("Could not check if partition exists on " + dim, e);
-              }
-              if (numParts > 0) {
+              foundPart = client.dimTableLatestPartitionExists(tableName);
+              if (foundPart) {
                 LOG.info("Adding existing partition" + StorageConstants.LATEST_PARTITION_VALUE);
-                foundPart = true;
               } else {
                 LOG.info("Partition " + StorageConstants.LATEST_PARTITION_VALUE + " does not exist on " + tableName);
               }
-              if (!failOnPartialData || numParts > 0) {
+              if (!failOnPartialData || foundPart) {
                 storageTables.add(tableName);
                 String whereClause =
                   StorageUtil.getWherePartClause(dim.getTimedDimension(), null,
@@ -246,13 +228,6 @@ class StorageTableResolver implements ContextRewriter {
         candidate.whereClause = whereClauses.get(candidate.storageTable);
       }
     }
-  }
-
-  private String getDimFilter(String partCol, String partSpec) {
-    StringBuilder builder = new StringBuilder();
-    builder.append(partCol);
-    builder.append("='").append(partSpec).append("'");
-    return builder.toString();
   }
 
   // Resolves all the storage table names, which are valid for each updatePeriod
