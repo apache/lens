@@ -403,6 +403,75 @@ public class TestJdbcDriver {
   }
 
   /**
+   * Test type casting of char, varchar, nvarchar and decimal type
+   *
+   * @throws Exception
+   *           the exception
+   */
+  @Test
+  public void tesDecimalCharCasting() throws Exception {
+
+    Statement stmt = null;
+    Connection conn = null;
+    try {
+      conn = driver.getConnection();
+      stmt = conn.createStatement();
+      // Create table with char, varchar, nvarchar and decimal data type
+      stmt.execute("CREATE TABLE test_casting(c1 decimal(10,2), c2 varchar(20), c3 nvarchar(20), c4 char(10))");
+      // Insert data
+      stmt.execute("INSERT INTO test_casting VALUES(34.56,'abc','def','ghi')");
+      stmt.execute("INSERT INTO test_casting VALUES(78.50,'abc1','def1','ghi1')");
+      stmt.execute("INSERT INTO test_casting VALUES(48.89,'abc2','def2','ghi2')");
+      conn.commit();
+
+      // Query
+      final String query = "SELECT * FROM test_casting";
+      QueryContext context = createQueryContext(query);
+      LensResultSet resultSet = driver.execute(context);
+      assertNotNull(resultSet);
+
+      if (resultSet instanceof InMemoryResultSet) {
+        InMemoryResultSet rs = (InMemoryResultSet) resultSet;
+        LensResultSetMetadata rsMeta = rs.getMetadata();
+        assertEquals(rsMeta.getColumns().size(), 4);
+
+        ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+        assertEquals(col1.getTypeName().toLowerCase(), "double");
+        assertEquals(col1.getName(), "C1");
+
+        ColumnDescriptor col2 = rsMeta.getColumns().get(1);
+        assertEquals(col2.getTypeName().toLowerCase(), "string");
+        assertEquals(col2.getName(), "C2");
+
+        ColumnDescriptor col3 = rsMeta.getColumns().get(2);
+        assertEquals(col3.getTypeName().toLowerCase(), "string");
+        assertEquals(col3.getName(), "C3");
+
+        ColumnDescriptor col4 = rsMeta.getColumns().get(3);
+        assertEquals(col4.getTypeName().toLowerCase(), "string");
+        assertEquals(col4.getName(), "C4");
+
+
+        while (rs.hasNext()) {
+          ResultRow row = rs.next();
+          List<Object> rowObjects = row.getValues();
+        }
+        if (rs instanceof JDBCResultSet) {
+          ((JDBCResultSet) rs).close();
+        }
+      }
+
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+      if (conn != null) {
+        conn.close();
+      }
+    }
+  }
+
+  /**
    * Test prepare.
    *
    * @throws Exception the exception
