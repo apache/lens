@@ -154,9 +154,11 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> for listing storages") String dim) {
     List<String> storages = getClient().getDimStorages(dim);
     StringBuilder sb = new StringBuilder();
-    for (String storage : storages) {
-      if (!storage.isEmpty()) {
-        sb.append(storage).append("\n");
+    if (storages != null && !storages.isEmpty()) {
+      for (String storage : storages) {
+        if (!storage.isEmpty()) {
+          sb.append(storage).append("\n");
+        }
       }
     }
 
