@@ -203,8 +203,8 @@ public final class RewriteUtil {
     return query.replaceAll("[\\n\\r]", " ").replaceAll("&&", " AND ").replaceAll("\\|\\|", " OR ").trim();
   }
 
-  private static final String REWRITE_QUERY_GAUGE = RewriteUtil.class.getCanonicalName() + "-rewriteQuery";
-  private static final String TOHQL_GAUGE = RewriteUtil.class.getCanonicalName() + "-rewriteQuery-toHQL";
+  private static final String REWRITE_QUERY_GAUGE = RewriteUtil.class.getSimpleName() + "-rewriteQuery";
+  private static final String TOHQL_GAUGE = RewriteUtil.class.getSimpleName() + "-rewriteQuery-toHQL";
 
   /**
    * Rewrite query.
@@ -280,6 +280,7 @@ public final class RewriteUtil {
 
         // We have to rewrite each sub cube query which might be present in the original
         // user query. We are looping through all sub queries here.
+        int qIndex = 1;
         for (RewriteUtil.CubeQueryInfo cqi : cubeQueries) {
           if (LOG.isDebugEnabled()) {
             LOG.debug("Rewriting cube query:" + cqi.query);
@@ -292,10 +293,11 @@ public final class RewriteUtil {
           // Parse and rewrite individual cube query
           CubeQueryContext cqc = rewriter.rewrite(cqi.query);
           MethodMetricsContext toHQLGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
-            TOHQL_GAUGE);
+            qIndex + "-" + TOHQL_GAUGE);
           // toHQL actually generates the rewritten query
           String hqlQuery = cqc.toHQL();
           toHQLGauge.markSuccess();
+          qIndex++;
 
           if (LOG.isDebugEnabled()) {
             LOG.debug("Rewritten query:" + hqlQuery);

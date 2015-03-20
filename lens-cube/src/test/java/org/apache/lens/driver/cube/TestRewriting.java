@@ -202,8 +202,8 @@ public class TestRewriting {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-org.apache.lens.driver.cube.RewriteUtil-rewriteQuery",
-      "lens.MethodMetricGauge.TestRewriting-MockDriver-org.apache.lens.driver.cube.RewriteUtil-rewriteQuery-toHQL")));
+      "lens.MethodMetricGauge.TestRewriting-MockDriver-RewriteUtil-rewriteQuery",
+      "lens.MethodMetricGauge.TestRewriting-MockDriver-1-RewriteUtil-rewriteQuery-toHQL")));
     conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "insert overwrite directory '/tmp/rewrite' cube select name from table";
@@ -280,6 +280,7 @@ public class TestRewriting {
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
 
+    conf.set(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY, TestRewriting.class.getSimpleName() + "-multiple");
     q2 = "select * from (cube select name from table) a join (cube select" + " name2 from table2) b";
     Assert.assertTrue(RewriteUtil.isCubeQuery(q2));
     cubeQueries = RewriteUtil.findCubePositions(q2, hconf);
@@ -288,6 +289,12 @@ public class TestRewriting {
     Assert.assertEquals(cubeQueries.get(1).query, "cube select name2 from table2");
     ctx = new QueryContext(q2, null, lensConf, conf, drivers);
     runRewrites(RewriteUtil.rewriteQuery(ctx));
+    reg = LensMetricsRegistry.getStaticRegistry();
+    Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
+      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-1-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-2-RewriteUtil-rewriteQuery-toHQL",
+      "lens.MethodMetricGauge.TestRewriting-multiple-MockDriver-RewriteUtil-rewriteQuery")));
+    conf.unset(LensConfConstants.QUERY_METRIC_UNIQUE_ID_CONF_KEY);
 
     q2 = "select * from (cube select name from table) a full outer join"
       + " (cube select name2 from table2) b on a.name=b.name2";
