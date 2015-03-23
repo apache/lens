@@ -151,9 +151,12 @@ public final class CSVSerde extends AbstractSerDe {
   @Override
   public void initialize(final Configuration conf, final Properties tbl) throws SerDeException {
     List<String> columnNames = new ArrayList<String>();
-    String[] names = tbl.getProperty(LIST_COLUMNS).split("(?!\"),(?!\")");
-    for (String name : names) {
-      columnNames.add(StringEscapeUtils.unescapeCsv(name));
+
+    if (tbl.getProperty(LIST_COLUMNS) != null) {
+      String[] names = tbl.getProperty(LIST_COLUMNS).split("(?!\"),(?!\")");
+      for (String name : names) {
+        columnNames.add(StringEscapeUtils.unescapeCsv(name));
+      }
     }
     String columnTypeProperty = tbl.getProperty(LIST_COLUMN_TYPES);
     columnTypes = TypeInfoUtils.getTypeInfosFromTypeString(columnTypeProperty);
@@ -472,6 +475,7 @@ public final class CSVSerde extends AbstractSerDe {
     return Text.class;
   }
 
+  @Override
   public SerDeStats getSerDeStats() {
     return null;
   }

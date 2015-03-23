@@ -31,7 +31,6 @@ import org.apache.lens.driver.jdbc.JDBCDriver.QueryResult;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 
-import org.apache.hadoop.hive.common.type.HiveDecimal;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hive.service.cli.ColumnDescriptor;
@@ -206,18 +205,12 @@ public class JDBCResultSet extends InMemoryResultSet {
 
     case Types.CHAR:
     case Types.NCHAR:
-      hiveType = new TypeDescriptor(Type.CHAR_TYPE);
-      qualifiers = new TypeQualifiers();
-      qualifiers.setCharacterMaximumLength(rsmeta.getColumnDisplaySize(index));
-      hiveType.setTypeQualifiers(qualifiers);
+      hiveType = new TypeDescriptor(Type.STRING_TYPE);
       break;
     case Types.VARCHAR:
     case Types.LONGNVARCHAR:
     case Types.NVARCHAR:
-      hiveType = new TypeDescriptor(Type.VARCHAR_TYPE);
-      qualifiers = new TypeQualifiers();
-      qualifiers.setCharacterMaximumLength(rsmeta.getColumnDisplaySize(index));
-      hiveType.setTypeQualifiers(qualifiers);
+      hiveType = new TypeDescriptor(Type.STRING_TYPE);
       break;
 
     case Types.NCLOB:
@@ -240,14 +233,7 @@ public class JDBCResultSet extends InMemoryResultSet {
       hiveType = new TypeDescriptor(Type.TIMESTAMP_TYPE);
       break;
     case Types.DECIMAL:
-      hiveType = new TypeDescriptor(Type.DECIMAL_TYPE);
-      qualifiers = new TypeQualifiers();
-      int colPrecision = rsmeta.getPrecision(index);
-      if (colPrecision > HiveDecimal.MAX_PRECISION) {
-        qualifiers.setPrecision(HiveDecimal.MAX_PRECISION);
-      }
-      qualifiers.setScale(rsmeta.getScale(index));
-      hiveType.setTypeQualifiers(qualifiers);
+      hiveType = new TypeDescriptor(Type.DOUBLE_TYPE);
       break;
 
     case Types.DOUBLE:

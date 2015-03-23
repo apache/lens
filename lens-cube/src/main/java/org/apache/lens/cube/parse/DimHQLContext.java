@@ -62,7 +62,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
   protected void setMissingExpressions() throws SemanticException {
     setFrom(getFromString());
     setWhere(joinWithAnd(
-      getQuery().getHiveConf().getBoolean(
+      getQuery().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
         ? getPostSelectionWhereClause() : null,
       genWhereClauseWithDimPartitions(where)));

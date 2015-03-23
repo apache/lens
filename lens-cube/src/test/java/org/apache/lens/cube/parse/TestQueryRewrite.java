@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class TestQueryRewrite {
 
   private static CubeTestSetup setup;
-  private static HiveConf hconf = new HiveConf(TestJoinResolver.class);
+  private static HiveConf hconf = new HiveConf(TestQueryRewrite.class);
 
   @BeforeSuite
   public static void setup() throws Exception {
@@ -68,7 +68,7 @@ public abstract class TestQueryRewrite {
 
   protected CubeQueryContext rewriteCtx(String query, Configuration conf) throws SemanticException, ParseException {
     log.info("User query: {}", query);
-    CubeQueryRewriter driver = new CubeQueryRewriter(new HiveConf(conf, HiveConf.class));
+    CubeQueryRewriter driver = new CubeQueryRewriter(conf, hconf);
     return driver.rewrite(query);
   }
 

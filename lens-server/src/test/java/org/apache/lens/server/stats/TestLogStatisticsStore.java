@@ -20,11 +20,12 @@ package org.apache.lens.server.stats;
 
 import java.io.StringWriter;
 
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.lens.server.stats.store.log.LogStatisticsStore;
 import org.apache.lens.server.stats.store.log.StatisticsLogLayout;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.log4j.Logger;
 import org.apache.log4j.WriterAppender;
@@ -60,7 +61,7 @@ public class TestLogStatisticsStore {
      * @see org.apache.lens.server.stats.event.LoggableLensStatistics#getHiveTable(org.apache.hadoop.conf.Configuration)
      */
     @Override
-    public Table getHiveTable(Configuration conf) {
+    public Table getHiveTable(HiveConf conf) {
       return null;
     }
 
@@ -78,7 +79,7 @@ public class TestLogStatisticsStore {
   @Test
   public void testLogStatisticsStore() throws Exception {
     LogStatisticsStore store = new LogStatisticsStore();
-    store.initialize(new Configuration());
+    store.initialize(LensServerConf.get());
     // Do some initialization work
     StringWriter writer = new StringWriter();
     Logger l = Logger.getLogger(MyLoggableLens.class);

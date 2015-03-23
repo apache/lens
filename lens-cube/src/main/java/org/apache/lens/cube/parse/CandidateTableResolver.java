@@ -54,7 +54,7 @@ class CandidateTableResolver implements ContextRewriter {
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     qlEnabledMultiTableSelect =
-      cubeql.getHiveConf().getBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT,
+      cubeql.getConf().getBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT,
         CubeQueryConfUtil.DEFAULT_MULTI_TABLE_SELECT);
     if (checkForQueriedColumns) {
       LOG.debug("Dump queried columns:" + cubeql.getTblAliasToColumns());
@@ -200,7 +200,7 @@ class CandidateTableResolver implements ContextRewriter {
 
   private void resolveCandidateFactTables(CubeQueryContext cubeql) throws SemanticException {
     if (cubeql.getCube() != null) {
-      String str = cubeql.getHiveConf().get(CubeQueryConfUtil.getValidFactTablesKey(cubeql.getCube().getName()));
+      String str = cubeql.getConf().get(CubeQueryConfUtil.getValidFactTablesKey(cubeql.getCube().getName()));
       List<String> validFactTables =
         StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
       Set<String> queriedDimAttrs = cubeql.getQueriedDimAttrs();
@@ -229,7 +229,7 @@ class CandidateTableResolver implements ContextRewriter {
         for (String col : queriedDimAttrs) {
           if (!cfact.getColumns().contains(col.toLowerCase())) {
             // check if it available as reference, if not remove the candidate
-            if (!cubeql.getDenormCtx().addRefUsage(cfact, col, cubeql.getCube().getName())) {
+            if (!cubeql.getDeNormCtx().addRefUsage(cfact, col, cubeql.getCube().getName())) {
               LOG.info("Not considering fact table:" + cfact + " as column " + col + " is not available");
               cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.columnNotFound(col));
               toRemove = true;
@@ -510,7 +510,7 @@ class CandidateTableResolver implements ContextRewriter {
               if (!cdim.getColumns().contains(col.toLowerCase())) {
                 // check if it available as reference, if not remove the
                 // candidate
-                if (!cubeql.getDenormCtx().addRefUsage(cdim, col, dim.getName())) {
+                if (!cubeql.getDeNormCtx().addRefUsage(cdim, col, dim.getName())) {
                   LOG.info("Not considering dimtable:" + cdim + " as column " + col + " is not available");
                   cubeql.addDimPruningMsgs(dim, cdim.getTable(), CandidateTablePruneCause.columnNotFound(col));
                   i.remove();

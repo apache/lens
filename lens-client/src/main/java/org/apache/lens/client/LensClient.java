@@ -441,8 +441,21 @@ public class LensClient {
     return mc.addPartitionsToFactTable(table, storage, partsSpec);
   }
 
+  public APIResult addPartitionToFact(String table, String storage, XPartition xp) {
+    return mc.addPartitionToFactTable(table, storage, xp);
+  }
+  public APIResult addPartitionsToFact(String table, String storage, XPartitionList xpList) {
+    return mc.addPartitionsToFactTable(table, storage, xpList);
+  }
+
   public APIResult addPartitionToDim(String table, String storage, String partSpec) {
     return mc.addPartitionToDimensionTable(table, storage, partSpec);
+  }
+  public APIResult addPartitionToDim(String table, String storage, XPartition xp) {
+    return mc.addPartitionToDimensionTable(table, storage, xp);
+  }
+  public APIResult addPartitionsToDim(String table, String storage, XPartitionList xpList) {
+    return mc.addPartitionsToDimensionTable(table, storage, xpList);
   }
   public APIResult addPartitionsToDim(String table, String storage, String partsSpec) {
     return mc.addPartitionsToDimensionTable(table, storage, partsSpec);

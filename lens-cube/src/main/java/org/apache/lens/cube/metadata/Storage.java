@@ -35,6 +35,8 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
 
+import com.google.common.collect.Maps;
+
 /**
  * Storage is Named Interface which would represent the underlying storage of the data.
  */
@@ -103,16 +105,15 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     }
   }
 
-  public static final class LatestPartColumnInfo {
-    final Map<String, String> partParams = new HashMap<String, String>();
+  public static final class LatestPartColumnInfo extends HashMap<String, String> {
 
     public LatestPartColumnInfo(Map<String, String> partParams) {
-      this.partParams.putAll(partParams);
+      putAll(partParams);
     }
 
     public Map<String, String> getPartParams(Map<String, String> parentParams) {
-      partParams.putAll(parentParams);
-      return partParams;
+      putAll(parentParams);
+      return this;
     }
   }
 
@@ -178,9 +179,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     }
 
     if (crtTbl.getSerdeProps() != null) {
-      Iterator<Entry<String, String>> iter = crtTbl.getSerdeProps().entrySet().iterator();
-      while (iter.hasNext()) {
-        Entry<String, String> m = iter.next();
+      for (Entry<String, String> m : crtTbl.getSerdeProps().entrySet()) {
         tbl.setSerdeParam(m.getKey(), m.getValue());
       }
     }
@@ -229,48 +228,75 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
   }
 
   /**
-   * Add a partition in the underlying hive table and update latest partition links
-   *
-   * @param client           The metastore client
-   * @param addPartitionDesc add Partition specification
-   * @param latestInfo       The latest partition info, null if latest should not be created
+   * Add single partition to storage. Just calls #addPartitions.
+   * @param client
+   * @param addPartitionDesc
+   * @param latestInfo
    * @throws HiveException
    */
   public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
     throws HiveException {
-    preAddPartition(addPartitionDesc);
+    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(), Arrays.asList(
+      addPartitionDesc), latestInfo);
+  }
+
+  /**
+   * Add given partitions in the underlying hive table and update latest partition links
+   *
+   * @param client                hive client instance
+   * @param fact                  fact name
+   * @param updatePeriod          update period of partitions.
+   * @param storagePartitionDescs all partitions to be added
+   * @param latestInfo            new latest info. atleast one partition for the latest value exists for each part
+   *                              column
+   * @throws HiveException
+   */
+  public void addPartitions(Hive client, String factOrDimTable, UpdatePeriod updatePeriod,
+    List<StoragePartitionDesc> storagePartitionDescs, LatestInfo latestInfo) throws HiveException {
+    preAddPartitions(storagePartitionDescs);
+    Map<String, Integer> latestPartIndexForPartCols = Maps.newHashMap();
     boolean success = false;
     try {
-      String tableName = MetastoreUtil.getStorageTableName(addPartitionDesc.getCubeTableName(), this.getPrefix());
+      String tableName = MetastoreUtil.getStorageTableName(factOrDimTable, this.getPrefix());
       String dbName = SessionState.get().getCurrentDatabase();
+      AddPartitionDesc addParts = new AddPartitionDesc(dbName, tableName, true);
       Table storageTbl = client.getTable(dbName, tableName);
-      String location = null;
-      if (addPartitionDesc.getLocation() != null) {
-        Path partLocation = new Path(addPartitionDesc.getLocation());
-        if (partLocation.isAbsolute()) {
-          location = addPartitionDesc.getLocation();
-        } else {
-          location = new Path(storageTbl.getPath(), partLocation).toString();
+      for (StoragePartitionDesc addPartitionDesc : storagePartitionDescs) {
+        String location = null;
+        if (addPartitionDesc.getLocation() != null) {
+          Path partLocation = new Path(addPartitionDesc.getLocation());
+          if (partLocation.isAbsolute()) {
+            location = addPartitionDesc.getLocation();
+          } else {
+            location = new Path(storageTbl.getPath(), partLocation).toString();
+          }
+        }
+        Map<String, String> partParams = addPartitionDesc.getPartParams();
+        if (partParams == null) {
+          partParams = new HashMap<String, String>();
+        }
+        partParams.put(MetastoreConstants.PARTITION_UPDATE_PERIOD, addPartitionDesc.getUpdatePeriod().name());
+        addParts.addPartition(addPartitionDesc.getStoragePartSpec(), location);
+        int curIndex = addParts.getPartitionCount() - 1;
+        addParts.getPartition(curIndex).setPartParams(partParams);
+        addParts.getPartition(curIndex).setInputFormat(addPartitionDesc.getInputFormat());
+        addParts.getPartition(curIndex).setOutputFormat(addPartitionDesc.getOutputFormat());
+        addParts.getPartition(curIndex).setNumBuckets(addPartitionDesc.getNumBuckets());
+        addParts.getPartition(curIndex).setCols(addPartitionDesc.getCols());
+        addParts.getPartition(curIndex).setSerializationLib(addPartitionDesc.getSerializationLib());
+        addParts.getPartition(curIndex).setSerdeParams(addPartitionDesc.getSerdeParams());
+        addParts.getPartition(curIndex).setBucketCols(addPartitionDesc.getBucketCols());
+        addParts.getPartition(curIndex).setSortCols(addPartitionDesc.getSortCols());
+        if (latestInfo != null) {
+          for (Map.Entry<String, LatestPartColumnInfo> entry : latestInfo.latestParts.entrySet()) {
+            if (addPartitionDesc.getTimePartSpec().containsKey(entry.getKey())
+              && entry.getValue().get(MetastoreUtil.getLatestPartTimestampKey(entry.getKey())).equals(
+                updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
+              latestPartIndexForPartCols.put(entry.getKey(), curIndex);
+            }
+          }
         }
       }
-      Map<String, String> partParams = addPartitionDesc.getPartParams();
-      if (partParams == null) {
-        partParams = new HashMap<String, String>();
-      }
-      partParams.put(MetastoreConstants.PARTITION_UPDATE_PERIOD, addPartitionDesc.getUpdatePeriod().name());
-      AddPartitionDesc addParts = new AddPartitionDesc(dbName, tableName, true);
-      addParts.addPartition(addPartitionDesc.getStoragePartSpec(), location);
-      addParts.getPartition(0).setPartParams(partParams);
-      addParts.getPartition(0).setInputFormat(addPartitionDesc.getInputFormat());
-      addParts.getPartition(0).setOutputFormat(addPartitionDesc.getOutputFormat());
-      addParts.getPartition(0).setNumBuckets(addPartitionDesc.getNumBuckets());
-      addParts.getPartition(0).setCols(addPartitionDesc.getCols());
-      addParts.getPartition(0).setSerializationLib(addPartitionDesc.getSerializationLib());
-      addParts.getPartition(0).setSerdeParams(addPartitionDesc.getSerdeParams());
-      addParts.getPartition(0).setBucketCols(addPartitionDesc.getBucketCols());
-      addParts.getPartition(0).setSortCols(addPartitionDesc.getSortCols());
-      client.createPartitions(addParts);
-
       if (latestInfo != null) {
         for (Map.Entry<String, LatestPartColumnInfo> entry : latestInfo.latestParts.entrySet()) {
           // symlink this partition to latest
@@ -284,26 +310,32 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
           if (!latest.isEmpty()) {
             client.dropPartition(storageTbl.getTableName(), latest.get(0).getValues(), false);
           }
-          AddPartitionDesc latestPart = new AddPartitionDesc(dbName, tableName, true);
-          latestPart.addPartition(
-            StorageConstants.getLatestPartSpec(addPartitionDesc.getStoragePartSpec(), latestPartCol), location);
-          latestPart.getPartition(0).setPartParams(entry.getValue().getPartParams(partParams));
-          latestPart.getPartition(0).setInputFormat(addPartitionDesc.getInputFormat());
-          latestPart.getPartition(0).setOutputFormat(addPartitionDesc.getOutputFormat());
-          latestPart.getPartition(0).setNumBuckets(addPartitionDesc.getNumBuckets());
-          latestPart.getPartition(0).setCols(addPartitionDesc.getCols());
-          latestPart.getPartition(0).setSerializationLib(addPartitionDesc.getSerializationLib());
-          latestPart.getPartition(0).setSerdeParams(addPartitionDesc.getSerdeParams());
-          latestPart.getPartition(0).setBucketCols(addPartitionDesc.getBucketCols());
-          latestPart.getPartition(0).setSortCols(addPartitionDesc.getSortCols());
-          client.createPartitions(latestPart);
+          if (latestPartIndexForPartCols.containsKey(latestPartCol)) {
+            AddPartitionDesc.OnePartitionDesc latestPartWithFullTimestamp = addParts.getPartition(
+              latestPartIndexForPartCols.get(latestPartCol));
+            addParts.addPartition(
+              StorageConstants.getLatestPartSpec(latestPartWithFullTimestamp.getPartSpec(), latestPartCol),
+              latestPartWithFullTimestamp.getLocation());
+            int curIndex = addParts.getPartitionCount() - 1;
+            addParts.getPartition(curIndex).setPartParams(entry.getValue().getPartParams(
+              latestPartWithFullTimestamp.getPartParams()));
+            addParts.getPartition(curIndex).setInputFormat(latestPartWithFullTimestamp.getInputFormat());
+            addParts.getPartition(curIndex).setOutputFormat(latestPartWithFullTimestamp.getOutputFormat());
+            addParts.getPartition(curIndex).setNumBuckets(latestPartWithFullTimestamp.getNumBuckets());
+            addParts.getPartition(curIndex).setCols(latestPartWithFullTimestamp.getCols());
+            addParts.getPartition(curIndex).setSerializationLib(latestPartWithFullTimestamp.getSerializationLib());
+            addParts.getPartition(curIndex).setSerdeParams(latestPartWithFullTimestamp.getSerdeParams());
+            addParts.getPartition(curIndex).setBucketCols(latestPartWithFullTimestamp.getBucketCols());
+            addParts.getPartition(curIndex).setSortCols(latestPartWithFullTimestamp.getSortCols());
+          }
         }
       }
-      commitAddPartition(addPartitionDesc);
+      client.createPartitions(addParts);
+      commitAddPartitions(storagePartitionDescs);
       success = true;
     } finally {
       if (!success) {
-        rollbackAddPartition(addPartitionDesc);
+        rollbackAddPartitions(storagePartitionDescs);
       }
     }
   }
@@ -313,8 +345,8 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    *
    * @param client           The metastore client
    * @param storageTableName TableName
-   * @param partSpec         Partition specification
-   * @param latestInfo       The latest partition info if it needs update, null if latest should not be updated
+   * @param partVals         Partition specification
+   * @param updateLatestInfo The latest partition info if it needs update, null if latest should not be updated
    * @throws HiveException
    */
   public void dropPartition(Hive client, String storageTableName, List<String> partVals,
@@ -361,6 +393,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
         }
       }
       commitDropPartition(storageTableName, partVals);
+      success = true;
     } finally {
       if (!success) {
         rollbackDropPartition(storageTableName, partVals);
@@ -374,8 +407,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     try {
       Class<?> clazz = Class.forName(storageClassName);
       Constructor<?> constructor = clazz.getConstructor(Table.class);
-      Storage storage = (Storage) constructor.newInstance(new Object[]{tbl});
-      return storage;
+      return (Storage) constructor.newInstance(tbl);
     } catch (Exception e) {
       throw new HiveException("Could not create storage class" + storageClassName, e);
     }

@@ -33,6 +33,7 @@ import org.apache.lens.server.stats.event.LoggableLensStatistics;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -60,6 +61,8 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
   /** The client. */
   private Hive client;
 
+  private HiveConf conf;
+
   /** The database. */
   private String database;
 
@@ -68,12 +71,13 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
    *
    * @param conf the conf
    */
-  public void initialize(Configuration conf) {
+  public void initialize(HiveConf conf) {
     String temp = conf.get(LensConfConstants.STATISTICS_WAREHOUSE_KEY, LensConfConstants.DEFAULT_STATISTICS_WAREHOUSE);
     warehousePath = new Path(temp);
     database = conf.get(LensConfConstants.STATISTICS_DATABASE_KEY, LensConfConstants.DEFAULT_STATISTICS_DATABASE);
+    this.conf = conf;
     try {
-      client = Hive.get();
+      client = Hive.get(conf);
     } catch (Exception e) {
       LOG.error("Unable to connect to hive metastore", e);
       throw new IllegalArgumentException("Unable to connect to hive metastore", e);
@@ -169,8 +173,6 @@ public class StatisticsLogPartitionHandler extends AsyncEventListener<PartitionE
       client.createDatabase(db, true);
       Class<LoggableLensStatistics> statisticsClass = (Class<LoggableLensStatistics>) Class.forName(className);
       LoggableLensStatistics stat = statisticsClass.newInstance();
-      Configuration conf = new Configuration();
-      conf.addResource("hive-site.xml");
       tmp = stat.getHiveTable(conf);
       tmp.setDbName(database);
       if (LOG.isDebugEnabled()) {

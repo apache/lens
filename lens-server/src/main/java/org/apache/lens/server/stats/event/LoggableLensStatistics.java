@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.stats.event;
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 /**
@@ -48,5 +48,5 @@ public abstract class LoggableLensStatistics extends LensStatistics {
    * @param conf the conf
    * @return the hive table
    */
-  public abstract Table getHiveTable(Configuration conf);
+  public abstract Table getHiveTable(HiveConf conf);
 }

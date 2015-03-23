@@ -158,7 +158,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   public void testAutoJoinResolver() throws Exception {
     // Test 1 Cube + dim
     String query = "select citydim.name, testDim2.name, testDim4.name, msr2 from testCube where " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext rewrittenQuery = driver.rewrite(query);
     String hql = rewrittenQuery.toHQL();
     System.out.println("testAutoJoinResolverauto join HQL:" + hql);
@@ -217,7 +217,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       "SELECT citydim.name, testDim4.name, msr2 "
         + "FROM testCube left outer join citydim ON citydim.name = 'FOOBAR'"
         + " right outer join testDim4 on testDim4.name='TESTDIM4NAME'" + " WHERE " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext rewrittenQuery = driver.rewrite(query);
     String hql = rewrittenQuery.toHQL();
     System.out.println("testPartialJoinResolver Partial join hql: " + hql);
@@ -239,7 +239,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   @Test
   public void testJoinNotRequired() throws Exception {
     String query = "SELECT msr2 FROM testCube WHERE " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext ctx = driver.rewrite(query);
     Assert.assertTrue(ctx.getAutoJoinCtx() == null);
   }
@@ -247,7 +247,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   @Test
   public void testJoinWithoutCondition() throws Exception {
     String query = "SELECT citydim.name, msr2 FROM testCube WHERE " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext ctx = driver.rewrite(query);
     String hql = ctx.toHQL();
     String joinClause = getAutoResolvedFromString(ctx);
@@ -261,7 +261,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     HiveConf tConf = new HiveConf(hconf);
     tConf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "LEFTOUTER");
     System.out.println("@@Set join type to " + hconf.get(CubeQueryConfUtil.JOIN_TYPE_KEY));
-    CubeQueryRewriter driver = new CubeQueryRewriter(tConf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(tConf, hconf);
     String query = "select citydim.name, msr2 FROM testCube WHERE " + TWO_DAYS_RANGE;
     CubeQueryContext ctx = driver.rewrite(query);
     String hql = ctx.toHQL();
@@ -272,7 +272,7 @@ public class TestJoinResolver extends TestQueryRewrite {
 
     tConf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "FULLOUTER");
     System.out.println("@@Set join type to " + hconf.get(CubeQueryConfUtil.JOIN_TYPE_KEY));
-    driver = new CubeQueryRewriter(tConf);
+    driver = new CubeQueryRewriter(tConf, hconf);
     ctx = driver.rewrite(query);
     hql = ctx.toHQL();
     System.out.println("testJoinTypeConf@@Resolved join clause2 - " + getAutoResolvedFromString(ctx));
@@ -286,7 +286,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     HiveConf tConf = new HiveConf(hconf);
     tConf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "LEFTOUTER");
     String query = "select c.name, t.msr2 FROM testCube t join citydim c WHERE " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(tConf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(tConf, hconf);
     CubeQueryContext ctx = driver.rewrite(query);
     String hql = ctx.toHQL();
     System.out.println("testPreserveTableAlias@@HQL:" + hql);
@@ -306,7 +306,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     tConf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "INNER");
     String query = "select citydim.name, statedim.name from citydim limit 10";
     HiveConf dimOnlyConf = new HiveConf(tConf);
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(dimOnlyConf);
+    CubeQueryRewriter rewriter = new CubeQueryRewriter(dimOnlyConf, hconf);
     CubeQueryContext ctx = rewriter.rewrite(query);
     String hql = ctx.toHQL();
     System.out.println("testDimOnlyQuery@@@HQL:" + hql);
@@ -320,7 +320,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     ctx = rewriter.rewrite(queryWithJoin);
     hql = ctx.toHQL();
     System.out.println("testDimOnlyQuery@@@HQL2:" + hql);
-    HQLParser.parseHQL(hql);
+    HQLParser.parseHQL(hql, tConf);
     Assert.assertEquals(getDbName() + "c1_citytable citydim inner join " + getDbName()
         + "c1_statetable statedim on citydim.stateid = statedim.id and (statedim.dt = 'latest')",
       getAutoResolvedFromString(ctx).trim());
@@ -331,7 +331,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     String q = "SELECT citydim.name, statedim.name FROM citydim";
     HiveConf conf = new HiveConf(hconf);
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "LEFTOUTER");
-    CubeQueryRewriter rewriter = new CubeQueryRewriter(conf);
+    CubeQueryRewriter rewriter = new CubeQueryRewriter(conf, hconf);
     CubeQueryContext context = rewriter.rewrite(q);
     String hql = context.toHQL();
     System.out.println("##1 hql " + hql);
@@ -342,7 +342,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     Assert.assertTrue(hql.matches(".*?WHERE\\W+citydim.dt = 'latest'\\W+.*?"));
 
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "RIGHTOUTER");
-    rewriter = new CubeQueryRewriter(conf);
+    rewriter = new CubeQueryRewriter(conf, hconf);
     context = rewriter.rewrite(q);
     hql = context.toHQL();
     System.out.println("##2 hql " + hql);
@@ -353,7 +353,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     Assert.assertTrue(hql.matches(".*?WHERE\\W+statedim.dt = 'latest'\\W+.*?"));
 
     conf.set(CubeQueryConfUtil.JOIN_TYPE_KEY, "FULLOUTER");
-    rewriter = new CubeQueryRewriter(conf);
+    rewriter = new CubeQueryRewriter(conf, hconf);
     context = rewriter.rewrite(q);
     hql = context.toHQL();
     System.out.println("##3 hql " + hql);
@@ -567,7 +567,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     List<String> expectedClauses = new ArrayList<String>();
     List<String> actualClauses = new ArrayList<String>();
     String dimOnlyQuery = "select testDim2.name, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
-    CubeQueryRewriter driver = new CubeQueryRewriter(hconf);
+    CubeQueryRewriter driver = new CubeQueryRewriter(hconf, hconf);
     CubeQueryContext rewrittenQuery = driver.rewrite(dimOnlyQuery);
     String hql = rewrittenQuery.toHQL();
     System.out.println("testAutoJoinResolverauto join HQL:" + hql);
@@ -591,7 +591,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     //Dim only join chain query without qualified tableName for join chain ref column
     actualClauses.clear();
     dimOnlyQuery = "select name, cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
-    driver = new CubeQueryRewriter(hconf);
+    driver = new CubeQueryRewriter(hconf, hconf);
     rewrittenQuery = driver.rewrite(dimOnlyQuery);
     hql = rewrittenQuery.toHQL();
     System.out.println("testAutoJoinResolverauto join HQL:" + hql);
@@ -611,7 +611,7 @@ public class TestJoinResolver extends TestQueryRewrite {
     //With ChainRef.col
     actualClauses.clear();
     dimOnlyQuery = "select testDim2.name, cityState.capital FROM testDim2 where " + TWO_DAYS_RANGE;
-    driver = new CubeQueryRewriter(hconf);
+    driver = new CubeQueryRewriter(hconf, hconf);
     rewrittenQuery = driver.rewrite(dimOnlyQuery);
     hql = rewrittenQuery.toHQL();
     System.out.println("testAutoJoinResolverauto join HQL:" + hql);

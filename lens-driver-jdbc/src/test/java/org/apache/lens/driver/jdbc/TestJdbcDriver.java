@@ -70,6 +70,7 @@ public class TestJdbcDriver {
   /** The base conf. */
   Configuration baseConf;
 
+  HiveConf hConf;
   /** The driver. */
   JDBCDriver driver;
 
@@ -88,6 +89,7 @@ public class TestJdbcDriver {
     baseConf.set(JDBCDriverConfConstants.JDBC_USER, "SA");
     baseConf.set(JDBCDriverConfConstants.JDBC_PASSWORD, "");
     baseConf.set(JDBCDriverConfConstants.JDBC_EXPLAIN_KEYWORD_PARAM, "explain plan for ");
+    hConf = new HiveConf(baseConf, this.getClass());
 
     driver = new JDBCDriver();
     driver.configure(baseConf);
@@ -119,7 +121,11 @@ public class TestJdbcDriver {
   }
 
   private QueryContext createQueryContext(final String query) throws LensException {
-    QueryContext context = new QueryContext(query, "SA", new LensConf(), baseConf, drivers);
+    return createQueryContext(query, baseConf);
+  }
+
+  private QueryContext createQueryContext(final String query, Configuration conf) throws LensException {
+    QueryContext context = new QueryContext(query, "SA", new LensConf(), conf, drivers);
     return context;
   }
 
@@ -202,7 +208,7 @@ public class TestJdbcDriver {
 
     Throwable th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -213,7 +219,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -224,7 +230,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -235,7 +241,7 @@ public class TestJdbcDriver {
 
     th = null;
     try {
-      driver.rewriteQuery(query, baseConf);
+      driver.rewriteQuery(createQueryContext(query));
     } catch (LensException e) {
       e.printStackTrace();
       th = e;
@@ -253,9 +259,12 @@ public class TestJdbcDriver {
     createTable("estimate_test", driver.getEstimateConnection()); // Create table
     insertData("estimate_test", driver.getEstimateConnection()); // Insert some data into table
     String query1 = "SELECT * FROM estimate_test"; // Select query against existing table
-    QueryCost cost = driver.estimate(createExplainContext(query1, baseConf));
+    ExplainQueryContext ctx = createExplainContext(query1, baseConf);
+    Assert.assertNull(ctx.getFinalDriverQuery(driver));
+    QueryCost cost = driver.estimate(ctx);
     Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
     Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
   }
 
   /**
@@ -290,9 +299,44 @@ public class TestJdbcDriver {
     MetricRegistry reg = LensMetricsRegistry.getStaticRegistry();
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-columnar-sql-rewrite",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-prepare-statement",
-      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare")));
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-columnar-sql-rewrite",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-jdbc-prepare-statement",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-validate-thru-prepare",
+      "lens.MethodMetricGauge.TestJdbcDriver-JDBCDriver-jdbc-check-allowed-query")));
+  }
+
+  @Test
+  public void testMetricsEnabled() throws Exception {
+    createTable("test_metrics", driver.getEstimateConnection()); // Create table
+    insertData("test_metrics", driver.getEstimateConnection()); // Insert some data into table
+    createTable("test_metrics"); // Create table
+    insertData("test_metrics"); // Insert some data into table
+    String query1 = "SELECT * FROM test_metrics"; // Select query against existing table
+    Configuration metricConf = new Configuration(baseConf);
+    metricConf.setBoolean(LensConfConstants.ENABLE_QUERY_METRICS, true);
+    // run estimate and execute - because server would first run estimate and then execute with same context
+    QueryContext ctx = createQueryContext(query1, metricConf);
+    QueryCost cost = driver.estimate(ctx);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    LensResultSet result = driver.execute(ctx);
+    Assert.assertNotNull(result);
+
+    // test prepare
+    // run estimate and prepare - because server would first run estimate and then prepare with same context
+    PreparedQueryContext pContext = new PreparedQueryContext(query1, "SA", metricConf, drivers);
+    cost = driver.estimate(pContext);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    driver.prepare(pContext);
+
+    // test explain and prepare
+    PreparedQueryContext pContext2 = new PreparedQueryContext(query1, "SA", metricConf, drivers);
+    cost = driver.estimate(pContext2);
+    Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
+    Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
+    driver.prepare(pContext2);
+    driver.explainAndPrepare(pContext2);
   }
 
   /**
@@ -306,7 +350,10 @@ public class TestJdbcDriver {
     insertData("explain_test"); // Insert some data into table
     String query1 = "SELECT * FROM explain_test"; // Select query against existing table
     String query2 = "SELECT * FROM explain_test1"; // Select query against non existing table
-    driver.explain(createExplainContext(query1, baseConf));
+    ExplainQueryContext ctx = createExplainContext(query1, baseConf);
+    Assert.assertNull(ctx.getFinalDriverQuery(driver));
+    driver.explain(ctx);
+    Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
 
     try {
       driver.explain(createExplainContext(query2, baseConf));
@@ -356,6 +403,75 @@ public class TestJdbcDriver {
   }
 
   /**
+   * Test type casting of char, varchar, nvarchar and decimal type
+   *
+   * @throws Exception
+   *           the exception
+   */
+  @Test
+  public void tesDecimalCharCasting() throws Exception {
+
+    Statement stmt = null;
+    Connection conn = null;
+    try {
+      conn = driver.getConnection();
+      stmt = conn.createStatement();
+      // Create table with char, varchar, nvarchar and decimal data type
+      stmt.execute("CREATE TABLE test_casting(c1 decimal(10,2), c2 varchar(20), c3 nvarchar(20), c4 char(10))");
+      // Insert data
+      stmt.execute("INSERT INTO test_casting VALUES(34.56,'abc','def','ghi')");
+      stmt.execute("INSERT INTO test_casting VALUES(78.50,'abc1','def1','ghi1')");
+      stmt.execute("INSERT INTO test_casting VALUES(48.89,'abc2','def2','ghi2')");
+      conn.commit();
+
+      // Query
+      final String query = "SELECT * FROM test_casting";
+      QueryContext context = createQueryContext(query);
+      LensResultSet resultSet = driver.execute(context);
+      assertNotNull(resultSet);
+
+      if (resultSet instanceof InMemoryResultSet) {
+        InMemoryResultSet rs = (InMemoryResultSet) resultSet;
+        LensResultSetMetadata rsMeta = rs.getMetadata();
+        assertEquals(rsMeta.getColumns().size(), 4);
+
+        ColumnDescriptor col1 = rsMeta.getColumns().get(0);
+        assertEquals(col1.getTypeName().toLowerCase(), "double");
+        assertEquals(col1.getName(), "C1");
+
+        ColumnDescriptor col2 = rsMeta.getColumns().get(1);
+        assertEquals(col2.getTypeName().toLowerCase(), "string");
+        assertEquals(col2.getName(), "C2");
+
+        ColumnDescriptor col3 = rsMeta.getColumns().get(2);
+        assertEquals(col3.getTypeName().toLowerCase(), "string");
+        assertEquals(col3.getName(), "C3");
+
+        ColumnDescriptor col4 = rsMeta.getColumns().get(3);
+        assertEquals(col4.getTypeName().toLowerCase(), "string");
+        assertEquals(col4.getName(), "C4");
+
+
+        while (rs.hasNext()) {
+          ResultRow row = rs.next();
+          List<Object> rowObjects = row.getValues();
+        }
+        if (rs instanceof JDBCResultSet) {
+          ((JDBCResultSet) rs).close();
+        }
+      }
+
+    } finally {
+      if (stmt != null) {
+        stmt.close();
+      }
+      if (conn != null) {
+        conn.close();
+      }
+    }
+  }
+
+  /**
    * Test prepare.
    *
    * @throws Exception the exception
@@ -372,10 +488,10 @@ public class TestJdbcDriver {
 
     final String query = "SELECT * from prepare_test";
     PreparedQueryContext pContext = new PreparedQueryContext(query, "SA", baseConf, drivers);
-    //run prepare
-    driver.prepare(pContext);
     //run validate
     driver.validate(pContext);
+    //run prepare
+    driver.prepare(pContext);
   }
 
   /**

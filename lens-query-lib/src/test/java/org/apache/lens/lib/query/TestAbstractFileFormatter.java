@@ -226,7 +226,7 @@ public abstract class TestAbstractFileFormatter {
       Assert.fail(e.getMessage());
     }
     QueryContext ctx = QueryContext.createContextWithSingleDriver("test writer query", "testuser", new LensConf(),
-        conf, mockDriver, null);
+        conf, mockDriver, null, false);
 
     ctx.setSelectedDriver(mockDriver);
     formatter = createFormatter();

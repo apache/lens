@@ -22,6 +22,7 @@ package org.apache.lens.cube.parse;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.*;
@@ -30,13 +31,15 @@ import org.apache.hadoop.hive.ql.parse.*;
  * Accepts cube query AST and rewrites into storage table query
  */
 public class CubeSemanticAnalyzer extends SemanticAnalyzer {
-  private final HiveConf conf;
+  private final Configuration queryConf;
+  private final HiveConf hiveConf;
   private final List<ValidationRule> validationRules = new ArrayList<ValidationRule>();
   private CubeQueryContext cubeQl;
 
-  public CubeSemanticAnalyzer(HiveConf conf) throws SemanticException {
-    super(conf);
-    this.conf = conf;
+  public CubeSemanticAnalyzer(Configuration queryConf, HiveConf hiveConf) throws SemanticException {
+    super(hiveConf);
+    this.queryConf = queryConf;
+    this.hiveConf = hiveConf;
     setupRules();
   }
 
@@ -70,7 +73,7 @@ public class CubeSemanticAnalyzer extends SemanticAnalyzer {
       // if phase1Result false return
       return;
     }
-    cubeQl = new CubeQueryContext(ast, qb, conf);
+    cubeQl = new CubeQueryContext(ast, qb, queryConf, hiveConf);
     // cubeQl.init();
     // validate();
 

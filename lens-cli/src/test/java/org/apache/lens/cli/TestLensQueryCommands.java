@@ -20,18 +20,25 @@ package org.apache.lens.cli;
 
 import java.io.File;
 import java.net.URL;
+import java.util.GregorianCalendar;
 import java.util.UUID;
 
 import javax.ws.rs.BadRequestException;
+import javax.xml.datatype.DatatypeFactory;
 
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XTimePartSpec;
+import org.apache.lens.api.metastore.XTimePartSpecElement;
+import org.apache.lens.api.metastore.XUpdatePeriod;
 import org.apache.lens.api.query.QueryHandle;
-import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensQueryCommands;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.driver.hive.TestHiveDriver;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,6 +86,21 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     testShowPersistentResultSet(qCom);
     testPurgedFinishedResultSet(qCom);
     testFailPreparedQuery(qCom);
+    // run all query commands with query metrics enabled.
+    client = new LensClient();
+    client.setConnectionParam("lens.query.enable.persistent.resultset.indriver", "false");
+    client.setConnectionParam("lens.query.enable.metrics.per.query", "true");
+    qCom.setClient(client);
+    String result = qCom.getAllPreparedQueries("all", "", -1, -1);
+    Assert.assertEquals(result, "No prepared queries");
+    testExecuteSyncQuery(qCom);
+    testExecuteAsyncQuery(qCom);
+    testExplainQuery(qCom);
+    testExplainFailQuery(qCom);
+    testPreparedQuery(qCom);
+    testShowPersistentResultSet(qCom);
+    testPurgedFinishedResultSet(qCom);
+    testFailPreparedQuery(qCom);
   }
 
   /**
@@ -92,7 +114,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String sql = "cube select id, name from test_dim";
     String result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
 
-    Assert.assertEquals("No prepared queries", result);
+    Assert.assertEquals(result, "No prepared queries");
     final String qh = qCom.prepare(sql, "testPreparedName");
     result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, System.currentTimeMillis());
     Assert.assertEquals(qh, result);
@@ -123,6 +145,9 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
+    result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
+
+    Assert.assertEquals(result, "No prepared queries");
 
     final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(qh2.contains(explainPlan));
@@ -131,6 +156,8 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     String handles2 = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, submitTime - 1);
     Assert.assertFalse(handles2.contains(qh), handles2);
+    result = qCom.destroyPreparedQuery(handles);
+    Assert.assertEquals("Successfully destroyed " + handles, result);
   }
 
   /**
@@ -269,17 +296,20 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     TestLensDimensionCommands.createDimension();
     TestLensDimensionTableCommands.addDim1Table("dim_table", "dim_table.xml", "local");
 
-    URL dataFile = TestLensQueryCommands.class.getClassLoader().getResource("data.data");
-
-    QueryHandle qh = client.executeQueryAsynch(
-      "LOAD DATA LOCAL INPATH '" + new File(dataFile.toURI()).getAbsolutePath()
-        + "' OVERWRITE INTO TABLE local_dim_table partition(dt='latest')", null);
-
-    while (!client.getQueryStatus(qh).isFinished()) {
-      Thread.sleep(5000);
-    }
-
-    Assert.assertEquals(client.getQueryStatus(qh).getStatus(), QueryStatus.Status.SUCCESSFUL);
+    // Add partition
+    URL dataDir = TestLensQueryCommands.class.getClassLoader().getResource("dim2-part");
+    XPartition xp = new XPartition();
+    xp.setFactOrDimensionTableName("dim_table");
+    xp.setLocation(new Path(dataDir.toURI()).toString());
+    xp.setUpdatePeriod(XUpdatePeriod.HOURLY);
+    XTimePartSpec timePart = new XTimePartSpec();
+    XTimePartSpecElement partElement = new XTimePartSpecElement();
+    partElement.setKey("dt");
+    partElement.setValue(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+    timePart.getPartSpecElement().add(partElement);
+    xp.setTimePartitionSpec(timePart);
+    APIResult result = client.addPartitionToDim("dim_table", "local", xp);
+    Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
   }
 
   /**

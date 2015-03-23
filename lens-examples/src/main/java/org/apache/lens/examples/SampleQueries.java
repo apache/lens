@@ -52,15 +52,15 @@ public class SampleQueries {
    * @throws JAXBException the JAXB exception
    */
   public SampleQueries() throws JAXBException {
-    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
-    queryClient = new LensStatement(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.instance().getClient().getConnection());
+    queryClient = new LensStatement(LensClientSingletonWrapper.instance().getClient().getConnection());
   }
 
   /**
    * Close.
    */
   public void close() {
-    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.instance().getClient().closeConnection();
   }
 
   /**

@@ -31,12 +31,14 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.ToString;
 
 /**
  * Implementation of PartitionTimeline that stores all partitions as a tree set. Created for instrumentation purposes.
  * Helps in test cases. In real life scenarios, this would be almost always end up causing out of memory error.
  */
 @Data
+@ToString(callSuper = true)
 public class StoreAllPartitionTimeline extends PartitionTimeline {
   TreeSet<TimePartition> allPartitions;
 

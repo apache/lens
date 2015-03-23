@@ -31,6 +31,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.ToString;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -41,6 +42,7 @@ import lombok.extern.apachecommons.CommonsLog;
  * @see org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline
  */
 @Data
+@ToString(exclude = {"client"})
 @CommonsLog
 public abstract class PartitionTimeline implements Iterable<TimePartition> {
   private final CubeMetastoreClient client;

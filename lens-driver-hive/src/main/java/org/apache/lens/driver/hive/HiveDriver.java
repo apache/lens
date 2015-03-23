@@ -96,8 +96,11 @@ public class HiveDriver implements LensDriver {
   public static final float DAILY_PARTITION_WEIGHT_DEFAULT = 0.75f;
   public static final float HOURLY_PARTITION_WEIGHT_DEFAULT = 1.0f;
 
-  /** The driver conf. */
-  private HiveConf driverConf;
+  /** The driver conf- which will merged with query conf */
+  private Configuration driverConf;
+
+  /** The HiveConf - used for connecting to hive server and metastore */
+  private HiveConf hiveConf;
 
   /** The hive handles. */
   private Map<QueryHandle, OperationHandle> hiveHandles = new HashMap<QueryHandle, OperationHandle>();
@@ -314,9 +317,16 @@ public class HiveDriver implements LensDriver {
    */
   @Override
   public void configure(Configuration conf) throws LensException {
-    this.driverConf = new HiveConf(conf, HiveDriver.class);
+    this.driverConf = new Configuration(conf);
     this.driverConf.addResource("hivedriver-default.xml");
     this.driverConf.addResource("hivedriver-site.xml");
+
+    // resources have to be added separately on hiveConf again because new HiveConf() overrides hive.* properties
+    // from HiveConf
+    this.hiveConf = new HiveConf(conf, HiveDriver.class);
+    this.hiveConf.addResource("hivedriver-default.xml");
+    this.hiveConf.addResource("hivedriver-site.xml");
+
     connectionClass = this.driverConf.getClass(HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class,
       ThriftConnection.class);
     isEmbedded = (connectionClass.getName().equals(EmbeddedThriftConnection.class.getName()));
@@ -365,13 +375,13 @@ public class HiveDriver implements LensDriver {
       return (HiveQueryPlan) explainCtx.getDriverContext().getDriverQueryPlan(this);
     }
     LOG.info("Explain: " + explainCtx.getDriverQuery(this));
-    HiveConf explainConf = new HiveConf(explainCtx.getDriverConf(this), this.getClass());
+    Configuration explainConf = new Configuration(explainCtx.getDriverConf(this));
     explainConf.setClassLoader(explainCtx.getConf().getClassLoader());
     explainConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     final String explainQuery = "EXPLAIN EXTENDED " + explainCtx.getDriverQuery(this);
 
     QueryContext explainQueryCtx = QueryContext.createContextWithSingleDriver(explainQuery,
-      explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier());
+      explainCtx.getSubmittedUser(), new LensConf(), explainConf, this, explainCtx.getLensSessionIdentifier(), false);
     // Get result set of explain
     HiveInMemoryResultSet inMemoryResultSet = (HiveInMemoryResultSet) execute(explainQueryCtx);
     List<String> explainOutput = new ArrayList<String>();
@@ -380,7 +390,8 @@ public class HiveDriver implements LensDriver {
     }
     closeQuery(explainQueryCtx.getQueryHandle());
     try {
-      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, explainConf);
+      hiveConf.setClassLoader(explainCtx.getConf().getClassLoader());
+      HiveQueryPlan hqp = new HiveQueryPlan(explainOutput, null, hiveConf);
       explainCtx.getDriverContext().setDriverQueryPlan(this, hqp);
       return hqp;
     } catch (HiveException e) {
@@ -727,22 +738,20 @@ public class HiveDriver implements LensDriver {
       if (embeddedConnection == null) {
         try {
           embeddedConnection = connectionClass.newInstance();
+          embeddedConnection.init(hiveConf, null);
         } catch (Exception e) {
           throw new LensException(e);
         }
         LOG.info("New thrift connection " + connectionClass);
       }
-      return embeddedConnection.getClient(driverConf);
+      return embeddedConnection.getClient();
     } else {
       connectionLock.lock();
       try {
-        HiveConf connectionConf = driverConf;
+        String user = hiveConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_USER);
         if (SessionState.get() != null && SessionState.get().getUserName() != null) {
-          connectionConf = new HiveConf(driverConf);
-          connectionConf.set(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_USER.varname, SessionState.get()
-            .getUserName());
+          user = SessionState.get().getUserName();
         }
-        String user = connectionConf.getVar(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_CLIENT_USER);
         Map<Long, ExpirableConnection> userThreads = threadConnections.get(user.toLowerCase());
         if (userThreads == null) {
           userThreads = new HashMap<Long, ExpirableConnection>();
@@ -752,6 +761,7 @@ public class HiveDriver implements LensDriver {
         if (connection == null || connection.isExpired()) {
           try {
             ThriftConnection tconn = connectionClass.newInstance();
+            tconn.init(hiveConf, user);
             connection = new ExpirableConnection(tconn, connectionExpiryTimeout);
             thriftConnExpiryQueue.offer(connection);
             userThreads.put(Thread.currentThread().getId(), connection);
@@ -766,7 +776,7 @@ public class HiveDriver implements LensDriver {
             thriftConnExpiryQueue.offer(connection);
           }
         }
-        return connection.getConnection().getClient(connectionConf);
+        return connection.getConnection().getClient();
       } finally {
         connectionLock.unlock();
       }

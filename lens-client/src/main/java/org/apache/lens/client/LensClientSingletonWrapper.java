@@ -26,10 +26,16 @@ import org.apache.commons.logging.LogFactory;
 /**
  * The Enum LensClientSingletonWrapper.
  */
-public enum LensClientSingletonWrapper {
+public class LensClientSingletonWrapper {
 
   /** The instance. */
-  INSTANCE;
+  public static class InstanceHolder {
+    public static final LensClientSingletonWrapper INSTANCE = new LensClientSingletonWrapper();
+  }
+
+  public static LensClientSingletonWrapper instance() {
+    return InstanceHolder.INSTANCE;
+  }
 
   /** The log. */
   private static final Log LOG = LogFactory.getLog(LensClientSingletonWrapper.class);
@@ -72,7 +78,7 @@ public enum LensClientSingletonWrapper {
    * @param e the e
    */
   public void explainFailedAttempt(LensClientServerConnectionException e) {
-//    LOG.error("failed login attempt", e);
+    LOG.error("failed login attempt", e);
     switch (e.getErrorCode()) {
     case 401:
       System.console().printf("username/password combination incorrect.\n");
@@ -81,7 +87,7 @@ public enum LensClientSingletonWrapper {
       System.console().printf("server unresponsive, Returned error code 500\n");
       break;
     default:
-      System.console().printf("Unknown error in authenticating with the server. Error code = %d\n", e.getErrorCode());
+      System.console().printf("ERROR: " + e.getMessage() + "\n");
     }
   }
 

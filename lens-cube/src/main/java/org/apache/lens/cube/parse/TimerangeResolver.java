@@ -163,7 +163,7 @@ class TimerangeResolver implements ContextRewriter {
 
     // Look at referenced columns through denormalization resolver
     // and do column life validation
-    Map<String, Set<ReferencedQueriedColumn>> refCols = cubeql.getDenormCtx().getReferencedCols();
+    Map<String, Set<ReferencedQueriedColumn>> refCols = cubeql.getDeNormCtx().getReferencedCols();
     for (String col : refCols.keySet()) {
       Iterator<ReferencedQueriedColumn> refColIter = refCols.get(col).iterator();
       while (refColIter.hasNext()) {

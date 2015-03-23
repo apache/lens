@@ -1345,8 +1345,10 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("id", "int", "code"));
     dimColumns.add(new FieldSchema("stateid", "int", "state id"));
 
+    dumpPeriods = new HashMap<String, UpdatePeriod>();
     storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c4, s2);
+    dumpPeriods.put(c4, null);
 
     client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
 
@@ -1356,7 +1358,6 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("id", "int", "code"));
 
     client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
-
   }
 
   private void createTestDim2(CubeMetastoreClient client) throws HiveException {
@@ -2053,7 +2054,7 @@ public class CubeTestSetup {
   public static void printQueryAST(String query, String label) throws ParseException {
     System.out.println("--" + label + "--AST--");
     System.out.println("--query- " + query);
-    HQLParser.printAST(HQLParser.parseHQL(query));
+    HQLParser.printAST(HQLParser.parseHQL(query, new HiveConf()));
   }
 
 

@@ -93,7 +93,7 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
    */
   public PreparedQueryContext(String query, String user, Configuration conf, LensConf qconf, Collection<LensDriver>
     drivers) {
-    super(query, user, qconf, conf, drivers);
+    super(query, user, qconf, conf, drivers, true);
     this.preparedTime = new Date();
     this.preparedUser = user;
     this.prepareHandle = new QueryPrepareHandle(UUID.randomUUID());
@@ -151,5 +151,14 @@ public class PreparedQueryContext extends AbstractQueryContext implements Delaye
       getDriverContext().getSelectedDriver() != null ? getDriverContext().getSelectedDriver().getClass()
         .getCanonicalName() : null, getDriverContext().getSelectedDriverQuery(),
       lensConf);
+  }
+
+  /**
+   * Get prepared query handle string
+   * @return
+   */
+  @Override
+  public String getLogHandle() {
+    return prepareHandle.getPrepareHandleId().toString();
   }
 }

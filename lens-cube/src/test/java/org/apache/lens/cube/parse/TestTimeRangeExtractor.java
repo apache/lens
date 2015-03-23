@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.lens.cube.metadata.TestCubeMetastoreClient;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ParseException;
@@ -42,7 +43,7 @@ public class TestTimeRangeExtractor extends TestQueryRewrite {
 
   @BeforeTest
   public void setupInstance() throws Exception {
-    driver = new CubeQueryRewriter(new HiveConf());
+    driver = new CubeQueryRewriter(new Configuration(), new HiveConf());
     dateTwoDaysBack = getDateUptoHours(TWODAYS_BACK);
     dateNow = getDateUptoHours(NOW);
   }

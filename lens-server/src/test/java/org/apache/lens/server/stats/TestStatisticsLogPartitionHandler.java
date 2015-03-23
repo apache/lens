@@ -26,13 +26,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Set;
 
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 import org.apache.lens.server.stats.store.log.PartitionEvent;
 import org.apache.lens.server.stats.store.log.StatisticsLogPartitionHandler;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -59,7 +60,7 @@ public class TestStatisticsLogPartitionHandler {
    */
   @Test
   public void testPartitionHandler() throws Exception {
-    Configuration conf = configureHiveTables();
+    HiveConf conf = configureHiveTables();
     String fileName = "/tmp/lensstats.log";
     File f = createDummyFile(fileName);
     StatisticsLogPartitionHandler handler = new StatisticsLogPartitionHandler();
@@ -68,7 +69,7 @@ public class TestStatisticsLogPartitionHandler {
     partMap.put("random", f.getAbsolutePath());
     PartitionEvent event = new PartitionEvent(EVENT_NAME, partMap, null);
     handler.process(event);
-    Hive h = getHiveClient();
+    Hive h = getHiveClient(conf);
     Set<Partition> partitionSet = h.getAllPartitionsOf(getHiveTable());
     Assert.assertEquals(partitionSet.size(), 1);
     Partition p = partitionSet.iterator().next();
@@ -88,10 +89,9 @@ public class TestStatisticsLogPartitionHandler {
   @Test
   public void testQueryExecutionStatisticsTableCreation() throws Exception {
     QueryExecutionStatistics stats = new QueryExecutionStatistics(System.currentTimeMillis());
-    Configuration conf = new Configuration();
-    conf.addResource("hive-site.xml");
+    HiveConf conf = LensServerConf.get();
     Table t = stats.getHiveTable(conf);
-    Hive h = getHiveClient();
+    Hive h = getHiveClient(conf);
     h.createTable(t);
     Assert.assertNotNull(h.getTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE, t.getTableName()));
     h.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE, t.getTableName(), true, true);
@@ -115,12 +115,11 @@ public class TestStatisticsLogPartitionHandler {
    *
    * @return the configuration
    */
-  private Configuration configureHiveTables() {
+  private HiveConf configureHiveTables() {
     assertNotNull(System.getProperty("hadoop.bin.path"));
-    Configuration conf = new Configuration();
-    conf.addResource("hive-site.xml");
+    HiveConf conf = LensServerConf.get();
     try {
-      Hive hive = getHiveClient();
+      Hive hive = getHiveClient(conf);
       Database database = new Database();
       database.setName(LensConfConstants.DEFAULT_STATISTICS_DATABASE);
       hive.dropTable(LensConfConstants.DEFAULT_STATISTICS_DATABASE, EVENT_NAME, true, true);
@@ -144,8 +143,8 @@ public class TestStatisticsLogPartitionHandler {
     return t;
   }
 
-  private Hive getHiveClient() throws HiveException {
-    return Hive.get();
+  private Hive getHiveClient(HiveConf conf) throws HiveException {
+    return Hive.get(conf);
   }
 
 }

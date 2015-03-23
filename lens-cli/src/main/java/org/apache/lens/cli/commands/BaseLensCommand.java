@@ -102,7 +102,7 @@ public class BaseLensCommand {
   }
 
   public static LensClientSingletonWrapper getClientWrapper() {
-    return LensClientSingletonWrapper.INSTANCE;
+    return LensClientSingletonWrapper.instance();
   }
 
   /**

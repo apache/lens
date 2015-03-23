@@ -20,6 +20,7 @@ package org.apache.lens.cube.metadata;
 
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
@@ -112,7 +113,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   private static Map<String, UpdatePeriod> getDumpPeriods(String name, Map<String, String> params) {
     String storagesStr = params.get(MetastoreUtil.getDimensionStorageListKey(name));
-    if (storagesStr != null) {
+    if (!StringUtils.isBlank(storagesStr)) {
       Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
       String[] storages = storagesStr.split(",");
       for (String storage : storages) {

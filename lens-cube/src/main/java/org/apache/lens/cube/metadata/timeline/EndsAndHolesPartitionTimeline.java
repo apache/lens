@@ -34,6 +34,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.ToString;
 
 /**
  * One implementation of PartitionTimeline that stores first partition, latest partition and a collection of holes in
@@ -41,6 +42,7 @@ import lombok.NonNull;
  * which Timeline Class to use in it's params.
  */
 @Data
+@ToString(callSuper = true)
 public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   private TimePartition first;
   private TreeSet<TimePartition> holes = Sets.newTreeSet();

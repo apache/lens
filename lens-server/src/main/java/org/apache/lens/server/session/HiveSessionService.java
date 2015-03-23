@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
+import org.apache.hive.service.cli.OperationHandle;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -134,7 +135,7 @@ public class HiveSessionService extends LensService implements SessionService {
     String command = "add " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
-      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
     } finally {
@@ -150,7 +151,7 @@ public class HiveSessionService extends LensService implements SessionService {
     String command = "delete " + type.toLowerCase() + " " + path;
     try {
       acquire(sessionid);
-      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
       getSession(sessionid).removeResource(type, path);
     } catch (HiveSQLException e) {
       throw new WebApplicationException(e);
@@ -301,7 +302,8 @@ public class HiveSessionService extends LensService implements SessionService {
       }
       getSession(sessionid).getSessionConf().set(var, value);
       // set in underlying cli session
-      getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null);
+      closeCliServiceOp(getCliService().executeStatement(getHiveSessionHandle(sessionid), command, null));
+
       // add to persist
       if (addToSession) {
         getSession(sessionid).setConfig(key, value);
@@ -437,6 +439,20 @@ public class HiveSessionService extends LensService implements SessionService {
     LensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
     if (svc instanceof QueryExecutionServiceImpl) {
       ((QueryExecutionServiceImpl) svc).closeDriverSessions(sessionHandle);
+    }
+  }
+
+  /**
+   * Close operation created for underlying CLI service
+   * @param op operation handle
+   */
+  private void closeCliServiceOp(OperationHandle op) {
+    if (op != null) {
+      try {
+        getCliService().closeOperation(op);
+      } catch (HiveSQLException e) {
+        LOG.error("Error closing operation " + op.getHandleIdentifier(), e);
+      }
     }
   }
 

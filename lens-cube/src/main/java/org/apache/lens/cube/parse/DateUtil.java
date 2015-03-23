@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -72,10 +73,17 @@ public final class DateUtil {
   public static final String MINUTE_FMT = HOUR_FMT + ":[0-9]{2}";
   public static final String SECOND_FMT = MINUTE_FMT + ":[0-9]{2}";
   public static final String ABSDATE_FMT = "yyyy-MM-dd-HH:mm:ss,SSS";
-  public static final SimpleDateFormat ABSDATE_PARSER = new SimpleDateFormat(ABSDATE_FMT);
+
+  public static final ThreadLocal<DateFormat> ABSDATE_PARSER =
+    new ThreadLocal<DateFormat>() {
+      @Override
+      protected SimpleDateFormat initialValue() {
+        return new SimpleDateFormat(ABSDATE_FMT);
+      }
+    };
 
   public static String formatDate(Date dt) {
-    return ABSDATE_PARSER.format(dt);
+    return ABSDATE_PARSER.get().format(dt);
   }
 
   public static String getAbsDateFormatString(String str) {
@@ -102,7 +110,7 @@ public final class DateUtil {
       return resolveRelativeDate(str, now);
     } else {
       try {
-        return ABSDATE_PARSER.parse(getAbsDateFormatString(str));
+        return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
       } catch (ParseException e) {
         LOG.error("Invalid date format. expected only " + ABSDATE_FMT + " date provided:" + str, e);
         throw new SemanticException(e, ErrorMsg.WRONG_TIME_RANGE_FORMAT, ABSDATE_FMT, str);

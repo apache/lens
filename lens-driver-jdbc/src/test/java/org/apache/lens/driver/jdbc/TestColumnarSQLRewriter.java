@@ -26,11 +26,11 @@ import java.net.URLClassLoader;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.MetastoreConstants;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -51,8 +51,8 @@ import org.testng.annotations.Test;
  */
 public class TestColumnarSQLRewriter {
 
-  HiveConf conf = new HiveConf();
-  HiveConf queryConf = new HiveConf();
+  HiveConf hconf = new HiveConf();
+  Configuration conf = new Configuration();
   ColumnarSQLRewriter qtest = new ColumnarSQLRewriter();
 
   /**
@@ -219,20 +219,20 @@ public class TestColumnarSQLRewriter {
   // Testing multiple queries in one instance
   public void testNoRewrite() throws ParseException, SemanticException, LensException {
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
     String query = "select count(distinct id) from location_dim";
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select count( distinct  id ) from location_dim ";
     compareQueries(expected, actual);
 
     String query2 = "select count(distinct id) from location_dim  location_dim";
-    String actual2 = qtest.rewrite(query2, conf);
+    String actual2 = qtest.rewrite(query2, conf, hconf);
     String expected2 = "select count( distinct  id ) from location_dim location_dim___location_dim";
     compareQueries(expected2, actual2);
 
     String query3 = "select count(distinct location_dim.id) from  db.location_dim location_dim";
-    String actual3 = qtest.rewrite(query3, conf);
+    String actual3 = qtest.rewrite(query3, conf, hconf);
     String expected3 = "select count( distinct ( location_dim__db_location_dim_location_dim . id )) "
       + "from db.location_dim location_dim__db_location_dim_location_dim";
     compareQueries(expected3, actual3);
@@ -240,7 +240,7 @@ public class TestColumnarSQLRewriter {
     String query4 = "select count(distinct location_dim.id) from  db.location_dim location_dim "
       + "left outer join db.item_dim item_dim on location_dim.id = item_dim.id "
       + "right outer join time_dim time_dim on location_dim.id = time_dim.id ";
-    String actual4 = qtest.rewrite(query4, conf);
+    String actual4 = qtest.rewrite(query4, conf, hconf);
     String expected4 = "select count( distinct ( location_dim__db_location_dim_location_dim . id )) "
       + "from db.location_dim location_dim__db_location_dim_location_dim  left outer join db.item_dim "
       + "item_dim__db_item_dim_item_dim on (( location_dim__db_location_dim_location_dim . id ) = "
@@ -270,9 +270,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String rwq = qtest.rewrite(query, conf);
+    String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "inner join time_dim time_dim___time_dim on (( sales_fact___fact . time_key ) = "
       + "( time_dim___time_dim . time_key ))  inner join location_dim location_dim___location_dim on "
       + "((( sales_fact___fact . location_key ) = ( location_dim___location_dim . location_key )) "
@@ -302,9 +302,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String rwq = qtest.rewrite(query, conf);
+    String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "[(( location_dim___location_dim . location_name ) =  "
       + "'test123' ), , , ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31' "
       + ", , ( time_dim___time_dim . time_key ) between  '2013-01-01'  and  '2013-01-31' ]";
@@ -335,9 +335,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String rwq = qtest.rewrite(query, conf);
+    String rwq = qtest.rewrite(query, conf, hconf);
     String actual = qtest.aggColumn.toString();
     String expected = "[sum(( sales_fact___fact . dollars_sold )) as sum_sales_fact___fact_dollars_sold, "
       + "sum(( sales_fact___fact . units_sold )) as sum_sales_fact___fact_units_sold, "
@@ -369,9 +369,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String rwq = qtest.rewrite(query, conf);
+    String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key,sales_fact___fact.location_key,sales_fact___fact.item_key,";
     String actual = qtest.factKeys.toString();
     compareQueries(expected, actual);
@@ -399,9 +399,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-01-01' and '2013-01-31' " + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String rwq = qtest.rewrite(query, conf);
+    String rwq = qtest.rewrite(query, conf, hconf);
     String expected = "sales_fact___fact.time_key in  (  select time_dim .time_key from time_dim where "
       + "( time_dim. time_key ) between  '2013-01-01'  and  '2013-01-31'  ) and sales_fact___fact.location_key in  "
       + "(  select location_dim .location_key from location_dim "
@@ -436,9 +436,9 @@ public class TestColumnarSQLRewriter {
         + "and item_dim.item_name = 'item_1' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day,item_dim.item_key " + "order by dollars_sold  ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
 
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
       + "date(( time_dim___time_dim . day )), ( item_dim___item_dim . item_key ),  case  when "
@@ -507,9 +507,9 @@ public class TestColumnarSQLRewriter {
         + "where time_dim.time_key between '2013-03-01' and '2013-03-05' "
         + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact___fact . time_key ), ( time_dim___time_dim . day_of_week ), "
       + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact___fact_dollars_sold) =  0 ) then  "
       + "0.0  else sum(sum_sales_fact___fact_dollars_sold) end  dollars_sold  "
@@ -578,9 +578,9 @@ public class TestColumnarSQLRewriter {
       + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
       + "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select  distinct ( location_dim___location_dim . id ) "
       + "from location_dim location_dim___location_dim  "
       + "inner join time_dim time_dim___time_dim on "
@@ -598,9 +598,9 @@ public class TestColumnarSQLRewriter {
       + "location_dim join time_dim time_dim on location_dim.time_id = time_dim.id "
       + "WHERE ( time_dim . full_date ) between  '2013-01-01 00:00:00'  and  '2013-01-04 00:00:00'  LIMIT 10 ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select sum(count_location_dim___location_dim_name) from  "
       + "(select location_dim___location_dim.time_id,count(( location_dim___location_dim . name )) as "
       + "count_location_dim___location_dim_name from location_dim location_dim___location_dim where "
@@ -623,9 +623,9 @@ public class TestColumnarSQLRewriter {
       + "where time_dim.time_key between '2013-01-01' and '2013-01-31' "
       + "group by fact.time_key,time_dim.day_of_week,time_dim.day " + "order by dollars_sold desc ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( sales_fact__db_sales_fact_fact . time_key ), ( time_dim___time_dim . day_of_week ), "
       + "( time_dim___time_dim . day ),  case  when (sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) =  0 ) "
       + "then  0.0  else sum(sum_sales_fact__db_sales_fact_fact_dollars_sold) end  dollars_sold  from  "
@@ -661,9 +661,9 @@ public class TestColumnarSQLRewriter {
       + "WHERE ((dim1 . date) = '2014-11-25 00:00:00') "
       + "GROUP BY (dim1 . date),  (dim2 . name), (dim3 . name) , (dim4 . name) ";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) date , sum(sum_fact___f_msr1) msr1 , "
       + "( dim2___dim2 . name ) dim2_name , "
       + "( dim3___dim3 . name ) dim3_name , ( dim4___dim4 . name ) dim4_name "
@@ -691,9 +691,9 @@ public class TestColumnarSQLRewriter {
       + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
       + "GROUP BY (dim1 . date),  (dim2 . name)";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) date , sum(sum_fact___f_msr1) msr1 , "
       + "( dim2___dim2 . name ) dim2_name  from  "
       + "(select fact___f.dim2_id, fact___f.dim1_id, fact___f.m4, fact___f.m3, fact___f.m2,sum(( fact___f . msr1 )) as "
@@ -720,9 +720,9 @@ public class TestColumnarSQLRewriter {
       + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
       + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) dim1_date , sum(sum_fact___f_msr1) msr1 , "
       + "( dim2___dim2 . name ) dim2_name  from  (select fact___f.dim2_id, "
       + "fact___f.dim1_id, fact___f.m4, fact___f.m3, fact___f.m2,sum(( fact___f . msr1 )) "
@@ -750,9 +750,9 @@ public class TestColumnarSQLRewriter {
       + "WHERE ((dim1 . date) = '2014-11-25 00:00:00')  and f.m4  is not null "
       + "GROUP BY (dim1 . date),  (dim2 . name) ORDER BY dim1_date";
 
-    SessionState.start(conf);
+    SessionState.start(hconf);
 
-    String actual = qtest.rewrite(query, conf);
+    String actual = qtest.rewrite(query, conf, hconf);
     String expected = "select ( dim1___dim1 . date ) dim1_date , sum(sum_fact___f_msr1) msr1 , "
       + "( dim2___dim2 . name ) dim2_name  from  "
       + "(select fact___f.dim2_id, fact___f.dim1_id, fact___f.dim3_id, fact___f.m4, fact___f.m2,sum((fact___f.msr1)) "
@@ -786,39 +786,36 @@ public class TestColumnarSQLRewriter {
     serdeUrls[0] = new URL("file:" + testJarFile.getAbsolutePath());
     serdeUrls[1] = new URL("file:" + serdeJarFile.getAbsolutePath());
 
-    URLClassLoader createTableClassLoader = new URLClassLoader(serdeUrls, conf.getClassLoader());
-    conf.setClassLoader(createTableClassLoader);
-    SessionState.start(conf);
+    URLClassLoader createTableClassLoader = new URLClassLoader(serdeUrls, hconf.getClassLoader());
+    hconf.setClassLoader(createTableClassLoader);
+    SessionState.start(hconf);
 
     // Create test table
     Database database = new Database();
     database.setName("mydb");
 
-    Hive.get(conf).createDatabase(database);
-    createTable(conf, "mydb", "mytable", "testDB", "testTable_1");
-    createTable(conf, "mydb", "mytable_2", "testDB", "testTable_2");
-    createTable(conf, "default", "mytable_3", "testDB", "testTable_3");
+    Hive.get(hconf).createDatabase(database);
+    SessionState.get().setCurrentDatabase("mydb");
+    createTable(hconf, "mydb", "mytable", "testDB", "testTable_1");
+    createTable(hconf, "mydb", "mytable_2", "testDB", "testTable_2");
+    createTable(hconf, "default", "mytable_3", "testDB", "testTable_3");
 
-    String query = "SELECT * FROM mydb.mytable t1 JOIN mydb.mytable_2 t2 ON t1.t2id = t2.id "
-      + " left outer join mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
-
-    queryConf.setBoolean(MetastoreConstants.METASTORE_ENABLE_CACHING, false);
-    // Test fails without setting this class loader as now metastore lookup is done using queryConf
-    queryConf.setClassLoader(createTableClassLoader);
+    String query = "SELECT * FROM mydb.mytable t1 JOIN mytable_2 t2 ON t1.t2id = t2.id "
+      + " left outer join default.mytable_3 t3 on t2.t3id = t3.id " + "WHERE A = 100";
 
     ColumnarSQLRewriter rewriter = new ColumnarSQLRewriter();
     rewriter.init(conf);
-    rewriter.ast = HQLParser.parseHQL(query);
+    rewriter.ast = HQLParser.parseHQL(query, hconf);
     rewriter.query = query;
-    rewriter.analyzeInternal();
+    rewriter.analyzeInternal(conf, hconf);
 
     String joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
     String joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
-    System.out.println(joinTreeAfterRewrite);
+    System.out.println("joinTreeAfterRewrite:" + joinTreeAfterRewrite);
 
     // Tests
     assertTrue(joinTreeBeforeRewrite.contains("mydb"));
@@ -834,17 +831,17 @@ public class TestColumnarSQLRewriter {
       && joinTreeAfterRewrite.contains("testtable_3"));
 
     // Rewrite one more query where table and db name is not set
-    createTable(conf, "mydb", "mytable_4", null, null);
+    createTable(hconf, "mydb", "mytable_4", null, null);
     String query2 = "SELECT * FROM mydb.mytable_4 WHERE a = 100";
-    rewriter.ast = HQLParser.parseHQL(query2);
+    rewriter.ast = HQLParser.parseHQL(query2, hconf);
     rewriter.query = query2;
-    rewriter.analyzeInternal();
+    rewriter.analyzeInternal(conf, hconf);
 
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeBeforeRewrite);
 
     // Rewrite
-    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     System.out.println(joinTreeAfterRewrite);
 
@@ -856,14 +853,14 @@ public class TestColumnarSQLRewriter {
     database = new Database();
     database.setName("examples");
     Hive.get().createDatabase(database);
-    createTable(conf, "examples", "mytable", "default", null);
+    createTable(hconf, "examples", "mytable", "default", null);
 
     String defaultQuery = "SELECT * FROM examples.mytable t1 WHERE A = 100";
-    rewriter.ast = HQLParser.parseHQL(defaultQuery);
+    rewriter.ast = HQLParser.parseHQL(defaultQuery, hconf);
     rewriter.query = defaultQuery;
-    rewriter.analyzeInternal();
+    rewriter.analyzeInternal(conf, hconf);
     joinTreeBeforeRewrite = HQLParser.getString(rewriter.fromAST);
-    rewriter.replaceWithUnderlyingStorage(queryConf, rewriter.fromAST);
+    rewriter.replaceWithUnderlyingStorage(hconf, rewriter.fromAST);
     joinTreeAfterRewrite = HQLParser.getString(rewriter.fromAST);
     assertTrue(joinTreeBeforeRewrite.contains("examples"), joinTreeBeforeRewrite);
     assertFalse(joinTreeAfterRewrite.contains("examples"), joinTreeAfterRewrite);
@@ -875,6 +872,7 @@ public class TestColumnarSQLRewriter {
     Hive.get().dropTable("mydb", "mytable_4");
     Hive.get().dropDatabase("mydb", true, true, true);
     Hive.get().dropDatabase("examples", true, true, true);
+    SessionState.get().setCurrentDatabase("default");
   }
 
   /**

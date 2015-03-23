@@ -24,6 +24,7 @@ import java.io.ObjectOutput;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
@@ -46,6 +47,7 @@ import lombok.Setter;
  * The Class MockDriver.
  */
 public class MockDriver implements LensDriver {
+  private static AtomicInteger mockDriverId = new AtomicInteger();
 
   /**
    * The conf.
@@ -62,10 +64,18 @@ public class MockDriver implements LensDriver {
    */
   private int ioTestVal = -1;
 
+  private final int driverId;
+
   /**
    * Instantiates a new mock driver.
    */
   public MockDriver() {
+    driverId = mockDriverId.incrementAndGet();
+  }
+
+  @Override
+  public String toString() {
+    return "MockDriver:" + driverId;
   }
 
   @Override

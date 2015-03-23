@@ -31,6 +31,7 @@ import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCo
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
 import org.apache.hadoop.hive.ql.ErrorMsg;
@@ -52,7 +53,8 @@ public class CubeQueryContext {
   @Getter
   private final QB qb;
   private String clauseName = null;
-  private final HiveConf conf;
+  @Getter
+  private final Configuration conf;
 
   @Getter
   private final List<TimeRange> timeRanges;
@@ -79,7 +81,6 @@ public class CubeQueryContext {
   private final Set<Set<CandidateFact>> candidateFactSets = new HashSet<Set<CandidateFact>>();
 
   // would be added through join chains and de-normalized resolver
-  @Getter
   protected Map<Dimension, OptionalDimCtx> optionalDimensions = new HashMap<Dimension, OptionalDimCtx>();
 
   // Alias to table object mapping of tables accessed in this query
@@ -128,8 +129,10 @@ public class CubeQueryContext {
   @Getter
   private CubeMetastoreClient metastoreClient;
   @Getter
+  @Setter
   private JoinResolver.AutoJoinContext autoJoinCtx;
   @Getter
+  @Setter
   private DenormalizationResolver.DenormalizationContext deNormCtx;
   @Getter
   private PruneCauses<CubeFactTable> factPruningMsgs =
@@ -138,14 +141,15 @@ public class CubeQueryContext {
   private Map<Dimension, PruneCauses<CubeDimensionTable>> dimPruningMsgs =
     new HashMap<Dimension, PruneCauses<CubeDimensionTable>>();
 
-  public CubeQueryContext(ASTNode ast, QB qb, HiveConf conf) throws SemanticException {
+  public CubeQueryContext(ASTNode ast, QB qb, Configuration queryConf, HiveConf metastoreConf)
+    throws SemanticException {
     this.ast = ast;
     this.qb = qb;
-    this.conf = conf;
+    this.conf = queryConf;
     this.clauseName = getClause();
     this.timeRanges = new ArrayList<TimeRange>();
     try {
-      metastoreClient = CubeMetastoreClient.getInstance(conf);
+      metastoreClient = CubeMetastoreClient.getInstance(metastoreConf);
     } catch (HiveException e) {
       throw new SemanticException(e);
     }
@@ -357,10 +361,6 @@ public class CubeQueryContext {
       clauseName = ks.first();
     }
     return clauseName;
-  }
-
-  public QB getQB() {
-    return qb;
   }
 
   public Set<CandidateFact> getCandidateFactTables() {
@@ -956,30 +956,6 @@ public class CubeQueryContext {
     }
   }
 
-  public List<TimeRange> getTimeRanges() {
-    return timeRanges;
-  }
-
-  public HiveConf getHiveConf() {
-    return conf;
-  }
-
-  public void setAutoJoinCtx(JoinResolver.AutoJoinContext autoJoinCtx) {
-    this.autoJoinCtx = autoJoinCtx;
-  }
-
-  public JoinResolver.AutoJoinContext getAutoJoinCtx() {
-    return autoJoinCtx;
-  }
-
-  public void setDenormCtx(DenormalizationResolver.DenormalizationContext deNormCtx) {
-    this.deNormCtx = deNormCtx;
-  }
-
-  public DenormalizationResolver.DenormalizationContext getDenormCtx() {
-    return this.deNormCtx;
-  }
-
   public Set<Dimension> getOptionalDimensions() {
     return optionalDimensions.keySet();
   }
@@ -996,7 +972,7 @@ public class CubeQueryContext {
   }
 
   public boolean shouldReplaceTimeDimWithPart() {
-    return getHiveConf().getBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL,
+    return getConf().getBoolean(CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL,
       CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL);
   }
 

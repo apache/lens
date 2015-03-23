@@ -56,11 +56,11 @@ public class SampleMetastore {
   }
 
   public SampleMetastore() throws JAXBException {
-    metaClient = new LensMetadataClient(LensClientSingletonWrapper.INSTANCE.getClient().getConnection());
+    metaClient = new LensMetadataClient(LensClientSingletonWrapper.instance().getClient().getConnection());
   }
 
   public void close() {
-    LensClientSingletonWrapper.INSTANCE.getClient().closeConnection();
+    LensClientSingletonWrapper.instance().getClient().closeConnection();
   }
 
   public void createCube() throws JAXBException, IOException {
