@@ -115,11 +115,11 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
 
-    Assert.assertEquals(pruneCauses.getBrief(),CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
       CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
-    for(SkipStorageCause s: pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
+    for (SkipStorageCause s : pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
       Assert.assertEquals(s.getCause(), SkipStorageCode.MISSING_PARTITIONS);
     }
 
@@ -132,8 +132,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
 
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
-    for(SkipStorageCause s: pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
-          Assert.assertEquals(s.getCause(), SkipStorageCode.MISSING_PARTITIONS);
+    for (SkipStorageCause s : pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
+      Assert.assertEquals(s.getCause(), SkipStorageCode.MISSING_PARTITIONS);
     }
 
     Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").size(), 1);
