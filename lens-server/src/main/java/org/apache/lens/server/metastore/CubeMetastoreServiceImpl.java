@@ -608,6 +608,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   public XStorageTableElement getStorageOfFact(LensSessionHandle sessionid, String fact, String storageName)
     throws LensException {
     try {
+      acquire(sessionid);
       CubeMetastoreClient msClient = getClient(sessionid);
       CubeFactTable factTable = msClient.getFactTable(fact);
       Set<UpdatePeriod> updatePeriods = factTable.getUpdatePeriods().get(storageName);
@@ -628,6 +629,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   public XStorageTableElement getStorageOfDim(LensSessionHandle sessionid, String dimTblName, String storageName)
     throws LensException {
     try {
+      acquire(sessionid);
       CubeMetastoreClient msClient = getClient(sessionid);
       CubeDimensionTable dimTable = msClient.getDimensionTable(dimTblName);
       XStorageTableElement tblElement = JAXBUtils.getXStorageTableFromHiveTable(
