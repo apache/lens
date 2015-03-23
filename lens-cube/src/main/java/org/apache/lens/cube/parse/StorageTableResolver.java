@@ -533,7 +533,7 @@ class StorageTableResolver implements ContextRewriter {
           } else {
             LOG.info("No finer granual partitions exist for" + part);
             for(String storageTable: storageTbls) {
-              skipStorageCauses.put(storageTable, SkipStorageCause.missingPartitions(part.getFormattedPartSpec()))C;
+              skipStorageCauses.put(storageTable, SkipStorageCause.missingPartitions(part.getFormattedPartSpec()));
             }
             return false;
           }

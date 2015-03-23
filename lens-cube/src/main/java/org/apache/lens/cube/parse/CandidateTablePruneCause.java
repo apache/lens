@@ -24,6 +24,7 @@ import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.apachecommons.CommonsLog;
 
 /**
  * Contains the cause why a candidate table is not picked for answering the query
@@ -32,7 +33,7 @@ import lombok.NoArgsConstructor;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
-
+@CommonsLog
 public class CandidateTablePruneCause {
   public enum CandidateTablePruneCode {
     MORE_WEIGHT("Picked table had more weight than minimum."),
@@ -67,11 +68,12 @@ public class CandidateTablePruneCause {
     INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
     // missing storage tables for cube table
     MISSING_STORAGES("Missing storage tables for the cube table"),
+    // Range is not answerable by this table because none of the update periods don't fit  in this range
+    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
     // no candidate storges for cube table, storage cause will have why each
     // storage is not a candidate
     NO_CANDIDATE_STORAGES("No candidate storages for any table"),
-    // cube table has more weight
-    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
+
     NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         List<String> columns = new ArrayList<String>();
@@ -108,6 +110,7 @@ public class CandidateTablePruneCause {
       try {
         return String.format(errorFormat, getFormatPlaceholders(causes));
       } catch (NullPointerException e) {
+        log.error(e);
         return name();
       }
     }

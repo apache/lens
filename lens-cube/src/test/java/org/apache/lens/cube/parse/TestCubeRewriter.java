@@ -114,14 +114,14 @@ public class TestCubeRewriter extends TestQueryRewrite {
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
-    int endIndex = CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3;
-    Assert.assertEquals(
-      pruneCauses.getBrief().substring(0, endIndex),
-      CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0, endIndex)
-    );
+
+    Assert.assertEquals(pruneCauses.getBrief(),CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
-      CandidateTablePruneCode.MISSING_PARTITIONS);
+      CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+    for(SkipStorageCause s: pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
+      Assert.assertEquals(s.getCause(), SkipStorageCode.MISSING_PARTITIONS);
+    }
 
     // Error should be no missing partitions with first missing partition populated for each update period
     conf.setBoolean(CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS, false);
@@ -129,14 +129,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     pruneCauses = extractPruneCause(th);
-    Assert.assertEquals(
-      pruneCauses.getBrief().substring(0, CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3),
-      CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0,
-        CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3)
-    );
+    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
-    Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
-      CandidateTablePruneCode.MISSING_PARTITIONS);
+    for(SkipStorageCause s: pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
+          Assert.assertEquals(s.getCause(), SkipStorageCode.MISSING_PARTITIONS);
+    }
+
     Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
       CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
@@ -191,7 +190,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + TWO_DAYS_RANGE, getConf());
     String expected = "insert overwrite directory '/tmp/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
@@ -202,7 +201,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + TWO_DAYS_RANGE, getConf());
     expected = "insert overwrite local directory '/tmp/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite local directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
@@ -213,7 +212,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getConf());
     expected = "insert overwrite table temp "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite table temp" + " cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE,
@@ -849,21 +848,15 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
 
-    Assert.assertEquals(
-      pruneCauses.getBrief().substring(0, CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3),
-        CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0,
-          CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3));
-
-    Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
-      CandidateTablePruneCode.MISSING_PARTITIONS);
-    Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
-      CandidateTablePruneCode.MISSING_PARTITIONS);
-    Assert.assertEquals(pruneCauses.getDetails().get("testfact2_raw,testfact2").iterator().next().getCause(),
-        CandidateTablePruneCode.MISSING_PARTITIONS);
-    Assert.assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
-        CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
-    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3,summary4").iterator().next()
-      .getCause(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+    Assert.assertNotNull(pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses());
+    for (String tables : Arrays.asList("testfact", "testfactmonthly", "testfact2_raw,testfact2")) {
+      for (SkipStorageCause c : pruneCauses.getDetails().get(tables).iterator().next().getStorageCauses().values()) {
+        Assert.assertEquals(c.getCause(), SkipStorageCode.MISSING_PARTITIONS);
+      }
+    }
+    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3").iterator().next().getStorageCauses()
+      .get("c1").getCause(), SkipStorageCode.MISSING_PARTITIONS);
   }
 
   @Test
@@ -1149,7 +1142,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " OR ("
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-          CubeTestSetup.BEFORE_4_DAYS_END) + ")";
+        CubeTestSetup.BEFORE_4_DAYS_END) + ")";
     expected =
       getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, " AND testcube.dt='default'",
         expecteddtRangeWhere1, "c2_testfact");
@@ -1160,7 +1153,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " AND testcube.dt='dt1') OR "
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-          CubeTestSetup.BEFORE_4_DAYS_END);
+        CubeTestSetup.BEFORE_4_DAYS_END);
     hqlQuery =
       rewrite("select SUM(msr2) from testCube" + " where (" + TWO_DAYS_RANGE + " AND dt='dt1') OR ("
         + CubeTestSetup.TWO_DAYS_RANGE_BEFORE_4_DAYS + " AND dt='default')", getConf());
@@ -1241,7 +1234,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " OR "
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-          CubeTestSetup.BEFORE_4_DAYS_END);
+        CubeTestSetup.BEFORE_4_DAYS_END);
     String expected =
       getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, expectedRangeWhere, "c2_testfact");
     compareQueries(expected, hqlQuery);
