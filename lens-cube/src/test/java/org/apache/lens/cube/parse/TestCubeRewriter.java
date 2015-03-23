@@ -190,7 +190,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + TWO_DAYS_RANGE, getConf());
     String expected = "insert overwrite directory '/tmp/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
@@ -201,7 +201,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       + TWO_DAYS_RANGE, getConf());
     expected = "insert overwrite local directory '/tmp/test' "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite local directory" + " '/tmp/test' cube select SUM(msr2) from testCube where "
@@ -212,7 +212,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getConf());
     expected = "insert overwrite table temp "
       + getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-      getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
+        getWhereForDailyAndHourly2days(cubeName, "C2_testfact"));
     compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("insert overwrite table temp" + " cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE,
@@ -1142,7 +1142,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " OR ("
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-        CubeTestSetup.BEFORE_4_DAYS_END) + ")";
+          CubeTestSetup.BEFORE_4_DAYS_END) + ")";
     expected =
       getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, " AND testcube.dt='default'",
         expecteddtRangeWhere1, "c2_testfact");
@@ -1153,7 +1153,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " AND testcube.dt='dt1') OR "
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-        CubeTestSetup.BEFORE_4_DAYS_END);
+          CubeTestSetup.BEFORE_4_DAYS_END);
     hqlQuery =
       rewrite("select SUM(msr2) from testCube" + " where (" + TWO_DAYS_RANGE + " AND dt='dt1') OR ("
         + CubeTestSetup.TWO_DAYS_RANGE_BEFORE_4_DAYS + " AND dt='default')", getConf());
@@ -1234,7 +1234,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", TWODAYS_BACK, NOW)
         + " OR "
         + getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "dt", CubeTestSetup.BEFORE_4_DAYS_START,
-        CubeTestSetup.BEFORE_4_DAYS_END);
+          CubeTestSetup.BEFORE_4_DAYS_END);
     String expected =
       getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null, expectedRangeWhere, "c2_testfact");
     compareQueries(expected, hqlQuery);
