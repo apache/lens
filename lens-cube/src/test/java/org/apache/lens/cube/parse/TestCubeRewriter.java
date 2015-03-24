@@ -115,7 +115,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
 
-    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+    int start = 0;
+    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length()-2;
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
       CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
@@ -129,7 +131,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     pruneCauses = extractPruneCause(th);
-    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
 
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     for (SkipStorageCause s : pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
@@ -848,7 +851,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
 
-    Assert.assertEquals(pruneCauses.getBrief(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat);
+    int start = 0;
+    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length()-2;
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
     Assert.assertNotNull(pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses());
     for (String tables : Arrays.asList("testfact", "testfactmonthly", "testfact2_raw,testfact2")) {
       for (SkipStorageCause c : pruneCauses.getDetails().get(tables).iterator().next().getStorageCauses().values()) {
@@ -889,7 +894,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     SemanticException e = getSemanticExceptionInRewrite("select name, capital from statedim ", conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE.getErrorCode());
     Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
-      CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat,
+      SkipStorageCode.NO_PARTITIONS.errorFormat,
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("statetable", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
