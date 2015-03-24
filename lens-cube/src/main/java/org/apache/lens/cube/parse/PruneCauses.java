@@ -80,14 +80,14 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
 
   public String getBriefCause() {
     CandidateTablePruneCode maxCause = CandidateTablePruneCode.values()[0];
-    for(CandidateTablePruneCause cause: getReversed().keySet()) {
-      if(cause.getCause().compareTo(maxCause) > 0) {
+    for (CandidateTablePruneCause cause : getReversed().keySet()) {
+      if (cause.getCause().compareTo(maxCause) > 0) {
         maxCause = cause.getCause();
       }
     }
     Map<CandidateTablePruneCause, String> maxCauseMap = Maps.newHashMap();
-    for(Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
-      if(entry.getKey().getCause().equals(maxCause)) {
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
+      if (entry.getKey().getCause().equals(maxCause)) {
         maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
       }
     }

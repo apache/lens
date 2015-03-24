@@ -116,8 +116,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
 
     int start = 0;
-    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length()-2;
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
+    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length() - 2;
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
+      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
       CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
@@ -132,7 +133,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     pruneCauses = extractPruneCause(th);
 
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
+      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
 
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     for (SkipStorageCause s : pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses().values()) {
@@ -852,8 +854,9 @@ public class TestCubeRewriter extends TestQueryRewrite {
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
 
     int start = 0;
-    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length()-2;
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end), SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
+    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length() - 2;
+    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
+      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
     Assert.assertNotNull(pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses());
     for (String tables : Arrays.asList("testfact", "testfactmonthly", "testfact2_raw,testfact2")) {
       for (SkipStorageCause c : pruneCauses.getDetails().get(tables).iterator().next().getStorageCauses().values()) {
