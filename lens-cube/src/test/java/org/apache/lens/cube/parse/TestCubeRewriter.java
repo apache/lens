@@ -865,6 +865,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
     }
     Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3").iterator().next().getStorageCauses()
       .get("c1").getCause(), SkipStorageCode.MISSING_PARTITIONS);
+    Assert.assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
+      CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
   }
 
   @Test
