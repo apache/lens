@@ -2128,6 +2128,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
       for (int i = 0; i < numQueries; i++) {
         QueryContext ctx = (QueryContext) in.readObject();
+        ctx.initTransientState();
 
         //Create DriverSelectorQueryContext by passing all the drivers and the user query
         //Driver conf gets reset in start
