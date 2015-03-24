@@ -44,7 +44,7 @@ public final class ModelLoader {
   }
 
   /** The Constant MODEL_PATH_BASE_DIR. */
-  public static final String MODEL_PATH_BASE_DIR = "Lens.ml.model.basedir";
+  public static final String MODEL_PATH_BASE_DIR = "lens.ml.model.basedir";
 
   /** The Constant MODEL_PATH_BASE_DIR_DEFAULT. */
   public static final String MODEL_PATH_BASE_DIR_DEFAULT = "file:///tmp";
@@ -53,7 +53,7 @@ public final class ModelLoader {
   public static final Log LOG = LogFactory.getLog(ModelLoader.class);
 
   /** The Constant TEST_REPORT_BASE_DIR. */
-  public static final String TEST_REPORT_BASE_DIR = "Lens.ml.test.basedir";
+  public static final String TEST_REPORT_BASE_DIR = "lens.ml.test.basedir";
 
   /** The Constant TEST_REPORT_BASE_DIR_DEFAULT. */
   public static final String TEST_REPORT_BASE_DIR_DEFAULT = "file:///tmp/ml_reports";
