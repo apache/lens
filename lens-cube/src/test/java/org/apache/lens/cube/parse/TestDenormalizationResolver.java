@@ -156,7 +156,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     SemanticException e = getSemanticExceptionInRewrite(
       "select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + TWO_DAYS_RANGE, tconf);
     Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
-      CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat,
+      CandidateTablePruneCause.SkipStorageCode.UNSUPPORTED.errorFormat,
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("summary2,testfact2_raw,summary3",
