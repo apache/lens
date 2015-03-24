@@ -25,7 +25,7 @@ import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import com.google.common.collect.Lists;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Contains the cause why a candidate table is not picked for answering the query
@@ -34,7 +34,7 @@ import lombok.extern.apachecommons.CommonsLog;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
-@CommonsLog
+@Slf4j
 public class CandidateTablePruneCause {
 
   public enum CandidateTablePruneCode {
