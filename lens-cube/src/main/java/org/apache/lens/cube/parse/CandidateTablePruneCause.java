@@ -125,14 +125,17 @@ public class CandidateTablePruneCause {
     }
 
     Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
-      return null;
+      return new Object[0];
     }
 
     String getBriefError(Map<CandidateTablePruneCause, String> causes) {
+      Object[] placeHolders = new Object[0];
       try {
+        placeHolders = getFormatPlaceholders(causes);
         return String.format(errorFormat, getFormatPlaceholders(causes));
-      } catch (NullPointerException e) {
-        log.error(e);
+      } catch (Exception e) {
+        log.error("couldn't format errorFormat:" + errorFormat + " with format placeholders: "
+          + (placeHolders == null ? "null" : Arrays.toString(placeHolders)), e);
         return name();
       }
     }
@@ -153,7 +156,7 @@ public class CandidateTablePruneCause {
     // partition column does not exist
     PART_COL_DOES_NOT_EXIST("Partition column(s) don't exist: %s") {
       @Override
-      public Object[] getFormatPlaceHolders(ArrayList<SkipStorageCause> maxCauses) {
+      public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
         List<List<String>> nonExistantPartCols = Lists.newArrayList();
         for (SkipStorageCause cause : maxCauses) {
           nonExistantPartCols.add(cause.getNonExistantPartCols());
@@ -166,7 +169,7 @@ public class CandidateTablePruneCause {
     // storage table has missing partitions among the ones queried
     MISSING_PARTITIONS("Missing partitions: %s") {
       @Override
-      public Object[] getFormatPlaceHolders(ArrayList<SkipStorageCause> maxCauses) {
+      public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
         List<List<String>> missingPartition = Lists.newArrayList();
         for (SkipStorageCause cause : maxCauses) {
           missingPartition.add(cause.getMissingPartitions());
@@ -181,11 +184,19 @@ public class CandidateTablePruneCause {
       this.errorFormat = errorFormat;
     }
 
-    public Object getBriefError(ArrayList<SkipStorageCause> maxCauses) {
-      return String.format(errorFormat, getFormatPlaceHolders(maxCauses));
+    String getBriefError(ArrayList<SkipStorageCause> causes) {
+      Object[] placeHolders = new Object[0];
+      try {
+        placeHolders = getFormatPlaceholders(causes);
+        return String.format(errorFormat, getFormatPlaceholders(causes));
+      } catch (Exception e) {
+        log.error("couldn't format errorFormat:" + errorFormat + " with format placeholders: "
+          + (placeHolders == null ? "null" : Arrays.toString(placeHolders)), e);
+        return name();
+      }
     }
 
-    public Object[] getFormatPlaceHolders(ArrayList<SkipStorageCause> maxCauses) {
+    public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
       return new Object[0];
     }
   }
