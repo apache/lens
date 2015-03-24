@@ -17,13 +17,15 @@
 
 FROM inmobi/docker-hive
 
-ENV LENS_VERSION apache-lens-2.1.0-beta-incubating-SNAPSHOT
+ENV LENS_VERSION 2.1.0-beta-incubating-SNAPSHOT
 ENV BASEDIR /opt/lens
-ENV LENS_HOME $BASEDIR/lens-dist/target/${LENS_VERSION}-bin/${LENS_VERSION}-bin/server
-ENV LENS_CLIENT $BASEDIR/lens-dist/target/${LENS_VERSION}-bin/${LENS_VERSION}-bin/client
+ENV LENS_HOME $BASEDIR/lens-dist/target/apache-lens-${LENS_VERSION}-bin/apache-lens-${LENS_VERSION}-bin/server
+ENV LENS_CLIENT $BASEDIR/lens-dist/target/apache-lens-${LENS_VERSION}-bin/apache-lens-${LENS_VERSION}-bin/client
 
 ENV LENS_SERVER_CONF $LENS_HOME/conf-pseudo-distr/
 ENV LENS_CLIENT_CONF $LENS_CLIENT/conf-pseudo-distr/
+
+ENV LENS_ML $BASEDIR/lens-ml-dist/target/apache-lens-${LENS_VERSION}-ml/
 
 
 # set permissions for lens bootstrap file

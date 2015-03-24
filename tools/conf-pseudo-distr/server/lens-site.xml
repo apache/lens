@@ -43,4 +43,39 @@
   <name>lens.query.enable.persistent.resultset.indriver</name>
   <value>false</value>
 </property>
+
+<property>
+  <name>lens.server.drivers</name>
+  <value>org.apache.lens.driver.hive.HiveDriver,org.apache.lens.driver.jdbc.JDBCDriver</value>
+  <name>lens.server.servicenames</name>
+  <value>session,query,metastore,scheduler,quota,ml</value>
+</property>
+
+<property>
+  <name>lens.server.ws.resourcenames</name>
+  <value>session,metastore,query,quota,scheduler,ml</value>
+  <description>These JAXRS resources would be started in the specified order when lensserver starts up</description>
+</property>
+
+<property>
+  <name>lens.server.ml.ws.resource.impl</name>
+  <value>org.apache.lens.server.ml.MLServiceResource</value>
+  <description>Implementation class for ML Service Resource</description>
+</property>
+
+<property>
+  <name>lens.server.ml.service.impl</name>
+  <value>org.apache.lens.server.ml.MLServiceImpl</value>
+  <description>Implementation class for ML service</description>
+</property>
+
+<property>
+  <name>lens.ml.drivers</name>
+  <value>org.apache.lens.ml.spark.SparkMLDriver</value>
+</property>
+
+<property>
+  <name>lens.ml.sparkdriver.spark.master</name>
+  <value>local</value>
+</property>
 </configuration>

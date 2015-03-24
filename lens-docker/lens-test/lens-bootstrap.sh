@@ -21,6 +21,11 @@ echo "LENS_HOME " $LENS_HOME
 echo "LENS_SERVER_CONF " $LENS_SERVER_CONF
 echo "LENS_CLIENT " $LENS_CLIENT
 echo "LENS_CLIENT_CONF " $LENS_CLIENT_CONF
+echo "LENS_ML " $LENS_ML
+ 
+#set ml classpath into LENS_EXT_CLASSPATH
+LENS_EXT_CLASSPATH=$LENS_EXT_CLASSPATH:`$LENS_ML/bin/lens-ml-classpath.sh`
+export LENS_EXT_CLASSPATH
 
 #start hive bootstrap script
 /etc/hive-bootstrap.sh

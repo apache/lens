@@ -54,24 +54,25 @@ public class LensMLClient implements LensML, Closeable {
   /** The client. */
   private LensMLJerseyClient client;
 
-  /**
-   * Instantiates a new lens ml client.
-   *
-   * @param clientConf the client conf
-   */
-  public LensMLClient(LensConnectionParams clientConf, String password) {
-    client = new LensMLJerseyClient(new LensConnection(clientConf), password);
-    LOG.info("Client created with new session");
+  public LensMLClient(String password) {
+    this(new LensClientConfig(), password);
   }
 
-  /**
-   * Instantiates a new lens ml client.
-   *
-   * @param clientConf the client conf
-   */
-  public LensMLClient(LensConnectionParams clientConf, LensSessionHandle sessionHandle) {
-    client = new LensMLJerseyClient(new LensConnection(clientConf, sessionHandle), sessionHandle);
-    LOG.info("Client created with existing session");
+  public LensMLClient(LensClientConfig conf, String password) {
+    this(conf, conf.getUser(), password);
+  }
+
+  public LensMLClient(String username, String password) {
+    this(new LensClientConfig(), username, password);
+  }
+
+  public LensMLClient(LensClientConfig conf, String username, String password) {
+    this(new LensClient(conf, username, password));
+  }
+
+  public LensMLClient(LensClient lensClient) {
+    client = new LensMLJerseyClient(lensClient.getConnection(), lensClient
+        .getConnection().getSessionHandle());
   }
 
   /**

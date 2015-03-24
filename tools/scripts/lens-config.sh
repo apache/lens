@@ -125,5 +125,9 @@ case $type in
     exit 1
   ;;
 esac
+
+# add LENS_EXT_CLASSPATH
+LENSCPPATH=$LENS_EXT_CLASSPATH:$LENSCPPATH
+
 export LENSCPPATH
 export LENS_OPTS
