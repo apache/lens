@@ -22,7 +22,6 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.TimeRange;
@@ -48,9 +47,9 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   private TreeSet<TimePartition> holes = Sets.newTreeSet();
   private TimePartition latest;
 
-  public EndsAndHolesPartitionTimeline(CubeMetastoreClient client, String storageTableName, UpdatePeriod updatePeriod,
+  public EndsAndHolesPartitionTimeline(String storageTableName, UpdatePeriod updatePeriod,
     String partCol) {
-    super(client, storageTableName, updatePeriod, partCol);
+    super(storageTableName, updatePeriod, partCol);
   }
 
   @Override
@@ -86,9 +85,6 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
 
   @Override
   public boolean drop(TimePartition toDrop) throws LensException {
-    if (morePartitionsExist(toDrop.getDateString())) {
-      return true;
-    }
     if (first.equals(latest) && first.equals(toDrop)) {
       this.first = null;
       this.latest = null;

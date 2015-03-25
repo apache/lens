@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -45,19 +44,60 @@ import lombok.ToString;
 public class RangesPartitionTimeline extends PartitionTimeline {
   private List<TimePartition.TimePartitionRange> ranges = Lists.newArrayList();
 
-  public RangesPartitionTimeline(CubeMetastoreClient client, String storageTableName, UpdatePeriod updatePeriod,
+  public RangesPartitionTimeline(String storageTableName, UpdatePeriod updatePeriod,
     String partCol) {
-    super(client, storageTableName, updatePeriod, partCol);
+    super(storageTableName, updatePeriod, partCol);
   }
 
   @Override
   public boolean add(TimePartition partition) throws LensException {
-    int ind = findIndexToInsert(partition);
-    if (ind == 0 || !ranges.get(ind - 1).contains(partition)) {
-      ranges.add(ind, partition.singletonRange());
+    int ind = getStrictlyAfterIndex(partition);
+    int added = 0;
+    if (ind > 0) {
+      if (ranges.get(ind - 1).contains(partition)) {
+        return true;
+      }
+      if (ranges.get(ind - 1).getEnd().equals(partition)) {
+        added++;
+        ranges.get(ind - 1).setEnd(partition.next());
+      }
     }
-    mergeRanges();
+    if (ind < ranges.size()) {
+      if (partition.equals(ranges.get(ind).getBegin().previous())) {
+        added++;
+        ranges.get(ind).setBegin(partition);
+      }
+    }
+    switch (added) {
+    case 0:
+      ranges.add(ind, partition.singletonRange());
+      break;
+    case 2:
+      ranges.get(ind - 1).setEnd(ranges.get(ind).getEnd());
+      ranges.remove(ind);
+      break;
+    case 1:
+      // Nothing needs to be done.
+    default:
+      break;
+
+    }
     return true;
+  }
+
+  private int getStrictlyAfterIndex(TimePartition part) {
+    int start = 0;
+    int end = getRanges().size();
+    int mid;
+    while (end - start > 0) {
+      mid = (start + end) / 2;
+      if (ranges.get(mid).getBegin().after(part)) {
+        end = mid;
+      } else {
+        start = mid + 1;
+      }
+    }
+    return end;
   }
 
   private void mergeRanges() {
@@ -70,29 +110,23 @@ public class RangesPartitionTimeline extends PartitionTimeline {
     }
   }
 
-  private int findIndexToInsert(TimePartition partition) {
-    //TODO: binary search
-    int i = 0;
-    for (; i < ranges.size(); i++) {
-      if (ranges.get(i).getBegin().after(partition)) {
-        break;
-      }
-    }
-    return i;
-  }
-
   @Override
   public boolean drop(TimePartition toDrop) throws LensException {
-    if (morePartitionsExist(toDrop.getDateString())) {
-      return true;
+    int ind = getStrictlyAfterIndex(toDrop);
+    if (ind == 0) {
+      return true; // nothing to do
     }
-    //TODO: binary search
-    for (int i = 0; i < ranges.size(); i++) {
-      TimePartition.TimePartitionRange cur = ranges.get(i);
-      if (cur.contains(toDrop)) {
-        ranges.add(i, cur.getBegin().rangeUpto(toDrop));
-        ranges.get(i + 1).setBegin(toDrop.next());
-      }
+    if (ranges.get(ind - 1).getBegin().equals(toDrop)) {
+      ranges.get(ind - 1).setBegin(toDrop.next());
+    } else if (ranges.get(ind - 1).getEnd().previous().equals(toDrop)) {
+      ranges.get(ind - 1).setEnd(toDrop);
+    } else {
+      TimePartition end = ranges.get(ind - 1).getEnd();
+      ranges.get(ind - 1).setEnd(toDrop);
+      ranges.add(ind, toDrop.next().rangeUpto(end));
+    }
+    if (ranges.get(ind - 1).isEmpty()) {
+      ranges.remove(ind - 1);
     }
     return true;
   }

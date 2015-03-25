@@ -532,7 +532,7 @@ class StorageTableResolver implements ContextRewriter {
           if (addNonExistingParts) {
             // Add non existing partitions for all cases of whether we populate all non existing or not.
             if (!nonExistingParts.containsKey(part.getPeriod())) {
-              nonExistingParts.put(part.getPeriod(), new RangesPartitionTimeline(client, null, null, null));
+              nonExistingParts.put(part.getPeriod(), new RangesPartitionTimeline(null, null, null));
             }
             nonExistingParts.get(part.getPeriod()).add(TimePartition.of(part.getPeriod(), dt));
             if (!failOnPartialData) {

@@ -21,7 +21,6 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -42,9 +41,9 @@ import lombok.ToString;
 public class StoreAllPartitionTimeline extends PartitionTimeline {
   TreeSet<TimePartition> allPartitions;
 
-  public StoreAllPartitionTimeline(CubeMetastoreClient client, String storageTableName,
+  public StoreAllPartitionTimeline(String storageTableName,
     UpdatePeriod updatePeriod, String partCol) {
-    super(client, storageTableName, updatePeriod, partCol);
+    super(storageTableName, updatePeriod, partCol);
     allPartitions = Sets.newTreeSet();
   }
 
@@ -60,9 +59,6 @@ public class StoreAllPartitionTimeline extends PartitionTimeline {
 
   @Override
   public boolean drop(@NonNull TimePartition toDrop) throws LensException {
-    if (morePartitionsExist(toDrop.getDateString())) {
-      return true;
-    }
     return allPartitions.remove(toDrop);
   }
 

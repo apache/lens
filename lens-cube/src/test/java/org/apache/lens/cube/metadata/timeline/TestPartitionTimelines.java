@@ -57,10 +57,13 @@ public class TestPartitionTimelines {
       for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
         timelines.add(getInstance(clazz));
       }
+      final List<TimePartition> addedPartitions = Lists.newArrayList();
       for (int i = 0; i < 200; i++) {
         int randomInt = randomGenerator.nextInt(100) - 50;
+        TimePartition part = TimePartition.of(PERIOD, timeAtHourDiff(randomInt));
+        addedPartitions.add(part);
         for (PartitionTimeline timeline : timelines) {
-          timeline.add(TimePartition.of(PERIOD, timeAtHourDiff(randomInt)));
+          timeline.add(part);
         }
       }
       Iterator<TimePartition> sourceOfTruth = timelines.get(0).iterator();
@@ -78,6 +81,20 @@ public class TestPartitionTimelines {
       for (Iterator<TimePartition> iterator : otherIterators) {
         Assert.assertFalse(iterator.hasNext());
       }
+      Collections.shuffle(addedPartitions);
+      Iterator<TimePartition> iter = addedPartitions.iterator();
+      while (iter.hasNext()) {
+        TimePartition part = iter.next();
+        iter.remove();
+        if (!addedPartitions.contains(part)) {
+          for (PartitionTimeline timeline : timelines) {
+            timeline.drop(part);
+          }
+        }
+      }
+      for (PartitionTimeline timeline : timelines) {
+        Assert.assertTrue(timeline.isEmpty());
+      }
     }
   }
 
@@ -90,8 +107,8 @@ public class TestPartitionTimelines {
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
     try {
-      return clz.getConstructor(CubeMetastoreClient.class, String.class, UpdatePeriod.class, String.class)
-        .newInstance(client, TABLE_NAME, PERIOD, PART_COL);
+      return clz.getConstructor(String.class, UpdatePeriod.class, String.class)
+        .newInstance(TABLE_NAME, PERIOD, PART_COL);
     } catch (Exception e) {
       e.printStackTrace();
     }

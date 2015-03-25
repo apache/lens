@@ -132,9 +132,11 @@ public class TimePartition implements Comparable<TimePartition> {
   public TimePartitionRange rangeFrom(TimePartition from) {
     return new TimePartitionRange(from, this);
   }
-  public TimePartitionRange singletonRange(){
+
+  public TimePartitionRange singletonRange() {
     return rangeUpto(next());
   }
+
   @Data
   public static class TimePartitionRange implements Iterable<TimePartition> {
     TimePartition begin;
@@ -177,6 +179,10 @@ public class TimePartition implements Comparable<TimePartition> {
 
     public boolean contains(TimePartition partition) {
       return !partition.before(begin) && partition.before(end);
+    }
+
+    public boolean isEmpty() {
+      return begin.equals(end);
     }
   }
 }
