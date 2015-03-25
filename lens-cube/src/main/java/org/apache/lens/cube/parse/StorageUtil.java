@@ -33,20 +33,20 @@ public final class StorageUtil {
 
   private static final Log LOG = LogFactory.getLog(StorageUtil.class.getName());
 
-  public static String getWherePartClause(String timeDimName, String tableName, List<String> parts) {
+  public static String getWherePartClause(String timeDimName, String tableName, Collection<String> parts) {
     if (parts.size() == 0) {
       return "";
     }
     StringBuilder partStr = new StringBuilder();
     String sep = "";
-    for (int i = 0; i < parts.size(); i++) {
+    for (String part : parts) {
       partStr.append(sep);
       partStr.append("(");
       partStr.append(tableName != null ? tableName : "%s");
       partStr.append(".");
       partStr.append(timeDimName);
       partStr.append(" = '");
-      partStr.append(parts.get(i));
+      partStr.append(part);
       partStr.append("'");
       partStr.append(")");
       sep = " OR ";

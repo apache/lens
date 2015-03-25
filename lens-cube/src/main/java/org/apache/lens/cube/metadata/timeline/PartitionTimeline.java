@@ -155,7 +155,14 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
    * @return whether add was successful
    * @throws LensException
    */
-  public abstract boolean add(@NonNull Collection<TimePartition> partitions) throws LensException;
+  public boolean add(@NonNull Collection<TimePartition> partitions) throws LensException {
+    boolean result = true;
+    for (TimePartition partition : partitions) {
+      result &= add(partition);
+    }
+    // Can also return the failed to add items.
+    return result;
+  }
 
   /**
    * drop partition.

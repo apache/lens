@@ -22,10 +22,9 @@ import java.util.*;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Contains the cause why a candidate table is not picked for answering the query
@@ -34,9 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @JsonWriteNullProperties(false)
 @Data
 @NoArgsConstructor
-@Slf4j
-public class CandidateTablePruneCause {
 
+public class CandidateTablePruneCause {
   public enum CandidateTablePruneCode {
     MORE_WEIGHT("Picked table had more weight than minimum."),
     // cube table has more partitions
@@ -47,15 +45,15 @@ public class CandidateTablePruneCause {
     COLUMN_NOT_VALID("Column not valid in cube table"),
     // column not found in cube table
     COLUMN_NOT_FOUND("%s are not %s") {
-      Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         if (causes.size() == 1) {
           return new String[]{
-            "Columns " + causes.keySet().iterator().next().getMissingColumns(),
+            "Columns " + causes.iterator().next().getMissingColumns(),
             "present in any table",
           };
         } else {
           List<List<String>> columnSets = new ArrayList<List<String>>();
-          for (CandidateTablePruneCause cause : causes.keySet()) {
+          for (CandidateTablePruneCause cause : causes) {
             columnSets.add(cause.getMissingColumns());
           }
           return new String[]{
@@ -70,36 +68,15 @@ public class CandidateTablePruneCause {
     INVALID_DENORM_TABLE("Referred dimension is invalid in one of the candidate tables"),
     // missing storage tables for cube table
     MISSING_STORAGES("Missing storage tables for the cube table"),
-    // Range is not answerable by this table because none of the update periods don't fit  in this range
-    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
     // no candidate storges for cube table, storage cause will have why each
     // storage is not a candidate
-    NO_CANDIDATE_STORAGES("%s") {
-      Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
-        SkipStorageCode maxCode = SkipStorageCode.values()[0];
-        for (CandidateTablePruneCause cause : causes.keySet()) {
-          for (SkipStorageCause sCause : cause.getStorageCauses().values()) {
-            if (sCause.getCause().compareTo(maxCode) > 0) {
-              maxCode = sCause.getCause();
-            }
-          }
-        }
-        ArrayList<SkipStorageCause> maxCauses = new ArrayList<SkipStorageCause>();
-        for (CandidateTablePruneCause cause : causes.keySet()) {
-          for (SkipStorageCause sCause : cause.getStorageCauses().values()) {
-            if (sCause.getCause().compareTo(maxCode) == 0) {
-              maxCauses.add(sCause);
-            }
-          }
-        }
-        return new Object[]{maxCode.getBriefError(maxCauses)};
-      }
-    },
-
+    NO_CANDIDATE_STORAGES("No candidate storages for any table"),
+    // cube table has more weight
+    NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE("No fact update periods for given range"),
     NO_COLUMN_PART_OF_A_JOIN_PATH("No column part of a join path. Join columns: [%s]") {
-      Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         List<String> columns = new ArrayList<String>();
-        for (CandidateTablePruneCause cause : causes.keySet()) {
+        for (CandidateTablePruneCause cause : causes) {
           columns.addAll(cause.getJoinColumns());
         }
         return new String[]{columns.toString()};
@@ -108,12 +85,22 @@ public class CandidateTablePruneCause {
     // cube table is an aggregated fact and queried column is not under default
     // aggregate
     MISSING_DEFAULT_AGGREGATE("Columns: [%s] are missing default aggregate") {
-      Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
         List<String> columns = new ArrayList<String>();
-        for (CandidateTablePruneCause cause : causes.keySet()) {
+        for (CandidateTablePruneCause cause : causes) {
           columns.addAll(cause.getColumnsMissingDefaultAggregate());
         }
         return new String[]{columns.toString()};
+      }
+    },
+    // missing partitions for cube table
+    MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        Set<Set<String>> missingPartitions = Sets.newHashSet();
+        for (CandidateTablePruneCause cause : causes) {
+          missingPartitions.add(cause.getMissingPartitions());
+        }
+        return new String[]{missingPartitions.toString()};
       }
     };
 
@@ -124,18 +111,14 @@ public class CandidateTablePruneCause {
       this.errorFormat = format;
     }
 
-    Object[] getFormatPlaceholders(Map<CandidateTablePruneCause, String> causes) {
-      return new Object[0];
+    Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+      return null;
     }
 
-    String getBriefError(Map<CandidateTablePruneCause, String> causes) {
-      Object[] placeHolders = new Object[0];
+    String getBriefError(Set<CandidateTablePruneCause> causes) {
       try {
-        placeHolders = getFormatPlaceholders(causes);
         return String.format(errorFormat, getFormatPlaceholders(causes));
-      } catch (Exception e) {
-        log.error("couldn't format errorFormat:" + errorFormat + " with format placeholders: "
-          + (placeHolders == null ? "null" : Arrays.toString(placeHolders)), e);
+      } catch (NullPointerException e) {
         return name();
       }
     }
@@ -143,62 +126,20 @@ public class CandidateTablePruneCause {
 
   public enum SkipStorageCode {
     // invalid storage table
-    INVALID("No valid storage tables"),
+    INVALID,
     // storage table does not exist
-    TABLE_NOT_EXIST("No storage tables exist"),
-    // storage is not supported by execution engine
-    UNSUPPORTED("No supported storage tables"),
+    TABLE_NOT_EXIST,
     // storage has no update periods queried
-    MISSING_UPDATE_PERIODS("Storage table does not have update period"),
+    MISSING_UPDATE_PERIODS,
     // no candidate update periods, update period cause will have why each
     // update period is not a candidate
-    NO_CANDIDATE_PERIODS("No candidate update periods for storage table"),
-    // partition column does not exist
-    PART_COL_DOES_NOT_EXIST("Partition column(s) don't exist: %s") {
-      @Override
-      public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
-        List<List<String>> nonExistantPartCols = Lists.newArrayList();
-        for (SkipStorageCause cause : maxCauses) {
-          nonExistantPartCols.add(cause.getNonExistantPartCols());
-        }
-        return new Object[]{nonExistantPartCols};
-      }
-    },
+    NO_CANDIDATE_PERIODS,
     // storage table has no partitions queried
-    NO_PARTITIONS("No partitions queried"),
-    // storage table has missing partitions among the ones queried
-    MISSING_PARTITIONS("Missing partitions: %s") {
-      @Override
-      public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
-        List<List<String>> missingPartition = Lists.newArrayList();
-        for (SkipStorageCause cause : maxCauses) {
-          missingPartition.add(cause.getMissingPartitions());
-        }
-        return new Object[]{missingPartition};
-      }
-    };
-
-    public String errorFormat;
-
-    SkipStorageCode(String errorFormat) {
-      this.errorFormat = errorFormat;
-    }
-
-    String getBriefError(ArrayList<SkipStorageCause> causes) {
-      Object[] placeHolders = new Object[0];
-      try {
-        placeHolders = getFormatPlaceholders(causes);
-        return String.format(errorFormat, getFormatPlaceholders(causes));
-      } catch (Exception e) {
-        log.error("couldn't format errorFormat:" + errorFormat + " with format placeholders: "
-          + (placeHolders == null ? "null" : Arrays.toString(placeHolders)), e);
-        return name();
-      }
-    }
-
-    public Object[] getFormatPlaceholders(ArrayList<SkipStorageCause> maxCauses) {
-      return new Object[0];
-    }
+    NO_PARTITIONS,
+    // partition column does not exist
+    PART_COL_DOES_NOT_EXIST,
+    // storage is not supported by execution engine
+    UNSUPPORTED
   }
 
   public enum SkipUpdatePeriodCode {
@@ -216,9 +157,6 @@ public class CandidateTablePruneCause {
     // update period to skip cause
     private Map<String, SkipUpdatePeriodCode> updatePeriodRejectionCause;
     private List<String> nonExistantPartCols;
-
-    // populated only incase of missing partitions cause
-    private List<String> missingPartitions;
 
     public SkipStorageCause(SkipStorageCode cause) {
       this.cause = cause;
@@ -238,18 +176,6 @@ public class CandidateTablePruneCause {
       ret.updatePeriodRejectionCause = causes;
       return ret;
     }
-
-    public static SkipStorageCause missingPartitions(List<String> nonExistingParts) {
-      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.MISSING_PARTITIONS);
-      ret.setMissingPartitions(nonExistingParts);
-      return ret;
-    }
-
-    public static SkipStorageCause missingPartitions(String... nonExistingParts) {
-      SkipStorageCause ret = new SkipStorageCause(SkipStorageCode.MISSING_PARTITIONS);
-      ret.setMissingPartitions(Arrays.asList(nonExistingParts));
-      return ret;
-    }
   }
 
   // cause for cube table
@@ -257,6 +183,8 @@ public class CandidateTablePruneCause {
   // storage to skip storage cause
   private Map<String, SkipStorageCause> storageCauses;
 
+  // populated only incase of missing partitions cause
+  private Set<String> missingPartitions;
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
@@ -286,6 +214,13 @@ public class CandidateTablePruneCause {
       colList.add(column);
     }
     return columnNotFound(colList);
+  }
+
+  public static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {
+    CandidateTablePruneCause cause =
+      new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
+    cause.setMissingPartitions(nonExistingParts);
+    return cause;
   }
 
   public static CandidateTablePruneCause noColumnPartOfAJoinPath(final Collection<String> colSet) {

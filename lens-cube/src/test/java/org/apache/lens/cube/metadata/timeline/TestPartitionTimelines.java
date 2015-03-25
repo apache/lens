@@ -40,6 +40,7 @@ public class TestPartitionTimelines {
   public void testPropertiesContractsForAllSubclasses() throws LensException {
     testPropertiesContract(StoreAllPartitionTimeline.class);
     testPropertiesContract(EndsAndHolesPartitionTimeline.class);
+    testPropertiesContract(RangesPartitionTimeline.class);
   }
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {

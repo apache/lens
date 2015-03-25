@@ -21,6 +21,7 @@ package org.apache.lens.cube.metadata;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.apache.lens.api.LensException;
 
@@ -122,5 +123,60 @@ public class TimePartition implements Comparable<TimePartition> {
 
   protected static String getWrongUpdatePeriodMessage(UpdatePeriod up, String dateString) {
     return String.format(UPDATE_PERIOD_WRONG_ERROR_MESSAGE, up, dateString);
+  }
+
+  public TimePartitionRange rangeUpto(TimePartition to) {
+    return new TimePartitionRange(this, to);
+  }
+
+  public TimePartitionRange rangeFrom(TimePartition from) {
+    return new TimePartitionRange(from, this);
+  }
+  public TimePartitionRange singletonRange(){
+    return rangeUpto(next());
+  }
+  @Data
+  public static class TimePartitionRange implements Iterable<TimePartition> {
+    TimePartition begin;
+    TimePartition end;
+
+    public TimePartitionRange(TimePartition begin, TimePartition end) {
+      this.begin = begin;
+      this.end = end;
+    }
+
+    @Override
+    public String toString() {
+      return "[" + begin.getDateString() + ", " + end.getDateString() + ")";
+    }
+
+    @Override
+    public Iterator<TimePartition> iterator() {
+
+      return new Iterator<TimePartition>() {
+        TimePartition current = begin;
+
+        @Override
+        public boolean hasNext() {
+          return current.before(end);
+        }
+
+        @Override
+        public TimePartition next() {
+          TimePartition ret = current;
+          current = current.next();
+          return ret;
+        }
+
+        @Override
+        public void remove() {
+          throw new UnsupportedOperationException("remove not supported");
+        }
+      };
+    }
+
+    public boolean contains(TimePartition partition) {
+      return !partition.before(begin) && partition.before(end);
+    }
   }
 }

@@ -641,7 +641,7 @@ public class CubeQueryContext {
     }
   }
 
-  void setNonexistingParts(Map<String, List<String>> nonExistingParts) throws SemanticException {
+  void setNonexistingParts(Map<String, Set<String>> nonExistingParts) throws SemanticException {
     if (!nonExistingParts.isEmpty()) {
       ByteArrayOutputStream out = null;
       String partsStr;

@@ -109,37 +109,19 @@ public class TestCubeRewriter extends TestQueryRewrite {
     compareQueries(expected, hqlQuery);
 
     conf.setBoolean(CubeQueryConfUtil.LIGHTEST_FACT_FIRST, true);
-    conf.setBoolean(CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS, true);
+
     SemanticException th = getSemanticExceptionInRewrite(
       "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(th);
-
-    int start = 0;
-    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length() - 2;
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
-      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
+    int endIndex = CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3;
+    Assert.assertEquals(
+      pruneCauses.getBrief().substring(0, endIndex),
+      CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0, endIndex)
+    );
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
-      CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
-    assertSkipStorageCode(pruneCauses, "testfact", SkipStorageCode.MISSING_PARTITIONS);
-
-    // Error should be no missing partitions with first missing partition populated for each update period
-    conf.setBoolean(CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS, false);
-    th = getSemanticExceptionInRewrite(
-      "select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
-    pruneCauses = extractPruneCause(th);
-
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
-      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
-
-    Assert.assertEquals(pruneCauses.getDetails().get("testfact").size(), 1);
-    assertSkipStorageCode(pruneCauses, "testfact", SkipStorageCode.MISSING_PARTITIONS);
-
-    Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").size(), 1);
-    Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
-      CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
+      CandidateTablePruneCode.MISSING_PARTITIONS);
   }
 
   @Test
@@ -849,34 +831,23 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
     PruneCauses.BriefAndDetailedError pruneCauses = extractPruneCause(e);
 
-    int start = 0;
-    int end = SkipStorageCode.MISSING_PARTITIONS.errorFormat.length() - 2;
-    Assert.assertEquals(pruneCauses.getBrief().substring(start, end),
-      SkipStorageCode.MISSING_PARTITIONS.errorFormat.substring(start, end));
-    Assert.assertNotNull(pruneCauses.getDetails().get("testfact").iterator().next().getStorageCauses());
-    for (String tables : Arrays.asList("testfact", "testfactmonthly", "testfact2_raw,testfact2")) {
-      assertSkipStorageCode(pruneCauses, tables, SkipStorageCode.MISSING_PARTITIONS);
-    }
-    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3").iterator().next().getStorageCauses()
-      .get("c1").getCause(), SkipStorageCode.MISSING_PARTITIONS);
+    Assert.assertEquals(
+      pruneCauses.getBrief().substring(0, CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3),
+        CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0,
+          CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3));
+
+    Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
+      CandidateTablePruneCode.MISSING_PARTITIONS);
+    Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
+      CandidateTablePruneCode.MISSING_PARTITIONS);
+    Assert.assertEquals(pruneCauses.getDetails().get("testfact2").iterator().next().getCause(),
+        CandidateTablePruneCode.MISSING_PARTITIONS);
+    Assert.assertEquals(pruneCauses.getDetails().get("testfact2_raw").iterator().next().getCause(),
+      CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
-      CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
-    assertSkipStorageCode(pruneCauses, "cheapfact", SkipStorageCode.UNSUPPORTED);
-    assertSkipStorageCode(pruneCauses, "summary4", SkipStorageCode.PART_COL_DOES_NOT_EXIST);
-    Assert.assertEquals(getSkipStorageCauses(pruneCauses, "summary4").iterator().next().getNonExistantPartCols(),
-      Arrays.asList("dt"));
-  }
-
-  private void assertSkipStorageCode(PruneCauses.BriefAndDetailedError pruneCauses, String factname,
-    SkipStorageCode code) {
-    for(SkipStorageCause cause: getSkipStorageCauses(pruneCauses, factname)) {
-      Assert.assertEquals(cause.getCause(), code);
-    }
-  }
-
-  private Collection<SkipStorageCause> getSkipStorageCauses(PruneCauses.BriefAndDetailedError pruneCauses,
-    String factname) {
-    return pruneCauses.getDetails().get(factname).iterator().next().getStorageCauses().values();
+        CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3,summary4").iterator().next()
+      .getCause(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
   }
 
   @Test
@@ -909,7 +880,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     SemanticException e = getSemanticExceptionInRewrite("select name, capital from statedim ", conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NO_CANDIDATE_DIM_AVAILABLE.getErrorCode());
     Assert.assertEquals(extractPruneCause(e), new PruneCauses.BriefAndDetailedError(
-      SkipStorageCode.NO_PARTITIONS.errorFormat,
+      CandidateTablePruneCode.NO_CANDIDATE_STORAGES.errorFormat,
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("statetable", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(

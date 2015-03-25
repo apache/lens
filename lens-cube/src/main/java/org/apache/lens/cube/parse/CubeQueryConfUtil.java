@@ -44,7 +44,6 @@ public final class CubeQueryConfUtil {
   public static final String DRIVER_SUPPORTED_STORAGES = "lens.cube.query.driver." + "supported.storages";
   public static final String FAIL_QUERY_ON_PARTIAL_DATA = "lens.cube.query.fail.if.data.partial";
   public static final String NON_EXISTING_PARTITIONS = "lens.cube.query.nonexisting.partitions";
-  public static final String ADD_NON_EXISTING_PARTITIONS = "lens.cube.query.add.nonexisting.partitions";
   public static final String ENABLE_MULTI_TABLE_SELECT = "lens.cube.query.enable.multi.table.select";
   public static final String QUERY_MAX_INTERVAL = "lens.cube.query.max.interval";
   public static final String PROCESS_TIME_PART_COL = "lens.cube.query.process.time" + ".partition.column";
@@ -59,7 +58,6 @@ public final class CubeQueryConfUtil {
   public static final int DEFAULT_LOOK_AHEAD_PT_PARTS = 1;
   public static final boolean DEFAULT_ENABLE_GROUP_BY_TO_SELECT = false;
   public static final boolean DEFAULT_ENABLE_SELECT_TO_GROUPBY = false;
-  public static final boolean DEFAULT_ADD_NON_EXISTING_PARTITIONS = false;
   public static final boolean DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL = true;
 
   public static String getLookAheadPTPartsKey(UpdatePeriod interval) {

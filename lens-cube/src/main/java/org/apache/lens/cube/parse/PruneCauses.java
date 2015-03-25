@@ -91,7 +91,7 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
         maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
       }
     }
-    return maxCause.getBriefError(maxCauseMap);
+    return maxCause.getBriefError(maxCauseMap.keySet());
   }
 
   public static void main(String[] args) {
