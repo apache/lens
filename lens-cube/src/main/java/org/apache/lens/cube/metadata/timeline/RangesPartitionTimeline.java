@@ -36,9 +36,9 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
- * One implementation of PartitionTimeline that stores first partition, latest partition and a collection of holes in
- * between them, excluding the edges(start and end values).  This is the default Timeline for tables that don't specify
- * which Timeline Class to use in it's params.
+ * One implementation of PartitionTimeline that stores ranges of partition presence, Basically a list of tuples each
+ * tuple represents a range of presence. range is of the form [from, end) i.e. including the first element and excluding
+ * the second element of the tuple
  */
 @Data
 @ToString(callSuper = true)
