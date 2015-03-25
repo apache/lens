@@ -1093,6 +1093,8 @@ public class CubeMetastoreClient {
             if (enableCaching) {
               allHiveTables.put(tableName, tbl);
             }
+          } else {
+            tbl = allHiveTables.get(tableName);
           }
         }
       }
@@ -1294,6 +1296,8 @@ public class CubeMetastoreClient {
               }
             }
           }
+        } else {
+          dimTable = allDimTables.get(tableName);
         }
       }
     }
@@ -1324,6 +1328,8 @@ public class CubeMetastoreClient {
               allStorages.put(storageName, storage);
             }
           }
+        } else {
+          storage = allStorages.get(storageName);
         }
       }
     }
@@ -1354,6 +1360,8 @@ public class CubeMetastoreClient {
               allCubes.put(tableName, cube);
             }
           }
+        } else {
+          cube = allCubes.get(tableName);
         }
       }
     }
@@ -1380,6 +1388,8 @@ public class CubeMetastoreClient {
               allDims.put(tableName, dim);
             }
           }
+        } else {
+          dim = allDims.get(tableName);
         }
       }
     }
@@ -1403,6 +1413,8 @@ public class CubeMetastoreClient {
           if (enableCaching && fact != null) {
             allFactTables.put(tableName, fact);
           }
+        } else {
+          fact = allFactTables.get(tableName);
         }
       }
     }
