@@ -83,6 +83,12 @@
   </property>
 
   <property>
+    <name>lens.server.ui.enable</name>
+    <value>true</value>
+    <description>Bringing up the ui server is optional. By default it brings up UI server.</description>
+  </property>
+
+  <property>
     <name>lens.server.ui.enable.caching</name>
     <value>true</value>
     <description>Set this to false to disable static file caching in the UI server</description>
