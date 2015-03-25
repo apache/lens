@@ -36,19 +36,48 @@ public class TestPartitionTimelines {
   private static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
   private static final String PART_COL = "pt";
   private static final Date DATE = new Date();
+  private static final List<Class<? extends PartitionTimeline>> TIMELINE_IMPLEMENTATIONS = Arrays.asList(
+    StoreAllPartitionTimeline.class,
+    EndsAndHolesPartitionTimeline.class,
+    RangesPartitionTimeline.class
+  );
 
   @Test
   public void testPropertiesContractsForAllSubclasses() throws LensException {
-    testPropertiesContract(StoreAllPartitionTimeline.class);
-    testPropertiesContract(EndsAndHolesPartitionTimeline.class);
-    testPropertiesContract(RangesPartitionTimeline.class);
+    for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
+      testPropertiesContract(clazz);
+    }
   }
 
   @Test
   public void testEquivalence() throws LensException {
-    for (int i = 0; i < 10; i++) {
-      testEquivalence(StoreAllPartitionTimeline.class, EndsAndHolesPartitionTimeline.class,
-        RangesPartitionTimeline.class);
+    for (int j = 0; j < 10; j++) {
+      Random randomGenerator = new Random();
+      List<PartitionTimeline> timelines = Lists.newArrayList();
+      for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
+        timelines.add(getInstance(clazz));
+      }
+      for (int i = 0; i < 200; i++) {
+        int randomInt = randomGenerator.nextInt(100) - 50;
+        for (PartitionTimeline timeline : timelines) {
+          timeline.add(TimePartition.of(PERIOD, timeAtHourDiff(randomInt)));
+        }
+      }
+      Iterator<TimePartition> sourceOfTruth = timelines.get(0).iterator();
+      List<Iterator<TimePartition>> otherIterators = Lists.newArrayList();
+      for (int i = 1; i < TIMELINE_IMPLEMENTATIONS.size() - 1; i++) {
+        otherIterators.add(timelines.get(i).iterator());
+      }
+      while (sourceOfTruth.hasNext()) {
+        TimePartition cur = sourceOfTruth.next();
+        for (Iterator<TimePartition> iterator : otherIterators) {
+          Assert.assertTrue(iterator.hasNext());
+          Assert.assertEquals(iterator.next(), cur);
+        }
+      }
+      for (Iterator<TimePartition> iterator : otherIterators) {
+        Assert.assertFalse(iterator.hasNext());
+      }
     }
   }
 
@@ -57,35 +86,6 @@ public class TestPartitionTimelines {
     cal.setTime(DATE);
     cal.add(PERIOD.calendarField(), d);
     return cal.getTime();
-  }
-
-  private void testEquivalence(Class<? extends PartitionTimeline>... classes) throws LensException {
-    Random randomGenerator = new Random();
-    PartitionTimeline[] timelines = new PartitionTimeline[classes.length];
-    for (int i = 0; i < classes.length; i++) {
-      timelines[i] = getInstance(classes[i]);
-    }
-    for (int i = 0; i < 200; i++) {
-      int randomInt = randomGenerator.nextInt(100) - 50;
-      for (PartitionTimeline timeline : timelines) {
-        timeline.add(TimePartition.of(PERIOD, timeAtHourDiff(randomInt)));
-      }
-    }
-    Iterator<TimePartition> sourceOfTruth = timelines[0].iterator();
-    List<Iterator<TimePartition>> otherIterators = Lists.newArrayList(classes.length - 1);
-    for (int i = 1; i < classes.length; i++) {
-      otherIterators.add(timelines[i].iterator());
-    }
-    while (sourceOfTruth.hasNext()) {
-      TimePartition cur = sourceOfTruth.next();
-      for (Iterator<TimePartition> iterator : otherIterators) {
-        Assert.assertTrue(iterator.hasNext());
-        Assert.assertEquals(iterator.next(), cur);
-      }
-    }
-    for (Iterator<TimePartition> iterator : otherIterators) {
-      Assert.assertFalse(iterator.hasNext());
-    }
   }
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
