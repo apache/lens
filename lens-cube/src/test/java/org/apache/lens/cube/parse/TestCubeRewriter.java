@@ -846,8 +846,14 @@ public class TestCubeRewriter extends TestQueryRewrite {
       CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
         CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
-    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3,summary4").iterator().next()
+    Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3").iterator().next().getCause(),
+      CandidateTablePruneCode.MISSING_PARTITIONS);
+    Assert.assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
       .getCause(), CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+    Assert.assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
+      .getStorageCauses().values().iterator().next().getCause(), SkipStorageCode.PART_COL_DOES_NOT_EXIST);
+    Assert.assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
+      .getStorageCauses().values().iterator().next().getNonExistantPartCols(), Arrays.asList("dt"));
   }
 
   @Test
