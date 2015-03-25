@@ -41,7 +41,7 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
 
   @Override
   protected int getTestPort() {
-    return 10000;
+    return 10056;
   }
 
   @Override

@@ -34,7 +34,7 @@ public class LensCliApplicationTest extends LensAllApplicationJerseyTest {
 
   @Override
   protected int getTestPort() {
-    return 10001;
+    return 10057;
   }
 
   @Override

@@ -58,7 +58,7 @@ public class TestMLRunner extends LensJerseyTest {
 
   @Override
   protected int getTestPort() {
-    return 10000;
+    return 10058;
   }
 
   @Override
