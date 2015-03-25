@@ -147,7 +147,7 @@ public class RangesPartitionTimeline extends PartitionTimeline {
 
   @Override
   public boolean isConsistent() {
-    if(isEmpty()) {
+    if (isEmpty()) {
       return true;
     }
     if (!ranges.get(0).getBegin().before(ranges.get(0).getEnd())) {

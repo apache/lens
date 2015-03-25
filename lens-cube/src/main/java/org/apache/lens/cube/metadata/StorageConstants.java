@@ -19,9 +19,10 @@
 
 package org.apache.lens.cube.metadata;
 
-import java.util.*;
-
-import com.google.common.collect.Sets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 public final class StorageConstants {
   private StorageConstants() {
