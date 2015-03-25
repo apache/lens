@@ -52,9 +52,7 @@ public final class StorageConstants {
    * @return List
    */
   public static Set<String> getPartitionsForLatest() {
-    Set<String> parts = Sets.newHashSet();
-    parts.add(LATEST_PARTITION_VALUE);
-    return parts;
+    return Collections.singleton(LATEST_PARTITION_VALUE);
   }
 
   /**
