@@ -18,8 +18,7 @@
  */
 package org.apache.lens.cube.metadata.timeline;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
@@ -28,6 +27,8 @@ import org.apache.lens.cube.metadata.UpdatePeriod;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import com.beust.jcommander.internal.Lists;
 
 public class TestPartitionTimelines {
   CubeMetastoreClient client = null;
@@ -41,6 +42,50 @@ public class TestPartitionTimelines {
     testPropertiesContract(StoreAllPartitionTimeline.class);
     testPropertiesContract(EndsAndHolesPartitionTimeline.class);
     testPropertiesContract(RangesPartitionTimeline.class);
+  }
+
+  @Test
+  public void testEquivalence() throws LensException {
+    for (int i = 0; i < 10; i++) {
+      testEquivalence(StoreAllPartitionTimeline.class, EndsAndHolesPartitionTimeline.class,
+        RangesPartitionTimeline.class);
+    }
+  }
+
+  private Date timeAtHourDiff(int d) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(DATE);
+    cal.add(PERIOD.calendarField(), d);
+    return cal.getTime();
+  }
+
+  private void testEquivalence(Class<? extends PartitionTimeline>... classes) throws LensException {
+    Random randomGenerator = new Random();
+    PartitionTimeline[] timelines = new PartitionTimeline[classes.length];
+    for (int i = 0; i < classes.length; i++) {
+      timelines[i] = getInstance(classes[i]);
+    }
+    for (int i = 0; i < 200; i++) {
+      int randomInt = randomGenerator.nextInt(100) - 50;
+      for (PartitionTimeline timeline : timelines) {
+        timeline.add(TimePartition.of(PERIOD, timeAtHourDiff(randomInt)));
+      }
+    }
+    Iterator<TimePartition> sourceOfTruth = timelines[0].iterator();
+    List<Iterator<TimePartition>> otherIterators = Lists.newArrayList(classes.length - 1);
+    for (int i = 1; i < classes.length; i++) {
+      otherIterators.add(timelines[i].iterator());
+    }
+    while (sourceOfTruth.hasNext()) {
+      TimePartition cur = sourceOfTruth.next();
+      for (Iterator<TimePartition> iterator : otherIterators) {
+        Assert.assertTrue(iterator.hasNext());
+        Assert.assertEquals(iterator.next(), cur);
+      }
+    }
+    for (Iterator<TimePartition> iterator : otherIterators) {
+      Assert.assertFalse(iterator.hasNext());
+    }
   }
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
