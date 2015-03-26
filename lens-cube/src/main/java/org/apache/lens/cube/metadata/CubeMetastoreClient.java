@@ -328,18 +328,19 @@ public class CubeMetastoreClient {
     }
 
     /** update partition timeline cache for deletion of time partition */
-    public void updateForDeletion(String cubeTableName, String storageName, UpdatePeriod updatePeriod,
-
+    public boolean updateForDeletion(String cubeTableName, String storageName, UpdatePeriod updatePeriod,
       Map<String, Date> timePartSpec) throws HiveException, LensException {
+      boolean updated = false;
       for (Map.Entry<String, Date> entry : timePartSpec.entrySet()) {
         TimePartition part = TimePartition.of(updatePeriod, entry.getValue());
-        if (partitionExistsByFilter(cubeTableName, storageName, StorageConstants.getPartFilter(entry.getKey(),
+        if (!partitionExistsByFilter(cubeTableName, storageName, StorageConstants.getPartFilter(entry.getKey(),
           part.getDateString()))) {
           get(cubeTableName, storageName, updatePeriod, entry.getKey()).drop(part);
+          updated = true;
         }
       }
+      return updated;
     }
-
   }
 
 
@@ -939,8 +940,9 @@ public class CubeMetastoreClient {
     } else {
       // dropping fact partition
       getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null);
-      partitionTimelineCache.updateForDeletion(cubeTableName, storageName, updatePeriod, timePartSpec);
-      this.alterTablePartitionCache(storageTableName);
+      if (partitionTimelineCache.updateForDeletion(cubeTableName, storageName, updatePeriod, timePartSpec)) {
+        this.alterTablePartitionCache(storageTableName);
+      }
     }
   }
 

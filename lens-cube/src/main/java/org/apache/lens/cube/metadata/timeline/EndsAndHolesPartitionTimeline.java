@@ -74,16 +74,6 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   }
 
   @Override
-  public boolean add(@NonNull Collection<TimePartition> partitions) throws LensException {
-    boolean result = true;
-    for (TimePartition partition : partitions) {
-      result &= add(partition);
-    }
-    // Can also return the failed to add items.
-    return result;
-  }
-
-  @Override
   public boolean drop(TimePartition toDrop) throws LensException {
     if (first.equals(latest) && first.equals(toDrop)) {
       this.first = null;
