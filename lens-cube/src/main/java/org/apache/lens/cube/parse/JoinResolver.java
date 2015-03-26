@@ -576,8 +576,8 @@ class JoinResolver implements ContextRewriter {
     private String getStorageFilter(Map<Dimension, CandidateDim> dimsToQuery, AbstractCubeTable table, String alias) {
       String whereClause = "";
       if (dimsToQuery != null && dimsToQuery.get(table) != null) {
-        if (StringUtils.isNotBlank(dimsToQuery.get(table).whereClause)) {
-          whereClause = dimsToQuery.get(table).whereClause;
+        if (StringUtils.isNotBlank(dimsToQuery.get(table).getWhereClause())) {
+          whereClause = dimsToQuery.get(table).getWhereClause();
           if (alias != null) {
             whereClause = StorageUtil.getWhereClause(whereClause, alias);
           }

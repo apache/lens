@@ -578,6 +578,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     launchedQueries.add(ctx);
     ctx.setLaunchTime(System.currentTimeMillis());
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
+    ctx.clearTransientStateAfterLaunch();
   }
 
   /**
@@ -610,6 +611,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       }
     }
     finishedQueries.add(new FinishedQuery(ctx));
+    ctx.clearTransientStateAfterLaunch();
   }
 
   void setSuccessState(QueryContext ctx) throws LensException {

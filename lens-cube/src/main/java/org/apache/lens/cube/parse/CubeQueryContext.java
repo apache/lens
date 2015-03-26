@@ -743,6 +743,8 @@ public class CubeQueryContext {
   }
 
   private HQLContextInterface hqlContext;
+  @Getter private Collection<CandidateFact> pickedFacts;
+  @Getter private Collection<CandidateDim> pickedDimTables;
 
   public String toHQL() throws SemanticException {
     Set<CandidateFact> cfacts = pickCandidateFactToQuery();
@@ -809,7 +811,8 @@ public class CubeQueryContext {
       }
     }
     LOG.info("Picked Fact:" + cfacts + " dimsToQuery:" + dimsToQuery);
-
+    pickedDimTables = dimsToQuery.values();
+    pickedFacts = cfacts;
     if (cfacts != null) {
       if (cfacts.size() > 1) {
         // Update ASTs for each fact

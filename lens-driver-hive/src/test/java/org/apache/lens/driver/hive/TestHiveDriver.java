@@ -21,6 +21,7 @@ package org.apache.lens.driver.hive;
 import static org.testng.Assert.*;
 
 import java.io.*;
+import java.text.ParseException;
 import java.util.*;
 
 import org.apache.lens.api.LensConf;
@@ -28,13 +29,14 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.driver.hive.priority.DurationBasedQueryPriorityDecider;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.ExplainQueryContext;
-import org.apache.lens.server.api.query.MockQueryContext;
 import org.apache.lens.server.api.query.PreparedQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.util.LensUtil;
@@ -173,7 +175,7 @@ public class TestHiveDriver {
   protected void createTestTable(String tableName) throws Exception {
     System.out.println("Hadoop Location: " + System.getProperty("hadoop.bin.path"));
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + "(ID STRING)" + " TBLPROPERTIES ('"
-        + LensConfConstants.STORAGE_COST + "'='500')";
+      + LensConfConstants.STORAGE_COST + "'='500')";
     // Create test table
     QueryContext context = createContext(createTable, conf);
     LensResultSet resultSet = driver.execute(context);
@@ -727,8 +729,9 @@ public class TestHiveDriver {
     assertEquals(plan.getTableWeight(dataBase + ".test_part_table"), 500.0);
     System.out.println("Parts:" + plan.getPartitions());
     assertFalse(plan.getPartitions().isEmpty());
-    assertTrue(plan.getPartitions().get(dataBase + ".test_part_table").get(0).contains("today"));
-    assertTrue(plan.getPartitions().get(dataBase + ".test_part_table").get(0).contains("dt"));
+    assertEquals(plan.getPartitions().size(), 1);
+    assertTrue(((String)plan.getPartitions().get(dataBase + ".test_part_table").iterator().next()).contains("today"));
+    assertTrue(((String)plan.getPartitions().get(dataBase + ".test_part_table").iterator().next()).contains("dt"));
   }
 
   /**
@@ -792,44 +795,110 @@ public class TestHiveDriver {
    *
    * @throws IOException
    * @throws LensException
+   * @throws ParseException
    */
   @Test
-  public void testPriority() throws IOException, LensException {
+  public void testPriority() throws IOException, LensException, ParseException {
     Configuration conf = new Configuration();
-    final MockDriver mockDriver = new MockDriver();
-    mockDriver.configure(conf);
-    DurationBasedQueryPriorityDecider alwaysNormalPriorityDecider = new DurationBasedQueryPriorityDecider("",
+    DurationBasedQueryPriorityDecider alwaysNormalPriorityDecider = new DurationBasedQueryPriorityDecider(driver,
+      "",
       HiveDriver.MONTHLY_PARTITION_WEIGHT_DEFAULT,
-      HiveDriver.DAILY_PARTITION_WEIGHT_DEFAULT,
-      HiveDriver.HOURLY_PARTITION_WEIGHT_DEFAULT
-    );
+      HiveDriver.DAILY_PARTITION_WEIGHT_DEFAULT, HiveDriver.HOURLY_PARTITION_WEIGHT_DEFAULT);
     BufferedReader br = new BufferedReader(new InputStreamReader(
       TestHiveDriver.class.getResourceAsStream("/priority_tests.data")));
     String line;
     while ((line = br.readLine()) != null) {
       String[] kv = line.split("\\s*:\\s*");
 
-      final List<String> partitions = Arrays.asList(kv[0].trim().split("\\s*,\\s*"));
+      final Set<FactPartition> partitions = getFactParts(Arrays.asList(kv[0].trim().split("\\s*,\\s*")));
       final Priority expected = Priority.valueOf(kv[1]);
-      final HashMap<LensDriver, String> driverQuery1 = new HashMap<LensDriver, String>() {
-        {
-          put(mockDriver, "driverQuery1");
-        }
-      };
-      AbstractQueryContext ctx = new MockQueryContext("driverQuery1", new LensConf(), conf,
-        driverQuery1.keySet());
-      ctx.getDriverContext().setDriverQueryPlans(driverQuery1, ctx);
-      ctx.setSelectedDriver(mockDriver);
+      AbstractQueryContext ctx = createContext("test priority query", conf);
+      ctx.getDriverContext().setDriverRewriterPlan(driver, new DriverQueryPlan() {
 
-      ((MockDriver.MockQueryPlan) ctx.getDriverContext().getDriverQueryPlan(mockDriver)).setPartitions(
-        new HashMap<String, List<String>>() {
+        @Override
+        public String getPlan() {
+          return null;
+        }
+
+        @Override
+        public QueryCost getCost() {
+          return null;
+        }
+      });
+
+      ctx.getDriverContext().getDriverRewriterPlan(driver).getPartitions().putAll(
+        new HashMap<String, Set<FactPartition>>() {
           {
             put("table1", partitions);
           }
-        }
-      );
+        });
+      ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
+        new HashMap<String, Double>() {
+          {
+            put("table1", 1.0);
+          }
+        });
       Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
       Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
     }
+    // test priority without fact partitions
+    AbstractQueryContext ctx = createContext("test priority query", conf);
+    ctx.getDriverContext().setDriverRewriterPlan(driver, new DriverQueryPlan() {
+
+      @Override
+      public String getPlan() {
+        return null;
+      }
+
+      @Override
+      public QueryCost getCost() {
+        return null;
+      }
+    });
+
+    ctx.getDriverContext().getDriverRewriterPlan(driver).getPartitions().putAll(
+      new HashMap<String, Set<String>>() {
+        {
+          put("table1", new HashSet<String>());
+        }
+      });
+    ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
+      new HashMap<String, Double>() {
+        {
+          put("table1", 1.0);
+        }
+      });
+    Assert.assertEquals(Priority.VERY_HIGH, driver.queryPriorityDecider.decidePriority(ctx));
+    Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
+
+    // test priority without rewriter plan
+    ctx = createContext("test priority query", conf);
+    Assert.assertEquals(Priority.VERY_HIGH, driver.queryPriorityDecider.decidePriority(ctx));
+    Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
+
+  }
+
+  private Set<FactPartition> getFactParts(List<String> partStrings) throws ParseException {
+    Set<FactPartition> factParts = new HashSet<FactPartition>();
+    for (String partStr : partStrings) {
+      String[] partEls = partStr.split(" ");
+      UpdatePeriod p = null;
+      String partSpec = partEls[1];
+      switch (partSpec.length()) {
+      case 7: //monthly
+        p = UpdatePeriod.MONTHLY;
+        break;
+      case 10: // daily
+        p = UpdatePeriod.DAILY;
+        break;
+      case 13: // hourly
+        p = UpdatePeriod.HOURLY;
+        break;
+      }
+      FactPartition part = new FactPartition(partEls[0], p.format().parse(partSpec), p, null, p.format(),
+        Collections.singleton("table1"));
+      factParts.add(part);
+    }
+    return factParts;
   }
 }

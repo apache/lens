@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,9 +38,6 @@ import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hive.service.cli.ColumnDescriptor;
-
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * The Class MockDriver.
@@ -116,10 +112,6 @@ public class MockDriver implements LensDriver {
       tableWeights.put("table2", 2.0);
       tableWeights.put("table3", 3.0);
     }
-
-    @Getter
-    @Setter
-    private Map<String, List<String>> partitions;
 
     @Override
     public String getPlan() {

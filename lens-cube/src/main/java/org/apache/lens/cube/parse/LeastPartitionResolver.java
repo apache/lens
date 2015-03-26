@@ -62,7 +62,7 @@ class LeastPartitionResolver implements ContextRewriter {
   private int getPartCount(Set<CandidateFact> set) {
     int parts = 0;
     for (CandidateFact f : set) {
-      parts += f.numQueriedParts;
+      parts += f.getNumQueriedParts();
     }
     return parts;
   }

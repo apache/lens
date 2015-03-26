@@ -374,6 +374,7 @@ public abstract class AbstractQueryContext implements Serializable {
    * Gets HiveConf corresponding to query conf.
    *
    * Should be called judiciously, because constructing HiveConf from conf object is costly.
+   * The field is set to null after query completion. Should not be accessed after completion.
    * @return
    */
   public HiveConf getHiveConf() {
@@ -416,5 +417,14 @@ public abstract class AbstractQueryContext implements Serializable {
    */
   public String getLogHandle() {
     return this.getUserQuery();
+  }
+
+  public void clearTransientStateAfterLaunch() {
+    driverContext.clearTransientStateAfterLaunch();
+  }
+
+  public void clearTransientStateAfterCompleted() {
+    driverContext.clearTransientStateAfterCompleted();
+    hiveConf = null;
   }
 }

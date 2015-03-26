@@ -96,7 +96,7 @@ class CandidateTableResolver implements ContextRewriter {
         }
         for (CubeFactTable fact : factTables) {
           CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
-          cfact.enabledMultiTableSelect = qlEnabledMultiTableSelect;
+          cfact.setEnabledMultiTableSelect(qlEnabledMultiTableSelect);
           cubeql.getCandidateFactTables().add(cfact);
         }
         LOG.info("Populated candidate facts:" + cubeql.getCandidateFactTables());

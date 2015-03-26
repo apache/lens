@@ -19,9 +19,9 @@
 package org.apache.lens.driver.hive;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryPrepareHandle;
@@ -41,9 +41,6 @@ public class HiveQueryPlan extends DriverQueryPlan {
 
   /** The explain output. */
   private String explainOutput;
-
-  /** The partitions. */
-  private Map<String, List<String>> partitions;
 
   static final QueryCost HIVE_DRIVER_COST = new QueryCost(1, 1.0);
 
@@ -105,7 +102,6 @@ public class HiveQueryPlan extends DriverQueryPlan {
     setPrepareHandle(prepared);
     setExecMode(ExecMode.BATCH);
     setScanMode(ScanMode.PARTIAL_SCAN);
-    partitions = new LinkedHashMap<String, List<String>>();
     this.explainOutput = StringUtils.join(explainOutput, '\n');
     extractPlanDetails(explainOutput, metastoreConf);
   }
@@ -122,7 +118,6 @@ public class HiveQueryPlan extends DriverQueryPlan {
     ParserState prevState = state;
     ArrayList<ParserState> states = new ArrayList<ParserState>();
     Hive metastore = Hive.get(metastoreConf);
-    List<String> partList = null;
 
     for (int i = 0; i < explainOutput.size(); i++) {
       String line = explainOutput.get(i);
@@ -203,9 +198,9 @@ public class HiveQueryPlan extends DriverQueryPlan {
             }
 
             if (partConditionStr != null) {
-              List<String> tablePartitions = partitions.get(table);
+              Set<String> tablePartitions = (Set<String>) partitions.get(table);
               if (tablePartitions == null) {
-                tablePartitions = new ArrayList<String>();
+                tablePartitions = new HashSet<String>();
                 partitions.put(table, tablePartitions);
               }
               tablePartitions.add(partConditionStr);
@@ -269,10 +264,5 @@ public class HiveQueryPlan extends DriverQueryPlan {
      * Return query cost as 1 so that if JDBC storage and other storage is present, JDBC is given preference.
      */
     return HIVE_DRIVER_COST;
-  }
-
-  @Override
-  public Map<String, List<String>> getPartitions() {
-    return partitions;
   }
 }

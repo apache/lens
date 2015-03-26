@@ -224,8 +224,8 @@ class StorageTableResolver implements ContextRewriter {
           continue;
         }
         // pick the first storage table
-        candidate.storageTable = storageTables.iterator().next();
-        candidate.whereClause = whereClauses.get(candidate.storageTable);
+        candidate.setStorageTable(storageTables.iterator().next());
+        candidate.setWhereClause(whereClauses.get(candidate.getStorageTable()));
       }
     }
   }
@@ -329,15 +329,16 @@ class StorageTableResolver implements ContextRewriter {
           noPartsForRange = true;
           continue;
         }
-        cfact.numQueriedParts += rangeParts.size();
+        cfact.incrementPartsQueried(rangeParts.size());
         answeringParts.addAll(rangeParts);
-        cfact.rangeToWhereClause.put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
+        cfact.getPartsQueried().addAll(rangeParts);
+        cfact.getRangeToWhereClause().put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
           cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts));
       }
       if (!nonExistingParts.isEmpty()) {
         addNonExistingParts(cfact.fact.getName(), nonExistingParts);
       }
-      if (cfact.numQueriedParts == 0 || (failOnPartialData && (noPartsForRange || !nonExistingParts.isEmpty()))) {
+      if (cfact.getNumQueriedParts() == 0 || (failOnPartialData && (noPartsForRange || !nonExistingParts.isEmpty()))) {
         LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
           + cubeql.getTimeRanges());
         /*
@@ -375,10 +376,10 @@ class StorageTableResolver implements ContextRewriter {
       }
       Set<String> storageTables = new LinkedHashSet<String>();
       storageTables.addAll(minimalStorageTables.keySet());
-      cfact.storageTables = storageTables;
+      cfact.setStorageTables(storageTables);
       // multi table select is already false, do not alter it
-      if (cfact.enabledMultiTableSelect) {
-        cfact.enabledMultiTableSelect = enabledMultiTableSelect;
+      if (cfact.isEnabledMultiTableSelect()) {
+        cfact.setEnabledMultiTableSelect(enabledMultiTableSelect);
       }
       LOG.info("Resolved partitions for fact " + cfact + ": " + answeringParts + " storageTables:" + storageTables);
     }
