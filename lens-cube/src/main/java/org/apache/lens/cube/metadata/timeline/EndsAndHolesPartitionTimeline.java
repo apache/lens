@@ -53,7 +53,7 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   }
 
   @Override
-  public boolean add(TimePartition partition) throws LensException {
+  public boolean add(@NonNull TimePartition partition) throws LensException {
     if (isEmpty()) {
       // First partition being added
       first = partition;
@@ -74,7 +74,7 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   }
 
   @Override
-  public boolean drop(TimePartition toDrop) throws LensException {
+  public boolean drop(@NonNull TimePartition toDrop) throws LensException {
     if (first.equals(latest) && first.equals(toDrop)) {
       this.first = null;
       this.latest = null;
