@@ -330,28 +330,26 @@ class StorageTableResolver implements ContextRewriter {
         cfact.rangeToWhereClause.put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
           cubeql.getAliasForTabName(cubeql.getCube().getName()), rangeParts));
       }
+      Set<String> nonExistingParts = Sets.newHashSet();
       if (!missingPartitionRanges.isEmpty()) {
-        addNonExistingParts(cfact.fact.getName(), Collections.singleton("blah"));
+        for(UpdatePeriod period: missingPartitionRanges.keySet()) {
+          for(TimePartition.TimePartitionRange range: missingPartitionRanges.get(period).getRanges()) {
+            nonExistingParts.add(range.toString());
+          }
+        }
+      if (!nonExistingParts.isEmpty()) {
+        addNonExistingParts(cfact.fact.getName(), nonExistingParts);
       }
       if (cfact.numQueriedParts == 0 || (failOnPartialData && (noPartsForRange || !missingPartitionRanges.isEmpty()))) {
         LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
           + cubeql.getTimeRanges());
         /*
          * This fact is getting discarded because of any of following reasons:
-         * 1. Storage tables are not partitioned by timedim partition column
-         * 2. Has missing partitions, and CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS is true - which can populate
-         *  all missing partitions
-         * 3. Has missing partitions, and CubeQueryConfUtil.ADD_NON_EXISTING_PARTITIONS is false - will populate only
-         *  the first missing partition.
-         * 4. Storage tables do not have the update period for the timerange queried.
+         * 1. Has missing partitions
+         * 2. All Storage tables were skipped for some reasons.
+         * 3. Storage tables do not have the update period for the timerange queried.
          */
-        if (!missingPartitionRanges.isEmpty()) {
-          Set<String> nonExistingParts = Sets.newHashSet();
-          for(UpdatePeriod period: missingPartitionRanges.keySet()) {
-            for(TimePartition.TimePartitionRange range: missingPartitionRanges.get(period).getRanges()) {
-              nonExistingParts.add(range.toString());
-            }
-          }
+        if (!nonExistingParts.isEmpty()) {
           cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
         } else if (!skipStorageCauses.isEmpty()) {
           CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);

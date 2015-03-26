@@ -137,21 +137,23 @@ public class TimePartition implements Comparable<TimePartition> {
     return rangeUpto(next());
   }
 
+  /**
+   * Range of time partition. [begin,end). i.e. inclusive begin and exclusive end.
+   */
   @Data
   public static class TimePartitionRange implements Iterable<TimePartition> {
     TimePartition begin;
     TimePartition end;
-
-    public TimePartitionRange(TimePartition begin, TimePartition end) {
-      this.begin = begin;
-      this.end = end;
-    }
 
     @Override
     public String toString() {
       return "[" + begin.getDateString() + ", " + end.getDateString() + ")";
     }
 
+    /**
+     * returns TimePartition objects starting from begin and upto(excluding) end. interval of iteration is
+     * the update period of the partitions. Assumes both partitions have same update period.
+     */
     @Override
     public Iterator<TimePartition> iterator() {
 
@@ -177,10 +179,17 @@ public class TimePartition implements Comparable<TimePartition> {
       };
     }
 
+    /**
+     * @param partition
+     * @return begin <= partition < end
+     */
     public boolean contains(TimePartition partition) {
       return !partition.before(begin) && partition.before(end);
     }
 
+    /**
+     * @return if range is empty range.
+     */
     public boolean isEmpty() {
       return begin.equals(end);
     }
