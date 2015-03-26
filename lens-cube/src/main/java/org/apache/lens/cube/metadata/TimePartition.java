@@ -142,8 +142,13 @@ public class TimePartition implements Comparable<TimePartition> {
    */
   @Data
   public static class TimePartitionRange implements Iterable<TimePartition> {
-    TimePartition begin;
-    TimePartition end;
+    private TimePartition begin;
+    private TimePartition end;
+
+    public TimePartitionRange(TimePartition from, TimePartition to) {
+      this.begin = from;
+      this.end = to;
+    }
 
     @Override
     public String toString() {
@@ -151,8 +156,8 @@ public class TimePartition implements Comparable<TimePartition> {
     }
 
     /**
-     * returns TimePartition objects starting from begin and upto(excluding) end. interval of iteration is
-     * the update period of the partitions. Assumes both partitions have same update period.
+     * returns TimePartition objects starting from begin and upto(excluding) end. interval of iteration is the update
+     * period of the partitions. Assumes both partitions have same update period.
      */
     @Override
     public Iterator<TimePartition> iterator() {

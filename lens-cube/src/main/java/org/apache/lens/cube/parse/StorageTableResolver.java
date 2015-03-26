@@ -332,53 +332,56 @@ class StorageTableResolver implements ContextRewriter {
       }
       Set<String> nonExistingParts = Sets.newHashSet();
       if (!missingPartitionRanges.isEmpty()) {
-        for(UpdatePeriod period: missingPartitionRanges.keySet()) {
-          for(TimePartition.TimePartitionRange range: missingPartitionRanges.get(period).getRanges()) {
+        for (UpdatePeriod period : missingPartitionRanges.keySet()) {
+          for (TimePartition.TimePartitionRange range : missingPartitionRanges.get(period).getRanges()) {
             nonExistingParts.add(range.toString());
           }
         }
-      if (!nonExistingParts.isEmpty()) {
-        addNonExistingParts(cfact.fact.getName(), nonExistingParts);
-      }
-      if (cfact.numQueriedParts == 0 || (failOnPartialData && (noPartsForRange || !missingPartitionRanges.isEmpty()))) {
-        LOG.info("Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
-          + cubeql.getTimeRanges());
+        if (!nonExistingParts.isEmpty()) {
+          addNonExistingParts(cfact.fact.getName(), nonExistingParts);
+        }
+        if (cfact.numQueriedParts == 0 || (failOnPartialData && (noPartsForRange || !missingPartitionRanges
+          .isEmpty()))) {
+          LOG.info(
+            "Not considering fact table:" + cfact.fact + " as it could" + " not find partition for given ranges: "
+              + cubeql.getTimeRanges());
         /*
          * This fact is getting discarded because of any of following reasons:
          * 1. Has missing partitions
          * 2. All Storage tables were skipped for some reasons.
          * 3. Storage tables do not have the update period for the timerange queried.
          */
-        if (!nonExistingParts.isEmpty()) {
-          cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
-        } else if (!skipStorageCauses.isEmpty()) {
-          CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
-          cubeql.addFactPruningMsgs(cfact.fact, cause);
-        } else {
-          CandidateTablePruneCause cause =
-            new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
-          cubeql.addFactPruningMsgs(cfact.fact, cause);
+          if (!nonExistingParts.isEmpty()) {
+            cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
+          } else if (!skipStorageCauses.isEmpty()) {
+            CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
+            cubeql.addFactPruningMsgs(cfact.fact, cause);
+          } else {
+            CandidateTablePruneCause cause =
+              new CandidateTablePruneCause(CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
+            cubeql.addFactPruningMsgs(cfact.fact, cause);
+          }
+          i.remove();
+          continue;
         }
-        i.remove();
-        continue;
+        // Map from storage to covering parts
+        Map<String, Set<FactPartition>> minimalStorageTables = new LinkedHashMap<String, Set<FactPartition>>();
+        boolean enabledMultiTableSelect = StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
+        if (minimalStorageTables.isEmpty()) {
+          LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
+          cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
+          i.remove();
+          continue;
+        }
+        Set<String> storageTables = new LinkedHashSet<String>();
+        storageTables.addAll(minimalStorageTables.keySet());
+        cfact.storageTables = storageTables;
+        // multi table select is already false, do not alter it
+        if (cfact.enabledMultiTableSelect) {
+          cfact.enabledMultiTableSelect = enabledMultiTableSelect;
+        }
+        LOG.info("Resolved partitions for fact " + cfact + ": " + answeringParts + " storageTables:" + storageTables);
       }
-      // Map from storage to covering parts
-      Map<String, Set<FactPartition>> minimalStorageTables = new LinkedHashMap<String, Set<FactPartition>>();
-      boolean enabledMultiTableSelect = StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
-      if (minimalStorageTables.isEmpty()) {
-        LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
-        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
-        i.remove();
-        continue;
-      }
-      Set<String> storageTables = new LinkedHashSet<String>();
-      storageTables.addAll(minimalStorageTables.keySet());
-      cfact.storageTables = storageTables;
-      // multi table select is already false, do not alter it
-      if (cfact.enabledMultiTableSelect) {
-        cfact.enabledMultiTableSelect = enabledMultiTableSelect;
-      }
-      LOG.info("Resolved partitions for fact " + cfact + ": " + answeringParts + " storageTables:" + storageTables);
     }
   }
 
