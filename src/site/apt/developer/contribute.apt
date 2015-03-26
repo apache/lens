@@ -493,7 +493,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
 * Stay involved
 
-  Contributors should join the Lens {{{./mail-lists.html}mailing lists}}. In particular, the commit list (to see
+  Contributors should join the Lens {{{../mail-lists.html}mailing lists}}. In particular, the commit list (to see
   changes as they are made), the dev list (to join discussions of changes) and the user list (to help others). Also
   refer to {{{http://www.apache.org/dev/contributors.html} Apache contributors guide}} and
   {{{http://www.apache.org/foundation/voting.html} Apache voting process}}.
