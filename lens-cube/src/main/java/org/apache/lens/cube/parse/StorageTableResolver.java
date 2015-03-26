@@ -554,7 +554,7 @@ class StorageTableResolver implements ContextRewriter {
     return getPartitions(fact, fromDate, ceilFromDate, partCol, partitions,
       updatePeriods, addNonExistingParts, skipStorageCauses, nonExistingParts)
       && getPartitions(fact, floorToDate, toDate, partCol, partitions,
-      updatePeriods, addNonExistingParts, skipStorageCauses, nonExistingParts);
+        updatePeriods, addNonExistingParts, skipStorageCauses, nonExistingParts);
   }
 
   private void updateFactPartitionStorageTablesFrom(CubeFactTable fact, FactPartition part,
