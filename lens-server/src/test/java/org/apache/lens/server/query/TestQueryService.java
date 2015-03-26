@@ -66,8 +66,6 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.subethamail.wiser.Wiser;
-import org.subethamail.wiser.WiserMessage;
 import org.testng.Assert;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
@@ -93,9 +91,6 @@ public class TestQueryService extends LensJerseyTest {
   /** The lens session id. */
   LensSessionHandle lensSessionId;
 
-  /** The wiser. */
-  private Wiser wiser;
-
   /*
    * (non-Javadoc)
    *
@@ -104,9 +99,6 @@ public class TestQueryService extends LensJerseyTest {
   @BeforeTest
   public void setUp() throws Exception {
     super.setUp();
-    wiser = new Wiser();
-    wiser.setHostname("localhost");
-    wiser.setPort(25000);
     queryService = (QueryExecutionServiceImpl) LensServices.get().getService("query");
     metricsSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
     Map<String, String> sessionconf = new HashMap<String, String>();
@@ -776,61 +768,6 @@ public class TestQueryService extends LensJerseyTest {
       Thread.sleep(1000);
     }
     validateHttpEndPoint(target(), null, handle3, null);
-  }
-
-  /**
-   * Test notification.
-   *
-   * @throws IOException          Signals that an I/O exception has occurred.
-   * @throws InterruptedException the interrupted exception
-   */
-  @Test
-  public void testNotification() throws IOException, InterruptedException {
-    wiser.start();
-    final WebTarget target = target().path("queryapi/queries");
-    final FormDataMultiPart mp2 = new FormDataMultiPart();
-    LensConf conf = new LensConf();
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    conf.addProperty(LensConfConstants.QUERY_MAIL_NOTIFY, "true");
-    conf.addProperty(LensConfConstants.QUERY_RESULT_EMAIL_CC, "foo1@localhost,foo2@localhost,foo3@localhost");
-    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-      MediaType.APPLICATION_XML_TYPE));
-    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "select ID, IDSTR from "
-      + TEST_TABLE));
-    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
-    mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-      MediaType.APPLICATION_XML_TYPE));
-    final QueryHandle handle = target.request().post(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
-
-    Assert.assertNotNull(handle);
-
-    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
-      .get(LensQuery.class);
-    Assert.assertTrue(ctx.getStatus().getStatus().equals(Status.QUEUED)
-      || ctx.getStatus().getStatus().equals(Status.LAUNCHED) || ctx.getStatus().getStatus().equals(Status.RUNNING)
-      || ctx.getStatus().getStatus().equals(Status.SUCCESSFUL));
-
-    // wait till the query finishes
-    QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
-      stat = ctx.getStatus();
-      Thread.sleep(1000);
-    }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-    List<WiserMessage> messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
-      messages = wiser.getMessages();
-      if (messages.size() > 0) {
-        break;
-      }
-      Thread.sleep(10000);
-    }
-
-    Assert.assertEquals(messages.size(), 4);
-    Assert.assertTrue(messages.get(0).toString().contains(handle.toString()));
-    wiser.stop();
   }
 
   /**

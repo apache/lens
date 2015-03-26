@@ -38,6 +38,7 @@ import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.query.QueryEnded;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -153,15 +154,22 @@ public class QueryEndNotifier extends AsyncEventListener<QueryEnded> {
       msgBuilder.append("/httpresultset");
       break;
     case FAILED:
-      msgBuilder.append(queryContext.getStatus().getErrorMessage());
+      msgBuilder.append(queryContext.getStatus().getStatusMessage());
+      if (!StringUtils.isBlank(queryContext.getStatus().getErrorMessage())) {
+        msgBuilder.append("\n Reason:\n");
+        msgBuilder.append(queryContext.getStatus().getErrorMessage());
+      }
       break;
     case CANCELED:
+      msgBuilder.append(queryContext.getStatus().getStatusMessage());
+      break;
     case CLOSED:
     default:
       break;
     }
     return msgBuilder.toString();
   }
+
   @Data
   public static class Email {
     private final String from;

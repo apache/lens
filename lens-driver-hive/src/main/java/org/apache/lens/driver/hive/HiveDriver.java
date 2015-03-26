@@ -544,7 +544,8 @@ public class HiveDriver implements LensDriver {
         break;
       case ERROR:
         context.getDriverStatus().setState(DriverQueryState.FAILED);
-        context.getDriverStatus().setStatusMessage(
+        context.getDriverStatus().setStatusMessage("Query execution failed!");
+        context.getDriverStatus().setErrorMessage(
           "Query failed with errorCode:" + opStatus.getOperationException().getErrorCode() + " with errorMessage: "
             + opStatus.getOperationException().getMessage());
         break;
