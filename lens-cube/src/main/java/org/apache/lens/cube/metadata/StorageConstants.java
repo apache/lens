@@ -19,10 +19,10 @@
 
 package org.apache.lens.cube.metadata;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public final class StorageConstants {
   private StorageConstants() {
@@ -52,10 +52,8 @@ public final class StorageConstants {
    *
    * @return List
    */
-  public static List<String> getPartitionsForLatest() {
-    List<String> parts = new ArrayList<String>();
-    parts.add(LATEST_PARTITION_VALUE);
-    return parts;
+  public static Set<String> getPartitionsForLatest() {
+    return Collections.singleton(LATEST_PARTITION_VALUE);
   }
 
   /**

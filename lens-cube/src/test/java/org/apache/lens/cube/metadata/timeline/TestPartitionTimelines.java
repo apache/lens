@@ -18,8 +18,7 @@
  */
 package org.apache.lens.cube.metadata.timeline;
 
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
@@ -29,23 +28,87 @@ import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import com.beust.jcommander.internal.Lists;
+
 public class TestPartitionTimelines {
   CubeMetastoreClient client = null;
   private static final String TABLE_NAME = "storage_fact";
   private static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
   private static final String PART_COL = "pt";
   private static final Date DATE = new Date();
+  private static final List<Class<? extends PartitionTimeline>> TIMELINE_IMPLEMENTATIONS = Arrays.asList(
+    StoreAllPartitionTimeline.class,
+    EndsAndHolesPartitionTimeline.class,
+    RangesPartitionTimeline.class
+  );
 
   @Test
   public void testPropertiesContractsForAllSubclasses() throws LensException {
-    testPropertiesContract(StoreAllPartitionTimeline.class);
-    testPropertiesContract(EndsAndHolesPartitionTimeline.class);
+    for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
+      testPropertiesContract(clazz);
+    }
+  }
+
+  @Test
+  public void testEquivalence() throws LensException {
+    for (int j = 0; j < 10; j++) {
+      Random randomGenerator = new Random();
+      List<PartitionTimeline> timelines = Lists.newArrayList();
+      for (Class<? extends PartitionTimeline> clazz : TIMELINE_IMPLEMENTATIONS) {
+        timelines.add(getInstance(clazz));
+      }
+      final List<TimePartition> addedPartitions = Lists.newArrayList();
+      for (int i = 0; i < 200; i++) {
+        int randomInt = randomGenerator.nextInt(100) - 50;
+        TimePartition part = TimePartition.of(PERIOD, timeAtHourDiff(randomInt));
+        addedPartitions.add(part);
+        for (PartitionTimeline timeline : timelines) {
+          timeline.add(part);
+        }
+      }
+      Iterator<TimePartition> sourceOfTruth = timelines.get(0).iterator();
+      List<Iterator<TimePartition>> otherIterators = Lists.newArrayList();
+      for (int i = 1; i < TIMELINE_IMPLEMENTATIONS.size() - 1; i++) {
+        otherIterators.add(timelines.get(i).iterator());
+      }
+      while (sourceOfTruth.hasNext()) {
+        TimePartition cur = sourceOfTruth.next();
+        for (Iterator<TimePartition> iterator : otherIterators) {
+          Assert.assertTrue(iterator.hasNext());
+          Assert.assertEquals(iterator.next(), cur);
+        }
+      }
+      for (Iterator<TimePartition> iterator : otherIterators) {
+        Assert.assertFalse(iterator.hasNext());
+      }
+      Collections.shuffle(addedPartitions);
+      Iterator<TimePartition> iter = addedPartitions.iterator();
+      while (iter.hasNext()) {
+        TimePartition part = iter.next();
+        iter.remove();
+        if (!addedPartitions.contains(part)) {
+          for (PartitionTimeline timeline : timelines) {
+            timeline.drop(part);
+          }
+        }
+      }
+      for (PartitionTimeline timeline : timelines) {
+        Assert.assertTrue(timeline.isEmpty());
+      }
+    }
+  }
+
+  private Date timeAtHourDiff(int d) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(DATE);
+    cal.add(PERIOD.calendarField(), d);
+    return cal.getTime();
   }
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
     try {
-      return clz.getConstructor(CubeMetastoreClient.class, String.class, UpdatePeriod.class, String.class)
-        .newInstance(client, TABLE_NAME, PERIOD, PART_COL);
+      return clz.getConstructor(String.class, UpdatePeriod.class, String.class)
+        .newInstance(TABLE_NAME, PERIOD, PART_COL);
     } catch (Exception e) {
       e.printStackTrace();
     }

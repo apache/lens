@@ -22,6 +22,7 @@ import java.util.*;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
+import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -95,7 +96,7 @@ public class CandidateTablePruneCause {
     // missing partitions for cube table
     MISSING_PARTITIONS("Missing partitions for the cube table: %s") {
       Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
-        List<List<String>> missingPartitions = new ArrayList<List<String>>();
+        Set<Set<String>> missingPartitions = Sets.newHashSet();
         for (CandidateTablePruneCause cause : causes) {
           missingPartitions.add(cause.getMissingPartitions());
         }
@@ -183,7 +184,7 @@ public class CandidateTablePruneCause {
   private Map<String, SkipStorageCause> storageCauses;
 
   // populated only incase of missing partitions cause
-  private List<String> missingPartitions;
+  private Set<String> missingPartitions;
   // populated only incase of missing update periods cause
   private List<String> missingUpdatePeriods;
   // populated in case of missing columns
@@ -215,7 +216,7 @@ public class CandidateTablePruneCause {
     return columnNotFound(colList);
   }
 
-  public static CandidateTablePruneCause missingPartitions(List<String> nonExistingParts) {
+  public static CandidateTablePruneCause missingPartitions(Set<String> nonExistingParts) {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);

@@ -21,6 +21,7 @@ package org.apache.lens.cube.metadata;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Iterator;
 
 import org.apache.lens.api.LensException;
 
@@ -122,5 +123,80 @@ public class TimePartition implements Comparable<TimePartition> {
 
   protected static String getWrongUpdatePeriodMessage(UpdatePeriod up, String dateString) {
     return String.format(UPDATE_PERIOD_WRONG_ERROR_MESSAGE, up, dateString);
+  }
+
+  public TimePartitionRange rangeUpto(TimePartition to) {
+    return new TimePartitionRange(this, to);
+  }
+
+  public TimePartitionRange rangeFrom(TimePartition from) {
+    return new TimePartitionRange(from, this);
+  }
+
+  public TimePartitionRange singletonRange() {
+    return rangeUpto(next());
+  }
+
+  /**
+   * Range of time partition. [begin,end). i.e. inclusive begin and exclusive end.
+   */
+  @Data
+  public static class TimePartitionRange implements Iterable<TimePartition> {
+    private TimePartition begin;
+    private TimePartition end;
+
+    public TimePartitionRange(TimePartition from, TimePartition to) {
+      this.begin = from;
+      this.end = to;
+    }
+
+    @Override
+    public String toString() {
+      return "[" + begin.getDateString() + ", " + end.getDateString() + ")";
+    }
+
+    /**
+     * returns TimePartition objects starting from begin and upto(excluding) end. interval of iteration is the update
+     * period of the partitions. Assumes both partitions have same update period.
+     */
+    @Override
+    public Iterator<TimePartition> iterator() {
+
+      return new Iterator<TimePartition>() {
+        TimePartition current = begin;
+
+        @Override
+        public boolean hasNext() {
+          return current.before(end);
+        }
+
+        @Override
+        public TimePartition next() {
+          TimePartition ret = current;
+          current = current.next();
+          return ret;
+        }
+
+        @Override
+        public void remove() {
+          throw new UnsupportedOperationException("remove not supported");
+        }
+      };
+    }
+
+    /**
+     * @param partition
+     * @return begin <= partition < end
+     */
+    public boolean contains(TimePartition partition) {
+      return !partition.before(begin) && partition.before(end);
+    }
+
+    /**
+     * @return if range is empty range.
+     */
+    public boolean isEmpty() {
+      return begin.equals(end);
+    }
   }
 }

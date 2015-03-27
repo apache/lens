@@ -22,9 +22,10 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.MetastoreUtil;
+import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.UpdatePeriod;
 
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Maps;
@@ -45,7 +46,6 @@ import lombok.extern.apachecommons.CommonsLog;
 @ToString(exclude = {"client"})
 @CommonsLog
 public abstract class PartitionTimeline implements Iterable<TimePartition> {
-  private final CubeMetastoreClient client;
   private final String storageTableName;
   private final UpdatePeriod updatePeriod;
   private final String partCol;
@@ -121,23 +121,6 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     return result;
   }
 
-  /**
-   * goes to metastore and queries if more partitions exist associated with (partCol = value) in storage table
-   * #getStorageTableName for update period #getUpdatePeriod. This might be useful for implementations while
-   * implementing drop.
-   *
-   * @param value
-   * @return
-   * @throws LensException
-   */
-  public boolean morePartitionsExist(String value) throws LensException {
-    try {
-      return getClient().partitionExistsByFilter(getStorageTableName(), StorageConstants.getPartFilter(getPartCol(),
-        value));
-    } catch (HiveException e) {
-      throw new LensException(e);
-    }
-  }
 
   /**
    * Add partition to timeline
@@ -155,7 +138,14 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
    * @return whether add was successful
    * @throws LensException
    */
-  public abstract boolean add(@NonNull Collection<TimePartition> partitions) throws LensException;
+  public boolean add(@NonNull Collection<TimePartition> partitions) throws LensException {
+    boolean result = true;
+    for (TimePartition partition : partitions) {
+      result &= add(partition);
+    }
+    // Can also return the failed to add items.
+    return result;
+  }
 
   /**
    * drop partition.

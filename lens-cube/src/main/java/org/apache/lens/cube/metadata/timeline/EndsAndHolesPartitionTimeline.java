@@ -22,7 +22,6 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.TimeRange;
@@ -48,13 +47,13 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   private TreeSet<TimePartition> holes = Sets.newTreeSet();
   private TimePartition latest;
 
-  public EndsAndHolesPartitionTimeline(CubeMetastoreClient client, String storageTableName, UpdatePeriod updatePeriod,
+  public EndsAndHolesPartitionTimeline(String storageTableName, UpdatePeriod updatePeriod,
     String partCol) {
-    super(client, storageTableName, updatePeriod, partCol);
+    super(storageTableName, updatePeriod, partCol);
   }
 
   @Override
-  public boolean add(TimePartition partition) throws LensException {
+  public boolean add(@NonNull TimePartition partition) throws LensException {
     if (isEmpty()) {
       // First partition being added
       first = partition;
@@ -75,20 +74,7 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   }
 
   @Override
-  public boolean add(@NonNull Collection<TimePartition> partitions) throws LensException {
-    boolean result = true;
-    for (TimePartition partition : partitions) {
-      result &= add(partition);
-    }
-    // Can also return the failed to add items.
-    return result;
-  }
-
-  @Override
-  public boolean drop(TimePartition toDrop) throws LensException {
-    if (morePartitionsExist(toDrop.getDateString())) {
-      return true;
-    }
+  public boolean drop(@NonNull TimePartition toDrop) throws LensException {
     if (first.equals(latest) && first.equals(toDrop)) {
       this.first = null;
       this.latest = null;

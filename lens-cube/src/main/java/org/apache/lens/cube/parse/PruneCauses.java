@@ -18,10 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
@@ -30,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
+import com.google.common.collect.Maps;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -38,6 +36,21 @@ import lombok.NoArgsConstructor;
 public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<CandidateTablePruneCause>> {
   @Getter(lazy = true)
   private final HashMap<CandidateTablePruneCause, List<T>> reversed = reverse();
+  @Getter(lazy = true)
+  private final HashMap<String, List<CandidateTablePruneCause>> compact = computeCompact();
+
+  private HashMap<String, List<CandidateTablePruneCause>> computeCompact() {
+    HashMap<String, List<CandidateTablePruneCause>> detailedMessage = Maps.newHashMap();
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
+      String key = StringUtils.join(entry.getValue(), ",");
+      if (detailedMessage.get(key) == null) {
+        detailedMessage.put(key, new ArrayList<CandidateTablePruneCause>());
+      }
+      detailedMessage.get(key).add(entry.getKey());
+    }
+    return detailedMessage;
+  }
+
   @Getter(lazy = true)
   private final BriefAndDetailedError jsonObject = toJsonObject();
 
@@ -62,16 +75,7 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
   }
 
   public BriefAndDetailedError toJsonObject() {
-    final HashMap<String, List<CandidateTablePruneCause>> detailedMessage
-      = new HashMap<String, List<CandidateTablePruneCause>>();
-    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
-      String key = StringUtils.join(entry.getValue(), ",");
-      if (detailedMessage.get(key) == null) {
-        detailedMessage.put(key, new ArrayList<CandidateTablePruneCause>());
-      }
-      detailedMessage.get(key).add(entry.getKey());
-    }
-    return new BriefAndDetailedError(getBriefCause(), detailedMessage);
+    return new BriefAndDetailedError(getBriefCause(), getCompact());
   }
 
   public String getBriefCause() {
@@ -81,10 +85,10 @@ public class PruneCauses<T extends AbstractCubeTable> extends HashMap<T, List<Ca
         maxCause = cause.getCause();
       }
     }
-    Map<CandidateTablePruneCause, List<T>> maxCauseMap = new HashMap<CandidateTablePruneCause, List<T>>();
-    for (Map.Entry<CandidateTablePruneCause, List<T>> entry : getReversed().entrySet()) {
-      if (entry.getKey().getCause().compareTo(maxCause) == 0) {
-        maxCauseMap.put(entry.getKey(), entry.getValue());
+    Map<CandidateTablePruneCause, String> maxCauseMap = Maps.newHashMap();
+    for (Map.Entry<CandidateTablePruneCause, List<T>> entry: getReversed().entrySet()) {
+      if (entry.getKey().getCause().equals(maxCause)) {
+        maxCauseMap.put(entry.getKey(), StringUtils.join(entry.getValue(), ","));
       }
     }
     return maxCause.getBriefError(maxCauseMap.keySet());

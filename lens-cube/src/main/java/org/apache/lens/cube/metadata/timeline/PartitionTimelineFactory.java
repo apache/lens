@@ -49,11 +49,11 @@ public final class PartitionTimelineFactory {
           updatePeriod, partitionColumn));
       Class<? extends PartitionTimeline> clz = (Class<? extends PartitionTimeline>) Class.forName(storageClassName);
       Constructor<? extends PartitionTimeline> constructor = clz.getConstructor(
-        CubeMetastoreClient.class, String.class, UpdatePeriod.class, String.class);
+        String.class, UpdatePeriod.class, String.class);
       return constructor.newInstance(
-        client, storageTable, updatePeriod, partitionColumn);
+        storageTable, updatePeriod, partitionColumn);
     } catch (Exception e) {
-      return new EndsAndHolesPartitionTimeline(client, storageTable, updatePeriod, partitionColumn);
+      return new EndsAndHolesPartitionTimeline(storageTable, updatePeriod, partitionColumn);
     }
   }
 }
