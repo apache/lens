@@ -27,7 +27,9 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
@@ -704,5 +706,24 @@ public class TestJoinResolver extends TestQueryRewrite {
         + " testdim4.dt = 'latest'", null, "group by testdim4.name", null,
       getWhereForDailyAndHourly2days("testcube", "c1_summary1"));
     TestCubeRewriter.compareQueries(expected, hqlQuery);
+  }
+
+  @Test
+  public void testChainsWithMultipleStorage() throws ParseException, HiveException {
+    Configuration conf = new Configuration(hconf);
+    conf.unset(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES); // supports all storages
+    String dimOnlyQuery = "select testDim2.name, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
+    CubeQueryRewriter driver = new CubeQueryRewriter(conf, hconf);
+    CubeQueryContext rewrittenQuery = driver.rewrite(dimOnlyQuery);
+    rewrittenQuery.toHQL();
+    Dimension citydim = CubeMetastoreClient.getInstance(hconf).getDimension("citydim");
+    Set<String> cdimTables = new HashSet<String>();
+    for (CandidateDim cdim : rewrittenQuery.getCandidateDims().get(citydim)) {
+      cdimTables.add(cdim.getName());
+    }
+    Assert.assertTrue(cdimTables.contains("citytable"));
+    Assert.assertTrue(cdimTables.contains("citytable2"));
+    Assert.assertFalse(cdimTables.contains("citytable3"));
+    Assert.assertFalse(cdimTables.contains("citytable4"));
   }
 }
