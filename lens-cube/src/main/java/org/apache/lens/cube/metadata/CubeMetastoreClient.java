@@ -195,6 +195,7 @@ public class CubeMetastoreClient {
               // Not found in table properties either, compute from all partitions of the fact-storage table.
               // First make sure all combinations of update period and partition column have an entry even
               // if no partitions exist
+              log.info("loading from all partitions");
               if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
                 storage) != null) {
                 for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
@@ -221,6 +222,7 @@ public class CubeMetastoreClient {
               commitAllBatchAdditions(storageTableName);
             } else {
               // found in table properties, load from there.
+              log.info("loading from table properties");
               for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
                 for (String partCol : getTimePartsOfTable(storageTableName)) {
                   ensureEntry(storageTableName, updatePeriod, partCol).init(storageTable);
@@ -277,7 +279,6 @@ public class CubeMetastoreClient {
           CubeMetastoreClient.this, storageTable, updatePeriod, partitionColumn));
       }
       PartitionTimeline ret = get(storageTable).get(updatePeriod).get(partitionColumn);
-      log.info("ensured entry " + ret);
       return ret;
     }
 
