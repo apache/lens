@@ -18,6 +18,11 @@
  */
 package org.apache.lens.server.api.query;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -87,5 +92,35 @@ public class TestAbstractQueryContext {
 
     Assert.assertTrue(reg.getGauges().keySet().containsAll(Arrays.asList(
       "lens.MethodMetricGauge.TestAbstractQueryContext-MockDriver-driverEstimate")));
+  }
+
+  @Test
+  public void testTransientState() throws LensException, IOException, ClassNotFoundException {
+    Configuration conf = new Configuration();
+    List<LensDriver> testDrivers = new ArrayList<LensDriver>();
+    MockDriver mdriver = new MockDriver();
+    mdriver.configure(conf);
+    testDrivers.add(mdriver);
+    MockQueryContext ctx = new MockQueryContext("mock query", new LensConf(), conf, testDrivers);
+    ByteArrayOutputStream bios = new ByteArrayOutputStream();
+    ObjectOutputStream out = new ObjectOutputStream(bios);
+    byte[] ctxBytes = null;
+    try {
+      out.writeObject(ctx);
+      ctxBytes = bios.toByteArray();
+    } finally {
+      out.close();
+    }
+    ByteArrayInputStream bais = new ByteArrayInputStream(ctxBytes);
+    ObjectInputStream in = new ObjectInputStream(bais);
+    MockQueryContext ctxRead = null;
+    try {
+      ctxRead = (MockQueryContext) in.readObject();
+    } finally {
+      in.close();
+    }
+    ctxRead.initTransientState();
+    ctxRead.setConf(conf);
+    Assert.assertNotNull(ctxRead.getHiveConf());
   }
 }

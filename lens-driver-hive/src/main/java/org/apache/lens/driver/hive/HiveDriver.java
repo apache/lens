@@ -333,6 +333,7 @@ public class HiveDriver implements LensDriver {
     connectionExpiryTimeout = this.driverConf.getLong(HS2_CONNECTION_EXPIRY_DELAY, DEFAULT_EXPIRY_DELAY);
     whetherCalculatePriority = this.driverConf.getBoolean(HS2_CALCULATE_PRIORITY, true);
     queryPriorityDecider = new DurationBasedQueryPriorityDecider(
+      this,
       this.driverConf.get(HS2_PRIORITY_RANGES, HS2_PRIORITY_DEFAULT_RANGES),
       this.driverConf.getFloat(HS2_PARTITION_WEIGHT_MONTHLY, MONTHLY_PARTITION_WEIGHT_DEFAULT),
       this.driverConf.getFloat(HS2_PARTITION_WEIGHT_DAILY, DAILY_PARTITION_WEIGHT_DEFAULT),
@@ -490,13 +491,13 @@ public class HiveDriver implements LensDriver {
       LOG.info("whetherCalculatePriority: " + whetherCalculatePriority);
       if (whetherCalculatePriority) {
         try {
-          // call explain for the plan to be filled
-          explain(ctx);
           // Inside try since non-data fetching queries can also be executed by async method.
           String priority = queryPriorityDecider.decidePriority(ctx).toString();
           ctx.getSelectedDriverConf().set("mapred.job.priority", priority);
           LOG.info("set priority to " + priority);
-        } catch (LensException e) {
+        } catch (Exception e) {
+          // not failing query launch when setting priority fails
+          // priority will be set to usually NORMAL - the default in underlying system.
           LOG.error("could not set priority for lens session id:" + ctx.getLensSessionIdentifier()
             + "User query: " + ctx.getUserQuery(), e);
         }
@@ -544,7 +545,8 @@ public class HiveDriver implements LensDriver {
         break;
       case ERROR:
         context.getDriverStatus().setState(DriverQueryState.FAILED);
-        context.getDriverStatus().setStatusMessage(
+        context.getDriverStatus().setStatusMessage("Query execution failed!");
+        context.getDriverStatus().setErrorMessage(
           "Query failed with errorCode:" + opStatus.getOperationException().getErrorCode() + " with errorMessage: "
             + opStatus.getOperationException().getMessage());
         break;

@@ -158,4 +158,9 @@
     <value>org.apache.lens.server.MockNonLensService</value>
     <description>Implementation class for session service</description>
   </property>
+
+  <property>
+    <name>lens.server.ml.predict.udf.jars</name>
+    <value>testjars/serde.jar,testjars/test.jar</value>
+  </property>
 </configuration>

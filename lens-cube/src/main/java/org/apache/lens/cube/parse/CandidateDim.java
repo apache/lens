@@ -19,20 +19,30 @@
 package org.apache.lens.cube.parse;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 import org.apache.lens.cube.metadata.CubeDimensionTable;
 import org.apache.lens.cube.metadata.Dimension;
+import org.apache.lens.cube.metadata.StorageConstants;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Holds context of a candidate dim table.
  */
-class CandidateDim implements CandidateTable {
+public class CandidateDim implements CandidateTable {
   final CubeDimensionTable dimtable;
-  String storageTable;
-  String whereClause;
+  @Getter
+  @Setter
+  private String storageTable;
+  @Getter
+  @Setter
+  private String whereClause;
   private boolean dbResolved = false;
   private boolean whereClauseAdded = false;
   private Dimension baseTable;
@@ -108,5 +118,18 @@ class CandidateDim implements CandidateTable {
   @Override
   public Collection<String> getColumns() {
     return dimtable.getAllFieldNames();
+  }
+
+  @Override
+  public Set<String> getStorageTables() {
+    return Collections.singleton(storageTable);
+  }
+
+  @Override
+  public Set<String> getPartsQueried() {
+    if (StringUtils.isBlank(whereClause)) {
+      return Collections.emptySet();
+    }
+    return Collections.singleton(StorageConstants.LATEST_PARTITION_VALUE);
   }
 }

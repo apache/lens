@@ -136,6 +136,14 @@ public class DriverSelectorQueryContext {
     @Setter
     /** final driver query - after driver rewrites the query*/
     protected String finalDriverQuery;
+
+    @Getter
+    @Setter
+    /**
+     * Plan generated from rewriter. This does not contain final driver plan. This contains the information
+     * extracted at rewriter only
+     */
+    protected DriverQueryPlan rewriterPlan;
   }
 
   /**
@@ -295,6 +303,17 @@ public class DriverSelectorQueryContext {
     return queries;
   }
 
+  public void setDriverRewriterPlan(LensDriver driver, DriverQueryPlan rewriterPlan) {
+    if (driverQueryContextMap.get(driver) != null) {
+      driverQueryContextMap.get(driver).setRewriterPlan(rewriterPlan);
+    }
+  }
+
+  public DriverQueryPlan getDriverRewriterPlan(LensDriver driver) {
+    return driverQueryContextMap.get(driver) != null
+      ? driverQueryContextMap.get(driver).getRewriterPlan() : null;
+  }
+
   public DriverQueryPlan getDriverQueryPlan(LensDriver driver) {
     return driverQueryContextMap.get(driver) != null
       ? driverQueryContextMap.get(driver).getDriverQueryPlan() : null;
@@ -322,5 +341,18 @@ public class DriverSelectorQueryContext {
 
   public void setDriverQueryPlan(LensDriver driver, DriverQueryPlan qp) {
     driverQueryContextMap.get(driver).setDriverQueryPlan(qp);
+  }
+
+  void clearTransientStateAfterLaunch() {
+    for (DriverQueryContext driverCtx : driverQueryContextMap.values()) {
+      driverCtx.driverQueryPlan = null;
+      driverCtx.rewriterPlan = null;
+    }
+  }
+
+  void clearTransientStateAfterCompleted() {
+    for (DriverQueryContext driverCtx : driverQueryContextMap.values()) {
+      driverCtx.driverSpecificConf = null;
+    }
   }
 }

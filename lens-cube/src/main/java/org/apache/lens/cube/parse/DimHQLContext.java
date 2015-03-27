@@ -102,7 +102,7 @@ abstract class DimHQLContext extends SimpleHQLContext {
       boolean added = (originalWhere != null);
       for (Dimension dim : queriedDims) {
         CandidateDim cdim = dimsToQuery.get(dim);
-        if (!cdim.isWhereClauseAdded() && !StringUtils.isBlank(cdim.whereClause)) {
+        if (!cdim.isWhereClauseAdded() && !StringUtils.isBlank(cdim.getWhereClause())) {
           appendWhereClause(whereBuf, StorageUtil.getWhereClause(cdim, query.getAliasForTabName(dim.getName())), added);
           added = true;
         }

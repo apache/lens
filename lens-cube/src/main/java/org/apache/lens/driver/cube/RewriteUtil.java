@@ -26,6 +26,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
+import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
@@ -229,12 +230,19 @@ public final class RewriteUtil {
     }
   }
 
+  public static DriverQueryPlan getRewriterPlan(DriverRewriterRunnable rewriter) {
+    RewriterPlan plan = new RewriterPlan(rewriter.cubeQueryCtx);
+    return plan;
+  }
+
   public static class DriverRewriterRunnable implements Runnable {
     @Getter
     private final LensDriver driver;
     private final AbstractQueryContext ctx;
     private final List<CubeQueryInfo> cubeQueries;
     private final String replacedQuery;
+    /** Cube query context - set after rewriting */
+    private List<CubeQueryContext> cubeQueryCtx;
 
     @Getter
     /** Indicate if rewrite operation succeeded */
@@ -256,6 +264,9 @@ public final class RewriteUtil {
       this.ctx = ctx;
       this.cubeQueries = cubeQueries;
       this.replacedQuery = replacedQuery;
+      if (cubeQueries != null) {
+        cubeQueryCtx = new ArrayList<CubeQueryContext>(cubeQueries.size());
+      }
     }
 
     @Override
@@ -296,6 +307,7 @@ public final class RewriteUtil {
             qIndex + "-" + TOHQL_GAUGE);
           // toHQL actually generates the rewritten query
           String hqlQuery = cqc.toHQL();
+          cubeQueryCtx.add(cqc);
           toHQLGauge.markSuccess();
           qIndex++;
 
@@ -310,6 +322,8 @@ public final class RewriteUtil {
         builder.append(replacedQuery.substring(start));
 
         rewrittenQuery = builder.toString();
+        // set rewriter plan
+        ctx.getDriverContext().setDriverRewriterPlan(driver, getRewriterPlan(this));
         succeeded = true;
         ctx.setDriverQuery(driver, rewrittenQuery);
         LOG.info("Final rewritten query for driver:" + driver + " is: " + rewrittenQuery);

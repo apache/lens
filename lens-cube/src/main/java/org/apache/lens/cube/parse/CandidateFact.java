@@ -25,6 +25,7 @@ import java.util.*;
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.metadata.CubeFactTable;
 import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.parse.HQLParser.ASTNodeVisitor;
 import org.apache.lens.cube.parse.HQLParser.TreeNode;
 
@@ -41,24 +42,35 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.antlr.runtime.CommonToken;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Holds context of a candidate fact table.
  */
-class CandidateFact implements CandidateTable {
+public class CandidateFact implements CandidateTable {
   public static final Log LOG = LogFactory.getLog(CandidateFact.class.getName());
   final CubeFactTable fact;
-  Set<String> storageTables;
+  @Getter
+  @Setter
+  private Set<String> storageTables;
   // flag to know if querying multiple storage tables is enabled for this fact
-  boolean enabledMultiTableSelect;
-  int numQueriedParts = 0;
-  final Map<TimeRange, String> rangeToWhereClause = new HashMap<TimeRange, String>();
+  @Getter
+  @Setter
+  private  boolean enabledMultiTableSelect;
+  @Getter
+  private int numQueriedParts = 0;
+  @Getter
+  private final Set<FactPartition> partsQueried = new HashSet<FactPartition>();
+  @Getter
+  private final Map<TimeRange, String> rangeToWhereClause = new HashMap<TimeRange, String>();
   private boolean dbResolved = false;
   private CubeInterface baseTable;
   private ASTNode selectAST;
   private ASTNode whereAST;
   private ASTNode groupbyAST;
   private ASTNode havingAST;
-  List<TimeRangeNode> timenodes = new ArrayList<TimeRangeNode>();
+  private List<TimeRangeNode> timenodes = new ArrayList<TimeRangeNode>();
   private final List<Integer> selectIndices = new ArrayList<Integer>();
   private final List<Integer> dimFieldIndices = new ArrayList<Integer>();
   private Collection<String> columns;
@@ -93,6 +105,10 @@ class CandidateFact implements CandidateTable {
       this.parent = parent;
       this.childIndex = childIndex;
     }
+  }
+
+  void incrementPartsQueried(int incr) {
+    numQueriedParts += incr;
   }
 
   private void updateTimeRanges(ASTNode root, ASTNode parent, int childIndex) throws SemanticException {

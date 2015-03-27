@@ -167,6 +167,6 @@ public final class StorageUtil {
   }
 
   public static String getWhereClause(CandidateDim dim, String alias) {
-    return getWhereClause(dim.whereClause, alias);
+    return getWhereClause(dim.getWhereClause(), alias);
   }
 }

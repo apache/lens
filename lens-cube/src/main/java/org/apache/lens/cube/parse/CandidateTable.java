@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 
@@ -34,6 +35,12 @@ public interface CandidateTable {
    * @return storage string
    */
   String getStorageString(String alias);
+
+  /**
+   * Get storage tables corresponding to this candidate
+   * @return
+   */
+  Set<String> getStorageTables();
 
   /**
    * Get candidate table
@@ -62,4 +69,9 @@ public interface CandidateTable {
    * @return set or list of columns
    */
   Collection<String> getColumns();
+
+  /**
+   * Get partitions queried
+   */
+  Set<?> getPartsQueried();
 }

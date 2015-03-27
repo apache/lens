@@ -240,6 +240,11 @@ public class HiveSessionService extends LensService implements SessionService {
     return sessionid;
   }
 
+  @Override
+  public boolean isOpen(LensSessionHandle sessionHandle) {
+    return sessionMap.containsKey(sessionHandle);
+  }
+
   /**
    * @inheritDoc
    */

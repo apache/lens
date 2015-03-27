@@ -129,4 +129,9 @@ public interface SessionService {
    *           Lists all resources if resource type is null
    */
   List<String> listAllResources(LensSessionHandle sessionHandle, String type);
+
+  /**
+   * Returns true if the session is open
+   */
+  boolean isOpen(LensSessionHandle sessionHandle);
 }

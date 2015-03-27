@@ -21,6 +21,10 @@ package org.apache.lens.ml;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -37,6 +41,7 @@ import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.ml.spark.SparkMLDriver;
 import org.apache.lens.ml.spark.algos.BaseSparkAlgo;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.session.SessionService;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -70,6 +75,11 @@ public class LensMLImpl implements LensML {
   /** The spark context. */
   private JavaSparkContext sparkContext;
 
+  /** Check if the predict UDF has been registered for a user */
+  private final Map<LensSessionHandle, Boolean> predictUdfStatus;
+  /** Background thread to periodically check if we need to clear expire status for a session */
+  private ScheduledExecutorService udfStatusExpirySvc;
+
   /**
    * Instantiates a new lens ml impl.
    *
@@ -77,6 +87,7 @@ public class LensMLImpl implements LensML {
    */
   public LensMLImpl(HiveConf conf) {
     this.conf = conf;
+    this.predictUdfStatus = new ConcurrentHashMap<LensSessionHandle, Boolean>();
   }
 
   public HiveConf getConf() {
@@ -300,6 +311,10 @@ public class LensMLImpl implements LensML {
         LOG.error("Failed to start driver " + driver, e);
       }
     }
+
+    udfStatusExpirySvc = Executors.newSingleThreadScheduledExecutor();
+    udfStatusExpirySvc.scheduleAtFixedRate(new UDFStatusExpiryRunnable(), 60, 60, TimeUnit.SECONDS);
+
     LOG.info("Started ML service");
   }
 
@@ -315,6 +330,7 @@ public class LensMLImpl implements LensML {
       }
     }
     drivers.clear();
+    udfStatusExpirySvc.shutdownNow();
     LOG.info("Stopped ML service");
   }
 
@@ -386,8 +402,11 @@ public class LensMLImpl implements LensML {
    * @return the ML test report
    * @throws LensException the lens exception
    */
-  public MLTestReport testModel(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
-    TestQueryRunner queryRunner, String outputTable) throws LensException {
+  public MLTestReport testModel(final LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
+    QueryRunner queryRunner, String outputTable) throws LensException {
+    if (sessionHandle == null) {
+      throw new NullPointerException("Null session not allowed");
+    }
     // check if algorithm exists
     if (!getAlgorithms().contains(algorithm)) {
       throw new LensException("No such algorithm " + algorithm);
@@ -435,7 +454,11 @@ public class LensMLImpl implements LensML {
       LOG.info("Table created " + testTable);
     }
 
+    // Check if ML UDF is registered in this session
+    registerPredictUdf(sessionHandle, queryRunner);
+
     LOG.info("Running evaluation query " + testQuery);
+    queryRunner.setQueryName("model_test_" + modelID);
     QueryHandle testQueryHandle = queryRunner.runQuery(testQuery);
 
     MLTestReport testReport = new MLTestReport();
@@ -579,7 +602,7 @@ public class LensMLImpl implements LensML {
   /**
    * Submit model test query to a remote Lens server.
    */
-  class RemoteQueryRunner extends TestQueryRunner {
+  class RemoteQueryRunner extends QueryRunner {
 
     /** The query api url. */
     final String queryApiUrl;
@@ -653,5 +676,59 @@ public class LensMLImpl implements LensML {
     LensConf lensConf = new LensConf();
     lensConf.getProperties().putAll(conf.getValByRegex(".*"));
     return lensConf;
+  }
+
+  protected void registerPredictUdf(LensSessionHandle sessionHandle, QueryRunner queryRunner) throws LensException {
+    if (isUdfRegisterd(sessionHandle)) {
+      // Already registered, nothing to do
+      return;
+    }
+
+    LOG.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
+    // We have to add UDF jars to the session
+    try {
+      SessionService sessionService = (SessionService) MLUtils.getServiceProvider().getService(SessionService.NAME);
+      String[] udfJars = conf.getStrings("lens.server.ml.predict.udf.jars");
+      if (udfJars != null) {
+        for (String jar : udfJars) {
+          sessionService.addResource(sessionHandle, "jar", jar);
+          LOG.info(jar + " added UDF session " + sessionHandle.getPublicId().toString());
+        }
+      }
+    } catch (Exception e) {
+      throw new LensException(e);
+    }
+
+    String regUdfQuery = "CREATE TEMPORARY FUNCTION " + HiveMLUDF.UDF_NAME + " AS '" + HiveMLUDF.class
+      .getCanonicalName() + "'";
+    queryRunner.setQueryName("register_predict_udf_" + sessionHandle.getPublicId().toString());
+    QueryHandle udfQuery = queryRunner.runQuery(regUdfQuery);
+    predictUdfStatus.put(sessionHandle, true);
+    LOG.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
+  }
+
+  protected boolean isUdfRegisterd(LensSessionHandle sessionHandle) {
+    return predictUdfStatus.containsKey(sessionHandle);
+  }
+
+  /**
+   * Periodically check if sessions have been closed, and clear UDF registered status.
+   */
+  private class UDFStatusExpiryRunnable implements Runnable {
+    public void run() {
+      try {
+        SessionService sessionService = (SessionService) MLUtils.getServiceProvider().getService(SessionService.NAME);
+        // Clear status of sessions which are closed.
+        List<LensSessionHandle> sessions = new ArrayList<LensSessionHandle>(predictUdfStatus.keySet());
+        for (LensSessionHandle sessionHandle : sessions) {
+          if (!sessionService.isOpen(sessionHandle)) {
+            LOG.info("Session closed, removing UDF status: " + sessionHandle);
+            predictUdfStatus.remove(sessionHandle);
+          }
+        }
+      } catch (Exception exc) {
+        LOG.warn("Error clearing UDF statuses", exc);
+      }
+    }
   }
 }

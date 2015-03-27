@@ -29,7 +29,7 @@ import org.apache.lens.api.LensSessionHandle;
  */
 public interface LensML {
 
-  /** The Constant NAME. */
+  /** Name of ML service */
   String NAME = "ml";
 
   /**

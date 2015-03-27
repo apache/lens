@@ -22,8 +22,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;
@@ -125,7 +126,7 @@ public abstract class DriverQueryPlan {
   /**
    * The tables queried.
    */
-  protected final List<String> tablesQueried = new ArrayList<String>();
+  protected final Set<String> tablesQueried = new HashSet<String>();
 
   /**
    * The has sub query.
@@ -186,6 +187,8 @@ public abstract class DriverQueryPlan {
    * The handle.
    */
   protected QueryPrepareHandle handle;
+
+  protected Map<String, Set<?>> partitions = new HashMap<String, Set<?>>();
 
   /**
    * Get the query plan
@@ -314,7 +317,7 @@ public abstract class DriverQueryPlan {
    *
    * @return the tablesQueried
    */
-  public List<String> getTablesQueried() {
+  public Set<String> getTablesQueried() {
     return tablesQueried;
   }
 
@@ -323,8 +326,17 @@ public abstract class DriverQueryPlan {
    *
    * @param table the table
    */
-  protected void addTablesQueries(String table) {
+  protected void addTablesQueried(String table) {
     this.tablesQueried.add(table);
+  }
+
+  /**
+   * Set the list of table names to be queried.
+   *
+   * @param table the table
+   */
+  protected void addTablesQueried(Set<String> tables) {
+    this.tablesQueried.addAll(tables);
   }
 
   /**
@@ -357,8 +369,8 @@ public abstract class DriverQueryPlan {
   /**
    * Set if query has subquery.
    */
-  protected void setHasSubQuery() {
-    this.hasSubQuery = true;
+  protected void setHasSubQuery(boolean hasSubQuery) {
+    this.hasSubQuery = hasSubQuery;
   }
 
   /**
@@ -579,8 +591,22 @@ public abstract class DriverQueryPlan {
     this.handle = handle;
   }
 
+  /**
+   * Get number of aggregate expressions.
+   *
+   * @return
+   */
   public int getNumAggreagateExprs() {
     return numAggrExprs;
+  }
+
+  /**
+   * Set num aggregate expressions
+   *
+   * @param numAggrs
+   */
+  protected void setNumAggreagateExprs(int numAggrs) {
+    numAggrExprs = numAggrs;
   }
 
   /**
@@ -588,8 +614,8 @@ public abstract class DriverQueryPlan {
    *
    * @return
    */
-  public Map<String, List<String>> getPartitions() {
-    return null;
+  public Map<String, Set<?>> getPartitions() {
+    return partitions;
   }
 
   /**
@@ -600,8 +626,9 @@ public abstract class DriverQueryPlan {
    */
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
     return new QueryPlan(numJoins, numGbys, numSels, numSelDi, numHaving, numObys, numAggrExprs, numFilters,
-      tablesQueried, hasSubQuery, execMode != null ? execMode.name() : null, scanMode != null ? scanMode.name()
-      : null, tableWeights, joinWeight, gbyWeight, filterWeight, havingWeight, obyWeight, selectWeight, null,
+      new ArrayList<String>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
+      scanMode != null ? scanMode.name() : null, tableWeights, joinWeight, gbyWeight, filterWeight, havingWeight,
+      obyWeight, selectWeight, null,
       URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
   }
 }

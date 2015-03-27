@@ -194,6 +194,7 @@ public class CubeMetastoreClient {
               // Not found in table properties either, compute from all partitions of the fact-storage table.
               // First make sure all combinations of update period and partition column have an entry even
               // if no partitions exist
+              log.info("loading from all partitions");
               if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
                 storage) != null) {
                 for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
@@ -220,6 +221,7 @@ public class CubeMetastoreClient {
               commitAllBatchAdditions(storageTableName);
             } else {
               // found in table properties, load from there.
+              log.info("loading from table properties");
               for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
                 for (String partCol : getTimePartsOfTable(storageTableName)) {
                   ensureEntry(storageTableName, updatePeriod, partCol).init(storageTable);
@@ -276,7 +278,6 @@ public class CubeMetastoreClient {
           CubeMetastoreClient.this, storageTable, updatePeriod, partitionColumn));
       }
       PartitionTimeline ret = get(storageTable).get(updatePeriod).get(partitionColumn);
-      log.info("ensured entry " + ret);
       return ret;
     }
 
@@ -1103,6 +1104,8 @@ public class CubeMetastoreClient {
             if (enableCaching) {
               allHiveTables.put(tableName, tbl);
             }
+          } else {
+            tbl = allHiveTables.get(tableName);
           }
         }
       }
@@ -1304,6 +1307,8 @@ public class CubeMetastoreClient {
               }
             }
           }
+        } else {
+          dimTable = allDimTables.get(tableName);
         }
       }
     }
@@ -1334,6 +1339,8 @@ public class CubeMetastoreClient {
               allStorages.put(storageName, storage);
             }
           }
+        } else {
+          storage = allStorages.get(storageName);
         }
       }
     }
@@ -1364,6 +1371,8 @@ public class CubeMetastoreClient {
               allCubes.put(tableName, cube);
             }
           }
+        } else {
+          cube = allCubes.get(tableName);
         }
       }
     }
@@ -1390,6 +1399,8 @@ public class CubeMetastoreClient {
               allDims.put(tableName, dim);
             }
           }
+        } else {
+          dim = allDims.get(tableName);
         }
       }
     }
@@ -1413,6 +1424,8 @@ public class CubeMetastoreClient {
           if (enableCaching && fact != null) {
             allFactTables.put(tableName, fact);
           }
+        } else {
+          fact = allFactTables.get(tableName);
         }
       }
     }

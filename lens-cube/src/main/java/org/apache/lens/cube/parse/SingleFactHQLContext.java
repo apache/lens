@@ -56,7 +56,7 @@ class SingleFactHQLContext extends DimOnlyHQLContext {
       // resolve timerange positions and replace it by corresponding where
       // clause
       for (TimeRange range : query.getTimeRanges()) {
-        String rangeWhere = fact.rangeToWhereClause.get(range);
+        String rangeWhere = fact.getRangeToWhereClause().get(range);
         if (!StringUtils.isBlank(rangeWhere)) {
           ASTNode rangeAST;
           try {

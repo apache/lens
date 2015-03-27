@@ -205,7 +205,6 @@ public class MLServiceImpl extends CompositeService implements MLService {
   @Override
   public MLTestReport testModel(LensSessionHandle sessionHandle, String table, String algorithm, String modelID,
     String outputTable) throws LensException {
-
     return ml.testModel(sessionHandle, table, algorithm, modelID, new DirectQueryRunner(sessionHandle), outputTable);
   }
 
@@ -262,7 +261,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
   /**
    * Run the test model query directly in the current lens server process.
    */
-  private class DirectQueryRunner extends TestQueryRunner {
+  private class DirectQueryRunner extends QueryRunner {
 
     /**
      * Instantiates a new direct query runner.
@@ -289,7 +288,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_SET, false + "");
       queryConf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false + "");
 
-      QueryHandle testQueryHandle = queryService.executeAsync(sessionHandle, testQuery, queryConf, "ml_test_query");
+      QueryHandle testQueryHandle = queryService.executeAsync(sessionHandle, testQuery, queryConf, queryName);
 
       // Wait for test query to complete
       LensQuery query = queryService.getQuery(sessionHandle, testQueryHandle);

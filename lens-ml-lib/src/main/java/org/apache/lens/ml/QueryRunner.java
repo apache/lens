@@ -22,20 +22,26 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
- * Run the model testing query against a Lens server.
+ * Run a query against a Lens server.
  */
-public abstract class TestQueryRunner {
+public abstract class QueryRunner {
 
   /** The session handle. */
   protected final LensSessionHandle sessionHandle;
 
+  @Getter @Setter
+  protected String queryName;
+
   /**
-   * Instantiates a new test query runner.
+   * Instantiates a new query runner.
    *
    * @param sessionHandle the session handle
    */
-  public TestQueryRunner(LensSessionHandle sessionHandle) {
+  public QueryRunner(LensSessionHandle sessionHandle) {
     this.sessionHandle = sessionHandle;
   }
 

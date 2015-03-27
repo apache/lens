@@ -27,6 +27,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
+import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -45,6 +46,8 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.testng.Assert;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -1326,6 +1329,9 @@ public class CubeTestSetup {
     s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
     s1.setPartCols(partCols);
     s1.setTimePartCols(timePartCols);
+    Map<String, String> tblPros = Maps.newHashMap();
+    tblPros.put(LensConfConstants.STORAGE_COST, "100");
+    s1.setTblProps(tblPros);
     dumpPeriods.put(c1, UpdatePeriod.HOURLY);
 
     StorageTableDesc s2 = new StorageTableDesc();

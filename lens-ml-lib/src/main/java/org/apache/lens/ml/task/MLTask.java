@@ -20,8 +20,6 @@ package org.apache.lens.ml.task;
 
 import java.util.*;
 
-import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.client.LensConnectionParams;
 import org.apache.lens.client.LensMLClient;
 import org.apache.lens.ml.LensML;
 import org.apache.lens.ml.MLTestReport;
@@ -61,6 +59,13 @@ public class MLTask implements Runnable {
   private String trainingTable;
 
   /**
+   * Name of the table containing test data. Optional, if not provided trainingTable itself is
+   * used for testing
+   */
+  @Getter
+  private String testTable;
+
+  /**
    * Training table partition spec
    */
   @Getter
@@ -84,14 +89,14 @@ public class MLTask implements Runnable {
   @Getter
   private HiveConf configuration;
 
-  /**
-   * Lens Server base URL, when running example as a client.
-   */
-  @Getter
-  private String serverLocation;
-
   private LensML ml;
   private String taskID;
+
+  /**
+   * ml client
+   */
+  @Getter
+  private LensMLClient mlClient;
 
   /**
    * Output table name
@@ -100,28 +105,10 @@ public class MLTask implements Runnable {
   private String outputTable;
 
   /**
-   * Session handle
-   */
-  @Getter
-  private LensSessionHandle sessionHandle;
-
-  /**
    * Extra params passed to the training algorithm
    */
   @Getter
   private Map<String, String> extraParams;
-
-  /**
-   * User name to connect to Lens server
-   */
-  @Getter
-  private String userName;
-
-  /**
-   * Password to connect to Lens server
-   */
-  @Getter
-  private String password;
 
   @Getter
   private String modelID;
@@ -153,6 +140,11 @@ public class MLTask implements Runnable {
       return this;
     }
 
+    public Builder testTable(String testTable) {
+      task.testTable = testTable;
+      return this;
+    }
+
     public Builder algorithm(String algorithm) {
       task.algorithm = algorithm;
       return this;
@@ -160,6 +152,11 @@ public class MLTask implements Runnable {
 
     public Builder labelColumn(String labelColumn) {
       task.labelColumn = labelColumn;
+      return this;
+    }
+
+    public Builder client(LensMLClient client) {
+      task.mlClient = client;
       return this;
     }
 
@@ -176,15 +173,7 @@ public class MLTask implements Runnable {
       return this;
     }
 
-    public Builder serverLocation(String serverLocation) {
-      task.serverLocation = serverLocation;
-      return this;
-    }
 
-    public Builder sessionHandle(LensSessionHandle sessionHandle) {
-      task.sessionHandle = sessionHandle;
-      return this;
-    }
 
     public Builder extraParam(String param, String value) {
       task.extraParams.put(param, value);
@@ -207,15 +196,6 @@ public class MLTask implements Runnable {
       return builtTask;
     }
 
-    public Builder userName(String userName) {
-      task.userName = userName;
-      return this;
-    }
-
-    public Builder password(String password) {
-      task.password = password;
-      return this;
-    }
   }
 
   @Override
@@ -239,14 +219,10 @@ public class MLTask implements Runnable {
    * @throws Exception
    */
   private void runTask() throws Exception {
-    if (serverLocation != null) {
+    if (mlClient != null) {
       // Connect to a remote Lens server
-      LensConnectionParams connectionParams = new LensConnectionParams();
-      connectionParams.setBaseUrl(serverLocation);
-      connectionParams.getConf().setUser(userName);
-      LensMLClient mlClient = new LensMLClient(connectionParams, sessionHandle);
       ml = mlClient;
-      LOG.info("Working in client mode. Lens session handle " + sessionHandle.getPublicId());
+      LOG.info("Working in client mode. Lens session handle " + mlClient.getSessionHandle().getPublicId());
     } else {
       // In server mode session handle has to be passed by the user as a request parameter
       ml = MLUtils.getMLService();
@@ -260,7 +236,8 @@ public class MLTask implements Runnable {
     printModelMetadata(taskID, modelID);
 
     LOG.info("Starting test " + taskID);
-    MLTestReport testReport = ml.testModel(sessionHandle, trainingTable, algorithm, modelID, outputTable);
+    testTable = (testTable != null) ? testTable : trainingTable;
+    MLTestReport testReport = ml.testModel(mlClient.getSessionHandle(), testTable, algorithm, modelID, outputTable);
     reportID = testReport.getReportID();
     printTestReport(taskID, testReport);
     saveTask();

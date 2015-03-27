@@ -18,13 +18,14 @@
  */
 package org.apache.lens.driver.hive.priority;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
+import org.apache.lens.cube.metadata.FactPartition;
+import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.priority.CostToPriorityRangeConf;
 import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;
@@ -32,27 +33,30 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
 
 
-  CostToPriorityRangeConf costToPriorityRangeMap;
+  private final CostToPriorityRangeConf costToPriorityRangeMap;
 
   /** Partition Weights for priority calculation based on selected partitions **/
 
   /** weight of monthly partition * */
-  private float monthlyPartitionWeight;
+  private final float monthlyPartitionWeight;
   /** weight of daily partition * */
-  private float dailyPartitionWeight;
+  private final float dailyPartitionWeight;
   /** weight of hourly partition * */
-  private float hourlyPartitionWeight;
+  private final float hourlyPartitionWeight;
+  private final LensDriver driver;
+
 
   /**
    * Constructor. Takes three weights for partitions.
-   *
+   * @param driver
    * @param ranges
    * @param monthlyPartitoinWeight
    * @param dailyPartitionWeight
    * @param hourlyPartitionWeight
    */
-  public DurationBasedQueryPriorityDecider(String ranges,
-    float monthlyPartitoinWeight, float dailyPartitionWeight, float hourlyPartitionWeight) {
+  public DurationBasedQueryPriorityDecider(LensDriver driver,
+    String ranges, float monthlyPartitoinWeight, float dailyPartitionWeight, float hourlyPartitionWeight) {
+    this.driver = driver;
     this.costToPriorityRangeMap = new CostToPriorityRangeConf(ranges);
     this.monthlyPartitionWeight = monthlyPartitoinWeight;
     this.dailyPartitionWeight = dailyPartitionWeight;
@@ -74,27 +78,6 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
   }
 
   /**
-   * Extract partitions from AbstractQueryContext. Hive currently gives partitions in the format
-   * {a:[dt partition1, dt partition2]...}. This method removes the "dt"
-   *
-   * @param queryContext
-   * @return all the tables along with their selected partitions.
-   * @throws LensException
-   */
-  protected Map<String, List<String>> extractPartitions(AbstractQueryContext queryContext) throws LensException {
-    Map<String, List<String>> partitions = new HashMap<String, List<String>>();
-    for (Map.Entry<String, List<String>> entry : queryContext.getDriverContext().getSelectedDriverQueryPlan()
-      .getPartitions().entrySet()) {
-      partitions.put(entry.getKey(), new ArrayList<String>());
-      for (String s : entry.getValue()) {
-        String[] splits = s.split("\\s+");
-        partitions.get(entry.getKey()).add(splits[splits.length - 1]); //last split.
-      }
-    }
-    return partitions;
-  }
-
-  /**
    * Calculates total cost based on weights of selected tables and their selected partitions
    *
    * @param queryContext
@@ -102,19 +85,33 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
    * @throws LensException
    */
 
-  float getDurationCost(AbstractQueryContext queryContext) throws LensException {
-    final Map<String, List<String>> partitions = extractPartitions(queryContext);
-    LOG.info("partitions picked: " + partitions);
+  @SuppressWarnings("unchecked") // required for (Set<FactPartition>) casting
+  private float getDurationCost(AbstractQueryContext queryContext) throws LensException {
     float cost = 0;
-    for (String table : partitions.keySet()) {
-      for (String partition : partitions.get(table)) {
-        if (!partition.equals("latest")) {
-          cost += queryContext.getDriverContext().getSelectedDriverQueryPlan().getTableWeight(table)
-            * getNormalizedPartitionCost(partition);
+    if (queryContext.getDriverContext().getDriverRewriterPlan(driver) != null) {
+      // the calculation is done only for cube queries involving fact tables
+      // for all other native table queries and dimension only queries, the cost will be zero and priority will
+      // be the highest one associated with zero cost
+      for (Map.Entry<String, Set<?>> entry : queryContext.getDriverContext().getDriverRewriterPlan(driver)
+        .getPartitions().entrySet()) {
+        if (!entry.getValue().isEmpty() && entry.getValue().iterator().next() instanceof FactPartition) {
+          Set<FactPartition> factParts = (Set<FactPartition>)entry.getValue();
+          for (FactPartition partition : factParts) {
+            cost += getTableWeights(partition.getStorageTables(), queryContext) * getNormalizedPartitionCost(
+              partition.getPeriod());
+          }
         }
       }
     }
     return cost;
+  }
+
+  private float getTableWeights(Set<String> tables, AbstractQueryContext queryContext) {
+    float weight = 0;
+    for (String tblName : tables) {
+      weight += queryContext.getDriverContext().getDriverRewriterPlan(driver).getTableWeight(tblName);
+    }
+    return weight == 0 ? 1 : weight;
   }
 
   /**
@@ -124,16 +121,16 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
    * @return normalized cost.
    * @throws LensException
    */
-  float getNormalizedPartitionCost(String partition) throws LensException {
-    switch (partition.length()) {
-    case 7: //monthly
+  private float getNormalizedPartitionCost(UpdatePeriod updatePeriod) throws LensException {
+    switch (updatePeriod) {
+    case MONTHLY: //monthly
       return 30 * monthlyPartitionWeight;
-    case 10: // daily
+    case DAILY: // daily
       return 1 * dailyPartitionWeight;
-    case 13: // hourly
-      return (1 / 24) * hourlyPartitionWeight;
+    case HOURLY: // hourly
+      return (1.0f / 24) * hourlyPartitionWeight;
     default:
-      throw new LensException("Could not recognize partition: " + partition);
+      throw new LensException("Weight not defined for " + updatePeriod);
     }
   }
 }

@@ -113,7 +113,7 @@ public abstract class AbstractQueryContext implements Serializable {
   private boolean olapQuery = false;
 
   /** Lock used to synchronize HiveConf access */
-  private final Lock hiveConfLock = new ReentrantLock();
+  private transient Lock hiveConfLock = new ReentrantLock();
 
   protected AbstractQueryContext(final String query, final String user, final LensConf qconf, final Configuration conf,
     final Collection<LensDriver> drivers, boolean mergeDriverConf) {
@@ -133,6 +133,11 @@ public abstract class AbstractQueryContext implements Serializable {
       this.selectedDriverQuery = query;
       setSelectedDriver(drivers.iterator().next());
     }
+  }
+
+  // called after the object is constructed from serialized object
+  public void initTransientState() {
+    hiveConfLock = new ReentrantLock();
   }
 
   /**
@@ -369,6 +374,7 @@ public abstract class AbstractQueryContext implements Serializable {
    * Gets HiveConf corresponding to query conf.
    *
    * Should be called judiciously, because constructing HiveConf from conf object is costly.
+   * The field is set to null after query completion. Should not be accessed after completion.
    * @return
    */
   public HiveConf getHiveConf() {
@@ -411,5 +417,14 @@ public abstract class AbstractQueryContext implements Serializable {
    */
   public String getLogHandle() {
     return this.getUserQuery();
+  }
+
+  public void clearTransientStateAfterLaunch() {
+    driverContext.clearTransientStateAfterLaunch();
+  }
+
+  public void clearTransientStateAfterCompleted() {
+    driverContext.clearTransientStateAfterCompleted();
+    hiveConf = null;
   }
 }

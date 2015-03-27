@@ -922,7 +922,8 @@ public class JDBCDriver implements LensDriver {
         context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " cancelled");
       } else if (ctx.getQueryResult() != null && ctx.getQueryResult().error != null) {
         context.getDriverStatus().setState(DriverQueryState.FAILED);
-        context.getDriverStatus().setStatusMessage(ctx.getQueryResult().error.getMessage());
+        context.getDriverStatus().setStatusMessage("Query execution failed!");
+        context.getDriverStatus().setErrorMessage(ctx.getQueryResult().error.getMessage());
       } else {
         context.getDriverStatus().setState(DriverQueryState.SUCCESSFUL);
         context.getDriverStatus().setStatusMessage(context.getQueryHandle() + " successful");
