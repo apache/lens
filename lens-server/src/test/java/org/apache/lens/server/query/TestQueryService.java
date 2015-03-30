@@ -51,6 +51,7 @@ import org.apache.lens.server.api.query.AbstractQueryContext;
 import org.apache.lens.server.api.query.QueryContext;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.session.HiveSessionService;
+import org.apache.lens.server.session.LensSessionImpl;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1368,29 +1369,62 @@ public class TestQueryService extends LensJerseyTest {
     LensSessionHandle sessionHandle =
       sessionService.openSession("foo@localhost", "bar", LensTestUtil.DB_WITH_JARS, new HashMap<String, String>());
 
+    // Add a jar in the session
+    File testJarFile = new File("testdata/test2.jar");
+    sessionService.addResourceToAllServices(sessionHandle, "jar", "file://" + testJarFile.getAbsolutePath());
+
     LOG.info("@@@ Opened session " + sessionHandle.getPublicId() + " with database " + LensTestUtil.DB_WITH_JARS);
+    LensSessionImpl session = sessionService.getSession(sessionHandle);
+
+    // Jars should be pending until query is run
+    Assert.assertEquals(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS).size(), 1);
+    Assert.assertEquals(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS_2).size(), 1);
 
     final String tableInDBWithJars = "testHiveDriverGetsDBJars";
     try {
       // First execute query on the session with db should load jars from DB
-      try {
-        LensTestUtil.createTable(tableInDBWithJars, target(), sessionHandle, "(ID INT, IDSTR STRING) "
-          + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
-      } catch (Throwable exc) {
-        // Above fails because our serde is returning all nulls. We only want to test that serde gets loaded
-        exc.printStackTrace();
-      }
+      LensTestUtil.createTable(tableInDBWithJars, target(), sessionHandle, "(ID INT, IDSTR STRING) "
+        + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
 
       boolean addedToHiveDriver = false;
 
       for (LensDriver driver : queryService.getDrivers()) {
         if (driver instanceof HiveDriver) {
-          addedToHiveDriver = ((HiveDriver) driver).areRsourcesAddedForSession(sessionHandle.getPublicId().toString());
+          addedToHiveDriver =
+            ((HiveDriver) driver).areDBResourcesAddedForSession(sessionHandle.getPublicId().toString(),
+              LensTestUtil.DB_WITH_JARS);
         }
       }
+      Assert.assertTrue(addedToHiveDriver);
+
+      // Switch database
+      LOG.info("@@@# database switch test");
+      session.setCurrentDatabase(LensTestUtil.DB_WITH_JARS_2);
+      LensTestUtil.createTable(tableInDBWithJars + "_2", target(), sessionHandle, "(ID INT, IDSTR STRING) "
+        + "ROW FORMAT SERDE \"DatabaseJarSerde\"");
+
+      // All db jars should have been added
+      Assert.assertTrue(session.getDBResources(LensTestUtil.DB_WITH_JARS_2).isEmpty());
+      Assert.assertTrue(session.getDBResources(LensTestUtil.DB_WITH_JARS).isEmpty());
+
+      // All session resources must have been added to both DBs
+      Assert.assertFalse(session.getLensSessionPersistInfo().getResources().isEmpty());
+      for (LensSessionImpl.ResourceEntry resource : session.getLensSessionPersistInfo().getResources()) {
+        Assert.assertTrue(resource.isAddedToDatabase(LensTestUtil.DB_WITH_JARS_2));
+        Assert.assertTrue(resource.isAddedToDatabase(LensTestUtil.DB_WITH_JARS));
+      }
+
+      Assert.assertTrue(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS).isEmpty());
+      Assert.assertTrue(session.getPendingSessionResourcesForDatabase(LensTestUtil.DB_WITH_JARS_2).isEmpty());
+
     } finally {
       LOG.info("@@@ TEST_OVER");
-      LensTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
+      try {
+        LensTestUtil.dropTable(tableInDBWithJars, target(), sessionHandle);
+        LensTestUtil.dropTable(tableInDBWithJars + "_2", target(), sessionHandle);
+      } catch (Throwable th) {
+        th.printStackTrace();
+      }
       sessionService.closeSession(sessionHandle);
     }
   }

@@ -661,8 +661,10 @@ public class TestHiveDriver {
    */
   @Test
   public void testExplain() throws Exception {
-    createTestTable("test_explain");
     SessionState.setCurrentSessionState(ss);
+    SessionState.get().setCurrentDatabase(dataBase);
+    createTestTable("test_explain");
+
     DriverQueryPlan plan = driver.explain(createExplainContext("SELECT ID FROM test_explain", conf));
     assertTrue(plan instanceof HiveQueryPlan);
     assertEquals(plan.getTableWeight(dataBase + ".test_explain"), 500.0);
@@ -671,6 +673,7 @@ public class TestHiveDriver {
     // test execute prepare
     PreparedQueryContext pctx = new PreparedQueryContext("SELECT ID FROM test_explain", null, conf, drivers);
     pctx.setSelectedDriver(driver);
+    pctx.setLensSessionIdentifier(sessionid);
 
     SessionState.setCurrentSessionState(ss);
     HiveConf inConf = new HiveConf(conf);
@@ -774,6 +777,7 @@ public class TestHiveDriver {
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
     PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf, drivers);
     pctx.setSelectedDriver(driver);
+    pctx.setLensSessionIdentifier(sessionid);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
     // assertNotNull(plan2.getResultDestination());
     Assert.assertEquals(0, driver.getHiveHandleSize());

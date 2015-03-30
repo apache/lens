@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.query;
 
+import static org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,6 +54,7 @@ import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.util.UtilityMethods;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -473,7 +476,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
                   LOG.info("Submitting to already selected driver");
                 }
                 // Check if we need to pass session's effective resources to selected driver
-                maybeAddSessionResourcesToDriver(ctx);
+                addSessionResourcesToDriver(ctx);
                 ctx.getSelectedDriver().executeAsync(ctx);
               } catch (Exception e) {
                 LOG.error("Error launching query " + ctx.getQueryHandle(), e);
@@ -1322,7 +1325,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       acquire(sessionHandle);
       prepared = prepareQuery(sessionHandle, query, lensConf, SubmitOp.EXPLAIN_AND_PREPARE);
       prepared.setQueryName(queryName);
-      maybeAddSessionResourcesToDriver(prepared);
+      addSessionResourcesToDriver(prepared);
       QueryPlan plan = prepared.getSelectedDriver().explainAndPrepare(prepared).toQueryPlan();
       plan.setPrepareHandle(prepared.getPrepareHandle());
       return plan;
@@ -2016,7 +2019,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       explainQueryContext.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
       accept(query, qconf, SubmitOp.EXPLAIN);
       rewriteAndSelect(explainQueryContext);
-      maybeAddSessionResourcesToDriver(explainQueryContext);
+      addSessionResourcesToDriver(explainQueryContext);
       return explainQueryContext.getSelectedDriver().explain(explainQueryContext).toQueryPlan();
     } catch (LensException e) {
       LOG.error("Error during explain :", e);
@@ -2029,26 +2032,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       return plan;
     } catch (UnsupportedEncodingException e) {
       throw new LensException(e);
-    } finally {
-      release(sessionHandle);
-    }
-  }
-
-  /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.LensService#addResource(org.apache.lens.api.LensSessionHandle, java.lang.String,
-   * java.lang.String)
-   */
-  public void addResource(LensSessionHandle sessionHandle, String type, String path) throws LensException {
-    try {
-      acquire(sessionHandle);
-      String command = "add " + type.toLowerCase() + " " + path;
-      for (LensDriver driver : drivers.values()) {
-        if (driver instanceof HiveDriver) {
-          driver.execute(createResourceQuery(command, sessionHandle, driver));
-        }
-      }
     } finally {
       release(sessionHandle);
     }
@@ -2342,9 +2325,9 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LensSessionImpl session = getSession(sessionHandle);
       acquire(sessionHandle);
       // Add resources for this session
-      List<LensSessionImpl.ResourceEntry> resources = session.getLensSessionPersistInfo().getResources();
+      List<ResourceEntry> resources = session.getLensSessionPersistInfo().getResources();
       if (resources != null && !resources.isEmpty()) {
-        for (LensSessionImpl.ResourceEntry resource : resources) {
+        for (ResourceEntry resource : resources) {
           LOG.info("Restoring resource " + resource + " for session " + lensSession);
           String command = "add " + resource.getType().toLowerCase() + " " + resource.getLocation();
           try {
@@ -2370,37 +2353,14 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   /**
    * Add session's resources to selected driver if needed
-   * @param ctx QueryContext for executinf queries
+   * @param ctx the query context
    * @throws LensException
    */
-  protected void maybeAddSessionResourcesToDriver(final QueryContext ctx) throws LensException {
-    maybeAddSessionResourcesToDriver(ctx.getLensSessionIdentifier(), ctx.getSelectedDriver(),
-      ctx.getQueryHandle().toString());
-  }
+  protected void addSessionResourcesToDriver(final AbstractQueryContext ctx) {
+    LensDriver driver = ctx.getSelectedDriver();
+    String sessionIdentifier = ctx.getLensSessionIdentifier();
 
-  /**
-   * Add session's resources to selected driver if needed.
-   * @param ctx ExplainQueryContext for explain queries
-   * @throws LensException
-   */
-  protected void maybeAddSessionResourcesToDriver(final ExplainQueryContext ctx) throws LensException {
-    maybeAddSessionResourcesToDriver(ctx.getLensSessionIdentifier(), ctx.getSelectedDriver(),
-      ctx.getSelectedDriverQuery());
-  }
-
-  /**
-   * Add session's resources to selected driver if needed.
-   * @param ctx PreparedQueryContext for explainAndPrepare(Async) queries
-   * @throws LensException
-   */
-  protected void maybeAddSessionResourcesToDriver(final PreparedQueryContext ctx) throws LensException {
-    maybeAddSessionResourcesToDriver(ctx.getLensSessionIdentifier(), ctx.getSelectedDriver(),
-      ctx.getPrepareHandle().toString());
-  }
-
-  private void maybeAddSessionResourcesToDriver(String sessionIdentifier, LensDriver driver, String queryHandle)
-    throws LensException {
-    if (!(driver instanceof HiveDriver) || sessionIdentifier == null || sessionIdentifier.isEmpty()) {
+    if (!(driver instanceof HiveDriver) || StringUtils.isBlank(sessionIdentifier)) {
       // Adding resources only required for Hive driver
       return;
     }
@@ -2413,36 +2373,78 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
     // Add resources if either they haven't been marked as added on the session, or if Hive driver says they need
     // to be added to the corresponding hive driver
-    if (!hiveDriver.areRsourcesAddedForSession(sessionIdentifier)) {
-      Collection<LensSessionImpl.ResourceEntry> dbResources = session.getCurrentDBResources();
+    if (!hiveDriver.areDBResourcesAddedForSession(sessionIdentifier, ctx.getDatabase())) {
+      Collection<ResourceEntry> dbResources = session.getDBResources(ctx.getDatabase());
 
-      if (dbResources != null && !dbResources.isEmpty()) {
+      if (CollectionUtils.isNotEmpty(dbResources)) {
         LOG.info("Proceeding to add resources for DB "
-          + session.getCurrentDatabase() + " for query " + queryHandle + " resources: " + dbResources);
+          + session.getCurrentDatabase() + " for query " + ctx.getLogHandle() + " resources: " + dbResources);
 
-        for (LensSessionImpl.ResourceEntry res : dbResources) {
-          String uri = res.getLocation();
-          try {
-            // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
-            // See: org.apache.hadoop.hive.ql.exec.Utilities.addToClassPath
-            if (uri.startsWith("file:") && !uri.startsWith("file://")) {
-              uri = "file://" + uri.substring("file:".length());
-            }
-            String command = "add " + res.getType().toLowerCase() + " " + uri;
-            hiveDriver.execute(createResourceQuery(command, sessionHandle, driver));
-            LOG.info("Added resource to hive driver for session "
-              + sessionIdentifier + " cmd: " + command);
-          } catch (LensException exc) {
-            LOG.error("Error adding resources for session "
-              + sessionIdentifier + " resources: " + uri, exc.getCause());
+        List<ResourceEntry> failedDBResources = addResources(dbResources, sessionHandle, hiveDriver);
+        Iterator<ResourceEntry> itr = dbResources.iterator();
+        while (itr.hasNext()) {
+          ResourceEntry res = itr.next();
+          if (!failedDBResources.contains(res)) {
+            itr.remove();
           }
         }
       } else {
         LOG.info("No need to add DB resources for session: " + sessionIdentifier
           + " db= " + session.getCurrentDatabase());
       }
-
-      hiveDriver.setResourcesAddedForSession(sessionIdentifier);
+      hiveDriver.setResourcesAddedForSession(sessionIdentifier, ctx.getDatabase());
     }
+
+    // Get pending session resources which needed to be added for this database
+    Collection<ResourceEntry> pendingResources =
+      session.getPendingSessionResourcesForDatabase(ctx.getDatabase());
+    LOG.info("Adding pending " + pendingResources.size() + " session resources for session " + sessionIdentifier
+      + " for database " + ctx.getDatabase());
+    List<ResourceEntry> failedResources = addResources(pendingResources, sessionHandle, hiveDriver);
+    // Mark added resources so that we don't add them again. If any of the resources failed
+    // to be added, then they will be added again
+    for (ResourceEntry res : pendingResources) {
+      if (!failedResources.contains(res)) {
+        res.addToDatabase(ctx.getDatabase());
+      }
+    }
+  }
+
+  /**
+   * Add resources to hive driver, returning resources which failed to be added
+   * @param resources collection of resources intented to be added to hive driver
+   * @param sessionHandle
+   * @param hiveDriver
+   * @return resources which could not be added to hive driver
+   */
+  private List<ResourceEntry> addResources(Collection<ResourceEntry> resources,
+                                                           LensSessionHandle sessionHandle,
+                                                           HiveDriver hiveDriver) {
+    List<ResourceEntry> failedResources = new ArrayList<ResourceEntry>();
+    for (ResourceEntry res : resources) {
+      try{
+        addSingleResourceToHive(hiveDriver, res, sessionHandle);
+      } catch (LensException exc) {
+        failedResources.add(res);
+        LOG.error("Error adding resources for session "
+          + sessionHandle.getPublicId().toString() + " resources: " + res.getLocation(), exc.getCause());
+      }
+    }
+    return failedResources;
+  }
+
+  private void addSingleResourceToHive(HiveDriver driver, ResourceEntry res,
+                                       LensSessionHandle sessionHandle) throws LensException {
+    String sessionIdentifier = sessionHandle.getPublicId().toString();
+    String uri = res.getLocation();
+    // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
+    // See: org.apache.hadoop.hive.ql.exec.Utilities.addToClassPath
+    if (uri.startsWith("file:") && !uri.startsWith("file://")) {
+      uri = "file://" + uri.substring("file:".length());
+    }
+    String command = "add " + res.getType().toLowerCase() + " " + uri;
+    driver.execute(createResourceQuery(command, sessionHandle, driver));
+    LOG.info("Added resource to hive driver for session "
+      + sessionIdentifier + " cmd: " + command);
   }
 }

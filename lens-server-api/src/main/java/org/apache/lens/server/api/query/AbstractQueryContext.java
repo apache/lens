@@ -38,6 +38,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.hive.ql.session.SessionState;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -112,6 +113,8 @@ public abstract class AbstractQueryContext implements Serializable {
   @Setter
   private boolean olapQuery = false;
 
+  private final String database;
+
   /** Lock used to synchronize HiveConf access */
   private transient Lock hiveConfLock = new ReentrantLock();
 
@@ -132,6 +135,14 @@ public abstract class AbstractQueryContext implements Serializable {
     if (drivers != null && drivers.size() == 1) {
       this.selectedDriverQuery = query;
       setSelectedDriver(drivers.iterator().next());
+    }
+
+    // If this is created under an 'acquire' current db would be set
+    if (SessionState.get() != null) {
+      String currDb = SessionState.get().getCurrentDatabase();
+      database = currDb == null ? "default" : currDb;
+    } else {
+      database = "default";
     }
   }
 
@@ -417,6 +428,14 @@ public abstract class AbstractQueryContext implements Serializable {
    */
   public String getLogHandle() {
     return this.getUserQuery();
+  }
+
+  /**
+   * Returns database set while launching query
+   * @return
+   */
+  public String getDatabase() {
+    return database == null ? "default" : database;
   }
 
   public void clearTransientStateAfterLaunch() {
