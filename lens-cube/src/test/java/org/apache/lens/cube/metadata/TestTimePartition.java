@@ -27,7 +27,7 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestTimePartition {
-  public static Date NOW = new Date();
+  public static final Date NOW = new Date();
 
   @Test
   public void test() throws LensException {
