@@ -18,6 +18,8 @@
  */
 package org.apache.lens.server.query;
 
+import static org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
+
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,6 +54,7 @@ import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.stats.StatisticsService;
 import org.apache.lens.server.util.UtilityMethods;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -2440,17 +2443,18 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   /**
    * Add resources to hive driver, returning resources which failed to be added
-   * @param resources collection of resources intented to be added to hive driver
+   *
+   * @param resources     collection of resources intented to be added to hive driver
    * @param sessionHandle
    * @param hiveDriver
    * @return resources which could not be added to hive driver
    */
   private List<ResourceEntry> addResources(Collection<ResourceEntry> resources,
-                                                           LensSessionHandle sessionHandle,
-                                                           HiveDriver hiveDriver) {
+    LensSessionHandle sessionHandle,
+    HiveDriver hiveDriver) {
     List<ResourceEntry> failedResources = new ArrayList<ResourceEntry>();
     for (ResourceEntry res : resources) {
-      try{
+      try {
         addSingleResourceToHive(hiveDriver, res, sessionHandle);
       } catch (LensException exc) {
         failedResources.add(res);
@@ -2462,7 +2466,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private void addSingleResourceToHive(HiveDriver driver, ResourceEntry res,
-                                       LensSessionHandle sessionHandle) throws LensException {
+    LensSessionHandle sessionHandle) throws LensException {
     String sessionIdentifier = sessionHandle.getPublicId().toString();
     String uri = res.getLocation();
     // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///
