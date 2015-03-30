@@ -636,13 +636,9 @@ public class JDBCDriver implements LensDriver {
         DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
     if (validateThroughPrepare) {
       PreparedStatement stmt = null;
-      try {
-        // Estimate queries need to get connection from estimate pool to make sure
-        // we are not blocked by data queries.
-        stmt = prepareInternal(pContext, getEstimateConnection(), true, "validate-");
-      } catch (SQLException e) {
-        throw new LensException(e);
-      }
+      // Estimate queries need to get connection from estimate pool to make sure
+      // we are not blocked by data queries.
+      stmt = prepareInternal(pContext, true, true, "validate-");
       if (stmt != null) {
         try {
           stmt.close();
@@ -728,12 +724,23 @@ public class JDBCDriver implements LensDriver {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
-    return prepareInternal(pContext, getConnection(), false, "prepare-");
+    return prepareInternal(pContext, false, false, "prepare-");
   }
 
 
-  private PreparedStatement prepareInternal(AbstractQueryContext pContext, final Connection conn,
-                                            boolean checkConfigured, String metricCallStack) throws LensException {
+  /**
+   * Prepare statment on the database server
+   * @param pContext query context
+   * @param calledForEstimate set this to true if this call will use the estimate connection pool
+   * @param checkConfigured set this to true if this call needs to check whether JDBC driver is configured
+   * @param metricCallStack stack for metrics API
+   * @return prepared statement
+   * @throws LensException
+   */
+  private PreparedStatement prepareInternal(AbstractQueryContext pContext,
+                                            boolean calledForEstimate,
+                                            boolean checkConfigured,
+                                            String metricCallStack) throws LensException {
     // Caller might have already verified configured status and driver query, so we don't have
     // to do this check twice. Caller must set checkConfigured to false in that case.
     if (checkConfigured) {
@@ -750,8 +757,11 @@ public class JDBCDriver implements LensDriver {
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       metricCallStack + JDBC_PREPARE_GAUGE);
+
     PreparedStatement stmt = null;
+    Connection conn = null;
     try {
+      conn = calledForEstimate ? getEstimateConnection() : getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
       if (stmt.getWarnings() != null) {
         throw new LensException(stmt.getWarnings());
