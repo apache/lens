@@ -879,7 +879,6 @@ class JoinResolver implements ContextRewriter {
               + " not part of any join paths. Join columns:" + minCostClause.chainColumns.get(dim));
             cubeql.addDimPruningMsgs(dim, cdim.dimtable,
               CandidateTablePruneCause.noColumnPartOfAJoinPath(minCostClause.chainColumns.get(dim)));
-            break;
           }
         }
         if (cubeql.getCandidateDimTables().get(dim).size() == 0) {

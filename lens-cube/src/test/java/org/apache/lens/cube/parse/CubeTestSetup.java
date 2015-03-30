@@ -1364,6 +1364,14 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("id", "int", "code"));
 
     client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+
+    dimName = "citytable4";
+
+    dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "code"));
+
+    client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
+
   }
 
   private void createTestDim2(CubeMetastoreClient client) throws HiveException {
