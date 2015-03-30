@@ -27,8 +27,6 @@ import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.TimeRange;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
