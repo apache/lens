@@ -1001,10 +1001,10 @@ public class CubeTestSetup {
     Assert.assertEquals(table.getParameters().get(
         MetastoreUtil.getPartitionTimelineStorageClassKey(UpdatePeriod.YEARLY, "ttd2")),
       EndsAndHolesPartitionTimeline.class.getCanonicalName());
-    Assert.assertEquals(table.getParameters().get(
+    Assert.assertEquals(MetastoreUtil.getNamedStringValue(table.getParameters(),
         MetastoreUtil.getPartitionInfoKeyPrefix(UpdatePeriod.HOURLY, "ttd") + "partitions"),
       StringUtils.join(partitions, ","));
-    Assert.assertEquals(table.getParameters().get(
+    Assert.assertEquals(MetastoreUtil.getNamedStringValue(table.getParameters(),
         MetastoreUtil.getPartitionInfoKeyPrefix(UpdatePeriod.HOURLY, "ttd2") + "partitions"),
       StringUtils.join(partitions, ","));
     // Add all hourly partitions for TWO_DAYS_RANGE_BEFORE_4_DAYS
