@@ -2351,6 +2351,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.warn("Lens session went away for sessionid:" + lensSession);
       return;
     }
+
     try {
       LensSessionImpl session = getSession(sessionHandle);
       acquire(sessionHandle);
