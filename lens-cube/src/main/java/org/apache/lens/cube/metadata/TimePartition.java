@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.parse.DateUtil;
 
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -125,15 +126,15 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     return String.format(UPDATE_PERIOD_WRONG_ERROR_MESSAGE, up, dateString);
   }
 
-  public TimePartitionRange rangeUpto(TimePartition to) {
+  public TimePartitionRange rangeUpto(TimePartition to) throws LensException {
     return new TimePartitionRange(this, to);
   }
 
-  public TimePartitionRange rangeFrom(TimePartition from) {
+  public TimePartitionRange rangeFrom(TimePartition from) throws LensException {
     return new TimePartitionRange(from, this);
   }
 
-  public TimePartitionRange singletonRange() {
+  public TimePartitionRange singletonRange() throws LensException {
     return rangeUpto(next());
   }
 
@@ -150,9 +151,15 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     private TimePartition begin;
     private TimePartition end;
 
-    public TimePartitionRange(TimePartition from, TimePartition to) {
-      this.begin = from;
-      this.end = to;
+    public TimePartitionRange(TimePartition begin, TimePartition end) throws LensException {
+      if (end.before(begin)) {
+        throw new LensException("condition of creation of timepartition failed: end>=begin");
+      }
+      if (end.getUpdatePeriod() != begin.getUpdatePeriod()) {
+        throw new LensException("update periods are not same");
+      }
+      this.begin = begin;
+      this.end = end;
     }
 
     @Override
@@ -233,6 +240,10 @@ public class TimePartition implements Comparable<TimePartition>, Named {
         toPartition = toPartition.next();
       }
       return new TimePartitionRange(fromPartition, toPartition);
+    }
+
+    public long size() {
+      return DateUtil.getTimeDiff(begin.getDate(), end.getDate(), begin.getUpdatePeriod());
     }
   }
 }

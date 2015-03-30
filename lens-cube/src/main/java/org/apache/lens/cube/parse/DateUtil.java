@@ -406,7 +406,7 @@ public final class DateUtil {
     return dayDiff / 7;
   }
 
-  static long getTimeDiff(Date from, Date to, UpdatePeriod interval) {
+  public static long getTimeDiff(Date from, Date to, UpdatePeriod interval) {
     long diff = to.getTime() - from.getTime();
     switch (interval) {
     case SECONDLY:

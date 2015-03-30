@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cube.metadata;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.lens.api.LensException;
@@ -26,12 +27,13 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestTimePartition {
+  public static Date NOW = new Date();
+
   @Test
   public void test() throws LensException {
-    Date now = new Date();
     for (UpdatePeriod up : UpdatePeriod.values()) {
-      String nowStr = up.format().format(now);
-      TimePartition nowPartition = TimePartition.of(up, now);
+      String nowStr = up.format().format(NOW);
+      TimePartition nowPartition = TimePartition.of(up, NOW);
       TimePartition nowStrPartition = TimePartition.of(up, nowStr);
       Assert.assertEquals(nowPartition, nowStrPartition);
       Assert.assertTrue(nowPartition.next().after(nowPartition));
@@ -72,5 +74,52 @@ public class TestTimePartition {
       return e;
     }
     return null; // redundant
+  }
+
+  private LensException getLensExceptionInPartitionRangeCreation(TimePartition begin, TimePartition end) {
+    try {
+      TimePartition.TimePartitionRange range = begin.rangeUpto(end);
+      Assert.fail("Should have thrown LensException. Can't create range: " + range);
+    } catch (LensException e) {
+      return e;
+    }
+    return null; // redundant
+  }
+
+  public static Date timeAtDiff(Date date, UpdatePeriod period, int d) {
+    Calendar cal = Calendar.getInstance();
+    cal.setTime(date);
+    cal.add(period.calendarField(), d);
+    return cal.getTime();
+  }
+
+  @Test
+  public void testTimeRange() throws LensException {
+    for (UpdatePeriod up : UpdatePeriod.values()) {
+      TimePartition nowPartition = TimePartition.of(up, NOW);
+      TimePartition tenLater = TimePartition.of(up, timeAtDiff(NOW, up, 10));
+      getLensExceptionInPartitionRangeCreation(tenLater, nowPartition);
+      TimePartition.TimePartitionRange range = nowPartition.rangeUpto(tenLater);
+      Assert.assertEquals(range, tenLater.rangeFrom(nowPartition));
+      if (up != UpdatePeriod.QUARTERLY) {
+        Assert.assertEquals(range.size(), 10);
+        Assert.assertEquals(nowPartition.singletonRange().size(), 1);
+      }
+      Assert.assertTrue(range.contains(nowPartition));
+      Assert.assertFalse(range.contains(tenLater));
+      String nowStr = nowPartition.getDateString();
+      String tenLaterStr = tenLater.getDateString();
+      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, nowStr, tenLaterStr), range);
+      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + ")"), range);
+      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + "]"),
+        nowPartition.rangeUpto(tenLater.next()));
+      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + "]"),
+        nowPartition.next().rangeUpto(
+          tenLater.next()));
+      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + ")"),
+        nowPartition.next().rangeUpto(tenLater));
+    }
+    getLensExceptionInPartitionRangeCreation(TimePartition.of(UpdatePeriod.HOURLY, NOW), TimePartition.of(
+      UpdatePeriod.DAILY, NOW));
   }
 }
