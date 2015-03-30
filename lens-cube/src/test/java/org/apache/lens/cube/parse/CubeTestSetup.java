@@ -2038,7 +2038,7 @@ public class CubeTestSetup {
       for (String p : Arrays.asList("et", "it", "pt")) {
         String first = params.get(prefix + up + "." + p + "." + "first");
         String latest = params.get(prefix + up + "." + p + "." + "latest");
-        String holes = params.get(prefix + up + "." + p + "." + "holes");
+        String holes = MetastoreUtil.getNamedStringValue(params, prefix + up + "." + p + "." + "holes");
         String storageClass = params.get(prefix + up + "." + p + "." + "storage.class");
         Assert.assertNotNull(first);
         Assert.assertNotNull(latest);
