@@ -21,6 +21,7 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -70,14 +71,14 @@ public class StoreAllPartitionTimeline extends PartitionTimeline {
   @Override
   public Map<String, String> toProperties() {
     HashMap<String, String> map = Maps.newHashMap();
-    map.put("partitions", StringUtils.join(allPartitions, ","));
+    MetastoreUtil.addNameStrings(map, "partitions", allPartitions);
     return map;
   }
 
   @Override
   public boolean initFromProperties(Map<String, String> properties) throws LensException {
     allPartitions.clear();
-    String partitionsStr = properties.get("partitions");
+    String partitionsStr = MetastoreUtil.getNamedStringValue(properties, "partitions");
     if (partitionsStr == null) {
       return true;
     }

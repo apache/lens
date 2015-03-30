@@ -116,22 +116,40 @@ public class TestPartitionTimelines {
   }
 
   private <T extends PartitionTimeline> void testPropertiesContract(Class<T> clz) throws LensException {
+    // Make two instances, one to modify, other to validate against
     T inst1 = getInstance(clz);
     T inst2 = getInstance(clz);
+    // whenever we'll init from props, timeline should become empty.
     Map<String, String> props = inst1.toProperties();
     Assert.assertTrue(inst2.initFromProperties(props));
+    // init from props of an empty timeline: should succeed and make the timeline empty
     Assert.assertEquals(inst1, inst2);
     Assert.assertTrue(inst1.isEmpty());
     Assert.assertTrue(inst2.isEmpty());
+    // Add single partition and test for non-equivalence
     Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, DATE)));
     Assert.assertFalse(inst1.equals(inst2));
+    // add same parittion in other timeline, test for equality
     Assert.assertTrue(inst2.add(TimePartition.of(PERIOD, DATE)));
     Assert.assertTrue(inst1.isConsistent());
     Assert.assertTrue(inst2.isConsistent());
     Assert.assertEquals(inst1, inst2);
+    // init with blank properties. Should become empty
     Assert.assertTrue(inst2.initFromProperties(props));
     Assert.assertFalse(inst1.equals(inst2));
+    // init from properties of timeline with single partition.
     Assert.assertTrue(inst2.initFromProperties(inst1.toProperties()));
+    Assert.assertEquals(inst1, inst2);
+    // clear timelines
+    inst1.initFromProperties(props);
+    inst2.initFromProperties(props);
+    // Make sparse partition range in one, init other from its properties. Test equality.
+    for(int i = 0; i < 5000; i++) {
+      Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, timeAtHourDiff(i * 2))));
+    }
+    Assert.assertTrue(inst1.isConsistent());
+    inst2.initFromProperties(inst1.toProperties());
+    Assert.assertTrue(inst2.isConsistent());
     Assert.assertEquals(inst1, inst2);
   }
 }

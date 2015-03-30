@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -143,32 +144,21 @@ public class RangesPartitionTimeline extends PartitionTimeline {
   @Override
   public Map<String, String> toProperties() {
     HashMap<String, String> ret = Maps.newHashMap();
-    if (isEmpty()) {
-      return ret;
-    }
-    StringBuilder sb = new StringBuilder();
-    String sep = "";
-    for (TimePartition.TimePartitionRange range : ranges) {
-      sb.append(sep);
-      sep = ",";
-      sb.append(range.getBegin()).append(sep).append(range.getEnd());
-    }
-    ret.put("ranges", sb.toString());
+    MetastoreUtil.addNameStrings(ret, "ranges", ranges);
     return ret;
   }
 
   @Override
   public boolean initFromProperties(Map<String, String> properties) throws LensException {
     ranges.clear();
-    String rangesStr = properties.get("ranges");
+    String rangesStr = MetastoreUtil.getNamedStringValue(properties, "ranges");
     if (!Strings.isNullOrEmpty(rangesStr)) {
       String[] split = rangesStr.split("\\s*,\\s*");
       if (split.length % 2 == 1) {
         throw new LensException("Ranges incomplete");
       }
       for (int i = 0; i < split.length; i += 2) {
-        ranges.add(TimePartition.of(getUpdatePeriod(), split[i]).rangeUpto(TimePartition.of(getUpdatePeriod(),
-          split[i + 1])));
+        ranges.add(TimePartition.TimePartitionRange.parseFrom(getUpdatePeriod(), split[i], split[i + 1]));
       }
     }
     return isConsistent();

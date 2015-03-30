@@ -32,7 +32,7 @@ import lombok.NonNull;
 
 /** stores a partition's update period, date and string representation. Provides some utility methods around it */
 @Data
-public class TimePartition implements Comparable<TimePartition> {
+public class TimePartition implements Comparable<TimePartition>, Named {
   private static final String UPDATE_PERIOD_WRONG_ERROR_MESSAGE = "Update period %s not correct for parsing %s";
   private final UpdatePeriod updatePeriod;
   private final Date date;
@@ -137,11 +137,16 @@ public class TimePartition implements Comparable<TimePartition> {
     return rangeUpto(next());
   }
 
+  @Override
+  public String getName() {
+    return getDateString();
+  }
+
   /**
    * Range of time partition. [begin,end). i.e. inclusive begin and exclusive end.
    */
   @Data
-  public static class TimePartitionRange implements Iterable<TimePartition> {
+  public static class TimePartitionRange implements Iterable<TimePartition>, Named {
     private TimePartition begin;
     private TimePartition end;
 
@@ -197,6 +202,37 @@ public class TimePartition implements Comparable<TimePartition> {
      */
     public boolean isEmpty() {
       return begin.equals(end);
+    }
+
+    @Override
+    public String getName() {
+      return toString();
+    }
+
+    public static TimePartitionRange parseFrom(UpdatePeriod updatePeriod, String from, String to) throws LensException {
+      boolean incrementFrom = false;
+      boolean incrementTo = false;
+      if (from.charAt(0) == '[') {
+        from = from.substring(1);
+      } else if (from.charAt(0) == '(') {
+        from = from.substring(1);
+        incrementFrom = true;
+      }
+      if (to.charAt(to.length() - 1) == ']') {
+        to = to.substring(0, to.length() - 1);
+        incrementTo = true;
+      } else if (to.charAt(to.length() - 1) == ')') {
+        to = to.substring(0, to.length() - 1);
+      }
+      TimePartition fromPartition = TimePartition.of(updatePeriod, from);
+      TimePartition toPartition = TimePartition.of(updatePeriod, to);
+      if (incrementFrom) {
+        fromPartition = fromPartition.next();
+      }
+      if (incrementTo) {
+        toPartition = toPartition.next();
+      }
+      return new TimePartitionRange(fromPartition, toPartition);
     }
   }
 }
