@@ -187,8 +187,8 @@ public class CubeMetastoreClient {
         synchronized (this) {
           if (get(storageTableName) == null) {
             Table storageTable = getTable(storageTableName);
-            if (storageTable.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()).equalsIgnoreCase(
-              "true")) {
+            if ("true".equalsIgnoreCase(storageTable.getParameters().get(
+              MetastoreUtil.getPartitoinTimelineCachePresenceKey()))) {
               try {
                 loadTimelinesFromTableProperties(fact, storage);
               } catch (Exception e) {
