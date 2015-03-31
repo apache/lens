@@ -118,13 +118,18 @@ public class TestJoinResolver extends TestQueryRewrite {
     CubeInterface testCube = metastore.getCube("testcube");
     Dimension zipDim = metastore.getDimension("zipdim");
     Dimension cityDim = metastore.getDimension("citydim");
+    Dimension testDim2 = metastore.getDimension("testDim2");
 
     SchemaGraph.GraphSearch search = new SchemaGraph.GraphSearch(zipDim, (AbstractCubeTable) testCube, schemaGraph);
 
     List<SchemaGraph.JoinPath> paths = search.findAllPathsToTarget();
-    Assert.assertEquals(2, paths.size());
+    Assert.assertEquals(6, paths.size());
     validatePath(paths.get(0), zipDim, (AbstractCubeTable) testCube);
     validatePath(paths.get(1), zipDim, cityDim, (AbstractCubeTable) testCube);
+    validatePath(paths.get(2), zipDim, cityDim, testDim2, (AbstractCubeTable) testCube);
+    validatePath(paths.get(3), zipDim, cityDim, testDim2, (AbstractCubeTable) testCube);
+    validatePath(paths.get(4), zipDim, cityDim, testDim2, (AbstractCubeTable) testCube);
+    validatePath(paths.get(5), zipDim, cityDim, testDim2, (AbstractCubeTable) testCube);
   }
 
   private void validatePath(SchemaGraph.JoinPath jp, AbstractCubeTable... tables) {
@@ -450,34 +455,6 @@ public class TestJoinResolver extends TestQueryRewrite {
     );
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
-    // Single joinchain with two paths, intermediate dimension accessed separately by name.
-    query = "select cityState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    hqlQuery = rewrite(query, hconf);
-    expected = getExpectedQuery("basecube",
-      "select citystate.name, citydim.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_citytable citydim on basecube.cityid = citydim.id and "
-        + "citydim.dt = 'latest'"
-        + " join " + getDbName() + "c1_statetable citystate on citydim.stateid = citystate.id and "
-        + "citystate.dt = 'latest'", null, "group by citystate.name,citydim.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base")
-    );
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
-
-    // Multi joinchains + a dimension part of one of the chains.
-    query = "select cityState.name, cubeState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    hqlQuery = rewrite(query, hconf);
-    expected = getExpectedQuery("basecube",
-      "select citystate.name, cubestate.name, citydim.name, sum(basecube.msr2) FROM ",
-      " join " + getDbName() + "c1_citytable citydim on basecube.cityid = citydim.id and "
-        + "citydim.dt = 'latest'"
-        + " join " + getDbName() + "c1_statetable citystate on citydim.stateid = citystate.id and "
-        + "citystate.dt = 'latest'"
-        + " join " + getDbName() + "c1_statetable cubestate on basecube.stateid=cubestate.id and cubestate.dt='latest'"
-      , null, "group by citystate.name,cubestate.name,citydim.name", null,
-      getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base")
-    );
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
-
     // Two joinchains, one accessed as refcol.
     query = "select cubestate.name, cityStateCapital, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
     hqlQuery = rewrite(query, hconf);
@@ -525,44 +502,6 @@ public class TestJoinResolver extends TestQueryRewrite {
       getWhereForDailyAndHourly2days("basecube", "c1_testfact1_base")
     );
     TestCubeRewriter.compareQueries(expected, hqlQuery);
-
-    // this test case should pass when default qualifiers for dimensions' chains are added
-    // Two joinchains with same destination, and the destination table accessed separately
-    query = "select cityState.name, cubeState.name, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    try {
-      rewrite(query, hconf);
-      Assert.fail("Should have failed. "
-        + "It's not possible to resolve which statedim is being asked for when cityState and cubeState both end at"
-        + " statedim table.");
-    } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(
-        e.getCause().getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
-    }
-
-    // this test case should pass when default qualifiers for dimensions' chains are added
-    // Two Single joinchain, And dest table accessed separately.
-    query = "select cubeState.name, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    try {
-      rewrite(query, hconf);
-      Assert.fail("Should have failed. "
-        + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
-        "Table statedim is getting accessed via two different names: [cubestate, statedim]".toLowerCase());
-    }
-    // this should pass when default qualifiers are added
-    query = "select cityStateCapital, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
-    try {
-      rewrite(query, hconf);
-      Assert.fail("Should have failed. "
-        + "The table statedim is getting accessed as both cubeState and statedim ");
-    } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
-        "Table statedim is getting accessed via two different names: [citystate, statedim]".toLowerCase());
-    }
 
     // Test 4 Dim only query with join chains
 
@@ -628,6 +567,85 @@ public class TestJoinResolver extends TestQueryRewrite {
     System.out.println("testDimOnlyJoinChainExpected1 : " + expectedClauses);
     System.out.println("testDimOnlyJoinChainActual1 : " + actualClauses);
     Assert.assertEquals(expectedClauses, actualClauses);
+  }
+
+  @Test
+  public void testConflictingJoins() throws ParseException {
+    // Single joinchain with two paths, intermediate dimension accessed separately by name.
+    String query = "select cityState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(query, hconf);
+      Assert.fail("Should have failed. "
+        + "The table citydim is getting accessed as both chain and without chain ");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+        "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
+    }
+
+    // Multi joinchains + a dimension part of one of the chains.
+    query = "select cityState.name, cubeState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(query, hconf);
+      Assert.fail("Should have failed. "
+        + "The table citydim is getting accessed as both chain and without chain ");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+        "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
+    }
+
+    // this test case should pass when default qualifiers for dimensions' chains are added
+    // Two joinchains with same destination, and the destination table accessed separately
+    query = "select cityState.name, cubeState.name, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(query, hconf);
+      Assert.fail("Should have failed. "
+        + "It's not possible to resolve which statedim is being asked for when cityState and cubeState both end at"
+        + " statedim table.");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(
+        e.getCause().getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
+    }
+
+    // this test case should pass when default qualifiers for dimensions' chains are added
+    // Two Single joinchain, And dest table accessed separately.
+    query = "select cubeState.name, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(query, hconf);
+      Assert.fail("Should have failed. "
+        + "The table statedim is getting accessed as both cubeState and statedim ");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+        "Table statedim is getting accessed via two different names: [cubestate, statedim]".toLowerCase());
+    }
+    // this should pass when default qualifiers are added
+    query = "select cityStateCapital, statedim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(query, hconf);
+      Assert.fail("Should have failed. "
+        + "The table statedim is getting accessed as both cubeState and statedim ");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+        "Table statedim is getting accessed via two different names: [citystate, statedim]".toLowerCase());
+    }
+
+    // table accessed through denorm column and chain column
+    Configuration conf = new Configuration(hconf);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C3, C4");
+    String failingQuery = "select testDim2.cityname, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;
+    try {
+      rewrite(failingQuery, conf);
+      Assert.fail("Should have failed. "
+        + "The table citydim is getting accessed as both chain and without chain ");
+    } catch (SemanticException e) {
+      Assert.assertNotNull(e.getCause());
+      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+        "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
+    }
   }
 
   @Test
