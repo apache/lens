@@ -113,7 +113,7 @@ public class HiveDriver implements LensDriver {
   // connections need to be separate for each user and each thread
   /** The thread connections. */
   private final Map<String, ExpirableConnection> threadConnections =
-    new HashMap<String, ExpirableConnection>();
+    new ConcurrentHashMap<String, ExpirableConnection>();
 
   /** The thrift conn expiry queue. */
   private final DelayQueue<ExpirableConnection> thriftConnExpiryQueue = new DelayQueue<ExpirableConnection>();
