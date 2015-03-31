@@ -809,6 +809,7 @@ public class TestHiveDriver {
     BufferedReader br = new BufferedReader(new InputStreamReader(
       TestHiveDriver.class.getResourceAsStream("/priority_tests.data")));
     String line;
+    int i = 0;
     while ((line = br.readLine()) != null) {
       String[] kv = line.split("\\s*:\\s*");
 
@@ -834,14 +835,18 @@ public class TestHiveDriver {
             put("table1", partitions);
           }
         });
-      ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
-        new HashMap<String, Double>() {
-          {
-            put("table1", 1.0);
-          }
-        });
+      if (i < 1) {
+        // table weights only for first calculation
+        ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
+          new HashMap<String, Double>() {
+            {
+              put("table1", 1.0);
+            }
+          });
+      }
       Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
       Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
+      i++;
     }
     // test priority without fact partitions
     AbstractQueryContext ctx = createContext("test priority query", conf);

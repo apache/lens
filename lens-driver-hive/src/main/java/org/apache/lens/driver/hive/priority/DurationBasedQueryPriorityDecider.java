@@ -109,7 +109,10 @@ public class DurationBasedQueryPriorityDecider implements QueryPriorityDecider {
   private float getTableWeights(Set<String> tables, AbstractQueryContext queryContext) {
     float weight = 0;
     for (String tblName : tables) {
-      weight += queryContext.getDriverContext().getDriverRewriterPlan(driver).getTableWeight(tblName);
+      Double tblWeight = queryContext.getDriverContext().getDriverRewriterPlan(driver).getTableWeight(tblName);
+      if (tblWeight != null) {
+        weight += tblWeight;
+      }
     }
     return weight == 0 ? 1 : weight;
   }
