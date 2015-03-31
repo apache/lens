@@ -84,46 +84,6 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * The num joins.
-   */
-  protected int numJoins = 0;
-
-  /**
-   * The num gbys.
-   */
-  protected int numGbys = 0;
-
-  /**
-   * The num sels.
-   */
-  protected int numSels = 0;
-
-  /**
-   * The num sel di.
-   */
-  protected int numSelDi = 0;
-
-  /**
-   * The num having.
-   */
-  protected int numHaving = 0;
-
-  /**
-   * The num obys.
-   */
-  protected int numObys = 0;
-
-  /**
-   * The num aggr exprs.
-   */
-  protected int numAggrExprs = 0;
-
-  /**
-   * The num filters.
-   */
-  protected int numFilters = 0;
-
-  /**
    * The tables queried.
    */
   protected final Set<String> tablesQueried = new HashSet<String>();
@@ -154,36 +114,6 @@ public abstract class DriverQueryPlan {
   protected final Map<String, Double> tableWeights = new HashMap<String, Double>();
 
   /**
-   * The join weight.
-   */
-  protected Double joinWeight;
-
-  /**
-   * The gby weight.
-   */
-  protected Double gbyWeight;
-
-  /**
-   * The filter weight.
-   */
-  protected Double filterWeight;
-
-  /**
-   * The having weight.
-   */
-  protected Double havingWeight;
-
-  /**
-   * The oby weight.
-   */
-  protected Double obyWeight;
-
-  /**
-   * The select weight.
-   */
-  protected Double selectWeight;
-
-  /**
    * The handle.
    */
   protected QueryPrepareHandle handle;
@@ -203,114 +133,6 @@ public abstract class DriverQueryPlan {
    * @return QueryCost object
    */
   public abstract QueryCost getCost();
-
-  /**
-   * Get the number of group by expressions on query
-   *
-   * @return the numGbys
-   */
-  public int getNumGbys() {
-    return numGbys;
-  }
-
-  /**
-   * Set the number of groupbys
-   *
-   * @param numGbys the numGbys to set
-   */
-  protected void setNumGbys(int numGbys) {
-    this.numGbys = numGbys;
-  }
-
-  /**
-   * Get the number of select expressions
-   *
-   * @return the numSels
-   */
-  public int getNumSels() {
-    return numSels;
-  }
-
-  /**
-   * Set the number of select expressions
-   *
-   * @param numSels the numSels to set
-   */
-  protected void setNumSels(int numSels) {
-    this.numSels = numSels;
-  }
-
-  /**
-   * Get the number distinct select expressions
-   *
-   * @return the numSelDi
-   */
-  public int getNumSelDistincts() {
-    return numSelDi;
-  }
-
-  /**
-   * Set the number of distinct select expressions
-   *
-   * @param numSelDi the numSelDi to set
-   */
-  protected void setNumSelDistincts(int numSelDi) {
-    this.numSelDi = numSelDi;
-  }
-
-  /**
-   * Get number of joins in the query
-   *
-   * @return the numJoins
-   */
-  public int getNumJoins() {
-    return numJoins;
-  }
-
-  /**
-   * Set the number of join expressions on query
-   *
-   * @param numJoins the numJoins to set
-   */
-  protected void setNumJoins(int numJoins) {
-    this.numJoins = numJoins;
-  }
-
-  /**
-   * Get the number of having expressions on query
-   *
-   * @return the numHaving
-   */
-  public int getNumHaving() {
-    return numHaving;
-  }
-
-  /**
-   * Set the number of having expressions on query
-   *
-   * @param numHaving the numHaving to set
-   */
-  protected void setNumHaving(int numHaving) {
-    this.numHaving = numHaving;
-  }
-
-  /**
-   * Get the number of order by expressions on query
-   *
-   * @return the numObys
-   */
-  public int getNumOrderBys() {
-    return numObys;
-  }
-
-  /**
-   * Set the number of order by expressions on query
-   *
-   * @param numObys the numObys to set
-   */
-  protected void setNumOrderBys(int numObys) {
-    this.numObys = numObys;
-  }
 
   /**
    * Get the list of tables to be queried
@@ -337,24 +159,6 @@ public abstract class DriverQueryPlan {
    */
   protected void addTablesQueried(Set<String> tables) {
     this.tablesQueried.addAll(tables);
-  }
-
-  /**
-   * Get the number of filters in query
-   *
-   * @return the numFilters
-   */
-  public int getNumFilters() {
-    return numFilters;
-  }
-
-  /**
-   * Set the number of filters in query
-   *
-   * @param numFilters the numFilters to set
-   */
-  protected void setNumFilters(int numFilters) {
-    this.numFilters = numFilters;
   }
 
   /**
@@ -458,114 +262,6 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * Get the weight associated with joins
-   *
-   * @return the joinWeight
-   */
-  public Double getJoinWeight() {
-    return joinWeight;
-  }
-
-  /**
-   * Set the weight associated with joins
-   *
-   * @param joinWeight the joinWeight to set
-   */
-  protected void setJoinWeight(Double joinWeight) {
-    this.joinWeight = joinWeight;
-  }
-
-  /**
-   * Set the weight associated with group by expressions.
-   *
-   * @return the gbyWeight
-   */
-  public Double getGbyWeight() {
-    return gbyWeight;
-  }
-
-  /**
-   * Set the weight associated with group by expressions.
-   *
-   * @param gbyWeight the gbyWeight to set
-   */
-  protected void setGbyWeight(Double gbyWeight) {
-    this.gbyWeight = gbyWeight;
-  }
-
-  /**
-   * Set the weight associated with filter expressions.
-   *
-   * @return the filterWeight
-   */
-  public Double getFilterWeight() {
-    return filterWeight;
-  }
-
-  /**
-   * Set the weight associated with filter expressions.
-   *
-   * @param filterWeight the filterWeight to set
-   */
-  protected void setFilterWeight(Double filterWeight) {
-    this.filterWeight = filterWeight;
-  }
-
-  /**
-   * Get the weight associated with order by expressions.
-   *
-   * @return the obyWeight
-   */
-  public Double getObyWeight() {
-    return obyWeight;
-  }
-
-  /**
-   * Set the weight associated with order by expressions.
-   *
-   * @param obyWeight the obyWeight to set
-   */
-  protected void setObyWeight(Double obyWeight) {
-    this.obyWeight = obyWeight;
-  }
-
-  /**
-   * Set the weight associated with having expressions.
-   *
-   * @return the havingWeight
-   */
-  public Double getHavingWeight() {
-    return havingWeight;
-  }
-
-  /**
-   * Set the weight associated with having expressions.
-   *
-   * @param havingWeight the havingWeight to set
-   */
-  protected void setHavingWeight(Double havingWeight) {
-    this.havingWeight = havingWeight;
-  }
-
-  /**
-   * Get the weight associated with select expressions.
-   *
-   * @return the selectWeight
-   */
-  public Double getSelectWeight() {
-    return selectWeight;
-  }
-
-  /**
-   * Set the weight associated with select expressions.
-   *
-   * @param selectWeight the selectWeight to set
-   */
-  protected void setSelectWeight(Double selectWeight) {
-    this.selectWeight = selectWeight;
-  }
-
-  /**
    * @return the handle
    * @deprecated
    */
@@ -592,24 +288,6 @@ public abstract class DriverQueryPlan {
   }
 
   /**
-   * Get number of aggregate expressions.
-   *
-   * @return
-   */
-  public int getNumAggreagateExprs() {
-    return numAggrExprs;
-  }
-
-  /**
-   * Set num aggregate expressions
-   *
-   * @param numAggrs
-   */
-  protected void setNumAggreagateExprs(int numAggrs) {
-    numAggrExprs = numAggrs;
-  }
-
-  /**
    * Get list of partitions queried for each table
    *
    * @return
@@ -625,10 +303,8 @@ public abstract class DriverQueryPlan {
    * @throws UnsupportedEncodingException the unsupported encoding exception
    */
   public QueryPlan toQueryPlan() throws UnsupportedEncodingException {
-    return new QueryPlan(numJoins, numGbys, numSels, numSelDi, numHaving, numObys, numAggrExprs, numFilters,
-      new ArrayList<String>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
-      scanMode != null ? scanMode.name() : null, tableWeights, joinWeight, gbyWeight, filterWeight, havingWeight,
-      obyWeight, selectWeight, null,
+    return new QueryPlan(new ArrayList<String>(tablesQueried), hasSubQuery, execMode != null ? execMode.name() : null,
+      scanMode != null ? scanMode.name() : null, handle,
       URLEncoder.encode(getPlan(), "UTF-8"), getCost(), false, null);
   }
 }

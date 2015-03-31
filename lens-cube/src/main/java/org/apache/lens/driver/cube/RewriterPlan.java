@@ -46,27 +46,9 @@ public final class RewriterPlan extends DriverQueryPlan {
 
   @SuppressWarnings("unchecked") // required for (Set<FactPartition>) casting
   void extractPlan(Collection<CubeQueryContext> cubeQueries) {
-    int selectCount = 0;
-    int havingCount = 0;
-    int joinCount = 0;
-    int groupbyCount = 0;
-    int orderbyCount = 0;
 
     for (CubeQueryContext ctx : cubeQueries) {
-      if (ctx.getOrderByAST() != null) {
-        orderbyCount += ctx.getOrderByAST().getChildCount();
-      }
-      if (ctx.getGroupByAST() != null) {
-        groupbyCount += ctx.getGroupByAST().getChildCount();
-      }
-      if (ctx.getHavingAST() != null) {
-        havingCount += ctx.getHavingAST().getChildCount();
-      }
-      if (ctx.getSelectAST() != null) {
-        selectCount += ctx.getSelectAST().getChildCount();
-      }
       if (ctx.getPickedDimTables() != null && !ctx.getPickedDimTables().isEmpty()) {
-        joinCount += ctx.getPickedDimTables().size();
         for (CandidateTable dim : ctx.getPickedDimTables()) {
           addTablesQueried(dim.getStorageTables());
           if (partitions.get(dim.getName()) == null || partitions.get(dim.getName()).isEmpty()) {
@@ -84,11 +66,6 @@ public final class RewriterPlan extends DriverQueryPlan {
             partitions.put(fact.getName(), factParts);
           }
           factParts.addAll((Set<FactPartition>) fact.getPartsQueried());
-        }
-      } else {
-        // if no facts are there, reducing join count by one, as target would be one of the dimtables picked
-        if (joinCount > 0) {
-          joinCount--;
         }
       }
       for (String table : getTablesQueried()) {
@@ -110,14 +87,6 @@ public final class RewriterPlan extends DriverQueryPlan {
       }
     }
     setHasSubQuery(hasSubQuery || cubeQueries.size() > 1);
-    setNumGbys(groupbyCount);
-    setNumJoins(joinCount);
-    setNumOrderBys(orderbyCount);
-    setNumSels(selectCount);
-    setNumHaving(havingCount);
-    setNumAggreagateExprs(-1);
-    setNumSelDistincts(-1);
-    setNumFilters(-1);
   }
 
   @Override

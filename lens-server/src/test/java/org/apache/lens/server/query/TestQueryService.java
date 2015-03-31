@@ -389,7 +389,6 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryPlan plan = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
-    Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
     Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNull(plan.getPrepareHandle());
@@ -408,7 +407,6 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryPlan plan2 = ptarget.request().post(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE),
       QueryPlan.class);
-    Assert.assertEquals(plan2.getNumSels(), 1);
     Assert.assertEquals(plan2.getTablesQueried().size(), 1);
     Assert.assertTrue(plan2.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNotNull(plan2.getPrepareHandle());
@@ -588,7 +586,6 @@ public class TestQueryService extends LensJerseyTest {
 
     final QueryPlan plan = target.request()
       .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryPlan.class);
-    Assert.assertEquals(plan.getNumSels(), 1);
     Assert.assertEquals(plan.getTablesQueried().size(), 1);
     Assert.assertTrue(plan.getTablesQueried().get(0).endsWith(TEST_TABLE.toLowerCase()));
     Assert.assertNotNull(plan.getPrepareHandle());
