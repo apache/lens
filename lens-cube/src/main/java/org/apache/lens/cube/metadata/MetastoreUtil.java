@@ -402,12 +402,18 @@ public class MetastoreUtil {
   }
 
   public static String getNamedStringValue(Map<String, String> props, String key) {
-    int size = Integer.parseInt(props.get(key + ".size"));
-    StringBuilder valueStr = new StringBuilder();
-    for (int i = 0; i < size; i++) {
-      valueStr.append(props.get(key + i));
+    if (props.containsKey(key + ".size")) {
+      int size = Integer.parseInt(props.get(key + ".size"));
+      StringBuilder valueStr = new StringBuilder();
+      for (int i = 0; i < size; i++) {
+        valueStr.append(props.get(key + i));
+      }
+      return valueStr.toString();
+    } else if (props.containsKey(key)) {
+      return props.get(key);
+    } else {
+      throw new RuntimeException("Named String value for key: " + key + " not present in the map");
     }
-    return valueStr.toString();
   }
 
   public static String getObjectStr(Collection<?> set) {

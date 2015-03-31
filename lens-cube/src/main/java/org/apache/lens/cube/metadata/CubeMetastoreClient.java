@@ -192,7 +192,7 @@ public class CubeMetastoreClient {
               try {
                 loadTimelinesFromTableProperties(fact, storage);
               } catch (Exception e) {
-                log.error("Error while loading timeline from table properties.", e);
+                log.error("Error while loading timelines from table properties.", e);
                 loadTimelinesFromAllPartitions(fact, storage);
               }
             } else {
