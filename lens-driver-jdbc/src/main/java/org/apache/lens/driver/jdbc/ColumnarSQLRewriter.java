@@ -1026,7 +1026,7 @@ public class ColumnarSQLRewriter implements QueryRewriter {
    * @see org.apache.lens.server.api.query.QueryRewriter#rewrite(java.lang.String, org.apache.hadoop.conf.Configuration)
    */
   @Override
-  public synchronized String rewrite(String query, Configuration conf, HiveConf metastoreConf) throws LensException {
+  public String rewrite(String query, Configuration conf, HiveConf metastoreConf) throws LensException {
     this.query = query;
     StringBuilder mergedQuery;
     rewrittenQuery.setLength(0);
