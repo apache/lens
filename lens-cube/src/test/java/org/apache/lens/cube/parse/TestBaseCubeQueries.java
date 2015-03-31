@@ -89,7 +89,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
 
     // no fact has the all the dimensions queried
-    e = getSemanticExceptionInRewrite("select dim1, cityid, msr3, msr13 from basecube" + " where " + TWO_DAYS_RANGE,
+    e = getSemanticExceptionInRewrite("select dim1, stateid, msr3, msr13 from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE.getErrorCode());
@@ -100,12 +100,12 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertTrue(matcher.matches());
     Assert.assertEquals(matcher.groupCount(), 1);
     String columnSetsStr = matcher.group(1);
-    Assert.assertNotEquals(columnSetsStr.indexOf("cityid"), -1);
+    Assert.assertNotEquals(columnSetsStr.indexOf("stateid"), -1);
     Assert.assertNotEquals(columnSetsStr.indexOf("msr3, msr13"), -1);
     Assert.assertEquals(pruneCauses.getDetails(),
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
-          put("testfact3_base,testfact3_raw_base", Arrays.asList(CandidateTablePruneCause.columnNotFound("cityid")));
+          put("testfact3_base,testfact3_raw_base", Arrays.asList(CandidateTablePruneCause.columnNotFound("stateid")));
           put("testfact2_raw_base,testfact2_base",
             Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
         }

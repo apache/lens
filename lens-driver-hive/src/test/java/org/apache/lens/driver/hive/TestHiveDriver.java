@@ -759,7 +759,6 @@ public class TestHiveDriver {
     assertNotNull(plan.getTableWeights());
     assertTrue(plan.getTableWeights().containsKey(dataBase + ".explain_test_1"));
     assertTrue(plan.getTableWeights().containsKey(dataBase + ".explain_test_2"));
-    assertEquals(plan.getNumJoins(), 1);
     assertTrue(plan.getPlan() != null && !plan.getPlan().isEmpty());
     driver.closeQuery(plan.getHandle());
   }
@@ -784,7 +783,6 @@ public class TestHiveDriver {
     assertNotNull(plan2.getTablesQueried());
     assertEquals(plan2.getTablesQueried().size(), 1);
     assertTrue(plan2.getTableWeights().containsKey(dataBase + ".explain_test_1"));
-    assertEquals(plan2.getNumSels(), 1);
     QueryContext ctx = createContext(pctx, conf);
     LensResultSet resultSet = driver.execute(ctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());

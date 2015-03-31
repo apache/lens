@@ -232,7 +232,7 @@ public class DenormalizationResolver implements ContextRewriter {
       return false;
     }
 
-    private void pickColumnsForTable(String tbl) {
+    private void pickColumnsForTable(String tbl) throws SemanticException {
       if (tableToRefCols.containsKey(tbl)) {
         for (ReferencedQueriedColumn refered : tableToRefCols.get(tbl)) {
           if (!refered.col.isChainedColumn()) {
@@ -244,6 +244,9 @@ public class DenormalizationResolver implements ContextRewriter {
                 (Dimension) cubeql.getCubeTableForAlias(reference.getDestTable()))) {
                 iter.remove();
               }
+            }
+            if (refered.references.isEmpty()) {
+              throw new SemanticException("No reference column available for " + refered);
             }
             PickedReference picked = new PickedReference(refered.references.iterator().next(),
               cubeql.getAliasForTabName(refered.srcTable.getName()), tbl);
