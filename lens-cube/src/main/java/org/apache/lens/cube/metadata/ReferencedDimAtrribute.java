@@ -28,7 +28,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-@ToString
+@ToString(callSuper = true)
 public class ReferencedDimAtrribute extends BaseDimAttribute {
   @Getter
   private final List<TableReference> references = new ArrayList<TableReference>();

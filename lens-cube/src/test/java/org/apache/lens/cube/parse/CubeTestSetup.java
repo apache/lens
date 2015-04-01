@@ -1362,6 +1362,7 @@ public class CubeTestSetup {
 
     dimColumns = new ArrayList<FieldSchema>();
     dimColumns.add(new FieldSchema("id", "int", "code"));
+    dimColumns.add(new FieldSchema("name", "string", "name"));
 
     client.createCubeDimensionTable(cityDim.getName(), dimName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
 
@@ -1402,7 +1403,10 @@ public class CubeTestSetup {
     dimAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "name")));
     dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("testDim3id", "string", "f-key to testdim3"), "Dim3 refer",
       new TableReference("testdim3", "id")));
-    dimAttrs.add(new BaseDimAttribute(new FieldSchema("cityId ", "string", "name")));
+    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityId", "string", "f-key to citydim"), "cityid",
+      new TableReference("citydim", "id")));
+    dimAttrs.add(new ReferencedDimAtrribute(new FieldSchema("cityname", "string", "name"), "cityid",
+      new TableReference("citydim", "name"), null, null, 0.0, false));
 
     // add ref dim through chain
     dimAttrs.add(new ReferencedDimAtrribute(
@@ -1450,6 +1454,9 @@ public class CubeTestSetup {
     dimColumns.add(new FieldSchema("id", "int", "code"));
     dimColumns.add(new FieldSchema("bigid1", "int", "code"));
     dimColumns.add(new FieldSchema("name", "string", "field1"));
+    dimColumns.add(new FieldSchema("cityId", "string", "f-key to cityDim"));
+    storageTables.put(c3, s1);
+    dumpPeriods.put(c3, UpdatePeriod.HOURLY);
 
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 10L, dumpPeriods, dimProps, storageTables);
 

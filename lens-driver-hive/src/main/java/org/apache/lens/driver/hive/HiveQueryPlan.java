@@ -139,26 +139,6 @@ public class HiveQueryPlan extends DriverQueryPlan {
       case TABLE_SCAN:
         // no op
         break;
-      case JOIN:
-        if (tr.equals("condition map:")) {
-          numJoins++;
-        }
-        break;
-      case SELECT:
-        if (tr.startsWith("expressions:") && states.get(states.size() - 1) == ParserState.TABLE_SCAN) {
-          numSels += StringUtils.split(tr, ",").length;
-        }
-        break;
-      case GROUPBY_EXPRS:
-        if (tr.startsWith("aggregations:")) {
-          numAggrExprs += StringUtils.split(tr, ",").length;
-        }
-        break;
-      case GROUPBY_KEYS:
-        if (tr.startsWith("keys:")) {
-          numGbys += StringUtils.split(tr, ",").length;
-        }
-        break;
       case PARTITION:
         String partConditionStr = null;
         for (; i < explainOutput.size(); i++) {
@@ -212,6 +192,8 @@ public class HiveQueryPlan extends DriverQueryPlan {
             break;
           }
         }
+        break;
+      default :
         break;
       }
     }

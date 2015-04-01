@@ -82,9 +82,6 @@ public class JDBCDriver implements LensDriver {
   /** The query context map. */
   private ConcurrentHashMap<QueryHandle, JdbcQueryContext> queryContextMap;
 
-  /** The rewriter cache. */
-  private ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter> rewriterCache;
-
   /** The conf. */
   private Configuration conf;
 
@@ -418,7 +415,6 @@ public class JDBCDriver implements LensDriver {
    */
   protected void init(Configuration conf) throws LensException {
     queryContextMap = new ConcurrentHashMap<QueryHandle, JdbcQueryContext>();
-    rewriterCache = new ConcurrentHashMap<Class<? extends QueryRewriter>, QueryRewriter>();
     asyncQueryPool = Executors.newCachedThreadPool(new ThreadFactory() {
       @Override
       public Thread newThread(Runnable runnable) {
@@ -466,23 +462,18 @@ public class JDBCDriver implements LensDriver {
    * @return the query rewriter
    * @throws LensException the lens exception
    */
-  protected synchronized QueryRewriter getQueryRewriter() throws LensException {
+  protected QueryRewriter getQueryRewriter() throws LensException {
     QueryRewriter rewriter;
     Class<? extends QueryRewriter> queryRewriterClass = conf.getClass(JDBC_QUERY_REWRITER_CLASS,
       DummyQueryRewriter.class, QueryRewriter.class);
-    if (rewriterCache.containsKey(queryRewriterClass)) {
-      rewriter = rewriterCache.get(queryRewriterClass);
-    } else {
-      try {
-        rewriter = queryRewriterClass.newInstance();
-        LOG.info("Initialized :" + queryRewriterClass);
-      } catch (Exception e) {
-        LOG.error("Unable to create rewriter object", e);
-        throw new LensException(e);
-      }
-      rewriter.init(conf);
-      rewriterCache.put(queryRewriterClass, rewriter);
+    try {
+      rewriter = queryRewriterClass.newInstance();
+      LOG.info("Initialized :" + queryRewriterClass);
+    } catch (Exception e) {
+      LOG.error("Unable to create rewriter object", e);
+      throw new LensException(e);
     }
+    rewriter.init(conf);
     return rewriter;
   }
 
@@ -633,16 +624,12 @@ public class JDBCDriver implements LensDriver {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     boolean validateThroughPrepare = pContext.getDriverConf(this).getBoolean(JDBC_VALIDATE_THROUGH_PREPARE,
-        DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
+      DEFAULT_JDBC_VALIDATE_THROUGH_PREPARE);
     if (validateThroughPrepare) {
       PreparedStatement stmt = null;
-      try {
-        // Estimate queries need to get connection from estimate pool to make sure
-        // we are not blocked by data queries.
-        stmt = prepareInternal(pContext, getEstimateConnection(), true, "validate-");
-      } catch (SQLException e) {
-        throw new LensException(e);
-      }
+      // Estimate queries need to get connection from estimate pool to make sure
+      // we are not blocked by data queries.
+      stmt = prepareInternal(pContext, true, true, "validate-");
       if (stmt != null) {
         try {
           stmt.close();
@@ -690,7 +677,7 @@ public class JDBCDriver implements LensDriver {
       tmpConf.set(JDBC_POOL_IDLE_TIME, getKeyOrFallBack(tmpConf, getEstimateKey(JDBC_POOL_IDLE_TIME),
         JDBC_POOL_IDLE_TIME));
       tmpConf.set(JDBC_MAX_STATEMENTS_PER_CONNECTION, getKeyOrFallBack(tmpConf,
-          getEstimateKey(JDBC_MAX_STATEMENTS_PER_CONNECTION), JDBC_MAX_STATEMENTS_PER_CONNECTION));
+        getEstimateKey(JDBC_MAX_STATEMENTS_PER_CONNECTION), JDBC_MAX_STATEMENTS_PER_CONNECTION));
       tmpConf.set(JDBC_GET_CONNECTION_TIMEOUT, getKeyOrFallBack(tmpConf,
         getEstimateKey(JDBC_GET_CONNECTION_TIMEOUT), JDBC_GET_CONNECTION_TIMEOUT));
 
@@ -714,7 +701,7 @@ public class JDBCDriver implements LensDriver {
   }
 
   private final Map<QueryPrepareHandle, PreparedStatement> preparedQueries =
-      new HashMap<QueryPrepareHandle, PreparedStatement>();
+    new HashMap<QueryPrepareHandle, PreparedStatement>();
 
   /**
    * Internally prepare the query
@@ -728,12 +715,23 @@ public class JDBCDriver implements LensDriver {
       throw new NullPointerException("Null driver query for " + pContext.getUserQuery());
     }
     checkConfigured();
-    return prepareInternal(pContext, getConnection(), false, "prepare-");
+    return prepareInternal(pContext, false, false, "prepare-");
   }
 
 
-  private PreparedStatement prepareInternal(AbstractQueryContext pContext, final Connection conn,
-                                            boolean checkConfigured, String metricCallStack) throws LensException {
+  /**
+   * Prepare statment on the database server
+   * @param pContext query context
+   * @param calledForEstimate set this to true if this call will use the estimate connection pool
+   * @param checkConfigured set this to true if this call needs to check whether JDBC driver is configured
+   * @param metricCallStack stack for metrics API
+   * @return prepared statement
+   * @throws LensException
+   */
+  private PreparedStatement prepareInternal(AbstractQueryContext pContext,
+                                            boolean calledForEstimate,
+                                            boolean checkConfigured,
+                                            String metricCallStack) throws LensException {
     // Caller might have already verified configured status and driver query, so we don't have
     // to do this check twice. Caller must set checkConfigured to false in that case.
     if (checkConfigured) {
@@ -750,8 +748,11 @@ public class JDBCDriver implements LensDriver {
     sqlRewriteGauge.markSuccess();
     MethodMetricsContext jdbcPrepareGauge = MethodMetricsFactory.createMethodGauge(pContext.getDriverConf(this), true,
       metricCallStack + JDBC_PREPARE_GAUGE);
+
     PreparedStatement stmt = null;
+    Connection conn = null;
     try {
+      conn = calledForEstimate ? getEstimateConnection() : getConnection();
       stmt = conn.prepareStatement(rewrittenQuery);
       if (stmt.getWarnings() != null) {
         throw new LensException(stmt.getWarnings());
@@ -895,9 +896,8 @@ public class JDBCDriver implements LensDriver {
    * @throws LensException the lens exception
    */
   @Override
-  public void registerForCompletionNotification(
-    QueryHandle handle, long timeoutMillis, QueryCompletionListener listener)
-    throws LensException {
+  public void registerForCompletionNotification(QueryHandle handle, long timeoutMillis,
+    QueryCompletionListener listener) throws LensException {
     checkConfigured();
     getQueryContext(handle).setListener(listener);
   }

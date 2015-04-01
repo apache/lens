@@ -17,52 +17,20 @@
  * under the License.
  */
 
-import java.util.Properties;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hive.serde2.AbstractSerDe;
 import org.apache.hadoop.hive.serde2.SerDeException;
-import org.apache.hadoop.hive.serde2.SerDeStats;
-import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
-import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 
 /**
  * Simple serde used during test of database jar
  */
-public class DatabaseJarSerde extends AbstractSerDe {
+public class DatabaseJarSerde extends LazySimpleSerDe {
   // This should load class from test.jar
   public static final ClassLoaderTestClass testClassInstance = new ClassLoaderTestClass();
   static {
     System.out.println("@@@@ SUCCESSFULLY_LOADED CLASS " + DatabaseJarSerde.class);
   }
 
-  @Override
-  public void initialize(Configuration configuration, Properties properties) throws SerDeException {
-
-  }
-
-  @Override
-  public Class<? extends Writable> getSerializedClass() {
-    return null;
-  }
-
-  @Override
-  public Writable serialize(Object o, ObjectInspector objectInspector) throws SerDeException {
-    return null;
-  }
-
-  @Override
-  public SerDeStats getSerDeStats() {
-    return null;
-  }
-
-  @Override
-  public Object deserialize(Writable writable) throws SerDeException {
-    return null;
-  }
-
-  @Override
-  public ObjectInspector getObjectInspector() throws SerDeException {
-    return null;
+  public DatabaseJarSerde() throws SerDeException {
+    super();
   }
 }

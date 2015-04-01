@@ -19,7 +19,6 @@
 package org.apache.lens.client;
 
 import java.net.URI;
-import java.util.List;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -77,11 +76,9 @@ public class TestLensClient extends LensAllApplicationJerseyTest {
     LensClient client = new LensClient(lensClientConfig);
     Assert.assertEquals(client.getCurrentDatabae(), TEST_DB,
       "current database");
-    List<String> dbs = client.getAllDatabases();
-    Assert.assertEquals(dbs.size(), 3, "no of databases");
     client.createDatabase("testclientdb", true);
-    Assert.assertEquals(client.getAllDatabases().size(), 4, " no of databases");
+    Assert.assertTrue(client.getAllDatabases().contains("testclientdb"));
     client.dropDatabase("testclientdb");
-    Assert.assertEquals(client.getAllDatabases().size(), 3, " no of databases");
+    Assert.assertFalse(client.getAllDatabases().contains("testclientdb"));
   }
 }

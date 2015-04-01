@@ -1082,6 +1082,11 @@ class JoinResolver implements ContextRewriter {
           throw new SemanticException("Table " + joinee.getName() + " is getting accessed via two different names: "
             + "[" + dimensionInJoinChain.get(joinee).get(0).getName() + ", " + joinee.getName() + "]");
         }
+        // table is accessed with chain and no chain
+        if (cubeql.getNonChainedDimensions().contains(joinee)) {
+          throw new SemanticException("Table " + joinee.getName() + " is getting accessed via joinchain: "
+            + dimensionInJoinChain.get(joinee).get(0).getName() + " and no chain at all");
+        }
       }
     }
     // populate paths from joinchains

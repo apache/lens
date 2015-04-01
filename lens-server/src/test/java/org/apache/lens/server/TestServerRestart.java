@@ -38,6 +38,7 @@ import org.apache.lens.api.query.PersistentQueryResult;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
+import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
 import org.apache.lens.server.session.HiveSessionService;
@@ -224,7 +225,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     createRestartTestDataFile();
 
     // Add a resource to check if its added after server restart.
-    queryService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
+    HiveSessionService sessionService = (HiveSessionService) LensServices.get().getService(SessionService.NAME);
+    sessionService.addResource(lensSessionId, "FILE", dataFile.toURI().toString());
     queryService.getSession(lensSessionId).addResource("FILE", dataFile.toURI().toString());
     LOG.info("@@ Added resource " + dataFile.toURI());
 

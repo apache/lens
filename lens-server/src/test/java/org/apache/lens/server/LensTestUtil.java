@@ -55,7 +55,7 @@ import org.testng.Assert;
 public final class LensTestUtil {
 
   public static final String DB_WITH_JARS = "test_db_static_jars";
-
+  public static final String DB_WITH_JARS_2 = "test_db_static_jars_2";
   private LensTestUtil() {
 
   }

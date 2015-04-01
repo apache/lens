@@ -661,8 +661,10 @@ public class TestHiveDriver {
    */
   @Test
   public void testExplain() throws Exception {
-    createTestTable("test_explain");
     SessionState.setCurrentSessionState(ss);
+    SessionState.get().setCurrentDatabase(dataBase);
+    createTestTable("test_explain");
+
     DriverQueryPlan plan = driver.explain(createExplainContext("SELECT ID FROM test_explain", conf));
     assertTrue(plan instanceof HiveQueryPlan);
     assertEquals(plan.getTableWeight(dataBase + ".test_explain"), 500.0);
@@ -671,6 +673,7 @@ public class TestHiveDriver {
     // test execute prepare
     PreparedQueryContext pctx = new PreparedQueryContext("SELECT ID FROM test_explain", null, conf, drivers);
     pctx.setSelectedDriver(driver);
+    pctx.setLensSessionIdentifier(sessionid);
 
     SessionState.setCurrentSessionState(ss);
     HiveConf inConf = new HiveConf(conf);
@@ -756,7 +759,6 @@ public class TestHiveDriver {
     assertNotNull(plan.getTableWeights());
     assertTrue(plan.getTableWeights().containsKey(dataBase + ".explain_test_1"));
     assertTrue(plan.getTableWeights().containsKey(dataBase + ".explain_test_2"));
-    assertEquals(plan.getNumJoins(), 1);
     assertTrue(plan.getPlan() != null && !plan.getPlan().isEmpty());
     driver.closeQuery(plan.getHandle());
   }
@@ -774,13 +776,13 @@ public class TestHiveDriver {
     String query2 = "SELECT DISTINCT ID FROM explain_test_1";
     PreparedQueryContext pctx = new PreparedQueryContext(query2, null, conf, drivers);
     pctx.setSelectedDriver(driver);
+    pctx.setLensSessionIdentifier(sessionid);
     DriverQueryPlan plan2 = driver.explainAndPrepare(pctx);
     // assertNotNull(plan2.getResultDestination());
     Assert.assertEquals(0, driver.getHiveHandleSize());
     assertNotNull(plan2.getTablesQueried());
     assertEquals(plan2.getTablesQueried().size(), 1);
     assertTrue(plan2.getTableWeights().containsKey(dataBase + ".explain_test_1"));
-    assertEquals(plan2.getNumSels(), 1);
     QueryContext ctx = createContext(pctx, conf);
     LensResultSet resultSet = driver.execute(ctx);
     Assert.assertEquals(0, driver.getHiveHandleSize());
@@ -807,6 +809,7 @@ public class TestHiveDriver {
     BufferedReader br = new BufferedReader(new InputStreamReader(
       TestHiveDriver.class.getResourceAsStream("/priority_tests.data")));
     String line;
+    int i = 0;
     while ((line = br.readLine()) != null) {
       String[] kv = line.split("\\s*:\\s*");
 
@@ -832,14 +835,18 @@ public class TestHiveDriver {
             put("table1", partitions);
           }
         });
-      ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
-        new HashMap<String, Double>() {
-          {
-            put("table1", 1.0);
-          }
-        });
+      if (i < 1) {
+        // table weights only for first calculation
+        ctx.getDriverContext().getDriverRewriterPlan(driver).getTableWeights().putAll(
+          new HashMap<String, Double>() {
+            {
+              put("table1", 1.0);
+            }
+          });
+      }
       Assert.assertEquals(expected, driver.queryPriorityDecider.decidePriority(ctx));
       Assert.assertEquals(Priority.NORMAL, alwaysNormalPriorityDecider.decidePriority(ctx));
+      i++;
     }
     // test priority without fact partitions
     AbstractQueryContext ctx = createContext("test priority query", conf);

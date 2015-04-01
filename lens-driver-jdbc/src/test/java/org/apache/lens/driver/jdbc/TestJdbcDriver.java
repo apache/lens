@@ -265,6 +265,25 @@ public class TestJdbcDriver {
     Assert.assertEquals(cost.getEstimatedExecTimeMillis(), 0);
     Assert.assertEquals(cost.getEstimatedResourceUsage(), 0.0);
     Assert.assertNotNull(ctx.getFinalDriverQuery(driver));
+
+    // Test connection leak for estimate
+    final int maxEstimateConnections =
+      driver.getEstimateConnectionConf().getInt(JDBCDriverConfConstants.JDBC_POOL_MAX_SIZE, 50);
+    for (int i = 0; i < maxEstimateConnections + 10; i++) {
+      try {
+        LOG.info("Iteration#" + (i + 1));
+        String query = i > maxEstimateConnections ? "SELECT * FROM estimate_test" : "CREATE TABLE FOO(ID INT)";
+        ExplainQueryContext context = createExplainContext(query, baseConf);
+        cost = driver.estimate(context);
+      } catch (LensException exc) {
+        Throwable th = exc.getCause();
+        while (th != null) {
+          assertFalse(th instanceof SQLException);
+          th = th.getCause();
+        }
+      }
+    }
+
   }
 
   /**

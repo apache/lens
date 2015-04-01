@@ -346,13 +346,13 @@ public class DriverSelectorQueryContext {
   void clearTransientStateAfterLaunch() {
     for (DriverQueryContext driverCtx : driverQueryContextMap.values()) {
       driverCtx.driverQueryPlan = null;
-      driverCtx.rewriterPlan = null;
     }
   }
 
   void clearTransientStateAfterCompleted() {
     for (DriverQueryContext driverCtx : driverQueryContextMap.values()) {
       driverCtx.driverSpecificConf = null;
+      driverCtx.rewriterPlan = null;
     }
   }
 }
