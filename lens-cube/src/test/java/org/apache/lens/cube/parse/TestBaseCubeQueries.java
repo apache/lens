@@ -58,10 +58,29 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
     Assert.assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("msr1"));
 
+    // Query with only measure should pass, since dim is not in where or group by
+    String hql = rewrite("select SUM(msr1), "
+      + "SUM(CASE WHEN cityState.name ='foo' THEN msr2"
+      + " WHEN dim2 = 'bar' THEN msr1 ELSE msr2 END) "
+      + "from basecube where " + TWO_DAYS_RANGE, conf);
+    Assert.assertNotNull(hql);
+
+    // This query should fail because chain ref in where clause
+    e = getSemanticExceptionInRewrite("select SUM(msr1), "
+      + "SUM(case WHEN cityState.capital ='foo' THEN msr2 ELSE msr1 END) "
+      + "from basecube where " + TWO_DAYS_RANGE + " AND cityState.name='foo'", conf);
+    Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
+    // Error message should contain chain_name.col_name and it should not contain dim attributes in select clause
+    // it should also contain the measure name
+    Assert.assertTrue(e.getMessage().contains("citystate.name")
+      && e.getMessage().contains("msr1")
+      && !e.getMessage().contains("capital"), e.getMessage());
+
+
     e = getSemanticExceptionInRewrite("select cityStateCapital, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    Assert.assertTrue(e.getMessage().contains("citystatecapital") && e.getMessage().contains("msr1"));
+    Assert.assertTrue(e.getMessage().contains("citystatecapital") && e.getMessage().contains("msr1"), e.getMessage());
 
     e = getSemanticExceptionInRewrite("select cityState.name, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
@@ -87,7 +106,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     e = getSemanticExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
-
     // no fact has the all the dimensions queried
     e = getSemanticExceptionInRewrite("select dim1, stateid, msr3, msr13 from basecube" + " where " + TWO_DAYS_RANGE,
       conf);
@@ -111,6 +129,9 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         }
       }
     );
+
+
+
   }
 
 

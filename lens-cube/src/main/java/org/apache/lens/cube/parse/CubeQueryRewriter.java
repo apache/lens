@@ -133,6 +133,10 @@ public class CubeQueryRewriter {
     rewriters.add(denormResolver);
     // Resolve candidate fact tables and dimension tables for columns queried
     rewriters.add(candidateTblResolver);
+    // Resolve aggregations and generate base select tree
+    rewriters.add(new AggregateResolver(conf));
+    rewriters.add(new GroupbyResolver(conf));
+    rewriters.add(new FieldValidator());
     // Resolve joins and generate base join tree
     rewriters.add(new JoinResolver(conf));
     // resolve time ranges and do col life validation
@@ -140,9 +144,7 @@ public class CubeQueryRewriter {
     // Resolve candidate fact tables and dimension tables for columns included
     // in join and denorm resolvers
     rewriters.add(candidateTblResolver);
-    // Resolve aggregations and generate base select tree
-    rewriters.add(new AggregateResolver(conf));
-    rewriters.add(new GroupbyResolver(conf));
+
     // Phase 1: resolve fact tables.
     rewriters.add(storageTableResolver);
     if (lightFactFirst) {

@@ -50,19 +50,20 @@ public class TestQueryMetrics extends TestQueryRewrite {
       "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.AliasReplacer-ITER-2",
       "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.DenormalizationResolver-ITER-3",
       "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.CandidateTableResolver-ITER-4",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.JoinResolver-ITER-5",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.TimerangeResolver-ITER-6",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.CandidateTableResolver-ITER-7",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.AggregateResolver-ITER-8",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.GroupbyResolver-ITER-9",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.StorageTableResolver-ITER-10",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.AggregateResolver-ITER-5",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.GroupbyResolver-ITER-6",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.FieldValidator-ITER-7",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.JoinResolver-ITER-8",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.TimerangeResolver-ITER-9",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.CandidateTableResolver-ITER-10",
       "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.StorageTableResolver-ITER-11",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestFactResolver-ITER-12",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.StorageTableResolver-ITER-13",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.DenormalizationResolver-ITER-14",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LeastPartitionResolver-ITER-15",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestFactResolver-ITER-16",
-      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestDimensionResolver-ITER-17"
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.StorageTableResolver-ITER-12",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestFactResolver-ITER-13",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.StorageTableResolver-ITER-14",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.DenormalizationResolver-ITER-15",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LeastPartitionResolver-ITER-16",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestFactResolver-ITER-17",
+      "lens.MethodMetricGauge.testCubeRewriteStackName-org.apache.lens.cube.parse.LightestDimensionResolver-ITER-18"
     )));
   }
 }
