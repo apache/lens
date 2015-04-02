@@ -412,7 +412,7 @@ public class MetastoreUtil {
     } else if (props.containsKey(key)) {
       return props.get(key);
     } else {
-      throw new RuntimeException("Named String value for key: " + key + " not present in the map");
+      return null;
     }
   }
 

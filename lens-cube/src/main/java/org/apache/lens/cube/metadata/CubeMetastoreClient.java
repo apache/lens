@@ -192,6 +192,8 @@ public class CubeMetastoreClient {
               try {
                 loadTimelinesFromTableProperties(fact, storage);
               } catch (Exception e) {
+                // Ideally this should never come. But since we have another source,
+                // let's piggyback on that for loading timeline
                 log.error("Error while loading timelines from table properties.", e);
                 loadTimelinesFromAllPartitions(fact, storage);
               }
@@ -200,6 +202,7 @@ public class CubeMetastoreClient {
             }
           }
         }
+        log.info("timeline for " + storageTableName + " is: " + get(storageTableName));
       }
       // return the final value from memory
       return get(storageTableName);
@@ -210,14 +213,14 @@ public class CubeMetastoreClient {
       // Not found in table properties either, compute from all partitions of the fact-storage table.
       // First make sure all combinations of update period and partition column have an entry even
       // if no partitions exist
-      log.info("loading from all partitions");
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
+      log.info("loading from all partitions: " + storageTableName);
       Table storageTable = getTable(storageTableName);
       if (getCubeFact(fact).getUpdatePeriods() != null && getCubeFact(fact).getUpdatePeriods().get(
         storage) != null) {
         for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
           for (String partCol : getTimePartsOfTable(storageTable)) {
-            partitionTimelineCache.ensureEntry(storageTableName, updatePeriod, partCol);
+            ensureEntry(storageTableName, updatePeriod, partCol);
           }
         }
       }
@@ -229,8 +232,7 @@ public class CubeMetastoreClient {
         List<String> values = partition.getValues();
         for (int i = 0; i < partCols.size(); i++) {
           if (timeParts.contains(partCols.get(i).getName())) {
-            partitionTimelineCache.addForBatchAddition(storageTableName, period, partCols.get(i).getName(),
-              values.get(i));
+            addForBatchAddition(storageTableName, period, partCols.get(i).getName(), values.get(i));
           }
         }
       }
@@ -241,8 +243,8 @@ public class CubeMetastoreClient {
 
     private void loadTimelinesFromTableProperties(String fact, String storage) throws HiveException, LensException {
       // found in table properties, load from there.
-      log.info("loading from table properties");
       String storageTableName = MetastoreUtil.getStorageTableName(fact, Storage.getPrefix(storage));
+      log.info("loading from table properties: " + storageTableName);
       for (UpdatePeriod updatePeriod : getCubeFact(fact).getUpdatePeriods().get(storage)) {
         for (String partCol : getTimePartsOfTable(storageTableName)) {
           ensureEntry(storageTableName, updatePeriod, partCol).init(getTable(storageTableName));
@@ -291,8 +293,7 @@ public class CubeMetastoreClient {
         get(storageTable).get(updatePeriod).put(partitionColumn, PartitionTimelineFactory.get(
           CubeMetastoreClient.this, storageTable, updatePeriod, partitionColumn));
       }
-      PartitionTimeline ret = get(storageTable).get(updatePeriod).get(partitionColumn);
-      return ret;
+      return get(storageTable).get(updatePeriod).get(partitionColumn);
     }
 
     /**
