@@ -29,6 +29,18 @@
   </property>
 
   <property>
+    <name>lens.server.driver.selector.class</name>
+    <value>org.apache.lens.server.api.driver.MinQueryCostSelector</value>
+    <description>Class for selecting best driver given the query context</description>
+  </property>
+
+  <property>
+    <name>lens.server.query.acceptors</name>
+    <value></value>
+    <description>Query Acceptors configuredsk</description>
+  </property>
+
+  <property>
     <name>lens.server.servicenames</name>
     <value>session,query,metastore,scheduler,quota</value>
     <description>These services would be started in the specified order when lens-server starts up</description>

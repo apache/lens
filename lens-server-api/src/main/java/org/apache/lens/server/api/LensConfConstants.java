@@ -55,7 +55,14 @@ public final class LensConfConstants {
    * The Constant DRIVER_CLASSES.
    */
   public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
-
+  /**
+   * The Constant DRIVER_SELECTOR_CLASS.
+   */
+  public static final String DRIVER_SELECTOR_CLASS = SERVER_PFX + "driver.selector.class";
+  /**
+   * The Constant ACCEPTOR_CLASSES.
+   */
+  public static final String ACCEPTOR_CLASSES = SERVER_PFX + "acceptors";
   /**
    * The Constant SERVICE_NAMES.
    */
@@ -835,15 +842,15 @@ public final class LensConfConstants {
   public static final boolean DEFAULT_ENABLE_QUERY_METRICS = false;
 
   /**
-   * Key used to hold value of unique id for query metrics. This wont be passed by user, will be generated and set.
-   * This is to pass unique id for query across the code flow.
+   * Key used to hold value of unique id for query metrics. This wont be passed by user, will be generated and set. This
+   * is to pass unique id for query across the code flow.
    */
   public static final String QUERY_METRIC_UNIQUE_ID_CONF_KEY = QUERY_PFX + "metric.unique.id";
 
   /**
-   * Key used to hold value query metric name in the stack. This wont be passed by user, will be generated and set.
-   * When each query looked at by driver, the metric needs to be different for each driver. This name capture the stack
-   * from which driver the code reached there.
+   * Key used to hold value query metric name in the stack. This wont be passed by user, will be generated and set. When
+   * each query looked at by driver, the metric needs to be different for each driver. This name capture the stack from
+   * which driver the code reached there.
    */
   public static final String QUERY_METRIC_DRIVER_STACK_NAME = QUERY_PFX + "metric.driver.stack.name";
 
