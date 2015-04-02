@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
-import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -59,7 +58,7 @@ class AliasReplacer implements ContextRewriter {
     colToTableAlias = new HashMap<String, String>();
 
     extractTabAliasForCol(cubeql);
-    doFieldValidation(cubeql);
+    findDimAttributesAndMeasures(cubeql);
 
     // Rewrite the all the columns in the query with table alias prefixed.
     // If col1 of table tab1 is accessed, it would be changed as tab1.col1.
@@ -97,10 +96,12 @@ class AliasReplacer implements ContextRewriter {
 
   }
 
-  // Finds all queried dim-attributes and measures from cube
-  // If all fields in cube are not queryable together, does the validation
-  // wrt to derived cubes.
-  private void doFieldValidation(CubeQueryContext cubeql) throws SemanticException {
+  /**
+   * Figure out queried dim attributes and measures from the cube query context
+   * @param cubeql
+   * @throws SemanticException
+   */
+  private void findDimAttributesAndMeasures(CubeQueryContext cubeql) throws SemanticException {
     CubeInterface cube = cubeql.getCube();
     if (cube != null) {
       Set<String> cubeColsQueried = cubeql.getColumnsQueried(cube.getName());
@@ -117,69 +118,7 @@ class AliasReplacer implements ContextRewriter {
       }
       cubeql.addQueriedDimAttrs(queriedDimAttrs);
       cubeql.addQueriedMsrs(queriedMsrs);
-      if (!cube.allFieldsQueriable()) {
-        // do queried field validation
-        List<DerivedCube> dcubes;
-        try {
-          dcubes = cubeql.getMetastoreClient().getAllDerivedQueryableCubes(cube);
-        } catch (HiveException e) {
-          throw new SemanticException(e);
-        }
-        // remove chained ref columns from field validation
-        Iterator<String> iter = queriedDimAttrs.iterator();
-        Set<String> chainedSrcColumns = new HashSet<String>();
-        while (iter.hasNext()) {
-          String attr = iter.next();
-          if (cube.getDimAttributeByName(attr) instanceof ReferencedDimAtrribute
-            && ((ReferencedDimAtrribute) cube.getDimAttributeByName(attr)).isChainedColumn()) {
-            iter.remove();
-            ReferencedDimAtrribute rdim = (ReferencedDimAtrribute)cube.getDimAttributeByName(attr);
-            chainedSrcColumns.addAll(cube.getChainByName(rdim.getChainName()).getSourceColumns());
-          }
-        }
-        for (JoinChain chainQueried : cubeql.getJoinchains().values()) {
-          chainedSrcColumns.addAll(chainQueried.getSourceColumns());
-        }
-        // do validation
-        // Find atleast one derived cube which contains all the dimensions
-        // queried.
-        boolean derivedCubeFound = false;
-        for (DerivedCube dcube : dcubes) {
-          if (dcube.getDimAttributeNames().containsAll(chainedSrcColumns)
-              && dcube.getDimAttributeNames().containsAll(queriedDimAttrs)) {
-            // remove all the measures that are covered
-            queriedMsrs.removeAll(dcube.getMeasureNames());
-            derivedCubeFound = true;
-          }
-        }
-        Set<String> nonQueryableFields = getNonQueryableAttributes(cubeql);
-        if (!derivedCubeFound && !nonQueryableFields.isEmpty()) {
-          throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, nonQueryableFields.toString());
-        }
-        if (!queriedMsrs.isEmpty()) {
-          // Add appropriate message to know which fields are not queryable together
-          if (!nonQueryableFields.isEmpty()) {
-            throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, nonQueryableFields.toString() + " and "
-              + queriedMsrs.toString());
-          } else {
-            throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedMsrs.toString());
-          }
-        }
-      }
     }
-  }
-
-  private Set<String> getNonQueryableAttributes(CubeQueryContext cubeql) {
-    Set<String> nonQueryableFields = new LinkedHashSet<String>();
-    nonQueryableFields.addAll(cubeql.getQueriedDimAttrs());
-    for (String joinChainAlias : cubeql.getJoinchains().keySet()) {
-      if (cubeql.getColumnsQueried(joinChainAlias) != null) {
-        for (String chaincol : cubeql.getColumnsQueried(joinChainAlias)) {
-          nonQueryableFields.add(joinChainAlias + "." + chaincol);
-        }
-      }
-    }
-    return nonQueryableFields;
   }
 
   private void extractTabAliasForCol(CubeQueryContext cubeql) throws SemanticException {
