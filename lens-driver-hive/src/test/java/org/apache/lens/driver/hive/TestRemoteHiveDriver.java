@@ -134,7 +134,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     conf = new HiveConf(remoteConf);
     conf.addResource("hivedriver-site.xml");
     driver = new HiveDriver();
-    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
+    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     driver.configure(conf);
     drivers = new ArrayList<LensDriver>() {
       {
@@ -158,7 +158,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     thConf.setLong(HiveDriver.HS2_CONNECTION_EXPIRY_DELAY, 10000);
     final HiveDriver thrDriver = new HiveDriver();
     thrDriver.configure(thConf);
-    QueryContext ctx = createContext("USE " + dataBase, conf);
+    QueryContext ctx = createContext("USE " + dataBase, conf, thrDriver);
     thrDriver.execute(ctx);
 
     // Launch a select query
@@ -171,7 +171,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
     for (int q = 0; q < QUERIES; q++) {
       final QueryContext qctx;
       try {
-        qctx = createContext("SELECT * FROM test_multithreads", conf);
+        qctx = createContext("SELECT * FROM test_multithreads", conf, thrDriver);
         thrDriver.executeAsync(qctx);
       } catch (LensException e) {
         errCount.incrementAndGet();
@@ -247,7 +247,7 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, false);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
-    QueryContext ctx = createContext("USE " + dataBase, driverConf);
+    QueryContext ctx = createContext("USE " + dataBase, driverConf, oldDriver);
     oldDriver.execute(ctx);
     Assert.assertEquals(0, oldDriver.getHiveHandleSize());
 
@@ -255,20 +255,20 @@ public class TestRemoteHiveDriver extends TestHiveDriver {
 
     // Create some ops with a driver
     String createTable = "CREATE TABLE IF NOT EXISTS " + tableName + "(ID STRING)";
-    ctx = createContext(createTable, driverConf);
+    ctx = createContext(createTable, driverConf, oldDriver);
     oldDriver.execute(ctx);
 
     // Load some data into the table
     String dataLoad = "LOAD DATA LOCAL INPATH '" + TEST_DATA_FILE + "' OVERWRITE INTO TABLE " + tableName;
-    ctx = createContext(dataLoad, driverConf);
+    ctx = createContext(dataLoad, driverConf, oldDriver);
     oldDriver.execute(ctx);
 
     driverConf.setBoolean(LensConfConstants.QUERY_ADD_INSERT_OVEWRITE, true);
     driverConf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     // Fire two queries
-    QueryContext ctx1 = createContext("SELECT * FROM " + tableName, driverConf);
+    QueryContext ctx1 = createContext("SELECT * FROM " + tableName, driverConf, oldDriver);
     oldDriver.executeAsync(ctx1);
-    QueryContext ctx2 = createContext("SELECT ID FROM " + tableName, driverConf);
+    QueryContext ctx2 = createContext("SELECT ID FROM " + tableName, driverConf, oldDriver);
     oldDriver.executeAsync(ctx2);
     Assert.assertEquals(2, oldDriver.getHiveHandleSize());
 

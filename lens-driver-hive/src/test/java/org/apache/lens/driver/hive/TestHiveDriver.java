@@ -120,7 +120,7 @@ public class TestHiveDriver {
     conf.addResource("hivedriver-site.xml");
     conf.setClass(HiveDriver.HIVE_CONNECTION_CLASS, EmbeddedThriftConnection.class, ThriftConnection.class);
     conf.set("hive.lock.manager", "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
-    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, false);
+    conf.setBoolean(HiveDriver.HS2_CALCULATE_PRIORITY, true);
     driver = new HiveDriver();
     driver.configure(conf);
     drivers = new ArrayList<LensDriver>() {
@@ -138,6 +138,13 @@ public class TestHiveDriver {
 
   protected QueryContext createContext(final String query, Configuration conf) throws LensException {
     QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, drivers);
+    // session id has to be set before calling setDriverQueriesAndPlans
+    context.setLensSessionIdentifier(sessionid);
+    return context;
+  }
+
+  protected QueryContext createContext(final String query, Configuration conf, LensDriver driver) throws LensException {
+    QueryContext context = new QueryContext(query, "testuser", new LensConf(), conf, Arrays.asList(driver));
     // session id has to be set before calling setDriverQueriesAndPlans
     context.setLensSessionIdentifier(sessionid);
     return context;
@@ -273,6 +280,7 @@ public class TestHiveDriver {
     String select = "SELECT ID FROM test_execute";
     QueryContext context = createContext(select, conf);
     resultSet = driver.execute(context);
+    Assert.assertNotNull(context.getDriverConf(driver).get("mapred.job.name"));
     validateInMemoryResult(resultSet);
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
     context = createContext(select, conf);
@@ -387,21 +395,22 @@ public class TestHiveDriver {
     // Now run a command that would fail
     String expectFail = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, true);
-    QueryContext context = createContext(expectFail, conf);
-    context.getConf().set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
+    Configuration failConf = new Configuration(conf);
+    failConf.set("hive.exec.driver.run.hooks", FailHook.class.getCanonicalName());
+    QueryContext context = createContext(expectFail, failConf);
     driver.executeAsync(context);
     Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.FAILED, true, false);
     Assert.assertEquals(1, driver.getHiveHandleSize());
     driver.closeQuery(context.getQueryHandle());
     Assert.assertEquals(0, driver.getHiveHandleSize());
-
-    conf.set("hive.exec.driver.run.hooks", "");
     // Async select query
     String select = "SELECT ID FROM test_execute_sync";
     conf.setBoolean(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, false);
     context = createContext(select, conf);
     driver.executeAsync(context);
+    Assert.assertNotNull(context.getDriverConf(driver).get("mapred.job.name"));
+    Assert.assertNotNull(context.getDriverConf(driver).get("mapred.job.priority"));
     Assert.assertEquals(1, driver.getHiveHandleSize());
     validateExecuteAsync(context, DriverQueryState.SUCCESSFUL, false, false);
     driver.closeQuery(context.getQueryHandle());
