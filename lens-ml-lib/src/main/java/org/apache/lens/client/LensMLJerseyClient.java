@@ -31,8 +31,8 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
-import org.apache.lens.api.ml.ModelMetadata;
-import org.apache.lens.api.ml.TestReport;
+import org.apache.lens.ml.api.ModelMetadata;
+import org.apache.lens.ml.api.TestReport;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

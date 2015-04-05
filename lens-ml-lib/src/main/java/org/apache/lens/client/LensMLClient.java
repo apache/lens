@@ -32,12 +32,12 @@ import javax.ws.rs.core.Form;
 
 import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.ml.ModelMetadata;
-import org.apache.lens.api.ml.TestReport;
-import org.apache.lens.ml.LensML;
-import org.apache.lens.ml.MLAlgo;
-import org.apache.lens.ml.MLModel;
-import org.apache.lens.ml.MLTestReport;
+import org.apache.lens.ml.algo.api.MLAlgo;
+import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.ml.api.LensML;
+import org.apache.lens.ml.api.MLTestReport;
+import org.apache.lens.ml.api.ModelMetadata;
+import org.apache.lens.ml.api.TestReport;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

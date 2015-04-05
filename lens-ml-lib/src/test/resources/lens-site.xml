@@ -103,7 +103,7 @@
 
   <property>
     <name>lens.server.ml.ws.resource.impl</name>
-    <value>org.apache.lens.server.ml.MLServiceResource</value>
+    <value>org.apache.lens.ml.server.MLServiceResource</value>
     <description>Implementation class for ML Service Resource</description>
   </property>
 
@@ -138,13 +138,13 @@
 
   <property>
     <name>lens.server.ml.service.impl</name>
-    <value>org.apache.lens.server.ml.MLServiceImpl</value>
+    <value>org.apache.lens.ml.server.MLServiceImpl</value>
     <description>Implementation class for ML service</description>
   </property>
 
   <property>
     <name>lens.ml.drivers</name>
-    <value>org.apache.lens.ml.spark.SparkMLDriver</value>
+    <value>org.apache.lens.ml.algo.spark.SparkMLDriver</value>
   </property>
 
   <property>
