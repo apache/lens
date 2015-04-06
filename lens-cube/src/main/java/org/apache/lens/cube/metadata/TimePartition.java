@@ -90,6 +90,9 @@ public class TimePartition implements Comparable<TimePartition>, Named {
   public TimePartition partitionAtDiff(int increment) {
     Calendar cal = Calendar.getInstance();
     cal.setTime(date);
+    if (getUpdatePeriod().equals(UpdatePeriod.QUARTERLY)) {
+      increment *= 3;
+    }
     cal.add(updatePeriod.calendarField(), increment);
     return new TimePartition(updatePeriod, cal.getTime());
   }

@@ -18,12 +18,14 @@
  */
 package org.apache.lens.cube.metadata;
 
+import static org.testng.Assert.*;
+
 import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.metadata.TimePartition.TimePartitionRange;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class TestTimePartition {
@@ -31,14 +33,22 @@ public class TestTimePartition {
 
   @Test
   public void test() throws LensException {
+    // Test for all update periods
     for (UpdatePeriod up : UpdatePeriod.values()) {
+      // Normal date object parsable
       String nowStr = up.format().format(NOW);
+
+      // Create partition by date object or it's string representation -- both should be same.
       TimePartition nowPartition = TimePartition.of(up, NOW);
       TimePartition nowStrPartition = TimePartition.of(up, nowStr);
-      Assert.assertEquals(nowPartition, nowStrPartition);
-      Assert.assertTrue(nowPartition.next().after(nowPartition));
-      Assert.assertTrue(nowPartition.previous().before(nowPartition));
-      Assert.assertEquals(getLensExceptionFromPartitionParsing(up, "garbage").getMessage(),
+      assertEquals(nowPartition, nowStrPartition);
+
+      // Test next and previous
+      assertTrue(nowPartition.next().after(nowPartition));
+      assertTrue(nowPartition.previous().before(nowPartition));
+
+      // date parse failures should give lens exception
+      assertEquals(getLensExceptionFromPartitionParsing(up, "garbage").getMessage(),
         TimePartition.getWrongUpdatePeriodMessage(up, "garbage"));
       getLensExceptionFromPartitionParsing(up, (Date) null);
       getLensExceptionFromPartitionParsing(up, (String) null);
@@ -50,7 +60,8 @@ public class TestTimePartition {
         if (up.formatStr().equals(up2.formatStr())) {
           continue;
         }
-        Assert.assertEquals(getLensExceptionFromPartitionParsing(up2, nowStr).getMessage(),
+        // Parsing a string representation with differnet update period should give lens exception.
+        assertEquals(getLensExceptionFromPartitionParsing(up2, nowStr).getMessage(),
           TimePartition.getWrongUpdatePeriodMessage(up2, nowStr));
       }
     }
@@ -59,7 +70,7 @@ public class TestTimePartition {
   private LensException getLensExceptionFromPartitionParsing(UpdatePeriod up, String dateStr) {
     try {
       TimePartition.of(up, dateStr);
-      Assert.fail("Should have thrown LensException");
+      fail("Should have thrown LensException");
     } catch (LensException e) {
       return e;
     }
@@ -69,7 +80,7 @@ public class TestTimePartition {
   private LensException getLensExceptionFromPartitionParsing(UpdatePeriod up, Date date) {
     try {
       TimePartition.of(up, date);
-      Assert.fail("Should have thrown LensException");
+      fail("Should have thrown LensException");
     } catch (LensException e) {
       return e;
     }
@@ -78,8 +89,8 @@ public class TestTimePartition {
 
   private LensException getLensExceptionInPartitionRangeCreation(TimePartition begin, TimePartition end) {
     try {
-      TimePartition.TimePartitionRange range = begin.rangeUpto(end);
-      Assert.fail("Should have thrown LensException. Can't create range: " + range);
+      TimePartitionRange range = begin.rangeUpto(end);
+      fail("Should have thrown LensException. Can't create range: " + range);
     } catch (LensException e) {
       return e;
     }
@@ -89,37 +100,54 @@ public class TestTimePartition {
   public static Date timeAtDiff(Date date, UpdatePeriod period, int d) {
     Calendar cal = Calendar.getInstance();
     cal.setTime(date);
+    if (period.equals(UpdatePeriod.QUARTERLY)) {
+      d *= 3;
+    }
     cal.add(period.calendarField(), d);
     return cal.getTime();
   }
 
   @Test
   public void testTimeRange() throws LensException {
+    // test for all update periods
     for (UpdatePeriod up : UpdatePeriod.values()) {
+      // create two partition of different time
       TimePartition nowPartition = TimePartition.of(up, NOW);
       TimePartition tenLater = TimePartition.of(up, timeAtDiff(NOW, up, 10));
+
+      // partition arguments should be [begin <= end)
       getLensExceptionInPartitionRangeCreation(tenLater, nowPartition);
-      TimePartition.TimePartitionRange range = nowPartition.rangeUpto(tenLater);
-      Assert.assertEquals(range, tenLater.rangeFrom(nowPartition));
-      if (up != UpdatePeriod.QUARTERLY) {
-        Assert.assertEquals(range.size(), 10);
-        Assert.assertEquals(nowPartition.singletonRange().size(), 1);
-      }
-      Assert.assertTrue(range.contains(nowPartition));
-      Assert.assertFalse(range.contains(tenLater));
+
+      // a.upto(b) == b.from(a)
+      TimePartitionRange range = nowPartition.rangeUpto(tenLater);
+      assertEquals(range, tenLater.rangeFrom(nowPartition));
+      // size check
+      assertEquals(range.size(), 10);
+      // test singleton range
+      assertEquals(nowPartition.singletonRange().size(), 1);
+      // test begin belongs to [begin, end) and end doesn't belong
+      assertTrue(range.contains(nowPartition));
+      assertFalse(range.contains(tenLater));
+      // test partition parsing for string arguments.
+      // a,b == [a,b)
+      // Other possible arguments: [a,b), [a,b], (a,b), (a,b]
       String nowStr = nowPartition.getDateString();
       String tenLaterStr = tenLater.getDateString();
-      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, nowStr, tenLaterStr), range);
-      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + ")"), range);
-      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + "]"),
+      assertEquals(TimePartitionRange.parseFrom(up, nowStr, tenLaterStr), range);
+      assertEquals(TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + ")"), range);
+      assertEquals(TimePartitionRange.parseFrom(up, "[" + nowStr, tenLaterStr + "]"),
         nowPartition.rangeUpto(tenLater.next()));
-      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + "]"),
+      assertEquals(TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + "]"),
         nowPartition.next().rangeUpto(
           tenLater.next()));
-      Assert.assertEquals(TimePartition.TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + ")"),
+      assertEquals(TimePartitionRange.parseFrom(up, "(" + nowStr, tenLaterStr + ")"),
         nowPartition.next().rangeUpto(tenLater));
     }
-    getLensExceptionInPartitionRangeCreation(TimePartition.of(UpdatePeriod.HOURLY, NOW), TimePartition.of(
-      UpdatePeriod.DAILY, NOW));
+  }
+
+  @Test(expectedExceptions = LensException.class)
+  public void testTimeRangeCreationWithDifferentUpdatePeriod() throws LensException {
+    // begin and end partitions should have same update period for range creation to succeed.
+    TimePartition.of(UpdatePeriod.HOURLY, NOW).rangeUpto(TimePartition.of(UpdatePeriod.DAILY, NOW));
   }
 }
