@@ -87,15 +87,6 @@ public class TestTimePartition {
     return null; // redundant
   }
 
-  private LensException getLensExceptionInPartitionRangeCreation(TimePartition begin, TimePartition end) {
-    try {
-      TimePartitionRange range = begin.rangeUpto(end);
-      fail("Should have thrown LensException. Can't create range: " + range);
-    } catch (LensException e) {
-      return e;
-    }
-    return null; // redundant
-  }
 
   public static Date timeAtDiff(Date date, UpdatePeriod period, int d) {
     Calendar cal = Calendar.getInstance();
@@ -114,9 +105,6 @@ public class TestTimePartition {
       // create two partition of different time
       TimePartition nowPartition = TimePartition.of(up, NOW);
       TimePartition tenLater = TimePartition.of(up, timeAtDiff(NOW, up, 10));
-
-      // partition arguments should be [begin <= end)
-      getLensExceptionInPartitionRangeCreation(tenLater, nowPartition);
 
       // a.upto(b) == b.from(a)
       TimePartitionRange range = nowPartition.rangeUpto(tenLater);
@@ -146,8 +134,16 @@ public class TestTimePartition {
   }
 
   @Test(expectedExceptions = LensException.class)
+  public void testPartitionRangeValidity() throws LensException {
+    // begin and end partitions should follow begin <= end
+    TimePartition.of(UpdatePeriod.HOURLY, NOW)
+      .rangeFrom(TimePartition.of(UpdatePeriod.HOURLY, timeAtDiff(NOW, UpdatePeriod.HOURLY, 10)));
+  }
+
+  @Test(expectedExceptions = LensException.class)
   public void testTimeRangeCreationWithDifferentUpdatePeriod() throws LensException {
     // begin and end partitions should have same update period for range creation to succeed.
     TimePartition.of(UpdatePeriod.HOURLY, NOW).rangeUpto(TimePartition.of(UpdatePeriod.DAILY, NOW));
   }
+
 }
