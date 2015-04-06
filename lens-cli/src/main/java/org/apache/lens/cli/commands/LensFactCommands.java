@@ -311,7 +311,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
    * @param specPair the spec pair
    * @return the string
    */
-  @CliCommand(value = "fact add single-partition", help = "add a partition to fact table")
+  @CliCommand(value = "fact add partition", help = "add a partition to fact table")
   public String addPartitionToFact(
     @CliOption(key = {"", "table"}, mandatory = true, help
       = "<table> <storage> <path to partition spec>") String specPair) {
@@ -319,8 +319,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
     if (pair.length != 3) {
-      return "Syntax error, please try in following " + "format. fact add single-partition "
-        + "<table> <storage> <partition spec>";
+      return "Syntax error, please try in following " + "format. fact add partition <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);
@@ -350,8 +349,7 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
     String[] pair = Iterables.toArray(parts, String.class);
     APIResult result;
     if (pair.length != 3) {
-      return "Syntax error, please try in following "
-        + "format. fact add partitions <table> <storage> <partitions spec>";
+      return "Syntax error, please try in following " + "format. fact add partition <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);

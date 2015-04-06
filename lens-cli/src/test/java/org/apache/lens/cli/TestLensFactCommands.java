@@ -199,22 +199,6 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       Assert.fail("Unable to locate the storage part file for adding new storage to fact table fact1");
     }
     verifyAndDeletePartitions();
-
-    // Wrong files:
-    try {
-      command.addPartitionToFact("fact1 " + FACT_LOCAL + " " + new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
-      Assert.fail("Should fail");
-    } catch (Throwable t) {
-      // pass
-    }
-    try {
-      command.addPartitionsToFact("fact1 " + FACT_LOCAL + " " + new File(
-        TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
-      Assert.fail("Should fail");
-    } catch (Throwable t) {
-      // pass
-    }
   }
 
   private void verifyAndDeletePartitions() {
