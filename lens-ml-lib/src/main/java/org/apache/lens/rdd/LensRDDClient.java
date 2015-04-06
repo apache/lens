@@ -29,7 +29,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.*;
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientResultSet;
-import org.apache.lens.ml.spark.HiveTableRDD;
+import org.apache.lens.ml.algo.spark.HiveTableRDD;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

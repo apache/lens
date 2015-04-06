@@ -18,9 +18,9 @@
  */
 package org.apache.lens.ml.dao;
 
-import org.apache.lens.ml.MLModel;
-import org.apache.lens.ml.MLTestReport;
-import org.apache.lens.ml.task.MLTask;
+import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.ml.api.MLTestReport;
+import org.apache.lens.ml.impl.MLTask;
 
 public class MLDBUtils {
 
