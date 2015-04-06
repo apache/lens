@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
 import com.google.common.base.Strings;
@@ -43,7 +44,7 @@ import lombok.ToString;
 @Data
 @ToString(callSuper = true)
 public class RangesPartitionTimeline extends PartitionTimeline {
-  private List<TimePartition.TimePartitionRange> ranges = Lists.newArrayList();
+  private List<TimePartitionRange> ranges = Lists.newArrayList();
 
   public RangesPartitionTimeline(String storageTableName, UpdatePeriod updatePeriod,
     String partCol) {
@@ -104,7 +105,7 @@ public class RangesPartitionTimeline extends PartitionTimeline {
   private void mergeRanges() {
     for (int i = 0; i < ranges.size() - 1; i++) {
       if (ranges.get(i).getEnd().equals(ranges.get(i + 1).getBegin())) {
-        TimePartition.TimePartitionRange removed = ranges.remove(i + 1);
+        TimePartitionRange removed = ranges.remove(i + 1);
         ranges.get(i).setEnd(removed.getEnd());
         i--; // check again at same index
       }
@@ -158,7 +159,7 @@ public class RangesPartitionTimeline extends PartitionTimeline {
         throw new LensException("Ranges incomplete");
       }
       for (int i = 0; i < split.length; i += 2) {
-        ranges.add(TimePartition.TimePartitionRange.parseFrom(getUpdatePeriod(), split[i], split[i + 1]));
+        ranges.add(TimePartitionRange.parseFrom(getUpdatePeriod(), split[i], split[i + 1]));
       }
     }
     return isConsistent();
@@ -193,7 +194,7 @@ public class RangesPartitionTimeline extends PartitionTimeline {
     if (isEmpty()) {
       return false;
     }
-    for (TimePartition.TimePartitionRange range : ranges) {
+    for (TimePartitionRange range : ranges) {
       if (range.contains(toCheck)) {
         return true;
       }
@@ -205,7 +206,7 @@ public class RangesPartitionTimeline extends PartitionTimeline {
   public Iterator<TimePartition> iterator() {
 
     return new Iterator<TimePartition>() {
-      Iterator<TimePartition.TimePartitionRange> uber = ranges.iterator();
+      Iterator<TimePartitionRange> uber = ranges.iterator();
       Iterator<TimePartition> cur = null;
 
       @Override

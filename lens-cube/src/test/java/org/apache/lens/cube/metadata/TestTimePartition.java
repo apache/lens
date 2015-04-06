@@ -24,7 +24,6 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.TimePartition.TimePartitionRange;
 
 import org.testng.annotations.Test;
 
