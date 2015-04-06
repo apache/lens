@@ -193,7 +193,7 @@ class StorageTableResolver implements ContextRewriter {
               } else {
                 LOG.info("Partition " + StorageConstants.LATEST_PARTITION_VALUE + " does not exist on " + tableName);
               }
-              if (!failOnPartialData || foundPart) {
+              if ((!skipOnNoData && !failOnPartialData) || foundPart) {
                 storageTables.add(tableName);
                 String whereClause =
                   StorageUtil.getWherePartClause(dim.getTimedDimension(), null,
@@ -327,7 +327,15 @@ class StorageTableResolver implements ContextRewriter {
           noPartsForRange = true;
           continue;
         }
-        cfact.incrementPartsQueried(rangeParts.size());
+        if (skipOnNoData) {
+          for (FactPartition part : rangeParts) {
+            if (part.found()) {
+              cfact.incrementPartsQueried(1);
+            }
+          }
+        } else {
+          cfact.incrementPartsQueried(rangeParts.size());
+        }
         answeringParts.addAll(rangeParts);
         cfact.getPartsQueried().addAll(rangeParts);
         cfact.getRangeToWhereClause().put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
@@ -514,10 +522,6 @@ class StorageTableResolver implements ContextRewriter {
                       partWhereClauseFormat));
                   }
                   LOG.info("added all sub partitions blindly in pPart: " + pPart);
-//                          if (!getPartitions(fact, dt, cal.getTime(), partCol, pPart, partitions, newset, false,
-//                            skipStorageCauses, nonExistingParts)) {
-//                            LOG.info("No partitions found in look ahead range");
-//                          }
                 }
               }
             }
