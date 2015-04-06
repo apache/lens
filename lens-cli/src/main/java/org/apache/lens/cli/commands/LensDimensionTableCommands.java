@@ -333,7 +333,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
    * @param specPair the spec pair
    * @return the string
    */
-  @CliCommand(value = "dimtable add partition", help = "add a partition to dim table")
+  @CliCommand(value = "dimtable add single-partition", help = "add a partition to dim table")
   public String addPartitionToDimTable(
     @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
       + " <path to partition specification>") String specPair) {
@@ -342,7 +342,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     APIResult result;
     if (pair.length != 3) {
       return "Syntax error, please try in following "
-        + "format. dimtable add partition <table> <storage> <partition spec>";
+        + "format. dimtable add single-partition <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);
@@ -373,7 +373,7 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
     APIResult result;
     if (pair.length != 3) {
       return "Syntax error, please try in following "
-        + "format. dimtable add partition <table> <storage> <partition spec>";
+        + "format. dimtable add partitions <table> <storage> <partition spec>";
     }
 
     File f = new File(pair[2]);

@@ -56,6 +56,7 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
 
+
   /**
    * Get current database used by the CubeMetastoreClient
    *

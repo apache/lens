@@ -54,6 +54,7 @@ class StorageTableResolver implements ContextRewriter {
   private final boolean allStoragesSupported;
   CubeMetastoreClient client;
   private final boolean failOnPartialData;
+  private final boolean skipOnNoData;
   private final List<String> validDimTables;
   private final Map<CubeFactTable, Map<UpdatePeriod, Set<String>>> validStorageMap =
     new HashMap<CubeFactTable, Map<UpdatePeriod, Set<String>>>();
@@ -85,6 +86,7 @@ class StorageTableResolver implements ContextRewriter {
     this.supportedStorages = getSupportedStorages(conf);
     this.allStoragesSupported = (supportedStorages == null);
     this.failOnPartialData = conf.getBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    this.skipOnNoData = conf.getBoolean(CubeQueryConfUtil.SKIP_FACTS_ON_NO_DATA, false);
     String str = conf.get(CubeQueryConfUtil.VALID_STORAGE_DIM_TABLES);
     validDimTables = StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
     this.processTimePartCol = conf.get(CubeQueryConfUtil.PROCESS_TIME_PART_COL);

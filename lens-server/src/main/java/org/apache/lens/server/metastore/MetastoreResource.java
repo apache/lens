@@ -49,6 +49,7 @@ public class MetastoreResource {
   public static final APIResult SUCCESS = new APIResult(Status.SUCCEEDED, "");
   public static final ObjectFactory X_CUBE_OBJECT_FACTORY = new ObjectFactory();
 
+
   public CubeMetastoreService getSvc() {
     return (CubeMetastoreService) LensServices.get().getService("metastore");
   }
@@ -58,6 +59,30 @@ public class MetastoreResource {
       throw new BadRequestException("Invalid session handle");
     }
   }
+
+  //  private <T> T checkValidity(JAXBElement<T> object) {
+  //    String NS = "http://www.w3.org/2001/XMLSchema";
+  //    try {
+  //      JAXBContext jaxbContext = JAXBContext.newInstance(object.getDeclaredType());
+  //      SchemaFactory schemaFactory = SchemaFactory.newInstance(NS);
+  //      Schema schema = schemaFactory.newSchema(getClass().getResource("/cube-0.1.xsd"));
+  //      Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+  //      unmarshaller.setSchema(schema);
+  //      unmarshaller.setEventHandler(new ValidationEventHandler() {
+  //        public boolean handleEvent(ValidationEvent event) {
+  //          System.out.println(event);
+  //          return false;
+  //        }
+  //      });
+  //      Marshaller marshaller = jaxbContext.createMarshaller();
+  //      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+  //      ByteArrayOutputStream stream = new ByteArrayOutputStream();
+  //      marshaller.marshal(object, stream);
+  //      return (T) unmarshaller.unmarshal(new StringReader(stream.toString()));
+  //    } catch (Exception e) {
+  //      throw new BadRequestException(e);
+  //    }
+  //  }
 
   private void checkNonNullArgs(String message, Object... args) {
     for (Object arg : args) {
@@ -1070,7 +1095,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartition partition) {
     checkSessionId(sessionid);
-    checkNonNullArgs("Partition is null", partition);
+    //    checkValidity(X_CUBE_OBJECT_FACTORY.createXPartition(partition));
     try {
       getSvc().addPartitionToFactStorage(sessionid, factName, storage, partition);
     } catch (LensException exc) {
@@ -1098,6 +1123,7 @@ public class MetastoreResource {
     @PathParam("storage") String storage,
     XPartitionList partitions) {
     checkSessionId(sessionid);
+    //    checkValidity(X_CUBE_OBJECT_FACTORY.createXPartitionList(partitions));
     checkNonNullArgs("Partition List is null", partitions);
     try {
       getSvc().addPartitionsToFactStorage(sessionid, factName, storage, partitions);
