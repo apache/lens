@@ -839,7 +839,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
       CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
-      CandidateTablePruneCode.MISSING_PARTITIONS);
+      CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact2").iterator().next().getCause(),
         CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact2_raw").iterator().next().getCause(),

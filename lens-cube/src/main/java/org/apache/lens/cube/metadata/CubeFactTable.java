@@ -183,22 +183,7 @@ public final class CubeFactTable extends AbstractCubeTable {
     for (UpdatePeriod i : updatePeriods) {
       if (UpdatePeriod.YEARLY == i || UpdatePeriod.QUARTERLY == i || UpdatePeriod.MONTHLY == i
         || UpdatePeriod.WEEKLY == i) {
-        int intervals = 0;
-        switch (i) {
-        case YEARLY:
-          intervals = DateUtil.getYearsBetween(from, to);
-          break;
-        case QUARTERLY:
-          intervals = DateUtil.getQuartersBetween(from, to);
-          break;
-        case MONTHLY:
-          intervals = DateUtil.getMonthsBetween(from, to);
-          break;
-        case WEEKLY:
-          intervals = DateUtil.getWeeksBetween(from, to);
-          break;
-        }
-
+        int intervals = DateUtil.getTimeDiff(from, to, i);
         if (intervals > 0) {
           if (cmp.compare(i, max) > 0) {
             max = i;
