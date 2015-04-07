@@ -20,6 +20,7 @@ package org.apache.lens.cube.parse;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TreeSet;
 
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -39,6 +40,11 @@ public class TimeRange {
   private ASTNode astNode;
   private ASTNode parent;
   private int childIndex;
+
+  public boolean isCoverableBy(TreeSet<UpdatePeriod> updatePeriods) {
+    return DateUtil.isCoverableBy(fromDate, toDate, updatePeriods);
+  }
+
 
   public static class TimeRangeBuilder {
     private final TimeRange range;

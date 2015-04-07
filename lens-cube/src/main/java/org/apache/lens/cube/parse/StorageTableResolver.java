@@ -351,7 +351,7 @@ class StorageTableResolver implements ContextRewriter {
          * 2. All Storage tables were skipped for some reasons.
          * 3. Storage tables do not have the update period for the timerange queried.
          */
-        if (!nonExistingParts.isEmpty()) {
+        if (failOnPartialData && !nonExistingParts.isEmpty()) {
           cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.missingPartitions(nonExistingParts));
         } else if (!skipStorageCauses.isEmpty()) {
           CandidateTablePruneCause cause = CandidateTablePruneCause.noCandidateStorages(skipStorageCauses);
@@ -405,8 +405,9 @@ class StorageTableResolver implements ContextRewriter {
     Map<UpdatePeriod, RangesPartitionTimeline> nonExistingParts)
     throws Exception {
     Set<FactPartition> partitions = new TreeSet<FactPartition>();
-    if (getPartitions(fact, range.getFromDate(), range.getToDate(), range.getPartitionColumn(), partitions,
-      updatePeriods, addNonExistingParts, skipStorageCauses, nonExistingParts)) {
+    if (range.isCoverableBy(updatePeriods)
+      && getPartitions(fact, range.getFromDate(), range.getToDate(), range.getPartitionColumn(), partitions,
+        updatePeriods, addNonExistingParts, skipStorageCauses, nonExistingParts)) {
       return partitions;
     } else {
       return new TreeSet<FactPartition>();

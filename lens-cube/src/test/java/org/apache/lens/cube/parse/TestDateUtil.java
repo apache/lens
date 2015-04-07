@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package org.apache.lens.cube.parse;
 
 import static org.apache.lens.cube.parse.DateUtil.resolveDate;
@@ -62,93 +61,121 @@ public class TestDateUtil {
   @Test
   public void testMonthsBetween() throws Exception {
     int i = 0;
-    Assert.assertEquals(1, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+      new DateUtil.CoveringInfo(1, true),
       "2013-Jan-01 to 2013-Jan-31");
 
     i += 2;
-    Assert.assertEquals(5, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+      new DateUtil.CoveringInfo(5, true),
       "2013-Jan-01 to 2013-May-31");
 
     i += 2;
-    Assert.assertEquals(12, DateUtil.getMonthsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+      new DateUtil.CoveringInfo(12, true),
       "2013-Jan-01 to 2013-Dec-31");
 
     i += 2;
-    Assert.assertEquals(2, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2013-Feb-01 to 2013-Apr-25");
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(2, false),
+      "2013-Feb-01 to 2013-Apr-25");
 
     i += 2;
-    Assert.assertEquals(12, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2012-Feb-01 to 2013-Feb-01");
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(12, true),
+      "2012-Feb-01 to 2013-Feb-01");
 
     i += 2;
-    Assert.assertEquals(24, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2011-Feb-01 to 2013-Feb-01");
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(24, true),
+      "2011-Feb-01 to 2013-Feb-01");
 
     i += 2;
-    Assert.assertEquals(0, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2013-Jan-02 to 2013-Feb-02");
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "2013-Jan-02 to 2013-Feb-02");
 
     i += 2;
-    Assert.assertEquals(1, DateUtil.getMonthsBetween(pairs[i], pairs[i + 1]), "2013-Jan-02 to 2013-Mar-02");
+    Assert.assertEquals(DateUtil.getMonthlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(1, false),
+      "2013-Jan-02 to 2013-Mar-02");
   }
 
   @Test
   public void testQuartersBetween() throws Exception {
     int i = 0;
-    Assert.assertEquals(0, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2013-Jan-01 to 2013-Jan-31");
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "2013-Jan-01 to 2013-Jan-31");
 
     i += 2;
-    Assert.assertEquals(1, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2013-Jan-01 to 2013-May-31");
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(1, false),
+      "2013-Jan-01 to 2013-May-31");
 
     i += 2;
-    Assert.assertEquals(4, DateUtil.getQuartersBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+      new DateUtil.CoveringInfo(4, true),
       "2013-Jan-01 to 2013-Dec-31");
 
     i += 2;
-    Assert.assertEquals(0, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2013-Feb-01 to 2013-Apr-25");
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "2013-Feb-01 to 2013-Apr-25");
 
     i += 2;
-    Assert.assertEquals(3, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2012-Feb-01 to 2013-Feb-01");
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(3, false),
+      "2012-Feb-01 to 2013-Feb-01");
 
     i += 2;
-    Assert.assertEquals(7, DateUtil.getQuartersBetween(pairs[i], pairs[i + 1]), "2011-Feb-01 to 2013-Feb-01");
+    Assert.assertEquals(DateUtil.getQuarterlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(7, false),
+      "2011-Feb-01 to 2013-Feb-01");
   }
 
   @Test
   public void testYearsBetween() throws Exception {
     int i = 0;
-    Assert.assertEquals(0, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "" + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    Assert.assertEquals(0, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "" + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    Assert.assertEquals(1, DateUtil.getYearsBetween(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)), ""
-      + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+      new DateUtil.CoveringInfo(1, true), ""
+        + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    Assert.assertEquals(0, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "" + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    Assert.assertEquals(0, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(0, false),
+      "" + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    Assert.assertEquals(1, DateUtil.getYearsBetween(pairs[i], pairs[i + 1]), "" + pairs[i] + "->" + pairs[i + 1]);
+    Assert.assertEquals(DateUtil.getYearlyCoveringInfo(pairs[i], pairs[i + 1]), new DateUtil.CoveringInfo(1, false),
+      "" + pairs[i] + "->" + pairs[i + 1]);
   }
 
   @Test
   public void testWeeksBetween() throws Exception {
-    int weeks = DateUtil.getWeeksBetween(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-2"));
-    Assert.assertEquals(1, weeks, "2013-May-26 to 2013-Jun-2");
+    DateUtil.CoveringInfo weeks;
 
-    weeks = DateUtil.getWeeksBetween(DATE_FMT.parse("2013-May-27"), DATE_FMT.parse("2013-Jun-1"));
-    Assert.assertEquals(0, weeks, "2013-May-27 to 2013-Jun-1");
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-2"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(1, true), "2013-May-26 to 2013-Jun-2");
 
-    weeks = DateUtil.getWeeksBetween(DATE_FMT.parse("2013-May-25"), DATE_FMT.parse("2013-Jun-2"));
-    Assert.assertEquals(1, weeks, "2013-May-25 to 2013-Jun-1");
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-27"), DATE_FMT.parse("2013-Jun-3"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(0, false), "2013-May-26 to 2013-Jun-2");
 
-    weeks = DateUtil.getWeeksBetween(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-9"));
-    Assert.assertEquals(2, weeks, "2013-May-26 to 2013-Jun-8");
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-27"), DATE_FMT.parse("2013-Jun-9"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(1, false), "2013-May-26 to 2013-Jun-2");
 
-    weeks = DateUtil.getWeeksBetween(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-10"));
-    Assert.assertEquals(2, weeks, "2013-May-26 to 2013-Jun-10");
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-27"), DATE_FMT.parse("2013-Jun-1"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(0, false), "2013-May-27 to 2013-Jun-1");
+
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-25"), DATE_FMT.parse("2013-Jun-2"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(1, false), "2013-May-25 to 2013-Jun-1");
+
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-9"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(2, true), "2013-May-26 to 2013-Jun-8");
+
+    weeks = DateUtil.getWeeklyCoveringInfo(DATE_FMT.parse("2013-May-26"), DATE_FMT.parse("2013-Jun-10"));
+    Assert.assertEquals(weeks, new DateUtil.CoveringInfo(2, false), "2013-May-26 to 2013-Jun-10");
   }
 
   @Test

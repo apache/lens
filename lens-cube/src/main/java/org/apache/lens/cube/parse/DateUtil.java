@@ -23,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,8 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.log4j.Logger;
+
+import lombok.Data;
 
 public final class DateUtil {
   private DateUtil() {
@@ -287,15 +290,18 @@ public final class DateUtil {
     return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
   }
 
-  public static int getMonthsBetween(Date from, Date to) {
+  public static CoveringInfo getMonthlyCoveringInfo(Date from, Date to) {
     // Move 'from' to end of month, unless its the first day of month
+    boolean coverable = true;
     if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
       from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+      coverable = false;
     }
 
-    // Move 'to' to beginning of month, unless its the last day of the month
-    if (!to.equals(DateUtils.round(to, Calendar.MONTH))) {
+    // Move 'to' to beginning of next month, unless its the first day of the month
+    if (!to.equals(DateUtils.truncate(to, Calendar.MONTH))) {
       to = DateUtils.truncate(to, Calendar.MONTH);
+      coverable = false;
     }
 
     int months = 0;
@@ -303,77 +309,55 @@ public final class DateUtil {
       from = DateUtils.addMonths(from, 1);
       months++;
     }
-    return months;
+    return new CoveringInfo(months, coverable);
   }
 
-  public static int getQuartersBetween(Date from, Date to) {
-    int months = getMonthsBetween(from, to);
-    if (months < 3) {
-      return 0;
+  public static CoveringInfo getQuarterlyCoveringInfo(Date from, Date to) {
+    CoveringInfo monthlyCoveringInfo = getMonthlyCoveringInfo(from, to);
+    if (monthlyCoveringInfo.getCountBetween() < 3) {
+      return new CoveringInfo(0, false);
     }
-
+    boolean coverable = monthlyCoveringInfo.isCoverable();
+    if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
+      from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+      coverable = false;
+    }
     Calendar cal = Calendar.getInstance();
     cal.setTime(from);
     int fromMonth = cal.get(Calendar.MONTH);
-    int fromYear = cal.get(Calendar.YEAR);
 
     // Get the start date of the quarter
-    int qtrStartMonth;
-    if (fromMonth % 3 == 0) {
-      qtrStartMonth = fromMonth;
-    } else {
-      qtrStartMonth = fromMonth - (fromMonth % 3);
+    int beginOffset = (3 - fromMonth % 3) % 3;
+    int endOffset = (monthlyCoveringInfo.getCountBetween() - beginOffset) % 3;
+    if (beginOffset > 0 || endOffset > 0) {
+      coverable = false;
     }
-
-    cal.clear();
-    cal.set(Calendar.MONTH, qtrStartMonth);
-    cal.set(Calendar.YEAR, fromYear);
-    cal.set(Calendar.DAY_OF_MONTH, 1);
-    Date fromQtrStartDate = cal.getTime();
-
-    int moveUp = 0;
-    if (fromQtrStartDate.before(from)) {
-      moveUp = 3 - (fromMonth % 3);
-    }
-
-    if (months % 3 != 0) {
-      months = months - (months % 3);
-    }
-    return (months - moveUp) / 3;
+    return new CoveringInfo((monthlyCoveringInfo.getCountBetween() - beginOffset - endOffset) / 3, coverable);
   }
 
-  public static int getYearsBetween(Date from, Date to) {
-    int months = getMonthsBetween(from, to);
-    if (months < 12) {
-      return 0;
-    }
 
-    // Get start of year for 'from' date
+  public static CoveringInfo getYearlyCoveringInfo(Date from, Date to) {
+    CoveringInfo monthlyCoveringInfo = getMonthlyCoveringInfo(from, to);
+    if (monthlyCoveringInfo.getCountBetween() < 12) {
+      return new CoveringInfo(0, false);
+    }
+    boolean coverable = monthlyCoveringInfo.isCoverable();
+    if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
+      from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+      coverable = false;
+    }
     Calendar cal = Calendar.getInstance();
     cal.setTime(from);
     int fromMonth = cal.get(Calendar.MONTH);
-    int fromYear = cal.get(Calendar.YEAR);
-
-    cal.clear();
-    cal.set(Calendar.MONTH, Calendar.JANUARY);
-    cal.set(Calendar.YEAR, fromYear);
-    cal.set(Calendar.DAY_OF_MONTH, 1);
-
-    Date yearStartDate = cal.getTime();
-
-    int moveUp = 0;
-    if (yearStartDate.before(from)) {
-      moveUp = 12 - (fromMonth % 12);
+    int beginOffset = (12 - fromMonth % 12) % 12;
+    int endOffset = (monthlyCoveringInfo.getCountBetween() - beginOffset) % 12;
+    if (beginOffset > 0 || endOffset > 0) {
+      coverable = false;
     }
-
-    if (months % 12 != 0) {
-      months = months - (months % 12);
-    }
-
-    return (months - moveUp) / 12;
+    return new CoveringInfo((monthlyCoveringInfo.getCountBetween() - beginOffset - endOffset) / 12, coverable);
   }
 
-  public static int getWeeksBetween(Date from, Date to) {
+  public static CoveringInfo getWeeklyCoveringInfo(Date from, Date to) {
     int dayDiff = 0;
     Date tmpFrom = from;
     while (tmpFrom.before(to)) {
@@ -382,7 +366,7 @@ public final class DateUtil {
     }
 
     if (dayDiff < 7) {
-      return 0;
+      return new CoveringInfo(0, false);
     }
 
     Calendar cal = Calendar.getInstance();
@@ -397,40 +381,65 @@ public final class DateUtil {
     cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
     int maxDayInWeek = cal.getActualMaximum(Calendar.DAY_OF_WEEK);
     Date fromWeekStartDate = cal.getTime();
-
+    boolean coverable = dayDiff % 7 == 0;
     if (fromWeekStartDate.before(from)) {
       // Count from the start of next week
       dayDiff -= (maxDayInWeek - (fromDay - Calendar.SUNDAY));
+      coverable = false;
     }
 
-    return dayDiff / 7;
+    return new CoveringInfo(dayDiff / 7, coverable);
   }
 
-  static long getTimeDiff(Date from, Date to, UpdatePeriod interval) {
-    long diff = to.getTime() - from.getTime();
+  static CoveringInfo getCoveringInfo(Date from, Date to, UpdatePeriod interval) {
     switch (interval) {
     case SECONDLY:
-      return diff / 1000;
+      return getMilliSecondCoveringInfo(from, to, 1000);
     case MINUTELY:
-      return diff / (1000 * 60);
+      return getMilliSecondCoveringInfo(from, to, 1000 * 60);
     case HOURLY:
-      return diff / (1000 * 60 * 60);
+      return getMilliSecondCoveringInfo(from, to, 1000 * 60 * 60);
     case DAILY:
-      return diff / (1000 * 60 * 60 * 24);
+      return getMilliSecondCoveringInfo(from, to, 1000 * 60 * 60 * 24);
     case WEEKLY:
-      // return diff/(1000 * 60 * 60 * 24 * 7);
-      return getWeeksBetween(from, to);
+      return getWeeklyCoveringInfo(from, to);
     case MONTHLY:
-      // return (long) (diff/(60 * 60 * 1000 * 24 * 30.41666666));
-      return getMonthsBetween(from, to);
+      return getMonthlyCoveringInfo(from, to);
     case QUARTERLY:
-      return getQuartersBetween(from, to);
+      return getQuarterlyCoveringInfo(from, to);
     case YEARLY:
-      // return (diff/(60 * 60 * 1000 * 24 * 365));
-      return getYearsBetween(from, to);
+      return getYearlyCoveringInfo(from, to);
     default:
-      return -1;
+      return new CoveringInfo(0, false);
     }
   }
 
+  private static CoveringInfo getMilliSecondCoveringInfo(Date from, Date to, int millisInInterval) {
+    long diff = to.getTime() - from.getTime();
+    return new CoveringInfo((int) (diff / millisInInterval), diff % millisInInterval == 0);
+  }
+
+  static boolean isCoverableBy(Date from, Date to, Set<UpdatePeriod> intervals) {
+    for (UpdatePeriod period : intervals) {
+      if (getCoveringInfo(from, to, period).isCoverable()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static int getTimeDiff(Date fromDate, Date toDate, UpdatePeriod updatePeriod) {
+    return getCoveringInfo(fromDate, toDate, updatePeriod).getCountBetween();
+  }
+
+  @Data
+  public static class CoveringInfo {
+    int countBetween;
+    boolean coverable;
+
+    public CoveringInfo(int countBetween, boolean coverable) {
+      this.countBetween = countBetween;
+      this.coverable = coverable;
+    }
+  }
 }
