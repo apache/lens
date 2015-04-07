@@ -72,16 +72,17 @@ if [ ! -e $JAVA_BIN ] || [ ! -e $JAR_BIN ]; then
   exit 1
 fi
 
-# default the heap size to 1GB
 DEFAULT_JAVA_HEAP_MAX=-Xmx1024m
-LENS_OPTS="$DEFAULT_JAVA_HEAP_MAX $LENS_OPTS"
-
 type="$1"
 shift
 case $type in
   client)
     # set the client class path
     LENSCPPATH=$LENS_CONF:`ls ${BASEDIR}/lib/* 2>/dev/null | tr "\n" ':' 2>/dev/null`
+    if test -z "$LENS_CLIENT_HEAP"
+    then
+      LENS_CLIENT_HEAP=$DEFAULT_JAVA_HEAP_MAX
+    fi
     LENS_OPTS="$LENS_OPTS $LENS_CLIENT_OPTS $LENS_CLIENT_HEAP"
     LENS_LOG_DIR="${LENS_LOG_DIR:-$BASEDIR/logs}"
     export LENS_LOG_DIR    
@@ -89,6 +90,10 @@ case $type in
     export LENS_HOME_DIR    
   ;;
   server)
+    if test -z "$LENS_SERVER_HEAP"
+    then
+      LENS_SERVER_HEAP=$DEFAULT_JAVA_HEAP_MAX
+    fi
     LENS_OPTS="$LENS_OPTS $LENS_SERVER_OPTS $LENS_SERVER_HEAP"
     LENSCPPATH="$LENS_CONF" 
     LENS_EXPANDED_WEBAPP_DIR=${LENS_EXPANDED_WEBAPP_DIR:-${BASEDIR}/webapp}
