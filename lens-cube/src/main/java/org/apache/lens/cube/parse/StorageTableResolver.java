@@ -334,7 +334,7 @@ class StorageTableResolver implements ContextRewriter {
       Set<String> nonExistingParts = Sets.newHashSet();
       if (!missingPartitionRanges.isEmpty()) {
         for (UpdatePeriod period : missingPartitionRanges.keySet()) {
-          for (TimePartition.TimePartitionRange range : missingPartitionRanges.get(period).getRanges()) {
+          for (TimePartitionRange range : missingPartitionRanges.get(period).getRanges()) {
             nonExistingParts.add(range.toString());
           }
         }

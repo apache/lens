@@ -22,11 +22,10 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
+import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.parse.TimeRange;
-
-import org.apache.commons.lang.StringUtils;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
@@ -99,12 +98,12 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   @Override
   public Map<String, String> toProperties() {
     HashMap<String, String> ret = Maps.newHashMap();
+    MetastoreUtil.addNameStrings(ret, "holes", holes);
     if (isEmpty()) {
       return ret;
     }
     ret.put("first", first.getDateString());
     ret.put("latest", latest.getDateString());
-    ret.put("holes", StringUtils.join(holes, ","));
     return ret;
   }
 
@@ -115,7 +114,7 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
     holes.clear();
     String firstStr = properties.get("first");
     String latestStr = properties.get("latest");
-    String holesStr = properties.get("holes");
+    String holesStr = MetastoreUtil.getNamedStringValue(properties, "holes");
     if (!Strings.isNullOrEmpty(firstStr)) {
       first = TimePartition.of(getUpdatePeriod(), firstStr);
     }
@@ -124,7 +123,7 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
     }
     holes = Sets.newTreeSet();
     if (!Strings.isNullOrEmpty(holesStr)) {
-      for (String hole : properties.get("holes").split("\\s*,\\s*")) {
+      for (String hole : holesStr.split("\\s*,\\s*")) {
         holes.add(TimePartition.of(getUpdatePeriod(), hole));
       }
     }

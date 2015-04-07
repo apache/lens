@@ -21,7 +21,6 @@ package org.apache.lens.cube.metadata;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Iterator;
 
 import org.apache.lens.api.LensException;
 
@@ -32,7 +31,7 @@ import lombok.NonNull;
 
 /** stores a partition's update period, date and string representation. Provides some utility methods around it */
 @Data
-public class TimePartition implements Comparable<TimePartition> {
+public class TimePartition implements Comparable<TimePartition>, Named {
   private static final String UPDATE_PERIOD_WRONG_ERROR_MESSAGE = "Update period %s not correct for parsing %s";
   private final UpdatePeriod updatePeriod;
   private final Date date;
@@ -89,6 +88,9 @@ public class TimePartition implements Comparable<TimePartition> {
   public TimePartition partitionAtDiff(int increment) {
     Calendar cal = Calendar.getInstance();
     cal.setTime(date);
+    if (getUpdatePeriod().equals(UpdatePeriod.QUARTERLY)) {
+      increment *= 3;
+    }
     cal.add(updatePeriod.calendarField(), increment);
     return new TimePartition(updatePeriod, cal.getTime());
   }
@@ -125,78 +127,21 @@ public class TimePartition implements Comparable<TimePartition> {
     return String.format(UPDATE_PERIOD_WRONG_ERROR_MESSAGE, up, dateString);
   }
 
-  public TimePartitionRange rangeUpto(TimePartition to) {
+  public TimePartitionRange rangeUpto(TimePartition to) throws LensException {
     return new TimePartitionRange(this, to);
   }
 
-  public TimePartitionRange rangeFrom(TimePartition from) {
+  public TimePartitionRange rangeFrom(TimePartition from) throws LensException {
     return new TimePartitionRange(from, this);
   }
 
-  public TimePartitionRange singletonRange() {
+  public TimePartitionRange singletonRange() throws LensException {
     return rangeUpto(next());
   }
 
-  /**
-   * Range of time partition. [begin,end). i.e. inclusive begin and exclusive end.
-   */
-  @Data
-  public static class TimePartitionRange implements Iterable<TimePartition> {
-    private TimePartition begin;
-    private TimePartition end;
-
-    public TimePartitionRange(TimePartition from, TimePartition to) {
-      this.begin = from;
-      this.end = to;
-    }
-
-    @Override
-    public String toString() {
-      return "[" + begin.getDateString() + ", " + end.getDateString() + ")";
-    }
-
-    /**
-     * returns TimePartition objects starting from begin and upto(excluding) end. interval of iteration is the update
-     * period of the partitions. Assumes both partitions have same update period.
-     */
-    @Override
-    public Iterator<TimePartition> iterator() {
-
-      return new Iterator<TimePartition>() {
-        TimePartition current = begin;
-
-        @Override
-        public boolean hasNext() {
-          return current.before(end);
-        }
-
-        @Override
-        public TimePartition next() {
-          TimePartition ret = current;
-          current = current.next();
-          return ret;
-        }
-
-        @Override
-        public void remove() {
-          throw new UnsupportedOperationException("remove not supported");
-        }
-      };
-    }
-
-    /**
-     * @param partition
-     * @return begin <= partition < end
-     */
-    public boolean contains(TimePartition partition) {
-      return !partition.before(begin) && partition.before(end);
-    }
-
-    /**
-     * @return if range is empty range.
-     */
-    public boolean isEmpty() {
-      return begin.equals(end);
-    }
+  @Override
+  public String getName() {
+    return getDateString();
   }
+
 }
