@@ -21,7 +21,7 @@ package org.apache.lens.cube.metadata.timeline;
 import java.util.*;
 
 import org.apache.lens.api.LensException;
-import org.apache.lens.cube.metadata.CubeMetastoreClient;
+import org.apache.lens.cube.metadata.TestTimePartition;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
@@ -31,11 +31,9 @@ import org.testng.annotations.Test;
 import com.beust.jcommander.internal.Lists;
 
 public class TestPartitionTimelines {
-  CubeMetastoreClient client = null;
   private static final String TABLE_NAME = "storage_fact";
-  private static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
+  public static final UpdatePeriod PERIOD = UpdatePeriod.HOURLY;
   private static final String PART_COL = "pt";
-  private static final Date DATE = new Date();
   private static final List<Class<? extends PartitionTimeline>> TIMELINE_IMPLEMENTATIONS = Arrays.asList(
     StoreAllPartitionTimeline.class,
     EndsAndHolesPartitionTimeline.class,
@@ -60,7 +58,8 @@ public class TestPartitionTimelines {
       final List<TimePartition> addedPartitions = Lists.newArrayList();
       for (int i = 0; i < 200; i++) {
         int randomInt = randomGenerator.nextInt(100) - 50;
-        TimePartition part = TimePartition.of(PERIOD, timeAtHourDiff(randomInt));
+        TimePartition part = TimePartition.of(PERIOD, TestTimePartition.timeAtDiff(TestTimePartition.NOW, PERIOD,
+          randomInt));
         addedPartitions.add(part);
         for (PartitionTimeline timeline : timelines) {
           timeline.add(part);
@@ -98,12 +97,6 @@ public class TestPartitionTimelines {
     }
   }
 
-  private Date timeAtHourDiff(int d) {
-    Calendar cal = Calendar.getInstance();
-    cal.setTime(DATE);
-    cal.add(PERIOD.calendarField(), d);
-    return cal.getTime();
-  }
 
   private <T extends PartitionTimeline> T getInstance(Class<T> clz) {
     try {
@@ -116,22 +109,41 @@ public class TestPartitionTimelines {
   }
 
   private <T extends PartitionTimeline> void testPropertiesContract(Class<T> clz) throws LensException {
+    // Make two instances, one to modify, other to validate against
     T inst1 = getInstance(clz);
     T inst2 = getInstance(clz);
+    // whenever we'll init from props, timeline should become empty.
     Map<String, String> props = inst1.toProperties();
     Assert.assertTrue(inst2.initFromProperties(props));
+    // init from props of an empty timeline: should succeed and make the timeline empty
     Assert.assertEquals(inst1, inst2);
     Assert.assertTrue(inst1.isEmpty());
     Assert.assertTrue(inst2.isEmpty());
-    Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, DATE)));
+    // Add single partition and test for non-equivalence
+    Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, TestTimePartition.NOW)));
     Assert.assertFalse(inst1.equals(inst2));
-    Assert.assertTrue(inst2.add(TimePartition.of(PERIOD, DATE)));
+    // add same parittion in other timeline, test for equality
+    Assert.assertTrue(inst2.add(TimePartition.of(PERIOD, TestTimePartition.NOW)));
     Assert.assertTrue(inst1.isConsistent());
     Assert.assertTrue(inst2.isConsistent());
     Assert.assertEquals(inst1, inst2);
+    // init with blank properties. Should become empty
     Assert.assertTrue(inst2.initFromProperties(props));
     Assert.assertFalse(inst1.equals(inst2));
+    // init from properties of timeline with single partition.
     Assert.assertTrue(inst2.initFromProperties(inst1.toProperties()));
+    Assert.assertEquals(inst1, inst2);
+    // clear timelines
+    inst1.initFromProperties(props);
+    inst2.initFromProperties(props);
+    // Make sparse partition range in one, init other from its properties. Test equality.
+    for (int i = 0; i < 5000; i++) {
+      Assert.assertTrue(inst1.add(TimePartition.of(PERIOD, TestTimePartition.timeAtDiff(TestTimePartition.NOW, PERIOD,
+        i * 2))));
+    }
+    Assert.assertTrue(inst1.isConsistent());
+    inst2.initFromProperties(inst1.toProperties());
+    Assert.assertTrue(inst2.isConsistent());
     Assert.assertEquals(inst1, inst2);
   }
 }
