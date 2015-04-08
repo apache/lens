@@ -26,6 +26,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 public final class CubeDimensionTable extends AbstractCubeTable {
+  private Set<String> partCols;
   private String dimName; // dimension name the dimtabe belongs to
   private final Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
 
@@ -46,8 +47,15 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
     Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
+    this(dimName, dimTblName, columns, null, weight, snapshotDumpPeriods, properties);
+  }
+
+  public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, Set<String> partCols,
+    double weight,
+    Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
     super(dimTblName, columns, properties, weight);
     this.dimName = dimName;
+    this.partCols = partCols;
     if (snapshotDumpPeriods != null) {
       this.snapshotDumpPeriods.putAll(snapshotDumpPeriods);
     }
@@ -69,6 +77,11 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     if (dumpPeriods != null) {
       this.snapshotDumpPeriods.putAll(dumpPeriods);
     }
+    partCols = getPartCols(getName(), getProperties());
+  }
+
+  private Set<String> getPartCols(String name, Map<String, String> properties) {
+    return null;
   }
 
   @Override
@@ -79,9 +92,11 @@ public final class CubeDimensionTable extends AbstractCubeTable {
   @Override
   protected void addProperties() {
     super.addProperties();
-    setDimName(getProperties(), getName(), dimName);
+    setDimName(getName(), getProperties(), dimName);
     setSnapshotPeriods(getName(), getProperties(), snapshotDumpPeriods);
+    setPartCols(getName(), getProperties(), partCols);
   }
+
 
   public Map<String, UpdatePeriod> getSnapshotDumpPeriods() {
     return snapshotDumpPeriods;
@@ -103,7 +118,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     }
   }
 
-  private static void setDimName(Map<String, String> props, String dimTblName, String dimName) {
+  private static void setDimName(String dimTblName, Map<String, String> props, String dimName) {
     props.put(MetastoreUtil.getDimNameKey(dimTblName), dimName);
   }
 

@@ -588,7 +588,13 @@ public class CubeMetastoreClient {
   public void createCubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
     Map<String, UpdatePeriod> dumpPeriods, Map<String, String> properties,
     Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
-    CubeDimensionTable dimTable = new CubeDimensionTable(dimName, dimTblName, columns, weight, dumpPeriods, properties);
+    Set<String> partCols = Sets.newHashSet();
+    for(StorageTableDesc desc: storageTableDescs.values()) {
+      for(FieldSchema fs: desc.getPartCols()) {
+        partCols.add(fs.getName());
+      }
+    }
+    CubeDimensionTable dimTable = new CubeDimensionTable(dimName, dimTblName, columns, partCols, weight, dumpPeriods, properties);
     createCubeTable(dimTable, storageTableDescs);
     // do a get to update cache
     getDimensionTable(dimTblName);
@@ -603,6 +609,15 @@ public class CubeMetastoreClient {
    */
   public void createCubeTable(AbstractCubeTable cubeTable, Map<String, StorageTableDesc> storageTableDescs)
     throws HiveException {
+    Set<String> partCols = Sets.newHashSet();
+    if (storageTableDescs != null) {
+      // create tables for each storage
+      for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
+        for(FieldSchema fs: entry.getValue().getPartCols()) {
+          partCols.add(fs.getName());
+        }
+      }
+    }
     // create virtual cube table in metastore
     Table cTable = createCubeHiveTable(cubeTable);
 
