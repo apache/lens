@@ -627,17 +627,6 @@ public class CubeMetastoreClient {
    */
   public void createCubeTable(AbstractCubeTable cubeTable, Map<String, StorageTableDesc> storageTableDescs)
     throws HiveException {
-    Set<String> partCols = Sets.newHashSet();
-    if (storageTableDescs != null) {
-      // create tables for each storage
-      for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
-        if (entry.getValue().getPartCols() != null) {
-          for (FieldSchema fs : entry.getValue().getPartCols()) {
-            partCols.add(fs.getName());
-          }
-        }
-      }
-    }
     // create virtual cube table in metastore
     Table cTable = createCubeHiveTable(cubeTable);
 

@@ -91,7 +91,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
   private Set<String> getPartCols(String name, Map<String, String> properties) {
     Set<String> partCols = Sets.newHashSet();
     for (String s : MetastoreUtil.getNamedStringValue(properties, MetastoreUtil.getDimPartsKey(name)).split(",")) {
-      if(s != null && !s.isEmpty()) {
+      if (s != null && !s.isEmpty()) {
         partCols.add(s);
       }
     }
@@ -107,7 +107,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
   protected void addProperties() {
     super.addProperties();
     setDimName(getName(), getProperties(), dimName);
-    setSnapshotPeriods(getName(), getProperties(), snapshotDumpPeriods);
+    setSnapshotDumpPeriods(getName(), getProperties(), snapshotDumpPeriods);
     setPartCols(getName(), getProperties(), partCols);
   }
 
@@ -120,7 +120,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     return dimName;
   }
 
-  private static void setSnapshotPeriods(String name, Map<String, String> props,
+  private static void setSnapshotDumpPeriods(String name, Map<String, String> props,
     Map<String, UpdatePeriod> snapshotDumpPeriods) {
     if (snapshotDumpPeriods != null) {
       props.put(MetastoreUtil.getDimensionStorageListKey(name), MetastoreUtil.getStr(snapshotDumpPeriods.keySet()));
@@ -227,7 +227,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     }
 
     snapshotDumpPeriods.put(storage, period);
-    setSnapshotPeriods(getName(), getProperties(), snapshotDumpPeriods);
+    setSnapshotDumpPeriods(getName(), getProperties(), snapshotDumpPeriods);
   }
 
   @Override
@@ -242,6 +242,6 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   void dropStorage(String storage) {
     snapshotDumpPeriods.remove(storage);
-    setSnapshotPeriods(getName(), getProperties(), snapshotDumpPeriods);
+    setSnapshotDumpPeriods(getName(), getProperties(), snapshotDumpPeriods);
   }
 }

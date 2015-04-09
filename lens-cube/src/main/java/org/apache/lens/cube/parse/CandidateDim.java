@@ -118,10 +118,7 @@ public class CandidateDim implements CandidateTable {
 
   @Override
   public Collection<String> getColumns() {
-    Set<String> ret = Sets.newHashSet();
-    ret.addAll(dimtable.getAllFieldNames());
-    ret.addAll(dimtable.getPartCols());
-    return ret;
+    return Sets.union(dimtable.getAllFieldNames(), dimtable.getPartCols());
   }
 
   @Override
