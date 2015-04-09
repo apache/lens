@@ -96,6 +96,8 @@
     <war.plugin.version>2.1.1</war.plugin.version>
     <license.plugin.version>2.6</license.plugin.version>
     <buildnumber.plugin.version>1.0</buildnumber.plugin.version>
+    <findbugs.plugin.version>3.0.1</findbugs.plugin.version>
+
     <!-- debian -->
     <mvn.deb.build.dir>${project.build.directory}/debian</mvn.deb.build.dir>
 
@@ -454,6 +456,11 @@
           <artifactId>maven-war-plugin</artifactId>
           <version>${war.plugin.version}</version>
         </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs.plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -562,6 +569,25 @@
               <failOnViolation>true</failOnViolation>
             </configuration>
           </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <configuration>
+          <xmlOutput>true</xmlOutput>
+          <excludeFilterFile>checkstyle/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
+          <failOnError>false</failOnError>
+          <skip>${skipCheck}</skip>
+        </configuration>
+        <executions>
+          <execution>
+             <id>findbugs-check</id>
+             <goals>
+               <goal>check</goal>
+             </goals>
+             <phase>verify</phase>
+           </execution>
         </executions>
       </plugin>
     </plugins>

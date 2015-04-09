@@ -104,14 +104,6 @@ public class PopulateSampleMetastore {
     } else {
       System.out.println("Added partition from:dim4-local-part.xml");
     }
-
-    try {
-      DatabaseUtil.initalizeDatabaseStorage();
-      System.out.println("Created DB storages for dim_table3 and dim_table4");
-    } catch (Exception e) {
-      e.printStackTrace();
-      System.out.println("Creating DB storage failed for dim_table3 and dim_table4");
-    }
   }
 
   private void createFactPartition(String fileName, String fact, String storage) throws JAXBException, IOException {

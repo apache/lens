@@ -61,8 +61,12 @@ public class JoinChain implements Named {
       props.put(MetastoreUtil.getCubeJoinChainFullChainKey(getName(), i),
         MetastoreUtil.getReferencesString(paths.get(i).getReferences()));
     }
-    props.put(MetastoreUtil.getCubeJoinChainDisplayKey(getName()), displayString);
-    props.put(MetastoreUtil.getCubeJoinChainDescriptionKey(getName()), description);
+    if (displayString != null) {
+      props.put(MetastoreUtil.getCubeJoinChainDisplayKey(getName()), displayString);
+    }
+    if (description != null) {
+      props.put(MetastoreUtil.getCubeJoinChainDescriptionKey(getName()), description);
+    }
   }
 
   public void addProperties(Dimension dimension) {
@@ -72,8 +76,12 @@ public class JoinChain implements Named {
       props.put(MetastoreUtil.getDimensionJoinChainFullChainKey(getName(), i),
         MetastoreUtil.getReferencesString(paths.get(i).getReferences()));
     }
-    props.put(MetastoreUtil.getDimensionJoinChainDisplayKey(getName()), displayString);
-    props.put(MetastoreUtil.getDimensionJoinChainDescriptionKey(getName()), description);
+    if (displayString != null) {
+      props.put(MetastoreUtil.getDimensionJoinChainDisplayKey(getName()), displayString);
+    }
+    if (description != null) {
+      props.put(MetastoreUtil.getDimensionJoinChainDescriptionKey(getName()), description);
+    }
   }
 
 
