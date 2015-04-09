@@ -126,7 +126,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * The accepted queries.
    */
-  private PriorityBlockingQueue<QueryContext> acceptedQueries = new PriorityBlockingQueue<QueryContext>();
+  private PriorityBlockingQueue<QueryContext> queuedQueries = new PriorityBlockingQueue<QueryContext>();
 
   /**
    * The launched queries.
@@ -262,7 +262,24 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   /**
    * Initialize query acceptors and listeners.
    */
-  private void initializeQueryAcceptorsAndListeners() {
+  private void initializeQueryAcceptors() throws LensException {
+    String[] acceptorClasses = conf.getStrings(LensConfConstants.ACCEPTOR_CLASSES);
+    if (acceptorClasses != null) {
+      for (String acceptorClass : acceptorClasses) {
+        try {
+          Class<?> clazz = Class.forName(acceptorClass);
+          QueryAcceptor acceptor = (QueryAcceptor) clazz.newInstance();
+          LOG.info("initialized query acceptor: " + acceptor);
+          queryAcceptors.add(acceptor);
+        } catch (Exception e) {
+          LOG.warn("Could not load the acceptor:" + acceptorClass, e);
+          throw new LensException("Could not load acceptor" + acceptorClass, e);
+        }
+      }
+    }
+  }
+
+  private void initializeListeners() {
     if (conf.getBoolean(LensConfConstants.QUERY_STATE_LOGGER_ENABLED, true)) {
       getEventService().addListenerForType(new QueryStatusLogger(), StatusChange.class);
       LOG.info("Registered query state logger");
@@ -281,7 +298,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
    * @throws LensException the lens exception
    */
   private void loadDriversAndSelector() throws LensException {
-    conf.get(LensConfConstants.DRIVER_CLASSES);
     String[] driverClasses = conf.getStrings(LensConfConstants.DRIVER_CLASSES);
     if (driverClasses != null) {
       for (String driverClass : driverClasses) {
@@ -304,7 +320,17 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     } else {
       throw new LensException("No drivers specified");
     }
-    driverSelector = new MinQueryCostSelector();
+    try {
+      Class<? extends DriverSelector> driverSelectorClass = conf.getClass(LensConfConstants.DRIVER_SELECTOR_CLASS,
+        MinQueryCostSelector.class,
+        DriverSelector.class);
+      LOG.info("Using driver selector class: " + driverSelectorClass.getCanonicalName());
+      driverSelector = driverSelectorClass.newInstance();
+    } catch (Exception e) {
+      throw new LensException("Couldn't instantiate driver selector class. Class name: "
+        + conf.get(LensConfConstants.DRIVER_SELECTOR_CLASS) + ". Please supply a valid value for "
+        + LensConfConstants.DRIVER_SELECTOR_CLASS);
+    }
   }
 
   protected LensEventService getEventService() {
@@ -462,7 +488,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.info("Starting QuerySubmitter thread");
       while (!pausedForTest && !stopped && !querySubmitter.isInterrupted()) {
         try {
-          QueryContext ctx = acceptedQueries.take();
+          QueryContext ctx = queuedQueries.take();
           synchronized (ctx) {
             if (ctx.getStatus().getStatus().equals(Status.QUEUED)) {
               LOG.info("Launching query:" + ctx.getUserQuery());
@@ -608,7 +634,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     // before would be null in case of server restart
     if (before != null) {
       if (before.getStatus().equals(Status.QUEUED)) {
-        acceptedQueries.remove(ctx);
+        queuedQueries.remove(ctx);
       } else {
         launchedQueries.remove(ctx);
       }
@@ -844,7 +870,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   public synchronized void init(HiveConf hiveConf) {
     super.init(hiveConf);
     this.conf = hiveConf;
-    initializeQueryAcceptorsAndListeners();
+    try {
+      initializeQueryAcceptors();
+    } catch (LensException e) {
+      throw new IllegalStateException("Could not load acceptors");
+    }
+    initializeListeners();
     try {
       loadDriversAndSelector();
     } catch (LensException e) {
@@ -873,7 +904,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     module.addSerializer(ColumnDescriptor.class, new JsonSerializer<ColumnDescriptor>() {
       @Override
       public void serialize(ColumnDescriptor columnDescriptor, JsonGenerator jsonGenerator,
-                            SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
+        SerializerProvider serializerProvider) throws IOException, JsonProcessingException {
         jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("name", columnDescriptor.getName());
         jsonGenerator.writeStringField("comment", columnDescriptor.getComment());
@@ -997,8 +1028,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private static final String PARALLEL_CALL_GAUGE = "PARALLEL_ESTIMATE";
 
   /**
-   * Rewrite the query for each driver, and estimate query cost for the rewritten queries.
-   * Finally, select the driver using driver selector.
+   * Rewrite the query for each driver, and estimate query cost for the rewritten queries. Finally, select the driver
+   * using driver selector.
    *
    * @param ctx query context
    * @throws LensException the lens exception
@@ -1089,8 +1120,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   /**
-   * Chains driver specific rewrite and estimate of the query in a single runnable, which can be
-   * processed in a background thread
+   * Chains driver specific rewrite and estimate of the query in a single runnable, which can be processed in a
+   * background thread
    */
   public class RewriteEstimateRunnable implements Runnable {
     @Getter
@@ -1181,7 +1212,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       String rejectionCause = acceptor.accept(query, conf, submitOp);
       if (rejectionCause != null) {
         getEventService().notifyEvent(new QueryRejected(System.currentTimeMillis(), query, rejectionCause, null));
-        throw new LensException("Query not accepted because " + cause);
+        throw new BadRequestException("Query not accepted because " + cause);
       }
     }
     getEventService().notifyEvent(new QueryAccepted(System.currentTimeMillis(), null, query, null));
@@ -1231,11 +1262,11 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         if (resultSet == null) {
           if (ctx.isPersistent() && ctx.getQueryOutputFormatter() != null) {
             resultSets
-            .put(queryHandle,
-              new LensPersistentResult(
-                ctx.getQueryOutputFormatter().getMetadata(),
-                ctx.getQueryOutputFormatter().getFinalOutputPath(),
-                ctx.getQueryOutputFormatter().getNumRows()));
+              .put(queryHandle,
+                new LensPersistentResult(
+                  ctx.getQueryOutputFormatter().getMetadata(),
+                  ctx.getQueryOutputFormatter().getFinalOutputPath(),
+                  ctx.getQueryOutputFormatter().getNumRows()));
           } else if (allQueries.get(queryHandle).isResultAvailableInDriver()) {
             resultSet = allQueries.get(queryHandle).getSelectedDriver().fetchResultSet(allQueries.get(queryHandle));
             resultSets.put(queryHandle, resultSet);
@@ -1471,7 +1502,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     ctx.setLensSessionIdentifier(sessionHandle.getPublicId().toString());
     QueryStatus before = ctx.getStatus();
     ctx.setStatus(new QueryStatus(0.0, QueryStatus.Status.QUEUED, "Query is queued", false, null, null));
-    acceptedQueries.add(ctx);
+    queuedQueries.add(ctx);
     allQueries.put(ctx.getQueryHandle(), ctx);
     fireStatusChangeEvent(ctx, ctx.getStatus(), before);
     LOG.info("Returning handle " + ctx.getQueryHandle().getHandleId());
@@ -2135,7 +2166,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         switch (ctx.getStatus().getStatus()) {
         case NEW:
         case QUEUED:
-          acceptedQueries.add(ctx);
+          queuedQueries.add(ctx);
           break;
         case LAUNCHED:
         case RUNNING:
@@ -2289,7 +2320,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   @Override
   public long getQueuedQueriesCount() {
-    return acceptedQueries.size();
+    return queuedQueries.size();
   }
 
   @Override
@@ -2321,6 +2352,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.warn("Lens session went away for sessionid:" + lensSession);
       return;
     }
+
     try {
       LensSessionImpl session = getSession(sessionHandle);
       acquire(sessionHandle);
@@ -2353,7 +2385,8 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   /**
    * Add session's resources to selected driver if needed
-   * @param ctx the query context
+   *
+   * @param ctx QueryContext for executinf queries
    * @throws LensException
    */
   protected void addSessionResourcesToDriver(final AbstractQueryContext ctx) {
@@ -2412,17 +2445,18 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
 
   /**
    * Add resources to hive driver, returning resources which failed to be added
-   * @param resources collection of resources intented to be added to hive driver
+   *
+   * @param resources     collection of resources intented to be added to hive driver
    * @param sessionHandle
    * @param hiveDriver
    * @return resources which could not be added to hive driver
    */
   private List<ResourceEntry> addResources(Collection<ResourceEntry> resources,
-                                                           LensSessionHandle sessionHandle,
-                                                           HiveDriver hiveDriver) {
+    LensSessionHandle sessionHandle,
+    HiveDriver hiveDriver) {
     List<ResourceEntry> failedResources = new ArrayList<ResourceEntry>();
     for (ResourceEntry res : resources) {
-      try{
+      try {
         addSingleResourceToHive(hiveDriver, res, sessionHandle);
       } catch (LensException exc) {
         failedResources.add(res);
@@ -2434,7 +2468,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   }
 
   private void addSingleResourceToHive(HiveDriver driver, ResourceEntry res,
-                                       LensSessionHandle sessionHandle) throws LensException {
+    LensSessionHandle sessionHandle) throws LensException {
     String sessionIdentifier = sessionHandle.getPublicId().toString();
     String uri = res.getLocation();
     // Hive doesn't and URIs starting with file:/ correctly, so we have to change it to file:///

@@ -55,7 +55,15 @@ public final class LensConfConstants {
    * The Constant DRIVER_CLASSES.
    */
   public static final String DRIVER_CLASSES = SERVER_PFX + "drivers";
+  /**
+   * The Constant DRIVER_SELECTOR_CLASS.
+   */
+  public static final String DRIVER_SELECTOR_CLASS = SERVER_PFX + "driver.selector.class";
+  /**
+   * The Constant ACCEPTOR_CLASSES.
+   */
 
+  public static final String ACCEPTOR_CLASSES = SERVER_PFX + "query.acceptors";
   /**
    * The Constant SERVICE_NAMES.
    */
