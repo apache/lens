@@ -63,38 +63,39 @@ public class SampleMetastore {
     LensClientSingletonWrapper.instance().getClient().closeConnection();
   }
 
-  public void createCube() throws JAXBException, IOException {
-    result = metaClient.createCube("sample-cube.xml");
+  private void createCube(String cubeSpec) {
+    result = metaClient.createCube(cubeSpec);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating cube from:sample-cube.xml failed, reason:" + result.getMessage());
+      System.err.println("Creating cube from:" + cubeSpec + " failed, reason:" + result.getMessage());
       retCode = 1;
     }
   }
 
+  public void createCubes() throws JAXBException, IOException {
+    createCube("sample-cube.xml");
+    createCube("sales-cube.xml");
+  }
+
+  private void createDimension(String dimensionSpec) {
+    result = metaClient.createDimension(dimensionSpec);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.err.println("Creating dimension from:" + dimensionSpec + " failed, reason:" + result.getMessage());
+      retCode = 1;
+    }
+  }
   public void createDimensions() throws JAXBException, IOException {
-    result = metaClient.createDimension("sample-dimension.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dimension from:sample-dimension.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-
-    result = metaClient.createDimension("sample-dimension2.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dimension from:sample-dimension2.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-
-    result = metaClient.createDimension("sample-db-only-dimension.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dimension from:sample-db-only-dimension.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
+    createDimension("sample-dimension.xml");
+    createDimension("sample-dimension2.xml");
+    createDimension("sample-db-only-dimension.xml");
+    createDimension("city.xml");
+    createDimension("customer.xml");
+    createDimension("product.xml");
   }
 
   private void createStorage(String fileName) throws JAXBException, IOException {
     result = metaClient.createNewStorage(fileName);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating storage from:" + fileName + " failed, reason:" + result.getMessage());
+      System.err.println("Creating storage from:" + fileName + " failed, reason:" + result.getMessage());
       retCode = 1;
     }
   }
@@ -107,53 +108,52 @@ public class SampleMetastore {
 
   public void createAll() throws JAXBException, IOException {
     createStorages();
-    createCube();
+    createCubes();
     createDimensions();
     createFacts();
     createDimensionTables();
+    try {
+      DatabaseUtil.initializeDatabaseStorage();
+      System.out.println("Created DB storages");
+    } catch (Exception e) {
+      retCode = 1;
+      e.printStackTrace();
+      System.err.println("Creating DB storage failed");
+    }
   }
 
+  private void createDimTable(String dimTableSpec) {
+    result = metaClient.createDimensionTable(dimTableSpec);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.err.println("Creating dim table from: " + dimTableSpec + " failed, reason:" + result.getMessage());
+      retCode = 1;
+    }
+  }
   private void createDimensionTables() throws JAXBException, IOException {
-    result = metaClient.createDimensionTable("dim_table.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dim table from: dim_table.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-    result = metaClient.createDimensionTable("dim_table2.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dim table from: dim_table2.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
+    createDimTable("dim_table.xml");
+    createDimTable("dim_table2.xml");
+    createDimTable("dim_table3.xml");
+    createDimTable("dim_table4.xml");
+    createDimTable("city_table.xml");
+    createDimTable("city_subset.xml");
+    createDimTable("product_table.xml");
+    createDimTable("customer_table.xml");
+  }
 
-    result = metaClient.createDimensionTable("dim_table3.xml");
+  private void createFact(String factSpec) {
+    result = metaClient.createFactTable(factSpec);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dim table from: dim_table3.xmlfailed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-
-    result = metaClient.createDimensionTable("dim_table4.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating dim table from: dim_table4.xml failed, reason:" + result.getMessage());
+      System.err.println("Creating fact table from: " + factSpec + " failed, reason:" + result.getMessage());
       retCode = 1;
     }
   }
-
   private void createFacts() throws JAXBException, IOException {
-    result = metaClient.createFactTable("fact1.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating fact table from: fact1.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-    result = metaClient.createFactTable("fact2.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating fact table from: fact2.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
-    result = metaClient.createFactTable("rawfact.xml");
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Creating fact table from: rawfact.xml failed, reason:" + result.getMessage());
-      retCode = 1;
-    }
+    createFact("fact1.xml");
+    createFact("fact2.xml");
+    createFact("rawfact.xml");
+    createFact("sales-raw-fact.xml");
+    createFact("sales-aggr-fact1.xml");
+    createFact("sales-aggr-fact2.xml");
   }
 
   public static void main(String[] args) throws Exception {

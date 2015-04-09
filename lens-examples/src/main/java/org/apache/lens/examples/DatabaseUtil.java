@@ -39,7 +39,7 @@ public final class DatabaseUtil {
    *
    * @throws Exception the exception
    */
-  public static void initalizeDatabaseStorage() throws Exception {
+  public static void initializeDatabaseStorage() throws Exception {
 
     try {
       Class.forName("org.hsqldb.jdbcDriver");
@@ -72,6 +72,6 @@ public final class DatabaseUtil {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
-    DatabaseUtil.initalizeDatabaseStorage();
+    DatabaseUtil.initializeDatabaseStorage();
   }
 }

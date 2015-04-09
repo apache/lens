@@ -30,6 +30,7 @@ import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.Indenter;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.annotate.JsonSerialize.Inclusion;
 import org.codehaus.jackson.util.DefaultPrettyPrinter;
 
 /**
@@ -74,6 +75,8 @@ public class BaseLensCommand {
   public BaseLensCommand() {
     getClient();
     mapper = new ObjectMapper();
+    mapper.setSerializationInclusion(Inclusion.NON_NULL);
+    mapper.setSerializationInclusion(Inclusion.NON_DEFAULT);
     pp = new DefaultPrettyPrinter();
     pp.indentObjectsWith(new Indenter() {
       @Override
