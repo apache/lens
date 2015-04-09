@@ -34,7 +34,7 @@ public class TestLensServer {
    */
   @Test
   public void testUIServer() throws IOException {
-    HiveConf conf = new HiveConf(LensServerConf.get());
+    HiveConf conf = LensServerConf.createHiveConf();
     LensServer thisServer = LensServer.createLensServer(conf);
     Assert.assertEquals(thisServer.getServerList().size(), 2);
 

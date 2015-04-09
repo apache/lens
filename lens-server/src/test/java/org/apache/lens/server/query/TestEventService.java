@@ -179,7 +179,7 @@ public class TestEventService {
    */
   @BeforeTest
   public void setup() throws Exception {
-    LensServices.get().init(LensServerConf.get());
+    LensServices.get().init(LensServerConf.getHiveConf());
     LensServices.get().start();
     service = LensServices.get().getService(LensEventService.NAME);
     assertNotNull(service);

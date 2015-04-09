@@ -40,6 +40,7 @@ import org.apache.lens.api.query.*;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.driver.cube.RewriteUtil;
 import org.apache.lens.driver.hive.HiveDriver;
+import org.apache.lens.server.LensServerConf;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
@@ -304,7 +305,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         try {
           Class<?> clazz = Class.forName(driverClass);
           LensDriver driver = (LensDriver) clazz.newInstance();
-          driver.configure(conf);
+          driver.configure(LensServerConf.getConf());
 
           if (driver instanceof HiveDriver) {
             driver.registerDriverEventListener(driverEventListener);

@@ -28,7 +28,7 @@ import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.hive.conf.HiveConf;
+import org.apache.hadoop.conf.Configuration;
 
 /**
  * The Class LensApplication.
@@ -40,7 +40,7 @@ public class LensApplication extends Application {
   public static final Log LOG = LogFactory.getLog(LensApplication.class);
 
   /** The conf. */
-  public static final HiveConf CONF = LensServerConf.get();
+  public static final Configuration CONF = LensServerConf.getConf();
 
   @Override
   public Set<Class<?>> getClasses() {

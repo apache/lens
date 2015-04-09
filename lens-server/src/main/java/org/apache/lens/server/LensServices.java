@@ -143,8 +143,6 @@ public class LensServices extends CompositeService implements ServiceProvider {
   public synchronized void init(HiveConf hiveConf) {
     if (getServiceState() == STATE.NOTINITED) {
       conf = hiveConf;
-      conf.addResource("lensserver-default.xml");
-      conf.addResource("lens-site.xml");
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(SERVER_MODE,
         SERVICE_MODE.valueOf(DEFAULT_SERVER_MODE));

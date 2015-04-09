@@ -43,7 +43,7 @@ import org.testng.annotations.Test;
 public class TestSessionClassLoaders {
   private static final Log LOG = LogFactory.getLog(TestSessionClassLoaders.class);
 
-  private final HiveConf conf = LensServerConf.create();
+  private final HiveConf conf = LensServerConf.createHiveConf();
   private HiveSessionService sessionService;
 
   private static final String DB1 = TestSessionClassLoaders.class.getSimpleName() + "_db1";

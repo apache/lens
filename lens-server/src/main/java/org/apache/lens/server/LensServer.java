@@ -62,9 +62,6 @@ public class LensServer {
   @Getter
   private final List<HttpServer> serverList = new ArrayList<HttpServer>();
 
-  /** The conf. */
-  final HiveConf conf;
-
   /**
    * This flag indicates that the lens server can run, When this is set to false, main thread bails out.
    */
@@ -87,7 +84,6 @@ public class LensServer {
    * @throws IOException Signals that an I/O exception has occurred.
    */
   private LensServer(HiveConf conf) throws IOException {
-    this.conf = conf;
     startServices(conf);
     String baseURI = conf.get(LensConfConstants.SERVER_BASE_URL, LensConfConstants.DEFAULT_SERVER_BASE_URL);
     HttpServer server = GrizzlyHttpServerFactory.createHttpServer(UriBuilder.fromUri(baseURI).build(), getApp(),
@@ -187,7 +183,7 @@ public class LensServer {
 
     printStartupMessage();
     try {
-      final LensServer thisServer = LensServer.createLensServer(LensServerConf.get());
+      final LensServer thisServer = LensServer.createLensServer(LensServerConf.getHiveConf());
 
       registerShutdownHook(thisServer);
       registerDefaultExceptionHandler();

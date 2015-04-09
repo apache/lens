@@ -1291,6 +1291,22 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(),
       ctx.getDriverContext().getDriverConf(queryService.getDrivers().iterator().next()).getClassLoader());
     Assert.assertTrue(ctx.isDriverQueryExplicitlySet());
+    for (LensDriver driver : queryService.getDrivers()) {
+      Configuration dconf = ctx.getDriverConf(driver);
+      Assert.assertEquals(dconf.get("test.session.key"), "svalue");
+      // query specific conf
+      Assert.assertEquals(dconf.get("test.query.conf"), "qvalue");
+      // lenssession default should be loaded
+      Assert.assertNotNull(dconf.get("lens.query.enable.persistent.resultset"));
+      // lens site should be loaded
+      Assert.assertEquals(dconf.get("test.lens.site.key"), "gsvalue");
+      // hive default variables should not be set
+      Assert.assertNull(conf.get("hive.exec.local.scratchdir"));
+      // driver site should be loaded
+      Assert.assertEquals(dconf.get("lens.driver.test.key"), "set");
+      // core default should not be loaded
+      Assert.assertNull(dconf.get("fs.default.name"));
+    }
   }
 
   /**

@@ -42,7 +42,7 @@ public class TestServiceProvider extends LensAllApplicationJerseyTest {
    */
   @Test
   public void testServiceProvider() throws Exception {
-    HiveConf conf = LensServerConf.get();
+    HiveConf conf = LensServerConf.getHiveConf();
     Class<? extends ServiceProviderFactory> spfClass = conf.getClass(LensConfConstants.SERVICE_PROVIDER_FACTORY, null,
       ServiceProviderFactory.class);
 

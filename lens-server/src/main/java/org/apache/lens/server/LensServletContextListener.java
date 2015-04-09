@@ -63,7 +63,7 @@ public class LensServletContextListener implements ServletContextListener {
     }
 
     // start up all lens services
-    HiveConf conf = LensServerConf.get();
+    HiveConf conf = LensServerConf.getHiveConf();
     LensServices services = LensServices.get();
     services.init(conf);
     services.start();
