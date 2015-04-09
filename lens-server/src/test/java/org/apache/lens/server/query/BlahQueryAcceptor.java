@@ -16,30 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.lens.server;
+package org.apache.lens.server.query;
 
-import java.io.IOException;
+import org.apache.lens.api.LensException;
+import org.apache.lens.api.query.SubmitOp;
+import org.apache.lens.server.api.query.QueryAcceptor;
 
-import org.apache.lens.server.api.LensConfConstants;
+import org.apache.hadoop.conf.Configuration;
 
-import org.apache.hadoop.hive.conf.HiveConf;
+public class BlahQueryAcceptor implements QueryAcceptor {
+  public static final String MSG = "Query can't start with blah";
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-
-public class TestLensServer {
-
-  /**
-   * Test UI server
-   */
-  @Test
-  public void testUIServer() throws IOException {
-    HiveConf conf = LensServerConf.createHiveConf();
-    LensServer thisServer = LensServer.createLensServer(conf);
-    Assert.assertEquals(thisServer.getServerList().size(), 2);
-
-    conf.set(LensConfConstants.SERVER_UI_ENABLE, "false");
-    thisServer = LensServer.createLensServer(conf);
-    Assert.assertEquals(thisServer.getServerList().size(), 1);
+  @Override
+  public String accept(String query, Configuration conf, SubmitOp submitOp) throws LensException {
+    if (query.toLowerCase().startsWith("blah")) {
+      return MSG;
+    }
+    return null;
   }
 }

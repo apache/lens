@@ -79,7 +79,7 @@ public class TestLogStatisticsStore {
   @Test
   public void testLogStatisticsStore() throws Exception {
     LogStatisticsStore store = new LogStatisticsStore();
-    store.initialize(LensServerConf.get());
+    store.initialize(LensServerConf.getHiveConf());
     // Do some initialization work
     StringWriter writer = new StringWriter();
     Logger l = Logger.getLogger(MyLoggableLens.class);

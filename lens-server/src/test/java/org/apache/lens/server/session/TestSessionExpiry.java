@@ -43,7 +43,7 @@ public class TestSessionExpiry {
    * @throws Exception the exception
    */
   public void testSessionExpiry() throws Exception {
-    HiveConf conf = LensServerConf.get();
+    HiveConf conf = LensServerConf.getHiveConf();
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.setLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, 1L);
     CLIService cliService = new CLIService();

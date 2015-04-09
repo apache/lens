@@ -28,6 +28,12 @@
   </property>
 
   <property>
+    <name>lens.server.query.acceptors</name>
+    <value>org.apache.lens.server.query.BlahQueryAcceptor</value>
+    <description>Query Acceptors configured</description>
+  </property>
+
+  <property>
     <name>test.lens.site.key</name>
     <value>gsvalue</value>
   </property>

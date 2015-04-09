@@ -89,7 +89,7 @@ public class TestStatisticsLogPartitionHandler {
   @Test
   public void testQueryExecutionStatisticsTableCreation() throws Exception {
     QueryExecutionStatistics stats = new QueryExecutionStatistics(System.currentTimeMillis());
-    HiveConf conf = LensServerConf.get();
+    HiveConf conf = LensServerConf.getHiveConf();
     Table t = stats.getHiveTable(conf);
     Hive h = getHiveClient(conf);
     h.createTable(t);
@@ -117,7 +117,7 @@ public class TestStatisticsLogPartitionHandler {
    */
   private HiveConf configureHiveTables() {
     assertNotNull(System.getProperty("hadoop.bin.path"));
-    HiveConf conf = LensServerConf.get();
+    HiveConf conf = LensServerConf.getHiveConf();
     try {
       Hive hive = getHiveClient(conf);
       Database database = new Database();
