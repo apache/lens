@@ -928,6 +928,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
                 }
               }))
           );
+          put("statetable_partitioned", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
+              new HashMap<String, SkipStorageCause>() {
+                {
+                  put("C3_statetable_partitioned", new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
+                }
+              }))
+          );
         }
       }
     ));

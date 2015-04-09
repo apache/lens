@@ -1784,8 +1784,9 @@ public class CubeTestSetup {
     ArrayList<FieldSchema> partCols = Lists.newArrayList();
     partCols.add(dimColumns.remove(dimColumns.size() - 2));
     s2.setPartCols(partCols);
+    dumpPeriods.clear();
     dumpPeriods.put(c3, UpdatePeriod.HOURLY);
-    storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.clear();
     storageTables.put(c3, s2);
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
@@ -1828,7 +1829,7 @@ public class CubeTestSetup {
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
 
     // In this, country id will be a partition
-    dimTblName = "stabetable_partitioned";
+    dimTblName = "statetable_partitioned";
 
     StorageTableDesc s2 = new StorageTableDesc();
     s2.setInputFormat(TextInputFormat.class.getCanonicalName());
@@ -1836,8 +1837,9 @@ public class CubeTestSetup {
     partCols.add(dimColumns.remove(dimColumns.size() - 1));
     s2.setPartCols(partCols);
     s2.setTimePartCols(timePartCols);
+    dumpPeriods.clear();
     dumpPeriods.put(c3, UpdatePeriod.HOURLY);
-    storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.clear();
     storageTables.put(c3, s2);
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
