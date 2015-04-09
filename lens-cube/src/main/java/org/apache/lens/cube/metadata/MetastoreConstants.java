@@ -42,6 +42,7 @@ public final class MetastoreConstants {
   // Uber dimension constants
   public static final String DIMENSION_PFX = "dimension.";
   public static final String ATTRIBUTES_LIST_SFX = ".attributes.list";
+  public static final String PARTCOLS_SFX = ".part.cols";
   public static final String TIMED_DIMENSION_SFX = ".timed.dimension";
 
   // fact constants

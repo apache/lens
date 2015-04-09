@@ -604,12 +604,15 @@ public class CubeMetastoreClient {
     Map<String, UpdatePeriod> dumpPeriods, Map<String, String> properties,
     Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
     Set<String> partCols = Sets.newHashSet();
-    for(StorageTableDesc desc: storageTableDescs.values()) {
-      for(FieldSchema fs: desc.getPartCols()) {
-        partCols.add(fs.getName());
+    for (StorageTableDesc desc : storageTableDescs.values()) {
+      if (desc.getPartCols() != null) {
+        for (FieldSchema fs : desc.getPartCols()) {
+          partCols.add(fs.getName());
+        }
       }
     }
-    CubeDimensionTable dimTable = new CubeDimensionTable(dimName, dimTblName, columns, partCols, weight, dumpPeriods, properties);
+    CubeDimensionTable dimTable =
+      new CubeDimensionTable(dimName, dimTblName, columns, partCols, weight, dumpPeriods, properties);
     createCubeTable(dimTable, storageTableDescs);
     // do a get to update cache
     getDimensionTable(dimTblName);
@@ -628,8 +631,10 @@ public class CubeMetastoreClient {
     if (storageTableDescs != null) {
       // create tables for each storage
       for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
-        for(FieldSchema fs: entry.getValue().getPartCols()) {
-          partCols.add(fs.getName());
+        if (entry.getValue().getPartCols() != null) {
+          for (FieldSchema fs : entry.getValue().getPartCols()) {
+            partCols.add(fs.getName());
+          }
         }
       }
     }

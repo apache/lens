@@ -26,6 +26,8 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
+import com.google.common.collect.Lists;
+
 public class MetastoreUtil {
   private MetastoreUtil() {
 
@@ -60,6 +62,10 @@ public class MetastoreUtil {
 
   public static final String getDimAttributeListKey(String dimName) {
     return getDimPrefix(dimName) + ATTRIBUTES_LIST_SFX;
+  }
+
+  public static final String getDimPartsKey(String dimName) {
+    return getDimPrefix(dimName) + PARTCOLS_SFX;
   }
 
   public static final String getDimTimedDimensionKey(String dimName) {
@@ -387,6 +393,19 @@ public class MetastoreUtil {
   }
 
   private static int maxParamLength = 3999;
+
+  public static void addNameStringsOfStringCollection(Map<String, String> props, String key, Collection<String> set) {
+    List<Named> nameds = Lists.newArrayList();
+    for (final String s : set) {
+      nameds.add(new Named() {
+        @Override
+        public String getName() {
+          return s;
+        }
+      });
+    }
+    addNameStrings(props, key, nameds);
+  }
 
   public static <E extends Named> void addNameStrings(Map<String, String> props, String key, Collection<E> set) {
     addNameStrings(props, key, set, maxParamLength);

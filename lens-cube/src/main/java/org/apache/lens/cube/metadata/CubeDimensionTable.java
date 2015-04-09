@@ -25,7 +25,11 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+import com.google.common.collect.Sets;
+import lombok.Getter;
+
 public final class CubeDimensionTable extends AbstractCubeTable {
+  @Getter
   private Set<String> partCols;
   private String dimName; // dimension name the dimtabe belongs to
   private final Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
@@ -80,8 +84,18 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     partCols = getPartCols(getName(), getProperties());
   }
 
+  private void setPartCols(String name, Map<String, String> properties, Set<String> partCols) {
+    MetastoreUtil.addNameStringsOfStringCollection(properties, MetastoreUtil.getDimPartsKey(name), partCols);
+  }
+
   private Set<String> getPartCols(String name, Map<String, String> properties) {
-    return null;
+    Set<String> partCols = Sets.newHashSet();
+    for (String s : MetastoreUtil.getNamedStringValue(properties, MetastoreUtil.getDimPartsKey(name)).split(",")) {
+      if(s != null && !s.isEmpty()) {
+        partCols.add(s);
+      }
+    }
+    return partCols;
   }
 
   @Override
@@ -193,7 +207,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
    */
   public void alterUberDim(String newDimName) {
     this.dimName = newDimName;
-    setDimName(getProperties(), getName(), this.dimName);
+    setDimName(getName(), getProperties(), this.dimName);
   }
 
   /**
