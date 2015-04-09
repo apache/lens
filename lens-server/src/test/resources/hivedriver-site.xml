@@ -72,4 +72,9 @@
     <value>3</value>
   </property>
 
+  <property>
+    <name>lens.driver.test.key</name>
+    <value>set</value>
+  </property>
+
 </configuration>

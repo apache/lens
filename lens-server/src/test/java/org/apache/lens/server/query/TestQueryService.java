@@ -1291,6 +1291,22 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(queryService.getSession(lensSessionId).getHiveConf().getClassLoader(),
       ctx.getDriverContext().getDriverConf(queryService.getDrivers().iterator().next()).getClassLoader());
     Assert.assertTrue(ctx.isDriverQueryExplicitlySet());
+    for (LensDriver driver : queryService.getDrivers()) {
+      Configuration dconf = ctx.getDriverConf(driver);
+      Assert.assertEquals(dconf.get("test.session.key"), "svalue");
+      // query specific conf
+      Assert.assertEquals(dconf.get("test.query.conf"), "qvalue");
+      // lenssession default should be loaded
+      Assert.assertNotNull(dconf.get("lens.query.enable.persistent.resultset"));
+      // lens site should be loaded
+      Assert.assertEquals(dconf.get("test.lens.site.key"), "gsvalue");
+      // hive default variables should not be set
+      Assert.assertNull(conf.get("hive.exec.local.scratchdir"));
+      // driver site should be loaded
+      Assert.assertEquals(dconf.get("lens.driver.test.key"), "set");
+      // core default should not be loaded
+      Assert.assertNull(dconf.get("fs.default.name"));
+    }
   }
 
   /**
@@ -1515,5 +1531,21 @@ public class TestQueryService extends LensJerseyTest {
         "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-JDBCDriver-RewriteUtil-rewriteQuery",
         "lens.MethodMetricGauge.TestQueryService-testEstimateGauges-PARALLEL_ESTIMATE")),
       reg.getGauges().keySet().toString());
+  }
+  @Test
+  public void testQueryRejection() throws InterruptedException, IOException {
+    final WebTarget target = target().path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+      MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), "blah select ID from "
+      + TEST_TABLE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
+      MediaType.APPLICATION_XML_TYPE));
+
+    Response response = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE));
+    Assert.assertEquals(response.getStatus(), 400);
   }
 }
