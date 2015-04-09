@@ -456,11 +456,11 @@ public final class JAXBUtils {
   }
 
   public static List<XColumn> columnsFromFieldSchemaList(List<FieldSchema> fslist) {
+    List<XColumn> cols = new ArrayList<XColumn>();
     if (fslist == null || fslist.isEmpty()) {
-      return null;
+      return cols;
     }
 
-    List<XColumn> cols = new ArrayList<XColumn>();
     for (FieldSchema fs : fslist) {
       cols.add(columnFromFieldSchema(fs));
     }

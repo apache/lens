@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements. See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership. The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied. See the License for the
+  specific language governing permissions and limitations
+  under the License.
+
+-->
+<x_base_cube name="sales" xmlns="uri:lens:cube:0.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
+  <measures>
+    <measure name="unit_sales" type="BIGINT" default_aggr="SUM" display_string="Unit Sales" format_string="#,###"/>
+    <measure name="store_sales" type="DOUBLE" default_aggr="SUM" display_string="Store Sales" format_string="#,###.##"/>
+    <measure name="store_cost" type="DOUBLE" default_aggr="SUM" display_string="Store Cost" format_string="#,###.00"
+     start_time='2015-03-01-00:00' />
+    <measure name="line_item_quantity" type="INT" default_aggr="SUM" display_string="Line item quantity"/>
+    <measure name="line_item_product_price" type="FLOAT" default_aggr="SUM" display_string="Line item product price"/>
+    <measure name="line_item_discount_amount" type="FLOAT" default_aggr="SUM" display_string="Line item discount"/>
+    <measure name="line_item_tax" type="FLOAT" default_aggr="SUM" display_string="Line item tax"/>
+    <measure name="average_line_item_price" type="FLOAT" default_aggr="AVG" display_string="Average Line item price"/>
+    <measure name="average_line_item_discount" type="FLOAT" default_aggr="AVG"
+     display_string="Average Line item discount"/>
+    <measure name="max_line_item_price" type="FLOAT" default_aggr="MAX" display_string="Maximum Line item price"/>
+    <measure name="max_line_item_discount" type="FLOAT" default_aggr="MAX"
+     display_string="Maximum Line item discount"/>
+  </measures>
+  <expressions>
+    <expression name="profit" type="DOUBLE" expr="store_sales - store_cost" display_string="Profit"/>
+    <expression name="promotion_sales" type="DOUBLE" expr="sum(case when promotion_id = 0 then 0 else store_sales end)"
+     display_string="Promotion sales"/>
+  </expressions>
+  <dim_attributes>
+    <dim_attribute name="customer_id" type="INT" />
+    <dim_attribute name="product_id" type="INT" />
+    <dim_attribute name="promotion_id" type="INT" />
+    <dim_attribute name="order_id" type="INT" />
+    <dim_attribute name="order_line_number" type="INT" />
+    <dim_attribute name="order_time" type="TIMESTAMP" />
+    <dim_attribute name="delivery_time" type="TIMESTAMP" />
+    <dim_attribute name="customer_city_id" type="INT" start_time='2015-03-01-00:00' />
+    <dim_attribute name="production_city_id" type="INT" />
+    <dim_attribute name="delivery_city_id" type="INT" />
+    <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"
+      displayString=" Customer City">
+      <ref_spec>
+        <chain_ref_column chain_name="customer_city" ref_col="name" />
+      </ref_spec>
+    </dim_attribute>
+    <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
+      displayString=" Production City">
+      <ref_spec>
+        <chain_ref_column chain_name="production_city" ref_col="name" />
+      </ref_spec>
+    </dim_attribute>
+    <dim_attribute name="delivery_city_name" type="STRING" description="City name to which the product was delivered"
+      displayString=" Delivery City">
+      <ref_spec>
+        <chain_ref_column chain_name="delivery_city" ref_col="name" />
+      </ref_spec>
+    </dim_attribute>
+  </dim_attributes>
+  <join_chains>
+    <join_chain name="customer_details">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="customer_id" />
+              <to table="customer" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="customer_city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="customer_city_id" />
+              <to table="city" column="id" />
+            </edge>
+          </edges>
+        </path>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="customer_id" />
+              <to table="customer" column="id" />
+            </edge>
+            <edge>
+              <from table="customer" column="city_id" />
+              <to table="city" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="delivery_city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="delivery_city_id" />
+              <to table="city" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="production_city">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="production_city_id" />
+              <to table="city" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+  </join_chains>
+  <properties>
+    <property name="cube.sales.timed.dimensions.list" value="order_time,delivery_time" />
+    <property name="cube.timedim.partition.order_time" value="ot" />
+    <property name="cube.timedim.partition.delivery_time" value="dt" />
+  </properties>
+</x_base_cube>

@@ -34,5 +34,17 @@ insert into mydb_dim_table4(id, name, detail, d2id) values (2,'second','this is 
 
 insert into mydb_dim_table4(id, name, detail, d2id) values (3,'third','this is three',12)
 
+DROP TABLE IF EXISTS mydb_sales_aggr_fact2
+CREATE TABLE mydb_sales_aggr_fact2 (order_time timestamp, delivery_time timestamp, product_id integer, promotion_id integer, customer_city_id integer, production_city_id integer, delivery_city_id integer, unit_sales double, store_sales double, store_cost double)
 
+DROP TABLE IF EXISTS mydb_sales_aggr_fact1
+CREATE TABLE mydb_sales_aggr_fact1 (order_time timestamp, delivery_time timestamp, customer_id integer, product_id integer, promotion_id integer, customer_city_id integer, production_city_id integer, delivery_city_id integer, unit_sales double, store_sales double, store_cost double, average_line_item_price float, average_line_item_discount float, max_line_item_price float, max_line_item_discount float)
 
+DROP TABLE IF EXISTS mydb_product_table
+CREATE TABLE mydb_product_table (id integer, SKU_number integer, description varchar(255), color varchar(50), category varchar(255), weight float, manufacturer varchar(255))
+
+DROP TABLE IF EXISTS mydb_customer_table
+CREATE TABLE mydb_customer_table (id integer, name varchar(255), description varchar(255), gender varchar(50), age integer, city_id integer, customer_credit_status varchar(255))
+
+DROP TABLE IF EXISTS mydb_city_subset
+CREATE TABLE mydb_city_subset (id integer, name varchar(255))
