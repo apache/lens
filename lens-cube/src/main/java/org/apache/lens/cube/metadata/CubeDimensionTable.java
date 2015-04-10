@@ -74,15 +74,9 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     }
   }
 
-  private void setPartCols(String name, Map<String, String> properties, Set<String> partCols) {
-    if (partCols != null) {
-      MetastoreUtil.addNameStringsOfStringCollection(properties, MetastoreUtil.getDimPartsKey(name), partCols);
-    }
-  }
-
   public Set<String> getPartCols() {
     Set<String> partCols = Sets.newHashSet();
-    String partColsStr = getProperties().get(MetastoreUtil.getDimPartsKey(getName()));
+    String partColsStr = getProperties().get(MetastoreUtil.getDimTablePartsKey(getName()));
     if (partColsStr != null) {
       for (String s : partColsStr.split(",")) {
         if (s != null && !s.isEmpty()) {

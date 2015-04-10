@@ -1444,11 +1444,6 @@ public class TestCubeMetastoreClient {
     String storageTableName = MetastoreUtil.getFactStorageTableName(cubeFact.getName(), c1);
     List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
     Assert.assertEquals(parts.size(), 0);
-    //    Assert
-    //      .assertEquals(TextInputFormat.class.getCanonicalName(), parts.get(0).getInputFormatClass()
-    // .getCanonicalName());
-    //    Assert.assertEquals(parts.get(0).getParameters().get(MetastoreUtil.getLatestPartTimestampKey("dt")),
-    //      UpdatePeriod.HOURLY.format().format(now));
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 1);
 
     client.dropPartition(cubeFact.getName(), c1, timeParts, null, UpdatePeriod.HOURLY);
@@ -1532,11 +1527,6 @@ public class TestCubeMetastoreClient {
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 1);
     List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
     Assert.assertEquals(parts.size(), 0);
-    //    Assert
-    //      .assertEquals(TextInputFormat.class.getCanonicalName(), parts.get(0).getInputFormatClass()
-    // .getCanonicalName());
-    //    Assert.assertEquals(parts.get(0).getParameters().get(MetastoreUtil.getLatestPartTimestampKey("dt")),
-    //      UpdatePeriod.HOURLY.format().format(now));
 
     client.dropPartition(cubeFactWithParts.getName(), c1, timeParts, partSpec, UpdatePeriod.HOURLY);
     Assert.assertFalse(client.factPartitionExists(cubeFactWithParts.getName(), c1, UpdatePeriod.HOURLY, timeParts,

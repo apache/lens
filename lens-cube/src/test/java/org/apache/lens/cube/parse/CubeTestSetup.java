@@ -1788,7 +1788,7 @@ public class CubeTestSetup {
     dumpPeriods.put(c3, UpdatePeriod.HOURLY);
     storageTables.clear();
     storageTables.put(c3, s2);
-    dimProps.put(MetastoreUtil.getDimPartsKey(dimTblName), partCols.get(0).getName());
+    dimProps.put(MetastoreUtil.getDimTablePartsKey(dimTblName), partCols.get(0).getName());
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 
@@ -1842,7 +1842,7 @@ public class CubeTestSetup {
     dumpPeriods.put(c3, UpdatePeriod.HOURLY);
     storageTables.clear();
     storageTables.put(c3, s2);
-    dimProps.put(MetastoreUtil.getDimPartsKey(dimTblName), partCols.get(1).getName());
+    dimProps.put(MetastoreUtil.getDimTablePartsKey(dimTblName), partCols.get(1).getName());
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
   }
 

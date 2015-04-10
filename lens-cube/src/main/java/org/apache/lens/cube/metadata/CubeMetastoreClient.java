@@ -603,8 +603,7 @@ public class CubeMetastoreClient {
   public void createCubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
     Map<String, UpdatePeriod> dumpPeriods, Map<String, String> properties,
     Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
-    CubeDimensionTable dimTable =
-      new CubeDimensionTable(dimName, dimTblName, columns, weight, dumpPeriods, properties);
+    CubeDimensionTable dimTable = new CubeDimensionTable(dimName, dimTblName, columns, weight, dumpPeriods, properties);
     createCubeTable(dimTable, storageTableDescs);
     // do a get to update cache
     getDimensionTable(dimTblName);
