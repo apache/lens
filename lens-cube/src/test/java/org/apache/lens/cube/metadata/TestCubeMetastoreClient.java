@@ -25,6 +25,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
+import org.apache.lens.cube.parse.CubeTestSetup;
 import org.apache.lens.cube.parse.TimeRange;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,6 +47,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.Lists;
 
 public class TestCubeMetastoreClient {
 
@@ -1936,6 +1939,52 @@ public class TestCubeMetastoreClient {
     Assert.assertTrue(client.dimTableLatestPartitionExists(storageTableName));
     client.dropStorageFromDim(cubeDim.getName(), c1);
     Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
+  }
+
+  @Test(priority = 2)
+  public void testCubeDimWithNonTimeParts() throws Exception {
+    String dimName = "countrytable_partitioned";
+
+    List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
+    dimColumns.add(new FieldSchema("id", "int", "code"));
+    dimColumns.add(new FieldSchema("name", "string", "field1"));
+    dimColumns.add(new FieldSchema("capital", "string", "field2"));
+
+    Set<String> storageNames = new HashSet<String>();
+
+    StorageTableDesc s1 = new StorageTableDesc();
+    s1.setInputFormat(TextInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    ArrayList<FieldSchema> partCols = Lists.newArrayList();
+    partCols.add(new FieldSchema("region", "string", "region name"));
+    partCols.add(getDatePartition());
+    s1.setPartCols(partCols);
+    s1.setTimePartCols(Collections.singletonList(getDatePartitionKey()));
+    storageNames.add(c3);
+
+    Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
+    storageTables.put(c3, s1);
+
+    CubeDimensionTable cubeDim = new CubeDimensionTable(countryDim.getName(), dimName, dimColumns, 0L, storageNames);
+
+    client.createCubeDimensionTable(countryDim.getName(), dimName, dimColumns, 0L, storageNames, null, storageTables);
+    // test partition
+    String storageTableName = MetastoreUtil.getDimStorageTableName(dimName, c3);
+    Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
+    Map<String, Date> timeParts = new HashMap<String, Date>();
+    Map<String, String> nonTimeParts = new HashMap<String, String>();
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
+    nonTimeParts.put("region", "asia");
+    StoragePartitionDesc sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    client.addPartition(sPartSpec, c3);
+    List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
+    Assert.assertEquals(1, parts.size());
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowMinus1);
+    nonTimeParts.put("region", "africa");
+    sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    client.addPartition(sPartSpec, c3);
+    parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
+    Assert.assertEquals(2, parts.size());
   }
 
   @Test(priority = 2)

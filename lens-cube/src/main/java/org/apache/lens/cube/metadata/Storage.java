@@ -236,15 +236,15 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    */
   public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
     throws HiveException {
-    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(), Arrays.asList(
-      addPartitionDesc), latestInfo);
+    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
+      Collections.singletonList(addPartitionDesc), latestInfo);
   }
 
   /**
    * Add given partitions in the underlying hive table and update latest partition links
    *
    * @param client                hive client instance
-   * @param fact                  fact name
+   * @param factOrDimTable        fact or dim name
    * @param updatePeriod          update period of partitions.
    * @param storagePartitionDescs all partitions to be added
    * @param latestInfo            new latest info. atleast one partition for the latest value exists for each part

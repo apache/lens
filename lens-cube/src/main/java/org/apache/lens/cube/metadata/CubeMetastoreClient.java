@@ -581,8 +581,16 @@ public class CubeMetastoreClient {
   public void createCubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
     Set<String> storageNames, Map<String, String> properties, Map<String, StorageTableDesc> storageTableDescs)
     throws HiveException {
+    Set<String> partCols = Sets.newHashSet();
+    for (StorageTableDesc desc : storageTableDescs.values()) {
+      if (desc.getPartCols() != null) {
+        for (FieldSchema fs : desc.getPartCols()) {
+          partCols.add(fs.getName());
+        }
+      }
+    }
     CubeDimensionTable dimTable =
-      new CubeDimensionTable(dimName, dimTblName, columns, weight, storageNames, properties);
+      new CubeDimensionTable(dimName, dimTblName, columns, partCols, weight, storageNames, properties);
     createCubeTable(dimTable, storageTableDescs);
     // do a get to update cache
     getDimensionTable(dimTblName);
