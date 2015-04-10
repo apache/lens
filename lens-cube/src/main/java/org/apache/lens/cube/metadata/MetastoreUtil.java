@@ -26,8 +26,6 @@ import java.util.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
-import com.google.common.collect.Lists;
-
 public class MetastoreUtil {
   private MetastoreUtil() {
 
