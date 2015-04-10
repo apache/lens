@@ -25,6 +25,7 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
+import org.apache.lens.cube.parse.CubeTestSetup;
 import org.apache.lens.cube.parse.TimeRange;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -46,6 +47,8 @@ import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import com.google.common.collect.Lists;
 
 public class TestCubeMetastoreClient {
 
