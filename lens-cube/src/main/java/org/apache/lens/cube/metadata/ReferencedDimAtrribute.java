@@ -34,7 +34,7 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   private final List<TableReference> references = new ArrayList<TableReference>();
   // boolean whether to say the key is only a denormalized variable kept or can
   // be used in join resolution as well
-  private Boolean isJoinKey = true;
+  @Getter private Boolean isJoinKey = true;
   @Getter
   private String chainName = null;
   @Getter
@@ -45,13 +45,18 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   }
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference, Date startTime,
-    Date endTime, Double cost) {
+      Date endTime, Double cost) {
     this(column, displayString, reference, startTime, endTime, cost, true);
   }
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference, Date startTime,
-    Date endTime, Double cost, boolean isJoinKey) {
-    super(column, displayString, startTime, endTime, cost);
+      Date endTime, Double cost, boolean isJoinKey) {
+    this(column, displayString, reference, startTime, endTime, cost, isJoinKey, null);
+  }
+
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, TableReference reference, Date startTime,
+      Date endTime, Double cost, boolean isJoinKey, Long numOfDistinctValues) {
+    super(column, displayString, startTime, endTime, cost, numOfDistinctValues);
     this.references.add(reference);
     this.isJoinKey = isJoinKey;
   }
@@ -61,20 +66,30 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
   }
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references,
-    Date startTime, Date endTime, Double cost) {
+      Date startTime, Date endTime, Double cost) {
     this(column, displayString, references, startTime, endTime, cost, true);
   }
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references,
-    Date startTime, Date endTime, Double cost, boolean isJoinKey) {
-    super(column, displayString, startTime, endTime, cost);
+      Date startTime, Date endTime, Double cost, boolean isJoinKey) {
+    this(column, displayString, references, startTime, endTime, cost, isJoinKey, null);
+  }
+
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, Collection<TableReference> references,
+      Date startTime, Date endTime, Double cost, boolean isJoinKey, Long numOfDistinctValues) {
+    super(column, displayString, startTime, endTime, cost, numOfDistinctValues);
     this.references.addAll(references);
     this.isJoinKey = isJoinKey;
   }
 
   public ReferencedDimAtrribute(FieldSchema column, String displayString, String chainName, String refColumn,
-    Date startTime, Date endTime, Double cost) {
-    super(column, displayString, startTime, endTime, cost);
+      Date startTime, Date endTime, Double cost) {
+    this(column, displayString, chainName, refColumn, startTime, endTime, cost, null);
+  }
+
+  public ReferencedDimAtrribute(FieldSchema column, String displayString, String chainName, String refColumn,
+      Date startTime, Date endTime, Double cost, Long numOfDistinctValues) {
+    super(column, displayString, startTime, endTime, cost, numOfDistinctValues);
     this.chainName = chainName.toLowerCase();
     this.refColumn = refColumn.toLowerCase();
     this.isJoinKey = false;
@@ -100,7 +115,7 @@ public class ReferencedDimAtrribute extends BaseDimAttribute {
       props.put(MetastoreUtil.getDimRefChainColumnKey(getName()), refColumn);
     } else {
       props.put(MetastoreUtil.getDimensionSrcReferenceKey(getName()),
-        MetastoreUtil.getReferencesString(references));
+          MetastoreUtil.getReferencesString(references));
       props.put(MetastoreUtil.getDimUseAsJoinKey(getName()), isJoinKey.toString());
     }
   }
