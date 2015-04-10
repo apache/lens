@@ -31,18 +31,22 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.LensAllApplicationJerseyTest;
 import org.apache.lens.server.LensApplication;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.metrics.MethodMetrics;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.metastore.CubeMetastoreServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
 
@@ -87,7 +91,7 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
   }
 
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensTestUtil.loadData(tblName, testDataFile, target(), lensSessionId);
+    LensTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
   }
 
   @AfterTest
@@ -127,7 +131,7 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
     createTable(TestQueryService.TEST_TABLE);
     Assert.assertEquals(methodMetricsMap.size(), 5);
     LOG.info("load data");
-    loadData(TestQueryService.TEST_TABLE, TestQueryService.TEST_DATA_FILE);
+    loadData(TestQueryService.TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
     Assert.assertEquals(methodMetricsMap.size(), 5);
     LOG.info("execute async");
     executeAsync();
@@ -238,7 +242,7 @@ public class TestResourceMethodMetrics extends LensAllApplicationJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
+        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
     Assert.assertNotNull(handle);
   }

@@ -22,6 +22,8 @@ package org.apache.lens.cube.parse;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
 import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
 
+import org.apache.lens.api.LensException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -142,7 +144,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDimOnlyDistinctQuery() throws SemanticException, ParseException {
+  public void testDimOnlyDistinctQuery() throws SemanticException, ParseException, LensException {
 
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
 
@@ -191,7 +193,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testAggregateResolverOff() throws SemanticException, ParseException {
+  public void testAggregateResolverOff() throws SemanticException, ParseException, LensException {
     Configuration conf2 = new Configuration(this.conf);
     conf2.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, true);
 
@@ -212,7 +214,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     rawFactSelectionTests(conf2);
   }
 
-  private void aggregateFactSelectionTests(Configuration conf) throws SemanticException, ParseException {
+  private void aggregateFactSelectionTests(Configuration conf) throws SemanticException, ParseException, LensException {
     String query = "SELECT count(distinct cityid) from testcube where " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf);
     String hQL = cubeql.toHQL();
@@ -256,7 +258,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
     compareQueries(expectedQL, hQL);
   }
 
-  private void rawFactSelectionTests(Configuration conf) throws SemanticException, ParseException {
+  private void rawFactSelectionTests(Configuration conf) throws SemanticException, ParseException, LensException {
     // Check a query with non default aggregate function
     String query = "SELECT cityid, avg(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf);

@@ -22,6 +22,12 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
+
+import org.apache.lens.cube.parse.TimeRange;
+
+import com.google.common.base.Optional;
+import lombok.NonNull;
 
 public abstract class CubeColumn implements Named {
 
@@ -36,7 +42,9 @@ public abstract class CubeColumn implements Named {
     new ThreadLocal<DateFormat>() {
       @Override
       protected SimpleDateFormat initialValue() {
-        return new SimpleDateFormat("yyyy-MM-dd-HH");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd-HH");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return sdf;
       }
     };
 
@@ -101,6 +109,33 @@ public abstract class CubeColumn implements Named {
     return endTime;
   }
 
+  public Optional<Long> getStartTimeMillisSinceEpoch() {
+
+    if (startTime != null) {
+      return Optional.of(startTime.getTime());
+    }
+    return Optional.absent();
+  }
+
+  public Optional<Long> getEndTimeMillisSinceEpoch() {
+
+    if (endTime != null) {
+      return Optional.of(endTime.getTime());
+    }
+    return Optional.absent();
+  }
+
+  public boolean isColumnAvailableInTimeRange(final TimeRange range) {
+    return isColumnAvailableFrom(range.getFromDate()) && isColumnAvailableTill(range.getToDate());
+  }
+
+  public boolean isColumnAvailableFrom(@NonNull final Date date) {
+    return (getStartTime() == null) ? true : date.equals(getStartTime()) || date.after(getStartTime());
+  }
+
+  public boolean isColumnAvailableTill(@NonNull final Date date) {
+    return (getEndTime() == null) ? true : date.equals(getEndTime()) || date.before(getEndTime());
+  }
   /**
    * @return the cost
    */

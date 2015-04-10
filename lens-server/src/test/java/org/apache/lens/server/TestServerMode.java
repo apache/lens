@@ -35,6 +35,8 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.LensServices.SERVICE_MODE;
 
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
@@ -179,7 +181,8 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
     QueryHandle qhandle = null;
     try {
-      qhandle = queryTarget.request().post(Entity.entity(query, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      qhandle = queryTarget.request().post(Entity.entity(query, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
     } catch (NotAllowedException nae) {
       if (mode.equals(SERVICE_MODE.READ_ONLY)) {
         // expected

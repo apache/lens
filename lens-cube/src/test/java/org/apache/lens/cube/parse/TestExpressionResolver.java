@@ -24,6 +24,7 @@ import static org.apache.lens.cube.parse.CubeTestSetup.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.StorageConstants;
 
 import org.apache.hadoop.conf.Configuration;
@@ -61,11 +62,6 @@ public class TestExpressionResolver extends TestQueryRewrite {
       conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());
     Assert.assertTrue(th.getMessage().contains("invalidexpr"));
-
-    // Query with column life not in the range
-    th = getSemanticExceptionInRewrite("cube select newexpr, SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NOT_AVAILABLE_IN_RANGE.getErrorCode());
   }
 
   @Test
@@ -230,7 +226,7 @@ public class TestExpressionResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testDerivedCube() throws SemanticException, ParseException {
+  public void testDerivedCube() throws SemanticException, ParseException, LensException {
     SemanticException th =
       getSemanticExceptionInRewrite("select avgmsr from derivedCube" + " where " + TWO_DAYS_RANGE, conf);
     Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.COLUMN_NOT_FOUND.getErrorCode());

@@ -79,7 +79,7 @@ public class TestRewriting {
   // change the number, if more tests for success needs to be added
   static final int NUM_SUCCESS = 36;
 
-  private CubeQueryRewriter getMockedRewriter() throws SemanticException, ParseException {
+  private CubeQueryRewriter getMockedRewriter() throws SemanticException, ParseException, LensException {
     CubeQueryRewriter mockwriter = Mockito.mock(CubeQueryRewriter.class);
     Mockito.when(mockwriter.rewrite(any(String.class))).thenAnswer(new Answer<CubeQueryContext>() {
       @Override
@@ -112,7 +112,8 @@ public class TestRewriting {
    * @throws SemanticException the semantic exception
    * @throws ParseException    the parse exception
    */
-  private CubeQueryContext getMockedCubeContext(String query) throws SemanticException, ParseException {
+  private CubeQueryContext getMockedCubeContext(String query)
+    throws SemanticException, ParseException, LensException {
     CubeQueryContext context = Mockito.mock(CubeQueryContext.class);
     Mockito.when(context.toHQL()).thenReturn(query.substring(4));
     Mockito.when(context.toAST(any(Context.class))).thenReturn(HQLParser.parseHQL(query.substring(4), hconf));

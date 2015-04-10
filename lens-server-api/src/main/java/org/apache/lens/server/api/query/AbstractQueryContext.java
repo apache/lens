@@ -203,6 +203,8 @@ public abstract class AbstractQueryContext implements Serializable {
     @Getter
     private boolean succeeded = false;
 
+    @Getter
+    private LensException cause;
 
     public DriverEstimateRunnable(AbstractQueryContext queryContext,
                                   LensDriver driver) {
@@ -223,18 +225,25 @@ public abstract class AbstractQueryContext implements Serializable {
       try {
         driverQueryContext.setDriverCost(driver.estimate(queryContext));
         succeeded = true;
-      } catch (Exception e) {
-        String expMsg = LensUtil.getCauseMessage(e);
-        driverQueryContext.setDriverQueryCostEstimateError(e);
-        failureCause = new StringBuilder("Driver :")
-            .append(driver.getClass().getName())
-            .append(" Cause :")
-            .append(expMsg)
-            .toString();
-        LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
+      } catch (final LensException e) {
+        this.cause = e;
+        captureExceptionInformation(driverQueryContext, e);
+      } catch (final Exception e) {
+        captureExceptionInformation(driverQueryContext, e);
       } finally {
         estimateGauge.markSuccess();
       }
+    }
+
+    private void captureExceptionInformation(final DriverQueryContext driverQueryContext, final Exception e) {
+      String expMsg = LensUtil.getCauseMessage(e);
+      driverQueryContext.setDriverQueryCostEstimateError(e);
+      failureCause = new StringBuilder("Driver :")
+          .append(driver.getClass().getName())
+          .append(" Cause :")
+          .append(expMsg)
+          .toString();
+      LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
     }
   }
 

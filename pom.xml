@@ -57,6 +57,8 @@
     <joda.time.version>2.0</joda.time.version>
     <guava.version>13.0.1</guava.version>
     <lombok.version>1.12.4</lombok.version>
+    <commons-collections.version>3.2.1</commons-collections.version>
+    <typesafe.config.version>1.2.1</typesafe.config.version>
 
     <jackson.asl.version>1.9.13</jackson.asl.version>
     <opencsv.version>2.3</opencsv.version>
@@ -885,6 +887,11 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
+        <groupId>com.typesafe</groupId>
+        <artifactId>config</artifactId>
+        <version>${typesafe.config.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.hive</groupId>
         <artifactId>hive-shims</artifactId>
         <version>${hive.version}</version>
@@ -987,6 +994,11 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.glassfish.jersey.test-framework.providers</groupId>
+        <artifactId>jersey-test-framework-provider-inmemory</artifactId>
+        <version>${jersey.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.glassfish.jersey.containers</groupId>
         <artifactId>jersey-container-grizzly2-servlet</artifactId>
         <version>${jersey.version}</version>
@@ -1006,7 +1018,6 @@
         <artifactId>jersey-media-moxy</artifactId>
         <version>${jersey.version}</version>
       </dependency>
-
       <dependency>
         <groupId>org.glassfish.grizzly</groupId>
         <artifactId>grizzly-framework</artifactId>
@@ -1110,6 +1121,12 @@
         <artifactId>jackson-mapper-asl</artifactId>
         <version>${jackson.asl.version}</version>
       </dependency>
+      <dependency>
+        <groupId>commons-collections</groupId>
+        <artifactId>commons-collections</artifactId>
+        <version>${commons-collections.version}</version>
+      </dependency>
+
       <!-- Connection pooling for Finished queries -->
       <dependency>
         <groupId>commons-dbcp</groupId>

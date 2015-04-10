@@ -223,13 +223,14 @@ public class TestSessionResource extends LensJerseyTest {
     Assert.assertNotNull(handle);
 
     // add a resource
+    final String lensSiteFilePath = TestSessionResource.class.getClassLoader().getResource("lens-site.xml").getPath();
     final WebTarget resourcetarget = target().path("session/resources");
     final FormDataMultiPart mp1 = new FormDataMultiPart();
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), handle,
       MediaType.APPLICATION_XML_TYPE));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), "file"));
     mp1.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-      "target/test-classes/lens-site.xml"));
+        lensSiteFilePath));
     APIResult result = resourcetarget.path("add").request()
       .put(Entity.entity(mp1, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), Status.SUCCEEDED);
@@ -245,7 +246,7 @@ public class TestSessionResource extends LensJerseyTest {
       MediaType.APPLICATION_XML_TYPE));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("type").build(), "file"));
     mp2.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("path").build(),
-      "target/test-classes/lens-site.xml"));
+        lensSiteFilePath));
     result = resourcetarget.path("delete").request()
       .put(Entity.entity(mp2, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
     Assert.assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
