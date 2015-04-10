@@ -937,14 +937,10 @@ class JoinResolver implements ContextRewriter {
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
     partialJoinConditions = new HashMap<AbstractCubeTable, String>();
     tableJoinTypeMap = new HashMap<AbstractCubeTable, JoinType>();
-    try {
-      resolveJoins(cubeql);
-    } catch (HiveException e) {
-      throw new SemanticException(e);
-    }
+    resolveJoins(cubeql);
   }
 
-  private void resolveJoins(CubeQueryContext cubeql) throws HiveException {
+  private void resolveJoins(CubeQueryContext cubeql) throws SemanticException {
     QB cubeQB = cubeql.getQb();
     boolean joinResolverDisabled =
       cubeql.getConf().getBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, CubeQueryConfUtil.DEFAULT_DISABLE_AUTO_JOINS);
@@ -953,7 +949,13 @@ class JoinResolver implements ContextRewriter {
         cubeQB.setQbJoinTree(genJoinTree(cubeQB, cubeql.getJoinTree(), cubeql));
       }
     } else {
-      autoResolveJoins(cubeql);
+      try {
+        autoResolveJoins(cubeql);
+      } catch (SemanticException e) {
+        throw e;
+      } catch (HiveException e) {
+        throw new SemanticException(e);
+      }
     }
   }
 
@@ -996,6 +998,7 @@ class JoinResolver implements ContextRewriter {
         String targetDimTable = cubeql.getQb().getTabNameForAlias(targetDimAlias);
         if (targetDimTable == null) {
           LOG.warn("Null table for alias " + targetDimAlias);
+          return;
         }
         target = cubeql.getMetastoreClient().getDimension(targetDimTable);
       }
@@ -1029,7 +1032,6 @@ class JoinResolver implements ContextRewriter {
     SchemaGraph graph = cubeql.getMetastoreClient().getSchemaGraph();
     Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> multipleJoinPaths =
       new LinkedHashMap<Aliased<Dimension>, List<SchemaGraph.JoinPath>>();
-    Map<Dimension, String> dimensionAliasMap = new HashMap<Dimension, String>();
 
     // Resolve join path for each dimension accessed in the query
     for (Dimension joinee : dimTables) {
@@ -1286,7 +1288,7 @@ class JoinResolver implements ContextRewriter {
       cubeql.setJoinCond(joinTree, HQLParser.getString(joinCond));
     } else {
       // No join condition specified. this should be an error
-      new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
+      throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
     }
     return joinTree;
   }

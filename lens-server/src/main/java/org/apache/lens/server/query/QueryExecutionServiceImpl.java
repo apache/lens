@@ -971,7 +971,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     synchronized (allQueries) {
       for (QueryContext ctx : allQueries.values()) {
         try {
-          if (sessionMap.containsKey(ctx.getLensSessionIdentifier())) {
+          if (SESSION_MAP.containsKey(ctx.getLensSessionIdentifier())) {
             // try setting configuration if the query session is still not closed
             ctx.setConf(getLensConf(getSessionHandle(ctx.getLensSessionIdentifier()), ctx.getLensConf()));
           } else {

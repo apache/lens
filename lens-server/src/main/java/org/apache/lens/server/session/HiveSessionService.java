@@ -232,8 +232,8 @@ public class HiveSessionService extends LensService implements SessionService {
     String[] auxJars = getSession(sessionid).getSessionConf().getStrings(LensConfConstants.AUX_JARS);
 
     if (auxJars != null) {
-      LOG.info("Adding aux jars:" + auxJars);
       for (String jar : auxJars) {
+        LOG.info("Adding aux jar:" + jar);
         addResourceToAllServices(sessionid, "jar", jar);
       }
     }
@@ -242,7 +242,7 @@ public class HiveSessionService extends LensService implements SessionService {
 
   @Override
   public boolean isOpen(LensSessionHandle sessionHandle) {
-    return sessionMap.containsKey(sessionHandle);
+    return SESSION_MAP.containsKey(sessionHandle.getPublicId().toString());
   }
 
   /**
@@ -407,12 +407,12 @@ public class HiveSessionService extends LensService implements SessionService {
   @Override
   public void writeExternal(ObjectOutput out) throws IOException {
     // Write out all the sessions
-    out.writeInt(sessionMap.size());
-    for (LensSessionHandle sessionHandle : sessionMap.values()) {
+    out.writeInt(SESSION_MAP.size());
+    for (LensSessionHandle sessionHandle : SESSION_MAP.values()) {
       LensSessionImpl session = getSession(sessionHandle);
       session.getLensSessionPersistInfo().writeExternal(out);
     }
-    LOG.info("Session service pesristed " + sessionMap.size() + " sessions");
+    LOG.info("Session service pesristed " + SESSION_MAP.size() + " sessions");
   }
 
   /*
@@ -429,9 +429,9 @@ public class HiveSessionService extends LensService implements SessionService {
       LensSessionImpl.LensSessionPersistInfo persistInfo = new LensSessionImpl.LensSessionPersistInfo();
       persistInfo.readExternal(in);
       restorableSessions.add(persistInfo);
-      sessionMap.put(persistInfo.getSessionHandle().getPublicId().toString(), persistInfo.getSessionHandle());
+      SESSION_MAP.put(persistInfo.getSessionHandle().getPublicId().toString(), persistInfo.getSessionHandle());
     }
-    LOG.info("Session service recovered " + sessionMap.size() + " sessions");
+    LOG.info("Session service recovered " + SESSION_MAP.size() + " sessions");
   }
 
   /**
@@ -474,7 +474,7 @@ public class HiveSessionService extends LensService implements SessionService {
      * Run internal.
      */
     public void runInternal() {
-      List<LensSessionHandle> sessionsToRemove = new ArrayList<LensSessionHandle>(sessionMap.values());
+      List<LensSessionHandle> sessionsToRemove = new ArrayList<LensSessionHandle>(SESSION_MAP.values());
       Iterator<LensSessionHandle> itr = sessionsToRemove.iterator();
       while (itr.hasNext()) {
         LensSessionHandle sessionHandle = itr.next();

@@ -578,8 +578,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+      Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
 
@@ -590,8 +589,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+      Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
 
@@ -604,9 +602,8 @@ public class TestJoinResolver extends TestQueryRewrite {
         + "It's not possible to resolve which statedim is being asked for when cityState and cubeState both end at"
         + " statedim table.");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
       Assert.assertEquals(
-        e.getCause().getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
+        e.getMessage().indexOf("Table statedim has 2 different paths through joinchains"), 0);
     }
 
     // this test case should pass when default qualifiers for dimensions' chains are added
@@ -617,8 +614,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+      Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [cubestate, statedim]".toLowerCase());
     }
     // this should pass when default qualifiers are added
@@ -628,8 +624,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "The table statedim is getting accessed as both cubeState and statedim ");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+      Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table statedim is getting accessed via two different names: [citystate, statedim]".toLowerCase());
     }
 
@@ -642,8 +637,7 @@ public class TestJoinResolver extends TestQueryRewrite {
       Assert.fail("Should have failed. "
         + "The table citydim is getting accessed as both chain and without chain ");
     } catch (SemanticException e) {
-      Assert.assertNotNull(e.getCause());
-      Assert.assertEquals(e.getCause().getMessage().toLowerCase(),
+      Assert.assertEquals(e.getMessage().toLowerCase(),
         "Table citydim is getting accessed via joinchain: citystate and no chain at all".toLowerCase());
     }
   }

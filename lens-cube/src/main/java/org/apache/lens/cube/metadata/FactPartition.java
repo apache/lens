@@ -120,8 +120,9 @@ public class FactPartition implements Comparable<FactPartition> {
       if (this.partSpec != null) {
         if (o.partSpec == null) {
           partComp = 1;
+        } else {
+          partComp = this.partSpec.compareTo(o.partSpec);
         }
-        partComp = this.partSpec.compareTo(o.partSpec);
       } else {
         if (o.partSpec != null) {
           partComp = -1;

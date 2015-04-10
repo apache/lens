@@ -72,7 +72,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   // Static session map which is used by query submission thread to get the
   // lens session before submitting a query to hive server
   /** The session map. */
-  protected static ConcurrentHashMap<String, LensSessionHandle> sessionMap
+  protected static final ConcurrentHashMap<String, LensSessionHandle> SESSION_MAP
     = new ConcurrentHashMap<String, LensSessionHandle>();
 
   /**
@@ -148,7 +148,7 @@ public abstract class LensService extends CompositeService implements Externaliz
     }
     LensSessionHandle lensSession = new LensSessionHandle(sessionHandle.getHandleIdentifier().getPublicId(),
       sessionHandle.getHandleIdentifier().getSecretId());
-    sessionMap.put(lensSession.getPublicId().toString(), lensSession);
+    SESSION_MAP.put(lensSession.getPublicId().toString(), lensSession);
     return lensSession;
   }
 
@@ -168,7 +168,7 @@ public abstract class LensService extends CompositeService implements Externaliz
         new HashMap<String, String>());
       LensSessionHandle restoredSession = new LensSessionHandle(restoredHandle.getHandleIdentifier().getPublicId(),
         restoredHandle.getHandleIdentifier().getSecretId());
-      sessionMap.put(restoredSession.getPublicId().toString(), restoredSession);
+      SESSION_MAP.put(restoredSession.getPublicId().toString(), restoredSession);
     } catch (HiveSQLException e) {
       throw new LensException("Error restoring session " + sessionHandle, e);
     }
@@ -212,7 +212,7 @@ public abstract class LensService extends CompositeService implements Externaliz
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
     try {
       cliService.closeSession(getHiveSessionHandle(sessionHandle));
-      sessionMap.remove(sessionHandle.getPublicId().toString());
+      SESSION_MAP.remove(sessionHandle.getPublicId().toString());
     } catch (Exception e) {
       throw new LensException(e);
     }
@@ -260,7 +260,7 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @param sessionHandle public UUID of the session
    */
   public void acquire(String sessionHandle) {
-    LensSessionHandle handle = sessionMap.get(sessionHandle);
+    LensSessionHandle handle = SESSION_MAP.get(sessionHandle);
 
     if (handle == null) {
       throw new NotFoundException("Session handle not found " + sessionHandle);
@@ -288,7 +288,7 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @throws LensException if session cannot be released
    */
   public void release(String sessionHandle) throws LensException {
-    LensSessionHandle handle = sessionMap.get(sessionHandle);
+    LensSessionHandle handle = SESSION_MAP.get(sessionHandle);
     if (handle != null) {
       getSession(handle).release();
     }
@@ -301,7 +301,7 @@ public abstract class LensService extends CompositeService implements Externaliz
    * @return the session handle
    */
   protected LensSessionHandle getSessionHandle(String sessionid) {
-    return sessionMap.get(sessionid);
+    return SESSION_MAP.get(sessionid);
   }
 
   /**

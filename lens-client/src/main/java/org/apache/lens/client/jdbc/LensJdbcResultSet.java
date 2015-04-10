@@ -245,7 +245,7 @@ public class LensJdbcResultSet implements ResultSet {
       } else if (obj == null) {
         return 0;
       } else if (String.class.isInstance(obj)) {
-        return Integer.valueOf((String) obj);
+        return Integer.parseInt((String) obj);
       }
       throw new Exception("Illegal Conversion");
     } catch (Exception e) {
@@ -277,7 +277,7 @@ public class LensJdbcResultSet implements ResultSet {
       } else if (obj == null) {
         return 0;
       } else if (String.class.isInstance(obj)) {
-        return Long.valueOf((String) obj);
+        return Long.parseLong((String) obj);
       }
       throw new Exception("Illegal Conversion");
     } catch (Exception e) {
