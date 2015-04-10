@@ -19,8 +19,10 @@
 package org.apache.lens.cli;
 
 import java.io.*;
+import java.net.URISyntaxException;
 import java.net.URL;
 
+import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.LensClient;
 
@@ -42,6 +44,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
   /** The command. */
   private static LensFactCommands command = null;
+  private static LensCubeCommands cubeCommands = null;
 
   /**
    * Test fact commands.
@@ -49,12 +52,25 @@ public class TestLensFactCommands extends LensCliApplicationTest {
    * @throws IOException
    */
   @Test
-  public void testFactCommands() throws IOException {
+  public void testFactCommands() throws IOException, URISyntaxException {
+    createSampleCube();
     addFact1Table();
     updateFact1Table();
     testFactStorageActions();
     testFactPartitionActions();
     dropFact1Table();
+    dropSampleCube();
+  }
+
+  private void createSampleCube() throws URISyntaxException {
+    URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
+    String cubeList = getCubeCommand().showCubes();
+    Assert.assertFalse(cubeList.contains("sample_cube"));
+    getCubeCommand().createCube(new File(cubeSpec.toURI()).getAbsolutePath());
+  }
+
+  private void dropSampleCube() {
+    getCubeCommand().dropCube("sample_cube");
   }
 
   private static LensFactCommands getCommand() {
@@ -64,6 +80,15 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       command.setClient(client);
     }
     return command;
+  }
+
+  private static LensCubeCommands getCubeCommand() {
+    if (cubeCommands == null) {
+      LensClient client = new LensClient();
+      cubeCommands = new LensCubeCommands();
+      cubeCommands.setClient(client);
+    }
+    return cubeCommands;
   }
 
   /**
@@ -218,6 +243,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   }
 
   private void verifyAndDeletePartitions() {
+    Assert.assertEquals(getCubeCommand().getLatest("sample_cube dt"), "2014-03-27T12:00:00:000");
     String result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
     Assert.assertTrue(result.contains("HOURLY"));
     String dropPartitionsStatus = command.dropAllPartitionsOfFact("fact1 " + FACT_LOCAL);
