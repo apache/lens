@@ -26,11 +26,8 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
 import com.google.common.collect.Sets;
-import lombok.Getter;
 
 public final class CubeDimensionTable extends AbstractCubeTable {
-  @Getter
-  private Set<String> partCols;
   private String dimName; // dimension name the dimtabe belongs to
   private final Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
 
@@ -55,20 +52,14 @@ public final class CubeDimensionTable extends AbstractCubeTable {
 
   public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, double weight,
     Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
-    this(dimName, dimTblName, columns, null, weight, snapshotDumpPeriods, properties);
-  }
-
-  public CubeDimensionTable(String dimName, String dimTblName, List<FieldSchema> columns, Set<String> partCols,
-    double weight,
-    Map<String, UpdatePeriod> snapshotDumpPeriods, Map<String, String> properties) {
     super(dimTblName, columns, properties, weight);
     this.dimName = dimName;
-    this.partCols = partCols;
     if (snapshotDumpPeriods != null) {
       this.snapshotDumpPeriods.putAll(snapshotDumpPeriods);
     }
     addProperties();
   }
+
 
   private static Map<String, UpdatePeriod> getSnapshotDumpPeriods(Set<String> storages) {
     Map<String, UpdatePeriod> snapshotDumpPeriods = new HashMap<String, UpdatePeriod>();
@@ -85,24 +76,16 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     if (dumpPeriods != null) {
       this.snapshotDumpPeriods.putAll(dumpPeriods);
     }
-    partCols = getPartCols(getName(), getProperties());
   }
 
-  private void setPartCols(String name, Map<String, String> properties, Set<String> partCols) {
-    if (partCols != null) {
-      MetastoreUtil.addNameStringsOfStringCollection(properties, MetastoreUtil.getDimPartsKey(name), partCols);
-    }
-  }
-
-  private Set<String> getPartCols(String name, Map<String, String> properties) {
-    String partColsStr = MetastoreUtil.getNamedStringValue(properties, MetastoreUtil.getDimPartsKey(name));
-    if (partColsStr == null) {
-      return null;
-    }
+  public Set<String> getPartCols() {
     Set<String> partCols = Sets.newHashSet();
-    for (String s : partColsStr.split(",")) {
-      if (s != null && !s.isEmpty()) {
-        partCols.add(s);
+    String partColsStr = getProperties().get(MetastoreUtil.getDimTablePartsKey(getName()));
+    if (partColsStr != null) {
+      for (String s : partColsStr.split(",")) {
+        if (s != null && !s.isEmpty()) {
+          partCols.add(s);
+        }
       }
     }
     return partCols;
@@ -118,7 +101,6 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     super.addProperties();
     setDimName(getName(), getProperties(), dimName);
     setSnapshotDumpPeriods(getName(), getProperties(), snapshotDumpPeriods);
-    setPartCols(getName(), getProperties(), partCols);
   }
 
 
