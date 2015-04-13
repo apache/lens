@@ -494,8 +494,8 @@ public class MetastoreUtil {
       Partition part = iter.next();
       boolean ignore = false;
       for (Map.Entry<String, String> entry1 : part.getSpec().entrySet()) {
-        if ((nonTimePartSpec == null || !nonTimePartSpec.containsKey(entry1.getKey())) &&
-          !entry1.getKey().equals(latestPartCol)) {
+        if ((nonTimePartSpec == null || !nonTimePartSpec.containsKey(entry1.getKey()))
+          && !entry1.getKey().equals(latestPartCol)) {
           try {
             UpdatePeriod.valueOf(part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD))
               .format()
