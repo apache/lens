@@ -93,6 +93,10 @@ public class MetastoreUtil {
     return getDimensionKeyPrefix(dimName) + TYPE_SFX;
   }
 
+  public static final String getDimNumOfDistinctValuesPropertyKey(String dimName) {
+    return getDimensionKeyPrefix(dimName) + NUM_DISTINCT_VALUES;
+  }
+
   public static String getHierachyElementKeyPFX(String dimName) {
     return getDimensionKeyPrefix(dimName) + HIERARCHY_SFX;
   }
@@ -397,7 +401,7 @@ public class MetastoreUtil {
   }
 
   static <E extends Named> void addNameStrings(Map<String, String> props, String key,
-    Collection<E> set, int maxLength) {
+      Collection<E> set, int maxLength) {
     List<String> namedStrings = getNamedStrs(set, maxLength);
     props.put(key + ".size", String.valueOf(namedStrings.size()));
     for (int i = 0; i < namedStrings.size(); i++) {

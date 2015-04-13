@@ -78,6 +78,7 @@ public class TestCubeMetastoreClient {
   private static String c1 = "C1";
   private static String c2 = "C2";
   private static String c3 = "C3";
+  private static String c4 = "C4";
   private static Dimension zipDim, cityDim, stateDim, countryDim;
   private static Set<CubeDimAttribute> zipAttrs = new HashSet<CubeDimAttribute>();
   private static Set<CubeDimAttribute> cityAttrs = new HashSet<CubeDimAttribute>();
@@ -197,7 +198,7 @@ public class TestCubeMetastoreClient {
 
     List<CubeDimAttribute> locationHierarchyWithStartTime = new ArrayList<CubeDimAttribute>();
     locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("zipcode2", "int", "zip"),
-      "Zip refer2", new TableReference("zipdim", "zipcode"), now, now, 100.0));
+      "Zip refer2", new TableReference("zipdim", "zipcode"), now, now, 100.0, true, 1000L));
     locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("cityid2", "int", "city"),
       "City refer2", new TableReference("citydim", "id"), now, null, null));
     locationHierarchyWithStartTime.add(new ReferencedDimAtrribute(new FieldSchema("stateid2", "int", "state"),
@@ -327,9 +328,14 @@ public class TestCubeMetastoreClient {
     client.createStorage(hdfsStorage3);
     Assert.assertEquals(3, client.getAllStorages().size());
 
+    Storage hdfsStorage4 = new HDFSStorage(c4);
+    client.createStorage(hdfsStorage4);
+    Assert.assertEquals(4, client.getAllStorages().size());
+
     Assert.assertEquals(hdfsStorage, client.getStorage(c1));
     Assert.assertEquals(hdfsStorage2, client.getStorage(c2));
     Assert.assertEquals(hdfsStorage3, client.getStorage(c3));
+    Assert.assertEquals(hdfsStorage4, client.getStorage(c4));
   }
 
   @Test(priority = 1)
@@ -407,7 +413,8 @@ public class TestCubeMetastoreClient {
     // alter dimension
     Table tbl = client.getHiveTable(zipDim.getName());
     Dimension toAlter = new Dimension(tbl);
-    toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("newZipDim", "int", "new dim added")));
+    toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("newZipDim", "int", "new dim added"), null, null, null,
+      null, 1000L));
     toAlter.alterAttribute(new ReferencedDimAtrribute(new FieldSchema("newRefDim", "int", "new ref-dim added"),
       "New city ref", new TableReference("citydim", "id")));
     toAlter.alterAttribute(new BaseDimAttribute(new FieldSchema("f2", "varchar", "modified field")));
@@ -438,6 +445,7 @@ public class TestCubeMetastoreClient {
     CubeDimAttribute newzipdim = altered.getAttributeByName("newZipDim");
     Assert.assertTrue(newzipdim instanceof BaseDimAttribute);
     Assert.assertEquals(((BaseDimAttribute) newzipdim).getType(), "int");
+    Assert.assertEquals((((BaseDimAttribute) newzipdim).getNumOfDistinctValues().get()), Long.valueOf(1000));
 
     CubeDimAttribute newrefdim = altered.getAttributeByName("newRefDim");
     Assert.assertTrue(newrefdim instanceof ReferencedDimAtrribute);
@@ -782,7 +790,7 @@ public class TestCubeMetastoreClient {
     // Partition with different schema
     FieldSchema newcol = new FieldSchema("newcol", "int", "new col for part");
     cubeFact.alterColumn(newcol);
-    client.alterCubeFactTable(cubeFact.getName(), cubeFact);
+    client.alterCubeFactTable(cubeFact.getName(), cubeFact, storageTables);
     String storageTableName = MetastoreUtil.getFactStorageTableName(factName, c1);
     Assert.assertEquals(client.getAllParts(storageTableName).size(), 1);
     List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
@@ -879,7 +887,7 @@ public class TestCubeMetastoreClient {
     alterupdates.add(UpdatePeriod.MONTHLY);
     factTable.alterStorage(c2, alterupdates);
 
-    client.alterCubeFactTable(factName, factTable);
+    client.alterCubeFactTable(factName, factTable, storageTables);
 
     Table factHiveTable = Hive.get(conf).getTable(factName);
     CubeFactTable altered = new CubeFactTable(factHiveTable);
@@ -901,9 +909,47 @@ public class TestCubeMetastoreClient {
     }
     Assert.assertTrue(contains);
 
-    client.addStorage(altered, c3, updates, s1);
-    Assert.assertTrue(altered.getStorages().contains("C3"));
-    Assert.assertTrue(altered.getUpdatePeriods().get("C3").equals(updates));
+    // alter storage table desc
+    String c1TableName = MetastoreUtil.getFactStorageTableName(factName, c1);
+    Table c1Table = client.getTable(c1TableName);
+    Assert.assertEquals(c1Table.getInputFormatClass().getCanonicalName(),
+      TextInputFormat.class.getCanonicalName());
+    s1 = new StorageTableDesc();
+    s1.setInputFormat(SequenceFileInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s1.setPartCols(partCols);
+    s1.setTimePartCols(timePartCols);
+    s1.setFieldDelim(":");
+    storageTables.put(c1, s1);
+    storageTables.put(c4, s1);
+    factTable.addStorage(c4, updates);
+    client.alterCubeFactTable(factName, factTable, storageTables);
+    CubeFactTable altered2 = client.getCubeFact(factName);
+    Assert.assertTrue(client.tableExists(c1TableName));
+    Table alteredC1Table = client.getTable(c1TableName);
+    Assert.assertEquals(alteredC1Table.getInputFormatClass().getCanonicalName(),
+      SequenceFileInputFormat.class.getCanonicalName());
+    Assert.assertEquals(alteredC1Table.getSerdeParam(serdeConstants.FIELD_DELIM), ":");
+
+    boolean storageTableColsAltered = false;
+    for (FieldSchema column : alteredC1Table.getAllCols()) {
+      if (column.getName().equals("testfactcoladd") && column.getType().equals("int")) {
+        storageTableColsAltered = true;
+        break;
+      }
+    }
+    Assert.assertTrue(storageTableColsAltered);
+
+    Assert.assertTrue(altered2.getStorages().contains("C4"));
+    Assert.assertTrue(altered2.getUpdatePeriods().get("C4").equals(updates));
+    String c4TableName = MetastoreUtil.getFactStorageTableName(factName, c4);
+    Assert.assertTrue(client.tableExists(c4TableName));
+
+      // add storage
+    client.addStorage(altered2, c3, updates, s1);
+    CubeFactTable altered3 = client.getCubeFact(factName);
+    Assert.assertTrue(altered3.getStorages().contains("C3"));
+    Assert.assertTrue(altered3.getUpdatePeriods().get("C3").equals(updates));
     String storageTableName = MetastoreUtil.getFactStorageTableName(factName, c3);
     Assert.assertTrue(client.tableExists(storageTableName));
     client.dropStorageFromFact(factName, c2);
@@ -1880,7 +1926,7 @@ public class TestCubeMetastoreClient {
 
     // Partition with different schema
     cubeDim.alterColumn(newcol);
-    client.alterCubeDimensionTable(cubeDim.getName(), cubeDim);
+    client.alterCubeDimensionTable(cubeDim.getName(), cubeDim, storageTables);
 
     Map<String, Date> timeParts2 = new HashMap<String, Date>();
     timeParts2.put(TestCubeMetastoreClient.getDatePartitionKey(), nowPlus1);
@@ -2092,7 +2138,7 @@ public class TestCubeMetastoreClient {
 
   @Test(priority = 2)
   public void testAlterDim() throws Exception {
-    String dimName = "test_alter_dim";
+    String dimTblName = "test_alter_dim";
 
     List<FieldSchema> dimColumns = new ArrayList<FieldSchema>();
     dimColumns.add(new FieldSchema("zipcode", "int", "code"));
@@ -2112,24 +2158,24 @@ public class TestCubeMetastoreClient {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
 
-    client.createCubeDimensionTable(zipDim.getName(), dimName, dimColumns, 100L, dumpPeriods, null, storageTables);
+    client.createCubeDimensionTable(zipDim.getName(), dimTblName, dimColumns, 100L, dumpPeriods, null, storageTables);
 
-    CubeDimensionTable dimTable = client.getDimensionTable(dimName);
+    CubeDimensionTable dimTable = client.getDimensionTable(dimTblName);
     dimTable.alterColumn(new FieldSchema("testAddDim", "string", "test add column"));
 
     List<CubeDimensionTable> tbls = client.getAllDimensionTables(zipDim);
     boolean found = false;
     for (CubeDimensionTable dim : tbls) {
-      if (dim.getName().equalsIgnoreCase(dimName)) {
+      if (dim.getName().equalsIgnoreCase(dimTblName)) {
         found = true;
         break;
       }
     }
     Assert.assertTrue(found);
 
-    client.alterCubeDimensionTable(dimName, dimTable);
+    client.alterCubeDimensionTable(dimTblName, dimTable, storageTables);
 
-    Table alteredHiveTable = Hive.get(conf).getTable(dimName);
+    Table alteredHiveTable = Hive.get(conf).getTable(dimTblName);
     CubeDimensionTable altered = new CubeDimensionTable(alteredHiveTable);
     List<FieldSchema> columns = altered.getColumns();
     boolean contains = false;
@@ -2143,9 +2189,9 @@ public class TestCubeMetastoreClient {
 
     // Test alter column
     dimTable.alterColumn(new FieldSchema("testAddDim", "int", "change type"));
-    client.alterCubeDimensionTable(dimName, dimTable);
+    client.alterCubeDimensionTable(dimTblName, dimTable, storageTables);
 
-    altered = new CubeDimensionTable(Hive.get(conf).getTable(dimName));
+    altered = new CubeDimensionTable(Hive.get(conf).getTable(dimTblName));
     boolean typeChanged = false;
     for (FieldSchema column : altered.getColumns()) {
       if (column.getName().equals("testadddim") && column.getType().equals("int")) {
@@ -2154,21 +2200,59 @@ public class TestCubeMetastoreClient {
       }
     }
     Assert.assertTrue(typeChanged);
+
+    // alter storage table desc
+    String c1TableName = MetastoreUtil.getDimStorageTableName(dimTblName, c1);
+    Table c1Table = client.getTable(c1TableName);
+    Assert.assertEquals(c1Table.getInputFormatClass().getCanonicalName(),
+      TextInputFormat.class.getCanonicalName());
+    s1 = new StorageTableDesc();
+    s1.setInputFormat(SequenceFileInputFormat.class.getCanonicalName());
+    s1.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
+    s1.setPartCols(partCols);
+    s1.setTimePartCols(timePartCols);
+    storageTables.put(c1, s1);
+    storageTables.put(c4, s1);
+    dimTable.alterSnapshotDumpPeriod(c4, null);
+    client.alterCubeDimensionTable(dimTblName, dimTable, storageTables);
+    CubeDimensionTable altered2 = client.getDimensionTable(dimTblName);
+    Assert.assertTrue(client.tableExists(c1TableName));
+    Table alteredC1Table = client.getTable(c1TableName);
+    Assert.assertEquals(alteredC1Table.getInputFormatClass().getCanonicalName(),
+      SequenceFileInputFormat.class.getCanonicalName());
+    boolean storageTblColAltered = false;
+    for (FieldSchema column : alteredC1Table.getAllCols()) {
+      if (column.getName().equals("testadddim") && column.getType().equals("int")) {
+        storageTblColAltered = true;
+        break;
+      }
+    }
+    Assert.assertTrue(storageTblColAltered);
+    String c4TableName = MetastoreUtil.getDimStorageTableName(dimTblName, c4);
+    Assert.assertTrue(client.tableExists(c4TableName));
+    Table c4Table = client.getTable(c4TableName);
+    Assert.assertEquals(c4Table.getInputFormatClass().getCanonicalName(),
+      SequenceFileInputFormat.class.getCanonicalName());
+    Assert.assertTrue(altered2.getStorages().contains("C4"));
+    Assert.assertFalse(altered2.hasStorageSnapshots("C4"));
+
     StorageTableDesc s2 = new StorageTableDesc();
     s2.setInputFormat(TextInputFormat.class.getCanonicalName());
     s2.setOutputFormat(HiveIgnoreKeyTextOutputFormat.class.getCanonicalName());
     client.addStorage(dimTable, c2, null, s2);
     client.addStorage(dimTable, c3, UpdatePeriod.DAILY, s1);
-    Assert.assertTrue(client.tableExists(MetastoreUtil.getDimStorageTableName(dimName, c2)));
-    Assert.assertTrue(client.tableExists(MetastoreUtil.getDimStorageTableName(dimName, c3)));
-    Assert.assertFalse(dimTable.hasStorageSnapshots("C2"));
-    Assert.assertTrue(dimTable.hasStorageSnapshots("C3"));
-    client.dropStorageFromDim(dimName, "C1");
-    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimName, c1)));
-    client.dropDimensionTable(dimName, true);
-    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimName, c2)));
-    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimName, c3)));
-    Assert.assertFalse(client.tableExists(dimName));
+    Assert.assertTrue(client.tableExists(MetastoreUtil.getDimStorageTableName(dimTblName, c2)));
+    Assert.assertTrue(client.tableExists(MetastoreUtil.getDimStorageTableName(dimTblName, c3)));
+    CubeDimensionTable altered3 = client.getDimensionTable(dimTblName);
+    Assert.assertFalse(altered3.hasStorageSnapshots("C2"));
+    Assert.assertTrue(altered3.hasStorageSnapshots("C3"));
+    client.dropStorageFromDim(dimTblName, "C1");
+    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimTblName, c1)));
+    client.dropDimensionTable(dimTblName, true);
+    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimTblName, c2)));
+    Assert.assertFalse(client.tableExists(MetastoreUtil.getDimStorageTableName(dimTblName, c3)));
+    Assert.assertFalse(client.tableExists(dimTblName));
+    // alter storage tables
   }
 
   @Test(priority = 2)

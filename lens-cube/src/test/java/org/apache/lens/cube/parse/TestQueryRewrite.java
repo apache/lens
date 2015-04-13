@@ -89,6 +89,7 @@ public abstract class TestQueryRewrite {
       // unreachable
       return null;
     } catch (SemanticException e) {
+      e.printStackTrace();
       return e;
     }
   }

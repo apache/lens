@@ -51,6 +51,7 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
@@ -280,6 +281,7 @@ public class TestMetastoreService extends LensJerseyTest {
     xd1.setDisplayString("Dimension1");
     // Don't set endtime on this dim to validate null handling on server side
     xd1.setStartTime(startDate);
+    xd1.setNumDistinctValues(2000L);
 
     XDimAttribute xd2 = cubeObjectFactory.createXDimAttribute();
     xd2.setName("dim2");
@@ -299,6 +301,7 @@ public class TestMetastoreService extends LensJerseyTest {
     xcc.setRefCol("col2");
     xd3.setRefSpec(cubeObjectFactory.createXDimAttributeRefSpec());
     xd3.getRefSpec().setChainRefColumn(xcc);
+    xd3.setNumDistinctValues(1000L);
 
     // add attribute with complex type
     XDimAttribute xd4 = cubeObjectFactory.createXDimAttribute();
@@ -622,6 +625,9 @@ public class TestMetastoreService extends LensJerseyTest {
       Cube hcube = (Cube) JAXBUtils.hiveCubeFromXCube(actual, null);
       assertEquals(hcube.getDimAttributeByName("dim1").getDescription(), "first dimension");
       assertEquals(hcube.getDimAttributeByName("dim1").getDisplayString(), "Dimension1");
+      assertEquals((((BaseDimAttribute) hcube.getDimAttributeByName("dim1")).getNumOfDistinctValues().get()),
+          Long.valueOf(2000));
+
       assertNotNull(hcube.getDimAttributeByName("testdim2col2"));
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDisplayString(), "Chained Dimension");
       assertEquals(hcube.getDimAttributeByName("testdim2col2").getDescription(), "ref chained dimension");
@@ -630,6 +636,14 @@ public class TestMetastoreService extends LensJerseyTest {
       assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getType(), "string");
       assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getChainName(), "chain1");
       assertEquals(((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2")).getRefColumn(), "col2");
+      assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
+          .getNumOfDistinctValues().get()), Long.valueOf(1000));
+      assertEquals((((ReferencedDimAtrribute) hcube.getDimAttributeByName("testdim2col2"))
+          .getNumOfDistinctValues().get()), Long.valueOf(1000));
+
+      assertEquals(((BaseDimAttribute) hcube.getDimAttributeByName("dim2")).getNumOfDistinctValues().isPresent(),
+          false);
+
       assertNotNull(hcube.getMeasureByName("msr1"));
       assertEquals(hcube.getMeasureByName("msr1").getDescription(), "first measure");
       assertEquals(hcube.getMeasureByName("msr1").getDisplayString(), "Measure1");
@@ -887,7 +901,6 @@ public class TestMetastoreService extends LensJerseyTest {
     XStorageTableDesc xs1 = cubeObjectFactory.createXStorageTableDesc();
     xs1.setCollectionDelimiter(",");
     xs1.setEscapeChar("\\");
-    xs1.setFieldDelimiter("");
     xs1.setFieldDelimiter("\t");
     xs1.setLineDelimiter("\n");
     xs1.setMapKeyDelimiter("\r");
@@ -1274,6 +1287,46 @@ public class TestMetastoreService extends LensJerseyTest {
       Map<String, String> updProps = JAXBUtils.mapFromXProperties(dt3.getProperties());
       assertEquals(updProps.get("foodim"), "bardim1");
 
+      // Update storage tables
+      dt3.getStorageTables().getStorageTable().get(0).getTableDesc().setFieldDelimiter(":");
+      dt3.getStorageTables().getStorageTable().get(0).getTableDesc().setInputFormat(
+        SequenceFileInputFormat.class.getCanonicalName());
+      // add one more storage table
+      createStorage("testAlterDimStorage");
+      XStorageTableElement newStorage = createStorageTblElement("testAlterDimStorage", dt3.getTableName(),
+        (String[])null);
+      newStorage.getTableDesc().setFieldDelimiter(":");
+      dt3.getStorageTables().getStorageTable().add(newStorage);
+      // Update the table
+      result = target().path("metastore/dimtables")
+        .path(table)
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .put(Entity.xml(cubeObjectFactory.createXDimensionTable(dt3)), APIResult.class);
+      assertEquals(result.getStatus(), Status.SUCCEEDED);
+
+      // Get the updated table
+      JAXBElement<XDimensionTable> dtElement4 = target().path("metastore/dimtables").path(table)
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .get(new GenericType<JAXBElement<XDimensionTable>>() {});
+      XDimensionTable dt4 = dtElement4.getValue();
+      assertEquals(dt4.getStorageTables().getStorageTable().size(), 2);
+
+      WebTarget nativeTarget = target().path("metastore").path("nativetables");
+      // get all native tables
+      StringList nativetables = nativeTarget.queryParam("sessionid", lensSessionId).request(mediaType).get(
+        StringList.class);
+      assertTrue(nativetables.getElements().contains("test_" + table));
+      assertTrue(nativetables.getElements().contains("testalterdimstorage_" + table));
+
+      // get native table and validate altered property
+      XNativeTable newdNativeTable = nativeTarget.path("testalterdimstorage_" + table)
+        .queryParam("sessionid", lensSessionId)
+        .request(mediaType).get(XNativeTable.class);
+      assertEquals(newdNativeTable.getStorageDescriptor().getFieldDelimiter(), ":");
+      XNativeTable alteredNativeTable = nativeTarget.path("test_" + table).queryParam("sessionid", lensSessionId)
+        .request(mediaType).get(XNativeTable.class);
+      assertEquals(alteredNativeTable.getStorageDescriptor().getInputFormat(),
+        SequenceFileInputFormat.class.getCanonicalName());
       // Drop table
       result =
         target().path("metastore/dimtables").path(table)
@@ -1526,13 +1579,77 @@ public class TestMetastoreService extends LensJerseyTest {
       assertTrue(cf.getUpdatePeriods().get("S1").contains(UpdatePeriod.HOURLY));
       assertTrue(cf.getUpdatePeriods().get("S2").contains(UpdatePeriod.DAILY));
 
+      // Finally, drop the fact table
+      result = target().path("metastore").path("facts").path(table)
+        .queryParam("cascade", "true")
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .delete(APIResult.class);
+
+      assertEquals(result.getStatus(), Status.SUCCEEDED);
+
+      // Drop again, this time it should give a 404
+      try {
+        result = target().path("metastore").path("facts").path(table)
+          .queryParam("cascade", "true")
+          .queryParam("sessionid", lensSessionId).request(mediaType)
+          .delete(APIResult.class);
+        fail("Expected 404");
+      } catch (NotFoundException nfe) {
+        // PASS
+      }
+    } finally {
+      setCurrentDatabase(prevDb);
+      dropDatabase(DB);
+    }
+  }
+
+  @Test
+  public void testUpdateFactTable() throws Exception {
+    final String table = "testUpdateFactTable";
+    final String DB = dbPFX + "testUpdateFactTable_DB";
+    String prevDb = getCurrentDatabase();
+    createDatabase(DB);
+    setCurrentDatabase(DB);
+    createStorage("S1");
+    createStorage("S2");
+    createStorage("S3");
+    try {
+
+      XFactTable f = createFactTable(table);
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      f.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "DAILY"));
+      final FormDataMultiPart mp = new FormDataMultiPart();
+      mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(),
+        lensSessionId, medType));
+      mp.bodyPart(new FormDataBodyPart(
+        FormDataContentDisposition.name("fact").fileName("fact").build(),
+        cubeObjectFactory.createXFactTable(f), medType));
+      APIResult result = target()
+        .path("metastore")
+        .path("facts")
+        .request(mediaType)
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), APIResult.class);
+      assertEquals(result.getStatus(), APIResult.Status.SUCCEEDED);
+
+      // Get the created table
+      JAXBElement<XFactTable> gotFactElement = target().path("metastore/facts").path(table)
+        .queryParam("sessionid", lensSessionId).request(mediaType)
+        .get(new GenericType<JAXBElement<XFactTable>>() {});
+      XFactTable gotFact = gotFactElement.getValue();
+      assertTrue(gotFact.getName().equalsIgnoreCase(table));
+      assertEquals(gotFact.getWeight(), 10.0);
+      CubeFactTable cf = JAXBUtils.cubeFactFromFactTable(gotFact);
+
       // Do some changes to test update
       cf.alterWeight(20.0);
       cf.alterColumn(new FieldSchema("c2", "int", "changed to int"));
 
       XFactTable update = JAXBUtils.factTableFromCubeFactTable(cf);
-      update.getStorageTables().getStorageTable().add(createStorageTblElement("S1", table, "HOURLY"));
+      XStorageTableElement s1Tbl = createStorageTblElement("S1", table, "HOURLY");
+      s1Tbl.getTableDesc().setFieldDelimiter("#");
+      update.getStorageTables().getStorageTable().add(s1Tbl);
       update.getStorageTables().getStorageTable().add(createStorageTblElement("S2", table, "MONTHLY"));
+      update.getStorageTables().getStorageTable().add(createStorageTblElement("S3", table, "DAILY"));
 
       // Update
       result = target().path("metastore").path("facts").path(table)
@@ -1549,6 +1666,7 @@ public class TestMetastoreService extends LensJerseyTest {
 
       assertEquals(ucf.weight(), 20.0);
       assertTrue(ucf.getUpdatePeriods().get("S2").contains(UpdatePeriod.MONTHLY));
+      assertTrue(ucf.getUpdatePeriods().get("S3").contains(UpdatePeriod.DAILY));
 
       boolean foundC2 = false;
       for (FieldSchema fs : cf.getColumns()) {
@@ -1558,6 +1676,19 @@ public class TestMetastoreService extends LensJerseyTest {
         }
       }
       assertTrue(foundC2);
+
+      WebTarget nativeTarget = target().path("metastore").path("nativetables");
+      // get all native tables
+      StringList nativetables = nativeTarget.queryParam("sessionid", lensSessionId).request(mediaType).get(
+        StringList.class);
+      assertTrue(nativetables.getElements().contains("s1_" + table.toLowerCase()));
+      assertTrue(nativetables.getElements().contains("s2_" + table.toLowerCase()));
+      assertTrue(nativetables.getElements().contains("s3_" + table.toLowerCase()));
+
+      // get native table and validate altered property
+      XNativeTable alteredNativeTable = nativeTarget.path("s1_" + table).queryParam("sessionid", lensSessionId)
+        .request(mediaType).get(XNativeTable.class);
+      assertEquals(alteredNativeTable.getStorageDescriptor().getFieldDelimiter(), "#");
 
       // Finally, drop the fact table
       result = target().path("metastore").path("facts").path(table)

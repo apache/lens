@@ -781,11 +781,7 @@ public class CubeQueryContext {
     } else {
       denormTables.addAll(deNormCtx.rewriteDenormctx(null, dimsToQuery, false));
     }
-    if (dimsToQuery == null) {
-      dimsToQuery = pickCandidateDimsToQuery(denormTables);
-    } else {
-      dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
-    }
+    dimsToQuery.putAll(pickCandidateDimsToQuery(denormTables));
     // Prune join paths once denorm tables are picked
     if (autoJoinCtx != null) {
       // prune join paths for picked fact and dimensions
@@ -801,14 +797,9 @@ public class CubeQueryContext {
           joiningTables.addAll(factJoiningTables);
         }
       } else {
-        joiningTables.addAll(autoJoinCtx.pickOptionalTables(null,
-          dimsToQuery != null ? dimsToQuery.keySet() : null, this));
+        joiningTables.addAll(autoJoinCtx.pickOptionalTables(null, dimsToQuery.keySet(), this));
       }
-      if (dimsToQuery == null) {
-        dimsToQuery = pickCandidateDimsToQuery(joiningTables);
-      } else {
-        dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
-      }
+      dimsToQuery.putAll(pickCandidateDimsToQuery(joiningTables));
     }
     LOG.info("Picked Fact:" + cfacts + " dimsToQuery:" + dimsToQuery);
     pickedDimTables = dimsToQuery.values();

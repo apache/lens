@@ -54,10 +54,17 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
     Assert.assertFalse(cubeList.contains("sample_cube"));
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     cubeList = command.showCubes();
+    Assert.assertEquals(command.getLatest("sample_cube dt"), "No Data Available");
     Assert.assertTrue(cubeList.contains("sample_cube"));
 
     testUpdateCommand(new File(cubeSpec.toURI()), command);
     command.dropCube("sample_cube");
+    try {
+      command.getLatest("sample_cube dt");
+      Assert.fail("should have failed as cube doesn't exist");
+    } catch (Exception e) {
+      //pass
+    }
     cubeList = command.showCubes();
     Assert.assertFalse(cubeList.contains("sample_cube"));
   }
@@ -83,8 +90,8 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
     String xmlContent = sb.toString();
 
     xmlContent = xmlContent.replace("<property name=\"sample_cube.prop\" value=\"sample\" />\n",
-        "<property name=\"sample_cube.prop\" value=\"sample\" />"
-            + "\n<property name=\"sample_cube.prop1\" value=\"sample1\" />\n");
+      "<property name=\"sample_cube.prop\" value=\"sample\" />"
+        + "\n<property name=\"sample_cube.prop1\" value=\"sample1\" />\n");
 
     File newFile = new File("/tmp/sample_cube1.xml");
     try {

@@ -19,6 +19,9 @@
 package org.apache.lens.cli.commands;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientSingletonWrapper;
@@ -49,6 +52,19 @@ public class BaseLensCommand {
 
   /** The is connection active. */
   protected static boolean isConnectionActive;
+  public static final String DATE_FMT = "yyyy-MM-dd'T'HH:mm:ss:SSS";
+
+  public static final ThreadLocal<DateFormat> DATE_PARSER =
+    new ThreadLocal<DateFormat>() {
+      @Override
+      protected SimpleDateFormat initialValue() {
+        return new SimpleDateFormat(DATE_FMT);
+      }
+    };
+
+  public static String formatDate(Date dt) {
+    return DATE_PARSER.get().format(dt);
+  }
 
   static {
     Runtime.getRuntime().addShutdownHook(new Thread() {
