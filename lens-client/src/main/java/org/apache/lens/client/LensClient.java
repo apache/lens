@@ -18,6 +18,7 @@
  */
 package org.apache.lens.client;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -81,6 +82,10 @@ public class LensClient {
 
   public LensConnection getConnection() {
     return conn;
+  }
+
+  public Date getLatestDateOfCube(String cubeName, String timePartition) {
+    return mc.getLatestDateOfCube(cubeName, timePartition);
   }
 
   public static class LensClientResultSetWithStats {
@@ -437,6 +442,7 @@ public class LensClient {
   public APIResult addPartitionToFact(String table, String storage, String partSpec) {
     return mc.addPartitionToFactTable(table, storage, partSpec);
   }
+
   public APIResult addPartitionsToFact(String table, String storage, String partsSpec) {
     return mc.addPartitionsToFactTable(table, storage, partsSpec);
   }
@@ -444,6 +450,7 @@ public class LensClient {
   public APIResult addPartitionToFact(String table, String storage, XPartition xp) {
     return mc.addPartitionToFactTable(table, storage, xp);
   }
+
   public APIResult addPartitionsToFact(String table, String storage, XPartitionList xpList) {
     return mc.addPartitionsToFactTable(table, storage, xpList);
   }
@@ -451,12 +458,15 @@ public class LensClient {
   public APIResult addPartitionToDim(String table, String storage, String partSpec) {
     return mc.addPartitionToDimensionTable(table, storage, partSpec);
   }
+
   public APIResult addPartitionToDim(String table, String storage, XPartition xp) {
     return mc.addPartitionToDimensionTable(table, storage, xp);
   }
+
   public APIResult addPartitionsToDim(String table, String storage, XPartitionList xpList) {
     return mc.addPartitionsToDimensionTable(table, storage, xpList);
   }
+
   public APIResult addPartitionsToDim(String table, String storage, String partsSpec) {
     return mc.addPartitionsToDimensionTable(table, storage, partsSpec);
   }

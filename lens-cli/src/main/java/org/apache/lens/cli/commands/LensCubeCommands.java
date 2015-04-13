@@ -20,6 +20,7 @@ package org.apache.lens.cli.commands;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
@@ -139,5 +140,23 @@ public class LensCubeCommands extends BaseLensCommand implements CommandMarker {
       throw new IllegalArgumentException(e);
 
     }
+  }
+
+  /**
+   * Describe cube.
+   *
+   * @param specPair &lt;cube name, timePartition&gt;
+   * @return the string
+   */
+  @CliCommand(value = "cube latestdate", help = "cube get latest")
+  public String getLatest(
+    @CliOption(key = {"", "cube"}, mandatory = true, help = "<cube-name> <timePartition>") String specPair) {
+    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
+    String[] pair = Iterables.toArray(parts, String.class);
+    if (pair.length != 2) {
+      return "Syntax error, please try in following " + "format. cube get latest <cubeName> <timePartition>";
+    }
+    Date dt = getClient().getLatestDateOfCube(pair[0], pair[1]);
+    return dt == null ? "No Data Available" : formatDate(dt);
   }
 }

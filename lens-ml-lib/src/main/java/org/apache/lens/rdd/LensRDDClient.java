@@ -373,8 +373,8 @@ public class LensRDDClient {
         try {
           JavaPairRDD<WritableComparable, HCatRecord> javaPairRDD = HiveTableRDD.createHiveTableRDD(sparkContext,
             HIVE_CONF, "default", tempTableName, TEMP_TABLE_PART_COL + "='" + TEMP_TABLE_PART_VAL + "'");
-          LOG.info("Created RDD " + resultRDD.name() + " for table " + tempTableName);
           resultRDD = javaPairRDD.map(new HCatRecordToObjectListMapper()).rdd();
+          LOG.info("Created RDD " + resultRDD.name() + " for table " + tempTableName);
         } catch (IOException e) {
           throw new LensException("Error creating RDD for table " + tempTableName, e);
         }

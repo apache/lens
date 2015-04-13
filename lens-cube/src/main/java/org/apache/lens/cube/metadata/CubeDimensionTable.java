@@ -78,8 +78,8 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     Set<String> partCols = Sets.newHashSet();
     String partColsStr = getProperties().get(MetastoreUtil.getDimTablePartsKey(getName()));
     if (partColsStr != null) {
-      for (String s : partColsStr.split(",")) {
-        if (s != null && !s.isEmpty()) {
+      for (String s : StringUtils.split(partColsStr, ",")) {
+        if (!StringUtils.isBlank(s)) {
           partCols.add(s);
         }
       }
@@ -132,8 +132,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     String storagesStr = params.get(MetastoreUtil.getDimensionStorageListKey(name));
     if (!StringUtils.isBlank(storagesStr)) {
       Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
-      String[] storages = storagesStr.split(",");
-      for (String storage : storages) {
+      for (String storage : StringUtils.split(storagesStr, ",")) {
         String dumpPeriod = params.get(MetastoreUtil.getDimensionDumpPeriodKey(name, storage));
         if (dumpPeriod != null) {
           dumpPeriods.put(storage, UpdatePeriod.valueOf(dumpPeriod));
