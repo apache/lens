@@ -20,6 +20,7 @@
 package org.apache.lens.cube.metadata;
 
 import java.lang.reflect.Constructor;
+import java.text.ParseException;
 import java.util.*;
 import java.util.Map.Entry;
 
@@ -228,18 +229,18 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     return tbl;
   }
 
-//  /**
-//   * Add single partition to storage. Just calls #addPartitions.
-//   * @param client
-//   * @param addPartitionDesc
-//   * @param latestInfo
-//   * @throws HiveException
-//   */
-//  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
-//    throws HiveException {
-//    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
-//      Collections.singletonList(addPartitionDesc), latestInfo);
-//  }
+  //  /**
+  //   * Add single partition to storage. Just calls #addPartitions.
+  //   * @param client
+  //   * @param addPartitionDesc
+  //   * @param latestInfo
+  //   * @throws HiveException
+  //   */
+  //  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
+  //    throws HiveException {
+  //    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
+  //      Collections.singletonList(addPartitionDesc), latestInfo);
+  //  }
 
   /**
    * Add given partitions in the underlying hive table and update latest partition links
@@ -290,11 +291,12 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
         addParts.getPartition(curIndex).setBucketCols(addPartitionDesc.getBucketCols());
         addParts.getPartition(curIndex).setSortCols(addPartitionDesc.getSortCols());
         if (latestInfos != null && latestInfos.get(addPartitionDesc.getNonTimePartSpec()) != null) {
-          for (Map.Entry<String, LatestPartColumnInfo> entry : latestInfos.get(addPartitionDesc.getNonTimePartSpec()).latestParts.entrySet()) {
+          for (Map.Entry<String, LatestPartColumnInfo> entry : latestInfos
+            .get(addPartitionDesc.getNonTimePartSpec()).latestParts.entrySet()) {
             if (addPartitionDesc.getTimePartSpec().containsKey(entry.getKey())
               && entry.getValue().get(MetastoreUtil.getLatestPartTimestampKey(entry.getKey())).equals(
-                updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
-              if(latestPartIndexForPartCols.get(addPartitionDesc.getNonTimePartSpec()) == null) {
+              updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
+              if (latestPartIndexForPartCols.get(addPartitionDesc.getNonTimePartSpec()) == null) {
                 latestPartIndexForPartCols.put(addPartitionDesc.getNonTimePartSpec(),
                   Maps.<String, Integer>newHashMap());
               }
@@ -304,7 +306,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
         }
       }
       if (latestInfos != null) {
-        for(Map.Entry<Map<String, String>, LatestInfo> entry1: latestInfos.entrySet()) {
+        for (Map.Entry<Map<String, String>, LatestInfo> entry1 : latestInfos.entrySet()) {
           Map<String, String> nonTimeParts = entry1.getKey();
           LatestInfo latestInfo = entry1.getValue();
           for (Map.Entry<String, LatestPartColumnInfo> entry : latestInfo.latestParts.entrySet()) {
@@ -312,7 +314,8 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
             List<Partition> latest;
             String latestPartCol = entry.getKey();
             try {
-              latest = client.getPartitionsByFilter(storageTbl, StorageConstants.getLatestPartFilter(latestPartCol, nonTimeParts));
+              latest = client
+                .getPartitionsByFilter(storageTbl, StorageConstants.getLatestPartFilter(latestPartCol, nonTimeParts));
             } catch (Exception e) {
               throw new HiveException("Could not get latest partition", e);
             }
@@ -357,10 +360,11 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
    * @param storageTableName TableName
    * @param partVals         Partition specification
    * @param updateLatestInfo The latest partition info if it needs update, null if latest should not be updated
+   * @param nonTimePartSpec
    * @throws HiveException
    */
   public void dropPartition(Hive client, String storageTableName, List<String> partVals,
-    Map<String, LatestInfo> updateLatestInfo) throws HiveException {
+    Map<String, LatestInfo> updateLatestInfo, Map<String, String> nonTimePartSpec) throws HiveException {
     preDropPartition(storageTableName, partVals);
     boolean success = false;
     try {
@@ -369,16 +373,39 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
       Table storageTbl = client.getTable(storageTableName);
       // update latest info
       if (updateLatestInfo != null) {
-        for (Map.Entry<String, LatestInfo> entry : updateLatestInfo.entrySet()) {
+        for (Entry<String, LatestInfo> entry : updateLatestInfo.entrySet()) {
           String latestPartCol = entry.getKey();
           // symlink this partition to latest
           List<Partition> latestParts;
           try {
-            latestParts = client.getPartitionsByFilter(storageTbl, StorageConstants.getLatestPartFilter(latestPartCol));
+            latestParts = client.getPartitionsByFilter(storageTbl,
+              StorageConstants.getLatestPartFilter(latestPartCol, nonTimePartSpec));
+            ListIterator<Partition> iter = latestParts.listIterator();
+            while (iter.hasNext()) {
+              Partition part = iter.next();
+              boolean ignore = false;
+
+              for (Entry<String, String> entry1 : part.getSpec().entrySet()) {
+                if ((nonTimePartSpec == null || !nonTimePartSpec.containsKey(entry1.getKey())) && !entry1.getKey().equals(latestPartCol)) {
+                  try {
+                    UpdatePeriod.valueOf(part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD))
+                      .format()
+                      .parse(entry1.getValue());
+                  } catch (ParseException e) {
+                    ignore = true;
+                  }
+                }
+              }
+
+              if (ignore) {
+                iter.remove();
+              }
+            }
           } catch (Exception e) {
             throw new HiveException("Could not get latest partition", e);
           }
           if (!latestParts.isEmpty()) {
+            assert latestParts.size() == 1;
             client.dropPartition(storageTbl.getTableName(), latestParts.get(0).getValues(), false);
           }
           LatestInfo latest = entry.getValue();

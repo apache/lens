@@ -914,7 +914,7 @@ public class CubeMetastoreClient {
       }
     }
     Iterator<Partition> it = allPartTimeVals.iterator();
-//    it.next();
+    it.next(); // Skip itself. We have to find next latest.
     LatestInfo latest = null;
     if (it.hasNext()) {
       Partition nextLatest = it.next();
@@ -1002,14 +1002,14 @@ public class CubeMetastoreClient {
           throw new HiveException("Not time part columns" + timePartSpec.keySet());
         }
       }
-      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, latest);
+      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, latest, nonTimePartSpec);
       if (!latestAvailable) {
         // dropping latest and could not find latest, removing the entry from latest lookup cache
         latestLookupCache.remove(storageTableName);
       }
     } else {
       // dropping fact partition
-      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null);
+      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null, null);
       if (partitionTimelineCache.updateForDeletion(cubeTableName, storageName, updatePeriod, timePartSpec)) {
         this.alterTablePartitionCache(storageTableName);
       }
