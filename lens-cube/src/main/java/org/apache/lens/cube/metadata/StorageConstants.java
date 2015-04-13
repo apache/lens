@@ -46,25 +46,30 @@ public final class StorageConstants {
   public static String getPartFilter(String partCol, String value) {
     return partCol + "='" + value + "'";
   }
-  public static String getPartFilter(Map<String,String> parts) {
+
+  public static String getPartFilter(Map<String, String> parts) {
     String sep = "";
     StringBuilder ret = new StringBuilder();
-    for(Map.Entry<String, String> entry: parts.entrySet()) {
-      ret.append(sep).append(entry.getKey()).append("='").append(entry.getValue()).append("'");
-      sep = " and ";
+    if (parts != null) {
+      for (Map.Entry<String, String> entry : parts.entrySet()) {
+        ret.append(sep).append(entry.getKey()).append("='").append(entry.getValue()).append("'");
+        sep = " and ";
+      }
     }
     return ret.toString();
   }
-  public static String getPartFilter(String partCol, String value, Map<String,String> parts) {
+
+  public static String getPartFilter(String partCol, String value, Map<String, String> parts) {
     StringBuilder ret = new StringBuilder().append(getPartFilter(partCol, value));
-    if(parts != null) {
+    if (parts != null) {
       for (Map.Entry<String, String> entry : parts.entrySet()) {
         ret.append(" and ").append(entry.getKey()).append("='").append(entry.getValue()).append("'");
       }
     }
     return ret.toString();
   }
-  public static String getLatestPartFilter(String partCol, Map<String,String> parts) {
+
+  public static String getLatestPartFilter(String partCol, Map<String, String> parts) {
     return getPartFilter(partCol, LATEST_PARTITION_VALUE, parts);
   }
 

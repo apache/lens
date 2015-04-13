@@ -25,7 +25,6 @@ import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
-import org.apache.lens.cube.parse.CubeTestSetup;
 import org.apache.lens.cube.parse.TimeRange;
 
 import org.apache.hadoop.hive.conf.HiveConf;
@@ -948,7 +947,7 @@ public class TestCubeMetastoreClient {
     String c4TableName = MetastoreUtil.getFactStorageTableName(factName, c4);
     Assert.assertTrue(client.tableExists(c4TableName));
 
-      // add storage
+    // add storage
     client.addStorage(altered2, c3, updates, s1);
     CubeFactTable altered3 = client.getCubeFact(factName);
     Assert.assertTrue(altered3.getStorages().contains("C3"));
@@ -1418,10 +1417,14 @@ public class TestCubeMetastoreClient {
     throws LensException, HiveException {
     TimePartition[] values = new TimePartition[partCols.length];
     for (int i = 0; i < partCols.length; i++) {
-      List<Partition> part = client.getPartitionsByFilter(storageTableName, partCols[i] + "='latest'");
-      Assert.assertEquals(part.size(), 1);
-      values[i] = TimePartition.of(updatePeriod, part.get(0).getParameters().get(
-        MetastoreUtil.getLatestPartTimestampKey(partCols[i])));
+      List<Partition> parts = client.getPartitionsByFilter(storageTableName, partCols[i] + "='latest'");
+      for (Partition part : parts) {
+        TimePartition tp = TimePartition.of(updatePeriod, part.getParameters().get(
+          MetastoreUtil.getLatestPartTimestampKey(partCols[i])));
+        if (values[i] == null || values[i].before(tp)) {
+          values[i] = tp;
+        }
+      }
     }
     return values;
   }
@@ -2108,7 +2111,7 @@ public class TestCubeMetastoreClient {
 
     client.addPartitions(Arrays.asList(partSpec1, partSpec2, partSpec3), c1);
     String c1TableName = MetastoreUtil.getDimStorageTableName(cubeDim.getName(), c1);
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 6);
+    Assert.assertEquals(client.getAllParts(c1TableName).size(), 8);
 
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, now, now, nowPlus1));
@@ -2130,7 +2133,7 @@ public class TestCubeMetastoreClient {
 
     client.addPartitions(Arrays.asList(partSpec4, partSpec5), c1);
 
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 8);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 10);
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, nowPlus1, nowPlus1, nowPlus1));
     Map<String, Date> timeParts6 = new HashMap<String, Date>();
@@ -2142,7 +2145,7 @@ public class TestCubeMetastoreClient {
 
     client.addPartition(partSpec6, c1);
 
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 9);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 11);
 
 
     Map<String, Date> timeParts7 = new HashMap<String, Date>();
@@ -2153,22 +2156,22 @@ public class TestCubeMetastoreClient {
       UpdatePeriod.HOURLY);
 
     client.addPartition(partSpec7, c1);
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 10);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 12);
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, nowPlus1, nowPlus1, nowPlus1));
 
     client.dropPartition(cubeDim.getName(), c1, timeParts5, null, UpdatePeriod.HOURLY);
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 9);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 11);
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, now, nowPlus1, nowPlus1));
 
     client.dropPartition(cubeDim.getName(), c1, timeParts7, null, UpdatePeriod.HOURLY);
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 8);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 10);
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, now, nowPlus1, nowPlus1));
 
     client.dropPartition(cubeDim.getName(), c1, timeParts2, nonTimeSpec, UpdatePeriod.HOURLY);
-    Assert.assertEquals(client.getAllParts(c1TableName).size(), 7);
+        Assert.assertEquals(client.getAllParts(c1TableName).size(), 8);
     Assert.assertEquals(getLatestValues(c1TableName, UpdatePeriod.HOURLY, partColNames),
       toPartitionArray(UpdatePeriod.HOURLY, now, nowPlus1, now));
 
