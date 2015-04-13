@@ -116,7 +116,6 @@ public class CubeTestSetup {
   private static String c3 = "C3";
   private static String c4 = "C4";
   private static String c99 = "C99";
-  public static final String COUNTRYTABLE_PARTITIONED = "countrytable_partitioned";
 
   static {
     Calendar cal = Calendar.getInstance();
@@ -1777,7 +1776,7 @@ public class CubeTestSetup {
     storageTables.put(c1, s1);
 
     client.createCubeDimensionTable(dimName, dimTblName, dimColumns, 0L, dumpPeriods, dimProps, storageTables);
-    dimTblName = COUNTRYTABLE_PARTITIONED;
+    dimTblName = "countrytable_partitioned";
 
     StorageTableDesc s2 = new StorageTableDesc();
     s2.setInputFormat(TextInputFormat.class.getCanonicalName());
