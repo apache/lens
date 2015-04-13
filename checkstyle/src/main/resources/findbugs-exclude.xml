@@ -14,4 +14,12 @@
    limitations under the License.
  -->
 <FindBugsFilter>
+  <!-- Enable only high priority warnings -->
+  <Match>
+    <Priority value="2"/>
+  </Match>
+
+  <Match>
+    <Priority value="3"/>
+  </Match>
 </FindBugsFilter>

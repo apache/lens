@@ -395,12 +395,18 @@ public class CubeMetastoreClient {
     Hive.closeCurrent();
   }
 
-  private void createStorageHiveTable(Table parent, String storage, StorageTableDesc crtTblDesc) throws HiveException {
+  private void createOrAlterStorageHiveTable(Table parent, String storage, StorageTableDesc crtTblDesc)
+    throws HiveException {
     try {
       Table tbl = getStorage(storage).getStorageTable(getClient(), parent, crtTblDesc);
-      getClient().createTable(tbl);
-      // do get to update cache
-      getTable(tbl.getTableName());
+      if (tableExists(tbl.getTableName())) {
+        // alter table
+        alterHiveTable(tbl.getTableName(), tbl);
+      } else {
+        getClient().createTable(tbl);
+        // do get to update cache
+        getTable(tbl.getTableName());
+      }
     } catch (Exception e) {
       throw new HiveException("Exception creating table", e);
     }
@@ -639,7 +645,7 @@ public class CubeMetastoreClient {
     if (storageTableDescs != null) {
       // create tables for each storage
       for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
-        createStorageHiveTable(cTable, entry.getKey(), entry.getValue());
+        createOrAlterStorageHiveTable(cTable, entry.getKey(), entry.getValue());
       }
     }
   }
@@ -656,7 +662,7 @@ public class CubeMetastoreClient {
   public void addStorage(CubeFactTable fact, String storage, Set<UpdatePeriod> updatePeriods,
     StorageTableDesc storageTableDesc) throws HiveException {
     fact.addStorage(storage, updatePeriods);
-    createStorageHiveTable(getTable(fact.getName()), storage, storageTableDesc);
+    createOrAlterStorageHiveTable(getTable(fact.getName()), storage, storageTableDesc);
     alterCubeTable(fact.getName(), getTable(fact.getName()), fact);
     updateFactCache(fact.getName());
   }
@@ -673,7 +679,7 @@ public class CubeMetastoreClient {
   public void addStorage(CubeDimensionTable dim, String storage, UpdatePeriod dumpPeriod,
     StorageTableDesc storageTableDesc) throws HiveException {
     dim.alterSnapshotDumpPeriod(storage, dumpPeriod);
-    createStorageHiveTable(getTable(dim.getName()), storage, storageTableDesc);
+    createOrAlterStorageHiveTable(getTable(dim.getName()), storage, storageTableDesc);
     alterCubeTable(dim.getName(), getTable(dim.getName()), dim);
     updateDimCache(dim.getName());
   }
@@ -986,9 +992,9 @@ public class CubeMetastoreClient {
     return partSpec;
   }
 
-  public boolean tableExists(String cubeName) throws HiveException {
+  public boolean tableExists(String tblName) throws HiveException {
     try {
-      return (getClient().getTable(cubeName.toLowerCase(), false) != null);
+      return (getClient().getTable(tblName.toLowerCase(), false) != null);
     } catch (HiveException e) {
       throw new HiveException("Could not check whether table exists", e);
     }
@@ -1769,7 +1775,6 @@ public class CubeMetastoreClient {
     }
     if (enableCaching) {
       // refresh the table in cache
-      //TODO: don't need to fetch again. can put table -> hiveTable
       refreshTable(table);
     }
   }
@@ -1982,22 +1987,24 @@ public class CubeMetastoreClient {
   }
 
   /**
-   * Alter a cubefact with new definition
+   * Alter a cubefact with new definition and alter underlying storage tables as well.
    *
    * @param factTableName
    * @param cubeFactTable
+   * @param storageTableDescs
+   *
    * @throws HiveException
    * @throws InvalidOperationException
    */
-  public void alterCubeFactTable(String factTableName, CubeFactTable cubeFactTable) throws HiveException {
+  public void alterCubeFactTable(String factTableName, CubeFactTable cubeFactTable,
+    Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
     Table factTbl = getTable(factTableName);
     if (isFactTable(factTbl)) {
-      boolean colsChanged = alterCubeTable(factTableName, factTbl, cubeFactTable);
-      if (colsChanged) {
-        // Change schema of all the storage tables
-        for (String storage : cubeFactTable.getStorages()) {
-          String storageTableName = MetastoreUtil.getFactStorageTableName(factTableName, storage);
-          alterHiveTable(storageTableName, getTable(storageTableName), cubeFactTable.getColumns());
+      alterCubeTable(factTableName, factTbl, cubeFactTable);
+      if (storageTableDescs != null) {
+        // create/alter tables for each storage
+        for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
+          createOrAlterStorageHiveTable(getTable(factTableName), entry.getKey(), entry.getValue());
         }
       }
       updateFactCache(factTableName);
@@ -2019,22 +2026,22 @@ public class CubeMetastoreClient {
   }
 
   /**
-   * Alter dimension table with new dimension definition
+   * Alter dimension table with new dimension definition and underlying storage tables as well
    *
    * @param dimTableName
    * @param cubeDimensionTable
    * @throws HiveException
    * @throws InvalidOperationException
    */
-  public void alterCubeDimensionTable(String dimTableName, CubeDimensionTable cubeDimensionTable) throws HiveException {
+  public void alterCubeDimensionTable(String dimTableName, CubeDimensionTable cubeDimensionTable,
+    Map<String, StorageTableDesc> storageTableDescs) throws HiveException {
     Table dimTbl = getTable(dimTableName);
     if (isDimensionTable(dimTbl)) {
-      boolean colsChanged = alterCubeTable(dimTableName, dimTbl, cubeDimensionTable);
-      if (colsChanged) {
-        // Change schema of all the storage tables
-        for (String storage : cubeDimensionTable.getStorages()) {
-          String storageTableName = MetastoreUtil.getDimStorageTableName(dimTableName, storage);
-          alterHiveTable(storageTableName, getTable(storageTableName), cubeDimensionTable.getColumns());
+      alterCubeTable(dimTableName, dimTbl, cubeDimensionTable);
+      if (storageTableDescs != null) {
+        // create/alter tables for each storage
+        for (Map.Entry<String, StorageTableDesc> entry : storageTableDescs.entrySet()) {
+          createOrAlterStorageHiveTable(getTable(dimTableName), entry.getKey(), entry.getValue());
         }
       }
       updateDimCache(dimTableName);

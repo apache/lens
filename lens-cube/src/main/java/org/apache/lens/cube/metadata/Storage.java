@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -142,7 +143,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
       tbl.setNumBuckets(crtTbl.getNumBuckets());
     }
 
-    if (crtTbl.getStorageHandler() != null) {
+    if (!StringUtils.isBlank(crtTbl.getStorageHandler())) {
       tbl.setProperty(org.apache.hadoop.hive.metastore.api.hive_metastoreConstants.META_TABLE_STORAGE,
         crtTbl.getStorageHandler());
     }

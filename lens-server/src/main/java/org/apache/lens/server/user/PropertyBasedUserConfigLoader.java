@@ -54,7 +54,7 @@ public class PropertyBasedUserConfigLoader extends UserConfigLoader {
         + "Please set property " + LensConfConstants.USER_RESOLVER_PROPERTYBASED_FILENAME);
     }
     try {
-      properties.load(new InputStreamReader(new FileInputStream(new File(filename))));
+      properties.load(new InputStreamReader(new FileInputStream(new File(filename)), "UTF-8"));
     } catch (IOException e) {
       throw new UserConfigLoaderException("property file not found. Provided path was: " + filename);
     }

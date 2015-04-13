@@ -126,7 +126,8 @@ public class FilePersistentFormatter extends WrappedFileFormatter implements Per
         LOG.info("Processing file:" + entry.getValue().getPath());
         BufferedReader in = null;
         try {
-          in = new BufferedReader(new InputStreamReader(persistFs.open(entry.getValue().getPath())));
+          // default encoding in hadoop filesystem is utf-8
+          in = new BufferedReader(new InputStreamReader(persistFs.open(entry.getValue().getPath()), "UTF-8"));
           String row = in.readLine();
           while (row != null) {
             writeRow(row);

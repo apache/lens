@@ -347,8 +347,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     try {
       acquire(sessionid);
       getClient(sessionid).alterCubeDimensionTable(dimensionTable.getTableName(),
-        JAXBUtils.cubeDimTableFromDimTable(dimensionTable));
-      // TODO alter storage tables
+        JAXBUtils.cubeDimTableFromDimTable(dimensionTable),
+        JAXBUtils.storageTableMapFromXStorageTables(dimensionTable.getStorageTables()));
       LOG.info("Updated dimension table " + dimensionTable.getTableName());
     } catch (HiveException exc) {
       throw new LensException(exc);
@@ -526,8 +526,8 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   public void updateFactTable(LensSessionHandle sessionid, XFactTable fact) throws LensException {
     try {
       acquire(sessionid);
-      getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact));
-      // TODO alter storage tables
+      getClient(sessionid).alterCubeFactTable(fact.getName(), JAXBUtils.cubeFactFromFactTable(fact),
+        JAXBUtils.storageTableMapFromXStorageTables(fact.getStorageTables()));
       LOG.info("Updated fact table " + fact.getName());
     } catch (HiveException e) {
       throw new LensException(e);

@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.List;
 
 import javax.ws.rs.client.Client;
@@ -39,6 +40,7 @@ import javax.xml.bind.Unmarshaller;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
+import org.apache.lens.api.DateTime;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
 
@@ -923,5 +925,13 @@ public class LensMetadataClient {
       LOG.info("File error:", e);
       return new APIResult(Status.FAILED, "File not found");
     }
+  }
+
+  public Date getLatestDateOfCube(String cubeName, String timePartition) {
+    return getMetastoreWebTarget().path("cubes").path(cubeName).path("latestdate")
+      .queryParam("timeDimension", timePartition)
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .get(DateTime.class).getDate();
   }
 }

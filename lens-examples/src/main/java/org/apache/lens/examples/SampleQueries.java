@@ -119,7 +119,7 @@ public class SampleQueries {
    */
   public void runQueries(String fileName) throws IOException {
     InputStream file = SampleMetastore.class.getClassLoader().getResourceAsStream(fileName);
-    BufferedReader reader = new BufferedReader(new InputStreamReader(file));
+    BufferedReader reader = new BufferedReader(new InputStreamReader(file, "UTF-8"));
     String query;
     while ((query = reader.readLine()) != null) {
       if (StringUtils.isBlank(query)) {

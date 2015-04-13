@@ -330,7 +330,7 @@ public final class CSVSerde extends AbstractSerDe {
         StringBuilder unionString = new StringBuilder();
         ByteArrayOutputStream tagStream = new ByteArrayOutputStream();
         LazyInteger.writeUTF8(tagStream, uoi.getTag(field));
-        unionString.append(new String(tagStream.toByteArray()));
+        unionString.append(new String(tagStream.toByteArray(), "UTF-8"));
         unionString.append(unionTagFieldSeperator);
         unionString.append(serializeField(uoi.getField(field), ois.get(uoi.getTag(field))));
         return unionString.toString();

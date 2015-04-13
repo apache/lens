@@ -40,6 +40,8 @@ import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import com.google.common.base.Optional;
+
 /**
  * Utilities for converting to and from JAXB types to hive.ql.metadata.cube types
  */
@@ -173,7 +175,9 @@ public final class JAXBUtils {
         dimRefs,
         startDate,
         endDate,
-        null
+        null,
+        xd.isJoinKey(),
+        xd.getNumDistinctValues()
       );
     } else if (xd.getRefSpec() != null && xd.getRefSpec().getChainRefColumn() != null) {
       hiveDim = new ReferencedDimAtrribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
@@ -183,7 +187,8 @@ public final class JAXBUtils {
         xd.getRefSpec().getChainRefColumn().getRefCol(),
         startDate,
         endDate,
-        null
+        null,
+        xd.getNumDistinctValues()
       );
     } else {
       hiveDim = new BaseDimAttribute(new FieldSchema(xd.getName(), xd.getType().toLowerCase(),
@@ -191,7 +196,8 @@ public final class JAXBUtils {
         xd.getDisplayString(),
         startDate,
         endDate,
-        null
+        null,
+        xd.getNumDistinctValues()
       );
     }
 
@@ -282,15 +288,25 @@ public final class JAXBUtils {
           xcc.setDestTable(baseTable.getChainByName(rd.getChainName()).getDestTable());
         }
         refspec.setChainRefColumn(xcc);
+        xd.setJoinKey(Boolean.valueOf(false));
       } else {
         refspec.setTableReferences(new XTableReferences());
         refspec.getTableReferences().getTableReference().addAll(xTabReferencesFromHiveTabReferences(dimRefs));
+        xd.setJoinKey(rd.useAsJoinKey());
       }
       xd.setRefSpec(refspec);
       xd.setType(rd.getType());
+      Optional<Long> numOfDistinctValues = rd.getNumOfDistinctValues();
+      if (numOfDistinctValues.isPresent()) {
+        xd.setNumDistinctValues(numOfDistinctValues.get());
+      }
     } else if (cd instanceof BaseDimAttribute) {
       BaseDimAttribute bd = (BaseDimAttribute) cd;
       xd.setType(bd.getType());
+      Optional<Long> numOfDistinctValues = bd.getNumOfDistinctValues();
+      if (numOfDistinctValues.isPresent()) {
+        xd.setNumDistinctValues(numOfDistinctValues.get());
+      }
     }
     return xd;
   }
