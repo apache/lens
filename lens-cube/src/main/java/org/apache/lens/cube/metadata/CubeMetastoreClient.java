@@ -859,28 +859,7 @@ public class CubeMetastoreClient {
     List<Partition> partitions = null;
     try {
       partitions = getClient().getPartitionsByFilter(hiveTable, StorageConstants.getPartFilter(nonTimePartSpec));
-      if (nonTimePartSpec == null) {
-        nonTimePartSpec = Maps.newHashMap();
-      }
-      ListIterator<Partition> iter = partitions.listIterator();
-      while (iter.hasNext()) {
-        Partition part = iter.next();
-        LinkedHashMap<String, String> spec = part.getSpec();
-        boolean ignore = false;
-        for(Map.Entry<String, String> entry: spec.entrySet()) {
-          if (!nonTimePartSpec.containsKey(entry.getKey())) {
-            try {
-              updatePeriod.format().parse(entry.getValue());
-            } catch (ParseException e) {
-              ignore = true;
-              break;
-            }
-          }
-        }
-        if (ignore) {
-          iter.remove();
-        }
-      }
+      MetastoreUtil.filterPartitionsByNonTimeParts(partitions, nonTimePartSpec, timeCol);
     } catch (TException e) {
       throw new HiveException(e);
     }

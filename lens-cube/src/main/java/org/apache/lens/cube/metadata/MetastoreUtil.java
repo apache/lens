@@ -21,10 +21,12 @@ package org.apache.lens.cube.metadata;
 
 import static org.apache.lens.cube.metadata.MetastoreConstants.*;
 
+import java.text.ParseException;
 import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.Partition;
 
 public class MetastoreUtil {
   private MetastoreUtil() {
@@ -401,7 +403,7 @@ public class MetastoreUtil {
   }
 
   static <E extends Named> void addNameStrings(Map<String, String> props, String key,
-      Collection<E> set, int maxLength) {
+    Collection<E> set, int maxLength) {
     List<String> namedStrings = getNamedStrs(set, maxLength);
     props.put(key + ".size", String.valueOf(namedStrings.size()));
     for (int i = 0; i < namedStrings.size(); i++) {
@@ -482,5 +484,32 @@ public class MetastoreUtil {
 
   public static String getPartitoinTimelineCachePresenceKey() {
     return STORAGE_PFX + PARTITION_TIMELINE_CACHE + "present";
+  }
+
+  public static List<Partition> filterPartitionsByNonTimeParts(List<Partition> partitions,
+    Map<String, String> nonTimePartSpec,
+    String latestPartCol) {
+    ListIterator<Partition> iter = partitions.listIterator();
+    while (iter.hasNext()) {
+      Partition part = iter.next();
+      boolean ignore = false;
+      for (Map.Entry<String, String> entry1 : part.getSpec().entrySet()) {
+        if ((nonTimePartSpec == null || !nonTimePartSpec.containsKey(entry1.getKey())) &&
+          !entry1.getKey().equals(latestPartCol)) {
+          try {
+            UpdatePeriod.valueOf(part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD))
+              .format()
+              .parse(entry1.getValue());
+          } catch (ParseException e) {
+            ignore = true;
+          }
+        }
+      }
+
+      if (ignore) {
+        iter.remove();
+      }
+    }
+    return partitions;
   }
 }
