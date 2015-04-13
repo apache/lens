@@ -408,6 +408,38 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
+  public void testPartColAsQueryColumn() throws Exception {
+    Configuration conf = getConf();
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C3");
+    conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
+    String hql, expected;
+    hql = rewrite(
+      "select countrydim.name, msr2 from" + " testCube" + " where countrydim.region = 'asia' and "
+        + TWO_DAYS_RANGE, conf);
+    expected =
+      getExpectedQuery(cubeName, "select countrydim.name, sum(testcube.msr2)" + " FROM ", " JOIN " + getDbName()
+          + "c3_statetable_partitioned statedim ON" + " testCube.stateid = statedim.id and statedim.dt = 'latest' JOIN "
+          + getDbName()
+          + "c3_countrytable_partitioned countrydim on statedim.countryid=countrydim.id and countrydim.dt='latest'",
+        "countrydim.region='asia'",
+        " group by countrydim.name ", null,
+        getWhereForDailyAndHourly2days(cubeName, "C3_testfact"));
+    compareQueries(hql, expected);
+    hql = rewrite(
+      "select statedim.name, statedim.countryid, msr2 from" + " testCube" + " where statedim.countryid = 5 and "
+        + TWO_DAYS_RANGE, conf);
+    expected =
+      getExpectedQuery(cubeName, "select statedim.name, statedim.countryid, sum(testcube.msr2)" + " FROM ",
+        " JOIN " + getDbName()
+          + "c3_statetable_partitioned statedim ON" + " testCube.stateid = statedim.id and statedim.dt = 'latest'",
+        "statedim.countryid=5",
+        " group by statedim.name, statedim.countryid", null,
+        getWhereForDailyAndHourly2days(cubeName, "C3_testfact"));
+    compareQueries(hql, expected);
+  }
+
+  @Test
   public void testCubeJoinQuery() throws Exception {
     // q1
     String hqlQuery =
@@ -833,19 +865,19 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
     Assert.assertEquals(
       pruneCauses.getBrief().substring(0, CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3),
-        CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0,
-          CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3));
+      CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.substring(0,
+        CandidateTablePruneCode.MISSING_PARTITIONS.errorFormat.length() - 3));
 
     Assert.assertEquals(pruneCauses.getDetails().get("testfact").iterator().next().getCause(),
       CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("testfactmonthly").iterator().next().getCause(),
       CandidateTablePruneCode.NO_FACT_UPDATE_PERIODS_FOR_GIVEN_RANGE);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact2").iterator().next().getCause(),
-        CandidateTablePruneCode.MISSING_PARTITIONS);
+      CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("testfact2_raw").iterator().next().getCause(),
       CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("cheapfact").iterator().next().getCause(),
-        CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
+      CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
     Assert.assertEquals(pruneCauses.getDetails().get("summary1,summary2,summary3").iterator().next().getCause(),
       CandidateTablePruneCode.MISSING_PARTITIONS);
     Assert.assertEquals(pruneCauses.getDetails().get("summary4").iterator().next()
@@ -893,6 +925,13 @@ public class TestCubeRewriter extends TestQueryRewrite {
               new HashMap<String, SkipStorageCause>() {
                 {
                   put("c1_statetable", new SkipStorageCause(SkipStorageCode.NO_PARTITIONS));
+                }
+              }))
+          );
+          put("statetable_partitioned", Arrays.asList(CandidateTablePruneCause.noCandidateStorages(
+              new HashMap<String, SkipStorageCause>() {
+                {
+                  put("C3_statetable_partitioned", new SkipStorageCause(SkipStorageCode.UNSUPPORTED));
                 }
               }))
           );

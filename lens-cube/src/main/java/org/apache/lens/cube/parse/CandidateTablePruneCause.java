@@ -240,7 +240,7 @@ public class CandidateTablePruneCause {
     for (Map.Entry<String, SkipStorageCause> entry : storageCauses.entrySet()) {
       String key = entry.getKey();
       key = key.substring(0, (key.indexOf("_") + key.length() + 1) % (key.length() + 1)); // extract the storage part
-      cause.getStorageCauses().put(key, entry.getValue());
+      cause.getStorageCauses().put(key.toLowerCase(), entry.getValue());
     }
     return cause;
   }

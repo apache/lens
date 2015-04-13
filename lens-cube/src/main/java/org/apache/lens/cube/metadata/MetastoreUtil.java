@@ -62,6 +62,10 @@ public class MetastoreUtil {
     return getDimPrefix(dimName) + ATTRIBUTES_LIST_SFX;
   }
 
+  public static final String getDimTablePartsKey(String dimtableName) {
+    return getDimensionTablePrefix(dimtableName) + PARTCOLS_SFX;
+  }
+
   public static final String getDimTimedDimensionKey(String dimName) {
     return getDimPrefix(dimName) + TIMED_DIMENSION_SFX;
   }

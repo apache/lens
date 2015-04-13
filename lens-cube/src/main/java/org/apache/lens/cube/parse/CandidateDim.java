@@ -29,6 +29,7 @@ import org.apache.lens.cube.metadata.StorageConstants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -117,7 +118,7 @@ public class CandidateDim implements CandidateTable {
 
   @Override
   public Collection<String> getColumns() {
-    return dimtable.getAllFieldNames();
+    return Sets.union(dimtable.getAllFieldNames(), dimtable.getPartCols());
   }
 
   @Override
