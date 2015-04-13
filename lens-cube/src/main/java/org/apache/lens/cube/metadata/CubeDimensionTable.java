@@ -132,8 +132,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     String storagesStr = params.get(MetastoreUtil.getDimensionStorageListKey(name));
     if (!StringUtils.isBlank(storagesStr)) {
       Map<String, UpdatePeriod> dumpPeriods = new HashMap<String, UpdatePeriod>();
-      String[] storages = storagesStr.split(",");
-      for (String storage : storages) {
+      for (String storage : StringUtils.split(storagesStr, ",")) {
         String dumpPeriod = params.get(MetastoreUtil.getDimensionDumpPeriodKey(name, storage));
         if (dumpPeriod != null) {
           dumpPeriods.put(storage, UpdatePeriod.valueOf(dumpPeriod));
