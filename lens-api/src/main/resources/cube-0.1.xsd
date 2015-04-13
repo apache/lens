@@ -528,7 +528,11 @@
       <xs:element type="x_properties" name="properties" maxOccurs="1" minOccurs="0">
         <xs:annotation>
           <xs:documentation>
-            Dimension table properties
+            Dimension table properties. The properties that should be set are:
+            1.  dimtable.{dim_table_name}.part.cols = comma separated list of partition columns of this dimtable.
+                This would basically be union of all partition columns of all storage tables of the dimtable.
+                Setting this makes that partition column queryable.
+                Time part columns can be skipped as they will generally not be queried.
           </xs:documentation>
         </xs:annotation>
       </xs:element>
