@@ -79,7 +79,7 @@ public final class CubeDimensionTable extends AbstractCubeTable {
     String partColsStr = getProperties().get(MetastoreUtil.getDimTablePartsKey(getName()));
     if (partColsStr != null) {
       for (String s : StringUtils.split(partColsStr, ",")) {
-        if (s != null && !s.isEmpty()) {
+        if (!StringUtils.isBlank(s)) {
           partCols.add(s);
         }
       }
