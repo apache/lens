@@ -130,7 +130,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     String handle = qCom.executePreparedQuery(qh, true, "testPrepQuery2");
     LOG.debug("Perpared query handle is   " + handle);
-    while (!client.getQueryStatus(handle).isFinished()) {
+    while (!client.getQueryStatus(handle).finished()) {
       Thread.sleep(5000);
     }
     String status = qCom.getStatus(handle);
@@ -227,16 +227,20 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String[] resultSplits = result.split("\n");
     // assert on the number of queries
     Assert.assertEquals(String.valueOf(resultSplits.length - 1), resultSplits[resultSplits.length - 1].split(": ")[1]);
+    String details = qCom.getDetails(qh);
+    Assert.assertTrue(details.contains("driverQuery"), details);
 
     // Check that query name searching is 'ilike'
     String result2 = qCom.getAllQueries("", "query", "all", -1, Long.MAX_VALUE);
     Assert.assertTrue(result2.contains(qh), result2);
 
-    while (!client.getQueryStatus(qh).isFinished()) {
+    while (!client.getQueryStatus(qh).finished()) {
       Thread.sleep(5000);
     }
 
     Assert.assertTrue(qCom.getStatus(qh).contains("Status : SUCCESSFUL"));
+    details = qCom.getDetails(qh);
+    Assert.assertTrue(details.contains("driverQuery"));
 
     result = qCom.getQueryResults(qh);
     Assert.assertTrue(result.contains("1\tfirst"));
@@ -357,7 +361,7 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
     String query = "cube select id,name from test_dim";
     try {
       String qh = qCom.executeQuery(query, true, "testQuery");
-      while (!client.getQueryStatus(qh).isFinished()) {
+      while (!client.getQueryStatus(qh).finished()) {
         Thread.sleep(5000);
       }
       Assert.assertTrue(qCom.getStatus(qh).contains("Status : SUCCESSFUL"));

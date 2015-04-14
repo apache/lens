@@ -204,7 +204,7 @@ public class TestServerMode extends LensAllApplicationJerseyTest {
 
       // wait till the query finishes
       QueryStatus stat = ctx.getStatus();
-      while (!stat.isFinished()) {
+      while (!stat.finished()) {
         ctx = queryTarget.path(qhandle.toString()).queryParam("sessionid", lensSessionId).request()
           .get(LensQuery.class);
         stat = ctx.getStatus();

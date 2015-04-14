@@ -657,7 +657,7 @@ public class LensMLImpl implements LensML {
         .get(LensQuery.class);
 
       QueryStatus stat = ctx.getStatus();
-      while (!stat.isFinished()) {
+      while (!stat.finished()) {
         ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request().get(LensQuery.class);
         stat = ctx.getStatus();
         try {

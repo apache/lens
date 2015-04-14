@@ -298,7 +298,7 @@ public class MLServiceImpl extends CompositeService implements MLService {
       // Wait for test query to complete
       LensQuery query = queryService.getQuery(sessionHandle, testQueryHandle);
       LOG.info("Submitted query " + testQueryHandle.getHandleId());
-      while (!query.getStatus().isFinished()) {
+      while (!query.getStatus().finished()) {
         try {
           Thread.sleep(500);
         } catch (InterruptedException e) {

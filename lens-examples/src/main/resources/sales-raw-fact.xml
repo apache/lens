@@ -47,7 +47,6 @@
     <storage_table>
       <update_periods>
         <update_period>HOURLY</update_period>
-        <update_period>DAILY</update_period>
       </update_periods>
       <storage_name>local</storage_name>
       <table_desc external="true" field_delimiter="," table_location="/tmp/examples/rawfact">

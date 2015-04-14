@@ -24,6 +24,7 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XPartitionList;
 import org.apache.lens.client.LensClientSingletonWrapper;
 import org.apache.lens.client.LensMetadataClient;
 
@@ -57,7 +58,9 @@ public class PopulateSampleMetastore {
       if (populate != null) {
         populate.close();
       }
-
+    }
+    if (populate.retCode != 0) {
+      System.exit(populate.retCode);
     }
   }
 
@@ -67,42 +70,45 @@ public class PopulateSampleMetastore {
   }
 
   public void populateDimTables() throws JAXBException, IOException {
-    XPartition partition = (XPartition) SampleMetastore.readFromXML("dim1-local-part.xml");
+    createDimTablePartition("dim1-local-part.xml", "dim_table", "local");
+    createDimTablePartition("dim2-local-part.xml", "dim_table2", "local");
+    createDimTablePartition("dim4-local-part.xml", "dim_table4", "local");
+    createDimTablePartitions("product-local-parts.xml", "product_table", "local");
+    createDimTablePartition("city-local-part.xml", "city_table", "local");
+    createDimTablePartition("customer-local-part.xml", "customer_table", "local");
+  }
+
+  private void createDimTablePartition(String fileName, String dimTable, String storage)
+    throws JAXBException, IOException {
+    XPartition partition = (XPartition) SampleMetastore.readFromXML(fileName);
     String partLocation = partition.getLocation();
     if (!partLocation.startsWith("/")) {
       partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
     }
-    result = metaClient.addPartitionToDimensionTable("dim_table", "local", partition);
+    result = metaClient.addPartitionToDimensionTable(dimTable, storage, partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Adding partition from:dim1-local-part.xml failed");
+      System.err.println("Adding partition from:"+ fileName + " failed");
       retCode = 1;
     } else {
-      System.out.println("Added partition from:dim1-local-part.xml");
+      System.out.println("Added partition from:" + fileName);
     }
-    partition = (XPartition) SampleMetastore.readFromXML("dim2-local-part.xml");
-    partLocation = partition.getLocation();
-    if (!partLocation.startsWith("/")) {
-      partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
-    }
-    result = metaClient.addPartitionToDimensionTable("dim_table2", "local", partition);
-    if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Adding partition from:dim2-local-part.xml failed");
-      retCode = 1;
-    } else {
-      System.out.println("Added partition from:dim2-local-part.xml");
-    }
+  }
 
-    partition = (XPartition) SampleMetastore.readFromXML("dim4-local-part.xml");
-    partLocation = partition.getLocation();
-    if (!partLocation.startsWith("/")) {
-      partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
+  private void createDimTablePartitions(String fileName, String dimTable, String storage)
+    throws JAXBException, IOException {
+    XPartitionList partitionList = (XPartitionList) SampleMetastore.readFromXML(fileName);
+    for (XPartition partition : partitionList.getPartition()) {
+      String partLocation = partition.getLocation();
+      if (!partLocation.startsWith("/")) {
+        partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
+      }
     }
-    result = metaClient.addPartitionToDimensionTable("dim_table4", "local", partition);
+    result = metaClient.addPartitionsToDimensionTable(dimTable, storage, partitionList);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Adding partition from:dim4-local-part.xml failed");
+      System.err.println("Adding partitions from:" + fileName + " failed");
       retCode = 1;
     } else {
-      System.out.println("Added partition from:dim4-local-part.xml");
+      System.out.println("Added partitions from:" + fileName);
     }
   }
 
@@ -114,10 +120,27 @@ public class PopulateSampleMetastore {
     }
     result = metaClient.addPartitionToFactTable(fact, storage, partition);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      System.out.println("Adding partition from:" + fileName + " failed");
+      System.err.println("Adding partition from:" + fileName + " failed");
       retCode = 1;
     } else {
       System.out.println("Added partition from:" + fileName);
+    }
+  }
+
+  private void createFactPartitions(String fileName, String fact, String storage) throws JAXBException, IOException {
+    XPartitionList partitionList = (XPartitionList) SampleMetastore.readFromXML(fileName);
+    for (XPartition partition : partitionList.getPartition()) {
+      String partLocation = partition.getLocation();
+      if (!partLocation.startsWith("/")) {
+        partition.setLocation("file://" + System.getProperty("lens.home") + "/" + partLocation);
+      }
+    }
+    result = metaClient.addPartitionsToFactTable(fact, storage, partitionList);
+    if (result.getStatus().equals(APIResult.Status.FAILED)) {
+      System.err.println("Adding partitions from:" + fileName + " failed");
+      retCode = 1;
+    } else {
+      System.out.println("Added partitions from:" + fileName);
     }
   }
 
@@ -134,6 +157,11 @@ public class PopulateSampleMetastore {
     createFactPartition("raw-local-part4.xml", "rawfact", "local");
     createFactPartition("raw-local-part5.xml", "rawfact", "local");
     createFactPartition("raw-local-part6.xml", "rawfact", "local");
+    createFactPartitions("sales-raw-local-parts.xml", "sales_raw_fact", "local");
+    createFactPartitions("sales-aggr-fact1-local-parts.xml", "sales_aggr_fact1", "local");
+    createFactPartitions("sales-aggr-fact2-local-parts.xml", "sales_aggr_fact2", "local");
+    createFactPartitions("sales-aggr-fact1-mydb-parts.xml", "sales_aggr_fact1", "mydb");
+    createFactPartitions("sales-aggr-fact2-mydb-parts.xml", "sales_aggr_fact2", "mydb");
   }
 
 }

@@ -172,6 +172,76 @@
 
     <fileSet>
       <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/product_local_clothes</outputDirectory>
+      <includes>
+        <include>product-local-clothes.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/product_local_food</outputDirectory>
+      <includes>
+        <include>product-local-food.data</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/product_local_stationary</outputDirectory>
+      <includes>
+        <include>product-local-stationary.data</include>
+      </includes>
+    </fileSet>
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/product_local_wearables</outputDirectory>
+      <includes>
+        <include>product-local-wearables.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/customer_local</outputDirectory>
+      <includes>
+        <include>customer-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/city_local</outputDirectory>
+      <includes>
+        <include>city-local.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact1_local1</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact1-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact1_local2</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact1-local2*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact1_local3</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact1-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
       <outputDirectory>/client/examples/data/fact1_local1</outputDirectory>
       <includes>
         <include>fact1-local1*.data</include>
@@ -215,6 +285,46 @@
       <outputDirectory>/client/examples/data/fact2_local3</outputDirectory>
       <includes>
         <include>fact2-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact2_local1</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact2-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact2_local2</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact2-local2*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_aggr_fact2_local3</outputDirectory>
+      <includes>
+        <include>sales-aggr-fact2-local3*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_raw_local1</outputDirectory>
+      <includes>
+        <include>sales-raw-local1*.data</include>
+      </includes>
+    </fileSet>
+
+    <fileSet>
+      <directory>../lens-examples/src/main/resources/</directory>
+      <outputDirectory>/client/examples/data/sales_raw_local2</outputDirectory>
+      <includes>
+        <include>sales-raw-local2*.data</include>
       </includes>
     </fileSet>
 

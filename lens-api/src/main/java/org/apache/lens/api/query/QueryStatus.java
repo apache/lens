@@ -177,7 +177,7 @@ public class QueryStatus implements Serializable {
     return str.toString();
   }
 
-  public boolean isFinished() {
+  public boolean finished() {
     return status.equals(Status.SUCCESSFUL) || status.equals(Status.FAILED) || status.equals(Status.CANCELED);
   }
 

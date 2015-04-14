@@ -182,7 +182,7 @@ public class LensRDDClient {
    */
   public boolean isReadyForRDD(QueryHandle queryHandle) throws LensException {
     QueryStatus status = getClient().getQueryStatus(queryHandle);
-    return status.isFinished();
+    return status.finished();
   }
 
   /**
@@ -204,7 +204,7 @@ public class LensRDDClient {
    */
   public LensRDDResult getRDD(QueryHandle queryHandle) throws LensException {
     QueryStatus status = getClient().getQueryStatus(queryHandle);
-    if (!status.isFinished() && !status.isResultSetAvailable()) {
+    if (!status.finished() && !status.isResultSetAvailable()) {
       throw new LensException(queryHandle.getHandleId() + " query not finished or result unavailable");
     }
 

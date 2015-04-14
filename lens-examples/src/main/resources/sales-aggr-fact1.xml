@@ -33,8 +33,6 @@
     <column comment="" name="unit_sales" type="BIGINT"/>
     <column comment="" name="store_sales" type="DOUBLE"/>
     <column comment="" name="store_cost" type="DOUBLE"/>
-    <column comment="" name="average_line_item_price" type="FLOAT"/>
-    <column comment="" name="average_line_item_discount" type="FLOAT"/>
     <column comment="" name="max_line_item_price" type="FLOAT"/>
     <column comment="" name="max_line_item_discount" type="FLOAT"/>
   </columns>

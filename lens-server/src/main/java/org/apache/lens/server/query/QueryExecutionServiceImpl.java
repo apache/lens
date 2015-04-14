@@ -664,7 +664,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       synchronized (ctx) {
         QueryStatus before = ctx.getStatus();
         if (!ctx.getStatus().getStatus().equals(QueryStatus.Status.QUEUED) && !ctx.getDriverStatus().isFinished()
-          && !ctx.getStatus().isFinished()) {
+          && !ctx.getStatus().finished()) {
           LOG.info("Updating status for " + ctx.getQueryHandle());
           try {
             ctx.getSelectedDriver().updateStatus(ctx);
@@ -681,7 +681,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
             || !ctx.isResultAvailableInDriver())) {
             setSuccessState(ctx);
           } else {
-            if (ctx.getStatus().isFinished()) {
+            if (ctx.getStatus().finished()) {
               updateFinishedQuery(ctx, before);
             }
             fireStatusChangeEvent(ctx, ctx.getStatus(), before);
@@ -1695,7 +1695,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
     } catch (InterruptedException e) {
       LOG.info("Waiting thread interrupted");
     }
-    if (getQueryContext(sessionHandle, handle).getStatus().isFinished()) {
+    if (getQueryContext(sessionHandle, handle).getStatus().finished()) {
       result.setResult(getResultset(handle).toQueryResult());
     }
     return result;
@@ -1830,7 +1830,7 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
       LOG.info("CancelQuery: " + sessionHandle.toString() + " query:" + queryHandle);
       acquire(sessionHandle);
       QueryContext ctx = getQueryContext(sessionHandle, queryHandle);
-      if (ctx.getStatus().isFinished()) {
+      if (ctx.getStatus().finished()) {
         return false;
       }
       synchronized (ctx) {

@@ -69,3 +69,11 @@ drop table temp3
 create table temp3(id int, name string) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
 insert overwrite table temp3 cube select id,name from sample_dim
 select * from temp3
+cube select name from city
+cube select name from city where population > 1000000
+cube select name, poi from city
+cube select distinct category from product
+cube select id, description from product where weight > 100
+cube select category, count(1) as `Number of products` from product
+cube select name, customer_city_name from customer
+cube select customer.name, customer_city.population from customer

@@ -188,7 +188,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
         LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
           .get(LensQuery.class);
         QueryStatus stat = ctx.getStatus();
-        while (!stat.isFinished()) {
+        while (!stat.finished()) {
           LOG.info("Polling query " + handle + " Status:" + stat);
           ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
           stat = ctx.getStatus();
@@ -282,14 +282,14 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       LOG.info("Polling query " + handle + " Status:" + stat);
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
     }
 
-    Assert.assertTrue(stat.isFinished());
+    Assert.assertTrue(stat.finished());
     LOG.info("Previous query status: " + stat.getStatusMessage());
 
     for (int i = 0; i < 5; i++) {
@@ -308,7 +308,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       // Poll for second query, this should finish successfully
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
-      while (!stat.isFinished()) {
+      while (!stat.finished()) {
         LOG.info("Post restart polling query " + handle + " Status:" + stat);
         ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
         stat = ctx.getStatus();

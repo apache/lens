@@ -185,7 +185,7 @@ public class LensStatement {
    */
   private void waitForQueryToComplete(QueryHandle handle) {
     query = getQuery(handle);
-    while (!query.getStatus().isFinished()) {
+    while (!query.getStatus().finished()) {
       query = getQuery(handle);
       try {
         Thread.sleep(connection.getLensConnectionParams().getQueryPollInterval());
@@ -437,7 +437,7 @@ public class LensStatement {
    */
   public boolean kill(LensQuery query) {
 
-    if (query.getStatus().isFinished()) {
+    if (query.getStatus().finished()) {
       return false;
     }
 
@@ -485,7 +485,7 @@ public class LensStatement {
   }
 
   public boolean isIdle() {
-    return query == null || query.getStatus().isFinished();
+    return query == null || query.getStatus().finished();
   }
 
   /**

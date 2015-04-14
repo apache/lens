@@ -19,28 +19,28 @@
   under the License.
 
 -->
-<x_dimension_table dimension_name="city" table_name="city_table" weight="10.0" xmlns="uri:lens:cube:0.1"
+<x_dimension_table dimension_name="product" table_name="product_db_table" weight="0.0" xmlns="uri:lens:cube:0.1"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="uri:lens:cube:0.1 cube-0.1.xsd ">
   <columns>
     <column comment="ID" name="id" type="INT"/>
-    <column comment="name" name="name" type="STRING"/>
-    <column comment="Point of interests" name="POI" type="ARRAY&lt;STRING&gt;"/>
-    <column comment="city population" name="population" type="BIGINT"/>
+    <column comment="SKU_number" name="SKU_number" type="INT"/>
+    <column comment="" name="description" type="STRING"/>
+    <column comment="" name="color" type="STRING"/>
+    <column comment="Category" name="category" type="STRING"/>
+    <column comment="" name="weight" type="FLOAT"/>
+    <column comment="" name="manufacturer" type="STRING"/>
   </columns>
   <properties>
-    <property name="city.prop" value="d1"/>
+    <property name="dim4.prop" value="d1"/>
   </properties>
   <storage_tables>
     <storage_table>
-      <update_periods>
-        <update_period>HOURLY</update_period>
-      </update_periods>
-      <storage_name>local</storage_name>
-      <table_desc external="true" field_delimiter="," collection_delimiter=":" table_location="/tmp/examples/city">
-        <part_cols>
-          <column comment="Time column" name="dt" type="STRING"/>
-        </part_cols>
-        <time_part_cols>dt</time_part_cols>
+      <storage_name>mydb</storage_name>
+      <table_desc external="true" table_location="/tmp/db-storage.db"
+        storage_handler_name="org.apache.lens.storage.db.DBStorageHandler">
+        <table_parameters>
+          <property name="lens.metastore.native.db.name" value="default"/>
+        </table_parameters>
       </table_desc>
     </storage_table>
   </storage_tables>
