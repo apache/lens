@@ -128,7 +128,7 @@ public class TestLensDAO extends LensJerseyTest {
       for (QueryHandle handle : persistedHandles) {
         LensQuery query = service.getQuery(session, handle);
         if (!handle.getHandleId().toString().equals(finishedHandle)) {
-          Assert.assertTrue(query.getStatus().isFinished(), query.getQueryHandle() + " STATUS="
+          Assert.assertTrue(query.getStatus().finished(), query.getQueryHandle() + " STATUS="
             + query.getStatus().getStatus());
         }
       }

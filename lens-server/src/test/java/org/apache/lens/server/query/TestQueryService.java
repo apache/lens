@@ -224,7 +224,7 @@ public class TestQueryService extends LensJerseyTest {
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       System.out.println("%% query " + ctx.getQueryHandle() + " status:" + stat);
@@ -308,7 +308,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       switch (stat.getStatus()) {
@@ -534,7 +534,7 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(ctx1.getQueryName().toLowerCase(), "testquery1");
     // wait till the query finishes
     QueryStatus stat = ctx1.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx1 = target().path("queryapi/queries").path(handle1.toString()).queryParam("sessionid", lensSessionId)
         .request().get(LensQuery.class);
       stat = ctx1.getStatus();
@@ -548,7 +548,7 @@ public class TestQueryService extends LensJerseyTest {
     Assert.assertEquals(ctx2.getQueryName().toLowerCase(), "testqueryname2");
     // wait till the query finishes
     stat = ctx2.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx2 = target().path("queryapi/queries").path(handle1.toString()).queryParam("sessionid", lensSessionId)
         .request().get(LensQuery.class);
       stat = ctx2.getStatus();
@@ -626,7 +626,7 @@ public class TestQueryService extends LensJerseyTest {
       .request().get(LensQuery.class);
     // wait till the query finishes
     QueryStatus stat = ctx1.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx1 = target().path("queryapi/queries").path(handle1.toString()).queryParam("sessionid", lensSessionId)
         .request().get(LensQuery.class);
       stat = ctx1.getStatus();
@@ -638,7 +638,7 @@ public class TestQueryService extends LensJerseyTest {
       .request().get(LensQuery.class);
     // wait till the query finishes
     stat = ctx2.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx2 = target().path("queryapi/queries").path(handle1.toString()).queryParam("sessionid", lensSessionId)
         .request().get(LensQuery.class);
       stat = ctx2.getStatus();
@@ -697,7 +697,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       switch (stat.getStatus()) {
@@ -760,7 +760,7 @@ public class TestQueryService extends LensJerseyTest {
     ctx = target.path(handle3.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
     // wait till the query finishes
     stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle3.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
@@ -981,7 +981,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
@@ -1036,7 +1036,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(dropHandle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
@@ -1066,7 +1066,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);
@@ -1091,7 +1091,7 @@ public class TestQueryService extends LensJerseyTest {
 
     // wait till the query finishes
     stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);

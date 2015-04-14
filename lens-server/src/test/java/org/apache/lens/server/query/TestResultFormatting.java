@@ -219,7 +219,7 @@ public class TestResultFormatting extends LensJerseyTest {
       .get(LensQuery.class);
     // wait till the query finishes
     QueryStatus stat = ctx.getStatus();
-    while (!stat.isFinished()) {
+    while (!stat.finished()) {
       ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
       stat = ctx.getStatus();
       Thread.sleep(1000);

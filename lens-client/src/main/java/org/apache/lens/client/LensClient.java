@@ -153,8 +153,16 @@ public class LensClient {
     return new LensStatement(conn).getQuery(query).getStatus();
   }
 
+  public LensQuery getQueryDetails(QueryHandle handle) {
+    return new LensStatement(conn).getQuery(handle);
+  }
+
   public QueryStatus getQueryStatus(String q) {
     return getQueryStatus(QueryHandle.fromString(q));
+  }
+
+  public LensQuery getQueryDetails(String handle) {
+    return getQueryDetails(QueryHandle.fromString(handle));
   }
 
   public QueryPlan getQueryPlan(String q) {

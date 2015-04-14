@@ -18,6 +18,7 @@
  */
 package org.apache.lens.cli.commands;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.UUID;
@@ -137,6 +138,28 @@ public class LensQueryCommands extends BaseLensCommand implements CommandMarker 
     }
 
     return sb.toString();
+  }
+
+  /**
+   * Gets the query details.
+   *
+   * @param qh the qh
+   * @return the query
+   */
+  @CliCommand(value = "query details", help = "Get query details")
+  public String getDetails(
+    @CliOption(key = {"", "query"}, mandatory = true, help
+      = "<query-handle> for which details have to be fetched") String qh) {
+    LensQuery query = getClient().getQueryDetails(qh);
+    if (query == null) {
+      return "Unable to find query for " + qh;
+    }
+
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(query));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   /**
