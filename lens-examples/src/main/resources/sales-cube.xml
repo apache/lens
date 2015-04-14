@@ -30,9 +30,6 @@
     <measure name="line_item_product_price" type="FLOAT" default_aggr="SUM" display_string="Line item product price"/>
     <measure name="line_item_discount_amount" type="FLOAT" default_aggr="SUM" display_string="Line item discount"/>
     <measure name="line_item_tax" type="FLOAT" default_aggr="SUM" display_string="Line item tax"/>
-    <measure name="average_line_item_price" type="FLOAT" default_aggr="AVG" display_string="Average Line item price"/>
-    <measure name="average_line_item_discount" type="FLOAT" default_aggr="AVG"
-     display_string="Average Line item discount"/>
     <measure name="max_line_item_price" type="FLOAT" default_aggr="MAX" display_string="Maximum Line item price"/>
     <measure name="max_line_item_discount" type="FLOAT" default_aggr="MAX"
      display_string="Maximum Line item discount"/>
@@ -80,6 +77,18 @@
             <edge>
               <from table="sales" column="customer_id" />
               <to table="customer" column="id" />
+            </edge>
+          </edges>
+        </path>
+      </paths>
+    </join_chain>
+    <join_chain name="product_details">
+      <paths>
+        <path>
+          <edges>
+            <edge>
+              <from table="sales" column="product_id" />
+              <to table="product" column="id" />
             </edge>
           </edges>
         </path>

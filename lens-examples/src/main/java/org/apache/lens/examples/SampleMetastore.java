@@ -137,6 +137,7 @@ public class SampleMetastore {
     createDimTable("city_table.xml");
     createDimTable("city_subset.xml");
     createDimTable("product_table.xml");
+    createDimTable("product_db_table.xml");
     createDimTable("customer_table.xml");
   }
 

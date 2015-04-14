@@ -85,3 +85,21 @@ drop table temp3
 create table temp3(name string, msr4 float) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
 insert overwrite table temp3 cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
 select * from temp3
+cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00')
+cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')
+cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-02')
+cube select product_id, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+cube select product_id, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00')
+cube select promotion_sales, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-02')
+cube select promotion_sales, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-01')
+cube select customer_city_name, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00')
+cube select customer_city_name, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+cube select customer_city_name, delivery_city.name, production_city.name, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+cube select product_details.color, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00') and product_details.category='Stationary'
+cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+cube select product_details.color, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')and product_details.category='Stationary'
+cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')
+cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00') and product_details.category='Stationary'
+cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00') and product_details.category='Stationary'
