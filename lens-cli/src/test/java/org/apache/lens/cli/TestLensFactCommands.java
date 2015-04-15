@@ -117,11 +117,13 @@ public class TestLensFactCommands extends LensCliApplicationTest {
       Assert.assertEquals(command.showFacts("blah"), factList);
       Assert.fail();
     } catch (NotFoundException e) {
+      LOG.info("blah is not a table", e);
     }
     try {
       Assert.assertEquals(command.showFacts("fact1"), factList);
       Assert.fail();
     } catch (NotFoundException e) {
+      LOG.info("fact1 is a table, but not a cube table", e);
     }
     Assert.assertEquals("fact1", factList, "Fact1 table should be found");
   }
