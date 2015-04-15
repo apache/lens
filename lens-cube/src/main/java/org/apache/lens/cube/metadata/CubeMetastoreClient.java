@@ -188,7 +188,7 @@ public class CubeMetastoreClient {
           if (get(storageTableName) == null) {
             Table storageTable = getTable(storageTableName);
             if ("true".equalsIgnoreCase(storageTable.getParameters().get(
-              MetastoreUtil.getPartitoinTimelineCachePresenceKey()))) {
+              MetastoreUtil.getPartitionTimelineCachePresenceKey()))) {
               try {
                 loadTimelinesFromTableProperties(fact, storage);
               } catch (Exception e) {
@@ -765,7 +765,7 @@ public class CubeMetastoreClient {
           entry.getValue().updateTableParams(table);
         }
       }
-      params.put(MetastoreUtil.getPartitoinTimelineCachePresenceKey(), "true");
+      params.put(MetastoreUtil.getPartitionTimelineCachePresenceKey(), "true");
       alterHiveTable(storageTableName, table);
     }
   }
@@ -790,7 +790,7 @@ public class CubeMetastoreClient {
         boolean makeLatest = true;
         Partition part = getLatestPart(storageTableName, partCol, nonTimeParts);
         Date pTimestamp = timePartSpecs.get(partCol).last();
-        Date latestTimestamp = getLatestTimeStampOfDimtable(part, partCol);
+        Date latestTimestamp = MetastoreUtil.getLatestTimeStampOfDimtable(part, partCol);
         if (latestTimestamp != null && pTimestamp.before(latestTimestamp)) {
           makeLatest = false;
         }
@@ -821,20 +821,6 @@ public class CubeMetastoreClient {
 
   private boolean isLatestPartOfDimtable(Partition part) {
     return part.getValues().contains(StorageConstants.LATEST_PARTITION_VALUE);
-  }
-
-  public Date getLatestTimeStampOfDimtable(Partition part, String partCol) throws HiveException {
-    if (part != null) {
-      String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));
-      String latestPartUpdatePeriod = part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
-      UpdatePeriod latestUpdatePeriod = UpdatePeriod.valueOf(latestPartUpdatePeriod.toUpperCase());
-      try {
-        return latestUpdatePeriod.format().parse(latestTimeStampStr);
-      } catch (ParseException e) {
-        throw new HiveException(e);
-      }
-    }
-    return null;
   }
 
   private Date getPartDate(Partition part, int timeColIndex) {
@@ -959,7 +945,7 @@ public class CubeMetastoreClient {
             }
           }
           if (isLatest) {
-            Date latestTimestamp = getLatestTimeStampOfDimtable(part, timeCol);
+            Date latestTimestamp = MetastoreUtil.getLatestTimeStampOfDimtable(part, timeCol);
             Date dropTimestamp;
             try {
               dropTimestamp = updatePeriod.format().parse(updatePeriod.format().format(timePartSpec.get(timeCol)));

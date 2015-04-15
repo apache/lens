@@ -296,7 +296,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
             .get(addPartitionDesc.getNonTimePartSpec()).latestParts.entrySet()) {
             if (addPartitionDesc.getTimePartSpec().containsKey(entry.getKey())
               && entry.getValue().get(MetastoreUtil.getLatestPartTimestampKey(entry.getKey())).equals(
-              updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
+                updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
               if (latestPartIndexForPartCols.get(addPartitionDesc.getNonTimePartSpec()) == null) {
                 latestPartIndexForPartCols.put(addPartitionDesc.getNonTimePartSpec(),
                   Maps.<String, Integer>newHashMap());

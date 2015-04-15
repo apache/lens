@@ -48,6 +48,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class TestCubeMetastoreClient {
 
@@ -69,6 +70,8 @@ public class TestCubeMetastoreClient {
   private static final Map<String, String> CUBE_PROPERTIES = new HashMap<String, String>();
   private static Date now;
   private static Date nowPlus1;
+  private static Date nowPlus2;
+  private static Date nowPlus3;
   private static Date nowMinus1;
   private static Date nowMinus2;
   private static Date nowMinus3;
@@ -116,6 +119,10 @@ public class TestCubeMetastoreClient {
     cal.setTime(now);
     cal.add(Calendar.HOUR_OF_DAY, 1);
     nowPlus1 = cal.getTime();
+    cal.add(Calendar.HOUR_OF_DAY, 1);
+    nowPlus2 = cal.getTime();
+    cal.add(Calendar.HOUR_OF_DAY, 1);
+    nowPlus3 = cal.getTime();
     cal.setTime(now);
     cal.add(Calendar.HOUR, -1);
     nowMinus1 = cal.getTime();
@@ -2030,21 +2037,70 @@ public class TestCubeMetastoreClient {
     // test partition
     String storageTableName = MetastoreUtil.getDimStorageTableName(dimName, c3);
     Assert.assertFalse(client.dimTableLatestPartitionExists(storageTableName));
+    Map<String, Date> expectedLatestValues = Maps.newHashMap();
     Map<String, Date> timeParts = new HashMap<String, Date>();
     Map<String, String> nonTimeParts = new HashMap<String, String>();
+
     timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
     nonTimeParts.put("region", "asia");
     StoragePartitionDesc sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
     client.addPartition(sPartSpec, c3);
-    List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
-    Assert.assertEquals(1, parts.size());
+    expectedLatestValues.put("asia", now);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
     timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowMinus1);
     nonTimeParts.put("region", "africa");
     sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
     client.addPartition(sPartSpec, c3);
-    parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
-    Assert.assertEquals(2, parts.size());
+    expectedLatestValues.put("asia", now);
+    expectedLatestValues.put("africa", nowMinus1);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowPlus1);
+    nonTimeParts.put("region", "africa");
+    sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    client.addPartition(sPartSpec, c3);
+    expectedLatestValues.put("asia", now);
+    expectedLatestValues.put("africa", nowPlus1);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowPlus3);
+    nonTimeParts.put("region", "asia");
+    sPartSpec = new StoragePartitionDesc(dimName, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    client.addPartition(sPartSpec, c3);
+    expectedLatestValues.put("asia", nowPlus3);
+    expectedLatestValues.put("africa", nowPlus1);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    client.dropPartition(dimName, c3, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    expectedLatestValues.put("asia", now);
+    expectedLatestValues.put("africa", nowPlus1);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), now);
+    client.dropPartition(dimName, c3, timeParts, nonTimeParts, UpdatePeriod.HOURLY);
+    expectedLatestValues.remove("asia");
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    nonTimeParts.put("region", "africa");
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowMinus1);
+    assertLatestForRegions(storageTableName, expectedLatestValues);
+
+    timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), nowPlus3);
+    nonTimeParts.remove("africa");
+    assertLatestForRegions(storageTableName, expectedLatestValues);
   }
+
+  private void assertLatestForRegions(String storageTableName, Map<String, Date> expectedLatestValues)
+    throws HiveException, LensException {
+    List<Partition> parts = client.getPartitionsByFilter(storageTableName, "dt='latest'");
+    Assert.assertEquals(parts.size(), expectedLatestValues.size());
+    for (Partition part : parts) {
+      Assert.assertEquals(MetastoreUtil.getLatestTimeStampOfDimtable(part, getDatePartitionKey()),
+        TimePartition.of(UpdatePeriod.HOURLY, expectedLatestValues.get(part.getSpec().get("region"))).getDate());
+    }
+  }
+
 
   @Test(priority = 2)
   public void testCubeDimWithThreeTimedParts() throws Exception {

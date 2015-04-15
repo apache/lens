@@ -26,6 +26,7 @@ import java.util.*;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
+import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 
 public class MetastoreUtil {
@@ -482,7 +483,7 @@ public class MetastoreUtil {
     return getPartitionInfoKeyPrefix(updatePeriod, partCol) + STORAGE_CLASS;
   }
 
-  public static String getPartitoinTimelineCachePresenceKey() {
+  public static String getPartitionTimelineCachePresenceKey() {
     return STORAGE_PFX + PARTITION_TIMELINE_CACHE + "present";
   }
 
@@ -511,5 +512,18 @@ public class MetastoreUtil {
       }
     }
     return partitions;
+  }
+  public static Date getLatestTimeStampOfDimtable(Partition part, String partCol) throws HiveException {
+    if (part != null) {
+      String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));
+      String latestPartUpdatePeriod = part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
+      UpdatePeriod latestUpdatePeriod = UpdatePeriod.valueOf(latestPartUpdatePeriod.toUpperCase());
+      try {
+        return latestUpdatePeriod.format().parse(latestTimeStampStr);
+      } catch (ParseException e) {
+        throw new HiveException(e);
+      }
+    }
+    return null;
   }
 }
