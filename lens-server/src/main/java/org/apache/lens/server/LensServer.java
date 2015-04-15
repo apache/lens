@@ -28,8 +28,10 @@ import java.util.logging.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 
+import org.apache.lens.api.response.LensJAXBContextResolver;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.error.LensExceptionMapper;
 import org.apache.lens.server.metrics.MetricsServiceImpl;
 import org.apache.lens.server.ui.UIApp;
 
@@ -113,6 +115,8 @@ public class LensServer {
   private ResourceConfig getApp() {
     ResourceConfig app = ResourceConfig.forApplicationClass(LensApplication.class);
     app.register(new LoggingFilter(Logger.getLogger(LensServer.class.getName() + ".request"), true));
+    app.register(LensExceptionMapper.class);
+    app.register(LensJAXBContextResolver.class);
     app.setApplicationName("AllApps");
     return app;
   }

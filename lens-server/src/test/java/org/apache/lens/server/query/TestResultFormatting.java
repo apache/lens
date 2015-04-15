@@ -26,6 +26,7 @@ import java.util.HashMap;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
@@ -34,6 +35,8 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
@@ -41,6 +44,7 @@ import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.query.InMemoryOutputFormatter;
 import org.apache.lens.server.api.query.PersistedOutputFormatter;
 import org.apache.lens.server.api.query.QueryContext;
+import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe;
 
@@ -60,7 +64,6 @@ import org.testng.annotations.Test;
 @Test(groups = "unit-test")
 public class TestResultFormatting extends LensJerseyTest {
 
-  private static final String TEST_DATA_FILE = "./testdata/testdata2.data";
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -79,7 +82,7 @@ public class TestResultFormatting extends LensJerseyTest {
     lensSessionId = queryService.openSession("foo", "bar", new HashMap<String, String>());
     LensTestUtil.createTable(testTable, target(), lensSessionId,
       "(ID INT, IDSTR STRING, IDARR ARRAY<INT>, IDSTRARR ARRAY<STRING>)");
-    LensTestUtil.loadData(testTable, TEST_DATA_FILE, target(), lensSessionId);
+    LensTestUtil.loadDataFromClasspath(testTable, TestResourceFile.TEST_DATA2_FILE.getValue(), target(), lensSessionId);
   }
 
   /*
@@ -210,7 +213,8 @@ public class TestResultFormatting extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
     Assert.assertNotNull(handle);
 

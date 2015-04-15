@@ -26,6 +26,7 @@ import java.util.*;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
@@ -33,9 +34,13 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.api.LensConfConstants;
 
+
 import org.apache.commons.io.FileUtils;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.Database;
@@ -44,9 +49,11 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 
+
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+
 import org.testng.Assert;
 
 /**
@@ -85,8 +92,9 @@ public final class LensTestUtil {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
 
-    final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
+    final QueryHandle handle = target.request()
+        .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+            new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -110,6 +118,36 @@ public final class LensTestUtil {
     createTable(tblName, parent, lensSessionId, "(ID INT, IDSTR STRING)");
   }
 
+  public static void loadData(String tblName, final String testDataFile, WebTarget parent,
+      LensSessionHandle lensSessionId) throws InterruptedException {
+    LensConf conf = new LensConf();
+    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
+    final WebTarget target = parent.path("queryapi/queries");
+
+    final FormDataMultiPart mp = new FormDataMultiPart();
+    String dataLoad = "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE " + tblName;
+
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
+        MediaType.APPLICATION_XML_TYPE));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), dataLoad));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
+    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
+        MediaType.APPLICATION_XML_TYPE));
+
+    final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
+
+    // wait till the query finishes
+    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
+        .get(LensQuery.class);
+    QueryStatus stat = ctx.getStatus();
+    while (!stat.finished()) {
+      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
+      stat = ctx.getStatus();
+      Thread.sleep(1000);
+    }
+    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
+  }
   /**
    * Load data.
    *
@@ -119,36 +157,11 @@ public final class LensTestUtil {
    * @param lensSessionId  the lens session id
    * @throws InterruptedException the interrupted exception
    */
-  public static void loadData(String tblName, final String testDataFile, WebTarget parent,
-    LensSessionHandle lensSessionId) throws InterruptedException {
-    LensConf conf = new LensConf();
-    conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "false");
-    final WebTarget target = parent.path("queryapi/queries");
+  public static void loadDataFromClasspath(String tblName, final String testDataFile, WebTarget parent,
+      LensSessionHandle lensSessionId) throws InterruptedException {
 
-    final FormDataMultiPart mp = new FormDataMultiPart();
-    String dataLoad = "LOAD DATA LOCAL INPATH '" + testDataFile + "' OVERWRITE INTO TABLE " + tblName;
-
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), lensSessionId,
-      MediaType.APPLICATION_XML_TYPE));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("query").build(), dataLoad));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
-    mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
-      MediaType.APPLICATION_XML_TYPE));
-
-    final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
-
-    // wait till the query finishes
-    LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
-      .get(LensQuery.class);
-    QueryStatus stat = ctx.getStatus();
-    while (!stat.finished()) {
-      ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request().get(LensQuery.class);
-      stat = ctx.getStatus();
-      Thread.sleep(1000);
-    }
-    Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL);
-
+    String absolutePath = LensTestUtil.class.getClassLoader().getResource(testDataFile).getPath();
+    loadData(tblName, absolutePath, parent, lensSessionId);
   }
 
   /**
@@ -191,7 +204,7 @@ public final class LensTestUtil {
       MediaType.APPLICATION_XML_TYPE));
 
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
+        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
     // wait till the query finishes
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()

@@ -409,6 +409,18 @@
     </file>
 
     <file>
+      <source>../lens-server/conf/lens-errors.conf</source>
+      <outputDirectory>/server/conf</outputDirectory>
+      <destName>lens-errors.conf</destName>
+    </file>
+
+    <file>
+      <source>../lens-server/conf/lens-errors.conf</source>
+      <outputDirectory>/client/conf</outputDirectory>
+      <destName>lens-errors.conf</destName>
+    </file>
+
+    <file>
       <source>../DISCLAIMER</source>
       <outputDirectory>/</outputDirectory>
       <destName>DISCLAIMER</destName>
