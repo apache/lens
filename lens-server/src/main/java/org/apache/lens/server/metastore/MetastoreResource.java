@@ -37,6 +37,8 @@ import org.apache.log4j.Logger;
 
 import org.glassfish.jersey.media.multipart.FormDataParam;
 
+import com.google.common.collect.Lists;
+
 /**
  * metastore resource api
  * <p/>
@@ -341,9 +343,13 @@ public class MetastoreResource {
 
 
   private void checkTableNotFound(LensException e, String table) {
+    List<String> messages = Lists.newArrayList();
+    messages.add(e.getMessage());
     if (e.getCause() instanceof HiveException) {
-      HiveException hiveErr = (HiveException) e.getCause();
-      if (hiveErr.getMessage().startsWith("Could not get table")) {
+      messages.add(e.getCause().getMessage());
+    }
+    for (String message : messages) {
+      if (message.startsWith("Could not get table")) {
         throw new NotFoundException("Table not found " + table, e);
       }
     }
@@ -714,6 +720,27 @@ public class MetastoreResource {
   }
 
   /**
+   * Get all dimtables that belong to a dimension in the metastore
+   *
+   * @param sessionid The sessionid in which user is working
+   * @param dimensionName name of the dimension
+   * @return List of {@link XDimensionTable} objects
+   */
+  @GET
+  @Path("/dimensions/{dimName}/dimtables")
+  public StringList getAllDimensionTablesOfDimension(
+    @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("dimName") String dimensionName)
+    throws LensException {
+    checkSessionId(sessionid);
+    try {
+      return new StringList(getSvc().getAllDimTableNames(sessionid, dimensionName));
+    } catch (LensException exc) {
+      checkTableNotFound(exc, dimensionName);
+      throw exc;
+    }
+  }
+
+  /**
    * Get all facts that belong to a cube in the metastore
    *
    * @param sessionid The sessionid in which user is working
@@ -722,12 +749,12 @@ public class MetastoreResource {
    */
   @GET
   @Path("/cubes/{cubeName}/facts")
-  public List<XFactTable> getAllFactsOfCube(
+  public StringList getAllFactsOfCube(
     @QueryParam("sessionid") LensSessionHandle sessionid, @PathParam("cubeName") String cubeName)
     throws LensException {
     checkSessionId(sessionid);
     try {
-      return getSvc().getAllFactsOfCube(sessionid, cubeName);
+      return new StringList(getSvc().getAllFactNames(sessionid, cubeName));
     } catch (LensException exc) {
       checkTableNotFound(exc, cubeName);
       throw exc;
@@ -744,7 +771,7 @@ public class MetastoreResource {
   @Path("/facts")
   public StringList getAllFacts(@QueryParam("sessionid") LensSessionHandle sessionid) throws LensException {
     checkSessionId(sessionid);
-    return new StringList(getSvc().getAllFactNames(sessionid));
+    return new StringList(getSvc().getAllFactNames(sessionid, null));
   }
 
   /**
@@ -1147,7 +1174,7 @@ public class MetastoreResource {
   @GET
   @Path("/dimtables")
   public StringList getAllDims(@QueryParam("sessionid") LensSessionHandle sessionid) throws LensException {
-    return new StringList(getSvc().getAllDimTableNames(sessionid));
+    return new StringList(getSvc().getAllDimTableNames(sessionid, null));
   }
 
   /**

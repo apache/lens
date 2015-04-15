@@ -416,6 +416,28 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
+  public List<String> getAllDimTableNames(LensSessionHandle sessionid, String dimensionName) throws LensException {
+    try {
+      acquire(sessionid);
+      CubeMetastoreClient client = getClient(sessionid);
+      Dimension dimension = client.getDimension(dimensionName);
+      if (dimensionName != null && dimension == null) {
+        throw new LensException("Could not get table: " + dimensionName + " as a dimension");
+      }
+      Collection<CubeDimensionTable> dims = client.getAllDimensionTables(dimension);
+      List<String> dimNames = new ArrayList<String>(dims.size());
+      for (CubeDimensionTable cdt : dims) {
+        dimNames.add(cdt.getName());
+      }
+      return dimNames;
+    } catch (HiveException e) {
+      throw new LensException(e);
+    } finally {
+      release(sessionid);
+    }
+  }
+
+  @Override
   public void dropAllStoragesOfFact(LensSessionHandle sessionid, String factName) throws LensException {
     try {
       acquire(sessionid);
@@ -455,27 +477,6 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     } finally {
       release(sessionid);
     }
-  }
-
-  @Override
-  public List<XFactTable> getAllFactsOfCube(LensSessionHandle sessionid, String cubeName) throws LensException {
-    try {
-      acquire(sessionid);
-      CubeMetastoreClient msClient = getClient(sessionid);
-      List<CubeFactTable> cubeFacts = msClient.getAllFactTables(msClient.getCube(cubeName));
-      if (cubeFacts != null && !cubeFacts.isEmpty()) {
-        List<XFactTable> facts = new ArrayList<XFactTable>(cubeFacts.size());
-        for (CubeFactTable cft : cubeFacts) {
-          facts.add(JAXBUtils.factTableFromCubeFactTable(cft));
-        }
-        return facts;
-      }
-    } catch (HiveException e) {
-      throw new LensException(e);
-    } finally {
-      release(sessionid);
-    }
-    return null;
   }
 
   @Override
@@ -550,10 +551,15 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
   }
 
   @Override
-  public List<String> getAllFactNames(LensSessionHandle sessionid) throws LensException {
+  public List<String> getAllFactNames(LensSessionHandle sessionid, String cubeName) throws LensException {
     try {
       acquire(sessionid);
-      Collection<CubeFactTable> facts = getClient(sessionid).getAllFacts();
+      CubeMetastoreClient client = getClient(sessionid);
+      CubeInterface fact = client.getCube(cubeName);
+      if (cubeName != null && fact == null) {
+        throw new LensException("Could not get table: " + cubeName + " as a cube");
+      }
+      Collection<CubeFactTable> facts = client.getAllFacts(fact);
       List<String> factNames = new ArrayList<String>(facts.size());
       for (CubeFactTable cft : facts) {
         factNames.add(cft.getName());
@@ -566,22 +572,6 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     }
   }
 
-  @Override
-  public List<String> getAllDimTableNames(LensSessionHandle sessionid) throws LensException {
-    try {
-      acquire(sessionid);
-      Collection<CubeDimensionTable> dims = getClient(sessionid).getAllDimensionTables();
-      List<String> dimNames = new ArrayList<String>(dims.size());
-      for (CubeDimensionTable cdt : dims) {
-        dimNames.add(cdt.getName());
-      }
-      return dimNames;
-    } catch (HiveException e) {
-      throw new LensException(e);
-    } finally {
-      release(sessionid);
-    }
-  }
 
   @Override
   public List<String> getStoragesOfFact(LensSessionHandle sessionid, String fact) throws LensException {

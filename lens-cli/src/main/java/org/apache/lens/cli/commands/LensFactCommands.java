@@ -45,8 +45,9 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
    * @return the string
    */
   @CliCommand(value = "show facts", help = "display list of fact tables in database")
-  public String showFacts() {
-    List<String> facts = getClient().getAllFactTables();
+  public String showFacts(
+    @CliOption(key = {"", "cube"}, mandatory = false, help = "<optional cube name>") String cubeName) {
+    List<String> facts = getClient().getAllFactTables(cubeName);
     if (facts != null) {
       return Joiner.on("\n").join(facts);
     } else {

@@ -690,7 +690,7 @@ public class TestCubeMetastoreClient {
     addedMsr = altered.getMeasureByName("testaddmsr1");
     Assert.assertNotNull(addedMsr);
     Assert.assertEquals(addedMsr.getType(), "double");
-    Assert.assertTrue(client.getAllFactTables(altered).isEmpty());
+    Assert.assertTrue(client.getAllFacts(altered).isEmpty());
   }
 
   @Test(priority = 2)
@@ -765,8 +765,8 @@ public class TestCubeMetastoreClient {
     Table cubeTbl = client.getHiveTable(factName);
     Assert.assertTrue(client.isFactTable(cubeTbl));
     Assert.assertTrue(client.isFactTableForCube(cubeTbl, CUBE_NAME));
-    Assert.assertEquals(client.getAllFactTables(client.getCube(CUBE_NAME)).get(0).getName(), factName.toLowerCase());
-    Assert.assertEquals(client.getAllFactTables(client.getCube(DERIVED_CUBE_NAME)).get(0).getName(),
+    Assert.assertEquals(client.getAllFacts(client.getCube(CUBE_NAME)).get(0).getName(), factName.toLowerCase());
+    Assert.assertEquals(client.getAllFacts(client.getCube(DERIVED_CUBE_NAME)).get(0).getName(),
       factName.toLowerCase());
     CubeFactTable cubeFact2 = new CubeFactTable(cubeTbl);
     Assert.assertTrue(cubeFact.equals(cubeFact2));
@@ -955,13 +955,13 @@ public class TestCubeMetastoreClient {
     client.dropStorageFromFact(factName, c2);
     storageTableName = MetastoreUtil.getFactStorageTableName(factName, c2);
     Assert.assertFalse(client.tableExists(storageTableName));
-    List<CubeFactTable> cubeFacts = client.getAllFactTables(client.getCube(CUBE_NAME));
+    List<CubeFactTable> cubeFacts = client.getAllFacts(client.getCube(CUBE_NAME));
     List<String> cubeFactNames = new ArrayList<String>();
     for (CubeFactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());
     }
     Assert.assertTrue(cubeFactNames.contains(factName.toLowerCase()));
-    cubeFacts = client.getAllFactTables(client.getCube(DERIVED_CUBE_NAME));
+    cubeFacts = client.getAllFacts(client.getCube(DERIVED_CUBE_NAME));
     cubeFactNames = new ArrayList<String>();
     for (CubeFactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());
@@ -971,7 +971,7 @@ public class TestCubeMetastoreClient {
     Assert.assertFalse(client.tableExists(MetastoreUtil.getFactStorageTableName(factName, c1)));
     Assert.assertFalse(client.tableExists(MetastoreUtil.getFactStorageTableName(factName, c3)));
     Assert.assertFalse(client.tableExists(factName));
-    cubeFacts = client.getAllFactTables(cube);
+    cubeFacts = client.getAllFacts(cube);
     cubeFactNames = new ArrayList<String>();
     for (CubeFactTable cfact : cubeFacts) {
       cubeFactNames.add(cfact.getName());

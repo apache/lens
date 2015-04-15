@@ -22,6 +22,8 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.ws.rs.NotFoundException;
+
 import org.apache.lens.cli.commands.LensCubeCommands;
 import org.apache.lens.cli.commands.LensFactCommands;
 import org.apache.lens.client.LensClient;
@@ -98,7 +100,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
    */
   public static void addFact1Table() throws IOException {
     LensFactCommands command = getCommand();
-    String factList = command.showFacts();
+    String factList = command.showFacts(null);
+    Assert.assertEquals(command.showFacts("sample_cube"), factList);
     Assert.assertEquals("No Facts Found", factList, "Fact tables should not be found");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
@@ -108,7 +111,18 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     } catch (Exception e) {
       Assert.fail("Unable to create fact table" + e.getMessage());
     }
-    factList = command.showFacts();
+    factList = command.showFacts(null);
+    Assert.assertEquals(command.showFacts("sample_cube"), factList);
+    try {
+      Assert.assertEquals(command.showFacts("blah"), factList);
+      Assert.fail();
+    } catch (NotFoundException e) {
+    }
+    try {
+      Assert.assertEquals(command.showFacts("fact1"), factList);
+      Assert.fail();
+    } catch (NotFoundException e) {
+    }
     Assert.assertEquals("fact1", factList, "Fact1 table should be found");
   }
 
@@ -257,10 +271,10 @@ public class TestLensFactCommands extends LensCliApplicationTest {
    */
   public static void dropFact1Table() {
     LensFactCommands command = getCommand();
-    String factList = command.showFacts();
+    String factList = command.showFacts(null);
     Assert.assertEquals("fact1", factList, "Fact1 table should be found");
     command.dropFact("fact1", false);
-    factList = command.showFacts();
+    factList = command.showFacts(null);
     Assert.assertEquals("No Facts Found", factList, "Fact tables should not be found");
     TestLensStorageCommands.dropStorage(FACT_LOCAL);
   }

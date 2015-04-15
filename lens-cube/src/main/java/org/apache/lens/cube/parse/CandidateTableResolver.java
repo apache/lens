@@ -89,7 +89,7 @@ class CandidateTableResolver implements ContextRewriter {
   private void populateCandidateTables(CubeQueryContext cubeql) throws SemanticException {
     try {
       if (cubeql.getCube() != null) {
-        List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFactTables(cubeql.getCube());
+        List<CubeFactTable> factTables = cubeql.getMetastoreClient().getAllFacts(cubeql.getCube());
         if (factTables.isEmpty()) {
           throw new SemanticException(ErrorMsg.NO_CANDIDATE_FACT_AVAILABLE, cubeql.getCube().getName()
             + " does not have any facts");

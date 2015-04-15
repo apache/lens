@@ -322,13 +322,15 @@ public interface CubeMetastoreService {
   void dropStorageOfDimTable(LensSessionHandle sessionid, String dimTblName, String storage) throws LensException;
 
   /**
-   * Get all dimension tables
+   * Get all dimension tables. dimensionName is an optional filter of dimension name.
+   * If provided, only the dimension tables belonging to given dimension will be returned
    *
    * @param sessionid
+   * @param dimensionName dimension name to be filtered with. Optional
    * @return
    * @throws LensException
    */
-  List<String> getAllDimTableNames(LensSessionHandle sessionid) throws LensException;
+  List<String> getAllDimTableNames(LensSessionHandle sessionid, String dimensionName) throws LensException;
 
   /**
    * Get all partitions of a dimension table in a storage
@@ -365,16 +367,6 @@ public interface CubeMetastoreService {
    */
   void addPartitionsToDimStorage(LensSessionHandle sessionid, String dimTblName, String storageName,
     XPartitionList partitions) throws LensException;
-
-  /**
-   * Get all facts of cube. Cube can also be a derived cube
-   *
-   * @param sessionid The session id
-   * @param cubeName  The cube name
-   * @return List of FactTable objects
-   * @throws LensException
-   */
-  List<XFactTable> getAllFactsOfCube(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Get fact table given by name
@@ -418,10 +410,11 @@ public interface CubeMetastoreService {
    * Get all fact names
    *
    * @param sessionid The sessionid
+   * @param cubeName optional filter filter facts by cube name.
    * @return List of fact table names
    * @throws LensException
    */
-  List<String> getAllFactNames(LensSessionHandle sessionid) throws LensException;
+  List<String> getAllFactNames(LensSessionHandle sessionid, String cubeName) throws LensException;
 
   /**
    * Get all storages of fact
