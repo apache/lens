@@ -188,7 +188,7 @@ public class CubeMetastoreClient {
           if (get(storageTableName) == null) {
             Table storageTable = getTable(storageTableName);
             if ("true".equalsIgnoreCase(storageTable.getParameters().get(
-              MetastoreUtil.getPartitoinTimelineCachePresenceKey()))) {
+              MetastoreUtil.getPartitionTimelineCachePresenceKey()))) {
               try {
                 loadTimelinesFromTableProperties(fact, storage);
               } catch (Exception e) {
@@ -700,8 +700,14 @@ public class CubeMetastoreClient {
       Storage.getPrefix(storageName.trim())).toLowerCase();
     if (getDimensionTable(factOrDimTable) != null) {
       // Adding partition in dimension table.
+      Map<Map<String, String>, LatestInfo> latestInfos = Maps.newHashMap();
+      for (Map.Entry<Map<String, String>, List<StoragePartitionDesc>> entry : groupByNonTimePartitions(
+        storagePartitionDescs).entrySet()) {
+        latestInfos.put(entry.getKey(),
+          getDimTableLatestInfo(storageTableName, entry.getKey(), getTimePartSpecs(entry.getValue()), updatePeriod));
+      }
       getStorage(storageName).addPartitions(getClient(), factOrDimTable, updatePeriod, storagePartitionDescs,
-        getDimTableLatestInfo(storageTableName, getTimePartSpecs(storagePartitionDescs), updatePeriod));
+        latestInfos);
       latestLookupCache.add(storageTableName);
     } else {
       // first update in memory, then add to hive table's partitions. delete is reverse.
@@ -759,7 +765,7 @@ public class CubeMetastoreClient {
           entry.getValue().updateTableParams(table);
         }
       }
-      params.put(MetastoreUtil.getPartitoinTimelineCachePresenceKey(), "true");
+      params.put(MetastoreUtil.getPartitionTimelineCachePresenceKey(), "true");
       alterHiveTable(storageTableName, table);
     }
   }
@@ -769,7 +775,8 @@ public class CubeMetastoreClient {
     return UpdatePeriod.valueOf(partition.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD));
   }
 
-  private LatestInfo getDimTableLatestInfo(String storageTableName, Map<String, TreeSet<Date>> partitionTimestamps,
+  private LatestInfo getDimTableLatestInfo(String storageTableName, Map<String, String> nonTimeParts,
+    Map<String, TreeSet<Date>> timePartSpecs,
     UpdatePeriod updatePeriod) throws HiveException {
     Table hiveTable = getHiveTable(storageTableName);
     String timePartColsStr = hiveTable.getTTable().getParameters().get(MetastoreConstants.TIME_PART_COLUMNS);
@@ -777,13 +784,13 @@ public class CubeMetastoreClient {
       LatestInfo latest = new LatestInfo();
       String[] timePartCols = StringUtils.split(timePartColsStr, ',');
       for (String partCol : timePartCols) {
-        if (!partitionTimestamps.containsKey(partCol)) {
+        if (!timePartSpecs.containsKey(partCol)) {
           continue;
         }
         boolean makeLatest = true;
-        Partition part = getLatestPart(storageTableName, partCol);
-        Date pTimestamp = partitionTimestamps.get(partCol).last();
-        Date latestTimestamp = getLatestTimeStampOfDimtable(part, partCol);
+        Partition part = getLatestPart(storageTableName, partCol, nonTimeParts);
+        Date pTimestamp = timePartSpecs.get(partCol).last();
+        Date latestTimestamp = MetastoreUtil.getLatestTimeStampOfDimtable(part, partCol);
         if (latestTimestamp != null && pTimestamp.before(latestTimestamp)) {
           makeLatest = false;
         }
@@ -800,22 +807,20 @@ public class CubeMetastoreClient {
     }
   }
 
-  private boolean isLatestPartOfDimtable(Partition part) {
-    return part.getValues().contains(StorageConstants.LATEST_PARTITION_VALUE);
+  private Map<Map<String, String>, List<StoragePartitionDesc>> groupByNonTimePartitions(
+    List<StoragePartitionDesc> storagePartitionDescs) {
+    Map<Map<String, String>, List<StoragePartitionDesc>> result = Maps.newHashMap();
+    for (StoragePartitionDesc storagePartitionDesc : storagePartitionDescs) {
+      if (result.get(storagePartitionDesc.getNonTimePartSpec()) == null) {
+        result.put(storagePartitionDesc.getNonTimePartSpec(), Lists.<StoragePartitionDesc>newArrayList());
+      }
+      result.get(storagePartitionDesc.getNonTimePartSpec()).add(storagePartitionDesc);
+    }
+    return result;
   }
 
-  public Date getLatestTimeStampOfDimtable(Partition part, String partCol) throws HiveException {
-    if (part != null) {
-      String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));
-      String latestPartUpdatePeriod = part.getParameters().get(MetastoreConstants.PARTITION_UPDATE_PERIOD);
-      UpdatePeriod latestUpdatePeriod = UpdatePeriod.valueOf(latestPartUpdatePeriod.toUpperCase());
-      try {
-        return latestUpdatePeriod.format().parse(latestTimeStampStr);
-      } catch (ParseException e) {
-        throw new HiveException(e);
-      }
-    }
-    return null;
+  private boolean isLatestPartOfDimtable(Partition part) {
+    return part.getValues().contains(StorageConstants.LATEST_PARTITION_VALUE);
   }
 
   private Date getPartDate(Partition part, int timeColIndex) {
@@ -833,10 +838,17 @@ public class CubeMetastoreClient {
     return partDate;
   }
 
-  private LatestInfo getNextLatestOfDimtable(Table hiveTable, String timeCol, final int timeColIndex)
+  private LatestInfo getNextLatestOfDimtable(Table hiveTable, String timeCol, final int timeColIndex,
+    UpdatePeriod updatePeriod, Map<String, String> nonTimePartSpec)
     throws HiveException {
     // getClient().getPartitionsByNames(tbl, partNames)
-    List<Partition> partitions = getClient().getPartitions(hiveTable);
+    List<Partition> partitions = null;
+    try {
+      partitions = getClient().getPartitionsByFilter(hiveTable, StorageConstants.getPartFilter(nonTimePartSpec));
+      MetastoreUtil.filterPartitionsByNonTimeParts(partitions, nonTimePartSpec, timeCol);
+    } catch (TException e) {
+      throw new HiveException(e);
+    }
 
     // tree set contains partitions with timestamp as value for timeCol, in
     // descending order
@@ -867,7 +879,7 @@ public class CubeMetastoreClient {
       }
     }
     Iterator<Partition> it = allPartTimeVals.iterator();
-    it.next();
+    it.next(); // Skip itself. We have to find next latest.
     LatestInfo latest = null;
     if (it.hasNext()) {
       Partition nextLatest = it.next();
@@ -920,7 +932,7 @@ public class CubeMetastoreClient {
             throw new HiveException("Not a time partition column:" + timeCol);
           }
           int timeColIndex = partColNames.indexOf(timeCol);
-          Partition part = getLatestPart(storageTableName, timeCol);
+          Partition part = getLatestPart(storageTableName, timeCol, nonTimePartSpec);
 
           boolean isLatest = true;
           // check if partition being dropped is the latest partition
@@ -933,7 +945,7 @@ public class CubeMetastoreClient {
             }
           }
           if (isLatest) {
-            Date latestTimestamp = getLatestTimeStampOfDimtable(part, timeCol);
+            Date latestTimestamp = MetastoreUtil.getLatestTimeStampOfDimtable(part, timeCol);
             Date dropTimestamp;
             try {
               dropTimestamp = updatePeriod.format().parse(updatePeriod.format().format(timePartSpec.get(timeCol)));
@@ -941,7 +953,8 @@ public class CubeMetastoreClient {
               throw new HiveException(e);
             }
             if (latestTimestamp != null && dropTimestamp.equals(latestTimestamp)) {
-              LatestInfo latestInfo = getNextLatestOfDimtable(hiveTable, timeCol, timeColIndex);
+              LatestInfo latestInfo =
+                getNextLatestOfDimtable(hiveTable, timeCol, timeColIndex, updatePeriod, nonTimePartSpec);
               latestAvailable = (latestInfo != null && latestInfo.part != null);
               latest.put(timeCol, latestInfo);
             }
@@ -954,14 +967,14 @@ public class CubeMetastoreClient {
           throw new HiveException("Not time part columns" + timePartSpec.keySet());
         }
       }
-      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, latest);
+      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, latest, nonTimePartSpec);
       if (!latestAvailable) {
         // dropping latest and could not find latest, removing the entry from latest lookup cache
         latestLookupCache.remove(storageTableName);
       }
     } else {
       // dropping fact partition
-      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null);
+      getStorage(storageName).dropPartition(getClient(), storageTableName, partVals, null, null);
       if (partitionTimelineCache.updateForDeletion(cubeTableName, storageName, updatePeriod, timePartSpec)) {
         this.alterTablePartitionCache(storageTableName);
       }
@@ -1083,8 +1096,13 @@ public class CubeMetastoreClient {
   }
 
   Partition getLatestPart(String storageTableName, String latestPartCol) throws HiveException {
+    return getLatestPart(storageTableName, latestPartCol, null);
+  }
+
+  Partition getLatestPart(String storageTableName, String latestPartCol, Map<String, String> nonTimeParts)
+    throws HiveException {
     List<Partition> latestParts =
-      getPartitionsByFilter(storageTableName, StorageConstants.getLatestPartFilter(latestPartCol));
+      getPartitionsByFilter(storageTableName, StorageConstants.getLatestPartFilter(latestPartCol, nonTimeParts));
     if (latestParts != null && !latestParts.isEmpty()) {
       return latestParts.get(0);
     }

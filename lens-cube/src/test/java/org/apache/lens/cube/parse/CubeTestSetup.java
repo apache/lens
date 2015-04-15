@@ -964,7 +964,7 @@ public class CubeTestSetup {
     client.clearHiveTableCache();
     table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(),
       Storage.getPrefix(c4)));
-    Assert.assertEquals(table.getParameters().get(MetastoreUtil.getPartitoinTimelineCachePresenceKey()), "true");
+    Assert.assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineCachePresenceKey()), "true");
     Assert.assertEquals(table.getParameters().get(MetastoreUtil.getPartitionTimelineStorageClassKey(UpdatePeriod.DAILY,
         "ttd")),
       EndsAndHolesPartitionTimeline.class.getCanonicalName());
