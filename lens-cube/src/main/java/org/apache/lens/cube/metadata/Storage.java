@@ -228,18 +228,20 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
     return tbl;
   }
 
-  //  /**
-  //   * Add single partition to storage. Just calls #addPartitions.
-  //   * @param client
-  //   * @param addPartitionDesc
-  //   * @param latestInfo
-  //   * @throws HiveException
-  //   */
-  //  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
-  //    throws HiveException {
-  //    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
-  //      Collections.singletonList(addPartitionDesc), latestInfo);
-  //  }
+  /**
+   * Add single partition to storage. Just calls #addPartitions.
+   * @param client
+   * @param addPartitionDesc
+   * @param latestInfo
+   * @throws HiveException
+   */
+  public void addPartition(Hive client, StoragePartitionDesc addPartitionDesc, LatestInfo latestInfo)
+    throws HiveException {
+    Map<Map<String, String>, LatestInfo> latestInfos = Maps.newHashMap();
+    latestInfos.put(addPartitionDesc.getNonTimePartSpec(), latestInfo);
+    addPartitions(client, addPartitionDesc.getCubeTableName(), addPartitionDesc.getUpdatePeriod(),
+      Collections.singletonList(addPartitionDesc), latestInfos);
+  }
 
   /**
    * Add given partitions in the underlying hive table and update latest partition links
@@ -294,7 +296,7 @@ public abstract class Storage extends AbstractCubeTable implements PartitionMeta
             .get(addPartitionDesc.getNonTimePartSpec()).latestParts.entrySet()) {
             if (addPartitionDesc.getTimePartSpec().containsKey(entry.getKey())
               && entry.getValue().get(MetastoreUtil.getLatestPartTimestampKey(entry.getKey())).equals(
-                updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
+              updatePeriod.format().format(addPartitionDesc.getTimePartSpec().get(entry.getKey())))) {
               if (latestPartIndexForPartCols.get(addPartitionDesc.getNonTimePartSpec()) == null) {
                 latestPartIndexForPartCols.put(addPartitionDesc.getNonTimePartSpec(),
                   Maps.<String, Integer>newHashMap());
