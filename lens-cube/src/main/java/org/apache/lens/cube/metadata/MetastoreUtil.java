@@ -66,7 +66,7 @@ public class MetastoreUtil {
   }
 
   public static final String getDimTablePartsKey(String dimtableName) {
-    return getDimensionTablePrefix(dimtableName) + PARTCOLS_SFX;
+    return DIM_TABLE_PFX + dimtableName + PARTCOLS_SFX;
   }
 
   public static final String getDimTimedDimensionKey(String dimName) {
@@ -513,6 +513,7 @@ public class MetastoreUtil {
     }
     return partitions;
   }
+
   public static Date getLatestTimeStampOfDimtable(Partition part, String partCol) throws HiveException {
     if (part != null) {
       String latestTimeStampStr = part.getParameters().get(MetastoreUtil.getLatestPartTimestampKey(partCol));

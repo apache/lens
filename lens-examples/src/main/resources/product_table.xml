@@ -31,7 +31,7 @@
   </columns>
   <properties>
     <property name="dim4.prop" value="d1"/>
-    <property name="dimtble.product_table.part.cols" value="category"/>
+    <property name="dimtable.product_table.part.cols" value="category"/>
   </properties>
   <storage_tables>
     <storage_table>

@@ -53,7 +53,9 @@ public final class MetastoreConstants {
   public static final String FACT_AGGREGATED_PROPERTY = "cube.fact.is.aggregated";
 
   // dim table constants
+  // TODO: remove this and move to "dimtable."
   public static final String DIM_TBL_PFX = "dimtble.";
+  public static final String DIM_TABLE_PFX = "dimtable.";
   public static final String DUMP_PERIOD_SFX = ".dumpperiod";
   public static final String STORAGE_LIST_SFX = ".storages";
   public static final String DIM_NAME_SFX = ".dim.name";
