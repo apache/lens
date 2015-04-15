@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.Maps;
+
 public final class StorageConstants {
   private StorageConstants() {
 
@@ -40,11 +42,15 @@ public final class StorageConstants {
    * @return latest partition spec as Map from String to String
    */
   public static String getLatestPartFilter(String partCol) {
-    return partCol + "='" + LATEST_PARTITION_VALUE + "'";
+    return getPartFilter(partCol, LATEST_PARTITION_VALUE);
   }
 
-  public static String getPartFilter(String partCol, String value) {
-    return partCol + "='" + value + "'";
+  public static String getPartFilter(final String partCol, final String value) {
+    return getPartFilter(new HashMap<String, String>() {
+      {
+        put(partCol, value);
+      }
+    });
   }
 
   public static String getPartFilter(Map<String, String> parts) {
@@ -60,13 +66,10 @@ public final class StorageConstants {
   }
 
   public static String getPartFilter(String partCol, String value, Map<String, String> parts) {
-    StringBuilder ret = new StringBuilder().append(getPartFilter(partCol, value));
-    if (parts != null) {
-      for (Map.Entry<String, String> entry : parts.entrySet()) {
-        ret.append(" and ").append(entry.getKey()).append("='").append(entry.getValue()).append("'");
-      }
-    }
-    return ret.toString();
+    Map<String, String> allParts = Maps.newHashMap();
+    allParts.putAll(parts);
+    allParts.put(partCol, value);
+    return getPartFilter(allParts);
   }
 
   public static String getLatestPartFilter(String partCol, Map<String, String> parts) {
