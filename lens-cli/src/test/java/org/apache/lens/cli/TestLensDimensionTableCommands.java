@@ -125,11 +125,13 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       Assert.assertEquals(command.showDimensionTables("blah"), dimList);
       Assert.fail();
     } catch (NotFoundException e) {
+      LOG.info("blah is not a table", e);
     }
     try {
       Assert.assertEquals(command.showDimensionTables("dim_table2"), dimList);
       Assert.fail();
     } catch (NotFoundException e) {
+      LOG.info("dim_table2 is a table, but not a dimension", e);
     }
     Assert.assertTrue(dimList.contains(tableName), "dim_table table should be found");
   }
