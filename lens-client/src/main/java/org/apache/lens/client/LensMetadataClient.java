@@ -406,24 +406,30 @@ public class LensMetadataClient {
     return result;
   }
 
-  public List<XFactTable> getAllFactTables(String cubeName) {
+  public List<String> getAllFactTables(String cubeName) {
+    if (cubeName == null) {
+      return getAllFactTables();
+    }
     WebTarget target = getMetastoreWebTarget();
-    List<XFactTable> factTables = target.path("cubes").path(cubeName).path("facts")
-      .queryParam("sessionid", this.connection.getSessionHandle())
-      .request(MediaType.APPLICATION_XML)
-      .get(new GenericType<List<XFactTable>>() {
-      });
-    return factTables;
-  }
-
-  public List<String> getAllFactTables() {
-    WebTarget target = getMetastoreWebTarget();
-    StringList factTables = target.path("facts")
+    StringList factTables;
+    factTables = target.path("cubes").path(cubeName).path("facts")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .get(StringList.class);
     return factTables.getElements();
   }
+
+  public List<String> getAllFactTables() {
+    WebTarget target = getMetastoreWebTarget();
+    StringList factTables;
+    factTables = target.path("facts")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .get(StringList.class);
+
+    return factTables.getElements();
+  }
+
 
   public APIResult deleteAllFactTables(boolean cascade) {
     WebTarget target = getMetastoreWebTarget();
@@ -636,9 +642,23 @@ public class LensMetadataClient {
   }
 
 
+  public List<String> getAllDimensionTables(String dimensionName) {
+    if (dimensionName == null) {
+      return getAllDimensionTables();
+    }
+    WebTarget target = getMetastoreWebTarget();
+    StringList dimtables;
+    dimtables = target.path("dimensions").path(dimensionName).path("dimtables")
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .get(StringList.class);
+    return dimtables.getElements();
+  }
+
   public List<String> getAllDimensionTables() {
     WebTarget target = getMetastoreWebTarget();
-    StringList dimtables = target.path("dimtables")
+    StringList dimtables;
+    dimtables = target.path("dimtables")
       .queryParam("sessionid", this.connection.getSessionHandle())
       .request(MediaType.APPLICATION_XML)
       .get(StringList.class);

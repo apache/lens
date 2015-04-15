@@ -212,10 +212,17 @@ public class LensClient {
     return mc.getAllFactTables();
   }
 
-
+  public List<String> getAllFactTables(String cubeName) {
+    LOG.debug("Getting all fact table");
+    return mc.getAllFactTables(cubeName);
+  }
   public List<String> getAllDimensionTables() {
     LOG.debug("Getting all dimension table");
     return mc.getAllDimensionTables();
+  }
+  public List<String> getAllDimensionTables(String dimensionName) {
+    LOG.debug("Getting all dimension table");
+    return mc.getAllDimensionTables(dimensionName);
   }
 
   public List<String> getAllCubes() {

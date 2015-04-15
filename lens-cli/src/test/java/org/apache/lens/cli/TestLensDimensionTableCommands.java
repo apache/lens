@@ -22,6 +22,9 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+import javax.ws.rs.NotFoundException;
+
+import org.apache.lens.cli.commands.LensDimensionCommands;
 import org.apache.lens.cli.commands.LensDimensionTableCommands;
 import org.apache.lens.client.LensClient;
 
@@ -43,6 +46,7 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
 
   /** The command. */
   private static LensDimensionTableCommands command = null;
+  private static LensDimensionCommands dimensionCommand = null;
 
   private static LensDimensionTableCommands getCommand() {
     if (command == null) {
@@ -53,6 +57,16 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
     return command;
   }
 
+  private static LensDimensionCommands getDimensionCommand() {
+    if (dimensionCommand == null) {
+      LensClient client = new LensClient();
+      dimensionCommand = new LensDimensionCommands();
+      dimensionCommand.setClient(client);
+    }
+    return dimensionCommand;
+  }
+
+
   /**
    * Test dim table commands.
    *
@@ -61,11 +75,23 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
    */
   @Test
   public void testDimTableCommands() throws IOException, URISyntaxException {
+    createDimension();
     addDim1Table("dim_table2", "dim_table2.xml", DIM_LOCAL);
     updateDim1Table();
     testDimStorageActions();
     testDimPartitionActions();
     dropDim1Table();
+    dropDimension();
+  }
+
+  private void dropDimension() {
+    getDimensionCommand().dropDimension("test_dim");
+  }
+
+  private void createDimension() throws URISyntaxException {
+    URL dimensionSpec = TestLensDimensionTableCommands.class.getClassLoader().getResource("test-dimension.xml");
+    getDimensionCommand().createDimension(new File(dimensionSpec.toURI()).getAbsolutePath());
+
   }
 
   /**
@@ -79,7 +105,9 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
   public static synchronized void addDim1Table(String tableName, String specName, String storageName)
     throws IOException {
     LensDimensionTableCommands command = getCommand();
-    String dimList = command.showDimensionTables();
+    String dimList = command.showDimensionTables(null);
+    Assert.assertEquals(command.showDimensionTables("test_dim"), dimList);
+
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(storageName);
     URL dimSpec = TestLensDimensionTableCommands.class.getClassLoader().getResource(specName);
@@ -91,7 +119,18 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
       Assert.fail("Unable to create dimtable" + e.getMessage());
     }
 
-    dimList = command.showDimensionTables();
+    dimList = command.showDimensionTables(null);
+    Assert.assertEquals(command.showDimensionTables("test_dim"), dimList);
+    try {
+      Assert.assertEquals(command.showDimensionTables("blah"), dimList);
+      Assert.fail();
+    } catch (NotFoundException e) {
+    }
+    try {
+      Assert.assertEquals(command.showDimensionTables("dim_table2"), dimList);
+      Assert.fail();
+    } catch (NotFoundException e) {
+    }
     Assert.assertTrue(dimList.contains(tableName), "dim_table table should be found");
   }
 
@@ -220,10 +259,10 @@ public class TestLensDimensionTableCommands extends LensCliApplicationTest {
    */
   public static void dropDim1Table() {
     LensDimensionTableCommands command = getCommand();
-    String dimList = command.showDimensionTables();
+    String dimList = command.showDimensionTables(null);
     Assert.assertEquals("dim_table2", dimList, "dim_table table should be found");
     command.dropDimensionTable("dim_table2", false);
-    dimList = command.showDimensionTables();
+    dimList = command.showDimensionTables(null);
     Assert.assertEquals("No Dimensions Found", dimList, "Dim tables should not be found");
     TestLensStorageCommands.dropStorage(DIM_LOCAL);
   }

@@ -111,7 +111,7 @@ public class CubeMetastoreClient {
     String partCol = cube.getPartitionColumnOfTimeDim(timeDimension);
     Date max = new Date(Long.MIN_VALUE);
     boolean updated = false;
-    for (CubeFactTable fact : getAllFactTables(cube)) {
+    for (CubeFactTable fact : getAllFacts(cube)) {
       for (String storage : fact.getStorages()) {
         for (UpdatePeriod updatePeriod : fact.getUpdatePeriods().get(storage)) {
           PartitionTimeline timeline = partitionTimelineCache.get(fact.getName(), storage, updatePeriod,
@@ -1398,6 +1398,9 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public CubeInterface getCube(String tableName) throws HiveException {
+    if (tableName == null) {
+      return null;
+    }
     tableName = tableName.trim().toLowerCase();
     CubeInterface cube = allCubes.get(tableName);
     if (cube == null) {
@@ -1426,6 +1429,9 @@ public class CubeMetastoreClient {
    * @throws HiveException
    */
   public Dimension getDimension(String tableName) throws HiveException {
+    if (tableName == null) {
+      return null;
+    }
     tableName = tableName.trim().toLowerCase();
     Dimension dim = allDims.get(tableName);
     if (dim == null) {
@@ -1635,22 +1641,25 @@ public class CubeMetastoreClient {
    * @return List of fact tables
    * @throws HiveException
    */
-  public List<CubeFactTable> getAllFactTables(CubeInterface cube) throws HiveException {
-    if (cube instanceof Cube) {
-      List<CubeFactTable> cubeFacts = new ArrayList<CubeFactTable>();
-      try {
-        for (CubeFactTable fact : getAllFacts()) {
-          if (fact.getCubeName().equalsIgnoreCase(((Cube) cube).getName())) {
-            cubeFacts.add(fact);
-          }
-        }
-      } catch (HiveException e) {
-        throw new HiveException("Could not get all fact tables of " + cube, e);
+  public List<CubeFactTable> getAllFacts(CubeInterface cube) throws HiveException {
+    String cubeName = null;
+    if (cube != null) {
+      if (cube instanceof DerivedCube) {
+        cube = ((DerivedCube) cube).getParent();
       }
-      return cubeFacts;
-    } else {
-      return getAllFactTables(((DerivedCube) cube).getParent());
+      cubeName = cube.getName();
     }
+    List<CubeFactTable> cubeFacts = new ArrayList<CubeFactTable>();
+    try {
+      for (CubeFactTable fact : getAllFacts()) {
+        if (cubeName == null || fact.getCubeName().equalsIgnoreCase(cubeName)) {
+          cubeFacts.add(fact);
+        }
+      }
+    } catch (HiveException e) {
+      throw new HiveException("Could not get all fact tables of " + cube, e);
+    }
+    return cubeFacts;
   }
 
   /**
@@ -1707,7 +1716,7 @@ public class CubeMetastoreClient {
     List<CubeDimensionTable> dimTables = new ArrayList<CubeDimensionTable>();
     try {
       for (CubeDimensionTable dimTbl : getAllDimensionTables()) {
-        if (dimTbl.getDimName().equalsIgnoreCase(dim.getName().toLowerCase())) {
+        if (dim == null || dimTbl.getDimName().equalsIgnoreCase(dim.getName().toLowerCase())) {
           dimTables.add(dimTbl);
         }
       }

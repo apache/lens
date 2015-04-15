@@ -45,8 +45,9 @@ public class LensDimensionTableCommands extends BaseLensCommand implements Comma
    * @return the string
    */
   @CliCommand(value = "show dimtables", help = "show list of dimension tables in database")
-  public String showDimensionTables() {
-    List<String> dims = getClient().getAllDimensionTables();
+  public String showDimensionTables(
+    @CliOption(key = {"", "dimension"}, mandatory = false, help = "<optional dimension name>") String dimensionName) {
+    List<String> dims = getClient().getAllDimensionTables(dimensionName);
     if (dims != null) {
       return Joiner.on("\n").join(dims);
     } else {
