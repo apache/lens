@@ -67,7 +67,9 @@ public final class StorageConstants {
 
   public static String getPartFilter(String partCol, String value, Map<String, String> parts) {
     Map<String, String> allParts = Maps.newHashMap();
-    allParts.putAll(parts);
+    if (parts != null) {
+      allParts.putAll(parts);
+    }
     allParts.put(partCol, value);
     return getPartFilter(allParts);
   }
