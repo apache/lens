@@ -17,6 +17,13 @@
 
 FROM inmobi/docker-hive
 
+RUN wget http://apache.mirrors.lucidnetworks.net/spark/spark-1.3.0/spark-1.3.0-bin-hadoop2.4.tgz
+RUN gunzip spark-1.3.0-bin-hadoop2.4.tgz
+RUN tar -xvf spark-1.3.0-bin-hadoop2.4.tar
+RUN mv spark-1.3.0-bin-hadoop2.4 /usr/local
+ENV SPARK_HOME /usr/local/spark-1.3.0-bin-hadoop2.4
+RUN rm spark-1.3.0-bin-hadoop2.4.tar
+
 ENV LENS_VERSION 2.1.0-beta-incubating-SNAPSHOT
 ENV BASEDIR /opt/lens
 ENV LENS_HOME $BASEDIR/lens-dist/target/apache-lens-${LENS_VERSION}-bin/apache-lens-${LENS_VERSION}-bin/server

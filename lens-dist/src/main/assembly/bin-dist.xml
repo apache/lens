@@ -118,6 +118,7 @@
         <include>lens-config.sh</include>
         <include>lens-cli.sh</include>
         <include>lens-cli</include>
+        <include>lens-run-class.sh</include>
       </includes>
     </fileSet>
 
