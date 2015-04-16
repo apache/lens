@@ -695,24 +695,12 @@ public class LensMLImpl implements LensML {
     }
 
     LOG.info("Registering UDF for session " + sessionHandle.getPublicId().toString());
-    // We have to add UDF jars to the session
-    try {
-      SessionService sessionService = (SessionService) MLUtils.getServiceProvider().getService(SessionService.NAME);
-      String[] udfJars = conf.getStrings("lens.server.ml.predict.udf.jars");
-      if (udfJars != null) {
-        for (String jar : udfJars) {
-          sessionService.addResource(sessionHandle, "jar", jar);
-          LOG.info(jar + " added UDF session " + sessionHandle.getPublicId().toString());
-        }
-      }
-    } catch (Exception e) {
-      throw new LensException(e);
-    }
 
     String regUdfQuery = "CREATE TEMPORARY FUNCTION " + HiveMLUDF.UDF_NAME + " AS '" + HiveMLUDF.class
       .getCanonicalName() + "'";
     queryRunner.setQueryName("register_predict_udf_" + sessionHandle.getPublicId().toString());
     QueryHandle udfQuery = queryRunner.runQuery(regUdfQuery);
+    LOG.info("udf query handle is " + udfQuery);
     predictUdfStatus.put(sessionHandle, true);
     LOG.info("Predict UDF registered for session " + sessionHandle.getPublicId().toString());
   }

@@ -36,7 +36,7 @@
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
       <includes>
-        <include>org.apache.lens:lens-ml</include>
+        <include>org.apache.lens:lens-ml-lib</include>
       </includes>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <useTransitiveDependencies>true</useTransitiveDependencies>
