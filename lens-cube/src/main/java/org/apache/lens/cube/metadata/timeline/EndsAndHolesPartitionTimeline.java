@@ -98,6 +98,8 @@ public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   @Override
   public Map<String, String> toProperties() {
     HashMap<String, String> ret = Maps.newHashMap();
+    ret.put("first", "");
+    ret.put("latest", "");
     MetastoreUtil.addNameStrings(ret, "holes", holes);
     if (isEmpty()) {
       return ret;
