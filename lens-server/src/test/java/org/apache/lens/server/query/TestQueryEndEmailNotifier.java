@@ -18,7 +18,10 @@
  */
 package org.apache.lens.server.query;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -27,7 +30,9 @@ import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
-import org.apache.lens.api.query.*;
+import org.apache.lens.api.query.LensQuery;
+import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
@@ -58,7 +63,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
 
   /** The Constant LOG. */
   public static final Log LOG = LogFactory.getLog(TestQueryEndEmailNotifier.class);
-
+  private static final int NUM_ITERS = 30;
   /** The query service. */
   QueryExecutionServiceImpl queryService;
 
@@ -184,6 +189,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     Assert.assertEquals(ctx.getStatus().getStatus(), expectedStatus);
     return handle;
   }
+
   /**
    * Test launch fail.
    *
@@ -196,16 +202,14 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     // launch failure
     QueryHandle handle = launchAndWaitForQuery(conf, "select ID from non_exist_table", QueryStatus.Status.FAILED);
     List<WiserMessage> messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NUM_ITERS; i++) {
       messages = wiser.getMessages();
-      if (messages.size() > 0) {
+      if (messages.size() >= 4) {
         break;
       }
       Thread.sleep(10000);
     }
 
-    Assert.assertEquals(messages.size(), 4);
-    Assert.assertTrue(messages.get(0).toString().contains(handle.toString()));
     Assert.assertEquals(messages.size(), 4);
     Assert.assertTrue(messages.get(0).toString().contains(handle.toString()));
     Assert.assertTrue(messages.get(0).toString().contains("Launching query failed"));
@@ -214,9 +218,9 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     // rewriter failure
     handle = launchAndWaitForQuery(conf, "cube select ID from nonexist", QueryStatus.Status.FAILED);
     messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NUM_ITERS; i++) {
       messages = wiser.getMessages();
-      if (messages.size() > 4) {
+      if (messages.size() >= 8) {
         break;
       }
       Thread.sleep(10000);
@@ -235,9 +239,9 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     handle = launchAndWaitForQuery(conf, "select ID, IDSTR from " + TEST_TABLE,
       QueryStatus.Status.FAILED);
     messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NUM_ITERS; i++) {
       messages = wiser.getMessages();
-      if (messages.size() > 8) {
+      if (messages.size() >= 12) {
         break;
       }
       Thread.sleep(10000);
@@ -256,9 +260,9 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     conf.addProperty("mapred.map.output.compression.codec", "nonexisting");
     handle = launchAndWaitForQuery(conf, "select count(ID) from " + TEST_TABLE, QueryStatus.Status.FAILED);
     messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NUM_ITERS; i++) {
       messages = wiser.getMessages();
-      if (messages.size() > 12) {
+      if (messages.size() >= 16) {
         break;
       }
       Thread.sleep(10000);
@@ -275,19 +279,17 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     conf.addProperty(LensConfConstants.QUERY_PERSISTENT_RESULT_INDRIVER, "true");
     handle = launchAndWaitForQuery(conf, "select ID, IDSTR from " + TEST_TABLE, QueryStatus.Status.SUCCESSFUL);
     messages = new ArrayList<WiserMessage>();
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < NUM_ITERS; i++) {
       messages = wiser.getMessages();
-      if (messages.size() > 16) {
+      if (messages.size() >= 20) {
         break;
       }
       Thread.sleep(10000);
     }
-
     Assert.assertEquals(messages.size(), 20);
     Assert.assertTrue(messages.get(16).toString().contains(handle.toString()));
     Assert.assertTrue(messages.get(16).toString().contains("Query  SUCCESSFUL"));
     Assert.assertTrue(messages.get(16).toString().contains("Result available at"));
-
     wiser.stop();
   }
 }
