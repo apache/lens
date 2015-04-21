@@ -60,6 +60,7 @@
 
     <jackson.asl.version>1.9.13</jackson.asl.version>
     <opencsv.version>2.3</opencsv.version>
+    <jsch.version>0.1.42</jsch.version>
 
     <libthrift.version>0.9.0</libthrift.version>
 
@@ -412,6 +413,9 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>${surefire.plugin.version}</version>
           <configuration>
+            <excludes>
+              <exclude>**/IT*.java</exclude>
+            </excludes>
             <failIfNoTests>false</failIfNoTests>
             <forkedProcessTimeoutInSeconds>2400</forkedProcessTimeoutInSeconds>
           </configuration>
@@ -1149,6 +1153,11 @@
         <artifactId>opencsv</artifactId>
         <version>${opencsv.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.jcraft</groupId>
+        <artifactId>jsch</artifactId>
+        <version>${jsch.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -1173,7 +1182,7 @@
 
   <profiles>
     <profile>
-      <id>integration-tests</id>
+      <id>regression-tests</id>
       <build>
         <plugins>
           <plugin>
@@ -1192,11 +1201,13 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
               <includes>
-                <!-- integration test would run with mvn clean install -P integration-tests -->
+                <!-- regression test would run with mvn clean install -P regression-tests -->
                 <include>**/IT*.java</include>
               </includes>
-              <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-              <redirectTestOutputToFile>true</redirectTestOutputToFile>
+              <excludes>
+                <exclude>**/UT*.java</exclude>
+              </excludes>
+              <forkedProcessTimeoutInSeconds>6200</forkedProcessTimeoutInSeconds>
             </configuration>
           </plugin>
         </plugins>

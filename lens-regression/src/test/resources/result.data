@@ -1,0 +1,1517 @@
+Query:cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:2845
+Driver run time in millis:119
+Result:
+1	first
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim where name != 'first'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:77
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim order by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:82
+Driver run time in millis:1
+Result:
+1	first
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim order by name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:121
+Driver run time in millis:1
+Result:
+3	third
+2	second
+1	first
+--------------------
+Query:cube select id,name from sample_dim where name != 'first' order by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:111
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim where name != 'first' order by name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:106
+Driver run time in millis:1
+Result:
+3	third
+2	second
+--------------------
+Query:cube select id,name from sample_dim limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:115
+Driver run time in millis:1
+Result:
+1	first
+2	second
+--------------------
+Query:cube select id,name from sample_dim order by name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:78
+Driver run time in millis:3
+Result:
+1	first
+2	second
+--------------------
+Query:cube select id,name from sample_dim order by name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:67
+Driver run time in millis:3
+Result:
+3	third
+2	second
+--------------------
+Query:cube select id,name from sample_dim where name != 'first' limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:67
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim where name != 'first' order by name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:108
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_dim where name != 'first' order by name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:99
+Driver run time in millis:1
+Result:
+3	third
+2	second
+--------------------
+Query:cube select count(id) from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:348
+Driver run time in millis:2
+Result:
+3
+--------------------
+Query:cube select count(id) from sample_dim group by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:90
+Driver run time in millis:1
+Result:
+first	1
+second	1
+third	1
+--------------------
+Query:cube select count(distinct id) from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:88
+Driver run time in millis:1
+Result:
+3
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:19344
+Driver run time in millis:19094
+Result:
+fifth	fifteen
+six	sixteen
+seven	
+eight	eighteen
+first	eleven
+second	twelve
+third	thirteen
+fourth	fourteen
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim join sample_dim2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:17191
+Driver run time in millis:17066
+Result:
+six	sixteen
+eight	eighteen
+first	eleven
+second	twelve
+third	thirteen
+fourth	fourteen
+fifth	fifteen
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim left outer join sample_dim2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:19158
+Driver run time in millis:19088
+Result:
+fifth	fifteen
+six	sixteen
+seven	
+eight	eighteen
+first	eleven
+second	twelve
+third	thirteen
+fourth	fourteen
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim right outer join sample_dim2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:17208
+Driver run time in millis:17146
+Result:
+six	sixteen
+	seventeen
+eight	eighteen
+	ninteen
+first	eleven
+second	twelve
+third	thirteen
+fourth	fourteen
+fifth	fifteen
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim full outer join sample_dim2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22267
+Driver run time in millis:22202
+Result:
+seven	
+	ninteen
+second	twelve
+fifth	fifteen
+eight	eighteen
+third	thirteen
+six	sixteen
+first	eleven
+fourth	fourteen
+	seventeen
+--------------------
+Query:cube select count(id) from sample_dim where name != "first"
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21170
+Driver run time in millis:20130
+Result:
+6
+--------------------
+Query:cube select count(distinct id) from sample_dim where name != "first"
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21164
+Driver run time in millis:20147
+Result:
+6
+--------------------
+Query:cube select sample_dim.name, sample_dim2.name from sample_dim where sample_dim.name != 'first'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:19135
+Driver run time in millis:19078
+Result:
+fifth	fifteen
+six	sixteen
+seven	
+eight	eighteen
+second	twelve
+third	thirteen
+fourth	fourteen
+--------------------
+Query:cube select id,name from sample_db_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:101
+Driver run time in millis:1
+Result:
+1	first
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:50
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim order by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:76
+Driver run time in millis:1
+Result:
+1	first
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim order by name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:76
+Driver run time in millis:1
+Result:
+3	third
+2	second
+1	first
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first' order by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:41
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first' order by name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:83
+Driver run time in millis:1
+Result:
+3	third
+2	second
+--------------------
+Query:cube select id,name from sample_db_dim limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:49
+Driver run time in millis:1
+Result:
+1	first
+2	second
+--------------------
+Query:cube select id,name from sample_db_dim order by name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:49
+Driver run time in millis:1
+Result:
+1	first
+2	second
+--------------------
+Query:cube select id,name from sample_db_dim order by name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:96
+Driver run time in millis:2
+Result:
+3	third
+2	second
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first' limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:51
+Driver run time in millis:2
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first' order by name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:91
+Driver run time in millis:1
+Result:
+2	second
+3	third
+--------------------
+Query:cube select id,name from sample_db_dim where name != 'first' order by name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:65
+Driver run time in millis:1
+Result:
+3	third
+2	second
+--------------------
+Query:cube select count(id) from sample_db_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:69
+Driver run time in millis:1
+Result:
+3
+--------------------
+Query:cube select count(id) from sample_db_dim group by name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:63
+Driver run time in millis:1
+Result:
+first	1
+second	1
+third	1
+--------------------
+Query:cube select count(distinct id) from sample_db_dim
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:97
+Driver run time in millis:1
+Result:
+3
+--------------------
+Query:select * from (cube select sample_dim.name name1, sample_dim2.name name2 from sample_dim where sample_dim.name != 'first') a
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:19196
+Driver run time in millis:19127
+Result:
+fifth	fifteen
+six	sixteen
+seven	
+eight	eighteen
+second	twelve
+third	thirteen
+fourth	fourteen
+--------------------
+Query:drop table temp1
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:320
+Driver run time in millis:110
+--------------------
+Query:create table temp1 as cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:30459
+Driver run time in millis:30414
+--------------------
+Query:select * from temp1
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:168
+Driver run time in millis:33
+Result:
+5	fifth
+6	six
+7	seven
+	eight
+1	first
+2	second
+3	third
+4	fourth
+--------------------
+Query:insert overwrite local directory '/tmp/example-output' cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:14197
+Driver run time in millis:14153
+--------------------
+Query:insert overwrite local directory '/tmp/example-output2' ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:14224
+Driver run time in millis:14178
+--------------------
+Query:drop table temp2
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:303
+Driver run time in millis:102
+--------------------
+Query:create table temp2(id int, name string)
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:217
+Driver run time in millis:29
+--------------------
+Query:insert overwrite table temp2 cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:30437
+Driver run time in millis:30387
+--------------------
+Query:select * from temp2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:179
+Driver run time in millis:32
+Result:
+5	fifth
+6	six
+7	seven
+	eight
+1	first
+2	second
+3	third
+4	fourth
+--------------------
+Query:drop table temp3
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:238
+Driver run time in millis:106
+--------------------
+Query:create table temp3(id int, name string) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:148
+Driver run time in millis:31
+--------------------
+Query:insert overwrite table temp3 cube select id,name from sample_dim
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:30448
+Driver run time in millis:30408
+--------------------
+Query:select * from temp3
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:197
+Driver run time in millis:33
+Result:
+5	fifth
+6	six
+7	seven
+	eight
+1	first
+2	second
+3	third
+4	fourth
+--------------------
+Query:cube select name from city
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:98
+Driver run time in millis:1
+Result:
+Bangalore
+Hyderabad
+Austin
+San Fransisco
+--------------------
+Query:cube select name from city where population > 1000000
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:16178
+Driver run time in millis:16128
+Result:
+Bangalore
+Hyderabad
+--------------------
+Query:cube select name, poi from city
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:14191
+Driver run time in millis:14146
+Result:
+Bangalore	["Parks","Temples","Software companies"]
+Hyderabad	["Minars","Museums","Software companies"]
+Austin	["Lakes","University","Museums","Software companies"]
+San Francisco	["Golden gate bridge","Beaches","Software companies"]
+--------------------
+Query:cube select distinct category from product
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:89
+Driver run time in millis:0
+Result:
+Clothes
+Food
+Stationary
+Wearables
+--------------------
+Query:cube select id, description from product where weight > 100
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:58
+Driver run time in millis:1
+Result:
+1	Book
+3	Shirt
+4	Shoes
+5	Chocolates
+--------------------
+Query:cube select category, count(1) as `Number of products` from product
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:24244
+Driver run time in millis:24172
+Result:
+Clothes	1
+Stationary	2
+Food	1
+Wearables	1
+--------------------
+Query:cube select name, customer_city_name from customer
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:107
+Driver run time in millis:2
+Result:
+Ramu	Bangalore
+Meena	Hyderabad
+JohnX	Austin
+Anju	San Fransisco
+--------------------
+Query:cube select customer.name, customer_city.population from customer
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:17214
+Driver run time in millis:17165
+Result:
+Ramu	10000000
+Meena	11000000
+JohnX	800000
+Anju	800000
+--------------------
+Query:cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21242
+Driver run time in millis:20164
+Result:
+3600
+--------------------
+Query:cube select measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:18232
+Driver run time in millis:18154
+Result:
+86400
+--------------------
+Query:cube select measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21197
+Driver run time in millis:20147
+Result:
+93600
+--------------------
+Query:cube select dim1, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22193
+Driver run time in millis:22143
+Result:
+21	100
+24	400
+27	700
+22	200
+25	500
+28	800
+23	300
+26	600
+--------------------
+Query:cube select dim1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21178
+Driver run time in millis:20143
+Result:
+21	2400
+24	9600
+27	16800
+22	4800
+25	12000
+28	19200
+23	7200
+26	14400
+--------------------
+Query:cube select dim1, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22224
+Driver run time in millis:22166
+Result:
+21	2600
+24	10400
+27	18200
+22	5200
+25	13000
+28	20800
+23	7800
+26	15600
+--------------------
+Query:cube select dim3, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22230
+Driver run time in millis:22165
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select dim3, measure3 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22202
+Driver run time in millis:22156
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select dim3, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22235
+Driver run time in millis:22176
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25150
+Driver run time in millis:25102
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25242
+Driver run time in millis:25186
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25212
+Driver run time in millis:25144
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45271
+Driver run time in millis:45214
+Result:
+	800.0
+fifth	500.0
+first	100.0
+fourth	400.0
+second	200.0
+seven	700.0
+six	600.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45369
+Driver run time in millis:45308
+Result:
+	800.0
+fifth	500.0
+first	100.0
+fourth	400.0
+second	200.0
+seven	700.0
+six	600.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45302
+Driver run time in millis:45235
+Result:
+	800.0
+fifth	500.0
+first	100.0
+fourth	400.0
+second	200.0
+seven	700.0
+six	600.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first"
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:29245
+Driver run time in millis:29180
+Result:
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first"
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25207
+Driver run time in millis:25148
+Result:
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first"
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:27279
+Driver run time in millis:27218
+Result:
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first" order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47365
+Driver run time in millis:47305
+Result:
+fifth	500
+fourth	400
+second	200
+seven	700
+six	600
+third	300
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first" order by sample_dim.name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45309
+Driver run time in millis:45251
+Result:
+third	300
+six	600
+seven	700
+second	200
+fourth	400
+fifth	500
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first" order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45293
+Driver run time in millis:45246
+Result:
+fifth	12000
+fourth	9600
+second	4800
+seven	16800
+six	14400
+third	7200
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first" order by sample_dim.name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45695
+Driver run time in millis:45643
+Result:
+third	7200
+six	14400
+seven	16800
+second	4800
+fourth	9600
+fifth	12000
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first" order by sample_dim.name
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47353
+Driver run time in millis:47292
+Result:
+fifth	13000
+fourth	10400
+second	5200
+seven	18200
+six	15600
+third	7800
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first" order by sample_dim.name desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47315
+Driver run time in millis:47243
+Result:
+third	7800
+six	15600
+seven	18200
+second	5200
+fourth	10400
+fifth	13000
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45276
+Driver run time in millis:45222
+Result:
+	800.0
+fifth	500.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47256
+Driver run time in millis:47207
+Result:
+	800.0
+fifth	500.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45480
+Driver run time in millis:45387
+Result:
+	800.0
+fifth	500.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first" limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25177
+Driver run time in millis:25124
+Result:
+fifth	500.0
+second	200.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first" limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25178
+Driver run time in millis:25117
+Result:
+fifth	500.0
+second	200.0
+--------------------
+Query:cube select sample_dim.name, measure3 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first" limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:27174
+Driver run time in millis:27112
+Result:
+fifth	500.0
+second	200.0
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first" order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45260
+Driver run time in millis:45209
+Result:
+fifth	500
+fourth	400
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') and sample_dim.name != "first" order by sample_dim.name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47409
+Driver run time in millis:47352
+Result:
+third	300
+six	600
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first" order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47291
+Driver run time in millis:47233
+Result:
+fifth	12000
+fourth	9600
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00') and sample_dim.name != "first" order by sample_dim.name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:45300
+Driver run time in millis:45238
+Result:
+third	7200
+six	14400
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first" order by sample_dim.name limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47285
+Driver run time in millis:47233
+Result:
+fifth	13000
+fourth	10400
+--------------------
+Query:cube select sample_dim.name, measure2 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01') and sample_dim.name != "first" order by sample_dim.name desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:47310
+Driver run time in millis:47257
+Result:
+third	7800
+six	15600
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22242
+Driver run time in millis:22176
+Result:
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+21	11	100	100
+22	12	200	200
+23	13	300	300
+24	14	400	400
+25	15	500	500
+26	16	600	600
+27	17	700	700
+28	18	800	800
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02') order by dim2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:26226
+Driver run time in millis:26178
+Result:
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02') order by dim2 desc
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:26231
+Driver run time in millis:26183
+Result:
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+28	18	800	800
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+27	17	700	700
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+26	16	600	600
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+25	15	500	500
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+24	14	400	400
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+23	13	300	300
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+22	12	200	200
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+21	11	100	100
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02') limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22214
+Driver run time in millis:22171
+Result:
+21	11	100	100
+22	12	200	200
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02') order by dim2 limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:26249
+Driver run time in millis:26201
+Result:
+21	11	100	100
+21	11	100	100
+--------------------
+Query:cube select dim1, dim2, measure1, measure2 from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02') order by dim2 desc limit 2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:24233
+Driver run time in millis:24178
+Result:
+28	18	800	800
+28	18	800	800
+--------------------
+Query:cube select dim1, avg(measure2) from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:28261
+Driver run time in millis:28216
+Result:
+21	100.0
+24	400.0
+27	700.0
+22	200.0
+25	500.0
+28	800.0
+23	300.0
+26	600.0
+--------------------
+Query:cube select dim3, min(measure3) from sample_cube where time_range_in(dt, '2014-06-25-20', '2014-06-26-02')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:28248
+Driver run time in millis:28204
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select dim1, sum(measure2) from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22220
+Driver run time in millis:22168
+Result:
+21	100
+24	400
+27	700
+22	200
+25	500
+28	800
+23	300
+26	600
+--------------------
+Query:cube select dim1, sum(measure2)from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22214
+Driver run time in millis:22168
+Result:
+21	2400
+24	9600
+27	16800
+22	4800
+25	12000
+28	19200
+23	7200
+26	14400
+--------------------
+Query:cube select dim1, sum(measure2) from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22220
+Driver run time in millis:22168
+Result:
+21	2600
+24	10400
+27	18200
+22	5200
+25	13000
+28	20800
+23	7800
+26	15600
+--------------------
+Query:cube select dim3, max(measure3) from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22222
+Driver run time in millis:22176
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select dim3, max(measure3) from sample_cube where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22262
+Driver run time in millis:22190
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select dim3, max(measure3) from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22234
+Driver run time in millis:22168
+Result:
+3	300.0
+6	600.0
+1	100.0
+4	400.0
+7	700.0
+2	200.0
+5	500.0
+8	800.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube join sample_dim where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:27185
+Driver run time in millis:27136
+Result:
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube left outer join sample_dim where time_range_in(dt, '2014-06-25-00', '2014-06-26-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25189
+Driver run time in millis:25132
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube right outer join sample_dim where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25208
+Driver run time in millis:25149
+Result:
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select sample_dim.name, measure4 from sample_cube full outer join sample_dim where time_range_in(dt, '2014-06-24-23', '2014-06-26-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:48406
+Driver run time in millis:48295
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:select * from (cube select sample_dim.name, measure4 from sample_cube join sample_dim where time_range_in(dt, '2014-06-24-23', '2014-06-25-00') ) a
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25210
+Driver run time in millis:25156
+Result:
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:drop table temp1
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:290
+Driver run time in millis:100
+--------------------
+Query:create table temp1 as cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:25352
+Driver run time in millis:25306
+--------------------
+Query:select * from temp1
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:207
+Driver run time in millis:52
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:insert overwrite local directory '/tmp/example-cube-output' cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:25179
+Driver run time in millis:25124
+--------------------
+Query:insert overwrite local directory '/tmp/example-cube-output2' ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:25188
+Driver run time in millis:25143
+--------------------
+Query:drop table temp2
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:290
+Driver run time in millis:97
+--------------------
+Query:create table temp2(name string, msr4 float)
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:218
+Driver run time in millis:36
+--------------------
+Query:insert overwrite table temp2 cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:25408
+Driver run time in millis:25364
+--------------------
+Query:select * from temp2
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:173
+Driver run time in millis:32
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:drop table temp3
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:215
+Driver run time in millis:95
+--------------------
+Query:create table temp3(name string, msr4 float) ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe' WITH SERDEPROPERTIES ('serialization.null.format'='-NA-','field.delim'=','  ) STORED AS TEXTFILE
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:157
+Driver run time in millis:34
+--------------------
+Query:insert overwrite table temp3 cube select sample_dim.name, measure4 from sample_cube where time_range_in(dt, '2014-06-24-23', '2014-06-25-00')
+Status:SUCCESSFUL:Query is successful! - Result Not Available
+Total time in millis:25407
+Driver run time in millis:25361
+--------------------
+Query:select * from temp3
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:176
+Driver run time in millis:31
+Result:
+	800.0
+first	100.0
+fifth	500.0
+second	200.0
+six	600.0
+fourth	400.0
+seven	700.0
+third	300.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22294
+Driver run time in millis:22181
+Result:
+1	10.0
+2	16.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22288
+Driver run time in millis:22207
+Result:
+1	15.0
+2	24.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:78
+Driver run time in millis:3
+Result:
+1	5.0
+2	8.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-02')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22247
+Driver run time in millis:22174
+Result:
+1	10.0
+2	24.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22274
+Driver run time in millis:22167
+Result:
+1	10.0
+2	16.0
+--------------------
+Query:cube select product_id, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:97
+Driver run time in millis:1
+Result:
+1	5.0
+2	8.0
+--------------------
+Query:cube select promotion_sales, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-02')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:22243
+Driver run time in millis:22198
+Result:
+26.0	34.0
+--------------------
+Query:cube select promotion_sales, store_sales from sales where time_range_in(order_time, '2015-04-13-00', '2015-04-13-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:21184
+Driver run time in millis:20181
+Result:
+13.0	13.0
+--------------------
+Query:cube select customer_city_name, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:113
+Driver run time in millis:3
+Result:
+Bangalore	5.0
+Hyderabad	8.0
+--------------------
+Query:cube select customer_city_name, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25276
+Driver run time in millis:25186
+Result:
+Bangalore	10.0
+Hyderabad	16.0
+--------------------
+Query:cube select customer_city_name, delivery_city.name, production_city.name, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25399
+Driver run time in millis:25303
+Result:
+Bangalore	Bangalore	Bangalore	10.0
+Hyderabad	Hyderabad	Hyderabad	16.0
+--------------------
+Query:cube select product_details.color, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-00') and product_details.category='Stationary'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25351
+Driver run time in millis:25263
+Result:
+White	10.0
+Blue	16.0
+--------------------
+Query:cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25417
+Driver run time in millis:25314
+Result:
+Stationary	39.0
+--------------------
+Query:cube select product_details.color, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')and product_details.category='Stationary'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:117
+Driver run time in millis:7
+Result:
+White	5.0
+Blue	8.0
+--------------------
+Query:cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-11-00', '2015-04-13-01')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25253
+Driver run time in millis:25164
+Result:
+Stationary	39.0
+--------------------
+Query:cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:79
+Driver run time in millis:1
+Result:
+Stationary	13.0
+--------------------
+Query:cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00') and product_details.category='Stationary'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:25274
+Driver run time in millis:25206
+Result:
+White	10.0
+Blue	16.0
+--------------------
+Query:cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00') and product_details.category='Stationary'
+Status:SUCCESSFUL:Query is successful! - Result Available
+Total time in millis:76
+Driver run time in millis:4
+Result:
+White	5.0
+Blue	8.0
+--------------------
+Successful queries 146 out of 146queries
+Total time for running examples(in millis) :3914655
