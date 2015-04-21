@@ -23,6 +23,8 @@ All Apache Lens releases
 *--+--+---+--+--+--+--+
 |Release version|Major features|Release documentation|Release Notes|Download|Incompatibilities|More Info |
 *--+--+---+--+--+--+--+
+|2.1.0-beta-incubating| Estimate api, Partition timeline, DB resources, Timers on REST api| {{{../versions/2.1.0-beta-incubating/index.html} 2.1.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328991} 2.1 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.1-beta-incubating/} Download}} | {{{#a2.1.x_from_2.0.x} 2.1.x-incompatibilities}} | - |
+*--+--+---+--+--+--+--+
 |2.0.1-beta-incubating| First release in Apache| {{{../versions/2.0.1-beta-incubating/index.html} 2.0.x-incubating docs}} | {{{https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12315923&version=12328990} 2.0 release notes}}| {{{http://archive.apache.org/dist/incubator/lens/2.0-beta-incubating/} Download}} | - | - |
 *--+--+---+--+--+--+--+
 
@@ -31,3 +33,29 @@ All Apache Lens releases
   Binary distribution of the release does not include dependency org.acplt:oncrpc:jar:1.0.7, as its licensing (LGPL) is
   not in compliance with Apache licensing which is required for ganglia metrics reporting. If user is interested in
   ganglia metrics reporting, the jar needs to be downloaded and used.
+
+* Incompatibilities
+
+** 2.1.x from 2.0.x
+
+  * LENS-437 : Removed counts and weights from QueryPlan. The values are no longer available. If any usecase requires
+  these values, it requires a feature addition.
+
+  * LENS-338 : REST api path changed from /facts/\{factName\}/storages/\{storage\}/partitions to
+  /facts/\{factName\}/storages/\{storage\}/partition  and /dimtables/\{dimTableName\}/storages/\{storage\}/partitions to
+   /dimtables/\{dimTableName\}/storages/\{storage\}/partition for adding single partition. If single partition is
+   getting registered with old path, they need to change to use new path.
+
+  * LENS-281 : Lens server understands data(partition) availability through partition timeline instead of querying
+  metastore. When server is brought up for the first time after this feature, partition timeline will built. If it needs
+  to be updated again, table properties on storage table need to be modified by setting
+  cube.storagetable.partition.timeline.cache.present to false. All add and drop partitions should go through Lens server
+  to keep timeline updated.
+
+  * LENS-327 : Adds "QueryCost estimate(AbstractQueryContext qctx) throws LensException;" in LensDriver interface;
+  ESTIMATE is added in SubmitOp enum. If there is a driver implementation, the new api needs to be implemented.
+
+  * LENS-441 : GET on /cubes/\{cubeName\}/facts returns StringList instead of List<XFactTable>. For getting the
+  XFactTable corresponding to the name returned in StringList, user need to use GET on /facts/\{factName\}.
+
+  * LENS-275 : Session not found error code is 410, instead of 404
