@@ -47,7 +47,6 @@ import org.testng.Assert;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -2092,11 +2091,11 @@ public class CubeTestSetup {
         up = UpdatePeriod.MINUTELY;
         String first = params.get(prefix + up + "." + p + "." + "first");
         String latest = params.get(prefix + up + "." + p + "." + "latest");
-        String holes = params.get(prefix + up + "." + p + "." + "holes");
+        String holes = MetastoreUtil.getNamedStringValue(params, prefix + up + "." + p + "." + "holes");
         String storageClass = params.get(prefix + up + "." + p + "." + "storage.class");
-        Assert.assertNull(first);
-        Assert.assertNull(latest);
-        Assert.assertNull(holes);
+        Assert.assertEquals(first, "");
+        Assert.assertEquals(latest, "");
+        Assert.assertEquals(holes, "");
         Assert.assertEquals(storageClass, EndsAndHolesPartitionTimeline.class.getCanonicalName());
       }
     }
