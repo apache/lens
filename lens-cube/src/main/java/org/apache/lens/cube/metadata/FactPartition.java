@@ -42,6 +42,9 @@ public class FactPartition implements Comparable<FactPartition> {
   @Setter
   private FactPartition containingPart;
   private final DateFormat partFormat;
+  @Getter
+  @Setter
+  private boolean found = false;
 
   public FactPartition(String partCol, Date partSpec, UpdatePeriod period,
     FactPartition containingPart, DateFormat partFormat) {
@@ -60,10 +63,6 @@ public class FactPartition implements Comparable<FactPartition> {
 
   public boolean hasContainingPart() {
     return containingPart != null;
-  }
-
-  public boolean found() {
-    return !getStorageTables().isEmpty();
   }
 
   public String getFormattedPartSpec() {

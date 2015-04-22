@@ -38,17 +38,24 @@ public class TestRewriterPlan extends TestQueryRewrite {
   Configuration conf = new Configuration();
 
   TestRewriterPlan() {
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C1,C2");
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, false);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
   }
+  private Configuration getConf(){
+    return new Configuration(conf);
+  }
+  private Configuration getConf(String storages) {
+    Configuration c = getConf();
+    c.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, storages);
+    return c;
+  }
 
   @Test
   public void testPlanExtractionForSimpleQuery() throws Exception {
     // simple query
-    CubeQueryContext ctx = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
+    CubeQueryContext ctx = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, getConf("C2"));
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
@@ -64,18 +71,18 @@ public class TestRewriterPlan extends TestQueryRewrite {
   public void testPlanExtractionForComplexQuery() throws Exception {
     // complex query
     CubeQueryContext ctx = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
+      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", getConf("C1,C2"));
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
     Assert.assertFalse(plan.getTablesQueried().isEmpty());
-    Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c2_testfact"));
+    Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c1_testfact2"));
     Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c1_citytable"));
-    Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c2_testfact"), 1.0);
+    Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_testfact2"), 1.0);
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_citytable"), 100.0);
     Assert.assertFalse(plan.getPartitions().isEmpty());
-    Assert.assertFalse(plan.getPartitions().get("testfact").isEmpty());
-    Assert.assertTrue(plan.getPartitions().get("testfact").size() > 1);
+    Assert.assertFalse(plan.getPartitions().get("testfact2").isEmpty());
+    Assert.assertTrue(plan.getPartitions().get("testfact2").size() > 1);
     Assert.assertFalse(plan.getPartitions().get("citytable").isEmpty());
     Assert.assertEquals(plan.getPartitions().get("citytable").size(), 1);
   }
@@ -83,21 +90,21 @@ public class TestRewriterPlan extends TestQueryRewrite {
   @Test
   public void testPlanExtractionForMultipleQueries() throws Exception {
     // simple query
-    CubeQueryContext ctx1 = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
+    CubeQueryContext ctx1 = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, getConf("C1,C2"));
     ctx1.toHQL();
     CubeQueryContext ctx2 = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
+      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", getConf("C1,C2"));
     ctx2.toHQL();
     RewriterPlan plan = new RewriterPlan(Arrays.asList(ctx1, ctx2));
     Assert.assertNotNull(plan);
     Assert.assertFalse(plan.getTablesQueried().isEmpty());
-    Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c2_testfact"));
+    Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c1_testfact2"));
     Assert.assertTrue(plan.getTablesQueried().contains("TestQueryRewrite.c1_citytable"));
-    Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c2_testfact"), 1.0);
+    Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_testfact2"), 1.0);
     Assert.assertEquals(plan.getTableWeights().get("TestQueryRewrite.c1_citytable"), 100.0);
     Assert.assertFalse(plan.getPartitions().isEmpty());
-    Assert.assertFalse(plan.getPartitions().get("testfact").isEmpty());
-    Assert.assertTrue(plan.getPartitions().get("testfact").size() > 1);
+    Assert.assertFalse(plan.getPartitions().get("testfact2").isEmpty());
+    Assert.assertTrue(plan.getPartitions().get("testfact2").size() > 1);
     Assert.assertFalse(plan.getPartitions().get("citytable").isEmpty());
     Assert.assertEquals(plan.getPartitions().get("citytable").size(), 1);
   }

@@ -30,6 +30,7 @@ import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.api.Database;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -101,10 +102,13 @@ public class CubeTestSetup {
   public static final Date TWO_MONTHS_BACK;
   public static final Date BEFORE_4_DAYS_START;
   public static final Date BEFORE_4_DAYS_END;
+  public static final Date THIS_YEAR_START;
+  public static final Date THIS_YEAR_END;
 
   // Time Ranges
   public static final String LAST_HOUR_TIME_RANGE;
   public static final String TWO_DAYS_RANGE;
+  public static final String THIS_YEAR_RANGE;
   public static final String TWO_MONTHS_RANGE_UPTO_MONTH;
   public static final String TWO_MONTHS_RANGE_UPTO_HOURS;
   public static final String TWO_DAYS_RANGE_BEFORE_4_DAYS;
@@ -148,11 +152,18 @@ public class CubeTestSetup {
     BEFORE_4_DAYS_END = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
     BEFORE_4_DAYS_START = cal.getTime();
+
+
+    THIS_YEAR_START = DateUtils.truncate(NOW, UpdatePeriod.YEARLY.calendarField());
+    THIS_YEAR_END = DateUtils.addYears(THIS_YEAR_START, 1);
     TWO_DAYS_RANGE_BEFORE_4_DAYS =
       "time_range_in(dt, '" + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_START) + "','"
         + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_END) + "')";
 
+
     TWO_DAYS_RANGE = "time_range_in(dt, '" + getDateUptoHours(TWODAYS_BACK) + "','" + getDateUptoHours(NOW) + "')";
+    THIS_YEAR_RANGE =
+      "time_range_in(dt, '" + getDateUptoHours(THIS_YEAR_START) + "','" + getDateUptoHours(THIS_YEAR_END) + "')";
     TWO_MONTHS_RANGE_UPTO_MONTH =
       "time_range_in(dt, '" + getDateUptoMonth(TWO_MONTHS_BACK) + "','" + getDateUptoMonth(NOW) + "')";
     TWO_MONTHS_RANGE_UPTO_HOURS =
@@ -1226,9 +1237,11 @@ public class CubeTestSetup {
     s1.setPartCols(partCols);
     s1.setTimePartCols(timePartCols);
     storageAggregatePeriods.put(c1, updates);
+    storageAggregatePeriods.put(c3, updates);
 
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
+    storageTables.put(c3, s1);
 
     // create cube fact
     Map<String, String> properties = new HashMap<String, String>();
@@ -1247,7 +1260,7 @@ public class CubeTestSetup {
       Map<String, Date> timeParts = new HashMap<String, Date>();
       timeParts.put(TestCubeMetastoreClient.getDatePartitionKey(), temp);
       StoragePartitionDesc sPartSpec = new StoragePartitionDesc(fact2.getName(), timeParts, null, UpdatePeriod.HOURLY);
-      client.addPartition(sPartSpec, c1);
+      client.addPartition(sPartSpec, c3);
       cal.add(Calendar.HOUR_OF_DAY, 1);
       temp = cal.getTime();
     }

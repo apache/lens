@@ -35,8 +35,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 
 public class CandidateTablePruneCause {
+
   public enum CandidateTablePruneCode {
     MORE_WEIGHT("Picked table had more weight than minimum."),
+    // partial data is enabled, another fact has more data.
+    LESS_DATA("Picked table has less data than the maximum"),
     // cube table has more partitions
     MORE_PARTITIONS("Picked table has more partitions than minimum"),
     // invalid cube table
@@ -194,6 +197,9 @@ public class CandidateTablePruneCause {
   // the columns that are missing default aggregate. only set in case of MISSING_DEFAULT_AGGREGATE
   private List<String> columnsMissingDefaultAggregate;
 
+  // time covered
+  private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
+
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
   }
@@ -220,6 +226,12 @@ public class CandidateTablePruneCause {
     CandidateTablePruneCause cause =
       new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_PARTITIONS);
     cause.setMissingPartitions(nonExistingParts);
+    return cause;
+  }
+
+  public static CandidateTablePruneCause lessData(MaxCoveringFactResolver.TimeCovered timeCovered) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.LESS_DATA);
+    cause.setMaxTimeCovered(timeCovered);
     return cause;
   }
 

@@ -109,6 +109,17 @@ public class CubeQueryRewriter {
    * If LightestFact first flag is enabled, LightestFactResolver is applied
    * before StorageTableResolver.
    *
+   * MaxCoveringFactResolver runs just after all candidate facts' partitions
+   * are resolved. It then sees how much time range each fact set is able to cover
+   * and finds the maximum coverable range. It then prunes all fact sets that
+   * are covering less than that range. If fail on partial is true, then by the
+   * time this resolver runs, all the candidate fact sets cover full range.
+   * So there this resolver is a no-op. Same thing when fail on partial is false
+   * and no fact set has any data. This is most useful when facts actually have
+   * partial data. There it'll ensure the facts that are covering the maximum
+   * time range will be picked.
+   *
+   *
    * Once all rewriters are done, finally picks up one of the available
    * candidate sets to answer the query, after all the resolvers are done. Once
    * the final candidate fact set is picked, if number of elements in the fact
@@ -152,6 +163,7 @@ public class CubeQueryRewriter {
     }
     // Phase 2: resolve fact table partitions.
     rewriters.add(storageTableResolver);
+    rewriters.add(new MaxCoveringFactResolver(conf));
     if (!lightFactFirst) {
       rewriters.add(new LightestFactResolver(conf));
     }

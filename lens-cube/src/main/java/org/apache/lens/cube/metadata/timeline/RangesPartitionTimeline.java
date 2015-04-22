@@ -34,6 +34,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
@@ -42,6 +43,7 @@ import lombok.ToString;
  * the second element of the tuple
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class RangesPartitionTimeline extends PartitionTimeline {
   private List<TimePartitionRange> ranges = Lists.newArrayList();
@@ -230,5 +232,14 @@ public class RangesPartitionTimeline extends PartitionTimeline {
         throw new UnsupportedOperationException();
       }
     };
+  }
+
+
+  public long getTimeCovered() {
+    long t = 0;
+    for (TimePartitionRange range : ranges) {
+      t += (range.getEnd().getDate().getTime() - range.getBegin().getDate().getTime());
+    }
+    return t;
   }
 }

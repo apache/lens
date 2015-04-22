@@ -1043,6 +1043,11 @@ public class CubeQueryContext {
    */
   public void pruneCandidateFactWithCandidateSet(CandidateTablePruneCode pruneCause) {
     // remove candidate facts that are not part of any covering set
+    pruneCandidateFactWithCandidateSet(new CandidateTablePruneCause(pruneCause));
+  }
+
+  public void pruneCandidateFactWithCandidateSet(CandidateTablePruneCause pruneCause) {
+    // remove candidate facts that are not part of any covering set
     Set<CandidateFact> allCoveringFacts = new HashSet<CandidateFact>();
     for (Set<CandidateFact> set : candidateFactSets) {
       allCoveringFacts.addAll(set);
@@ -1051,7 +1056,7 @@ public class CubeQueryContext {
       CandidateFact cfact = i.next();
       if (!allCoveringFacts.contains(cfact)) {
         LOG.info("Not considering fact table:" + cfact + " as " + pruneCause);
-        addFactPruningMsgs(cfact.fact, new CandidateTablePruneCause(pruneCause));
+        addFactPruningMsgs(cfact.fact, pruneCause);
         i.remove();
       }
     }

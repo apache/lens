@@ -31,6 +31,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 
@@ -40,6 +41,7 @@ import lombok.ToString;
  * which Timeline Class to use in it's params.
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class EndsAndHolesPartitionTimeline extends PartitionTimeline {
   private TimePartition first;

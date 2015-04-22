@@ -462,7 +462,7 @@ class StorageTableResolver implements ContextRewriter {
       LOG.info("candidate storage tables for searching partitions: " + storageTbls);
       updateFactPartitionStorageTablesFrom(fact, part, storageTbls);
       LOG.info("Storage tables containing Partition " + part + " are: " + part.getStorageTables());
-      if (part.found()) {
+      if (part.isFound()) {
         LOG.info("Adding existing partition" + part);
         partitions.add(part);
         LOG.info("Looking for look ahead process time partitions for " + part);
@@ -490,7 +490,7 @@ class StorageTableResolver implements ContextRewriter {
               partWhereClauseFormat);
             updateFactPartitionStorageTablesFrom(fact, processTimePartition,
               part.getStorageTables());
-            if (processTimePartition.found()) {
+            if (processTimePartition.isFound()) {
               LOG.info("Finer parts not required for look-ahead partition :" + part);
             } else {
               LOG.info("Looked ahead process time partition " + processTimePartition + " is not found");
@@ -562,6 +562,7 @@ class StorageTableResolver implements ContextRewriter {
     for (String storageTableName : storageTableNames) {
       if (client.factPartitionExists(fact, part, storageTableName)) {
         part.getStorageTables().add(storageTableName);
+        part.setFound(true);
       }
     }
   }

@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
 
@@ -38,6 +39,7 @@ import lombok.ToString;
  * Helps in test cases. In real life scenarios, this would be almost always end up causing out of memory error.
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class StoreAllPartitionTimeline extends PartitionTimeline {
   TreeSet<TimePartition> allPartitions;

@@ -214,7 +214,7 @@ public final class DateUtil {
     boolean hasFraction = false;
     switch (interval) {
     case YEARLY:
-      if (cal.get(Calendar.MONTH) != 1) {
+      if (cal.get(Calendar.MONTH) != 0) {
         hasFraction = true;
         break;
       }
@@ -263,7 +263,7 @@ public final class DateUtil {
     cal.setTime(toDate);
     switch (interval) {
     case YEARLY:
-      cal.set(Calendar.MONTH, 1);
+      cal.set(Calendar.MONTH, 0);
     case MONTHLY:
       cal.set(Calendar.DAY_OF_MONTH, 1);
     case DAILY:
@@ -273,12 +273,14 @@ public final class DateUtil {
     case MINUTELY:
       cal.set(Calendar.SECOND, 0);
     case SECONDLY:
+      cal.set(Calendar.MILLISECOND, 0);
       break;
     case WEEKLY:
       cal.set(Calendar.DAY_OF_WEEK, 1);
       cal.set(Calendar.HOUR_OF_DAY, 0);
       cal.set(Calendar.MINUTE, 0);
       cal.set(Calendar.SECOND, 0);
+      cal.set(Calendar.MILLISECOND, 0);
       break;
     }
     return cal.getTime();
