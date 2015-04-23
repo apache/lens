@@ -62,24 +62,26 @@ public class DerivedCube extends AbstractCubeTable implements CubeInterface {
     this.parent = parent;
   }
 
-  private Set<CubeMeasure> cachedMeasures;
-  private Set<CubeDimAttribute> cachedDims;
+  private Set<CubeMeasure> cachedMeasures = new HashSet<CubeMeasure>();
+  private Set<CubeDimAttribute> cachedDims = new HashSet<CubeDimAttribute>();
 
   public Set<CubeMeasure> getMeasures() {
-    if (cachedMeasures == null) {
-      cachedMeasures = new HashSet<CubeMeasure>();
-      for (String msr : measures) {
-        cachedMeasures.add(parent.getMeasureByName(msr));
+    synchronized (measures) {
+      if (cachedMeasures.isEmpty()) {
+        for (String msr : measures) {
+          cachedMeasures.add(parent.getMeasureByName(msr));
+        }
       }
     }
     return cachedMeasures;
   }
 
   public Set<CubeDimAttribute> getDimAttributes() {
-    if (cachedDims == null) {
-      cachedDims = new HashSet<CubeDimAttribute>();
-      for (String dim : dimensions) {
-        cachedDims.add(parent.getDimAttributeByName(dim));
+    synchronized (dimensions) {
+      if (cachedDims.isEmpty()) {
+        for (String dim : dimensions) {
+          cachedDims.add(parent.getDimAttributeByName(dim));
+        }
       }
     }
     return cachedDims;
