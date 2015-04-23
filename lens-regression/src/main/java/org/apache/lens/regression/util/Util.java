@@ -39,7 +39,7 @@ public class Util {
   private static final String PROPERTY_FILE = "lens.properties";
   private static Properties properties;
 
-  public static Properties getPropertiesObj(String filename) {
+  public static synchronized Properties getPropertiesObj(String filename) {
     try {
       if (properties == null) {
         properties = new Properties();
@@ -107,7 +107,7 @@ public class Util {
 
   public static void writeFile(String fileName, String str) {
     try {
-      PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
+      PrintWriter out = new PrintWriter(fileName, "UTF-8");
       out.println(str);
       out.close();
     } catch (IOException e) {
