@@ -236,7 +236,7 @@ public final class LensTestUtil {
     Hive.get().dropTable(tableName);
   }
 
-  public static void createTestDatabaseResources(String[] testDatabases, HiveConf conf) throws Exception {
+  private static void createTestDatabaseResources(String[] testDatabases, HiveConf conf) throws Exception {
     File resDir = new File("target/resources");
     if (!resDir.exists()) {
       resDir.mkdir();
