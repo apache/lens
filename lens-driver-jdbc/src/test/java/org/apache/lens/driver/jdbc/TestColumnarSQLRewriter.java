@@ -776,9 +776,8 @@ public class TestColumnarSQLRewriter {
    *
    * @throws Exception the exception
    */
-  // Disabling the test for LENS-350
-  //@Test
-  private void testReplaceDBName() throws Exception {
+  @Test
+  public void testReplaceDBName() throws Exception {
     File jarDir = new File("testdata");
     File testJarFile = new File(jarDir, "test.jar");
     File serdeJarFile = new File(jarDir, "serde.jar");

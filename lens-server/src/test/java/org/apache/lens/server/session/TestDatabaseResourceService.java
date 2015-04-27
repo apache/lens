@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 
 import org.apache.commons.logging.Log;
@@ -33,8 +34,10 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
-// Disabling all tests for LENS-350
 public class TestDatabaseResourceService {
   private static final String DB_PFX = TestDatabaseResourceService.class.getSimpleName();
   public static final Log LOG = LogFactory.getLog(TestDatabaseResourceService.class);
@@ -49,13 +52,9 @@ public class TestDatabaseResourceService {
   private final HiveConf conf = new HiveConf(TestDatabaseResourceService.class);
   private DatabaseResourceService dbResService;
 
-  public void testDisabled() {
-    // to avoid checkstyle
-  }
-
-  //@BeforeClass
-  private void setup() throws Exception {
-   // LensTestUtil.createTestDatabaseResources(testDatabases, conf);
+  @BeforeClass
+  public void setup() throws Exception {
+    LensTestUtil.createTestDatabaseResources(testDatabases, conf);
     // Start resource service.
     conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
     dbResService = new DatabaseResourceService(DatabaseResourceService.NAME);
@@ -63,16 +62,16 @@ public class TestDatabaseResourceService {
     dbResService.start();
   }
 
-  //@AfterClass
-  private void tearDown() throws Exception {
+  @AfterClass
+  public void tearDown() throws Exception {
     Hive hive = Hive.get(conf);
     for (String db : testDatabases) {
       hive.dropDatabase(db, true, true);
     }
   }
 
-  //@Test
-  private void testClassLoaderCreated() throws Exception {
+  @Test
+  public void testClassLoaderCreated() throws Exception {
     ClassLoader db1Loader = dbResService.getClassLoader(DB1);
     ClassLoader db2Loader = dbResService.getClassLoader(DB2);
 
@@ -94,8 +93,8 @@ public class TestDatabaseResourceService {
     return false;
   }
 
-  //@Test
-  private void testJarsLoaded() throws Exception {
+  @Test
+  public void testJarsLoaded() throws Exception {
     // Verify that each db's classloader contains corresponding jar
     Assert.assertTrue(isJarLoaded(dbResService.getClassLoader(DB1), DB1), DB1 + " jar should be loaded");
     Assert.assertTrue(isJarLoaded(dbResService.getClassLoader(DB2), DB2), DB2 + " jar should be loaded");
@@ -105,8 +104,8 @@ public class TestDatabaseResourceService {
     Assert.assertFalse(isJarLoaded(dbResService.getClassLoader(DB1), DB2));
   }
 
-  //@Test
-  private void testJarOrder() throws Exception {
+  @Test
+  public void testJarOrder() throws Exception {
     Collection<LensSessionImpl.ResourceEntry> actualOrder = dbResService.getResourcesForDatabase(DB1);
     List<String> actualOrderList = new ArrayList<String>();
 
@@ -127,8 +126,8 @@ public class TestDatabaseResourceService {
     }
   }
 
-  //@Test
-  private void verifyClassLoader() throws Exception {
+  @Test
+  public void verifyClassLoader() throws Exception {
     // Should fail now since current classloader doesn't have jar loaded
     try {
       Class clz = Class.forName("ClassLoaderTestClass", true, getClass().getClassLoader());

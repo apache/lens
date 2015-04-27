@@ -25,6 +25,7 @@ import java.util.HashMap;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 
@@ -35,8 +36,10 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hive.service.cli.CLIService;
 
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
-// Disabling all tests for LENS-350
 public class TestSessionClassLoaders {
   private static final Log LOG = LogFactory.getLog(TestSessionClassLoaders.class);
 
@@ -45,12 +48,8 @@ public class TestSessionClassLoaders {
 
   private static final String DB1 = TestSessionClassLoaders.class.getSimpleName() + "_db1";
 
-  public void testDisabled() {
-    // to avoid checkstyle
-  }
-
-  //@BeforeClass
-  private void setup() throws Exception {
+  @BeforeClass
+  public void setup() throws Exception {
     /**
      * Test Setup -
      * Static test.jar containing ClassLoaderTestClass.class attached to DB1
@@ -58,7 +57,7 @@ public class TestSessionClassLoaders {
      * test2.jar containing ClassLoaderTestClass2.class added to session via addResource
      */
     // Create test databases and tables
-    //LensTestUtil.createTestDatabaseResources(new String[]{DB1}, conf);
+    LensTestUtil.createTestDatabaseResources(new String[]{DB1}, conf);
 
     conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getName());
     conf.set(LensConfConstants.DATABASE_RESOURCE_DIR, "target/resources");
@@ -76,8 +75,8 @@ public class TestSessionClassLoaders {
   }
 
 
-  //@AfterClass
-  private void tearDown() throws Exception {
+  @AfterClass
+  public void tearDown() throws Exception {
     Hive hive = Hive.get(conf);
     hive.dropDatabase(DB1, true, true);
   }
@@ -87,8 +86,8 @@ public class TestSessionClassLoaders {
    * Check that DB specific classlaoders are available
    * @throws Exception
    */
-  //@Test
-  private void testSessionClassLoader() throws Exception {
+  @Test
+  public void testSessionClassLoader() throws Exception {
     LensSessionHandle sessionHandle = sessionService.openSession("foo", "bar", new HashMap<String, String>());
     LensSessionImpl session = sessionService.getSession(sessionHandle);
     session.setDbResService(sessionService.getDatabaseResourceService());
@@ -149,8 +148,8 @@ public class TestSessionClassLoaders {
    * Check that any added resources to the session are available after database is switched
    * @throws Exception
    */
-  //@Test
-  private void testClassLoaderMergeAfterAddResources() throws Exception {
+  @Test
+  public void testClassLoaderMergeAfterAddResources() throws Exception {
     LensSessionHandle sessionHandle = sessionService.openSession("foo", "bar", new HashMap<String, String>());
     LensSessionImpl session = sessionService.getSession(sessionHandle);
     session.setDbResService(sessionService.getDatabaseResourceService());

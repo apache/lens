@@ -1373,8 +1373,8 @@ public class TestQueryService extends LensJerseyTest {
    * Check if DB static jars get passed to Hive driver
    * @throws Exception
    */
-  //@Test
-  private void testHiveDriverGetsDBJars() throws Exception {
+  @Test
+  public void testHiveDriverGetsDBJars() throws Exception {
     // Set DB to a db with static jars
     HiveSessionService sessionService = LensServices.get().getService(SessionService.NAME);
 
