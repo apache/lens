@@ -24,6 +24,7 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.ParseException;
 
 import org.testng.Assert;
 import org.testng.annotations.Test;
@@ -311,6 +312,33 @@ public class TestHQLParser {
 
     ASTNode literalExpr4 = HQLParser.parseExpr("A <> 'FooBar'");
     Assert.assertFalse(HQLParser.equalsAST(literalExpr1, literalExpr4));
+  }
+
+  @Test
+  public void testCastStatement() throws ParseException {
+    String castSelect = "cast(( a  +  b ) as tinyint), cast(( a  +  b ) as smallint), cast(( a  +  b ) as int),"
+      + " cast(( a  +  b ) as bigint), cast(( a  +  b ) as float), cast(( a  +  b ) as double),"
+      + " cast(( a  +  b ) as boolean), cast( a  as date), cast( b  as datetime), cast( a  as timestamp),"
+      + " cast(( a  +  b ) as string), cast(( a  +  b ) as binary), cast(( a  +  b ) as decimal(3,6)),"
+      + " cast(( a  +  b ) as decimal(5)), cast(( a  +  b ) as varchar(10)), cast(( a  +  b ) as char(20)),"
+      + " cast( '17.29'  as decimal(4,2))";
+    castSelect = "3.1415926BD";
+    String query = "select " + castSelect + " from table limit 1";
+    ASTNode tree = HQLParser.parseHQL(query, conf);
+    System.out.println(tree.dump());
+    ASTNode selectAST = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
+    String genQuery = HQLParser.getString(selectAST);
+    Assert.assertEquals(genQuery, castSelect);
+  }
+
+  @Test
+  public void testOtherStatements() throws ParseException {
+    String select = "3.1415926BD";
+    String query = "select " + select + " from table limit 1";
+    ASTNode tree = HQLParser.parseHQL(query, conf);
+    ASTNode selectAST = HQLParser.findNodeByPath(tree, TOK_INSERT, TOK_SELECT);
+    String genQuery = HQLParser.getString(selectAST);
+    Assert.assertEquals(genQuery, select);
   }
 
 }
