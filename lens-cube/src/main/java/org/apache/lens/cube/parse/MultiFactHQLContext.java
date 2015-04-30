@@ -18,10 +18,7 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.cube.metadata.Dimension;
 
@@ -30,6 +27,8 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
+
+import com.google.common.collect.Lists;
 
 /**
  * Writes a join query with all the facts involved, with where, groupby and having expressions pushed down to the fact
@@ -83,13 +82,15 @@ class MultiFactHQLContext extends SimpleHQLContext {
   }
 
   private String getSelectString() throws SemanticException {
-    Map<Integer, Integer> selectToFactIndex = new HashMap<Integer, Integer>(query.getSelectAST().getChildCount());
+    Map<Integer, List<Integer>> selectToFactIndex =
+      new HashMap<Integer, List<Integer>>(query.getSelectAST().getChildCount());
     int fi = 1;
     for (CandidateFact fact : facts) {
       for (int ind : fact.getSelectIndices()) {
         if (!selectToFactIndex.containsKey(ind)) {
-          selectToFactIndex.put(ind, fi);
+          selectToFactIndex.put(ind, Lists.<Integer>newArrayList());
         }
+        selectToFactIndex.get(ind).add(fi);
       }
       fi++;
     }
@@ -99,8 +100,19 @@ class MultiFactHQLContext extends SimpleHQLContext {
         throw new SemanticException(ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT, HQLParser.getString((ASTNode) query
           .getSelectAST().getChild(i)));
       }
-      select.append("mq").append(selectToFactIndex.get(i)).append(".").append(query.getSelectAlias(i)).append(" ")
-        .append(query.getSelectFinalAlias(i));
+      if (selectToFactIndex.get(i).size() == 1) {
+        select.append("mq").append(selectToFactIndex.get(i).get(0)).append(".")
+          .append(query.getSelectAlias(i)).append(" ");
+      } else {
+        select.append("COALESCE(");
+        String sep = "";
+        for (Integer factIndex : selectToFactIndex.get(i)) {
+          select.append(sep).append("mq").append(factIndex).append(".").append(query.getSelectAlias(i));
+          sep = ", ";
+        }
+        select.append(") ");
+      }
+      select.append(query.getSelectFinalAlias(i));
       if (i != query.getSelectAST().getChildCount() - 1) {
         select.append(", ");
       }
@@ -132,13 +144,16 @@ class MultiFactHQLContext extends SimpleHQLContext {
         fromBuilder.append(" full outer join ");
       }
     }
-    fromBuilder.append(" on ");
     CandidateFact firstFact = facts.iterator().next();
+    if (!firstFact.getDimFieldIndices().isEmpty()) {
+      fromBuilder.append(" on ");
+    }
     for (int i = 2; i <= facts.size(); i++) {
       Iterator<Integer> dimIter = firstFact.getDimFieldIndices().iterator();
       while (dimIter.hasNext()) {
         String dim = query.getSelectAlias(dimIter.next());
-        fromBuilder.append("mq1").append(".").append(dim).append(" = ").append("mq").append(i).append(".").append(dim);
+        fromBuilder.append("mq1").append(".").append(dim).append(" <=> ").append("mq").append(i).append(".")
+          .append(dim);
         if (dimIter.hasNext()) {
           fromBuilder.append(" AND ");
         }
