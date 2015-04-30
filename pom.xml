@@ -580,7 +580,7 @@
         <artifactId>findbugs-maven-plugin</artifactId>
         <configuration>
           <xmlOutput>true</xmlOutput>
-          <excludeFilterFile>checkstyle/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
+	  <excludeFilterFile>${project.basedir}/../checkstyle/src/main/resources/findbugs-exclude.xml</excludeFilterFile>
           <failOnError>true</failOnError>
           <skip>${skipCheck}</skip>
         </configuration>
