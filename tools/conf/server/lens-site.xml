@@ -26,4 +26,9 @@
   <name>lens.server.drivers</name>
   <value>org.apache.lens.driver.hive.HiveDriver,org.apache.lens.driver.jdbc.JDBCDriver</value>
 </property>
+
+<property>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>/tmp/hive/warehouse</value>
+</property>
 </configuration>

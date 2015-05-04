@@ -78,4 +78,9 @@
   <name>lens.ml.sparkdriver.spark.master</name>
   <value>local</value>
 </property>
+
+<property>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>/tmp/hive/warehouse</value>
+</property>
 </configuration>
