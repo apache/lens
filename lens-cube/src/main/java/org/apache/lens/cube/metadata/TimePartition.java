@@ -45,19 +45,6 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     this.dateString = updatePeriod.format().format(this.date);
   }
 
-  private TimePartition(@NonNull UpdatePeriod updatePeriod, @NonNull String dateString) throws LensException {
-    this.updatePeriod = updatePeriod;
-    this.dateString = dateString;
-    try {
-      this.date = updatePeriod.format().parse(dateString);
-    } catch (ParseException e) {
-      throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString), e);
-    }
-    if (!updatePeriod.format().format(this.date).equals(this.dateString)) {
-      throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString));
-    }
-  }
-
   public static TimePartition of(UpdatePeriod updatePeriod, Date date) throws LensException {
     if (date == null) {
       throw new LensException("time parition date is null");
@@ -69,7 +56,14 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     if (dateString == null || dateString.isEmpty()) {
       throw new LensException("time parition date string is null or blank");
     } else {
-      return new TimePartition(updatePeriod, dateString);
+      if (!updatePeriod.canParseDateString(dateString)) {
+        throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString));
+      }
+      try {
+        return TimePartition.of(updatePeriod, updatePeriod.format().parse(dateString));
+      } catch (ParseException e) {
+        throw new LensException(getWrongUpdatePeriodMessage(updatePeriod, dateString), e);
+      }
     }
   }
 
@@ -118,6 +112,10 @@ public class TimePartition implements Comparable<TimePartition>, Named {
       cal.setTime(truncDate);
       cal.set(Calendar.DAY_OF_WEEK, cal.getFirstDayOfWeek());
       return cal.getTime();
+    } else if (updatePeriod.equals(UpdatePeriod.QUARTERLY)) {
+      Date dt = DateUtils.truncate(date, updatePeriod.calendarField());
+      dt.setMonth(dt.getMonth() - dt.getMonth() % 3);
+      return dt;
     } else {
       return DateUtils.truncate(date, updatePeriod.calendarField());
     }
@@ -143,5 +141,4 @@ public class TimePartition implements Comparable<TimePartition>, Named {
   public String getName() {
     return getDateString();
   }
-
 }

@@ -194,6 +194,10 @@ public enum UpdatePeriod implements Named {
     return name();
   }
 
+  public boolean canParseDateString(String dateString) {
+    return formatStr().replaceAll("'", "").length() == dateString.length();
+  }
+
   public static class UpdatePeriodComparator implements Comparator<UpdatePeriod> {
     @Override
     public int compare(UpdatePeriod o1, UpdatePeriod o2) {
