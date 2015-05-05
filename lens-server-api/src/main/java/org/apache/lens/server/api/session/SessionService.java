@@ -22,8 +22,8 @@ package org.apache.lens.server.api.session;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.server.api.error.LensException;
 
 public interface SessionService {
 

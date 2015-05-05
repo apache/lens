@@ -26,6 +26,7 @@ import java.util.Map;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
@@ -34,10 +35,13 @@ import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.api.query.QueryStatus.Status;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.common.TestResourceFile;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -92,7 +96,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     lensSessionId = queryService.openSession("foo@localhost", "bar", sessionconf); // @localhost should be removed
     // automatically
     createTable(TEST_TABLE);
-    loadData(TEST_TABLE, TEST_DATA_FILE);
+    loadData(TEST_TABLE, TestResourceFile.TEST_DATA2_FILE.getValue());
   }
 
   /*
@@ -130,9 +134,6 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
   /** The test table. */
   public static final String TEST_TABLE = "EMAIL_NOTIFIER_TEST_TABLE";
 
-  /** The Constant TEST_DATA_FILE. */
-  public static final String TEST_DATA_FILE = "./testdata/testdata2.data";
-
   /**
    * Creates the table.
    *
@@ -151,7 +152,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
    * @throws InterruptedException the interrupted exception
    */
   private void loadData(String tblName, final String testDataFile) throws InterruptedException {
-    LensTestUtil.loadData(tblName, testDataFile, target(), lensSessionId);
+    LensTestUtil.loadDataFromClasspath(tblName, testDataFile, target(), lensSessionId);
   }
 
   /**
@@ -175,7 +176,7 @@ public class TestQueryEndEmailNotifier extends LensJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), conf,
       MediaType.APPLICATION_XML_TYPE));
     final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-      QueryHandle.class);
+      new GenericType<LensResponse<QueryHandle, NoErrorPayload>>(){}).getData();
 
     Assert.assertNotNull(handle);
     LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()

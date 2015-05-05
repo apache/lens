@@ -18,9 +18,9 @@
  */
 package org.apache.lens.ml.impl;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.error.LensException;
 
 import lombok.Getter;
 import lombok.Setter;

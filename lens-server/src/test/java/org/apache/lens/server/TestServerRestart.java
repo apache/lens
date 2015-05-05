@@ -29,16 +29,24 @@ import java.util.List;
 
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.lens.api.*;
+import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
+import org.apache.lens.api.LensConf;
+import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.StringList;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.PersistentQueryResult;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.driver.hive.TestRemoteHiveDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
+import org.apache.lens.server.common.TestResourceFile;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.query.TestQueryService;
 import org.apache.lens.server.session.HiveSessionService;
@@ -104,7 +112,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       return;
     }
 
-    dataFile = new File("target/testdata.data");
+    dataFile = new File(TestResourceFile.TEST_DATA_FILE.getValue());
     dataFile.deleteOnExit();
 
     PrintWriter dataFileOut = new PrintWriter(dataFile);
@@ -134,7 +142,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_server_restart", "target/testdata.data", target(), lensSessionId);
+    LensTestUtil.loadData("test_server_restart", TestResourceFile.TEST_DATA_FILE.getValue(), target(), lensSessionId);
     LOG.info("Loaded data");
 
     // test post execute op
@@ -165,7 +173,7 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
         new LensConf(), MediaType.APPLICATION_XML_TYPE));
       final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        QueryHandle.class);
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
       Assert.assertNotNull(handle);
       LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", lensSessionId).request()
@@ -232,7 +240,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
 
     // Create a test table
     LensTestUtil.createTable("test_hive_server_restart", target(), lensSessionId);
-    LensTestUtil.loadData("test_hive_server_restart", "target/testdata.data", target(), lensSessionId);
+    LensTestUtil.loadData("test_hive_server_restart", TestResourceFile.TEST_DATA_FILE.getValue(), target(),
+        lensSessionId);
     LOG.info("Loaded data");
 
     LOG.info("Hive Server restart test");
@@ -249,7 +258,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(), new LensConf(),
       MediaType.APPLICATION_XML_TYPE));
     QueryHandle handle = target.request()
-      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      .post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
     Assert.assertNotNull(handle);
 
@@ -302,7 +312,8 @@ public class TestServerRestart extends LensAllApplicationJerseyTest {
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("operation").build(), "execute"));
       mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("conf").fileName("conf").build(),
         new LensConf(), MediaType.APPLICATION_XML_TYPE));
-      handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE), QueryHandle.class);
+      handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
       Assert.assertNotNull(handle);
 
       // Poll for second query, this should finish successfully

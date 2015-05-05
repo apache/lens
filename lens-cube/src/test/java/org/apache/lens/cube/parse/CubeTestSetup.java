@@ -23,11 +23,11 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.timeline.EndsAndHolesPartitionTimeline;
 import org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
@@ -2114,7 +2114,7 @@ public class CubeTestSetup {
     }
   }
 
-  public static void printQueryAST(String query, String label) throws ParseException {
+  public static void printQueryAST(String query, String label) throws LensException {
     System.out.println("--" + label + "--AST--");
     System.out.println("--query- " + query);
     HQLParser.printAST(HQLParser.parseHQL(query, new HiveConf()));

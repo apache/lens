@@ -27,6 +27,7 @@ import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCause;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.SkipStorageCode;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -99,11 +100,6 @@ public class TestCubeRewriter extends TestQueryRewrite {
     compareQueries(expected, rewrittenQuery.toHQL());
     System.out.println("Non existing parts:" + rewrittenQuery.getNonExistingParts());
     Assert.assertNotNull(rewrittenQuery.getNonExistingParts());
-
-    // Query with column life not in the range
-    SemanticException th = getSemanticExceptionInRewrite(
-      "cube select SUM(newmeasure) from testCube" + " where " + TWO_DAYS_RANGE, getC2Conf());
-    Assert.assertEquals(th.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.NOT_AVAILABLE_IN_RANGE.getErrorCode());
   }
 
   @Test
@@ -160,7 +156,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
-  public void testDerivedCube() throws SemanticException, ParseException {
+  public void testDerivedCube() throws SemanticException, ParseException, LensException {
     CubeQueryContext rewrittenQuery =
       rewriteCtx("cube select" + " SUM(msr2) from derivedCube where " + TWO_DAYS_RANGE, getC2Conf());
     String expected =
@@ -823,7 +819,8 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithAsKeywordBwColAndAlias()
-    throws SemanticException, ParseException {
+    throws SemanticException, ParseException, LensException {
+
     String inputQuery = "cube select name as `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;
 
@@ -839,7 +836,7 @@ public class TestCubeRewriter extends TestQueryRewrite {
 
   @Test
   public void testSelectExprPromotionToGroupByWithSpacesInDimensionAliasAndWithoutAsKeywordBwColAndAlias()
-    throws SemanticException, ParseException {
+    throws SemanticException, ParseException, LensException {
 
     String inputQuery = "cube select name `Alias With Spaces`, SUM(msr2) as `TestMeasure` from testCube join citydim"
       + " on testCube.cityid = citydim.id where " + LAST_HOUR_TIME_RANGE;

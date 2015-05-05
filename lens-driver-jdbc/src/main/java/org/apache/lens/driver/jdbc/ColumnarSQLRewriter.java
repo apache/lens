@@ -22,11 +22,11 @@ import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.CubeMetastoreClient;
 import org.apache.lens.cube.parse.CubeSemanticAnalyzer;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryRewriter;
 
 import org.apache.commons.lang.StringUtils;
@@ -36,7 +36,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.parse.*;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
+import org.apache.hadoop.hive.ql.parse.HiveParser;
+import org.apache.hadoop.hive.ql.parse.QB;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
 
@@ -1055,8 +1058,6 @@ public class ColumnarSQLRewriter implements QueryRewriter {
         LOG.info("Input Query : " + query);
         LOG.info("Rewritten Query :  " + queryReplacedUdf);
       }
-    } catch (ParseException e) {
-      throw new LensException(e);
     } catch (SemanticException e) {
       throw new LensException(e);
     }

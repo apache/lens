@@ -19,7 +19,7 @@
  */
 package org.apache.lens.server.api.query;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;

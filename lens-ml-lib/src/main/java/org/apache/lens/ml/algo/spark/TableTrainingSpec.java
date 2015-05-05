@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

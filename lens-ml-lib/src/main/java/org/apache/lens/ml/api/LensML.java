@@ -21,10 +21,10 @@ package org.apache.lens.ml.api;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * Lens's machine learning interface used by client code as well as Lens ML service.

@@ -18,6 +18,9 @@
  */
 package org.apache.lens.server.query;
 
+import static org.apache.lens.server.error.LensServerErrorCode.NULL_OR_EMPTY_OR_BLANK_QUERY;
+import static org.apache.lens.server.error.LensServerErrorCode.SESSION_ID_NOT_PROVIDED;
+
 import java.util.List;
 
 import javax.ws.rs.*;
@@ -27,12 +30,16 @@ import javax.ws.rs.core.Response;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
+import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.query.*;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.annotations.MultiPurposeResource;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
+import org.apache.lens.server.error.UnSupportedQuerySubmitOpException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
@@ -54,14 +61,31 @@ public class QueryServiceResource {
   /** The query server. */
   private QueryExecutionService queryServer;
 
+  private final ErrorCollection errorCollection;
+
   /**
    * Check session id.
    *
    * @param sessionHandle the session handle
    */
-  private void checkSessionId(LensSessionHandle sessionHandle) {
+  private void checkSessionId(final LensSessionHandle sessionHandle) {
     if (sessionHandle == null) {
       throw new BadRequestException("Invalid session handle");
+    }
+  }
+
+  private void validateSessionId(final LensSessionHandle sessionHandle) throws LensException {
+    if (sessionHandle == null) {
+      throw new LensException(SESSION_ID_NOT_PROVIDED.getValue());
+    }
+  }
+
+  private SubmitOp checkAndGetQuerySubmitOperation(final String operation) throws UnSupportedQuerySubmitOpException {
+
+    try {
+      return SubmitOp.valueOf(operation.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new UnSupportedQuerySubmitOpException(e);
     }
   }
 
@@ -70,12 +94,18 @@ public class QueryServiceResource {
    *
    * @param query the query
    */
+
   private void checkQuery(String query) {
     if (StringUtils.isBlank(query)) {
       throw new BadRequestException("Invalid query");
     }
   }
 
+  private void validateQuery(String query) throws LensException {
+    if (StringUtils.isBlank(query)) {
+      throw new LensException(NULL_OR_EMPTY_OR_BLANK_QUERY.getValue());
+    }
+  }
   /**
    * API to know if Query service is up and running
    *
@@ -94,6 +124,7 @@ public class QueryServiceResource {
    */
   public QueryServiceResource() throws LensException {
     queryServer = (QueryExecutionService) LensServices.get().getService("query");
+    errorCollection = LensServices.get().getErrorCollection();
   }
 
   QueryExecutionService getQueryServer() {
@@ -157,45 +188,48 @@ public class QueryServiceResource {
    * @param timeoutmillis The timeout for the query, honored only in case of value {@value
    *                      SubmitOp#EXECUTE_WITH_TIMEOUT} operation
    * @param queryName     human readable query name set by user (optional parameter)
-   * @return {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation. {@link QueryPlan} in case of {@value
-   * SubmitOp#EXPLAIN} operation. {@link QueryHandleWithResultSet} in case {@value SubmitOp#EXECUTE_WITH_TIMEOUT}
-   * operation. {@link EstimateResult} in case of {@value SubmitOp#ESTIMATE} operation.
+   * @return {@link LensResponse} with DATA as {@link QueryHandle} in case of {@value SubmitOp#EXECUTE} operation.
+   * {@link QueryPlan} in case of {@value SubmitOp#EXPLAIN} operation. {@link QueryHandleWithResultSet} in case
+   * {@value SubmitOp#EXECUTE_WITH_TIMEOUT} operation. {@link QueryCost} in case of
+   * {@value SubmitOp#ESTIMATE} operation.
    */
   @POST
   @Path("queries")
   @Consumes({MediaType.MULTIPART_FORM_DATA})
   @Produces({MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML, MediaType.TEXT_PLAIN})
   @MultiPurposeResource(formParamName = "operation")
-  public QuerySubmitResult query(@FormDataParam("sessionid") LensSessionHandle sessionid,
-    @FormDataParam("query") String query, @FormDataParam("operation") String operation,
-    @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
-    @DefaultValue("") @FormDataParam("queryName") String queryName) {
-    checkQuery(query);
-    checkSessionId(sessionid);
+  public LensResponse<QuerySubmitResult, NoErrorPayload> query(@FormDataParam("sessionid") LensSessionHandle sessionid,
+      @FormDataParam("query") String query, @FormDataParam("operation") String operation,
+      @FormDataParam("conf") LensConf conf, @DefaultValue("30000") @FormDataParam("timeoutmillis") Long timeoutmillis,
+      @DefaultValue("") @FormDataParam("queryName") String queryName) throws LensException {
+
     try {
-      SubmitOp sop = null;
-      try {
-        sop = SubmitOp.valueOf(operation.toUpperCase());
-      } catch (IllegalArgumentException e) {
-        throw new BadRequestException(e);
-      }
-      if (sop == null) {
-        throw new BadRequestException("Invalid operation type: " + operation + submitClue);
-      }
+
+      validateSessionId(sessionid);
+      SubmitOp sop = checkAndGetQuerySubmitOperation(operation);
+      validateQuery(query);
+
+      QuerySubmitResult result;
       switch (sop) {
       case ESTIMATE:
-        return queryServer.estimate(sessionid, query, conf);
+        result = queryServer.estimate(sessionid, query, conf);
+        break;
       case EXECUTE:
-        return queryServer.executeAsync(sessionid, query, conf, queryName);
+        result = queryServer.executeAsync(sessionid, query, conf, queryName);
+        break;
       case EXPLAIN:
-        return queryServer.explain(sessionid, query, conf);
+        result = queryServer.explain(sessionid, query, conf);
+        break;
       case EXECUTE_WITH_TIMEOUT:
-        return queryServer.execute(sessionid, query, timeoutmillis, conf, queryName);
+        result = queryServer.execute(sessionid, query, timeoutmillis, conf, queryName);
+        break;
       default:
-        throw new BadRequestException("Invalid operation type: " + operation + submitClue);
+        throw new UnSupportedQuerySubmitOpException();
       }
+      return LensResponse.composedOf(null, null, result);
     } catch (LensException e) {
-      throw new WebApplicationException(e);
+      e.buildLensErrorResponse(errorCollection, null, null);
+      throw e;
     }
   }
 

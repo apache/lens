@@ -25,11 +25,11 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.driver.jdbc.JDBCDriver.QueryResult;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
@@ -41,7 +41,10 @@ import org.apache.log4j.Logger;
 
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-import lombok.*;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * The Class JDBCResultSet.

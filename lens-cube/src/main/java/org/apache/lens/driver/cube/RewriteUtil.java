@@ -18,16 +18,19 @@
  */
 package org.apache.lens.driver.cube;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.CubeQueryContext;
 import org.apache.lens.cube.parse.CubeQueryRewriter;
 import org.apache.lens.cube.parse.HQLParser;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.AbstractQueryContext;
@@ -36,7 +39,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.log4j.Logger;
 
@@ -84,7 +86,9 @@ public final class RewriteUtil {
    * @throws SemanticException the semantic exception
    * @throws ParseException    the parse exception
    */
-  static List<CubeQueryInfo> findCubePositions(String query, HiveConf conf) throws SemanticException, ParseException {
+  static List<CubeQueryInfo> findCubePositions(String query, HiveConf conf)
+    throws SemanticException, LensException {
+
     ASTNode ast = HQLParser.parseHQL(query, conf);
     LOG.debug("User query AST:" + ast.dump());
     List<CubeQueryInfo> cubeQueries = new ArrayList<CubeQueryInfo>();
@@ -225,6 +229,14 @@ public final class RewriteUtil {
       }
 
       return runnables;
+    } catch (LensException e) {
+
+      /* REST layer has to catch LensException and add additional information to it.
+      To enable REST layer to call methods on LensException instance, we have to propagate
+      LensException to the REST layer. Since there is a Exception e catch here,
+      we need to explicitly catch and rethrow LensException to enable us for the same.*/
+
+      throw e;
     } catch (Exception e) {
       throw new LensException("Rewriting failed, cause :" + e.getMessage(), e);
     }
@@ -253,6 +265,9 @@ public final class RewriteUtil {
     private String failureCause = null;
 
     @Getter
+    private LensException cause;
+
+    @Getter
     /** Get eventual rewritten query */
     private String rewrittenQuery;
 
@@ -277,8 +292,8 @@ public final class RewriteUtil {
         return;
       }
 
-      MethodMetricsContext rewriteGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
-        REWRITE_QUERY_GAUGE);
+      MethodMetricsContext rewriteGauge = MethodMetricsFactory
+          .createMethodGauge(ctx.getDriverConf(driver), true, REWRITE_QUERY_GAUGE);
       StringBuilder builder = new StringBuilder();
       int start = 0;
       CubeQueryRewriter rewriter = null;
@@ -303,8 +318,8 @@ public final class RewriteUtil {
 
           // Parse and rewrite individual cube query
           CubeQueryContext cqc = rewriter.rewrite(cqi.query);
-          MethodMetricsContext toHQLGauge = MethodMetricsFactory.createMethodGauge(ctx.getDriverConf(driver), true,
-            qIndex + "-" + TOHQL_GAUGE);
+          MethodMetricsContext toHQLGauge = MethodMetricsFactory
+              .createMethodGauge(ctx.getDriverConf(driver), true, qIndex + "-" + TOHQL_GAUGE);
           // toHQL actually generates the rewritten query
           String hqlQuery = cqc.toHQL();
           cubeQueryCtx.add(cqc);
@@ -327,14 +342,15 @@ public final class RewriteUtil {
         succeeded = true;
         ctx.setDriverQuery(driver, rewrittenQuery);
         LOG.info("Final rewritten query for driver:" + driver + " is: " + rewrittenQuery);
+
+      } catch (final LensException e) {
+
+        this.cause = e;
+        captureExceptionInformation(e);
       } catch (Exception e) {
+
         // we are catching all exceptions sothat other drivers can be picked in case of driver bugs
-        LOG.warn("Driver : " + driver + " Skipped for the query rewriting due to ", e);
-        ctx.setDriverRewriteError(driver, e);
-        failureCause = new StringBuilder(" Driver :")
-          .append(driver.getClass().getName())
-          .append(" Cause :" + e.getLocalizedMessage())
-          .toString();
+        captureExceptionInformation(e);
       } finally {
         if (rewriter != null) {
           rewriter.clear();
@@ -346,6 +362,16 @@ public final class RewriteUtil {
     @Override
     public String toString() {
       return "Rewrite runnable for " + driver;
+    }
+
+    private void captureExceptionInformation(final Exception e) {
+
+      LOG.warn("Driver : " + driver + " Skipped for the query rewriting due to ", e);
+      ctx.setDriverRewriteError(driver, e);
+      failureCause = new StringBuilder(" Driver :")
+          .append(driver.getClass().getName())
+          .append(" Cause :" + e.getLocalizedMessage())
+          .toString();
     }
   }
 

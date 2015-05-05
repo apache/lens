@@ -28,9 +28,9 @@ import javax.ws.rs.core.MediaType;
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.APIResult.Status;
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 
 import org.apache.commons.logging.Log;

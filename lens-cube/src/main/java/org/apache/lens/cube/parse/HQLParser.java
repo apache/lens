@@ -18,12 +18,17 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.error.LensCubeErrorCode.SYNTAX_ERROR;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
+import static org.apache.hadoop.hive.ql.parse.HiveParser.Number;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 import java.util.regex.Pattern;
+
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.Context;
@@ -129,7 +134,7 @@ public final class HQLParser {
     return ARITHMETIC_OPERATORS.contains(tokenType);
   }
 
-  public static ASTNode parseHQL(String query, HiveConf conf) throws ParseException {
+  public static ASTNode parseHQL(String query, HiveConf conf) throws LensException {
     ParseDriver driver = new ParseDriver();
     ASTNode tree = null;
     Context ctx = null;
@@ -137,6 +142,8 @@ public final class HQLParser {
       ctx = new Context(conf);
       tree = driver.parse(query, ctx);
       tree = ParseUtils.findRootNonNullToken(tree);
+    } catch (ParseException e) {
+      throw new LensException(SYNTAX_ERROR.getValue(), e, e.getMessage());
     } catch (IOException e) {
       throw new RuntimeException(e);
     } finally {

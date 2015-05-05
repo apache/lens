@@ -22,11 +22,11 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.ml.algo.api.AlgoParam;
 import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLModel;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

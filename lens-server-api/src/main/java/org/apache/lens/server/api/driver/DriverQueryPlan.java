@@ -20,11 +20,7 @@ package org.apache.lens.server.api.driver;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.api.query.QueryHandle;

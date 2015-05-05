@@ -18,10 +18,8 @@
  */
 package org.apache.lens.server.api.metrics;
 
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
-
 import lombok.NonNull;
 
 /**

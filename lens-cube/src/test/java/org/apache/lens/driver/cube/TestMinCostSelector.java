@@ -24,8 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
-import org.apache.lens.server.api.driver.*;
+import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.driver.MinQueryCostSelector;
+import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.driver.MockFailDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.MockQueryContext;
 
 import org.apache.hadoop.conf.Configuration;

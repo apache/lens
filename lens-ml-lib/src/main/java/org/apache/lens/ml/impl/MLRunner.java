@@ -20,11 +20,7 @@ package org.apache.lens.ml.impl;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.apache.lens.client.LensClient;
 import org.apache.lens.client.LensClientConfig;

@@ -25,6 +25,7 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.*;
 import org.apache.lens.cube.metadata.SchemaGraph.TableRelationship;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -372,7 +373,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testJoinChains() throws SemanticException, ParseException {
+  public void testJoinChains() throws SemanticException, ParseException, LensException {
     String query, hqlQuery, expected;
 
     // Single joinchain with direct link
@@ -570,7 +571,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testConflictingJoins() throws ParseException {
+  public void testConflictingJoins() throws ParseException, LensException {
     // Single joinchain with two paths, intermediate dimension accessed separately by name.
     String query = "select cityState.name, citydim.name, sum(msr2) from basecube where " + TWO_DAYS_RANGE;
     try {
@@ -643,7 +644,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testMultiPaths() throws SemanticException, ParseException {
+  public void testMultiPaths() throws SemanticException, ParseException, LensException {
     String query, hqlQuery, expected;
 
     query = "select testdim3.name, sum(msr2) from testcube where " + TWO_DAYS_RANGE;
@@ -721,7 +722,7 @@ public class TestJoinResolver extends TestQueryRewrite {
   }
 
   @Test
-  public void testChainsWithMultipleStorage() throws ParseException, HiveException {
+  public void testChainsWithMultipleStorage() throws ParseException, HiveException, LensException {
     Configuration conf = new Configuration(hconf);
     conf.unset(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES); // supports all storages
     String dimOnlyQuery = "select testDim2.name, testDim2.cityStateCapital FROM testDim2 where " + TWO_DAYS_RANGE;

@@ -26,12 +26,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.DriverQueryStatus.DriverQueryState;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.commons.io.FileUtils;

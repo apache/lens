@@ -20,11 +20,7 @@ package org.apache.lens.ml;
 
 import java.io.File;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;

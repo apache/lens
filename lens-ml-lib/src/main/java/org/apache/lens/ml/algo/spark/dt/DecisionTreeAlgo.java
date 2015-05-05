@@ -20,11 +20,11 @@ package org.apache.lens.ml.algo.spark.dt;
 
 import java.util.Map;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.ml.algo.api.AlgoParam;
 import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.spark.BaseSparkAlgo;
 import org.apache.lens.ml.algo.spark.BaseSparkClassificationModel;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.spark.mllib.regression.LabeledPoint;
 import org.apache.spark.mllib.tree.DecisionTree$;

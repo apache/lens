@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.api.events;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * <p>

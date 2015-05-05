@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 
@@ -178,7 +179,7 @@ public class CubeQueryRewriter {
     rewriters.add(new LightestDimensionResolver(conf));
   }
 
-  public CubeQueryContext rewrite(ASTNode astnode) throws SemanticException {
+  public CubeQueryContext rewrite(ASTNode astnode) throws SemanticException, LensException {
     CubeSemanticAnalyzer analyzer = new CubeSemanticAnalyzer(conf, hconf);
     analyzer.analyze(astnode, qlCtx);
     CubeQueryContext ctx = analyzer.getQueryContext();
@@ -186,7 +187,7 @@ public class CubeQueryRewriter {
     return ctx;
   }
 
-  public CubeQueryContext rewrite(String command) throws ParseException, SemanticException {
+  public CubeQueryContext rewrite(String command) throws ParseException, SemanticException, LensException {
     if (command != null) {
       command = command.replace("\n", "");
     }
@@ -198,7 +199,7 @@ public class CubeQueryRewriter {
 
   private static final String ITER_STR = "-ITER-";
 
-  private void rewrite(List<ContextRewriter> rewriters, CubeQueryContext ctx) throws SemanticException {
+  private void rewrite(List<ContextRewriter> rewriters, CubeQueryContext ctx) throws SemanticException, LensException {
     int i = 0;
     for (ContextRewriter rewriter : rewriters) {
       /*

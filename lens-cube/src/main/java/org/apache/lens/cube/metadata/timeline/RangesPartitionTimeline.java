@@ -24,11 +24,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;

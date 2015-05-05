@@ -16,49 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-/*
- *
- */
-package org.apache.lens.api;
+
+package org.apache.lens.api.error;
 
 /**
- * The Class LensException.
+ * Common error codes. Expected to be used by all concerned modules.
  */
-@SuppressWarnings("serial")
-public class LensException extends Exception {
+public enum LensCommonErrorCode {
 
-  /**
-   * Instantiates a new lens exception.
-   *
-   * @param msg the msg
-   */
-  public LensException(String msg) {
-    super(msg);
+  INTERNAL_SERVER_ERROR(1001);
+
+  public int getValue() {
+    return this.errorCode;
   }
 
-  /**
-   * Instantiates a new lens exception.
-   *
-   * @param msg the msg
-   * @param th  the th
-   */
-  public LensException(String msg, Throwable th) {
-    super(msg, th);
+  private LensCommonErrorCode(final int code) {
+    this.errorCode = code;
   }
 
-  /**
-   * Instantiates a new lens exception.
-   */
-  public LensException() {
-    super();
-  }
-
-  /**
-   * Instantiates a new lens exception.
-   *
-   * @param th the th
-   */
-  public LensException(Throwable th) {
-    super(th);
-  }
+  private final int errorCode;
 }

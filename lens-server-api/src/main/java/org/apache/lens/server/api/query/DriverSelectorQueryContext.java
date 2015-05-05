@@ -20,11 +20,11 @@ package org.apache.lens.server.api.query;
 
 import java.util.*;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.util.LensUtil;
 
 import org.apache.commons.lang3.StringUtils;

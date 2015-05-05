@@ -23,7 +23,7 @@ import static org.testng.Assert.*;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.testng.annotations.Test;
 

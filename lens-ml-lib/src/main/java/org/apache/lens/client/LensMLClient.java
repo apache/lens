@@ -30,7 +30,6 @@ import java.util.Map;
 
 import javax.ws.rs.core.Form;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLModel;
@@ -38,6 +37,7 @@ import org.apache.lens.ml.api.LensML;
 import org.apache.lens.ml.api.MLTestReport;
 import org.apache.lens.ml.api.ModelMetadata;
 import org.apache.lens.ml.api.TestReport;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

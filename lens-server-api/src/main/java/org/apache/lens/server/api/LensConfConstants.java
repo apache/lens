@@ -18,7 +18,7 @@
  */
 package org.apache.lens.server.api;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * The Class LensConfConstants.

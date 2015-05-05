@@ -18,8 +18,8 @@
  */
 package org.apache.lens.server.api.priority;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 import org.apache.log4j.Logger;

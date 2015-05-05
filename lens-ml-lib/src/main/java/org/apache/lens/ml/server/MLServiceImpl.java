@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
-import org.apache.lens.ml.algo.api.*;
+import org.apache.lens.ml.algo.api.MLAlgo;
+import org.apache.lens.ml.algo.api.MLModel;
 import org.apache.lens.ml.api.MLTestReport;
 import org.apache.lens.ml.impl.LensMLImpl;
 import org.apache.lens.ml.impl.ModelLoader;
@@ -35,6 +35,7 @@ import org.apache.lens.ml.impl.QueryRunner;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.ServiceProviderFactory;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryExecutionService;
 
 import org.apache.commons.logging.Log;

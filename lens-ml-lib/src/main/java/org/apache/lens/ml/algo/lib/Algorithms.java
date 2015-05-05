@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.ml.algo.api.Algorithm;
 import org.apache.lens.ml.algo.api.MLAlgo;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * The Class Algorithms.

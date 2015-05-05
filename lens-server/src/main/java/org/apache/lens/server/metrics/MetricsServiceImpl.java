@@ -33,11 +33,7 @@ import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.events.LensEventService;
-import org.apache.lens.server.api.metrics.DisabledMethodMetricsContext;
-import org.apache.lens.server.api.metrics.LensMetricsRegistry;
-import org.apache.lens.server.api.metrics.MethodMetricsContext;
-import org.apache.lens.server.api.metrics.MethodMetricsFactory;
-import org.apache.lens.server.api.metrics.MetricsService;
+import org.apache.lens.server.api.metrics.*;
 import org.apache.lens.server.api.query.QueryExecutionService;
 import org.apache.lens.server.api.query.StatusChange;
 

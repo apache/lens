@@ -27,11 +27,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.LensDriver;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.MockDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryContext;
 
 import org.apache.hadoop.conf.Configuration;

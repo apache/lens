@@ -21,9 +21,14 @@ package org.apache.lens.cube.parse;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.Identifier;
 import static org.apache.hadoop.hive.ql.parse.HiveParser.TOK_SELEXPR;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.AbstractCubeTable;
+import org.apache.lens.cube.metadata.CubeInterface;
+import org.apache.lens.cube.metadata.Dimension;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

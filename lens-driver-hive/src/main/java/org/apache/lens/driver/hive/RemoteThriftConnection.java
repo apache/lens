@@ -18,7 +18,7 @@
  */
 package org.apache.lens.driver.hive;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

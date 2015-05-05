@@ -18,8 +18,8 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.AbstractQueryContext;
 
 public class MockFailDriver extends MockDriver {

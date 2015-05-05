@@ -18,8 +18,8 @@
  */
 package org.apache.lens.server.query;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.SubmitOp;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.QueryAcceptor;
 
 import org.apache.hadoop.conf.Configuration;

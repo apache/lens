@@ -18,7 +18,6 @@
  */
 package org.apache.lens.server.session;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -27,8 +26,8 @@ import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.*;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

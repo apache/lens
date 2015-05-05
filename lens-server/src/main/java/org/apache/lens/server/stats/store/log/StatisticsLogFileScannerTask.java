@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.LensServices;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
 

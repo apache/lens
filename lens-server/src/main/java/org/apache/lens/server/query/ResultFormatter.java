@@ -18,13 +18,13 @@
  */
 package org.apache.lens.server.query;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSet;
 import org.apache.lens.server.api.driver.PersistentResultSet;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.events.AsyncEventListener;
 import org.apache.lens.server.api.metrics.MetricsService;
 import org.apache.lens.server.api.query.*;

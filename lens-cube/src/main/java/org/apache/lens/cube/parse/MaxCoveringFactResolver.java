@@ -23,12 +23,12 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.metadata.timeline.RangesPartitionTimeline;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

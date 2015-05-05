@@ -21,11 +21,11 @@ package org.apache.lens.driver.hive.priority;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.Priority;
 import org.apache.lens.cube.metadata.FactPartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.priority.CostToPriorityRangeConf;
 import org.apache.lens.server.api.priority.QueryPriorityDecider;
 import org.apache.lens.server.api.query.AbstractQueryContext;

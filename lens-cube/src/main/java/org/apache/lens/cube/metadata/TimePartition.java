@@ -22,7 +22,7 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang3.time.DateUtils;
 

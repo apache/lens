@@ -20,12 +20,7 @@ package org.apache.lens.ml.impl;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,14 +30,16 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.LensQuery;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
+import org.apache.lens.api.response.LensResponse;
+import org.apache.lens.api.response.NoErrorPayload;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLDriver;
 import org.apache.lens.ml.algo.api.MLModel;
@@ -51,6 +48,7 @@ import org.apache.lens.ml.algo.spark.SparkMLDriver;
 import org.apache.lens.ml.api.LensML;
 import org.apache.lens.ml.api.MLTestReport;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.session.SessionService;
 
 import org.apache.commons.io.IOUtils;
@@ -67,6 +65,7 @@ import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+
 
 /**
  * The Class LensMLImpl.
@@ -651,7 +650,7 @@ public class LensMLImpl implements LensML {
         MediaType.APPLICATION_XML_TYPE));
 
       final QueryHandle handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        QueryHandle.class);
+          new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
 
       LensQuery ctx = target.path(handle.toString()).queryParam("sessionid", sessionHandle).request()
         .get(LensQuery.class);

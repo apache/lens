@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.ml.algo.api.MLAlgo;
 import org.apache.lens.ml.algo.api.MLDriver;
 import org.apache.lens.ml.algo.lib.Algorithms;
@@ -32,6 +31,7 @@ import org.apache.lens.ml.algo.spark.dt.DecisionTreeAlgo;
 import org.apache.lens.ml.algo.spark.lr.LogisticRegressionAlgo;
 import org.apache.lens.ml.algo.spark.nb.NaiveBayesAlgo;
 import org.apache.lens.ml.algo.spark.svm.SVMAlgo;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;

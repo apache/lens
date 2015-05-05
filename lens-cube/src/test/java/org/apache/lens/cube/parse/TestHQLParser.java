@@ -21,6 +21,8 @@ package org.apache.lens.cube.parse;
 
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
+import org.apache.lens.server.api.error.LensException;
+
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -315,7 +317,7 @@ public class TestHQLParser {
   }
 
   @Test
-  public void testCastStatement() throws ParseException {
+  public void testCastStatement() throws ParseException, LensException {
     String castSelect = "cast(( a  +  b ) as tinyint), cast(( a  +  b ) as smallint), cast(( a  +  b ) as int),"
       + " cast(( a  +  b ) as bigint), cast(( a  +  b ) as float), cast(( a  +  b ) as double),"
       + " cast(( a  +  b ) as boolean), cast( a  as date), cast( b  as datetime), cast( a  as timestamp),"
@@ -332,7 +334,7 @@ public class TestHQLParser {
   }
 
   @Test
-  public void testOtherStatements() throws ParseException {
+  public void testOtherStatements() throws ParseException, LensException {
     String select = "3.1415926BD";
     String query = "select " + select + " from table limit 1";
     ASTNode tree = HQLParser.parseHQL(query, conf);
@@ -340,5 +342,4 @@ public class TestHQLParser {
     String genQuery = HQLParser.getString(selectAST);
     Assert.assertEquals(genQuery, select);
   }
-
 }

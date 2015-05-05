@@ -20,8 +20,8 @@ package org.apache.lens.cube.metadata;
 
 import java.util.Iterator;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.parse.DateUtil;
+import org.apache.lens.server.api.error.LensException;
 
 import lombok.Data;
 

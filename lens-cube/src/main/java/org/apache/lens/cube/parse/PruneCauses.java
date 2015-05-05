@@ -18,7 +18,10 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.lens.cube.metadata.AbstractCubeTable;
 import org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode;

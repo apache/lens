@@ -27,6 +27,8 @@ import java.io.ObjectOutputStream;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
+import org.apache.lens.api.error.ErrorCollection;
+import org.apache.lens.api.error.ErrorCollectionFactory;
 import org.apache.lens.server.api.ServiceProvider;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -103,6 +105,9 @@ public class LensServices extends CompositeService implements ServiceProvider {
   /* Lock for synchronizing persistence of LensServices state */
   private final Object statePersistenceLock = new Object();
 
+  @Getter
+  private ErrorCollection errorCollection;
+
   /**
    * The Enum SERVICE_MODE.
    */
@@ -141,7 +146,10 @@ public class LensServices extends CompositeService implements ServiceProvider {
   @SuppressWarnings("unchecked")
   @Override
   public synchronized void init(HiveConf hiveConf) {
+
     if (getServiceState() == STATE.NOTINITED) {
+
+      initializeErrorCollection();
       conf = hiveConf;
       conf.setVar(HiveConf.ConfVars.HIVE_SESSION_IMPL_CLASSNAME, LensSessionImpl.class.getCanonicalName());
       serviceMode = conf.getEnum(SERVER_MODE,
@@ -392,5 +400,13 @@ public class LensServices extends CompositeService implements ServiceProvider {
 
   public List<LensService> getLensServices() {
     return lensServices;
+  }
+
+  private void initializeErrorCollection() {
+    try {
+      errorCollection = new ErrorCollectionFactory().createErrorCollection();
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException("Could not create error collection.", e);
+    }
   }
 }

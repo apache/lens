@@ -21,7 +21,7 @@ package org.apache.lens.ml.algo.api;
 import java.util.List;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * The Interface MLDriver.

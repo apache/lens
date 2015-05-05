@@ -18,9 +18,9 @@
  */
 package org.apache.lens.server.query;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
 import org.apache.lens.server.api.driver.PersistentResultSet;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * The Class LensPersistentResult.

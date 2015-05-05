@@ -19,16 +19,19 @@
 package org.apache.lens.server.api.query;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.lens.api.LensConf;
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryCost;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.driver.DriverQueryPlan;
 import org.apache.lens.server.api.driver.LensDriver;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.query.DriverSelectorQueryContext.DriverQueryContext;
@@ -203,6 +206,8 @@ public abstract class AbstractQueryContext implements Serializable {
     @Getter
     private boolean succeeded = false;
 
+    @Getter
+    private LensException cause;
 
     public DriverEstimateRunnable(AbstractQueryContext queryContext,
                                   LensDriver driver) {
@@ -223,18 +228,25 @@ public abstract class AbstractQueryContext implements Serializable {
       try {
         driverQueryContext.setDriverCost(driver.estimate(queryContext));
         succeeded = true;
-      } catch (Exception e) {
-        String expMsg = LensUtil.getCauseMessage(e);
-        driverQueryContext.setDriverQueryCostEstimateError(e);
-        failureCause = new StringBuilder("Driver :")
-            .append(driver.getClass().getName())
-            .append(" Cause :")
-            .append(expMsg)
-            .toString();
-        LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
+      } catch (final LensException e) {
+        this.cause = e;
+        captureExceptionInformation(driverQueryContext, e);
+      } catch (final Exception e) {
+        captureExceptionInformation(driverQueryContext, e);
       } finally {
         estimateGauge.markSuccess();
       }
+    }
+
+    private void captureExceptionInformation(final DriverQueryContext driverQueryContext, final Exception e) {
+      String expMsg = LensUtil.getCauseMessage(e);
+      driverQueryContext.setDriverQueryCostEstimateError(e);
+      failureCause = new StringBuilder("Driver :")
+          .append(driver.getClass().getName())
+          .append(" Cause :")
+          .append(expMsg)
+          .toString();
+      LOG.error("Setting driver cost failed for driver " + driver + " Cause: " + failureCause, e);
     }
   }
 

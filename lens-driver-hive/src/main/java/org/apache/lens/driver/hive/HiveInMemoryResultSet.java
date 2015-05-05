@@ -23,10 +23,10 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.ResultRow;
 import org.apache.lens.server.api.driver.InMemoryResultSet;
 import org.apache.lens.server.api.driver.LensResultSetMetadata;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hive.service.cli.*;
 

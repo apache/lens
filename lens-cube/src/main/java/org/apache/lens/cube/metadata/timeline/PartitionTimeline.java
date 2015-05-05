@@ -21,10 +21,10 @@ package org.apache.lens.cube.metadata.timeline;
 
 import java.util.*;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
 import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
 
 import org.apache.hadoop.hive.ql.metadata.Table;
 

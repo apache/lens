@@ -18,8 +18,8 @@
  */
 package org.apache.lens.server.api.driver;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryResult;
+import org.apache.lens.server.api.error.LensException;
 
 /**
  * Result set returned by driver.

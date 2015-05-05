@@ -26,8 +26,8 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.apache.lens.api.LensException;
 import org.apache.lens.api.query.QueryHandle;
+import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.query.FinishedLensQuery;
 import org.apache.lens.server.util.UtilityMethods;
 

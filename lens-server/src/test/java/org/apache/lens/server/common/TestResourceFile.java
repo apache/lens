@@ -21,7 +21,9 @@ package org.apache.lens.server.common;
 public enum TestResourceFile {
 
   TEST_AUX_JAR("test-aux.jar"),
-  TEST_RESTART_ON_RESOURCE_MOVE_JAR("restart-on-resource-move-test.jar");
+  TEST_RESTART_ON_RESOURCE_MOVE_JAR("restart-on-resource-move-test.jar"),
+  TEST_DATA_FILE("target/testdata.data"),
+  TEST_DATA2_FILE("testdata2.data");
 
   public String getValue() {
     return this.fileName;

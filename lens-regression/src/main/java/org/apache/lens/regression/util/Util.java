@@ -18,9 +18,10 @@
  */
 package org.apache.lens.regression.util;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.util.Properties;
-
 
 import org.apache.log4j.Logger;
 
