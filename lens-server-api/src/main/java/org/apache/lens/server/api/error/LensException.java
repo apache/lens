@@ -31,7 +31,6 @@ import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
 import org.apache.lens.api.response.LensErrorTO;
 import org.apache.lens.api.response.LensResponse;
-import org.apache.lens.api.response.NoErrorPayload;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 
@@ -151,7 +150,7 @@ public class LensException extends Exception {
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
       final String stackTrace) {
 
-    return LensErrorTO.<NoErrorPayload>composedOf(errorCode, errorMsg, stackTrace);
+    return LensErrorTO.composedOf(errorCode, errorMsg, stackTrace);
   }
 
   private LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final LensError lensError) {
