@@ -43,6 +43,7 @@ public final class CubeQueryConfUtil {
   public static final String VALID_STORAGE_DIM_TABLES = "lens.cube.query.valid." + "dim.storgaetables";
   public static final String DRIVER_SUPPORTED_STORAGES = "lens.cube.query.driver." + "supported.storages";
   public static final String FAIL_QUERY_ON_PARTIAL_DATA = "lens.cube.query.fail.if.data.partial";
+  public static final String SKIP_FACTS_ON_NO_DATA = "lens.cube.facts.skip.on.no.data";
   public static final String NON_EXISTING_PARTITIONS = "lens.cube.query.nonexisting.partitions";
   public static final String ENABLE_MULTI_TABLE_SELECT = "lens.cube.query.enable.multi.table.select";
   public static final String QUERY_MAX_INTERVAL = "lens.cube.query.max.interval";

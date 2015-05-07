@@ -54,6 +54,7 @@ class StorageTableResolver implements ContextRewriter {
   private final boolean allStoragesSupported;
   CubeMetastoreClient client;
   private final boolean failOnPartialData;
+  private final boolean skipOnNoData;
   private final List<String> validDimTables;
   private final Map<CubeFactTable, Map<UpdatePeriod, Set<String>>> validStorageMap =
     new HashMap<CubeFactTable, Map<UpdatePeriod, Set<String>>>();
@@ -85,6 +86,7 @@ class StorageTableResolver implements ContextRewriter {
     this.supportedStorages = getSupportedStorages(conf);
     this.allStoragesSupported = (supportedStorages == null);
     this.failOnPartialData = conf.getBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    this.skipOnNoData = conf.getBoolean(CubeQueryConfUtil.SKIP_FACTS_ON_NO_DATA, false);
     String str = conf.get(CubeQueryConfUtil.VALID_STORAGE_DIM_TABLES);
     validDimTables = StringUtils.isBlank(str) ? null : Arrays.asList(StringUtils.split(str.toLowerCase(), ","));
     this.processTimePartCol = conf.get(CubeQueryConfUtil.PROCESS_TIME_PART_COL);
@@ -191,7 +193,7 @@ class StorageTableResolver implements ContextRewriter {
               } else {
                 LOG.info("Partition " + StorageConstants.LATEST_PARTITION_VALUE + " does not exist on " + tableName);
               }
-              if (!failOnPartialData || foundPart) {
+              if ((!skipOnNoData && !failOnPartialData) || foundPart) {
                 storageTables.add(tableName);
                 String whereClause =
                   StorageUtil.getWherePartClause(dim.getTimedDimension(), null,
@@ -325,7 +327,15 @@ class StorageTableResolver implements ContextRewriter {
           noPartsForRange = true;
           continue;
         }
-        cfact.incrementPartsQueried(rangeParts.size());
+        if (skipOnNoData) {
+          for (FactPartition part : rangeParts) {
+            if (part.found()) {
+              cfact.incrementPartsQueried(1);
+            }
+          }
+        } else {
+          cfact.incrementPartsQueried(rangeParts.size());
+        }
         answeringParts.addAll(rangeParts);
         cfact.getPartsQueried().addAll(rangeParts);
         cfact.getRangeToWhereClause().put(range, rangeWriter.getTimeRangeWhereClause(cubeql,
@@ -513,10 +523,6 @@ class StorageTableResolver implements ContextRewriter {
                       partWhereClauseFormat));
                   }
                   LOG.info("added all sub partitions blindly in pPart: " + pPart);
-//                          if (!getPartitions(fact, dt, cal.getTime(), partCol, pPart, partitions, newset, false,
-//                            skipStorageCauses, nonExistingParts)) {
-//                            LOG.info("No partitions found in look ahead range");
-//                          }
                 }
               }
             }
