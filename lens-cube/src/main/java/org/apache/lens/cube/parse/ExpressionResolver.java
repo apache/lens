@@ -32,7 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
-import org.apache.hadoop.hive.ql.parse.ParseException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.antlr.runtime.CommonToken;
@@ -112,11 +111,7 @@ class ExpressionResolver implements ContextRewriter {
     if (((AbstractBaseTable) cubeql.getQueriedTable(table)).getExpressionByName(column) == null) {
       return null;
     }
-    try {
-      return ((AbstractBaseTable) cubeql.getQueriedTable(table)).getExpressionByName(column).getAst();
-    } catch (ParseException e) {
-      throw new SemanticException(e);
-    }
+    return ((AbstractBaseTable) cubeql.getQueriedTable(table)).getExpressionByName(column).getAst();
   }
 
   private ASTNode getExprAST(final CubeQueryContext cubeql, final String column) throws SemanticException {
@@ -143,11 +138,7 @@ class ExpressionResolver implements ContextRewriter {
     if (expr == null) {
       return null;
     }
-    try {
-      return expr.getAst();
-    } catch (ParseException e) {
-      throw new SemanticException(e);
-    }
+    return expr.getAst();
   }
 
   private ASTNode replaceAlias(final ASTNode expr, final CubeQueryContext cubeql) throws SemanticException {

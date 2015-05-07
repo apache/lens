@@ -27,8 +27,11 @@ import java.util.TimeZone;
 import org.apache.lens.cube.parse.TimeRange;
 
 import com.google.common.base.Optional;
-import lombok.NonNull;
 
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public abstract class CubeColumn implements Named {
 
   private final String name;
@@ -59,12 +62,17 @@ public abstract class CubeColumn implements Named {
   }
 
   private Date getDate(String propKey, Map<String, String> props) {
-    String timeKey = props.get(propKey);
-    if (timeKey != null) {
+    String timeStr = props.get(propKey);
+    return getDate(timeStr);
+  }
+
+  protected Date getDate(String timeStr) {
+    if (timeStr != null) {
       try {
-        return COLUMN_TIME_FORMAT.get().parse(timeKey);
+        return COLUMN_TIME_FORMAT.get().parse(timeStr);
       } catch (Exception e) {
         // ignore and return null
+        log.warn("Column time passed:{} is not parsable, its ignored", timeStr, e);
       }
     }
     return null;
@@ -77,6 +85,7 @@ public abstract class CubeColumn implements Named {
         return Double.parseDouble(doubleStr);
       } catch (Exception e) {
         // ignore and return null
+        log.warn("Property {} value {} is not parsable, its ignored", propKey, doubleStr, e);
       }
     }
     return null;

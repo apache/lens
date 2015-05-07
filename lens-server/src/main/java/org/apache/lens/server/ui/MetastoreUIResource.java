@@ -194,7 +194,7 @@ public class MetastoreUIResource {
         for (XExprColumn expr : table.getExpressions().getExpression()) {
           try {
             attribList.put(new JSONObject().put("name", expr.getName()).put("type", "expression")
-              .put("expression", expr.getExpr()));
+              .put("expression", expr.getExprSpec()));
           } catch (JSONException j) {
             LOG.error(j);
           }

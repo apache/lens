@@ -30,6 +30,12 @@
     <dim_attribute name="category" type="STRING" />
     <dim_attribute name="manufacturer" type="STRING" />
   </attributes>
+  <expressions>
+    <expression name="isHeavy" type="boolean">
+      <expr_spec expr = "weight > 10" end_time="2015-04-12T00:00:00"/>
+      <expr_spec expr = "weight > 50" start_time="2015-04-12T00:00:00"/>
+    </expression>
+  </expressions>
   <properties>
     <property name="dimension.product.timed.dimension" value="dt"/>
   </properties>

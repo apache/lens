@@ -19,20 +19,50 @@
 
 package org.apache.lens.cube.metadata;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.*;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+
+import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 
 import org.testng.annotations.Test;
 
 public class TestExprColumn {
+
+  private final Date now;
+  private final Date twoDaysBack;
+  private final Date nowUptoHours;
+  private final Date twoDaysBackUptoHours;
+
+  public TestExprColumn() {
+    Calendar cal = Calendar.getInstance();
+    now = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, -2);
+    twoDaysBack = cal.getTime();
+    cal.set(Calendar.MINUTE, 0);
+    cal.set(Calendar.SECOND, 0);
+    cal.set(Calendar.MILLISECOND, 0);
+    twoDaysBackUptoHours = cal.getTime();
+    cal.add(Calendar.DAY_OF_MONTH, +2);
+    nowUptoHours = cal.getTime();
+  }
+
   @Test
   public void testExprColumnEquality() throws Exception {
     FieldSchema colSchema = new FieldSchema("someExprCol", "double", "some exprcol");
 
     ExprColumn col1 = new ExprColumn(colSchema, "someExprDisplayString", "AVG(msr1) + AVG(msr2)");
     ExprColumn col2 = new ExprColumn(colSchema, "someExprDisplayString", "avg(MSR1) + avg(MSR2)");
+    assertEquals(col1, col2);
+    assertEquals(col1.hashCode(), col2.hashCode());
+
+    col2 = new ExprColumn(colSchema, "someExprDisplayString", new ExprSpec("avg(MSR1) + avg(MSR2)", null, null));
     assertEquals(col1, col2);
     assertEquals(col1.hashCode(), col2.hashCode());
 
@@ -48,5 +78,130 @@ public class TestExprColumn {
     ExprColumn col6 = new ExprColumn(colSchema, "someExprDisplayString", "DIM1 = 'FooBar' AND DIM2 = 'BarFoo'");
     assertEquals(col4, col6);
     assertEquals(col4.hashCode(), col6.hashCode());
+  }
+
+  @Test
+  public void testExpressionStartAndEndTimes() throws Exception {
+    FieldSchema colSchema = new FieldSchema("multiExprCol", "double", "multi exprcol");
+
+    ExprColumn col1 = new ExprColumn(colSchema, "multiExprColDisplayString", new ExprSpec("avg(MSR1) + avg(MSR2)",
+      twoDaysBack, null));
+    Map<String, String> props = new HashMap<String, String>();
+    col1.addProperties(props);
+    ExprColumn col1FromProps = new ExprColumn("multiExprCol", props);
+    assertEquals(col1, col1FromProps);
+    assertEquals(col1.hashCode(), col1FromProps.hashCode());
+    assertEquals(col1FromProps.getExpressionSpecs().iterator().next().getStartTime(), twoDaysBackUptoHours);
+
+    col1 = new ExprColumn(colSchema, "multiExprColDisplayString", new ExprSpec("avg(MSR1) + avg(MSR2)",
+      null, twoDaysBack));
+    props = new HashMap<String, String>();
+    col1.addProperties(props);
+    col1FromProps = new ExprColumn("multiExprCol", props);
+    assertEquals(col1, col1FromProps);
+    assertEquals(col1.hashCode(), col1FromProps.hashCode());
+    assertEquals(col1FromProps.getExpressionSpecs().iterator().next().getEndTime(), twoDaysBackUptoHours);
+
+
+    col1 = new ExprColumn(colSchema, "multiExprColDisplayString", new ExprSpec("avg(MSR1) + avg(MSR2)",
+      twoDaysBack, now));
+    props = new HashMap<String, String>();
+    col1.addProperties(props);
+    col1FromProps = new ExprColumn("multiExprCol", props);
+    assertEquals(col1, col1FromProps);
+    assertEquals(col1.hashCode(), col1FromProps.hashCode());
+    assertEquals(col1FromProps.getExpressionSpecs().iterator().next().getStartTime(), twoDaysBackUptoHours);
+    assertEquals(col1FromProps.getExpressionSpecs().iterator().next().getEndTime(), nowUptoHours);
+  }
+
+  @Test
+  public void testMultipleExpressionStartAndEndTimes() throws Exception {
+    FieldSchema colSchema = new FieldSchema("multiExprCol", "double", "multi exprcol");
+
+    ExprColumn col1 = new ExprColumn(colSchema, "multiExprColDisplayString", new ExprSpec("avg(MSR1) + avg(MSR2)",
+      twoDaysBack, null), new ExprSpec("avg(MSR1) + avg(MSR2) - m1 + m1", now, null),
+      new ExprSpec("avg(MSR1) + avg(MSR2)", null, twoDaysBack),
+      new ExprSpec("avg(MSR1) + avg(MSR2) + 0.01", twoDaysBack, now));
+    Map<String, String> props = new HashMap<String, String>();
+    col1.addProperties(props);
+    ExprColumn col1FromProps = new ExprColumn("multiExprCol", props);
+    assertEquals(col1, col1FromProps);
+    assertEquals(col1.hashCode(), col1FromProps.hashCode());
+    Iterator<ExprSpec> it = col1FromProps.getExpressionSpecs().iterator();
+    assertEquals(it.next().getStartTime(), twoDaysBackUptoHours);
+    assertEquals(it.next().getStartTime(), nowUptoHours);
+    ExprSpec endTimeSpecified = it.next();
+    assertNull(endTimeSpecified.getStartTime());
+    assertEquals(endTimeSpecified.getEndTime(), twoDaysBackUptoHours);
+    ExprSpec last = it.next();
+    assertEquals(last.getStartTime(), twoDaysBackUptoHours);
+    assertEquals(last.getEndTime(), nowUptoHours);
+    assertFalse(it.hasNext());
+  }
+
+  @Test
+  public void testExprColumnCreationErrors() {
+    FieldSchema colSchema = new FieldSchema("errorColumn", "double", "multi exprcol");
+
+    // no expression spec passed
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "NoExprSpec", (ExprSpec[])null);
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("No expressions specified for column errorColumn"));
+    }
+
+    // no expression passed in exprspec
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec(null, null, null));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("No expression string specified for column errorColumn at index:0"));
+    }
+
+    // Parse error in expr passed in exprspec
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec("(a+b", null, null));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("Expression can't be parsed: (a+b"), e.getMessage());
+    }
+
+    // Parse error in expr passed in exprspec
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpec", new ExprSpec("a + b", null, null),
+        new ExprSpec("(a+b", null, null));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("Expression can't be parsed: (a+b"));
+    }
+
+    // no expression passed in exprspec
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "NoExprInExprSpecAt1", new ExprSpec("a + b", null, null),
+        new ExprSpec(null, null, null));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("No expression string specified for column errorColumn at index:1"));
+    }
+
+    // startTime after endTime
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "startTimeAfterEndTime", new ExprSpec("a + b", now, twoDaysBack));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("Start time is after end time for column errorColumn "
+        + "for expression at index:0"), e.getMessage());
+    }
+
+    // startTime after endTime
+    try {
+      ExprColumn col1 = new ExprColumn(colSchema, "startTimeAfterEndTimeAt1", new ExprSpec("a + b", null, null),
+        new ExprSpec("a + b", now, twoDaysBack));
+      fail(col1 + " should not be created");
+    } catch (IllegalArgumentException e) {
+      assertTrue(e.getMessage().contains("Start time is after end time for column errorColumn "
+        + "for expression at index:1"), e.getMessage());
+    }
   }
 }

@@ -42,6 +42,7 @@ import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.StringList;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 import org.apache.lens.server.LensJerseyTest;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.LensTestUtil;
@@ -383,9 +384,34 @@ public class TestMetastoreService extends LensJerseyTest {
     xe1.setType("DOUBLE");
     xe1.setDescription("first expression");
     xe1.setDisplayString("Expression1");
-    xe1.setExpr("msr1/1000");
+    XExprSpec es = new XExprSpec();
+    es.setExpr("msr1/1000");
+    xe1.getExprSpec().add(es);
+
+    XExprColumn xe2 = new XExprColumn();
+    xe2.setName("expr2");
+    xe2.setType("float");
+    xe2.setDescription("multi expression");
+    xe2.setDisplayString("Expression2");
+    XExprSpec es1 = new XExprSpec();
+    es1.setExpr("msr1/1000");
+    xe2.getExprSpec().add(es1);
+    XExprSpec es2 = new XExprSpec();
+    es2.setExpr("(msr1/1000) + 0.01");
+    es2.setStartTime(startDate);
+    xe2.getExprSpec().add(es2);
+    XExprSpec es3 = new XExprSpec();
+    es3.setExpr("(msr1/1000) + 0.03");
+    es3.setEndTime(endDate);
+    xe2.getExprSpec().add(es3);
+    XExprSpec es4 = new XExprSpec();
+    es4.setExpr("(msr1/1000) - 0.01");
+    es4.setStartTime(startDate);
+    es4.setEndTime(endDate);
+    xe2.getExprSpec().add(es4);
 
     cube.getExpressions().getExpression().add(xe1);
+    cube.getExpressions().getExpression().add(xe2);
 
     XProperty xp1 = cubeObjectFactory.createXProperty();
     xp1.setName("foo");
@@ -650,6 +676,27 @@ public class TestMetastoreService extends LensJerseyTest {
       assertNotNull(hcube.getExpressionByName("expr1"));
       assertEquals(hcube.getExpressionByName("expr1").getDescription(), "first expression");
       assertEquals(hcube.getExpressionByName("expr1").getDisplayString(), "Expression1");
+      assertNotNull(hcube.getExpressionByName("expr2"));
+      assertEquals(hcube.getExpressionByName("expr2").getExpressions().size(), 4);
+      ExprColumn expr2 = hcube.getExpressionByName("expr2");
+      Iterator<ExprSpec> esIter = expr2.getExpressionSpecs().iterator();
+      ExprSpec first = esIter.next();
+      assertEquals(first.getExpr(), "msr1/1000");
+      assertNull(first.getStartTime());
+      assertNull(first.getEndTime());
+      ExprSpec second = esIter.next();
+      assertEquals(second.getExpr(), "(msr1/1000) + 0.01");
+      assertNotNull(second.getStartTime());
+      assertNull(second.getEndTime());
+      ExprSpec third = esIter.next();
+      assertEquals(third.getExpr(), "(msr1/1000) + 0.03");
+      assertNull(third.getStartTime());
+      assertNotNull(third.getEndTime());
+      ExprSpec last = esIter.next();
+      assertEquals(last.getExpr(), "(msr1/1000) - 0.01");
+      assertNotNull(last.getStartTime());
+      assertNotNull(last.getEndTime());
+      assertFalse(esIter.hasNext());
       Assert.assertFalse(hcube.getJoinChains().isEmpty());
       Assert.assertEquals(hcube.getJoinChains().size(), 2);
       Assert.assertTrue(hcube.getJoinChainNames().contains("chain1"));
@@ -1030,7 +1077,9 @@ public class TestMetastoreService extends LensJerseyTest {
     xe1.setType("STRING");
     xe1.setDescription("dimension expression");
     xe1.setDisplayString("Dim Expression");
-    xe1.setExpr("substr(col1, 3)");
+    XExprSpec es = new XExprSpec();
+    es.setExpr("substr(col1, 3)");
+    xe1.getExprSpec().add(es);
     dimension.getExpressions().getExpression().add(xe1);
 
     XProperty xp1 = cubeObjectFactory.createXProperty();
@@ -2298,6 +2347,7 @@ public class TestMetastoreService extends LensJerseyTest {
         "flattestcube.testdim2col2",
         "flattestcube.dim4",
         "flattestcube.expr1",
+        "flattestcube.expr2",
         "chain1-testdim.col2",
         "chain1-testdim.col1",
         "chain1-testdim.dimexpr",

@@ -30,26 +30,47 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.ParseException;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 public class ExprColumn extends CubeColumn {
   public static final char EXPRESSION_DELIMITER = '|';
+  public static final char EXPRESSION_SPEC_DELIMITER = ':';
   private static final String EXPRESSION_ENCODED = "true";
-  private final Set<String> expressionSet = new LinkedHashSet<String>();
-  private List<ASTNode> astNodeList;
+  private final Set<ExprSpec> expressionSet = new LinkedHashSet<ExprSpec>();
+  private List<ASTNode> astNodeList = new ArrayList<ASTNode>();
   private final String type;
   private boolean hasHashCode = false;
   private int hashCode;
 
-  public ExprColumn(FieldSchema column, String displayString, String... expressions) throws ParseException {
+  // for backward compatibility
+  public ExprColumn(FieldSchema column, String displayString, String expression) {
+    this(column, displayString, new ExprSpec(expression, null, null));
+  }
+
+  public ExprColumn(FieldSchema column, String displayString, ExprSpec... expressions) {
     super(column.getName(), column.getComment(), displayString, null, null, 0.0);
 
     if (expressions == null || expressions.length == 0) {
-      throw new IllegalArgumentException("No expression specified for column " + column.getName());
+      throw new IllegalArgumentException("No expressions specified for column " + column.getName());
     }
 
-    for (String e : expressions) {
+    for (int i = 0; i < expressions.length; i++) {
+      ExprSpec e = expressions[i];
+      if (StringUtils.isBlank(e.getExpr())) {
+        throw new IllegalArgumentException(
+          "No expression string specified for column " + column.getName() + " at index:" + i);
+      }
+      if (e.getStartTime() != null && e.getEndTime() != null) {
+        if (e.getStartTime().after(e.getEndTime())) {
+          throw new IllegalArgumentException("Start time is after end time for column " + column.getName()
+            + " for expression at index:" + i + " for " + e.getExpr());
+        }
+      }
       expressionSet.add(e);
     }
-
     this.type = column.getType();
     assert (getAst() != null);
   }
@@ -69,9 +90,26 @@ public class ExprColumn extends CubeColumn {
       EXPRESSION_ENCODED.equals(props.get(MetastoreUtil.getExprEncodingPropertyKey(getName())));
 
     for (String e : expressions) {
+      String[] exprSpecStrs = StringUtils.splitPreserveAllTokens(e, EXPRESSION_SPEC_DELIMITER);
       try {
-        String decodedExpr = isExpressionBase64Encoded ? new String(Base64.decodeBase64(e), "UTF-8") : e;
-        expressionSet.add(decodedExpr);
+        String decodedExpr =
+          isExpressionBase64Encoded ? new String(Base64.decodeBase64(exprSpecStrs[0]), "UTF-8") : exprSpecStrs[0];
+        ExprSpec exprSpec = new ExprSpec();
+        exprSpec.setExpr(decodedExpr);
+        if (exprSpecStrs.length > 1) {
+          // start time and end time serialized
+          if (StringUtils.isNotBlank(exprSpecStrs[1])) {
+            // start time available
+            exprSpec.setStartTime(getDate(exprSpecStrs[1]));
+          }
+          if (exprSpecStrs.length > 2) {
+            if (StringUtils.isNotBlank(exprSpecStrs[2])) {
+              // end time available
+              exprSpec.setEndTime(getDate(exprSpecStrs[2]));
+            }
+          }
+        }
+        expressionSet.add(exprSpec);
       } catch (UnsupportedEncodingException e1) {
         throw new IllegalArgumentException("Error decoding expression for expression column "
           + name + " encoded value=" + e);
@@ -81,11 +119,69 @@ public class ExprColumn extends CubeColumn {
     this.type = props.get(MetastoreUtil.getExprTypePropertyKey(getName()));
   }
 
+  @NoArgsConstructor
+  @ToString(exclude = {"astNode", "hasHashCode", "hashCode"})
+  public static class ExprSpec {
+    @Getter
+    @Setter
+    private String expr;
+    @Getter
+    @Setter
+    private Date startTime;
+    @Getter
+    @Setter
+    private Date endTime;
+
+    private transient ASTNode astNode;
+    private boolean hasHashCode = false;
+    private transient int hashCode;
+
+    public ExprSpec(String expr, Date startTime, Date endTime) {
+      this.expr = expr;
+      this.startTime = startTime;
+      this.endTime = endTime;
+    }
+
+    synchronized ASTNode getASTNode() {
+      if (astNode == null) {
+        try {
+          if (StringUtils.isNotBlank(expr)) {
+            astNode = HQLParser.parseExpr(getExpr());
+          }
+        } catch (ParseException e) {
+          throw new IllegalArgumentException("Expression can't be parsed: " + getExpr(), e);
+        }
+      }
+      return astNode;
+    }
+
+    @Override
+    public int hashCode() {
+      if (!hasHashCode) {
+        final int prime = 31;
+        int result = 1;
+        if (getASTNode() != null) {
+          String exprNormalized = HQLParser.getString(getASTNode());
+          result = prime * result + exprNormalized.hashCode();
+        }
+        result = prime * result + ((getStartTime() == null) ? 0 : COLUMN_TIME_FORMAT.get().format(
+          getStartTime()).hashCode());
+        result = prime * result + ((getEndTime() == null) ? 0 : COLUMN_TIME_FORMAT.get().format(
+          getEndTime()).hashCode());
+        hashCode = result;
+        hasHashCode = true;
+      }
+      return hashCode;
+    }
+  }
+
   /**
+   * Returns the first expression.
+   *
    * @return the expression
    */
   public String getExpr() {
-    return expressionSet.iterator().next();
+    return expressionSet.iterator().next().getExpr();
   }
 
   public String getType() {
@@ -96,11 +192,25 @@ public class ExprColumn extends CubeColumn {
   public void addProperties(Map<String, String> props) {
     super.addProperties(props);
 
-    String[] encodedExpressions = expressionSet.toArray(new String[expressionSet.size()]);
-    for (int i = 0; i < encodedExpressions.length; i++) {
-      String expression = encodedExpressions[i];
+    String[] encodedExpressions = new String[expressionSet.size()];
+    StringBuilder exprSpecBuilder = new StringBuilder();
+    int i = 0;
+    for (ExprSpec es : expressionSet) {
+      String expression = es.getExpr();
       try {
-        encodedExpressions[i] = Base64.encodeBase64String(expression.getBytes("UTF-8"));
+        exprSpecBuilder.append(Base64.encodeBase64String(expression.getBytes("UTF-8")));
+        exprSpecBuilder.append(EXPRESSION_SPEC_DELIMITER);
+        if (es.getStartTime() != null) {
+          exprSpecBuilder.append(COLUMN_TIME_FORMAT.get().format(es.getStartTime()));
+        }
+        exprSpecBuilder.append(EXPRESSION_SPEC_DELIMITER);
+        if (es.getEndTime() != null) {
+          exprSpecBuilder.append(COLUMN_TIME_FORMAT.get().format(es.getEndTime()));
+        }
+        // encoded expression contains the Base64 encoded expression, start time and end time.
+        encodedExpressions[i] = exprSpecBuilder.toString();
+        exprSpecBuilder.setLength(0);
+        i++;
       } catch (UnsupportedEncodingException e) {
         throw new IllegalArgumentException("Failed to encode expression " + expression);
       }
@@ -119,9 +229,8 @@ public class ExprColumn extends CubeColumn {
       int result = super.hashCode();
       result = prime * result + ((getType() == null) ? 0 : getType().toLowerCase().hashCode());
 
-      for (ASTNode exprNode : getExpressionASTList()) {
-        String exprNormalized = HQLParser.getString(exprNode);
-        result = prime * result + exprNormalized.hashCode();
+      for (ExprSpec exprSpec : expressionSet) {
+        result = prime * result + exprSpec.hashCode();
       }
 
       hashCode = result;
@@ -161,6 +270,36 @@ public class ExprColumn extends CubeColumn {
         return false;
       }
     }
+    // compare start and end times for expressions
+    Iterator<ExprSpec> thisIter = this.expressionSet.iterator();
+    Iterator<ExprSpec> otherIter = other.expressionSet.iterator();
+    while (thisIter.hasNext() && otherIter.hasNext()) {
+      ExprSpec thisES = thisIter.next();
+      ExprSpec otherES = otherIter.next();
+      if (!equalDates(thisES.getStartTime(), otherES.getStartTime())) {
+        return false;
+      }
+      if (!equalDates(thisES.getEndTime(), otherES.getEndTime())) {
+        return false;
+      }
+    }
+    if (thisIter.hasNext() != otherIter.hasNext()) {
+      return false;
+    }
+    return true;
+  }
+
+  private boolean equalDates(Date d1, Date d2) {
+    if (d1 == null) {
+      if (d2 != null) {
+        return false;
+      }
+    } else if (d2 == null) {
+      return false;
+    } else if (!COLUMN_TIME_FORMAT.get().format(d1).equals(COLUMN_TIME_FORMAT.get().format(
+      d2))) {
+      return false;
+    }
     return true;
   }
 
@@ -178,35 +317,49 @@ public class ExprColumn extends CubeColumn {
    * @return the ast
    * @throws ParseException
    */
-  public ASTNode getAst() throws ParseException {
+  public ASTNode getAst() {
     return getExpressionASTList().get(0);
   }
 
   public List<ASTNode> getExpressionASTList() {
-    if (astNodeList == null) {
-      astNodeList = new ArrayList<ASTNode>(expressionSet.size());
-      for (String expr : expressionSet) {
-        try {
-          astNodeList.add(HQLParser.parseExpr(expr));
-        } catch (ParseException e) {
-          // Should not throw exception since expr should have been validated when it was added
-          throw new IllegalStateException("Expression can't be parsed: " + expr, e);
+    synchronized (expressionSet) {
+      if (astNodeList.isEmpty()) {
+        for (ExprSpec expr : expressionSet) {
+          astNodeList.add(expr.getASTNode());
         }
       }
     }
     return astNodeList;
   }
 
-  private Set<String> getAllExpressions() {
+  private Set<ExprSpec> getAllExpressions() {
     return expressionSet;
   }
 
+  private final Set<String> cachedExpressionStrings = new LinkedHashSet<String>();
+
   /**
-   * Get immutable view of this column's expressions
+   * Get immutable view of this column's expression strings
    *
    * @return
    */
   public Collection<String> getExpressions() {
+    if (cachedExpressionStrings.isEmpty()) {
+      synchronized (expressionSet) {
+        for (ExprSpec es : expressionSet) {
+          cachedExpressionStrings.add(es.getExpr());
+        }
+      }
+    }
+    return Collections.unmodifiableSet(cachedExpressionStrings);
+  }
+
+  /**
+   * Get immutable view of this column's expression full spec
+   *
+   * @return
+   */
+  public Collection<ExprSpec> getExpressionSpecs() {
     return Collections.unmodifiableSet(expressionSet);
   }
 
@@ -216,14 +369,16 @@ public class ExprColumn extends CubeColumn {
    * @param expression
    * @throws ParseException
    */
-  public void addExpression(String expression) throws ParseException {
-    if (expression == null || expression.isEmpty()) {
+  public void addExpression(ExprSpec expression) throws ParseException {
+    if (expression == null || expression.getExpr().isEmpty()) {
       throw new IllegalArgumentException("Empty expression not allowed");
     }
 
     // Validate if expression can be correctly parsed
-    HQLParser.parseExpr(expression);
-    expressionSet.add(expression);
+    HQLParser.parseExpr(expression.getExpr());
+    synchronized (expressionSet) {
+      expressionSet.add(expression);
+    }
     astNodeList = null;
     hasHashCode = false;
   }
@@ -238,7 +393,17 @@ public class ExprColumn extends CubeColumn {
     if (expression == null || expression.isEmpty()) {
       throw new IllegalArgumentException("Empty expression not allowed");
     }
-    boolean removed = expressionSet.remove(expression);
+    boolean removed = false;
+    synchronized (expressionSet) {
+      Iterator<ExprSpec> it = expressionSet.iterator();
+      while (it.hasNext()) {
+        if (it.next().getExpr().equals(expression)) {
+          it.remove();
+          removed = true;
+          break;
+        }
+      }
+    }
     if (removed) {
       astNodeList = null;
       hasHashCode = false;

@@ -248,6 +248,14 @@
         An expression column
       </xs:documentation>
     </xs:annotation>
+    <xs:sequence>
+      <xs:annotation>
+        <xs:documentation>
+          All the expressions associated with expression column.
+        </xs:documentation>
+      </xs:annotation>
+      <xs:element type="x_expr_spec" name="expr_spec" maxOccurs="unbounded" minOccurs="1"/>
+    </xs:sequence>
     <xs:attribute type="xs:string" name="name" use="required" />
     <xs:attribute type="xs:string" name="type" use="required">
       <xs:annotation>
@@ -269,10 +277,36 @@
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>
+  </xs:complexType>
+
+  <xs:complexType name="x_expr_spec">
+    <xs:annotation>
+      <xs:documentation>
+        Specification of single expression. Specification consists of required expression field, and optional start and
+        end times associated with expression. Expression is valid between start time and end time, if both are
+        specified. If only start_time is specified, is valid from start_time to till date. If only end_time is
+        specified, is valid upto date specified, from any time. If no start time, end time are specified, the
+        expression is always valid.
+      </xs:documentation>
+    </xs:annotation>
     <xs:attribute type="xs:string" name="expr" use="required">
       <xs:annotation>
         <xs:documentation>
           The expression can be any string parsable through Hive Query Language.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="start_time">
+      <xs:annotation>
+        <xs:documentation>
+          The start time from when the expression is valid.
+        </xs:documentation>
+      </xs:annotation>
+    </xs:attribute>
+    <xs:attribute type="xs:dateTime" name="end_time">
+      <xs:annotation>
+        <xs:documentation>
+          The end time till when the expression is valid.
         </xs:documentation>
       </xs:annotation>
     </xs:attribute>

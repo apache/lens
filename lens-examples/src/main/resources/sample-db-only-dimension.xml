@@ -24,8 +24,8 @@
   <attributes>
     <dim_attribute name="id" type="INT"/>
     <dim_attribute name="name" type="STRING"/>
-    <dim_attribute name="detail" type="STRING" start_time='2013-12-01-00:00'/>
-    <dim_attribute name="d2id" type="INT" start_time='2013-12-01-00:00' join_key="true">
+    <dim_attribute name="detail" type="STRING" start_time='2013-12-01T00:00:00'/>
+    <dim_attribute name="d2id" type="INT" start_time='2013-12-01T00:00:00' join_key="true">
       <ref_spec>
         <table_references>
           <table_reference table="sample_dim2" column="id"/>

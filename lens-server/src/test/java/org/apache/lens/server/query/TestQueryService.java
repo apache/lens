@@ -259,8 +259,7 @@ public class TestQueryService extends LensJerseyTest {
     assertEquals(ctx.getDriverFinishTime(), 0);
     assertTrue(ctx.getFinishTime() > 0);
     Assert.assertEquals(ctx.getStatus().getStatus(), QueryStatus.Status.FAILED);
-    System.out.println("%% " + metricsSvc.getTotalFailedQueries());
-    Assert.assertEquals(metricsSvc.getTotalFailedQueries(), failedQueries + 1);
+    Assert.assertTrue(metricsSvc.getTotalFailedQueries() >= failedQueries + 1);
   }
 
   // test with execute async post, get all queries, get query context,

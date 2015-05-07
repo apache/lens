@@ -24,7 +24,7 @@
   <attributes>
     <dim_attribute name="id" type="INT"/>
     <dim_attribute name="name" type="STRING"/>
-    <dim_attribute name="detail2" type="STRING" start_time='2013-12-01-00:00'/>
+    <dim_attribute name="detail2" type="STRING" start_time='2013-12-01T00:00:00'/>
   </attributes>
   <properties>
     <property name="dimension.sample_dim2.timed.dimension" value="dt"/>

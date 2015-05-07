@@ -28,6 +28,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 
 import org.apache.hadoop.hive.metastore.TableType;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -204,6 +205,14 @@ public final class JAXBUtils {
     return hiveDim;
   }
 
+  /**
+   * Get XMLGregorianCalendar from Date.
+   *
+   * Useful for converting from java code to XML spec.
+   *
+   * @param d Date value
+   * @return XML value
+   */
   public static XMLGregorianCalendar getXMLGregorianCalendar(Date d) {
     if (d == null) {
       return null;
@@ -219,6 +228,14 @@ public final class JAXBUtils {
     }
   }
 
+  /**
+   * Get Date from XMLGregorianCalendar
+   *
+   * Useful for converting from XML spec to java code.
+   *
+   * @param cal XML value
+   * @return Date value
+   */
   public static Date getDateFromXML(XMLGregorianCalendar cal) {
     if (cal == null) {
       return null;
@@ -262,8 +279,28 @@ public final class JAXBUtils {
     xe.setType(ec.getType());
     xe.setDescription(ec.getDescription());
     xe.setDisplayString(ec.getDisplayString());
-    xe.setExpr(ec.getExpr());
+    xe.getExprSpec().addAll(xExprSpecFromExprColumn(ec.getExpressionSpecs()));
     return xe;
+  }
+
+  private static Collection<XExprSpec> xExprSpecFromExprColumn(Collection<ExprSpec> esSet) {
+    List<XExprSpec> xes = new ArrayList<XExprSpec>();
+    for (ExprSpec es : esSet) {
+      XExprSpec e = new XExprSpec();
+      e.setExpr(es.getExpr());
+      e.setStartTime(getXMLGregorianCalendar(es.getStartTime()));
+      e.setEndTime(getXMLGregorianCalendar(es.getEndTime()));
+      xes.add(e);
+    }
+    return xes;
+  }
+
+  private static ExprSpec[] exprSpecFromXExprColumn(Collection<XExprSpec> xesList) {
+    List<ExprSpec> esArray = new ArrayList<ExprSpec>(xesList.size());
+    for (XExprSpec xes : xesList) {
+      esArray.add(new ExprSpec(xes.getExpr(), getDateFromXML(xes.getStartTime()), getDateFromXML(xes.getEndTime())));
+    }
+    return esArray.toArray(new ExprSpec[0]);
   }
 
   /**
@@ -274,6 +311,8 @@ public final class JAXBUtils {
     xd.setName(cd.getName());
     xd.setDescription(cd.getDescription());
     xd.setDisplayString(cd.getDisplayString());
+    xd.setStartTime(getXMLGregorianCalendar(cd.getStartTime()));
+    xd.setEndTime(getXMLGregorianCalendar(cd.getEndTime()));
     if (cd instanceof ReferencedDimAtrribute) {
       ReferencedDimAtrribute rd = (ReferencedDimAtrribute) cd;
       List<TableReference> dimRefs = rd.getReferences();
@@ -405,7 +444,7 @@ public final class JAXBUtils {
     ExprColumn ec = new ExprColumn(new FieldSchema(xe.getName(), xe.getType().toLowerCase(),
       xe.getDescription()),
       xe.getDisplayString(),
-      xe.getExpr());
+      exprSpecFromXExprColumn(xe.getExprSpec()));
     return ec;
   }
 
