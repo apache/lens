@@ -20,48 +20,65 @@ package org.apache.lens.cli.commands;
 
 import java.util.List;
 
-import org.springframework.shell.core.CommandMarker;
+import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XNativeTable;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
+
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
-
-import com.google.common.base.Joiner;
 
 /**
  * The Class LensNativeTableCommands.
  */
 @Component
-public class LensNativeTableCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Native Table management", description = "Read operations on native tables")
+public class LensNativeTableCommands extends LensCRUDCommand<XNativeTable> {
 
   /**
    * Show native tables.
    *
    * @return the string
    */
-  @CliCommand(value = "show nativetables", help = "show list of native tables")
+  @CliCommand(value = "show nativetables", help = "show list of native tables belonging to current database")
   public String showNativeTables() {
-    List<String> nativetables = getClient().getAllNativeTables();
-    if (nativetables != null) {
-      return Joiner.on("\n").join(nativetables);
-    } else {
-      return "No native tables found";
-    }
+    return showAll();
   }
 
   /**
    * Describe native table.
    *
-   * @param tblName the tbl name
+   * @param name the tbl name
    * @return the string
    */
-  @CliCommand(value = "describe nativetable", help = "describe nativetable")
+  @CliCommand(value = "describe nativetable", help = "describe nativetable named <native-table-name>")
   public String describeNativeTable(
-    @CliOption(key = {"", "nativetable"}, mandatory = true, help = "<native-table-name>") String tblName) {
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<native-table-name>") String name) {
+    return describe(name);
+  }
 
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getNativeTable(tblName)));
-    } catch (Exception e) {
-      throw new IllegalArgumentException(e);
-    }
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllNativeTables();
+  }
+
+  @Override
+  protected APIResult doCreate(String path, boolean ignoreIfExists) {
+    return null;
+  }
+
+  @Override
+  protected XNativeTable doRead(String name) {
+    return getClient().getNativeTable(name);
+  }
+
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return null;
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return null;
   }
 }

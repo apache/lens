@@ -1,0 +1,78 @@
+~~
+~~ Licensed to the Apache Software Foundation (ASF) under one
+~~ or more contributor license agreements.  See the NOTICE file
+~~ distributed with this work for additional information
+~~ regarding copyright ownership.  The ASF licenses this file
+~~ to you under the Apache License, Version 2.0 (the
+~~ "License"); you may not use this file except in compliance
+~~ with the License.  You may obtain a copy of the License at
+~~
+~~   http://www.apache.org/licenses/LICENSE-2.0
+~~
+~~ Unless required by applicable law or agreed to in writing,
+~~ software distributed under the License is distributed on an
+~~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+~~ KIND, either express or implied.  See the License for the
+~~ specific language governing permissions and limitations
+~~ under the License.
+~~
+
+User CLI Commands
+
+  Lens provides CLI on a shell. This document provides various commands available
+  in lens CLI.  All the commands documented below can be seen by typing <<help>>
+  from the CLI shell.
+
+%{toc}
+
+
+* Understanding this document
+
+  Given below are a bunch of available commands in lens cli along with the argumets they expect and the way
+  they expect those arguments. This section will give a brief introduction on how to interpret the help of
+  commands given below. Arguments to commands can be passed in the following ways:
+
+** Passing Keyword arguments
+
+  In this, all the arguments are passed with arg name and arg value. example:
+
+  <<<command --arg1 value1 --arg2 value2 --arg3 value3 >>>
+
+** Passing list arguments
+
+  In this, arguments are passed without arg names. Directly values will be passed:
+
+  <<<command value1 value2 value3>>>
+
+
+** Mixing list and keyword arguments
+
+  <<<base command --arg1 value1 [--arg2] value2 [[--arg3] value3] [--arg4 value4] >>>
+
+  The <<<[]>>> notation means <<<optional>>>. So argument <<<arg1>>> has to be passed as keyword argument, <<<arg2>>>
+  can be passed either with or without <<<--arg2>>>. arg3 can be omitted, passed without <<<--arg3>>> or passed
+  with <<<arg3>>>. arg4 can be omitted, or if passed, it has to be passed with <<<--arg4>>>.
+
+
+=========================
+
+
+* LENS Commands
+
+
+** Argument Passing in LENS
+
+  Lens supports both the approaches of passing arguments but advises the usage of keyword arguments over list arguments.
+  Mixing is not generally supported. Keyword args are always supported. In places where all the arguments
+  have arg name optional, list arguments are supported. So to re-iterate, list arguments are supported if
+
+
+  * All args are either like <<<arg2>>> or <<<arg3>>> in the previous section.
+
+  * Arguments are of any type, but there is only one argument of type arg2 or arg3 and that's the argument you intend
+     to pass value to.
+
+** Known bugs
+
+  * If all arguments have same value, Something weird will happen.
+

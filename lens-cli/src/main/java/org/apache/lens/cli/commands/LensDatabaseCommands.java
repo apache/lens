@@ -21,19 +21,18 @@ package org.apache.lens.cli.commands;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
-import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
-
-import com.google.common.base.Joiner;
 
 /**
  * The Class LensDatabaseCommands.
  */
 @Component
-public class LensDatabaseCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Database management commands", description = "These commands provide CRUD for databases")
+public class LensDatabaseCommands extends LensCRUDCommand {
 
   /**
    * Show all databases.
@@ -42,12 +41,7 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
    */
   @CliCommand(value = "show databases", help = "displays list of all databases")
   public String showAllDatabases() {
-    List<String> databases = getClient().getAllDatabases();
-    if (databases != null) {
-      return Joiner.on("\n").join(databases);
-    } else {
-      return "No Dabases found";
-    }
+    return showAll();
   }
 
   /**
@@ -58,7 +52,7 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
    */
   @CliCommand(value = "use", help = "change to new database")
   public String switchDatabase(
-    @CliOption(key = {"", "db"}, mandatory = true, help = "Database to change to") String database) {
+    @CliOption(key = {"", "db"}, mandatory = true, help = "<database-name>") String database) {
     boolean status = getClient().setDatabase(database);
     if (status) {
       return "Successfully switched to " + database;
@@ -70,20 +64,19 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
   /**
    * Creates the database.
    *
-   * @param database the database
-   * @param ignore   the ignore
+   * @param database       the database
+   * @param ignoreIfExists the ignore
    * @return the string
    */
-  @CliCommand(value = "create database", help = "create a database with specified name")
+  @CliCommand(value = "create database",
+    help = "create a database with specified name. if <ignore-if-exists> is true, "
+      + "create will not be tried if already exists. Default is false")
   public String createDatabase(
-    @CliOption(key = {"", "db"}, mandatory = true, help = "Database to create") String database,
-    @CliOption(key = {"ignore"}, mandatory = false, unspecifiedDefaultValue = "false") boolean ignore) {
-    APIResult result = getClient().createDatabase(database, ignore);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return ("Create database " + database + " successful");
-    } else {
-      return result.getMessage();
-    }
+    @CliOption(key = {"", "db"}, mandatory = true, help = "<database-name>") String database,
+    @CliOption(key = {"ignoreIfExists"}, mandatory = false, unspecifiedDefaultValue = "false",
+      help = "<ignore-if-exists>") boolean ignoreIfExists) {
+    // first arg is not file. LensCRUDCommand.create expects file path as first arg. So calling method directly here.
+    return doCreate(database, ignoreIfExists).toString().toLowerCase();
   }
 
   /**
@@ -94,13 +87,35 @@ public class LensDatabaseCommands extends BaseLensCommand implements CommandMark
    */
   @CliCommand(value = "drop database", help = "drop a database with specified name")
   public String dropDatabase(@CliOption(key = {"", "db"}, mandatory = true,
-    help = "Database to drop") String database) {
-    APIResult result = getClient().dropDatabase(database);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return ("drop database " + database + " successful");
-    } else {
-      return result.getMessage();
-    }
+    help = "<database-name>") String database) {
+    return drop(database, false);
   }
 
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllDatabases();
+  }
+
+  // Create is directly implemented
+  @Override
+  protected APIResult doCreate(String database, boolean ignoreIfExists) {
+    return getClient().createDatabase(database, ignoreIfExists);
+  }
+
+  // Doesn't make sense for database
+  @Override
+  protected Object doRead(String name) {
+    return null;
+  }
+
+  // Also, doesn't make sense
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return null;
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return getClient().dropDatabase(name);
+  }
 }

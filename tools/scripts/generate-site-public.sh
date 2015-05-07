@@ -42,7 +42,7 @@ VERSION=$(mvn org.apache.maven.plugins:maven-help-plugin:2.1.1:evaluate -Dexpres
 echo "Starting generate-site"
 CURR_BRANCH=`git branch | sed -n '/\* /s///p'`
 echo "Running site in current lens branch" $CURR_BRANCH
-mvn clean test -Dtest=TestGenerateConfigDoc || die "Unable to generate config docs"
+mvn clean test -Dtest=org.apache.lens.doc.TestGenerateConfigDoc,org.apache.lens.cli.doc.TestGenerateCLIUserDoc || die "Unable to generate config docs"
 mvn install -DskipTests
 mvn site site:stage -Ddependency.locations.enabled=false -Ddependency.details.enabled=false || die "unable to generate site"
 

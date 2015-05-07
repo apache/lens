@@ -25,152 +25,267 @@ User CLI Commands
 
 %{toc}
 
-* Session management
 
-  Opening the lens CLI shell is equivalent to open a session with lens server. This
-  section provides all the commands available for in shell which are applicable for the full session.
-   
+* Understanding this document
+
+  Given below are a bunch of available commands in lens cli along with the argumets they expect and the way
+  they expect those arguments. This section will give a brief introduction on how to interpret the help of
+  commands given below. Arguments to commands can be passed in the following ways:
+
+** Passing Keyword arguments
+
+  In this, all the arguments are passed with arg name and arg value. example:
+
+  <<<command --arg1 value1 --arg2 value2 --arg3 value3 >>>
+
+** Passing list arguments
+
+  In this, arguments are passed without arg names. Directly values will be passed:
+
+  <<<command value1 value2 value3>>>
+
+
+** Mixing list and keyword arguments
+
+  <<<base command --arg1 value1 [--arg2] value2 [[--arg3] value3] [--arg4 value4] >>>
+
+  The <<<[]>>> notation means <<<optional>>>. So argument <<<arg1>>> has to be passed as keyword argument, <<<arg2>>>
+  can be passed either with or without <<<--arg2>>>. arg3 can be omitted, passed without <<<--arg3>>> or passed
+  with <<<arg3>>>. arg4 can be omitted, or if passed, it has to be passed with <<<--arg4>>>.
+
+
+=========================
+
+
+* LENS Commands
+
+
+** Argument Passing in LENS
+
+  Lens supports both the approaches of passing arguments but advises the usage of keyword arguments over list arguments.
+  Mixing is not generally supported. Keyword args are always supported. In places where all the arguments
+  have arg name optional, list arguments are supported. So to re-iterate, list arguments are supported if
+
+
+  * All args are either like <<<arg2>>> or <<<arg3>>> in the previous section.
+
+  * Arguments are of any type, but there is only one argument of type arg2 or arg3 and that's the argument you intend
+     to pass value to.
+
+** Known bugs
+
+  * If all arguments have same value, Something weird will happen.
+
+
+
+
+** Session management
+
+  Opening the lens CLI shell is equivalent to open a session with lens server.This section provides all the commands available for in shell which are applicable for the full session.
+
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-| set <name>=<value> | Assign <<value>> to session parameter specified with <<name>> on lens server|
+|set \<key\>=\<value\>|Assign <<<value>>> to session parameter specified with <<<key>>> on lens server|
 *--+--+
-| get <name>| Fetches and prints session parameter specified with name <<name>> from lens server|
+|get [--key] \<key\>|Fetches and prints session parameter specified with name <<<key>>> from lens server|
 *--+--+
-| show params| Fetches and prints  all session parameter from lens server|
+|show params|Fetches and prints all session parameter from lens server|
 *--+--+
-| add jar <path to jar file>| Adds jar resource to the session|
+|add jar [--path] \<path-to-jar-on-server-side\>|Adds jar resource to the session|
 *--+--+
-| add file <path to file>| Adds the file resource to the session|
+|remove jar [--path] \<path-to-jar-on-server-side\>|Removes a jar resource from session|
 *--+--+
-| remove jar <path to file> | removes jar resource from the session|
+|add file [--path] \<path-to-file-on-server-side\>|Adds a file resource to session|
 *--+--+
-| remove file <path to file> | remove the file resource from the session|
+|remove file [--path] \<path-to-file-on-server-side\>|removes a file resource from session|
 *--+--+
-| list resources \[type\] | list resources from the session for a given resource type.\ |
-|     | Lists all resources if resource type is not mentioned. <<type>> of resource can be either <<jar>> or <<file>>.\ |
-|     | <<help:>> type <<list resources -->> for getting available options in the command|
+|list resources [[--type] \<resource-type\>]|list all resources from session. If type is provided,  lists resources of type <<<resource-type>>>. Valid values for type are jar and file.|
 *--+--+
-| close| Closes the session on the lens server and exits the shell. It is mandatory to call close to release all the resource of the session|
+|close/bye|Releases all resources of the server session and exits the shell|
 *--+--+
-  <<Lens Session Management Command list>>
-  
-===  
+  <<Lens Connection Commands>>
 
-* OLAP Data cube metadata management
-
-  These commands provide CRUD for storages, cubes, facts, dimensions and partitions.
-
-*--+--+
-|<<Command>>|<<Description>>|
-*--+--+
-| show database | prints a list of databases on lens server|
-*--+--+
-| use <database-name>| Sets the session database to database specified by <database-name>|
-*--+--+
-| create database <database-name>| creates a database specified by <database-name>|
-*--+--+
-| drop database <database-name> | drops the database specified by <database-name>|
-*--+--+
-  <<Lens Database Management Command list>>
-  
 ===
-  
-*--+--+
-|<<Command>>|<<Description>>|
-*--+--+
-| show storage| print all the storages present in the current database|
-*--+--+
-| create storage <storage-spec>| Creates a new storage specified in <storage-spec> file|
-*--+--+
-| update storage <storage-table> <storage-spec>| Updates storage <storage-table> as specified in the <storage-spec> file|
-*--+--+
-| drop storage <storage-table> | drops storage table <dimension-table> |
-*--+--+
-| describe storage <storage-table> | Prints the Schema and properties of Storage table <storage-table> |
-*--+--+
-  <<Lens Storage Management List>>
-  
-===
-  
-*--+--+
-|<<Command>>|<<Description>>|
-*--+--+
-| show cubes| Displays list of cubes|
-*--+--+
-| create cube <path to cube-spec.xml>| Creates a cube specified in <cube-spec.xml>|
-*--+--+
-| drop cube <cube-name>| Drops a cube specified by the name|
-*--+--+
-| update cube <cube-name> <cube-spec>| updates the cube with <cube-name> to cube specification specified in <cube-spec> file|
-*--+--+
-| describe cube <cube-name> | Print the schema of the cube|
-*--+--+
-  <<Cube Management Command list>>
-  
-===
-  
-*--+--+
-|<<Command>>|<<Description>>|
-*--+--+
-| show dimensions| print all the dimension tables present in the current database|
-*--+--+
-| create dimension <dimension-spec> <storage-spec>| Creates a new dimesion table with specification specified in <dimension-spec> file  and storage specified in <storage-spec> file|
-*--+--+
-| update dimension <dimension-table> <dimension-spec>| Updates dimension table <dimension-table> as specified in the <dimension-spec> file|
-*--+--+
-| drop dimension <dimension-table> | drops dimension table <dimension-table> |
-*--+--+
-| describe dimension <dimension-table> | Prints the Schema and property of Dimension table <dimension-table> |
-*--+--+
-| dim list storage <dimension-table> | Prints list of storages associated to a particular <dimension-table> |
-*--+--+
-| dim add storage <dimension-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <dimension-table> |
-*--+--+
-| dim drop storage <dimension-table> <storage-name>| Drops <storage-name> specified in <dimension-table> |
-*--+--+
-| dim get storage <dimension-table> <storage-name>| Prints schema of the <storage-name> in <dimension-table>|
-*--+--+
-| dim list partitions <dimension-table> <storage-name> | Prints list of partitions from <storage-name> in <dimension-table>|
-*--+--+
-| dim drop partitions <dimension-table> <storage-name> | drops all partitions from  <storage-name> in <dimension-table>|
-*--+--+
-| dim add partition <dimension-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <dimension-table>|
-*--+--+
-  <<Lens Dimension Table Management Command list>>
-  
-===
-  
-*--+--+
-|<<Command>>|<<Description>>|
-*--+--+
-| show facts| print all the fact tables present in the current database|
-*--+--+
-| create fact <fact-spec> <storage-spec>| Creates a new fact table with specification specified in <fact-spec> file  and storage specified in <storage-spec> file|
-*--+--+
-| update fact <fact-table> <fact-spec>| Updates fact table <fact-table> as specified in the <fact-spec> file|
-*--+--+
-| drop fact <fact-table> | drops fact table <fact-table> |
-*--+--+
-| describe fact <fact-table> | Prints the Schema and property of fact table <fact-table> |
-*--+--+
-| fact list storage <fact-table> | Prints list of storages associated to a particular <fact-table> |
-*--+--+
-| fact add storage <fact-table> <storage-spec>| Adds a storage specified in <storage-spec>file to <fact-table> |
-*--+--+
-| fact drop storage <fact-table> <storage-name>| Drops <storage-name> specified in <fact-table> |
-*--+--+
-| fact get storage <fact-table> <storage-name>| Prints schema of the <storage-name> in <fact-table>|
-*--+--+
-| fact list partitions <fact-table> <storage-name> | Prints list of partitions from <storage-name> in <fact-table>|
-*--+--+
-| fact drop partitions <fact-table> <storage-name> | drops all partitions from  <storage-name> in <fact-table>|
-*--+--+
-| fact add partition <fact-table> <storage-name> <part-spec> | Add a partition specified in <part-spec> file to <storage-name> in <fact-table>|
-*--+--+
-  <<Lens Fact table Management list>>
 
-* Query Management
+** Database management commands
+
+  These commands provide CRUD for databases
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show databases|displays list of all databases|
+*--+--+
+|use [--db] \<database-name\>|change to new database|
+*--+--+
+|create database [--db] \<database-name\> [--ignoreIfExists \<ignore-if-exists\>]|create a database with specified name. if <<<ignore-if-exists>>> is true, create will not be tried if already exists. Default is false|
+*--+--+
+|drop database [--db] \<database-name\>|drop a database with specified name|
+*--+--+
+  <<Lens Database Commands>>
+
+===
+
+** Storage Management
+
+  These commands provide CRUD for Storages
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show storages|list all storages|
+*--+--+
+|create storage [--path] \<path-to-storage-spec\>|Create a new Storage from file <<<path-to-storage-spec>>>|
+*--+--+
+|drop storage [--name] \<storage-name\>|drop storage <<<storage-name>>>|
+*--+--+
+|update storage [--name] \<storage-name\> [--path] \<path-to-storage-spec\>|update storage <<<storage-name>>> with storage spec from <<<path-to-storage-spec>>>|
+*--+--+
+|describe storage [--name] \<storage-name\>|describe storage <<<storage-name>>>|
+*--+--+
+  <<Lens Storage Commands>>
+
+===
+
+** OLAP Data cube metadata management
+
+  These commands provide CRUD for cubes
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show cubes|show list of cubes in current database|
+*--+--+
+|create cube [--path] \<path-to-cube-spec-file\>|Create a new Cube, taking spec from <<<path-to-cube-spec-file>>>|
+*--+--+
+|describe cube [--name] \<cube-name\>|describe cube with name <<<cube-name>>>|
+*--+--+
+|update cube [--name] \<cube-name\> [--path] \<path-to-cube-spec-file\>|update cube <<<cube-name>>> with spec from <<<path-to-cube-spec-file>>>|
+*--+--+
+|drop cube [--name] \<cube-name\>|drop cube <<<cube-name>>>|
+*--+--+
+|cube latestdate [--cube] \<cube-name\> [--timeDimension] \<time-dimension-name\>|get latest date of data available in cube <<<cube-name>>> for time dimension <<<time-dimension-name>>>|
+*--+--+
+  <<Lens Cube Commands>>
+
+===
+
+** Dimension Management
+
+  These commands provide CRUD for Dimensions
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show dimensions|show list of all dimensions in current database|
+*--+--+
+|create dimension [--path] \<path-to-dimension-spec file\>|Create a new Dimension, taking spec from <<<path-to-dimension-spec file>>>|
+*--+--+
+|describe dimension [--name] \<dimension-name\>|describe dimension <<<dimension-name>>>|
+*--+--+
+|update dimension [--name] \<dimension-name\> [--path] \<path-to-dimension-spec-file\>|update dimension <<<dimension-name>>>, taking spec from <<<path-to-dimension-spec file>>>|
+*--+--+
+|drop dimension [--name] \<dimension-name\>|drop dimension <<<dimension-name>>>|
+*--+--+
+  <<Lens Dimension Commands>>
+
+===
+
+** Management of Facts
+
+  These command provide CRUD for facts, associated storages, and fact partitions
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show facts [[--cube-name] \<cube-name\>]|display list of fact tables in current database. If optional <<<cube-name>>> is supplied, only facts belonging to cube <<<cube-name>>> will be displayed|
+*--+--+
+|create fact [--path] \<path-to-fact-spec-file\>|create a fact table with spec from <<<path-to-fact-spec-file>>>|
+*--+--+
+|describe fact [--fact-name] \<fact-name\>|describe fact <<<fact-name>>>|
+*--+--+
+|update fact [--fact-name] \<fact-name\> [--path] \<path-to-fact-spec\>|update fact <<<fact-name>>> taking spec from <<<path-to-fact-spec>>>|
+*--+--+
+|drop fact [--fact-name] \<fact-name\> [--cascade \<cascade\>]|drops fact <<<fact-name>>>. If <<<cascade>>> is true, all the storage tables associated with the fact <<<fact-name>>> are also dropped. By default <<<cascade>>> is false|
+*--+--+
+|fact list storage [--fact-name] \<fact-name\>|display list of storages associated to fact <<<fact-name>>>|
+*--+--+
+|fact add storage [--fact-name] \<fact-name\> [--path] \<path-to-storage-spec\>|adds a new storage to fact <<<fact-name>>>, taking storage spec from <<<path-to-storage-spec>>>|
+*--+--+
+|fact get storage [--fact-name] \<fact-name\> [--storage-name] \<path-to-storage-spec\>|describe storage <<<storage-name>>> of fact <<<fact-name>>>|
+*--+--+
+|fact drop storage [--fact-name] \<fact-name\> [--storage-name] \<storage-name\>|drop storage <<<storage-name>>> from fact <<<fact-name>>>|
+*--+--+
+|fact drop all storages [--fact-name] \<fact-name\>|drop all storages associated to fact <<<fact-name>>>|
+*--+--+
+|fact list partitions [--fact-name] \<fact-name\> [--storage] \<storage-name\> [[--filter] \<partition-filter\>]|get all partitions associated with fact <<<fact-name>>>, storage <<<storage-name>>> filtered by <<<partition-filter>>>|
+*--+--+
+|fact drop partitions [--fact-name] \<fact-name\> [--storage] \<storage-name\> [[--filter] \<partition-filter\>]|drop all partitions associated with fact <<<fact-name>>>, storage <<<storage-name>>> filtered by <<<partition-filter>>>|
+*--+--+
+|fact add single-partition [--fact-name] \<fact-name\> [--storage] \<storage-name\> [--path] \<partition-spec-path\>|add single partition to fact <<<fact-name>>>'s storage <<<storage-name>>>, reading spec from <<<partition-spec-path>>>|
+*--+--+
+|fact add partitions [--fact-name] \<fact-name\> [--storage] \<storage-name\> [--path] \<partition-list-spec-path\>|add multiple partition to fact <<<fact-name>>>'s storage <<<storage-name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+*--+--+
+  <<Lens Fact Commands>>
+
+===
+
+** Commands for Dimension Tables
+
+  These commands provide CRUD for dimension tables, associated storages, and fact partitions
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|show dimtables [[--dimension-name] \<dimension-name\>]|display list of dimtables in current database. If optional <<<dimension-name>>> is supplied, only facts belonging to dimension <<<dimension-name>>> will be displayed|
+*--+--+
+|create dimtable [--path] \<path-to-dimtable-spec-file\>|Create a new dimension table taking spec from <<<path-to-dimtable-spec-file>>>|
+*--+--+
+|describe dimtable [--dimtable-name] \<dimtable-name\>|describe dimtable <<<dimtable-name>>>|
+*--+--+
+|update dimtable [--dimtable-name] \<dimtable-name\> [--path] \<path-to-dimtable-spec\>|update dimtable <<<dimtable-name>>> taking spec from <<<path-to-dimtable-spec>>>|
+*--+--+
+|drop dimtable [--dimtable-name] \<dimtable-name\> [--cascade \<cascade\>]|drop dimtable <<<dimtable-name>>>.  If <<<cascade>>> is true, all the storage tables associated with the dimtable <<<dimtable-name>>> are also dropped. By default <<<cascade>>> is false|
+*--+--+
+|dimtable list storages [--dimtable-name] \<dimtable-name\>|display list of storage associated to dimtable <<<dimtable-name>>>|
+*--+--+
+|dimtable add storage [--dimtable-name] \<dimtable-name\> [--path] \<path-to-storage-spec\>|adds a new storage to dimtable <<<dimtable-name>>>, taking storage spec from <<<path-to-storage-spec>>>|
+*--+--+
+|dimtable get storage [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\>|describe storage <<<storage-name>>> of dimtable <<<dimtable-name>>>|
+*--+--+
+|dimtable drop storage [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\>|drop storage <<<storage-name>>> from dimtable <<<dimtable-name>>>|
+*--+--+
+|dimtable drop all storages [--dimtable-name] \<dimtable-name\>|drop all storages associated to dimension table|
+*--+--+
+|dimtable list partitions [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\> [[--filter] \<partition-filter\>]|get all partitions associated with dimtable <<<dimtable-name>>>, storage <<<storage-name>>> filtered by <<<partition-filter>>>|
+*--+--+
+|dimtable drop partitions [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\> [[--filter] \<partition-filter\>]|drop all partitions associated with dimtable <<<dimtable-name>>>, storage <<<storage-name>>> filtered by <<<partition-filter>>>|
+*--+--+
+|dimtable add single-partition [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\> [--path] \<partition-spec-path\>|add single partition to dimtable <<<dimtable-name>>>'s storage <<<storage-name>>>, reading spec from <<<partition-spec-path>>>|
+*--+--+
+|dimtable add partitions [--dimtable-name] \<dimtable-name\> [--storage-name] \<storage-name\> [--path] \<partition-list-spec-path\>|add multiple partition to dimtable <<<dimtable-name>>>'s storage <<<storage-name>>>, reading partition list spec from <<<partition-list-spec-path>>>|
+*--+--+
+  <<Lens Dimension Table Commands>>
+
+===
+
+** Native Table management
+
+  Read operations on native tables
+
+*--+--+
+|<<Command>>|<<Description>>|
+*--+--+
+|describe nativetable [--name] \<native-table-name\>|describe nativetable named <<<native-table-name>>>|
+*--+--+
+|show nativetables|show list of native tables belonging to current database|
+*--+--+
+  <<Lens Native Table Commands>>
+
+===
+
+** Query Management
 
   This section provides commands for query life cycle - submit, check status,
   fetch results, kill or list all the queries. Also provides commands for
@@ -181,35 +296,37 @@ User CLI Commands
   should be prefixed with another double quote. For example
   <<<query execute cube select id,name from dim_table where name != ""first"">>>,
   will be parsed as <<<cube select id,name from dim_table where name != "first">>>
-  
+
 *--+--+
 |<<Command>>|<<Description>>|
 *--+--+
-| query execute <sql-text> [async] | Executes Query specified in <sql-text> in synchronous manner unless <async> flag is passed. If <async> flag is passed then query handle is printed which can be used for query management|
+|prepQuery prepare [--query] \<query-string\> [--name \<query-name\>]|Prepapre query <<<query-string>>> and return prepare handle. Can optionaly provide <<<query-name>>>|
 *--+--+
-| query status <query-handle> | Prints the Status of query mentioned in Query Handle|
+|query status [--query-handle] \<query-handle\>|Fetch status of executed query having query handle <<<query-handle>>>|
 *--+--+
-| query explain <sql-text> | Prints query execution plan of  <sql-text>|
+|query execute [--query] \<query-string\> [--async \<async\>] [--name \<query-name\>]|Execute query <<<query-string>>>. If <<<async>>> is true, The query is launched in async manner and query handle is returned. It's by default false. <<<query name>>> can also be provided, though not required|
 *--+--+
-| query list | Prints list of queries|
+|query details [--query-handle] \<query-handle\>|Get query details of query with handle <<<query-handle>>>|
 *--+--+
-| query kill <query-handle> | Kill the execution of query specified by <query-handle>|
+|query explain [--query] \<query-string\> [--save-location \<save-location\>]|Explain execution plan of query <<<query-string>>>. Can optionally save the plan to a file by providing <<<save-location>>>|
 *--+--+
-| query results <query-handle> | Prints the result of Async query specified by <query-handle>|
+|query list [--state \<query-status\>] [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all queries. Various filter options can be provided(optionally),  as can be seen from the command syntax|
 *--+--+
-| prepQuery prepare <sql-text> | Prepares the query and gives a prepare handle|
+|query kill [--query-handle] \<query-handle\>|Kill query with handle <<<query-handle>>>|
 *--+--+
-| prepQuery explain <sql-text> | Explains and Prepares the query. Prints the query and a prepare handle|
+|query results [--query-handle] \<query-handle\>|get results of async query with query handle <<<query-handle>>>|
 *--+--+
-| prepQuery list | Prints list of prepared queries|
+|prepQuery list [--name \<query-name\>] [--user \<user-who-submitted-query\>] [--fromDate \<submission-time-is-after\>] [--toDate \<submission-time-is-before\>]|Get all prepared queries. Various filters can be provided(optionally) as can be seen from command syntax|
 *--+--+
-| prepQuery details <prepare-handle> | Prints details of the prepared query|
+|prepQuery details [--prepare-handle] \<prepare-handle\>|Get prepared query with handle <<<prepare-handle>>>|
 *--+--+
-| prepQuery execute <prepare-handle> [async] | Submits the prepared query for execution. If <async> flag is passed then query handle is printed which can be used for query management. Otherwise, results will be shown on the CLI|
+|prepQuery destroy [--prepare-handle] \<prepare-handle\>|Destroy prepared query with handle <<<prepare-handle>>>|
 *--+--+
-| prepQuery destroy <prepare-handle> | Destroys the prepared query|
+|prepQuery execute [--prepare-handle] Prepare handle to execute [--async \<async\>] [--name \<query-name\>]|Execute prepared query with handle <<<prepare-handle>>>. If <<<async>>> is supplied and is true, query is run in async manner and query handle is returned immediately. Optionally, <<<query-name>>> can be provided, though not required.|
 *--+--+
-  <<Lens Query management Command>>
+|prepQuery explain [--query] \<query-string\> [--name \<query-name\>]|Explain and prepare query <<<query-string>>>. Can optionally provide <<<query-name>>>|
+*--+--+
+  <<Lens Query Commands>>
 
 ===
 

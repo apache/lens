@@ -18,113 +18,102 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XStorage;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-
 /**
  * The Class LensStorageCommands.
  */
 @Component
-public class LensStorageCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Storage Management", description = "These commands provide CRUD for Storages")
+public class LensStorageCommands extends LensCRUDCommand<XStorage> implements CommandMarker {
 
-  @CliCommand(value = "show storages", help = "list storages")
+  @CliCommand(value = "show storages", help = "list all storages")
   public String getStorages() {
-    List<String> storages = getClient().getAllStorages();
-    if (storages == null || storages.isEmpty()) {
-      return "No storages found";
-    }
-    return Joiner.on("\n").join(storages);
+    return showAll();
   }
 
   /**
    * Creates the storage.
    *
-   * @param storageSpec the storage spec
+   * @param path the storage spec path
    * @return the string
    */
-  @CliCommand(value = "create storage", help = "Create a new Storage")
+  @CliCommand(value = "create storage", help = "Create a new Storage from file <path-to-storage-spec>")
   public String createStorage(
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<path to storage-spec>") String storageSpec) {
-    File f = new File(storageSpec);
-    if (!f.exists()) {
-      return "storage spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-    APIResult result = getClient().createStorage(storageSpec);
-    return result.getMessage();
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    return create(path, false);
   }
 
   /**
    * Drop storage.
    *
-   * @param storage the storage
+   * @param name the storage name
    * @return the string
    */
-  @CliCommand(value = "drop storage", help = "drop storage")
+  @CliCommand(value = "drop storage", help = "drop storage <storage-name>")
   public String dropStorage(
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "storage name to be dropped") String storage) {
-    APIResult result = getClient().dropStorage(storage);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped " + storage + "!!!";
-    } else {
-      return "Dropping storage failed";
-    }
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<storage-name>") String name) {
+    return drop(name, false);
   }
 
   /**
    * Update storage.
    *
-   * @param specPair the spec pair
+   * @param name the storage name
+   * @param path the new storage spec path
    * @return the string
    */
-  @CliCommand(value = "update storage", help = "update storage")
+  @CliCommand(value = "update storage",
+    help = "update storage <storage-name> with storage spec from <path-to-storage-spec>")
   public String updateStorage(
-    @CliOption(key = {"", "storage"}, mandatory = true, help
-      = "<storage-name> <path to storage-spec>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. update storage <storage-name> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-
-    if (!f.exists()) {
-      return "Storage spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().updateStorage(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Update of " + pair[0] + " succeeded";
-    } else {
-      return "Update of " + pair[0] + " failed";
-    }
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<storage-name>") String name,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    return update(name, path);
   }
 
   /**
    * Describe storage.
    *
-   * @param storage the storage
+   * @param name the storage name
    * @return the string
    */
-  @CliCommand(value = "describe storage", help = "describe storage schema")
+  @CliCommand(value = "describe storage", help = "describe storage <storage-name>")
   public String describeStorage(
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name> to be described") String storage) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getStorage(storage)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<storage-name>") String name) {
+    return describe(name);
+  }
+
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllStorages();
+  }
+
+  @Override
+  protected APIResult doCreate(String path, boolean ignoreIfExists) {
+    return getClient().createStorage(path);
+  }
+
+  @Override
+  protected XStorage doRead(String name) {
+    return getClient().getStorage(name);
+  }
+
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return getClient().updateStorage(name, path);
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return getClient().dropStorage(name);
   }
 }

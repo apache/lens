@@ -18,126 +18,113 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XDimension;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
-import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 
 /**
  * The Class LensDimensionCommands.
  */
 @Component
-public class LensDimensionCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Dimension Management", description = "These commands provide CRUD for Dimensions")
+public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
 
   /**
    * Show dimensions.
    *
    * @return the string
    */
-  @CliCommand(value = "show dimensions", help = "show list of dimensions in database")
+  @CliCommand(value = "show dimensions", help = "show list of all dimensions in current database")
   public String showDimensions() {
-    List<String> dimensions = getClient().getAllDimensions();
-    if (dimensions != null) {
-      return Joiner.on("\n").join(dimensions);
-    } else {
-      return "No Dimensions found";
-    }
+    return showAll();
   }
 
   /**
    * Creates the dimension.
    *
-   * @param dimensionSpec the dimension spec
+   * @param path the dimension spec
    * @return the string
    */
-  @CliCommand(value = "create dimension", help = "Create a new Dimension")
+  @CliCommand(value = "create dimension",
+    help = "Create a new Dimension, taking spec from <path-to-dimension-spec file>")
   public String createDimension(
-    @CliOption(key = {"", "table"}, mandatory = true, help =
-      "<path to dimension-spec file>") String dimensionSpec) {
-    File f = new File(dimensionSpec);
-
-    if (!f.exists()) {
-      return "dimension spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-    APIResult result = getClient().createDimension(dimensionSpec);
-
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "create dimension succeeded";
-    } else {
-      return "create dimension failed";
-    }
+    @CliOption(key = {"", "path"}, mandatory = true, help =
+      "<path-to-dimension-spec file>") String path) {
+    return create(path, false);
   }
 
   /**
-   * Drop dimension.
+   * Describe dimension.
    *
-   * @param dimension the dimension
+   * @param name the dimension name
    * @return the string
    */
-  @CliCommand(value = "drop dimension", help = "drop dimension")
-  public String dropDimension(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension name to be dropped") String dimension) {
-    APIResult result = getClient().dropDimension(dimension);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped " + dimension + "!!!";
-    } else {
-      return "Dropping dimension failed";
+  @CliCommand(value = "describe dimension", help = "describe dimension <dimension-name>")
+  public String describeDimension(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name) {
+    try {
+      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimension(name)));
+    } catch (IOException e) {
+      throw new IllegalArgumentException(e);
     }
   }
 
   /**
    * Update dimension.
    *
-   * @param specPair the spec pair
+   * @param name the dimension to be updated
+   * @param path  path to spec fild
    * @return the string
    */
-  @CliCommand(value = "update dimension", help = "update dimension")
+  @CliCommand(value = "update dimension",
+    help = "update dimension <dimension-name>, taking spec from <path-to-dimension-spec file>")
   public String updateDimension(
-    @CliOption(key = {"", "dimension"}, mandatory = true, help
-      = "<dimension-name> <path to dimension-spec file>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-
-    if (!f.exists()) {
-      return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().updateDimension(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Update of " + pair[0] + " succeeded";
-    } else {
-      return "Update of " + pair[0] + " failed";
-    }
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimension-spec-file>") String path) {
+    return update(name, path);
   }
 
   /**
-   * Describe dimension.
+   * Drop dimension.
    *
-   * @param dimensionName the dimension name
+   * @param name the dimension
    * @return the string
    */
-  @CliCommand(value = "describe dimension", help = "describe dimension")
-  public String describeDimension(
-    @CliOption(key = {"", "dimension"}, mandatory = true, help = "<dimension-name>") String dimensionName) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimension(dimensionName)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+  @CliCommand(value = "drop dimension", help = "drop dimension <dimension-name>")
+  public String dropDimension(
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name) {
+    return drop(name, false);
+  }
+
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllDimensions();
+  }
+
+  @Override
+  protected APIResult doCreate(String path, boolean ignoreIfExists) {
+    return getClient().createDimension(path);
+  }
+
+  @Override
+  protected XDimension doRead(String name) {
+    return getClient().getDimension(name);
+  }
+
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return getClient().updateDimension(name, path);
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return getClient().dropDimension(name);
   }
 }

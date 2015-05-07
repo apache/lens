@@ -152,7 +152,7 @@ public class TestLensStorageCommands extends LensCliApplicationTest {
       String propString = "name : storage.url  value : file:///";
       Assert.assertTrue(desc.contains(propString));
 
-      String updateResult = command.updateStorage(storageName + " " + updateFilePath);
+      String updateResult = command.updateStorage(storageName, updateFilePath);
       Assert.assertTrue(updateResult.contains("succeeded"));
       desc = command.describeStorage(storageName);
       LOG.debug(desc);

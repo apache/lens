@@ -18,63 +18,75 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XFactTable;
+import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XStorageTableElement;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
-import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
-
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
 
 /**
  * The Class LensFactCommands.
  */
 @Component
-public class LensFactCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Management of Facts",
+  description = "These command provide CRUD for facts, associated storages, and fact partitions")
+public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable> {
 
   /**
    * Show facts.
    *
    * @return the string
    */
-  @CliCommand(value = "show facts", help = "display list of fact tables in database")
+  @CliCommand(value = "show facts",
+    help = "display list of fact tables in current database. "
+      + "If optional <cube-name> is supplied, only facts belonging to cube <cube-name> will be displayed")
   public String showFacts(
-    @CliOption(key = {"", "cube"}, mandatory = false, help = "<optional cube name>") String cubeName) {
-    List<String> facts = getClient().getAllFactTables(cubeName);
-    if (facts != null) {
-      return Joiner.on("\n").join(facts);
-    } else {
-      return "No Facts Found";
-    }
+    @CliOption(key = {"", "cube-name"}, mandatory = false, help = "<cube-name>") String cubeName) {
+    return showAll(cubeName);
   }
 
   /**
    * Creates the fact.
    *
-   * @param factSpecFileName Path to fact spec
+   * @param path Path to fact spec
    * @return the string
    */
-  @CliCommand(value = "create fact", help = "create a fact table")
+  @CliCommand(value = "create fact", help = "create a fact table with spec from <path-to-fact-spec-file>")
   public String createFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<fact spec path>") String factSpecFileName) {
-    File f = new File(factSpecFileName);
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-fact-spec-file>") String path) {
+    return create(path, false);
+  }
 
-    if (!f.exists()) {
-      return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-    APIResult result = getClient().createFactTable(factSpecFileName);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Fact table Successfully completed";
-    } else {
-      return "Fact table creation failed";
-    }
+  /**
+   * Describe fact table.
+   *
+   * @param name the fact
+   * @return the string
+   */
+  @CliCommand(value = "describe fact", help = "describe fact <fact-name>")
+  public String describeFactTable(
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name) {
+    return describe(name);
+  }
+
+  /**
+   * Update fact table.
+   *
+   * @param name     fact name to be updated
+   * @param specPath path to the file containing new spec of the fact
+   * @return the string
+   */
+  @CliCommand(value = "update fact", help = "update fact <fact-name> taking spec from <path-to-fact-spec>")
+  public String updateFactTable(
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-fact-spec>") String specPath) {
+    return update(name, specPath);
   }
 
   /**
@@ -84,286 +96,219 @@ public class LensFactCommands extends BaseLensCommand implements CommandMarker {
    * @param cascade the cascade
    * @return the string
    */
-  @CliCommand(value = "drop fact", help = "drop fact table")
+  @CliCommand(value = "drop fact",
+    help = "drops fact <fact-name>."
+      + " If <cascade> is true, all the storage tables associated with the fact <fact-name> are also dropped."
+      + " By default <cascade> is false")
   public String dropFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "table name to be dropped") String fact,
-    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false") boolean cascade) {
-    APIResult result = getClient().dropFactTable(fact, cascade);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped " + fact + "!!!";
-    } else {
-      return "Dropping " + fact + " table failed";
-    }
-  }
-
-  /**
-   * Update fact table.
-   *
-   * @param specPair the spec pair
-   * @return the string
-   */
-  @CliCommand(value = "update fact", help = "update fact table")
-  public String updateFactTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> <path to table-spec>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. create fact <fact spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-
-    if (!f.exists()) {
-      return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().updateFactTable(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Update of " + pair[0] + " succeeded";
-    } else {
-      return "Update of " + pair[0] + " failed";
-    }
-  }
-
-  /**
-   * Describe fact table.
-   *
-   * @param fact the fact
-   * @return the string
-   */
-  @CliCommand(value = "describe fact", help = "describe a fact table")
-  public String describeFactTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "tablename to be described") String fact) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getFactTable(fact)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String fact,
+    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
+    boolean cascade) {
+    return drop(fact, cascade);
   }
 
   /**
    * Gets the fact storages.
    *
-   * @param fact the fact
+   * @param tableName the fact
    * @return the fact storages
    */
-  @CliCommand(value = "fact list storage", help = "display list of storages associated to fact table")
+  @CliCommand(value = "fact list storage", help = "display list of storages associated to fact <fact-name>")
   public String getFactStorages(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "tablename for getting storages") String fact) {
-    List<String> storages = getClient().getFactStorages(fact);
-    if (storages == null || storages.isEmpty()) {
-      return "No storages found for " + fact;
-    }
-    return Joiner.on("\n").join(storages);
-  }
-
-  /**
-   * Drop all fact storages.
-   *
-   * @param table the table
-   * @return the string
-   */
-  @CliCommand(value = "fact dropall storages", help = "drop all storages associated to fact table")
-  public String dropAllFactStorages(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "tablename for dropping all storages") String table) {
-    APIResult result = getClient().dropAllStoragesOfFact(table);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "All storages of " + table + " dropped successfully";
-    } else {
-      return "Error dropping storages of " + table;
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName) {
+    return showAllStorages(tableName);
   }
 
   /**
    * Adds the new fact storage.
    *
-   * @param tablepair the tablepair
+   * @param tableName the fact name
+   * @param path      the path to storage spec
    * @return the string
    */
-  @CliCommand(value = "fact add storage", help = "adds a new storage to fact")
+  @CliCommand(value = "fact add storage",
+    help = "adds a new storage to fact <fact-name>, taking storage spec from <path-to-storage-spec>")
   public String addNewFactStorage(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<table> <path to storage-spec>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. fact add storage <table> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path " + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().addStorageToFact(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Fact table storage addition completed";
-    } else {
-      return "Fact table storage addition failed";
-    }
-  }
-
-  /**
-   * Drop storage from fact.
-   *
-   * @param tablepair the tablepair
-   * @return the string
-   */
-  @CliCommand(value = "fact drop storage", help = "drop a storage from fact")
-  public String dropStorageFromFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> <storage-name>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. fact drop storage <table> <storage>";
-    }
-
-    APIResult result = getClient().dropStorageFromFact(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Fact table storage removal successful";
-    } else {
-      return "Fact table storage removal failed";
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    return addStorage(tableName, path);
   }
 
   /**
    * Gets the storage from fact.
    *
-   * @param tablepair the tablepair
+   * @param tableName fact table name
+   * @param storage      storage spec path
    * @return the storage from fact
    */
-  @CliCommand(value = "fact get storage", help = "get storage of fact table")
+  @CliCommand(value = "fact get storage", help = "describe storage <storage-name> of fact <fact-name>")
   public String getStorageFromFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> <storage-name>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following " + "format. fact get storage <table> <storage>";
-    }
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getStorageFromFact(pair[0], pair[1])));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<path-to-storage-spec>") String storage) {
+    return getStorage(tableName, storage);
+  }
+
+  /**
+   * Drop storage from fact.
+   *
+   * @param tableName   the table name
+   * @param storageName the storage name
+   * @return the string
+   */
+  @CliCommand(value = "fact drop storage", help = "drop storage <storage-name> from fact <fact-name>")
+  public String dropStorageFromFact(
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName) {
+    return dropStorage(tableName, storageName);
+  }
+
+  /**
+   * Drop all fact storages.
+   *
+   * @param name the table
+   * @return the string
+   */
+  @CliCommand(value = "fact drop all storages", help = "drop all storages associated to fact <fact-name>")
+  public String dropAllFactStorages(
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name) {
+    return dropAllStorages(name);
   }
 
   /**
    * Gets the all partitions of fact.
    *
-   * @param specPair the spec pair
+   * @param tableName   fact name
+   * @param storageName storage name
+   * @param filter      partition filter
    * @return the all partitions of fact
    */
-  @CliCommand(value = "fact list partitions", help = "get all partitions associated with fact")
+  @CliCommand(value = "fact list partitions",
+    help = "get all partitions associated with fact <fact-name>, storage <storage-name> filtered by <partition-filter>")
   public String getAllPartitionsOfFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<table-name> <storageName> [optional <partition query filter> to get]") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length == 2) {
-      try {
-        return formatJson(mapper.writer(pp).writeValueAsString(getClient().getAllPartitionsOfFact(pair[0], pair[1])));
-      } catch (IOException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-    if (pair.length == 3) {
-      try {
-        return formatJson(mapper.writer(pp).writeValueAsString(
-          getClient().getAllPartitionsOfFact(pair[0], pair[1], pair[2])));
-      } catch (IOException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-    return "Syntax error, please try in following "
-      + "format. fact list partitions <table> <storage> [partition values]";
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
+    return getAllPartitions(tableName, storageName, filter);
   }
 
   /**
    * Drop all partitions of fact.
    *
-   * @param specPair the spec pair
+   * @param tableName   fact name
+   * @param storageName storage name
+   * @param filter      partition query filter
    * @return the string
    */
-  @CliCommand(value = "fact drop partitions", help = "drop all partitions associated with fact")
+  @CliCommand(value = "fact drop partitions",
+    help = "drop all partitions associated with fact <fact-name>, "
+      + "storage <storage-name> filtered by <partition-filter>")
   public String dropAllPartitionsOfFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<tablename> <storageName> [optional <partition query filter> to drop]") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length == 2) {
-      result = getClient().dropAllPartitionsOfFact(pair[0], pair[1]);
-    } else if (pair.length == 3) {
-      result = getClient().dropAllPartitionsOfFact(pair[0], pair[1], pair[2]);
-    } else {
-      return "Syntax error, please try in following "
-        + "format. fact drop partitions <table> <storage> [partition values]";
-    }
-
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped partition of " + pair[0];
-    } else {
-      return "failure in  dropping partition of " + pair[0];
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
+    return dropPartitions(tableName, storageName, filter);
   }
 
   /**
    * Adds the partition to fact.
    *
-   * @param specPair the spec pair
+   * @param tableName   fact name
+   * @param storageName storage name
+   * @param path        partition spec path
    * @return the string
    */
-  @CliCommand(value = "fact add single-partition", help = "add a partition to fact table")
+  @CliCommand(value = "fact add single-partition",
+    help = "add single partition to fact <fact-name>'s"
+      + " storage <storage-name>, reading spec from <partition-spec-path>")
   public String addPartitionToFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<table> <storage> <path to partition spec>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length != 3) {
-      return "Syntax error, please try in following " + "format. fact add single-partition "
-        + "<table> <storage> <partition spec>";
-    }
-
-    File f = new File(pair[2]);
-    if (!f.exists()) {
-      return "Partition spec does not exist";
-    }
-
-    result = getClient().addPartitionToFact(pair[0], pair[1], pair[2]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully added partition to " + pair[0];
-    } else {
-      return "failure in  addition of partition to " + pair[0];
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
+    return addPartition(tableName, storageName, path);
   }
 
-  /**
-   * Adds the partitions to fact.
-   *
-   * @param specPair the spec pair
-   * @return the string
-   */
-  @CliCommand(value = "fact add partitions", help = "add a partitions to fact table")
+  @CliCommand(value = "fact add partitions",
+    help = "add multiple partition to fact <fact-name>'s"
+      + " storage <storage-name>, reading partition list spec from <partition-list-spec-path>")
   public String addPartitionsToFact(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<table> <storage> <path to partitions spec>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length != 3) {
-      return "Syntax error, please try in following "
-        + "format. fact add partitions <table> <storage> <partitions spec>";
-    }
+    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
+    return addPartitions(tableName, storageName, path);
+  }
 
-    File f = new File(pair[2]);
-    if (!f.exists()) {
-      return "Partition spec does not exist";
-    }
-    result = getClient().addPartitionsToFact(pair[0], pair[1], pair[2]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully added partition to " + pair[0];
-    } else {
-      return "failure in  addition of partition to " + pair[0];
-    }
+  @Override
+  protected XStorageTableElement readStorage(String tableName, String storage) {
+    return getClient().getStorageFromFact(tableName, storage);
+  }
+
+  @Override
+  public APIResult doDropStorage(String tableName, String storageName) {
+    return getClient().dropStorageFromFact(tableName, storageName);
+  }
+
+  @Override
+  public List<String> getAllStorages(String name) {
+    return getClient().getFactStorages(name);
+  }
+
+  @Override
+  public APIResult doAddStorage(String name, String path) {
+    return getClient().addStorageToFact(name, path);
+  }
+
+  @Override
+  public APIResult doDropAllStorages(String name) {
+    return getClient().dropAllStoragesOfFact(name);
+  }
+
+  @Override
+  protected List<XPartition> readAllPartitions(String tableName, String storageName, String filter) {
+    return getClient().getAllPartitionsOfFact(tableName, storageName, filter);
+  }
+
+  @Override
+  protected APIResult doAddPartition(String tableName, String storageName, String path) {
+    return getClient().addPartitionToFact(tableName, storageName, path);
+  }
+
+  @Override
+  protected APIResult doAddPartitions(String tableName, String storageName, String path) {
+    return getClient().addPartitionsToFact(tableName, storageName, path);
+  }
+
+  @Override
+  protected APIResult doDropPartitions(String tableName, String storageName, String filter) {
+    return getClient().dropAllPartitionsOfFact(tableName, storageName, filter);
+  }
+
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllFactTables();
+  }
+
+  @Override
+  public List<String> getAll(String cubeName) {
+    return getClient().getAllFactTables(cubeName);
+  }
+
+  @Override
+  protected APIResult doCreate(String path, boolean ignoreIfExists) {
+    return getClient().createFactTable(path);
+  }
+
+  @Override
+  protected XFactTable doRead(String name) {
+    return getClient().getFactTable(name);
+  }
+
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return getClient().updateFactTable(name, path);
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return getClient().dropFactTable(name, cascade);
   }
 }

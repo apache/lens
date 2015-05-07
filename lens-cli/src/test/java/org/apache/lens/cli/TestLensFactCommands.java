@@ -67,7 +67,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   private void createSampleCube() throws URISyntaxException {
     URL cubeSpec = TestLensCubeCommands.class.getClassLoader().getResource("sample-cube.xml");
     String cubeList = getCubeCommand().showCubes();
-    Assert.assertFalse(cubeList.contains("sample_cube"));
+    Assert.assertFalse(cubeList.contains("sample_cube"), cubeList);
     getCubeCommand().createCube(new File(cubeSpec.toURI()).getAbsolutePath());
   }
 
@@ -101,8 +101,8 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   public static void addFact1Table() throws IOException {
     LensFactCommands command = getCommand();
     String factList = command.showFacts(null);
-    Assert.assertEquals(command.showFacts("sample_cube"), factList);
-    Assert.assertEquals("No Facts Found", factList, "Fact tables should not be found");
+    Assert.assertEquals(command.showFacts("sample_cube"), "No fact found for sample_cube");
+    Assert.assertEquals(factList, "No fact found", "Fact tables should not be found");
     // add local storage before adding fact table
     TestLensStorageCommands.addLocalStorage(FACT_LOCAL);
     URL factSpec = TestLensFactCommands.class.getClassLoader().getResource("fact1.xml");
@@ -161,7 +161,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateFactTable("fact1 /tmp/local-fact1.xml");
+      command.updateFactTable("fact1", "/tmp/local-fact1.xml");
       desc = command.describeFactTable("fact1");
       LOG.debug(desc);
       Assert.assertTrue(desc.contains(propString), "The sample property value is not set");
@@ -186,11 +186,13 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     Assert.assertEquals(FACT_LOCAL, result);
     command.dropAllFactStorages("fact1");
     result = command.getFactStorages("fact1");
-    Assert.assertEquals("No storages found for fact1", result);
+    Assert.assertEquals(result, "No storage found for fact1");
     addLocalStorageToFact1();
-    command.dropStorageFromFact("fact1 " + FACT_LOCAL);
     result = command.getFactStorages("fact1");
-    Assert.assertEquals("No storages found for fact1", result);
+    Assert.assertNotEquals(result, "No storage found for fact1");
+    command.dropStorageFromFact("fact1", FACT_LOCAL);
+    result = command.getFactStorages("fact1");
+    Assert.assertEquals(result, "No storage found for fact1");
     addLocalStorageToFact1();
   }
 
@@ -202,7 +204,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     String result;
     URL resource = TestLensFactCommands.class.getClassLoader().getResource("fact-local-storage-element.xml");
     try {
-      command.addNewFactStorage("fact1 " + new File(resource.toURI()).getAbsolutePath());
+      command.addNewFactStorage("fact1", new File(resource.toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();
       Assert.fail("Unable to locate the storage part file for adding new storage to fact table fact1");
@@ -210,7 +212,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     result = command.getFactStorages("fact1");
     Assert.assertEquals(FACT_LOCAL, result);
 
-    result = command.getStorageFromFact("fact1 " + FACT_LOCAL);
+    result = command.getStorageFromFact("fact1", FACT_LOCAL);
     Assert.assertTrue(result.contains("HOURLY"));
     Assert.assertTrue(result.contains("DAILY"));
 
@@ -222,10 +224,10 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   private void testFactPartitionActions() {
     LensFactCommands command = getCommand();
     String result;
-    result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    result = command.getAllPartitionsOfFact("fact1", FACT_LOCAL, null);
     Assert.assertTrue(result.trim().isEmpty());
     try {
-      command.addPartitionToFact("fact1 " + FACT_LOCAL + " " + new File(
+      command.addPartitionToFact("fact1", FACT_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();
@@ -233,7 +235,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     }
     verifyAndDeletePartitions();
     try {
-      command.addPartitionsToFact("fact1 " + FACT_LOCAL + " " + new File(
+      command.addPartitionsToFact("fact1", FACT_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
     } catch (Throwable t) {
       t.printStackTrace();
@@ -243,14 +245,14 @@ public class TestLensFactCommands extends LensCliApplicationTest {
 
     // Wrong files:
     try {
-      command.addPartitionToFact("fact1 " + FACT_LOCAL + " " + new File(
+      command.addPartitionToFact("fact1", FACT_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("fact1-local-parts.xml").toURI()).getAbsolutePath());
       Assert.fail("Should fail");
     } catch (Throwable t) {
       // pass
     }
     try {
-      command.addPartitionsToFact("fact1 " + FACT_LOCAL + " " + new File(
+      command.addPartitionsToFact("fact1", FACT_LOCAL, new File(
         TestLensFactCommands.class.getClassLoader().getResource("fact1-local-part.xml").toURI()).getAbsolutePath());
       Assert.fail("Should fail");
     } catch (Throwable t) {
@@ -259,12 +261,12 @@ public class TestLensFactCommands extends LensCliApplicationTest {
   }
 
   private void verifyAndDeletePartitions() {
-    Assert.assertEquals(getCubeCommand().getLatest("sample_cube dt"), "2014-03-27T12:00:00:000");
-    String result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    Assert.assertEquals(getCubeCommand().getLatest("sample_cube", "dt"), "2014-03-27T12:00:00:000");
+    String result = command.getAllPartitionsOfFact("fact1", FACT_LOCAL, null);
     Assert.assertTrue(result.contains("HOURLY"));
-    String dropPartitionsStatus = command.dropAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    String dropPartitionsStatus = command.dropAllPartitionsOfFact("fact1", FACT_LOCAL, null);
     Assert.assertFalse(dropPartitionsStatus.contains("Syntax error, please try in following"));
-    result = command.getAllPartitionsOfFact("fact1 " + FACT_LOCAL);
+    result = command.getAllPartitionsOfFact("fact1", FACT_LOCAL, null);
     Assert.assertTrue(result.trim().isEmpty());
   }
 
@@ -277,7 +279,7 @@ public class TestLensFactCommands extends LensCliApplicationTest {
     Assert.assertEquals("fact1", factList, "Fact1 table should be found");
     command.dropFact("fact1", false);
     factList = command.showFacts(null);
-    Assert.assertEquals("No Facts Found", factList, "Fact tables should not be found");
+    Assert.assertEquals(factList, "No fact found", "Fact tables should not be found");
     TestLensStorageCommands.dropStorage(FACT_LOCAL);
   }
 }

@@ -112,11 +112,11 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
   private void testPreparedQuery(LensQueryCommands qCom) throws Exception {
     long submitTime = System.currentTimeMillis();
     String sql = "cube select id, name from test_dim";
-    String result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
+    String result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, Long.MAX_VALUE);
 
     Assert.assertEquals(result, "No prepared queries");
     final String qh = qCom.prepare(sql, "testPreparedName");
-    result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, System.currentTimeMillis());
+    result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, System.currentTimeMillis());
     Assert.assertEquals(qh, result);
 
     result = qCom.getPreparedStatus(qh);
@@ -145,16 +145,16 @@ public class TestLensQueryCommands extends LensCliApplicationTest {
 
     LOG.debug("destroy result is " + result);
     Assert.assertEquals("Successfully destroyed " + qh, result);
-    result = qCom.getAllPreparedQueries("all", "testPreparedName", submitTime, Long.MAX_VALUE);
+    result = qCom.getAllPreparedQueries("testPreparedName", "all", submitTime, Long.MAX_VALUE);
 
     Assert.assertEquals(result, "No prepared queries");
 
     final String qh2 = qCom.explainAndPrepare(sql, "testPrepQuery3");
     Assert.assertTrue(qh2.contains(explainPlan));
-    String handles = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, Long.MAX_VALUE);
+    String handles = qCom.getAllPreparedQueries("testPrepQuery3", "all", -1, Long.MAX_VALUE);
     Assert.assertFalse(handles.contains("No prepared queries"), handles);
 
-    String handles2 = qCom.getAllPreparedQueries("all", "testPrepQuery3", -1, submitTime - 1);
+    String handles2 = qCom.getAllPreparedQueries("testPrepQuery3", "all", -1, submitTime - 1);
     Assert.assertFalse(handles2.contains(qh), handles2);
     result = qCom.destroyPreparedQuery(handles);
     Assert.assertEquals("Successfully destroyed " + handles, result);

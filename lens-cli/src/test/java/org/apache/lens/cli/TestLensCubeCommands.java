@@ -54,13 +54,13 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
     Assert.assertFalse(cubeList.contains("sample_cube"));
     command.createCube(new File(cubeSpec.toURI()).getAbsolutePath());
     cubeList = command.showCubes();
-    Assert.assertEquals(command.getLatest("sample_cube dt"), "No Data Available");
+    Assert.assertEquals(command.getLatest("sample_cube", "dt"), "No Data Available");
     Assert.assertTrue(cubeList.contains("sample_cube"));
 
     testUpdateCommand(new File(cubeSpec.toURI()), command);
     command.dropCube("sample_cube");
     try {
-      command.getLatest("sample_cube dt");
+      command.getLatest("sample_cube", "dt");
       Assert.fail("should have failed as cube doesn't exist");
     } catch (Exception e) {
       //pass
@@ -107,7 +107,7 @@ public class TestLensCubeCommands extends LensCliApplicationTest {
 
       Assert.assertTrue(desc.contains(propString));
 
-      command.updateCube("sample_cube /tmp/sample_cube1.xml");
+      command.updateCube("sample_cube", "/tmp/sample_cube1.xml");
       desc = command.describeCube("sample_cube");
       LOG.debug(desc);
       Assert.assertTrue(desc.contains(propString));

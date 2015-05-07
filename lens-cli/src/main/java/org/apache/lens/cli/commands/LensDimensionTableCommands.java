@@ -18,375 +18,312 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.lens.api.APIResult;
+import org.apache.lens.api.metastore.XDimensionTable;
+import org.apache.lens.api.metastore.XPartition;
+import org.apache.lens.api.metastore.XStorageTableElement;
+import org.apache.lens.cli.commands.annotations.UserDocumentation;
 
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.springframework.stereotype.Component;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Iterables;
-
 /**
  * The Class LensDimensionTableCommands.
  */
 @Component
-public class LensDimensionTableCommands extends BaseLensCommand implements CommandMarker {
+@UserDocumentation(title = "Commands for Dimension Tables",
+  description = "These commands provide CRUD for dimension tables, associated storages, and fact partitions")
+public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<XDimensionTable>
+  implements CommandMarker {
 
   /**
    * Show dimension tables.
    *
    * @return the string
    */
-  @CliCommand(value = "show dimtables", help = "show list of dimension tables in database")
+  @CliCommand(value = "show dimtables",
+    help = "display list of dimtables in current database. If optional <dimension-name> is supplied,"
+      + " only facts belonging to dimension <dimension-name> will be displayed")
   public String showDimensionTables(
-    @CliOption(key = {"", "dimension"}, mandatory = false, help = "<optional dimension name>") String dimensionName) {
-    List<String> dims = getClient().getAllDimensionTables(dimensionName);
-    if (dims != null) {
-      return Joiner.on("\n").join(dims);
-    } else {
-      return "No Dimensions Found";
-    }
+    @CliOption(key = {"", "dimension-name"}, mandatory = false, help = "<dimension-name>") String dimensionName) {
+    return showAll(dimensionName);
   }
 
   /**
    * Creates the dimension table.
    *
-   * @param dimSpec Path to dim spec
+   * @param path Path to dim spec
    * @return the string
    */
-  @CliCommand(value = "create dimtable", help = "Create a new dimension table")
+  @CliCommand(value = "create dimtable",
+    help = "Create a new dimension table taking spec from <path-to-dimtable-spec-file>")
   public String createDimensionTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<path to dim-spec>") String dimSpec) {
-
-    File f = new File(dimSpec);
-    if (!f.exists()) {
-      return "dimtable spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().createDimensionTable(dimSpec);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "create dimension table succeeded";
-    } else {
-      return "create dimension table failed";
-    }
-  }
-
-  /**
-   * Drop dimension table.
-   *
-   * @param dim     the dim
-   * @param cascade the cascade
-   * @return the string
-   */
-  @CliCommand(value = "drop dimtable", help = "drop dimension table")
-  public String dropDimensionTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension table name to be dropped") String dim,
-    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false") boolean cascade) {
-    APIResult result = getClient().dropDimensionTable(dim, cascade);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped " + dim + "!!!";
-    } else {
-      return "Dropping " + dim + " table failed";
-    }
-  }
-
-  /**
-   * Update dimension table.
-   *
-   * @param specPair the spec pair
-   * @return the string
-   */
-  @CliCommand(value = "update dimtable", help = "update dimension table")
-  public String updateDimensionTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<dimension-table-name> <path to table-spec>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following "
-        + "format. create dimtable <dimtable spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-
-    if (!f.exists()) {
-      return "Fact spec path" + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().updateDimensionTable(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Update of " + pair[0] + " succeeded";
-    } else {
-      return "Update of " + pair[0] + " failed";
-    }
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec-file>") String path) {
+    return create(path, false);
   }
 
   /**
    * Describe dimension table.
    *
-   * @param dim the dim
+   * @param name the dim
    * @return the string
    */
-  @CliCommand(value = "describe dimtable", help = "describe a dimension table")
+  @CliCommand(value = "describe dimtable", help = "describe dimtable <dimtable-name>")
   public String describeDimensionTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "dimension table name to be described") String dim) {
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimensionTable(dim)));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name) {
+    return describe(name);
+  }
+
+  /**
+   * Update dimension table.
+   *
+   * @param name the dimtable name
+   * @param path the path to spec file
+   * @return the string
+   */
+  @CliCommand(value = "update dimtable",
+    help = "update dimtable <dimtable-name> taking spec from <path-to-dimtable-spec>")
+  public String updateDimensionTable(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec>") String path) {
+    return update(name, path);
+  }
+
+
+  /**
+   * Drop dimension table.
+   *
+   * @param name    the dim
+   * @param cascade the cascade
+   * @return the string
+   */
+  @CliCommand(value = "drop dimtable",
+    help = "drop dimtable <dimtable-name>. "
+      + " If <cascade> is true, all the storage tables associated with the dimtable <dimtable-name> are also dropped."
+      + " By default <cascade> is false")
+  public String dropDimensionTable(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name,
+    @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
+    boolean cascade) {
+    return drop(name, cascade);
   }
 
   /**
    * Gets the dim storages.
    *
-   * @param dim the dim
+   * @param table the dim
    * @return the dim storages
    */
-  @CliCommand(value = "dimtable list storage", help = "display list of storage associated to dimension table")
+  @CliCommand(value = "dimtable list storages", help = "display list of storage associated to dimtable <dimtable-name>")
   public String getDimStorages(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<table-name> for listing storages") String dim) {
-    List<String> storages = getClient().getDimStorages(dim);
-    StringBuilder sb = new StringBuilder();
-    if (storages != null && !storages.isEmpty()) {
-      for (String storage : storages) {
-        if (!storage.isEmpty()) {
-          sb.append(storage).append("\n");
-        }
-      }
-    }
-
-    if (sb.toString().isEmpty()) {
-      return "No storages found for " + dim;
-    }
-    return sb.toString().substring(0, sb.toString().length() - 1);
-  }
-
-  /**
-   * Drop all dim storages.
-   *
-   * @param table the table
-   * @return the string
-   */
-  @CliCommand(value = "dimtable drop-all storages", help = "drop all storages associated to dimension table")
-  public String dropAllDimStorages(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<table-name> for which all storage should be dropped") String table) {
-    APIResult result = getClient().dropAllStoragesOfDim(table);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "All storages of " + table + " dropped successfully";
-    } else {
-      return "Error dropping storages of " + table;
-    }
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String table) {
+    return showAllStorages(table);
   }
 
   /**
    * Adds the new dim storage.
    *
-   * @param tablepair the tablepair
+   * @param tableName dimtable name
+   * @param path      path to storage spec
    * @return the string
    */
-  @CliCommand(value = "dimtable add storage", help = "adds a new storage to dimension")
+  @CliCommand(value = "dimtable add storage",
+    help = "adds a new storage to dimtable <dimtable-name>, taking storage spec from <path-to-storage-spec>")
   public String addNewDimStorage(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<dim-table-name> <path to storage-spec>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following "
-        + "format. create dimtable <dimtable spec path> <storage spec path>";
-    }
-
-    File f = new File(pair[1]);
-    if (!f.exists()) {
-      return "Storage spech path " + f.getAbsolutePath() + " does not exist. Please check the path";
-    }
-
-    APIResult result = getClient().addStorageToDim(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Dim table storage addition completed";
-    } else {
-      return "Dim table storage addition failed";
-    }
-  }
-
-  /**
-   * Drop storage from dim.
-   *
-   * @param tablepair the tablepair
-   * @return the string
-   */
-  @CliCommand(value = "dimtable drop storage", help = "drop storage to dimension table")
-  public String dropStorageFromDim(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<dimension-table-name> <storage-name>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following "
-        + "format. create dimtable <dimtable spec path> <storage spec path>";
-    }
-    APIResult result = getClient().dropStorageFromDim(pair[0], pair[1]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Dim table storage removal successful";
-    } else {
-      return "Dim table storage removal failed";
-    }
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
+    return addStorage(tableName, path);
   }
 
   /**
    * Gets the storage from dim.
    *
-   * @param tablepair the tablepair
-   * @return the storage from dim
+   * @param tableName dimtable name
+   * @return path storage spec path
    */
-  @CliCommand(value = "dimtable get storage", help = "describe storage of dimension table")
+  @CliCommand(value = "dimtable get storage", help = "describe storage <storage-name> of dimtable <dimtable-name>")
   public String getStorageFromDim(
-    @CliOption(key = {"", "table"}, mandatory = true, help
-      = "<dimension-table-name> <storage-name>") String tablepair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(tablepair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length != 2) {
-      return "Syntax error, please try in following "
-        + "format. create dimtable <dimtable spec path> <storage spec path>";
-    }
-    try {
-      return formatJson(mapper.writer(pp).writeValueAsString(getClient().getStorageFromDim(pair[0], pair[1])));
-    } catch (IOException e) {
-      throw new IllegalArgumentException(e);
-    }
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storage) {
+    return getStorage(tableName, storage);
+  }
+
+  /**
+   * Drop storage from dim.
+   *
+   * @param tableName   dimtable name
+   * @param storageName storage name
+   * @return the string
+   */
+  @CliCommand(value = "dimtable drop storage", help = "drop storage <storage-name> from dimtable <dimtable-name>")
+  public String dropStorageFromDim(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName) {
+    return dropStorage(tableName, storageName);
+  }
+
+  /**
+   * Drop all dim storages.
+   *
+   * @param tableName the table
+   * @return the string
+   */
+  @CliCommand(value = "dimtable drop all storages", help = "drop all storages associated to dimension table")
+  public String dropAllDimStorages(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName) {
+    return dropAllStorages(tableName);
   }
 
   /**
    * Gets the all partitions of dim.
    *
-   * @param specPair the spec pair
+   * @param tableName   dimtable name
+   * @param storageName storage name
+   * @param filter      partition filter
    * @return the all partitions of dim
    */
-  @CliCommand(value = "dimtable list partitions", help = "get all partitions associated with dimension table")
+  @CliCommand(value = "dimtable list partitions",
+    help = "get all partitions associated with dimtable <dimtable-name>, "
+      + "storage <storage-name> filtered by <partition-filter>")
   public String getAllPartitionsOfDim(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storageName> "
-      + "[optional <partition query filter> to get]") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    if (pair.length == 2) {
-      try {
-        return formatJson(mapper.writer(pp).writeValueAsString(getClient().getAllPartitionsOfDim(pair[0], pair[1])));
-      } catch (IOException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    if (pair.length == 3) {
-      try {
-        return formatJson(mapper.writer(pp).writeValueAsString(
-          getClient().getAllPartitionsOfDim(pair[0], pair[1], pair[2])));
-      } catch (IOException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    return "Syntax error, please try in following "
-      + "format. dim list partitions <table> <storage> [partition values]";
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
+    return getAllPartitions(tableName, storageName, filter);
   }
 
   /**
    * Drop all partitions of dim.
    *
-   * @param specPair the spec pair
+   * @param tableName   dimtable name
+   * @param storageName storage name
+   * @param filter      partition query filter
    * @return the string
    */
-  @CliCommand(value = "dimtable drop partitions", help = "drop all partitions associated with dimension table")
+  @CliCommand(value = "dimtable drop partitions",
+    help = "drop all partitions associated with dimtable "
+      + "<dimtable-name>, storage <storage-name> filtered by <partition-filter>")
   public String dropAllPartitionsOfDim(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storageName> "
-      + "[optional <partition query filter> to drop]") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length == 2) {
-      result = getClient().dropAllPartitionsOfDim(pair[0], pair[1]);
-    }
-    if (pair.length == 3) {
-      result = getClient().dropAllPartitionsOfDim(pair[0], pair[1], pair[3]);
-    } else {
-      return "Syntax error, please try in following "
-        + "format. dimtable drop partitions <table> <storage> [partition values]";
-    }
-
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully dropped partition of " + pair[0];
-    } else {
-      return "failure in  dropping partition of " + pair[0];
-    }
-
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
+    return dropPartitions(tableName, storageName, filter);
   }
 
   /**
    * Adds the partition to dim table.
    *
-   * @param specPair the spec pair
+   * @param tableName   dimtable name
+   * @param storageName storage name
+   * @param path        partition spec path
    * @return the string
    */
-  @CliCommand(value = "dimtable add single-partition", help = "add a partition to dim table")
-  public String addPartitionToDimTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
-      + " <path to partition specification>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length != 3) {
-      return "Syntax error, please try in following "
-        + "format. dimtable add single-partition <table> <storage> <partition spec>";
-    }
-
-    File f = new File(pair[2]);
-    if (!f.exists()) {
-      return "Partition spec does not exist";
-    }
-
-    result = getClient().addPartitionToDim(pair[0], pair[1], pair[2]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully added partition to " + pair[0];
-    } else {
-      return "failure in  addition of partition to " + pair[0];
-    }
+  @CliCommand(value = "dimtable add single-partition",
+    help = "add single partition to dimtable <dimtable-name>'s"
+      + " storage <storage-name>, reading spec from <partition-spec-path>")
+  public String addPartitionToDimtable(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
+    return addPartition(tableName, storageName, path);
   }
 
   /**
-   * Adds  partitions to dim table.
+   * Adds the partitions to dim table.
    *
-   * @param specPair the spec pair
+   * @param tableName   dimtable name
+   * @param storageName storage name
+   * @param path        partition spec path
    * @return the string
    */
-  @CliCommand(value = "dimtable add partitions", help = "add partitions to dim table")
-  public String addPartitionsToDimTable(
-    @CliOption(key = {"", "table"}, mandatory = true, help = "<dimension-table-name> <storage-name>"
-      + " <path to partitions specification>") String specPair) {
-    Iterable<String> parts = Splitter.on(' ').trimResults().omitEmptyStrings().split(specPair);
-    String[] pair = Iterables.toArray(parts, String.class);
-    APIResult result;
-    if (pair.length != 3) {
-      return "Syntax error, please try in following "
-        + "format. dimtable add partitions <table> <storage> <partition spec>";
-    }
 
-    File f = new File(pair[2]);
-    if (!f.exists()) {
-      return "Partition spec does not exist";
-    }
+  @CliCommand(value = "dimtable add partitions",
+    help = "add multiple partition to dimtable <dimtable-name>'s"
+      + " storage <storage-name>, reading partition list spec from <partition-list-spec-path>")
+  public String addPartitionsToDimtable(
+    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
+    return addPartitions(tableName, storageName, path);
+  }
 
-    result = getClient().addPartitionsToDim(pair[0], pair[1], pair[2]);
-    if (result.getStatus() == APIResult.Status.SUCCEEDED) {
-      return "Successfully added partition to " + pair[0];
-    } else {
-      return "failure in  addition of partition to " + pair[0];
-    }
+  @Override
+  protected XStorageTableElement readStorage(String tableName, String storage) {
+    return getClient().getStorageFromDim(tableName, storage);
+  }
+
+  @Override
+  public APIResult doDropStorage(String tableName, String storageName) {
+    return getClient().dropStorageFromDim(tableName, storageName);
+  }
+
+
+  @Override
+  public List<String> getAllStorages(String name) {
+    return getClient().getDimStorages(name);
+  }
+
+  @Override
+  public APIResult doAddStorage(String name, String path) {
+    return getClient().addStorageToDim(name, path);
+  }
+
+  @Override
+  public APIResult doDropAllStorages(String name) {
+    return getClient().dropAllStoragesOfDim(name);
+  }
+
+  @Override
+  protected List<XPartition> readAllPartitions(String tableName, String storageName, String filter) {
+    return getClient().getAllPartitionsOfDim(tableName, storageName, filter);
+  }
+
+  @Override
+  protected APIResult doAddPartition(String tableName, String storageName, String path) {
+    return getClient().addPartitionToDim(tableName, storageName, path);
+  }
+
+  @Override
+  protected APIResult doAddPartitions(String tableName, String storageName, String path) {
+    return getClient().addPartitionsToDim(tableName, storageName, path);
+  }
+
+  @Override
+  protected APIResult doDropPartitions(String tableName, String storageName, String filter) {
+    return getClient().dropAllPartitionsOfDim(tableName, storageName, filter);
+  }
+
+  @Override
+  public List<String> getAll() {
+    return getClient().getAllDimensionTables();
+  }
+
+  @Override
+  public List<String> getAll(String dimesionName) {
+    return getClient().getAllDimensionTables(dimesionName);
+  }
+
+  @Override
+  protected APIResult doCreate(String path, boolean ignoreIfExists) {
+    return getClient().createDimensionTable(path);
+  }
+
+  @Override
+  protected XDimensionTable doRead(String name) {
+    return getClient().getDimensionTable(name);
+  }
+
+  @Override
+  public APIResult doUpdate(String name, String path) {
+    return getClient().updateDimensionTable(name, path);
+  }
+
+  @Override
+  protected APIResult doDelete(String name, boolean cascade) {
+    return getClient().dropDimensionTable(name, cascade);
   }
 }
