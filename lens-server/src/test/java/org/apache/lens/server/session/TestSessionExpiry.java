@@ -24,7 +24,9 @@ import java.util.HashMap;
 
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.LensServerConf;
+import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
+import org.apache.lens.server.api.metrics.MetricsService;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hive.service.cli.CLIService;
@@ -51,6 +53,7 @@ public class TestSessionExpiry {
     HiveSessionService lensService = new HiveSessionService(cliService);
     lensService.init(conf);
     lensService.start();
+    MetricsService metricSvc = (MetricsService) LensServices.get().getService(MetricsService.NAME);
 
     try {
       LensSessionHandle sessionHandle = lensService.openSession("foo", "bar", new HashMap<String, String>());
@@ -59,9 +62,11 @@ public class TestSessionExpiry {
       session.setLastAccessTime(session.getLastAccessTime() - 2000
         * conf.getLong(LensConfConstants.SESSION_TIMEOUT_SECONDS, LensConfConstants.SESSION_TIMEOUT_SECONDS_DEFAULT));
       assertFalse(session.isActive());
-
       // run the expiry thread
       lensService.getSessionExpiryRunnable().run();
+      assertTrue(metricSvc.getTotalExpiredSessions() >= 1);
+      assertTrue(metricSvc.getTotalClosedSessions() >= 1);
+
       try {
         lensService.getSession(sessionHandle);
         // should throw exception since session should be expired by now

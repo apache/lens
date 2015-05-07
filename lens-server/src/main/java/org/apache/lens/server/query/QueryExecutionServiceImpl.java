@@ -47,7 +47,6 @@ import org.apache.lens.server.api.driver.*;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.error.LensMultiCauseException;
 import org.apache.lens.server.api.events.LensEventListener;
-import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.metrics.MethodMetricsContext;
 import org.apache.lens.server.api.metrics.MethodMetricsFactory;
 import org.apache.lens.server.api.metrics.MetricsService;
@@ -208,11 +207,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
   private Map<QueryHandle, LensResultSet> resultSets = new HashMap<QueryHandle, LensResultSet>();
 
   /**
-   * The event service.
-   */
-  private LensEventService eventService;
-
-  /**
    * The metrics service.
    */
   private MetricsService metricsService;
@@ -334,16 +328,6 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
         + conf.get(LensConfConstants.DRIVER_SELECTOR_CLASS) + ". Please supply a valid value for "
         + LensConfConstants.DRIVER_SELECTOR_CLASS);
     }
-  }
-
-  protected LensEventService getEventService() {
-    if (eventService == null) {
-      eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
-      if (eventService == null) {
-        throw new NullPointerException("Could not get event service");
-      }
-    }
-    return eventService;
   }
 
   private MetricsService getMetrics() {

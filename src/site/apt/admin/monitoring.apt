@@ -39,6 +39,11 @@ Lens server monitoring
 
   * Number of result formatting error
 
+  * Total number of opened sessions from the server start/restart
+
+  * Total number of closed sessions
+
+  * Number of active sessions
 
  Lens server also emits following metrics for other services
 

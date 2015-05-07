@@ -35,6 +35,8 @@ import org.apache.lens.api.LensConf;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.events.LensEvent;
+import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.session.LensSessionImpl;
 import org.apache.lens.server.user.UserConfigLoaderFactory;
 import org.apache.lens.server.util.UtilityMethods;
@@ -42,8 +44,10 @@ import org.apache.lens.server.util.UtilityMethods;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
+
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.auth.AuthenticationProviderFactory;
 import org.apache.hive.service.auth.HiveAuthFactory;
@@ -95,6 +99,10 @@ public abstract class LensService extends CompositeService implements Externaliz
 
   public String getServerDomain() {
     return cliService.getHiveConf().get(LensConfConstants.SERVER_DOMAIN);
+  }
+
+  public static int getNumberOfSessions() {
+    return LensService.SESSION_MAP.size();
   }
 
   /**
@@ -150,6 +158,18 @@ public abstract class LensService extends CompositeService implements Externaliz
       sessionHandle.getHandleIdentifier().getSecretId());
     SESSION_MAP.put(lensSession.getPublicId().toString(), lensSession);
     return lensSession;
+  }
+
+  protected LensEventService getEventService() {
+    LensEventService  eventService = (LensEventService) LensServices.get().getService(LensEventService.NAME);
+    if (eventService == null) {
+      throw new NullPointerException("Could not get event service");
+    }
+    return eventService;
+  }
+
+  protected void notifyEvent(LensEvent event) throws LensException {
+    getEventService().notifyEvent(event);
   }
 
   /**

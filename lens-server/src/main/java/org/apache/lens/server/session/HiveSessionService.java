@@ -36,6 +36,10 @@ import org.apache.lens.server.LensService;
 import org.apache.lens.server.LensServices;
 import org.apache.lens.server.api.LensConfConstants;
 import org.apache.lens.server.api.error.LensException;
+import org.apache.lens.server.api.session.SessionClosed;
+import org.apache.lens.server.api.session.SessionExpired;
+import org.apache.lens.server.api.session.SessionOpened;
+import org.apache.lens.server.api.session.SessionRestored;
 import org.apache.lens.server.api.session.SessionService;
 import org.apache.lens.server.query.QueryExecutionServiceImpl;
 import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
@@ -43,11 +47,13 @@ import org.apache.lens.server.session.LensSessionImpl.ResourceEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.processors.SetProcessor;
 import org.apache.hadoop.hive.ql.session.SessionState;
+
 import org.apache.hive.service.cli.CLIService;
 import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.hive.service.cli.OperationHandle;
@@ -200,6 +206,7 @@ public class HiveSessionService extends LensService implements SessionService {
     throws LensException {
     LensSessionHandle sessionid = super.openSession(username, password, configuration);
     LOG.info("Opened session " + sessionid + " for user " + username);
+    notifyEvent(new SessionOpened(System.currentTimeMillis(), sessionid, username));
 
     // Set current database
     if (StringUtils.isNotBlank(database)) {
@@ -379,6 +386,7 @@ public class HiveSessionService extends LensService implements SessionService {
           }
         }
         LOG.info("Restored session " + persistInfo.getSessionHandle().getPublicId());
+        notifyEvent(new SessionRestored(System.currentTimeMillis(), sessionHandle));
       } catch (LensException e) {
         throw new RuntimeException(e);
       }
@@ -439,6 +447,16 @@ public class HiveSessionService extends LensService implements SessionService {
    */
   @Override
   public void closeSession(LensSessionHandle sessionHandle) throws LensException {
+    closeInternal(sessionHandle);
+    notifyEvent(new SessionClosed(System.currentTimeMillis(), sessionHandle));
+  }
+
+  /**
+   * Close a Lens server session
+   * @param sessionHandle session handle
+   * @throws LensException
+   */
+  private void closeInternal(LensSessionHandle sessionHandle) throws LensException {
     super.closeSession(sessionHandle);
     // Inform query service
     LensService svc = LensServices.get().getService(QueryExecutionServiceImpl.NAME);
@@ -492,9 +510,10 @@ public class HiveSessionService extends LensService implements SessionService {
       for (LensSessionHandle sessionHandle : sessionsToRemove) {
         try {
           long lastAccessTime = getSession(sessionHandle).getLastAccessTime();
-          closeSession(sessionHandle);
+          closeInternal(sessionHandle);
           LOG.info("Closed inactive session " + sessionHandle.getPublicId() + " last accessed at "
             + new Date(lastAccessTime));
+          notifyEvent(new SessionExpired(System.currentTimeMillis(), sessionHandle));
         } catch (ClientErrorException nfe) {
           // Do nothing
         } catch (LensException e) {

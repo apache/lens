@@ -24,6 +24,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.query.QueryHandle;
 import org.apache.lens.api.query.QueryStatus;
 import org.apache.lens.server.EventServiceImpl;
@@ -35,6 +36,10 @@ import org.apache.lens.server.api.events.LensEvent;
 import org.apache.lens.server.api.events.LensEventListener;
 import org.apache.lens.server.api.events.LensEventService;
 import org.apache.lens.server.api.query.*;
+import org.apache.lens.server.api.session.SessionClosed;
+import org.apache.lens.server.api.session.SessionExpired;
+import org.apache.lens.server.api.session.SessionOpened;
+import org.apache.lens.server.api.session.SessionRestored;
 import org.apache.lens.server.query.QueryExecutionServiceImpl.QueryStatusLogger;
 import org.apache.lens.server.stats.event.query.QueryExecutionStatistics;
 
@@ -66,6 +71,18 @@ public class TestEventService {
 
   /** The ended listener. */
   MockEndedListener endedListener;
+
+  /** the session opened listener */
+  MockerSessionOpened sessionOpenedListener;
+
+  /** the session closed listener */
+  MockerSessionClosed sessionClosedListener;
+
+  /** the session expired listener */
+  MockerSessionExpired sessionExpiredListner;
+
+  /** the session restored listener */
+  MockerSessionRestored sessionRestoredListener;
 
   /** The latch. */
   CountDownLatch latch;
@@ -173,6 +190,90 @@ public class TestEventService {
   }
 
   /**
+   * The Class MockerSessionOpened.
+   */
+  class MockerSessionOpened implements LensEventListener<SessionOpened> {
+
+    /** The processed. */
+    boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
+    @Override
+    public void onEvent(SessionOpened event) throws LensException {
+      processed = true;
+      latch.countDown();
+      LOG.info("Session opened: " + event);
+    }
+  }
+
+  /**
+   * The Class MockerSessionClosed.
+   */
+  class MockerSessionClosed implements LensEventListener<SessionClosed> {
+
+    /** The processed. */
+    boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
+    @Override
+    public void onEvent(SessionClosed event) throws LensException {
+      processed = true;
+      latch.countDown();
+      LOG.info("Session closed: " + event);
+    }
+  }
+
+  /**
+   * The Class MockerSessionExpired.
+   */
+  class MockerSessionExpired implements LensEventListener<SessionExpired> {
+
+    /** The processed. */
+    boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
+    @Override
+    public void onEvent(SessionExpired event) throws LensException {
+      processed = true;
+      latch.countDown();
+      LOG.info("Session expired: " + event);
+    }
+  }
+
+  /**
+   * The Class MockerSessionRestored.
+   */
+  class MockerSessionRestored implements LensEventListener<SessionRestored> {
+
+    /** The processed. */
+    boolean processed = false;
+
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.events.LensEventListener#onEvent(org.apache.lens.server.api.events.LensEvent)
+     */
+    @Override
+    public void onEvent(SessionRestored event) throws LensException {
+      processed = true;
+      latch.countDown();
+      LOG.info("Session restored: " + event);
+    }
+  }
+
+  /**
    * Setup.
    *
    * @throws Exception the exception
@@ -200,11 +301,21 @@ public class TestEventService {
     service.addListenerForType(failedListener, QueryFailed.class);
     queuePositionChangeListener = new MockQueuePositionChange();
     service.addListenerForType(queuePositionChangeListener, QueuePositionChange.class);
+    sessionOpenedListener = new MockerSessionOpened();
+    service.addListenerForType(sessionOpenedListener, SessionOpened.class);
+    sessionClosedListener = new MockerSessionClosed();
+    service.addListenerForType(sessionClosedListener, SessionClosed.class);
+    sessionExpiredListner = new MockerSessionExpired();
+    service.addListenerForType(sessionExpiredListner, SessionExpired.class);
+    sessionRestoredListener = new MockerSessionRestored();
+    service.addListenerForType(sessionRestoredListener, SessionRestored.class);
 
     assertTrue(service.getListeners(LensEvent.class).contains(genericEventListener));
     assertTrue(service.getListeners(QueryFailed.class).contains(failedListener));
     assertTrue(service.getListeners(QueryEnded.class).contains(endedListener));
     assertTrue(service.getListeners(QueuePositionChange.class).contains(queuePositionChangeListener));
+    assertTrue(service.getListeners(SessionOpened.class).contains(sessionOpenedListener));
+    assertTrue(service.getListeners(SessionClosed.class).contains(sessionClosedListener));
   }
 
   /**
@@ -227,6 +338,75 @@ public class TestEventService {
     endedListener.processed = false;
     failedListener.processed = false;
     queuePositionChangeListener.processed = false;
+  }
+
+  /**
+   * Reset session listeners.
+   */
+  private void resetSessionListeners() {
+    genericEventListener.processed = false;
+    sessionOpenedListener.processed = false;
+    sessionClosedListener.processed = false;
+    sessionExpiredListner.processed = false;
+    sessionRestoredListener.processed = false;
+  }
+
+  /**
+   * Test handle event.
+   *
+   * @throws Exception
+   *           the exception
+   */
+  @Test
+  public void testSesionHandleEvent() throws Exception {
+    LensSessionHandle sessionHandle = new LensSessionHandle(UUID.randomUUID(), UUID.randomUUID());
+    String user = "user";
+    long now = System.currentTimeMillis();
+    SessionOpened sessionOpenedEvent = new SessionOpened(now, sessionHandle, user);
+    SessionClosed sessionClosedEvent = new SessionClosed(now, sessionHandle);
+    SessionRestored sessionRestored = new SessionRestored(now, sessionHandle);
+    SessionExpired sessionExpired = new SessionExpired(now, sessionHandle);
+
+    try {
+      latch = new CountDownLatch(3);
+      LOG.info("Sending session opened  event: " + sessionOpenedEvent);
+      service.notifyEvent(sessionOpenedEvent);
+      LOG.info("Sending session restored event: " + sessionRestored);
+      service.notifyEvent(sessionRestored);
+      latch.await(5, TimeUnit.SECONDS);
+      assertTrue(genericEventListener.processed);
+      assertTrue(sessionOpenedListener.processed);
+      assertTrue(sessionRestoredListener.processed);
+      resetSessionListeners();
+
+      LensEvent genEvent = new LensEvent(now) {
+        @Override
+        public String getEventId() {
+          return "TEST_EVENT";
+        }
+      };
+
+      latch = new CountDownLatch(2);
+      LOG.info("Sending generic event " + genEvent.getEventId());
+      service.notifyEvent(genEvent);
+      latch.await(5, TimeUnit.SECONDS);
+      assertTrue(genericEventListener.processed);
+      resetSessionListeners();
+
+      latch = new CountDownLatch(3);
+      LOG.info("Sending session closed event " + sessionClosedEvent);
+      service.notifyEvent(sessionClosedEvent);
+      LOG.info("Sending session expired event " + sessionExpired);
+      service.notifyEvent(sessionExpired);
+      latch.await(5, TimeUnit.SECONDS);
+      assertTrue(sessionClosedListener.processed);
+      assertTrue(sessionExpiredListner.processed);
+      assertFalse(sessionOpenedListener.processed);
+      assertFalse(sessionRestoredListener.processed);
+
+    } catch (LensException e) {
+      fail(e.getMessage());
+    }
   }
 
   /**
