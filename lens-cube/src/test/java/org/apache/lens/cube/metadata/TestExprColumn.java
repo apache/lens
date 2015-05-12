@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.lens.cube.metadata.ExprColumn.ExprSpec;
 
@@ -42,6 +43,7 @@ public class TestExprColumn {
 
   public TestExprColumn() {
     Calendar cal = Calendar.getInstance();
+    cal.setTimeZone(TimeZone.getTimeZone("UTC"));
     now = cal.getTime();
     cal.add(Calendar.DAY_OF_MONTH, -2);
     twoDaysBack = cal.getTime();
