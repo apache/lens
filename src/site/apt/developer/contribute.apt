@@ -230,7 +230,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
 +---+
 
-  git diff --no-prefix > LENS-1234.patch
+  git diff > LENS-1234.patch
 
 +---+
 
@@ -277,7 +277,12 @@ Developer Documentation : How to contribute to Apache Lens?
 
   To apply a patch either you generated or found from JIRA, you can issue
 
-  git apply -p0 lens_patch.patch
++---+
+
+  git apply --check lens_patch.patch
+  git apply lens_patch.patch
+
++---+
 
 ** Review request
 
