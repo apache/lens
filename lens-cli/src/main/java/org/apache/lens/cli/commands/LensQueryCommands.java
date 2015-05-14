@@ -133,9 +133,9 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param qh the qh
    * @return the status
    */
-  @CliCommand(value = "query status", help = "Fetch status of executed query having query handle <query-handle>")
+  @CliCommand(value = "query status", help = "Fetch status of executed query having query handle <query_handle>")
   public String getStatus(
-    @CliOption(key = {"", "query-handle"}, mandatory = true, help = "<query-handle>") String qh) {
+    @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh) {
     QueryStatus status = getClient().getQueryStatus(new QueryHandle(UUID.fromString(qh)));
     StringBuilder sb = new StringBuilder();
     if (status == null) {
@@ -165,10 +165,10 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param qh the qh
    * @return the query
    */
-  @CliCommand(value = "query details", help = "Get query details of query with handle <query-handle>")
+  @CliCommand(value = "query details", help = "Get query details of query with handle <query_handle>")
   public String getDetails(
-    @CliOption(key = {"", "query-handle"}, mandatory = true, help
-      = "<query-handle>") String qh) {
+    @CliOption(key = {"", "query_handle"}, mandatory = true, help
+      = "<query_handle>") String qh) {
     LensQuery query = getClient().getQueryDetails(qh);
     if (query == null) {
       return "Unable to find query for " + qh;
@@ -191,9 +191,9 @@ public class LensQueryCommands extends BaseLensCommand {
    */
   @CliCommand(value = "query explain",
     help = "Explain execution plan of query <query-string>. Can optionally save the plan"
-      + " to a file by providing <save-location>")
+      + " to a file by providing <save_location>")
   public String explainQuery(@CliOption(key = {"", "query"}, mandatory = true, help = "<query-string>") String sql,
-    @CliOption(key = {"save-location"}, mandatory = false, help = "<save-location>") String location)
+    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location)
     throws IOException {
     QueryPlan plan = getClient().getQueryPlan(sql);
     if (plan.isError()) {
@@ -245,9 +245,9 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param qh the qh
    * @return the string
    */
-  @CliCommand(value = "query kill", help = "Kill query with handle <query-handle>")
+  @CliCommand(value = "query kill", help = "Kill query with handle <query_handle>")
   public String killQuery(
-    @CliOption(key = {"", "query-handle"}, mandatory = true, help = "<query-handle>") String qh) {
+    @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh) {
     boolean status = getClient().killQuery(new QueryHandle(UUID.fromString(qh)));
     if (status) {
       return "Successfully killed " + qh;
@@ -262,9 +262,9 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param qh the qh
    * @return the query results
    */
-  @CliCommand(value = "query results", help = "get results of async query with query handle <query-handle>")
+  @CliCommand(value = "query results", help = "get results of async query with query handle <query_handle>")
   public String getQueryResults(
-    @CliOption(key = {"", "query-handle"}, mandatory = true, help = "<query-handle>") String qh) {
+    @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh) {
     try {
       LensClient.LensClientResultSetWithStats result = getClient()
         .getAsyncResults(new QueryHandle(UUID.fromString(qh)));
@@ -307,9 +307,9 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param ph the ph
    * @return the prepared status
    */
-  @CliCommand(value = "prepQuery details", help = "Get prepared query with handle <prepare-handle>")
+  @CliCommand(value = "prepQuery details", help = "Get prepared query with handle <prepare_handle>")
   public String getPreparedStatus(
-    @CliOption(key = {"", "prepare-handle"}, mandatory = true, help = "<prepare-handle>") String ph) {
+    @CliOption(key = {"", "prepare_handle"}, mandatory = true, help = "<prepare_handle>") String ph) {
     LensPreparedQuery prepared = getClient().getPreparedQuery(QueryPrepareHandle.fromString(ph));
     if (prepared != null) {
       StringBuilder sb = new StringBuilder()
@@ -334,9 +334,9 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param ph the ph
    * @return the string
    */
-  @CliCommand(value = "prepQuery destroy", help = "Destroy prepared query with handle <prepare-handle>")
+  @CliCommand(value = "prepQuery destroy", help = "Destroy prepared query with handle <prepare_handle>")
   public String destroyPreparedQuery(
-    @CliOption(key = {"", "prepare-handle"}, mandatory = true, help = "<prepare-handle>") String ph) {
+    @CliOption(key = {"", "prepare_handle"}, mandatory = true, help = "<prepare_handle>") String ph) {
     boolean status = getClient().destroyPrepared(new QueryPrepareHandle(UUID.fromString(ph)));
     if (status) {
       return "Successfully destroyed " + ph;
@@ -354,11 +354,11 @@ public class LensQueryCommands extends BaseLensCommand {
    * @return the string
    */
   @CliCommand(value = "prepQuery execute",
-    help = "Execute prepared query with handle <prepare-handle>."
+    help = "Execute prepared query with handle <prepare_handle>."
       + " If <async> is supplied and is true, query is run in async manner and query handle is returned immediately."
       + " Optionally, <query-name> can be provided, though not required.")
   public String executePreparedQuery(
-    @CliOption(key = {"", "prepare-handle"}, mandatory = true, help = "Prepare handle to execute") String phandle,
+    @CliOption(key = {"", "prepare_handle"}, mandatory = true, help = "Prepare handle to execute") String phandle,
     @CliOption(key = {"async"}, mandatory = false, unspecifiedDefaultValue = "false",
       specifiedDefaultValue = "true", help = "<async>") boolean async,
     @CliOption(key = {"name"}, mandatory = false, help = "<query-name>") String queryName) {

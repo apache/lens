@@ -45,9 +45,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    */
   @CliCommand(value = "show facts",
     help = "display list of fact tables in current database. "
-      + "If optional <cube-name> is supplied, only facts belonging to cube <cube-name> will be displayed")
+      + "If optional <cube_name> is supplied, only facts belonging to cube <cube_name> will be displayed")
   public String showFacts(
-    @CliOption(key = {"", "cube-name"}, mandatory = false, help = "<cube-name>") String cubeName) {
+    @CliOption(key = {"", "cube_name"}, mandatory = false, help = "<cube_name>") String cubeName) {
     return showAll(cubeName);
   }
 
@@ -69,9 +69,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param name the fact
    * @return the string
    */
-  @CliCommand(value = "describe fact", help = "describe fact <fact-name>")
+  @CliCommand(value = "describe fact", help = "describe fact <fact_name>")
   public String describeFactTable(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name) {
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String name) {
     return describe(name);
   }
 
@@ -82,9 +82,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param specPath path to the file containing new spec of the fact
    * @return the string
    */
-  @CliCommand(value = "update fact", help = "update fact <fact-name> taking spec from <path-to-fact-spec>")
+  @CliCommand(value = "update fact", help = "update fact <fact_name> taking spec from <path-to-fact-spec>")
   public String updateFactTable(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String name,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-fact-spec>") String specPath) {
     return update(name, specPath);
   }
@@ -97,11 +97,11 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @return the string
    */
   @CliCommand(value = "drop fact",
-    help = "drops fact <fact-name>."
-      + " If <cascade> is true, all the storage tables associated with the fact <fact-name> are also dropped."
+    help = "drops fact <fact_name>."
+      + " If <cascade> is true, all the storage tables associated with the fact <fact_name> are also dropped."
       + " By default <cascade> is false")
   public String dropFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String fact,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String fact,
     @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
     boolean cascade) {
     return drop(fact, cascade);
@@ -113,9 +113,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param tableName the fact
    * @return the fact storages
    */
-  @CliCommand(value = "fact list storage", help = "display list of storages associated to fact <fact-name>")
+  @CliCommand(value = "fact list storage", help = "display list of storages associated to fact <fact_name>")
   public String getFactStorages(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName) {
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName) {
     return showAllStorages(tableName);
   }
 
@@ -127,9 +127,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @return the string
    */
   @CliCommand(value = "fact add storage",
-    help = "adds a new storage to fact <fact-name>, taking storage spec from <path-to-storage-spec>")
+    help = "adds a new storage to fact <fact_name>, taking storage spec from <path-to-storage-spec>")
   public String addNewFactStorage(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
     return addStorage(tableName, path);
   }
@@ -141,10 +141,10 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param storage      storage spec path
    * @return the storage from fact
    */
-  @CliCommand(value = "fact get storage", help = "describe storage <storage-name> of fact <fact-name>")
+  @CliCommand(value = "fact get storage", help = "describe storage <storage_name> of fact <fact_name>")
   public String getStorageFromFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<path-to-storage-spec>") String storage) {
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<path-to-storage-spec>") String storage) {
     return getStorage(tableName, storage);
   }
 
@@ -155,10 +155,10 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param storageName the storage name
    * @return the string
    */
-  @CliCommand(value = "fact drop storage", help = "drop storage <storage-name> from fact <fact-name>")
+  @CliCommand(value = "fact drop storage", help = "drop storage <storage_name> from fact <fact_name>")
   public String dropStorageFromFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName) {
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName) {
     return dropStorage(tableName, storageName);
   }
 
@@ -168,9 +168,9 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @param name the table
    * @return the string
    */
-  @CliCommand(value = "fact drop all storages", help = "drop all storages associated to fact <fact-name>")
+  @CliCommand(value = "fact drop all storages", help = "drop all storages associated to fact <fact_name>")
   public String dropAllFactStorages(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String name) {
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String name) {
     return dropAllStorages(name);
   }
 
@@ -183,10 +183,10 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @return the all partitions of fact
    */
   @CliCommand(value = "fact list partitions",
-    help = "get all partitions associated with fact <fact-name>, storage <storage-name> filtered by <partition-filter>")
+    help = "get all partitions associated with fact <fact_name>, storage <storage_name> filtered by <partition-filter>")
   public String getAllPartitionsOfFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
     return getAllPartitions(tableName, storageName, filter);
   }
@@ -200,11 +200,11 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @return the string
    */
   @CliCommand(value = "fact drop partitions",
-    help = "drop all partitions associated with fact <fact-name>, "
-      + "storage <storage-name> filtered by <partition-filter>")
+    help = "drop all partitions associated with fact <fact_name>, "
+      + "storage <storage_name> filtered by <partition-filter>")
   public String dropAllPartitionsOfFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
     return dropPartitions(tableName, storageName, filter);
   }
@@ -218,21 +218,21 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
    * @return the string
    */
   @CliCommand(value = "fact add single-partition",
-    help = "add single partition to fact <fact-name>'s"
-      + " storage <storage-name>, reading spec from <partition-spec-path>")
+    help = "add single partition to fact <fact_name>'s"
+      + " storage <storage_name>, reading spec from <partition-spec-path>")
   public String addPartitionToFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
     return addPartition(tableName, storageName, path);
   }
 
   @CliCommand(value = "fact add partitions",
-    help = "add multiple partition to fact <fact-name>'s"
-      + " storage <storage-name>, reading partition list spec from <partition-list-spec-path>")
+    help = "add multiple partition to fact <fact_name>'s"
+      + " storage <storage_name>, reading partition list spec from <partition-list-spec-path>")
   public String addPartitionsToFact(
-    @CliOption(key = {"", "fact-name"}, mandatory = true, help = "<fact-name>") String tableName,
-    @CliOption(key = {"", "storage"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
     return addPartitions(tableName, storageName, path);
   }

@@ -46,10 +46,10 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the string
    */
   @CliCommand(value = "show dimtables",
-    help = "display list of dimtables in current database. If optional <dimension-name> is supplied,"
-      + " only facts belonging to dimension <dimension-name> will be displayed")
+    help = "display list of dimtables in current database. If optional <dimension_name> is supplied,"
+      + " only facts belonging to dimension <dimension_name> will be displayed")
   public String showDimensionTables(
-    @CliOption(key = {"", "dimension-name"}, mandatory = false, help = "<dimension-name>") String dimensionName) {
+    @CliOption(key = {"", "dimension_name"}, mandatory = false, help = "<dimension_name>") String dimensionName) {
     return showAll(dimensionName);
   }
 
@@ -72,9 +72,9 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @param name the dim
    * @return the string
    */
-  @CliCommand(value = "describe dimtable", help = "describe dimtable <dimtable-name>")
+  @CliCommand(value = "describe dimtable", help = "describe dimtable <dimtable_name>")
   public String describeDimensionTable(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name) {
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String name) {
     return describe(name);
   }
 
@@ -86,9 +86,9 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the string
    */
   @CliCommand(value = "update dimtable",
-    help = "update dimtable <dimtable-name> taking spec from <path-to-dimtable-spec>")
+    help = "update dimtable <dimtable_name> taking spec from <path-to-dimtable-spec>")
   public String updateDimensionTable(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String name,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimtable-spec>") String path) {
     return update(name, path);
   }
@@ -102,11 +102,11 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the string
    */
   @CliCommand(value = "drop dimtable",
-    help = "drop dimtable <dimtable-name>. "
-      + " If <cascade> is true, all the storage tables associated with the dimtable <dimtable-name> are also dropped."
+    help = "drop dimtable <dimtable_name>. "
+      + " If <cascade> is true, all the storage tables associated with the dimtable <dimtable_name> are also dropped."
       + " By default <cascade> is false")
   public String dropDimensionTable(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String name,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String name,
     @CliOption(key = {"cascade"}, mandatory = false, unspecifiedDefaultValue = "false", help = "<cascade>")
     boolean cascade) {
     return drop(name, cascade);
@@ -118,9 +118,9 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @param table the dim
    * @return the dim storages
    */
-  @CliCommand(value = "dimtable list storages", help = "display list of storage associated to dimtable <dimtable-name>")
+  @CliCommand(value = "dimtable list storages", help = "display list of storage associated to dimtable <dimtable_name>")
   public String getDimStorages(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String table) {
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String table) {
     return showAllStorages(table);
   }
 
@@ -132,9 +132,9 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the string
    */
   @CliCommand(value = "dimtable add storage",
-    help = "adds a new storage to dimtable <dimtable-name>, taking storage spec from <path-to-storage-spec>")
+    help = "adds a new storage to dimtable <dimtable_name>, taking storage spec from <path-to-storage-spec>")
   public String addNewDimStorage(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-storage-spec>") String path) {
     return addStorage(tableName, path);
   }
@@ -145,10 +145,10 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @param tableName dimtable name
    * @return path storage spec path
    */
-  @CliCommand(value = "dimtable get storage", help = "describe storage <storage-name> of dimtable <dimtable-name>")
+  @CliCommand(value = "dimtable get storage", help = "describe storage <storage_name> of dimtable <dimtable_name>")
   public String getStorageFromDim(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storage) {
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storage) {
     return getStorage(tableName, storage);
   }
 
@@ -159,10 +159,10 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @param storageName storage name
    * @return the string
    */
-  @CliCommand(value = "dimtable drop storage", help = "drop storage <storage-name> from dimtable <dimtable-name>")
+  @CliCommand(value = "dimtable drop storage", help = "drop storage <storage_name> from dimtable <dimtable_name>")
   public String dropStorageFromDim(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName) {
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName) {
     return dropStorage(tableName, storageName);
   }
 
@@ -174,7 +174,7 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    */
   @CliCommand(value = "dimtable drop all storages", help = "drop all storages associated to dimension table")
   public String dropAllDimStorages(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName) {
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName) {
     return dropAllStorages(tableName);
   }
 
@@ -187,11 +187,11 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the all partitions of dim
    */
   @CliCommand(value = "dimtable list partitions",
-    help = "get all partitions associated with dimtable <dimtable-name>, "
-      + "storage <storage-name> filtered by <partition-filter>")
+    help = "get all partitions associated with dimtable <dimtable_name>, "
+      + "storage <storage_name> filtered by <partition-filter>")
   public String getAllPartitionsOfDim(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
     return getAllPartitions(tableName, storageName, filter);
   }
@@ -206,10 +206,10 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    */
   @CliCommand(value = "dimtable drop partitions",
     help = "drop all partitions associated with dimtable "
-      + "<dimtable-name>, storage <storage-name> filtered by <partition-filter>")
+      + "<dimtable_name>, storage <storage_name> filtered by <partition-filter>")
   public String dropAllPartitionsOfDim(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "filter"}, mandatory = false, help = "<partition-filter>") String filter) {
     return dropPartitions(tableName, storageName, filter);
   }
@@ -223,11 +223,11 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    * @return the string
    */
   @CliCommand(value = "dimtable add single-partition",
-    help = "add single partition to dimtable <dimtable-name>'s"
-      + " storage <storage-name>, reading spec from <partition-spec-path>")
+    help = "add single partition to dimtable <dimtable_name>'s"
+      + " storage <storage_name>, reading spec from <partition-spec-path>")
   public String addPartitionToDimtable(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-spec-path>") String path) {
     return addPartition(tableName, storageName, path);
   }
@@ -242,11 +242,11 @@ public class LensDimensionTableCommands extends LensCRUDStoragePartitionCommand<
    */
 
   @CliCommand(value = "dimtable add partitions",
-    help = "add multiple partition to dimtable <dimtable-name>'s"
-      + " storage <storage-name>, reading partition list spec from <partition-list-spec-path>")
+    help = "add multiple partition to dimtable <dimtable_name>'s"
+      + " storage <storage_name>, reading partition list spec from <partition-list-spec-path>")
   public String addPartitionsToDimtable(
-    @CliOption(key = {"", "dimtable-name"}, mandatory = true, help = "<dimtable-name>") String tableName,
-    @CliOption(key = {"", "storage-name"}, mandatory = true, help = "<storage-name>") String storageName,
+    @CliOption(key = {"", "dimtable_name"}, mandatory = true, help = "<dimtable_name>") String tableName,
+    @CliOption(key = {"", "storage_name"}, mandatory = true, help = "<storage_name>") String storageName,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<partition-list-spec-path>") String path) {
     return addPartitions(tableName, storageName, path);
   }

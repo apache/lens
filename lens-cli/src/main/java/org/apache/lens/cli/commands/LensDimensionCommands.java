@@ -66,9 +66,9 @@ public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
    * @param name the dimension name
    * @return the string
    */
-  @CliCommand(value = "describe dimension", help = "describe dimension <dimension-name>")
+  @CliCommand(value = "describe dimension", help = "describe dimension <dimension_name>")
   public String describeDimension(
-    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name) {
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name) {
     try {
       return formatJson(mapper.writer(pp).writeValueAsString(getClient().getDimension(name)));
     } catch (IOException e) {
@@ -84,9 +84,9 @@ public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
    * @return the string
    */
   @CliCommand(value = "update dimension",
-    help = "update dimension <dimension-name>, taking spec from <path-to-dimension-spec file>")
+    help = "update dimension <dimension_name>, taking spec from <path-to-dimension-spec file>")
   public String updateDimension(
-    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name,
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-dimension-spec-file>") String path) {
     return update(name, path);
   }
@@ -97,9 +97,9 @@ public class LensDimensionCommands extends LensCRUDCommand<XDimension> {
    * @param name the dimension
    * @return the string
    */
-  @CliCommand(value = "drop dimension", help = "drop dimension <dimension-name>")
+  @CliCommand(value = "drop dimension", help = "drop dimension <dimension_name>")
   public String dropDimension(
-    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension-name>") String name) {
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<dimension_name>") String name) {
     return drop(name, false);
   }
 

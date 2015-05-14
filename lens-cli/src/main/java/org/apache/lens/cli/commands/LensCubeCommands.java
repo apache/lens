@@ -65,8 +65,8 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
    * @param name the cube name
    * @return the string
    */
-  @CliCommand(value = "describe cube", help = "describe cube with name <cube-name>")
-  public String describeCube(@CliOption(key = {"", "name"}, mandatory = true, help = "<cube-name>") String name) {
+  @CliCommand(value = "describe cube", help = "describe cube with name <cube_name>")
+  public String describeCube(@CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String name) {
     return describe(name);
   }
 
@@ -77,9 +77,9 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
    * @param path path to new spec file
    * @return the string
    */
-  @CliCommand(value = "update cube", help = "update cube <cube-name> with spec from <path-to-cube-spec-file>")
+  @CliCommand(value = "update cube", help = "update cube <cube_name> with spec from <path-to-cube-spec-file>")
   public String updateCube(
-    @CliOption(key = {"", "name"}, mandatory = true, help = "<cube-name>") String name,
+    @CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String name,
     @CliOption(key = {"", "path"}, mandatory = true, help = "<path-to-cube-spec-file>") String path) {
     return update(name, path);
   }
@@ -90,8 +90,8 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
    * @param name the cube
    * @return the string
    */
-  @CliCommand(value = "drop cube", help = "drop cube <cube-name>")
-  public String dropCube(@CliOption(key = {"", "name"}, mandatory = true, help = "<cube-name>") String name) {
+  @CliCommand(value = "drop cube", help = "drop cube <cube_name>")
+  public String dropCube(@CliOption(key = {"", "name"}, mandatory = true, help = "<cube_name>") String name) {
     return drop(name, false);
   }
 
@@ -103,10 +103,10 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
    * @return the string
    */
   @CliCommand(value = "cube latestdate",
-    help = "get latest date of data available in cube <cube-name> for time dimension <time-dimension-name>")
+    help = "get latest date of data available in cube <cube_name> for time dimension <time_dimension_name>")
   public String getLatest(
-    @CliOption(key = {"", "cube"}, mandatory = true, help = "<cube-name>") String cube,
-    @CliOption(key = {"", "timeDimension"}, mandatory = true, help = "<time-dimension-name>") String timeDim) {
+    @CliOption(key = {"", "cube"}, mandatory = true, help = "<cube_name>") String cube,
+    @CliOption(key = {"", "timeDimension"}, mandatory = true, help = "<time_dimension_name>") String timeDim) {
     Date dt = getClient().getLatestDateOfCube(cube, timeDim);
     return dt == null ? "No Data Available" : formatDate(dt);
   }
