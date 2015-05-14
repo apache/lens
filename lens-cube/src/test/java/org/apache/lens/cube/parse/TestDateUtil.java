@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.Calendar.DAY_OF_MONTH;
+
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.cube.parse.DateUtil.*;
 
@@ -28,15 +30,21 @@ import static org.testng.Assert.assertEquals;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Set;
 
 import org.apache.lens.cube.parse.DateUtil.*;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.hadoop.hive.ql.parse.SemanticException;
 
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
+
+import com.beust.jcommander.internal.Sets;
+import com.google.common.collect.Lists;
 
 /**
  * Unit tests for cube DateUtil class TestDateUtil.
@@ -245,5 +253,35 @@ public class TestDateUtil {
     assertEquals(getCeilDate(date, MINUTELY), ABS_DATE_PARSER.get().parse("2015-12-26T06:31:00:000Z"));
     assertEquals(getCeilDate(date, SECONDLY), ABS_DATE_PARSER.get().parse("2015-12-26T06:30:16:000Z"));
     assertEquals(getCeilDate(date, WEEKLY), ABS_DATE_PARSER.get().parse("2015-12-27T00:00:00:000Z"));
+  }
+
+  @Test
+  public void testTimeDiff() throws SemanticException {
+    ArrayList<String> minusFourDays =
+      Lists.newArrayList("-4 days", "-4days", "-4day", "-4 day", "- 4days", "- 4 day");
+    ArrayList<String> plusFourDays =
+      Lists.newArrayList("+4 days", "4 days", "+4days", "4day", "4 day", "+ 4days", "+ 4 day", "+4 day");
+    Set<TimeDiff> diffs = Sets.newHashSet();
+    for (String diffStr : minusFourDays) {
+      diffs.add(TimeDiff.parseFrom(diffStr));
+    }
+    assertEquals(diffs.size(), 1);
+    TimeDiff minusFourDaysDiff = diffs.iterator().next();
+    assertEquals(minusFourDaysDiff.quantity, -4);
+    assertEquals(minusFourDaysDiff.calendarField, DAY_OF_MONTH);
+
+    diffs.clear();
+    for (String diffStr : plusFourDays) {
+      diffs.add(TimeDiff.parseFrom(diffStr));
+    }
+    assertEquals(diffs.size(), 1);
+    TimeDiff plusFourDaysDiff = diffs.iterator().next();
+    assertEquals(plusFourDaysDiff.quantity, 4);
+    assertEquals(plusFourDaysDiff.calendarField, DAY_OF_MONTH);
+    Date now = new Date();
+    assertEquals(minusFourDaysDiff.offsetFrom(plusFourDaysDiff.offsetFrom(now)), now);
+    assertEquals(plusFourDaysDiff.offsetFrom(minusFourDaysDiff.offsetFrom(now)), now);
+    assertEquals(minusFourDaysDiff.negativeOffsetFrom(now), plusFourDaysDiff.offsetFrom(now));
+    assertEquals(minusFourDaysDiff.offsetFrom(now), plusFourDaysDiff.negativeOffsetFrom(now));
   }
 }

@@ -136,7 +136,6 @@ class TimerangeResolver implements ContextRewriter {
 
     TimeRange range = builder.build();
     range.validate();
-
     cubeql.getTimeRanges().add(range);
   }
 

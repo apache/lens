@@ -67,6 +67,10 @@ public class TimePartition implements Comparable<TimePartition>, Named {
     }
   }
 
+  public TimePartition withUpdatePeriod(UpdatePeriod period) throws LensException {
+    return TimePartition.of(period, getDate());
+  }
+
   public String toString() {
     return dateString;
   }
@@ -140,5 +144,9 @@ public class TimePartition implements Comparable<TimePartition>, Named {
   @Override
   public String getName() {
     return getDateString();
+  }
+
+  public TimePartitionRange emptyRange() throws LensException {
+    return this.rangeUpto(this);
   }
 }

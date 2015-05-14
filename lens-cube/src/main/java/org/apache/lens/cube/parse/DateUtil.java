@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static java.util.Calendar.*;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,6 +38,7 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.log4j.Logger;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 public final class DateUtil {
   private DateUtil() {
@@ -76,12 +79,20 @@ public final class DateUtil {
   public static final String MINUTE_FMT = HOUR_FMT + ":[0-9]{2}";
   public static final String SECOND_FMT = MINUTE_FMT + ":[0-9]{2}";
   public static final String ABSDATE_FMT = "yyyy-MM-dd-HH:mm:ss,SSS";
+  public static final String HIVE_QUERY_DATE_FMT = "yyyy-MM-dd HH:mm:ss";
 
   public static final ThreadLocal<DateFormat> ABSDATE_PARSER =
     new ThreadLocal<DateFormat>() {
       @Override
       protected SimpleDateFormat initialValue() {
         return new SimpleDateFormat(ABSDATE_FMT);
+      }
+    };
+  public static final ThreadLocal<DateFormat> HIVE_QUERY_DATE_PARSER =
+    new ThreadLocal<DateFormat>() {
+      @Override
+      protected SimpleDateFormat initialValue() {
+        return new SimpleDateFormat(HIVE_QUERY_DATE_FMT);
       }
     };
 
@@ -141,14 +152,14 @@ public final class DateUtil {
       if (granularityMatcher.find()) {
         String unit = granularityMatcher.group().toLowerCase();
         if ("year".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.YEAR);
+          calendar = DateUtils.truncate(calendar, YEAR);
         } else if ("month".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.MONTH);
+          calendar = DateUtils.truncate(calendar, MONTH);
         } else if ("week".equals(unit)) {
           calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
-          calendar = DateUtils.truncate(calendar, Calendar.DAY_OF_MONTH);
+          calendar = DateUtils.truncate(calendar, DAY_OF_MONTH);
         } else if ("day".equals(unit)) {
-          calendar = DateUtils.truncate(calendar, Calendar.DAY_OF_MONTH);
+          calendar = DateUtils.truncate(calendar, DAY_OF_MONTH);
         } else if ("hour".equals(unit)) {
           calendar = DateUtils.truncate(calendar, Calendar.HOUR_OF_DAY);
         } else if ("minute".equals(unit)) {
@@ -162,50 +173,9 @@ public final class DateUtil {
     }
 
     // Get rid of 'now' part and whitespace
-    String raw = str.replaceAll(GRANULARITY, "").replace(WSPACE, "");
-
-    if (raw.isEmpty()) { // String is just "now" with granularity
-      return calendar.getTime();
-    }
-
-    // Get the relative diff part to get eventual date based on now.
-    Matcher qtyMatcher = P_QUANTITY.matcher(raw);
-    int qty = 1;
-    if (qtyMatcher.find()) {
-      qty = Integer.parseInt(qtyMatcher.group());
-    }
-
-    Matcher signageMatcher = P_SIGNAGE.matcher(raw);
-    if (signageMatcher.find()) {
-      String sign = signageMatcher.group();
-      if ("-".equals(sign)) {
-        qty = -qty;
-      }
-    }
-
-    Matcher unitMatcher = P_UNIT.matcher(raw);
-    if (unitMatcher.find()) {
-      String unit = unitMatcher.group().toLowerCase();
-      if ("year".equals(unit)) {
-        calendar.add(Calendar.YEAR, qty);
-      } else if ("month".equals(unit)) {
-        calendar.add(Calendar.MONTH, qty);
-      } else if ("week".equals(unit)) {
-        calendar.add(Calendar.DAY_OF_MONTH, 7 * qty);
-      } else if ("day".equals(unit)) {
-        calendar.add(Calendar.DAY_OF_MONTH, qty);
-      } else if ("hour".equals(unit)) {
-        calendar.add(Calendar.HOUR_OF_DAY, qty);
-      } else if ("minute".equals(unit)) {
-        calendar.add(Calendar.MINUTE, qty);
-      } else if ("second".equals(unit)) {
-        calendar.add(Calendar.SECOND, qty);
-      } else {
-        throw new SemanticException(ErrorMsg.INVALID_TIME_UNIT, unit);
-      }
-    }
-
-    return calendar.getTime();
+    String diffStr = str.replaceAll(RELATIVE, "").replace(WSPACE, "");
+    TimeDiff diff = TimeDiff.parseFrom(diffStr);
+    return diff.offsetFrom(calendar.getTime());
   }
 
   public static Date getCeilDate(Date fromDate, UpdatePeriod interval) {
@@ -214,12 +184,12 @@ public final class DateUtil {
     boolean hasFraction = false;
     switch (interval) {
     case YEARLY:
-      if (cal.get(Calendar.MONTH) != 0) {
+      if (cal.get(MONTH) != 0) {
         hasFraction = true;
         break;
       }
     case MONTHLY:
-      if (cal.get(Calendar.DAY_OF_MONTH) != 1) {
+      if (cal.get(DAY_OF_MONTH) != 1) {
         hasFraction = true;
         break;
       }
@@ -263,9 +233,9 @@ public final class DateUtil {
     cal.setTime(toDate);
     switch (interval) {
     case YEARLY:
-      cal.set(Calendar.MONTH, 0);
+      cal.set(MONTH, 0);
     case MONTHLY:
-      cal.set(Calendar.DAY_OF_MONTH, 1);
+      cal.set(DAY_OF_MONTH, 1);
     case DAILY:
       cal.set(Calendar.HOUR_OF_DAY, 0);
     case HOURLY:
@@ -289,20 +259,20 @@ public final class DateUtil {
   public static int getNumberofDaysInMonth(Date date) {
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(date);
-    return calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+    return calendar.getActualMaximum(DAY_OF_MONTH);
   }
 
   public static CoveringInfo getMonthlyCoveringInfo(Date from, Date to) {
     // Move 'from' to end of month, unless its the first day of month
     boolean coverable = true;
-    if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
-      from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+    if (!from.equals(DateUtils.truncate(from, MONTH))) {
+      from = DateUtils.addMonths(DateUtils.truncate(from, MONTH), 1);
       coverable = false;
     }
 
     // Move 'to' to beginning of next month, unless its the first day of the month
-    if (!to.equals(DateUtils.truncate(to, Calendar.MONTH))) {
-      to = DateUtils.truncate(to, Calendar.MONTH);
+    if (!to.equals(DateUtils.truncate(to, MONTH))) {
+      to = DateUtils.truncate(to, MONTH);
       coverable = false;
     }
 
@@ -320,13 +290,13 @@ public final class DateUtil {
       return new CoveringInfo(0, false);
     }
     boolean coverable = monthlyCoveringInfo.isCoverable();
-    if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
-      from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+    if (!from.equals(DateUtils.truncate(from, MONTH))) {
+      from = DateUtils.addMonths(DateUtils.truncate(from, MONTH), 1);
       coverable = false;
     }
     Calendar cal = Calendar.getInstance();
     cal.setTime(from);
-    int fromMonth = cal.get(Calendar.MONTH);
+    int fromMonth = cal.get(MONTH);
 
     // Get the start date of the quarter
     int beginOffset = (3 - fromMonth % 3) % 3;
@@ -344,13 +314,13 @@ public final class DateUtil {
       return new CoveringInfo(0, false);
     }
     boolean coverable = monthlyCoveringInfo.isCoverable();
-    if (!from.equals(DateUtils.truncate(from, Calendar.MONTH))) {
-      from = DateUtils.addMonths(DateUtils.truncate(from, Calendar.MONTH), 1);
+    if (!from.equals(DateUtils.truncate(from, MONTH))) {
+      from = DateUtils.addMonths(DateUtils.truncate(from, MONTH), 1);
       coverable = false;
     }
     Calendar cal = Calendar.getInstance();
     cal.setTime(from);
-    int fromMonth = cal.get(Calendar.MONTH);
+    int fromMonth = cal.get(MONTH);
     int beginOffset = (12 - fromMonth % 12) % 12;
     int endOffset = (monthlyCoveringInfo.getCountBetween() - beginOffset) % 12;
     if (beginOffset > 0 || endOffset > 0) {
@@ -375,10 +345,10 @@ public final class DateUtil {
     cal.setTime(from);
     int fromWeek = cal.get(Calendar.WEEK_OF_YEAR);
     int fromDay = cal.get(Calendar.DAY_OF_WEEK);
-    int fromYear = cal.get(Calendar.YEAR);
+    int fromYear = cal.get(YEAR);
 
     cal.clear();
-    cal.set(Calendar.YEAR, fromYear);
+    cal.set(YEAR, fromYear);
     cal.set(Calendar.WEEK_OF_YEAR, fromWeek);
     cal.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
     int maxDayInWeek = cal.getActualMaximum(Calendar.DAY_OF_WEEK);
@@ -442,6 +412,63 @@ public final class DateUtil {
     public CoveringInfo(int countBetween, boolean coverable) {
       this.countBetween = countBetween;
       this.coverable = coverable;
+    }
+  }
+  @EqualsAndHashCode
+  static class TimeDiff{
+    int quantity;
+    int calendarField;
+
+    public TimeDiff(int quantity, int calendarField) {
+      this.quantity = quantity;
+      this.calendarField = calendarField;
+    }
+
+    static TimeDiff parseFrom(String diffStr) throws SemanticException {
+      // Get the relative diff part to get eventual date based on now.
+      Matcher qtyMatcher = P_QUANTITY.matcher(diffStr);
+      int qty = 1;
+      if (qtyMatcher.find()) {
+        qty = Integer.parseInt(qtyMatcher.group());
+      }
+
+      Matcher signageMatcher = P_SIGNAGE.matcher(diffStr);
+      if (signageMatcher.find()) {
+        String sign = signageMatcher.group();
+        if ("-".equals(sign)) {
+          qty = -qty;
+        }
+      }
+
+      Matcher unitMatcher = P_UNIT.matcher(diffStr);
+      if (unitMatcher.find()) {
+        String unit = unitMatcher.group().toLowerCase();
+        if ("year".equals(unit)) {
+          return new TimeDiff(qty, YEAR);
+        } else if ("month".equals(unit)) {
+          return new TimeDiff(qty, MONTH);
+        } else if ("week".equals(unit)) {
+          return new TimeDiff(7 * qty, DAY_OF_MONTH);
+        } else if ("day".equals(unit)) {
+          return new TimeDiff(qty, DAY_OF_MONTH);
+        } else if ("hour".equals(unit)) {
+          return new TimeDiff(qty, HOUR_OF_DAY);
+        } else if ("minute".equals(unit)) {
+          return new TimeDiff(qty, MINUTE);
+        } else if ("second".equals(unit)) {
+          return new TimeDiff(qty, SECOND);
+        } else {
+          throw new SemanticException(ErrorMsg.INVALID_TIME_UNIT, unit);
+        }
+      }
+      return new TimeDiff(0, SECOND);
+    }
+
+    public Date offsetFrom(Date time) {
+      return DateUtils.add(time, calendarField, quantity);
+    }
+    public Date negativeOffsetFrom(Date time) {
+      return DateUtils.add(time, calendarField, -quantity);
     }
   }
 }

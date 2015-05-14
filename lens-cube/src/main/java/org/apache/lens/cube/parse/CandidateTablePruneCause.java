@@ -36,6 +36,8 @@ import lombok.NoArgsConstructor;
 
 public class CandidateTablePruneCause {
 
+
+
   public enum CandidateTablePruneCode {
     MORE_WEIGHT("Picked table had more weight than minimum."),
     // partial data is enabled, another fact has more data.

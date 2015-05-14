@@ -127,7 +127,7 @@ public class FieldValidator implements ContextRewriter {
             // this 'tabName' is a join chain, so add all source columns
             chainSourceColumns.addAll(cubeql.getJoinchains().get(tabName).getSourceColumns());
             nonQueryableColumns.add(tabName + "." + colName);
-          } else if (tabName.equalsIgnoreCase(cubeql.getAliasForTabName(cube.getName()))
+          } else if (tabName.equalsIgnoreCase(cubeql.getAliasForTableName(cube.getName()))
             && cube.getDimAttributeNames().contains(colName)) {
             // Alternatively, check if this is a dimension attribute, if yes add it to the dim attribute set
             // and non queryable fields set

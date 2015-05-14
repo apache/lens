@@ -34,8 +34,10 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
-public class TestRewriterPlan extends TestQueryRewrite {
+import lombok.Getter;
 
+public class TestRewriterPlan extends TestQueryRewrite {
+  @Getter
   Configuration conf = new Configuration();
 
   TestRewriterPlan() {
@@ -44,19 +46,12 @@ public class TestRewriterPlan extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, false);
   }
-  private Configuration getConf(){
-    return new Configuration(conf);
-  }
-  private Configuration getConf(String storages) {
-    Configuration c = getConf();
-    c.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, storages);
-    return c;
-  }
 
   @Test
   public void testPlanExtractionForSimpleQuery() throws Exception {
     // simple query
-    CubeQueryContext ctx = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, getConf("C2"));
+    Configuration conf = getConfWithStorages("C2");
+    CubeQueryContext ctx = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
@@ -71,8 +66,9 @@ public class TestRewriterPlan extends TestQueryRewrite {
   @Test
   public void testPlanExtractionForComplexQuery() throws Exception {
     // complex query
+    Configuration conf = getConfWithStorages("C1,C2");
     CubeQueryContext ctx = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", getConf("C1,C2"));
+      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
     ctx.toHQL();
     RewriterPlan plan = new RewriterPlan(Collections.singleton(ctx));
     Assert.assertNotNull(plan);
@@ -91,10 +87,11 @@ public class TestRewriterPlan extends TestQueryRewrite {
   @Test
   public void testPlanExtractionForMultipleQueries() throws Exception {
     // simple query
-    CubeQueryContext ctx1 = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, getConf("C1,C2"));
+    Configuration conf = getConfWithStorages("C1,C2");
+    CubeQueryContext ctx1 = rewriteCtx("cube select SUM(msr2) from testCube where " + TWO_DAYS_RANGE, conf);
     ctx1.toHQL();
     CubeQueryContext ctx2 = rewriteCtx("cube select citydim.name, SUM(msr2) from testCube where citydim.name != \"XYZ\""
-      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", getConf("C1,C2"));
+      + " and " + TWO_DAYS_RANGE + " having sum(msr2) > 1000 order by citydim.name limit 50", conf);
     ctx2.toHQL();
     RewriterPlan plan = new RewriterPlan(Arrays.asList(ctx1, ctx2));
     Assert.assertNotNull(plan);

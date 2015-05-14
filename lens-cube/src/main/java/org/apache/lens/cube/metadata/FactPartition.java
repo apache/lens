@@ -24,6 +24,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.lens.server.api.error.LensException;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -159,5 +161,9 @@ public class FactPartition implements Comparable<FactPartition> {
       return partComp;
     }
     return colComp;
+  }
+
+  public TimePartition getTimePartition() throws LensException {
+    return TimePartition.of(getPeriod(), getPartSpec());
   }
 }

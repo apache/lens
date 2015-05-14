@@ -39,7 +39,6 @@ import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.ParseException;
-import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.mapred.TextInputFormat;
@@ -108,6 +107,7 @@ public class CubeTestSetup {
   // Time Ranges
   public static final String LAST_HOUR_TIME_RANGE;
   public static final String TWO_DAYS_RANGE;
+  public static final String TWO_DAYS_RANGE_TTD;
   public static final String THIS_YEAR_RANGE;
   public static final String TWO_MONTHS_RANGE_UPTO_MONTH;
   public static final String TWO_MONTHS_RANGE_UPTO_HOURS;
@@ -157,17 +157,19 @@ public class CubeTestSetup {
     THIS_YEAR_START = DateUtils.truncate(NOW, UpdatePeriod.YEARLY.calendarField());
     THIS_YEAR_END = DateUtils.addYears(THIS_YEAR_START, 1);
     TWO_DAYS_RANGE_BEFORE_4_DAYS =
-      "time_range_in(dt, '" + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_START) + "','"
+      "time_range_in(d_time, '" + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_START) + "','"
         + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_END) + "')";
 
 
-    TWO_DAYS_RANGE = "time_range_in(dt, '" + getDateUptoHours(TWODAYS_BACK) + "','" + getDateUptoHours(NOW) + "')";
+    TWO_DAYS_RANGE = "time_range_in(d_time, '" + getDateUptoHours(TWODAYS_BACK) + "','" + getDateUptoHours(NOW) + "')";
+    TWO_DAYS_RANGE_TTD = "time_range_in(test_time_dim, '" + getDateUptoHours(TWODAYS_BACK) + "','"
+      + getDateUptoHours(NOW) + "')";
     THIS_YEAR_RANGE =
-      "time_range_in(dt, '" + getDateUptoHours(THIS_YEAR_START) + "','" + getDateUptoHours(THIS_YEAR_END) + "')";
+      "time_range_in(d_time, '" + getDateUptoHours(THIS_YEAR_START) + "','" + getDateUptoHours(THIS_YEAR_END) + "')";
     TWO_MONTHS_RANGE_UPTO_MONTH =
-      "time_range_in(dt, '" + getDateUptoMonth(TWO_MONTHS_BACK) + "','" + getDateUptoMonth(NOW) + "')";
+      "time_range_in(d_time, '" + getDateUptoMonth(TWO_MONTHS_BACK) + "','" + getDateUptoMonth(NOW) + "')";
     TWO_MONTHS_RANGE_UPTO_HOURS =
-      "time_range_in(dt, '" + getDateUptoHours(TWO_MONTHS_BACK) + "','" + getDateUptoHours(NOW) + "')";
+      "time_range_in(d_time, '" + getDateUptoHours(TWO_MONTHS_BACK) + "','" + getDateUptoHours(NOW) + "')";
 
     // calculate LAST_HOUR_TIME_RANGE
     LAST_HOUR_TIME_RANGE = getTimeRangeString(getDateUptoHours(LAST_HOUR), getDateUptoHours(NOW));
@@ -448,23 +450,6 @@ public class CubeTestSetup {
     return getExpectedQuery(dimName, selExpr, null, null, postWhereExpr, storageTable, hasPart);
   }
 
-  public static List<String> getNotLatestConditions(final String cubeName, final String timePart,
-    final String storageTableName) throws SemanticException {
-    return new ArrayList<String>() {
-      {
-        try {
-          for (FieldSchema fs : Hive.get().getTable(storageTableName).getPartitionKeys()) {
-            if (!fs.getName().equals(timePart)) {
-              add(cubeName + "." + fs.getName() + " != '" + StorageConstants.LATEST_PARTITION_VALUE + "'");
-            }
-          }
-        } catch (HiveException e) {
-          throw new SemanticException(e);
-        }
-      }
-    };
-  }
-
   public static String getExpectedQuery(String dimName, String selExpr, String joinExpr, String whereExpr,
     String postWhereExpr, String storageTable, boolean hasPart) {
     StringBuilder expected = new StringBuilder();
@@ -516,6 +501,8 @@ public class CubeTestSetup {
       "New measure", null, null, null, NOW, null, 100.0));
 
     cubeDimensions = new HashSet<CubeDimAttribute>();
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("d_time", "timestamp", "d time")));
+    cubeDimensions.add(new BaseDimAttribute(new FieldSchema("processing_time", "timestamp", "processing time")));
     List<CubeDimAttribute> locationHierarchy = new ArrayList<CubeDimAttribute>();
     locationHierarchy.add(new ReferencedDimAtrribute(new FieldSchema("zipcode", "int", "zip"), "Zip refer",
       new TableReference("zipdim", "code")));
@@ -593,13 +580,14 @@ public class CubeTestSetup {
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(TEST_CUBE_NAME),
-      "dt,pt,it,et,test_time_dim,test_time_dim2");
+      "d_time,pt,it,et,test_time_dim,test_time_dim2");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim2", "ttd2");
-    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "d_time", "dt");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_RELATION + "d_time", "test_time_dim+[-10 days,10 days]");
 
     client.createCube(TEST_CUBE_NAME, cubeMeasures, cubeDimensions, exprs, joinchains, cubeProperties);
 
@@ -631,13 +619,15 @@ public class CubeTestSetup {
 
     Map<String, String> cubeProperties = new HashMap<String, String>();
     cubeProperties.put(MetastoreUtil.getCubeTimedDimensionListKey(BASE_CUBE_NAME),
-      "dt,pt,it,et,test_time_dim,test_time_dim2");
+      "d_time,pt,it,et,test_time_dim,test_time_dim2");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim", "ttd");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "test_time_dim2", "ttd2");
-    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "dt", "dt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "d_time", "dt");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "it", "it");
     cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "et", "et");
-    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "pt", "pt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_TO_PART_MAPPING_PFX + "processing_time", "pt");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_RELATION + "d_time", "processing_time+[-5 days,5 days]");
+    cubeProperties.put(MetastoreConstants.TIMEDIM_RELATION + "processing_time", "test_time_dim+[-5 days,5 days]");
     cubeProperties.put(MetastoreConstants.CUBE_ALL_FIELDS_QUERIABLE, "false");
 
     Set<JoinChain> joinchains = new HashSet<JoinChain>() {
@@ -803,6 +793,8 @@ public class CubeTestSetup {
     }
 
     // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("zipcode", "int", "zip"));
     factColumns.add(new FieldSchema("cityid", "int", "city id"));
     factColumns.add(new FieldSchema("stateid", "int", "city id"));
@@ -819,6 +811,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("msr12", "float", "second measure"));
 
     // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("dim2", "int", "dim2 id"));
@@ -833,6 +827,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("msr14", "bigint", "fourth measure"));
 
     // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
 
@@ -846,6 +842,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("msr12", "float", "second measure"));
 
     // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("dim12", "string", "base dim"));
@@ -872,6 +870,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("msr14", "bigint", "fourth measure"));
 
     // add dimensions of the cube
+    factColumns.add(new FieldSchema("d_time", "timestamp", "event time"));
+    factColumns.add(new FieldSchema("processing_time", "timestamp", "processing time"));
     factColumns.add(new FieldSchema("dim1", "string", "base dim"));
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
     factColumns.add(new FieldSchema("dim12", "string", "base dim"));
@@ -1299,7 +1299,7 @@ public class CubeTestSetup {
   }
 
   // DimWithTwoStorages
-  private void createCityTbale(CubeMetastoreClient client) throws HiveException, ParseException {
+  private void createCityTable(CubeMetastoreClient client) throws HiveException, ParseException {
     Set<CubeDimAttribute> cityAttrs = new HashSet<CubeDimAttribute>();
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("id", "int", "code")));
     cityAttrs.add(new BaseDimAttribute(new FieldSchema("name", "string", "city name")));
@@ -1880,7 +1880,7 @@ public class CubeTestSetup {
       createCubeFactOnlyHourly(client);
       createCubeFactOnlyHourlyRaw(client);
 
-      createCityTbale(client);
+      createCityTable(client);
       // For join resolver test
       createTestDim2(client);
       createTestDim3(client);
@@ -2122,6 +2122,6 @@ public class CubeTestSetup {
 
 
   private static String getTimeRangeString(final String startDate, final String endDate) {
-    return "time_range_in(dt, '" + startDate + "','" + endDate + "')";
+    return "time_range_in(d_time, '" + startDate + "','" + endDate + "')";
   }
 }

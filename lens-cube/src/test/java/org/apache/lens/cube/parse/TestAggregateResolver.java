@@ -32,8 +32,11 @@ import org.testng.Assert;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
+import lombok.Getter;
+
 public class TestAggregateResolver extends TestQueryRewrite {
 
+  @Getter
   private Configuration conf;
   private final String cubeName = CubeTestSetup.TEST_CUBE_NAME;
 
@@ -44,14 +47,6 @@ public class TestAggregateResolver extends TestQueryRewrite {
     conf.setBoolean(CubeQueryConfUtil.DISABLE_AUTO_JOINS, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_SELECT_TO_GROUPBY, true);
     conf.setBoolean(CubeQueryConfUtil.ENABLE_GROUP_BY_TO_SELECT, true);
-  }
-  private Configuration getConf() {
-    return new Configuration(conf);
-  }
-  private Configuration getConf(String storages) {
-    Configuration conf = getConf();
-    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, storages);
-    return conf;
   }
 
   private CubeQueryContext rewrittenQuery;
@@ -148,7 +143,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
       compareQueries(expected[i], hql);
     }
     aggregateFactSelectionTests(conf);
-    rawFactSelectionTests(getConf("C1,C2"));
+    rawFactSelectionTests(getConfWithStorages("C1,C2"));
   }
 
   @Test
@@ -202,7 +197,7 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
   @Test
   public void testAggregateResolverOff() throws SemanticException, ParseException, LensException {
-    Configuration conf2 = getConf("C1,C2");
+    Configuration conf2 = getConfWithStorages("C1,C2");
     conf2.setBoolean(CubeQueryConfUtil.DISABLE_AGGREGATE_RESOLVER, true);
 
     // Test if raw fact is selected for query with no aggregate function on a

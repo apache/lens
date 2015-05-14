@@ -40,6 +40,7 @@ import org.apache.hadoop.hive.ql.parse.*;
 
 import org.codehaus.jackson.map.ObjectMapper;
 
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -310,6 +311,21 @@ public class CubeQueryContext {
     return autoJoinCtx != null && autoJoinCtx.isJoinsResolved();
   }
 
+  public Cube getBaseCube() {
+    if (cube instanceof Cube) {
+      return (Cube) cube;
+    }
+    return ((DerivedCube) cube).getParent();
+  }
+
+  public Set<String> getPartitionColumnsQueried() {
+    Set<String> partsQueried = Sets.newHashSet();
+    for (TimeRange range : getTimeRanges()) {
+      partsQueried.add(range.getPartitionColumn());
+    }
+    return partsQueried;
+  }
+
   // Holds the context of optional dimension
   // A dimension is optional if it is not queried directly by the user, but is
   // required by a candidate table to get a denormalized field from reference
@@ -384,20 +400,24 @@ public class CubeQueryContext {
     dimMsgs.addPruningMsg(dimtable, msg);
   }
 
-  public String getAliasForTabName(String tabName) {
+  public String getAliasForTableName(Named named) {
+    return getAliasForTableName(named.getName());
+  }
+
+  public String getAliasForTableName(String tableName) {
     for (String alias : qb.getTabAliases()) {
       String table = qb.getTabNameForAlias(alias);
-      if (table != null && table.equalsIgnoreCase(tabName)) {
+      if (table != null && table.equalsIgnoreCase(tableName)) {
         return alias;
       }
     }
     // get alias from cubeTbls
     for (Map.Entry<String, AbstractCubeTable> cubeTblEntry : cubeTbls.entrySet()) {
-      if (cubeTblEntry.getValue().getName().equalsIgnoreCase(tabName)) {
+      if (cubeTblEntry.getValue().getName().equalsIgnoreCase(tableName)) {
         return cubeTblEntry.getKey();
       }
     }
-    return tabName;
+    return tableName;
   }
 
   public void print() {
@@ -581,13 +601,13 @@ public class CubeQueryContext {
     String fromString = null;
     if (getJoinTree() == null) {
       if (cube != null) {
-        fromString = fact.getStorageString(getAliasForTabName(cube.getName()));
+        fromString = fact.getStorageString(getAliasForTableName(cube.getName()));
       } else {
         if (dimensions.size() != 1) {
           throw new SemanticException(ErrorMsg.NO_JOIN_CONDITION_AVAIABLE);
         }
         Dimension dim = dimensions.iterator().next();
-        fromString = dimsToQuery.get(dim).getStorageString(getAliasForTabName(dim.getName()));
+        fromString = dimsToQuery.get(dim).getStorageString(getAliasForTableName(dim.getName()));
       }
     } else {
       StringBuilder builder = new StringBuilder();
@@ -843,11 +863,11 @@ public class CubeQueryContext {
   }
 
   public Set<String> getColumnsQueried(String tblName) {
-    return tblAliasToColumns.get(getAliasForTabName(tblName));
+    return tblAliasToColumns.get(getAliasForTableName(tblName));
   }
 
   public void addColumnsQueried(AbstractCubeTable table, String column) {
-    addColumnsQueried(getAliasForTabName(table.getName()), column);
+    addColumnsQueried(getAliasForTableName(table.getName()), column);
   }
 
   public void addColumnsQueried(String alias, String column) {
@@ -876,7 +896,8 @@ public class CubeQueryContext {
     } else {
       String cubeName = split[0].trim();
       String colName = split[1].trim();
-      if (cubeName.equalsIgnoreCase(cube.getName()) || cubeName.equalsIgnoreCase(getAliasForTabName(cube.getName()))) {
+      if (cubeName.equalsIgnoreCase(cube.getName())
+        || cubeName.equalsIgnoreCase(getAliasForTableName(cube.getName()))) {
         return cube.getMeasureNames().contains(colName.toLowerCase());
       } else {
         return false;

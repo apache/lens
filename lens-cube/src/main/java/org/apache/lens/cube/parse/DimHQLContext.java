@@ -62,13 +62,16 @@ abstract class DimHQLContext extends SimpleHQLContext {
   protected void setMissingExpressions() throws SemanticException {
     setFrom(getFromString());
     setWhere(joinWithAnd(
-      getQuery().getConf().getBoolean(
+      genWhereClauseWithDimPartitions(where), getQuery().getConf().getBoolean(
         CubeQueryConfUtil.REPLACE_TIMEDIM_WITH_PART_COL, CubeQueryConfUtil.DEFAULT_REPLACE_TIMEDIM_WITH_PART_COL)
-        ? getPostSelectionWhereClause() : null,
-      genWhereClauseWithDimPartitions(where)));
+        ? getPostSelectionWhereClause() : null));
   }
 
-  protected abstract String getPostSelectionWhereClause() throws SemanticException;
+  protected String getPostSelectionWhereClause() throws SemanticException {
+    return null;
+  }
+
+
 
   protected String getFromString() throws SemanticException {
     String fromString = getFromTable();
@@ -103,7 +106,8 @@ abstract class DimHQLContext extends SimpleHQLContext {
       for (Dimension dim : queriedDims) {
         CandidateDim cdim = dimsToQuery.get(dim);
         if (!cdim.isWhereClauseAdded() && !StringUtils.isBlank(cdim.getWhereClause())) {
-          appendWhereClause(whereBuf, StorageUtil.getWhereClause(cdim, query.getAliasForTabName(dim.getName())), added);
+          appendWhereClause(whereBuf, StorageUtil.getWhereClause(cdim, query.getAliasForTableName(dim.getName())),
+            added);
           added = true;
         }
       }

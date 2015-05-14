@@ -61,6 +61,39 @@
             1. cube.allfields.queriable - (defaults to true) - If set to true, all the fields (measures, attributes) are
             queryable together. If set to false, there should be derived cubes defined that should group the queriable
             fields together.
+
+            Additional properties:
+
+            1. cube.timedim.relation.{time_dim1}: time_dim2+[timediff1,timediff2]. It's assumed that
+              timediff1 is smaller than timediff2. Means that time_dim1 can be expected to be between
+              [time_dim2+timediff1 and time_dim2+timediff2]. One use case would be the following:
+
+              1.1. if a query is on range of time_dim1 and
+                time_dim1 has no partitioning column in some fact, then partitions for time_dim2 can be looked at.
+                Let's say time_dim2's part col is part_col2, then for a query asking for time_dim1 between [a,b) can
+                be answered by looking at partitions of part_col2 in range [a-timediff2, b-timediff1).
+
+              This property is first looked into fact properties, then cube properties and if that's a derived cube,
+              then next in base cube properties. Wherever found first, that will be considered as the final relation
+              between time dimensions.
+
+              Time dimension relations are transitive, but not reversible. i.e.
+              cube.timedim.relation.time_dim1 = time_dim2 + [a, b]
+              cube.timedim.relation.time_dim2 = time_dim3 + [c, d]
+
+              implies:
+
+              cube.timedim.relation.time_dim1 = time_dim3 + [a+c, b+d]
+
+              but not:
+
+              cube.timedim.relation.time_dim2 = time_dim1 + [-b, -a]
+
+              Reverse relations have to be defined explicitly.
+
+              Timediff syntax is sign, quantity and unit. Spaces in between can be present. e.g. -4 days, +4days, +4 day
+              etc all are valid.
+
           </xs:documentation>
         </xs:annotation>
       </xs:element>
@@ -752,7 +785,7 @@
           </xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="skewed_info" type="x_skewed_info">
+      <xs:element name="skewed_info" type="x_skewed_info" maxOccurs="unbounded" minOccurs="0">
         <xs:annotation>
           <xs:documentation>
             Skewed info, if the table is skewed. Expressed as
@@ -1090,8 +1123,8 @@
 
             1. cube.fact.{fact-name}.valid.columns : comma separated column names which are valid in the fact.
             2. cube.fact.is.aggregated : Defaults to true. If the fact is a raw fact, this should be set to false,
-             otherwise true.
-
+              otherwise true.
+            3. cube.timedim.relation.{time_dim1}: See the same property in cube. Fact tables can override the property.
           </xs:documentation>
         </xs:annotation>
       </xs:element>

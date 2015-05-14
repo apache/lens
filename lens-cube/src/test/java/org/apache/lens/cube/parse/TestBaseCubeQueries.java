@@ -19,25 +19,36 @@
 
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.MISSING_PARTITIONS;
 import static org.apache.lens.cube.parse.CubeTestSetup.*;
+import static org.apache.lens.cube.parse.DateUtil.*;
+import static org.apache.lens.cube.parse.TestCubeRewriter.compareQueries;
+
+import static org.apache.hadoop.hive.ql.parse.HiveParser.KW_AND;
 
 import static org.testng.Assert.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.server.api.error.LensException;
+
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
+import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import org.antlr.runtime.CommonToken;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
-public class TestBaseCubeQueries extends TestQueryRewrite {
+import lombok.Getter;
 
+public class TestBaseCubeQueries extends TestQueryRewrite {
+  @Getter
   private Configuration conf;
   private final String cubeName = CubeTestSetup.BASE_CUBE_NAME;
 
@@ -141,19 +152,19 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
     String expected =
       getExpectedQuery(cubeName, "select basecube.dim1, SUM(basecube.msr1) FROM ", null, " group by basecube.dim1",
         getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select dim1, SUM(msr1), msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     expected =
       getExpectedQuery(cubeName, "select basecube.dim1, SUM(basecube.msr1), basecube.msr2 FROM ", null,
         " group by basecube.dim1", getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select dim1, roundedmsr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     expected =
       getExpectedQuery(cubeName, "select basecube.dim1, round(sum(basecube.msr2)/1000) FROM ", null,
         " group by basecube.dim1", getWhereForDailyAndHourly2days(cubeName, "C1_testFact1_BASE"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    compareQueries(expected, hqlQuery);
 
     hqlQuery =
       rewrite("select booleancut, msr2 from basecube" + " where " + TWO_DAYS_RANGE + " and substrexpr != 'XYZ'", conf);
@@ -162,13 +173,13 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
           + " sum(basecube.msr2) FROM ", null, " and substr(basecube.dim1, 3) != 'XYZ' "
           + "group by basecube.dim1 != 'x' AND basecube.dim2 != 10",
         getWhereForHourly2days(cubeName, "C1_testfact1_raw_base"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    compareQueries(expected, hqlQuery);
 
     hqlQuery = rewrite("select dim1, msr12 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     expected =
       getExpectedQuery(cubeName, "select basecube.dim1, sum(basecube.msr12) FROM ", null, " group by basecube.dim1",
         getWhereForDailyAndHourly2days(cubeName, "C1_testFact2_BASE"));
-    TestCubeRewriter.compareQueries(expected, hqlQuery);
+    compareQueries(expected, hqlQuery);
   }
 
   @Test
@@ -387,5 +398,75 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       || hqlQuery.toLowerCase()
         .startsWith("select coalesce(mq1.expr1, mq2.expr1) expr1, mq1.msr2 msr2, mq2.expr3 expr3 from "));
     assertTrue(hqlQuery.contains("mq1 full outer join ") && hqlQuery.endsWith("mq2 on mq1.expr1 <=> mq2.expr1"));
+  }
+
+  @Test
+  public void testFallbackPartCol() throws Exception {
+    Configuration conf = getConfWithStorages("C1,C2,C3,C4");
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    String hql, expected;
+    // Prefer fact that has a storage with part col on queried time dim
+    hql = rewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    expected = getExpectedQuery(BASE_CUBE_NAME, "select sum(basecube.msr12) FROM ", null, null,
+      getWhereForDailyAndHourly2days(BASE_CUBE_NAME, "c1_testfact2_base"));
+    compareQueries(hql, expected);
+
+    // If going to fallback timedim, and partitions are missing, then error should be missing partition on that
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "C4");
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, true);
+    SemanticException exc =
+      getSemanticExceptionInRewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    PruneCauses.BriefAndDetailedError pruneCause = extractPruneCause(exc);
+    assertTrue(pruneCause.getBrief().contains("Missing partitions"));
+    assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getCause(), MISSING_PARTITIONS);
+    assertEquals(pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().size(), 1);
+    assertEquals(
+      pruneCause.getDetails().get("testfact2_base").iterator().next().getMissingPartitions().iterator().next(),
+      "ttd:["
+        + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(TWODAYS_BACK, Calendar.HOUR), -10))
+        + ", " + UpdatePeriod.SECONDLY.format().format(DateUtils.addDays(DateUtils.truncate(NOW, Calendar.HOUR), 10))
+        + ")");
+
+    // fail on partial false. Should go to fallback column. Also testing transitivity of timedim relations
+    conf.setBoolean(CubeQueryConfUtil.FAIL_QUERY_ON_PARTIAL_DATA, false);
+    hql = rewrite("cube select msr12 from basecube where " + TWO_DAYS_RANGE, conf);
+    String dTimeWhereClause = "basecube.d_time >= '" + HIVE_QUERY_DATE_PARSER.get().format(ABSDATE_PARSER.get().parse(
+      getAbsDateFormatString(getDateUptoHours(
+        TWODAYS_BACK)))) + "' and "
+      + "basecube.d_time < '" + HIVE_QUERY_DATE_PARSER.get().format(ABSDATE_PARSER.get().parse(
+        getAbsDateFormatString(getDateUptoHours(NOW))));
+    String pTimeWhereClause = "basecube.processing_time >= '"
+      + HIVE_QUERY_DATE_PARSER.get().format(ABSDATE_PARSER.get().parse(
+        getAbsDateFormatString(getDateUptoHours(
+          DateUtils.addDays(TWODAYS_BACK, -5))))) + "' and "
+        + "basecube.processing_time < '" + HIVE_QUERY_DATE_PARSER.get().format(ABSDATE_PARSER.get().parse(
+          getAbsDateFormatString(getDateUptoHours(DateUtils.addDays(NOW, 5)))));
+    expected = getExpectedQuery(BASE_CUBE_NAME, "select sum(basecube.msr12) FROM ", null,
+        " and " + dTimeWhereClause + " and " + pTimeWhereClause,
+      getWhereForDailyAndHourly2daysWithTimeDim(BASE_CUBE_NAME, "ttd",
+        DateUtils.addDays(TWODAYS_BACK, -10), DateUtils.addDays(NOW, 10), "c4_testfact2_base"));
+    compareQueries(hql, expected);
+
+    // Multiple timedims in single query. test that
+    CubeQueryContext ctx =
+      rewriteCtx("cube select msr12 from basecube where " + TWO_DAYS_RANGE + " and " + TWO_DAYS_RANGE_TTD, conf);
+    assertEquals(ctx.getCandidateFactSets().size(), 1);
+    assertEquals(ctx.getCandidateFactSets().iterator().next().size(), 1);
+    CandidateFact cfact = ctx.getCandidateFactSets().iterator().next().iterator().next();
+    assertEquals(cfact.getRangeToWhereClause().size(), 2);
+    for(Map.Entry<TimeRange, String> entry: cfact.getRangeToWhereClause().entrySet()) {
+      if (entry.getKey().getPartitionColumn().equals("dt")) {
+        ASTNode parsed = HQLParser.parseExpr(entry.getValue());
+        assertEquals(parsed.getToken().getType(), KW_AND);
+        assertTrue(entry.getValue().substring(((CommonToken) parsed.getToken()).getStopIndex() + 1).toLowerCase()
+          .contains(dTimeWhereClause));
+        assertFalse(entry.getValue().substring(0, ((CommonToken) parsed.getToken()).getStartIndex()).toLowerCase()
+          .contains("and"));
+      } else if (entry.getKey().getPartitionColumn().equals("ttd")) {
+        assertFalse(entry.getValue().toLowerCase().contains("and"));
+      } else {
+        throw new LensException("Unexpected");
+      }
+    }
   }
 }

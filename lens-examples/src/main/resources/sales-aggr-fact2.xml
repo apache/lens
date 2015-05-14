@@ -35,6 +35,7 @@
   </columns>
   <properties>
     <property name="cube.fact.is.aggregated" value="true"/>
+    <property name="cube.timedim.relation.order_time" value="delivery_time+[-2 hours,-1hour]" />
   </properties>
   <storage_tables>
     <storage_table>

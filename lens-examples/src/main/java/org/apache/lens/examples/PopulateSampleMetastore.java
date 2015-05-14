@@ -163,5 +163,4 @@ public class PopulateSampleMetastore {
     createFactPartitions("sales-aggr-fact1-mydb-parts.xml", "sales_aggr_fact1", "mydb");
     createFactPartitions("sales-aggr-fact2-mydb-parts.xml", "sales_aggr_fact2", "mydb");
   }
-
 }

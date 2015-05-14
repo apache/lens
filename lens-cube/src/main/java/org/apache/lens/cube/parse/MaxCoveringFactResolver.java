@@ -24,8 +24,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.lens.cube.metadata.FactPartition;
-import org.apache.lens.cube.metadata.TimePartition;
-import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.cube.metadata.timeline.RangesPartitionTimeline;
 import org.apache.lens.server.api.error.LensException;
@@ -56,26 +54,52 @@ class MaxCoveringFactResolver implements ContextRewriter {
       // redundant computation.
       return;
     }
-    if (cubeql.getCube() != null && !cubeql.getCandidateFactSets().isEmpty()) {
-      Map<Set<CandidateFact>, Long> factPartCount = Maps.newHashMap();
-      for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
-        factPartCount.put(facts, getTimeCovered(facts));
+    if (cubeql.getCube() == null || cubeql.getCandidateFactSets().size() <= 1) {
+      // nothing to prune.
+      return;
+    }
+    // For each part column, which candidate fact sets are covering how much amount.
+    // Later, we'll maximize coverage for each queried part column.
+    Map<String, Map<Set<CandidateFact>, Long>> partCountsPerPartCol = Maps.newHashMap();
+    for (Set<CandidateFact> facts : cubeql.getCandidateFactSets()) {
+      for (Map.Entry<String, Long> entry : getTimeCoveredForEachPartCol(facts).entrySet()) {
+        if (!partCountsPerPartCol.containsKey(entry.getKey())) {
+          partCountsPerPartCol.put(entry.getKey(), Maps.<Set<CandidateFact>, Long>newHashMap());
+        }
+        partCountsPerPartCol.get(entry.getKey()).put(facts, entry.getValue());
       }
-      long maxTimeCovered = Collections.max(factPartCount.values());
-      TimeCovered timeCovered = new TimeCovered(maxTimeCovered);
-      for (Iterator<Set<CandidateFact>> i = cubeql.getCandidateFactSets().iterator(); i.hasNext();) {
-        Set<CandidateFact> facts = i.next();
-        if (factPartCount.get(facts) < maxTimeCovered) {
-          LOG.info("Not considering facts:" + facts + " from candidate fact tables as it covers less time than the max."
-            + "which is: " + timeCovered);
-          i.remove();
+    }
+    // for each queried partition, prune fact sets that are covering less range than max
+    for (String partColQueried : cubeql.getPartitionColumnsQueried()) {
+      if (partCountsPerPartCol.get(partColQueried) != null) {
+        long maxTimeCovered = Collections.max(partCountsPerPartCol.get(partColQueried).values());
+        TimeCovered timeCovered = new TimeCovered(maxTimeCovered);
+        Iterator<Set<CandidateFact>> iter = cubeql.getCandidateFactSets().iterator();
+        while (iter.hasNext()) {
+          Set<CandidateFact> facts = iter.next();
+          Long timeCoveredLong = partCountsPerPartCol.get(partColQueried).get(facts);
+          if (timeCoveredLong == null) {
+            timeCoveredLong = 0L;
+          }
+          if (timeCoveredLong < maxTimeCovered) {
+            LOG.info(
+              "Not considering facts:" + facts + " from candidate fact tables as it covers less time than the max"
+                + " for partition column: " + partColQueried + " which is: " + timeCovered);
+            iter.remove();
+          }
         }
       }
-      cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(timeCovered));
     }
+    cubeql.pruneCandidateFactWithCandidateSet(CandidateTablePruneCause.lessData(null));
   }
 
-  private long getTimeCovered(Set<CandidateFact> facts) {
+  /**
+   * Returns time covered by fact set for each part column.
+   * @param facts
+   * @return
+   */
+  private Map<String, Long> getTimeCoveredForEachPartCol(Set<CandidateFact> facts) {
+    Map<String, Long> ret = Maps.newHashMap();
     UpdatePeriod smallest = UpdatePeriod.values()[UpdatePeriod.values().length - 1];
     for (CandidateFact fact : facts) {
       for (FactPartition part : fact.getPartsQueried()) {
@@ -84,24 +108,22 @@ class MaxCoveringFactResolver implements ContextRewriter {
         }
       }
     }
-    RangesPartitionTimeline range = new RangesPartitionTimeline(null, smallest, null);
+    PartitionRangesForPartitionColumns partitionRangesForPartitionColumns = new PartitionRangesForPartitionColumns();
     for (CandidateFact fact : facts) {
       for (FactPartition part : fact.getPartsQueried()) {
         if (part.isFound()) {
           try {
-            TimePartitionRange subrange =
-              TimePartition.of(part.getPeriod(), part.getPartSpec()).singletonRange();
-            for (TimePartition partition : TimePartition.of(smallest, subrange.getBegin().getDate()).rangeUpto(
-              TimePartition.of(smallest, subrange.getEnd().getDate()))) {
-              range.add(partition);
-            }
+            partitionRangesForPartitionColumns.add(part);
           } catch (LensException e) {
             LOG.error("invalid partition: " + e);
           }
         }
       }
     }
-    return range.getTimeCovered();
+    for (Map.Entry<String, RangesPartitionTimeline> entry : partitionRangesForPartitionColumns.entrySet()) {
+      ret.put(entry.getKey(), entry.getValue().getTimeCovered());
+    }
+    return ret;
   }
 
   public static class TimeCovered {

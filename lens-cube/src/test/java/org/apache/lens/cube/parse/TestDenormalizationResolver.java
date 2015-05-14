@@ -61,7 +61,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
     String expecteddim2big1 =
       getExpectedQuery(cubeName, "select testcube.dim2big1," + " max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big1", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
-        getNotLatestConditions(cubeName, "it", "C2_summary4"));
+        null);
     TestCubeRewriter.compareQueries(expecteddim2big1, hqlQuery);
     // with another table
     hqlQuery = rewrite("select dim2big1, citydim.name, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange,
@@ -71,14 +71,14 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
         + getDbName() + "c1_citytable citydim " + "on testcube.cityid = citydim.id and citydim.dt = 'latest' ", null,
       " group by testcube.dim2big1, citydim.name", null,
       getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
-      getNotLatestConditions(cubeName, "it", "C2_summary4"));
+      null);
     TestCubeRewriter.compareQueries(expecteddim2big1WithAnotherTable, hqlQuery);
 
     hqlQuery = rewrite("select dim2big2, max(msr3)," + " msr2 from testCube" + " where " + twoDaysITRange, conf);
     String expecteddim2big2 =
       getExpectedQuery(cubeName, "select testcube.dim2big2, max(testcube.msr3), sum(testcube.msr2) FROM ", null,
         " group by testcube.dim2big2", getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
-        getNotLatestConditions(cubeName, "it", "C2_summary4"));
+        null);
     TestCubeRewriter.compareQueries(expecteddim2big2, hqlQuery);
 
     hqlQuery =
@@ -91,7 +91,7 @@ public class TestDenormalizationResolver extends TestQueryRewrite {
           + getDbName() + "c2_testdim3tbl testdim3 on " + "testdim2.testdim3id = testdim3.id", null,
         " group by testdim3.name, (testcube.dim2big1)", null,
         getWhereForDailyAndHourly2daysWithTimeDim(cubeName, "it", "C2_summary4"),
-        getNotLatestConditions(cubeName, "it", "C2_summary4"));
+        null);
     TestCubeRewriter.compareQueries(expected, hqlQuery);
 
     Configuration conf2 = new Configuration(conf);

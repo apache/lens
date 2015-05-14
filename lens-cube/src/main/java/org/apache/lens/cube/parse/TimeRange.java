@@ -24,6 +24,7 @@ import java.util.TreeSet;
 
 import org.apache.lens.cube.metadata.UpdatePeriod;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
@@ -128,6 +129,21 @@ public class TimeRange {
     if (fromDate.after(toDate)) {
       throw new SemanticException(ErrorMsg.FROM_AFTER_TO, fromDate.toString(), toDate.toString());
     }
+  }
+
+  public String toTimeDimWhereClause() {
+    return toTimeDimWhereClause(null, partitionColumn);
+  }
+
+  public String toTimeDimWhereClause(String prefix, String column) {
+    if (StringUtils.isNotBlank(column)) {
+      column = prefix + "." + column;
+    }
+    return new StringBuilder()
+      .append(column).append(" >= '").append(DateUtil.HIVE_QUERY_DATE_PARSER.get().format(fromDate)).append("'")
+      .append(" AND ")
+      .append(column).append(" < '").append(DateUtil.HIVE_QUERY_DATE_PARSER.get().format(toDate)).append("'")
+      .toString();
   }
 
   @Override

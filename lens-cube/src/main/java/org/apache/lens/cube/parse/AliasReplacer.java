@@ -136,7 +136,7 @@ class AliasReplacer implements ContextRewriter {
       if (cubeql.getCube() != null) {
         Set<String> cols = cubeql.getCube().getAllFieldNames();
         if (cols.contains(col.toLowerCase())) {
-          colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(cubeql.getCube().getName()));
+          colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTableName(cubeql.getCube().getName()));
           cubeql.addColumnsQueried((AbstractCubeTable) cubeql.getCube(), col.toLowerCase());
           inCube = true;
         }
@@ -148,7 +148,7 @@ class AliasReplacer implements ContextRewriter {
             if (prevDim != null && !prevDim.equals(dim.getName())) {
               throw new SemanticException(ErrorMsg.AMBIGOUS_DIM_COLUMN, col, prevDim, dim.getName());
             }
-            colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTabName(dim.getName()));
+            colToTableAlias.put(col.toLowerCase(), cubeql.getAliasForTableName(dim.getName()));
             cubeql.addColumnsQueried(dim, col.toLowerCase());
           } else {
             // throw error because column is in both cube and dimension table

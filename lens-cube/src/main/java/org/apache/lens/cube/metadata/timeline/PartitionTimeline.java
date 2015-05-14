@@ -23,6 +23,7 @@ import java.util.*;
 
 import org.apache.lens.cube.metadata.MetastoreUtil;
 import org.apache.lens.cube.metadata.TimePartition;
+import org.apache.lens.cube.metadata.TimePartitionRange;
 import org.apache.lens.cube.metadata.UpdatePeriod;
 import org.apache.lens.server.api.error.LensException;
 
@@ -145,6 +146,21 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     }
     // Can also return the failed to add items.
     return result;
+  }
+  /**
+   * Add partition range to the timeline. Default implementation is to iterate over the range and add
+   * each time partition belonging to the given range. Implementing classes can override.
+   *
+   * @param partitionRange
+   * @return whether add was successful
+   * @throws LensException
+   */
+  boolean add(TimePartitionRange partitionRange) throws LensException {
+    boolean ret = true;
+    for (TimePartition part : partitionRange) {
+      ret &= add(part);
+    }
+    return ret;
   }
 
   /**

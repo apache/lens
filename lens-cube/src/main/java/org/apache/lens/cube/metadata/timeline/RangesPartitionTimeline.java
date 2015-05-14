@@ -21,17 +21,12 @@ package org.apache.lens.cube.metadata.timeline;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.lens.cube.metadata.MetastoreUtil;
-import org.apache.lens.cube.metadata.TimePartition;
-import org.apache.lens.cube.metadata.TimePartitionRange;
-import org.apache.lens.cube.metadata.UpdatePeriod;
+import org.apache.lens.cube.metadata.*;
 import org.apache.lens.server.api.error.LensException;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -46,7 +41,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class RangesPartitionTimeline extends PartitionTimeline {
-  private List<TimePartitionRange> ranges = Lists.newArrayList();
+  private TimePartitionRangeList ranges = new TimePartitionRangeList();
 
   public RangesPartitionTimeline(String storageTableName, UpdatePeriod updatePeriod,
     String partCol) {
@@ -89,6 +84,37 @@ public class RangesPartitionTimeline extends PartitionTimeline {
     return true;
   }
 
+  @Override
+  public boolean add(TimePartitionRange partitionRange) throws LensException {
+    // Adding partition range to the timeline. Will have to find if any of the sub ranges
+    // intersects. If yes, add only remaining sub ranges, else add the given range as a new sub range.
+    int strictlyAfterIndex = getStrictlyAfterIndex(partitionRange.getBegin());
+    while (strictlyAfterIndex < ranges.size() && partitionRange.isValidAndNonEmpty()) {
+      if (partitionRange.getEnd().before(ranges.get(strictlyAfterIndex).getBegin())) {
+        // partition begin and end both are strictly before ranges[strictlyAfterIndex]. Add as new sub range.
+        ranges.add(strictlyAfterIndex, partitionRange);
+        partitionRange = partitionRange.getEnd().emptyRange();
+        break;
+      } else {
+        // begin is before ranges[strictlyAfterIndex], end is not.
+        // extend ranges[strictlyAfterIndex] and add remaining range, if any.
+        ranges.get(strictlyAfterIndex).setBegin(partitionRange.getBegin());
+        if (ranges.get(strictlyAfterIndex).getEnd().before(partitionRange.getEnd())) {
+          partitionRange = ranges.get(strictlyAfterIndex).getEnd().rangeUpto(partitionRange.getEnd());
+        } else {
+          // No remaining range, end was before ranges[strictlyAfterIndex].end
+          partitionRange = ranges.get(strictlyAfterIndex).getEnd().emptyRange();
+        }
+        strictlyAfterIndex++;
+      }
+    }
+    if (strictlyAfterIndex == ranges.size() && partitionRange.isValidAndNonEmpty()) {
+      ranges.add(partitionRange);
+    }
+    mergeRanges();
+    return true;
+  }
+
   private int getStrictlyAfterIndex(TimePartition part) {
     int start = 0;
     int end = getRanges().size();
@@ -110,6 +136,9 @@ public class RangesPartitionTimeline extends PartitionTimeline {
         TimePartitionRange removed = ranges.remove(i + 1);
         ranges.get(i).setEnd(removed.getEnd());
         i--; // check again at same index
+      } else if (ranges.get(i).isEmpty()) {
+        ranges.remove(i);
+        i--;
       }
     }
   }

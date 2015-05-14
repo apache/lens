@@ -42,6 +42,9 @@ import org.apache.hadoop.hive.ql.session.SessionState;
 
 import org.antlr.runtime.CommonToken;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -57,22 +60,23 @@ public class CandidateFact implements CandidateTable {
   // flag to know if querying multiple storage tables is enabled for this fact
   @Getter
   @Setter
-  private  boolean enabledMultiTableSelect;
+  private boolean enabledMultiTableSelect;
   @Getter
   private int numQueriedParts = 0;
   @Getter
-  private final Set<FactPartition> partsQueried = new HashSet<FactPartition>();
+  private final Set<FactPartition> partsQueried = Sets.newHashSet();
   @Getter
-  private final Map<TimeRange, String> rangeToWhereClause = new HashMap<TimeRange, String>();
+  private final Map<TimeRange, String> rangeToWhereClause = Maps.newHashMap();
+
   private boolean dbResolved = false;
   private CubeInterface baseTable;
   private ASTNode selectAST;
   private ASTNode whereAST;
   private ASTNode groupbyAST;
   private ASTNode havingAST;
-  private List<TimeRangeNode> timenodes = new ArrayList<TimeRangeNode>();
-  private final List<Integer> selectIndices = new ArrayList<Integer>();
-  private final List<Integer> dimFieldIndices = new ArrayList<Integer>();
+  private List<TimeRangeNode> timenodes = Lists.newArrayList();
+  private final List<Integer> selectIndices = Lists.newArrayList();
+  private final List<Integer> dimFieldIndices = Lists.newArrayList();
   private Collection<String> columns;
 
   CandidateFact(CubeFactTable fact, CubeInterface cube) {

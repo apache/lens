@@ -156,7 +156,7 @@ class ExpressionResolver implements ContextRewriter {
           ASTNode current = (ASTNode) node.getChild(0);
           if (current.getToken().getType() == Identifier) {
             String tableName = current.getToken().getText().toLowerCase();
-            String alias = cubeql.getAliasForTabName(tableName);
+            String alias = cubeql.getAliasForTableName(tableName);
             if (!alias.equalsIgnoreCase(tableName)) {
               node.setChild(0, new ASTNode(new CommonToken(HiveParser.Identifier, alias)));
             }

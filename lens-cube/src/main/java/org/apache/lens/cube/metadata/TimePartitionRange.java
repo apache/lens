@@ -127,4 +127,8 @@ public class TimePartitionRange implements Iterable<TimePartition>, Named {
   public long size() {
     return DateUtil.getTimeDiff(begin.getDate(), end.getDate(), begin.getUpdatePeriod());
   }
+
+  public boolean isValidAndNonEmpty() {
+    return begin.before(end);
+  }
 }

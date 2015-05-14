@@ -249,12 +249,12 @@ public class DenormalizationResolver implements ContextRewriter {
               throw new SemanticException("No reference column available for " + refered);
             }
             PickedReference picked = new PickedReference(refered.references.iterator().next(),
-              cubeql.getAliasForTabName(refered.srcTable.getName()), tbl);
+              cubeql.getAliasForTableName(refered.srcTable.getName()), tbl);
             addPickedReference(refered.col.getName(), picked);
             pickedRefs.add(picked);
           } else {
             PickedReference picked =
-              new PickedReference(refered.col, cubeql.getAliasForTabName(refered.srcTable.getName()), tbl);
+              new PickedReference(refered.col, cubeql.getAliasForTableName(refered.srcTable.getName()), tbl);
             addPickedReference(refered.col.getName(), picked);
             pickedRefs.add(picked);
           }
@@ -300,7 +300,7 @@ public class DenormalizationResolver implements ContextRewriter {
           return;
         }
         ASTNode newTableNode =
-          new ASTNode(new CommonToken(HiveParser.Identifier, query.getAliasForTabName(refered.getDestTable())));
+          new ASTNode(new CommonToken(HiveParser.Identifier, query.getAliasForTableName(refered.getDestTable())));
         tableNode.setChild(0, newTableNode);
         newTableNode.setParent(tableNode);
 

@@ -103,3 +103,5 @@ cube select product_details.category, store_sales from sales where time_range_in
 cube select product_details.category, store_sales from sales where time_range_in(order_time, '2015-04-12-00', '2015-04-13-00')
 cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-11-00', '2015-04-13-00') and product_details.category='Stationary'
 cube select product_details.color, store_sales from sales where time_range_in(delivery_time, '2015-04-12-00', '2015-04-13-00') and product_details.category='Stationary'
+-- The following query sees that ot part col is not present and falls back on querying on dt part col
+cube select customer_city_name, store_cost from sales where time_range_in(order_time, '2015-04-13-03', '2015-04-13-04') --

@@ -44,6 +44,16 @@ public abstract class TestQueryRewrite {
   private static CubeTestSetup setup;
   private static HiveConf hconf = new HiveConf(TestQueryRewrite.class);
 
+  public Configuration getConf() {
+    return hconf;
+  }
+
+  public Configuration getConfWithStorages(String storages) {
+    Configuration conf = new Configuration(getConf());
+    conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, storages);
+    return conf;
+  }
+
   @BeforeSuite
   public static void setup() throws Exception {
     SessionState.start(hconf);

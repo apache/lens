@@ -33,6 +33,8 @@
     <measure name="max_line_item_price" type="FLOAT" default_aggr="MAX" display_string="Maximum Line item price"/>
     <measure name="max_line_item_discount" type="FLOAT" default_aggr="MAX"
      display_string="Maximum Line item discount"/>
+    <measure name="rating" type="FLOAT" default_aggr="AVG"
+      display_string="Rating"/>
   </measures>
   <expressions>
     <expression name="profit" type="DOUBLE" display_string="Profit">
@@ -56,19 +58,19 @@
     <dim_attribute name="production_city_id" type="INT" />
     <dim_attribute name="delivery_city_id" type="INT" />
     <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"
-      displayString=" Customer City">
+      display_string="Customer City">
       <ref_spec>
         <chain_ref_column chain_name="customer_city" ref_col="name" />
       </ref_spec>
     </dim_attribute>
     <dim_attribute name="production_city_name" type="STRING" description="City name in which the product was produced"
-      displayString=" Production City">
+      display_string="Production City">
       <ref_spec>
         <chain_ref_column chain_name="production_city" ref_col="name" />
       </ref_spec>
     </dim_attribute>
     <dim_attribute name="delivery_city_name" type="STRING" description="City name to which the product was delivered"
-      displayString=" Delivery City">
+      display_string="Delivery City">
       <ref_spec>
         <chain_ref_column chain_name="delivery_city" ref_col="name" />
       </ref_spec>
@@ -152,5 +154,7 @@
     <property name="cube.sales.timed.dimensions.list" value="order_time,delivery_time" />
     <property name="cube.timedim.partition.order_time" value="ot" />
     <property name="cube.timedim.partition.delivery_time" value="dt" />
+    <property name="cube.timedim.relation.order_time" value="delivery_time+[-20 days,-1 hour]" />
+    <!-- means dt-20days <= ot <= dt-1hour -->
   </properties>
 </x_base_cube>

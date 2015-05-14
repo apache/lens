@@ -50,15 +50,10 @@ class DimOnlyHQLContext extends DimHQLContext {
   protected String getFromTable() throws SemanticException {
     if (query.getAutoJoinCtx() != null && query.getAutoJoinCtx().isJoinsResolved()) {
       return getDimsToQuery().get(query.getAutoJoinCtx().getAutoJoinTarget()).getStorageString(
-        query.getAliasForTabName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
+        query.getAliasForTableName(query.getAutoJoinCtx().getAutoJoinTarget().getName()));
     } else {
       return query.getQBFromString(null, getDimsToQuery());
     }
-  }
-
-  @Override
-  protected String getPostSelectionWhereClause() throws SemanticException {
-    return null;
   }
 
   @Override

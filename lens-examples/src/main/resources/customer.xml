@@ -28,7 +28,7 @@
     <dim_attribute name="age" type="INT" />
     <dim_attribute name="city_id" type="INT" />
     <dim_attribute name="customer_city_name" type="string" description="City name to which the customer belongs"
-      displayString=" Customer City">
+      display_string="Customer City">
       <ref_spec>
         <chain_ref_column chain_name="customer_city" ref_col="name" />
       </ref_spec>

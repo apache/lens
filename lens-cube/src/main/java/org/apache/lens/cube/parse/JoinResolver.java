@@ -149,7 +149,7 @@ class JoinResolver implements ContextRewriter {
         }
       }
       if (root.getSubtrees().size() > 0) {
-        root.setAlias(cubeql.getAliasForTabName(
+        root.setAlias(cubeql.getAliasForTableName(
           root.getSubtrees().keySet().iterator().next().getFromTable().getName()));
       }
       return root;
@@ -194,7 +194,7 @@ class JoinResolver implements ContextRewriter {
         // And for destination tables, an alias will be decided from here but might be
         // overridden outside this function.
         AbstractCubeTable destTable = tableRelationship.getToTable();
-        current.setAlias(cubeql.getAliasForTabName(destTable.getName()));
+        current.setAlias(cubeql.getAliasForTableName(destTable.getName()));
         if (aliasUsage.get(current.getAlias()) == null) {
           aliasUsage.put(current.getAlias(), 0);
         } else {

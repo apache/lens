@@ -47,14 +47,6 @@ public class FactHQLContext extends DimHQLContext {
   }
 
   @Override
-  protected String getPostSelectionWhereClause() throws SemanticException {
-    return StorageUtil.getNotLatestClauseForDimensions(
-      query.getAliasForTabName(query.getCube().getName()),
-      fact.getTimePartCols(query),
-      query.getTimeRanges().iterator().next().getPartitionColumn());
-  }
-
-  @Override
   protected Set<Dimension> getQueriedDimSet() {
     return factDims;
   }
