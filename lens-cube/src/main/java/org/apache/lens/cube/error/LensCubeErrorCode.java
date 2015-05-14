@@ -21,13 +21,14 @@ package org.apache.lens.cube.error;
 public enum LensCubeErrorCode {
 
   SYNTAX_ERROR(3001),
-  COLUMN_UNAVAILABLE_IN_TIME_RANGE(3002);
+  COLUMN_UNAVAILABLE_IN_TIME_RANGE(3002),
+  FIELDS_CANNOT_BE_QUERIED_TOGETHER(3003);
 
   public int getValue() {
     return this.errorCode;
   }
 
-  private LensCubeErrorCode(final int code) {
+  LensCubeErrorCode(final int code) {
     this.errorCode = code;
   }
 

@@ -18,7 +18,7 @@
  */
 package org.apache.lens.cube.error;
 
-import static org.apache.lens.cube.error.LensCubeErrorCode.COLUMN_UNAVAILABLE_IN_TIME_RANGE;
+import static org.apache.lens.cube.error.LensCubeErrorCode.FIELDS_CANNOT_BE_QUERIED_TOGETHER;
 
 import org.apache.lens.api.error.ErrorCollection;
 import org.apache.lens.api.error.LensError;
@@ -27,33 +27,32 @@ import org.apache.lens.server.api.error.LensException;
 
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+import lombok.ToString;
 
 @EqualsAndHashCode(callSuper = true)
-public class ColUnAvailableInTimeRangeException extends LensException {
+@ToString
+public class FieldsCannotBeQueriedTogetherException extends LensException {
 
-  private final ColUnAvailableInTimeRange colUnAvailableInTimeRange;
+  private final ConflictingFields conflictingFields;
 
-  public ColUnAvailableInTimeRangeException(@NonNull final ColUnAvailableInTimeRange colUnAvailableInTimeRange) {
+  public FieldsCannotBeQueriedTogetherException(@NonNull final ConflictingFields conflictingFields) {
 
-    super(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue());
-    this.colUnAvailableInTimeRange = colUnAvailableInTimeRange;
+    super(FIELDS_CANNOT_BE_QUERIED_TOGETHER.getValue());
+    this.conflictingFields = conflictingFields;
   }
 
   @Override
   public String getFormattedErrorMsg(LensError lensError) {
 
-    final String colName = colUnAvailableInTimeRange.getColumnName();
-    final String availability = colUnAvailableInTimeRange.getAvailability();
-
-    return lensError.getFormattedErrorMsg(colName, availability);
+    final String conflictingFieldsStr = conflictingFields.getConflictingFieldsString();
+    return lensError.getFormattedErrorMsg(conflictingFieldsStr);
   }
 
   @Override
   protected LensErrorTO buildLensErrorTO(final ErrorCollection errorCollection, final String errorMsg,
       final String stackTrace) {
 
-    return LensErrorTO.composedOf(COLUMN_UNAVAILABLE_IN_TIME_RANGE.getValue(), errorMsg, stackTrace,
-        colUnAvailableInTimeRange);
+    return LensErrorTO.composedOf(FIELDS_CANNOT_BE_QUERIED_TOGETHER.getValue(), errorMsg, stackTrace,
+        conflictingFields);
   }
-
 }

@@ -18,16 +18,14 @@
  */
 package org.apache.lens.cube.parse;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import org.apache.lens.cube.error.ConflictingFields;
+import org.apache.lens.cube.error.FieldsCannotBeQueriedTogetherException;
 import org.apache.lens.cube.metadata.CubeInterface;
 import org.apache.lens.cube.metadata.DerivedCube;
 import org.apache.lens.cube.metadata.ReferencedDimAtrribute;
 
-import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.HiveParser;
@@ -39,11 +37,11 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 public class FieldValidator implements ContextRewriter {
 
   @Override
-  public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
+  public void rewriteContext(CubeQueryContext cubeql) throws FieldsCannotBeQueriedTogetherException, SemanticException {
     validateFields(cubeql);
   }
 
-  public void validateFields(CubeQueryContext cubeql) throws SemanticException {
+  public void validateFields(CubeQueryContext cubeql) throws FieldsCannotBeQueriedTogetherException, SemanticException {
     CubeInterface cube = cubeql.getCube();
     if (cube == null) {
       return;
@@ -82,17 +80,24 @@ public class FieldValidator implements ContextRewriter {
         }
       }
 
+      final SortedSet<String> conflictingFields = new TreeSet<String>();
+
       if (!derivedCubeFound && !nonQueryableFields.isEmpty()) {
-        throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, nonQueryableFields.toString());
+        conflictingFields.addAll(nonQueryableFields);
+        throw new FieldsCannotBeQueriedTogetherException(new ConflictingFields(conflictingFields));
       }
 
       if (!queriedMsrs.isEmpty()) {
         // Add appropriate message to know which fields are not queryable together
         if (!nonQueryableFields.isEmpty()) {
-          throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, nonQueryableFields.toString() + " and "
-            + queriedMsrs.toString());
+
+          conflictingFields.addAll(nonQueryableFields);
+          conflictingFields.addAll(queriedMsrs);
+          throw new FieldsCannotBeQueriedTogetherException(new ConflictingFields(conflictingFields));
         } else {
-          throw new SemanticException(ErrorMsg.FIELDS_NOT_QUERYABLE, queriedMsrs.toString());
+
+          conflictingFields.addAll(queriedMsrs);
+          throw new FieldsCannotBeQueriedTogetherException(new ConflictingFields(conflictingFields));
         }
       }
     }
@@ -147,7 +152,5 @@ public class FieldValidator implements ContextRewriter {
         }
       }
     });
-
   }
-
 }

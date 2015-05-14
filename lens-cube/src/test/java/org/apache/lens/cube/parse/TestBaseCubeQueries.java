@@ -66,55 +66,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
   public void testColumnErrors() throws Exception {
     SemanticException e;
 
-    e = getSemanticExceptionInRewrite("select dim2, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("msr1"));
-
-    // Query with only measure should pass, since dim is not in where or group by
-    String hql = rewrite("select SUM(msr1), "
-      + "SUM(CASE WHEN cityState.name ='foo' THEN msr2"
-      + " WHEN dim2 = 'bar' THEN msr1 ELSE msr2 END) "
-      + "from basecube where " + TWO_DAYS_RANGE, conf);
-    assertNotNull(hql);
-
-    // This query should fail because chain ref in where clause
-    e = getSemanticExceptionInRewrite("select SUM(msr1), "
-      + "SUM(case WHEN cityState.capital ='foo' THEN msr2 ELSE msr1 END) "
-      + "from basecube where " + TWO_DAYS_RANGE + " AND cityState.name='foo'", conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    // Error message should contain chain_name.col_name and it should not contain dim attributes in select clause
-    // it should also contain the measure name
-    assertTrue(e.getMessage().contains("citystate.name")
-      && e.getMessage().contains("msr1")
-      && !e.getMessage().contains("capital"), e.getMessage());
-
-
-    e = getSemanticExceptionInRewrite("select cityStateCapital, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("citystatecapital") && e.getMessage().contains("msr1"), e.getMessage());
-
-    e = getSemanticExceptionInRewrite("select cityState.name, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("citystate.name") && e.getMessage().contains("msr1"));
-
-    e = getSemanticExceptionInRewrite("select cubeState.name, SUM(msr1) from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(), ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("cubestate.name") && e.getMessage().contains("msr1"));
-
-    e = getSemanticExceptionInRewrite("select dim2, countryid, SUM(msr2) from basecube" + " where " + TWO_DAYS_RANGE,
-      conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("dim2") && e.getMessage().contains("countryid"));
-
-    e = getSemanticExceptionInRewrite("select newmeasure from basecube" + " where " + TWO_DAYS_RANGE, conf);
-    assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
-      ErrorMsg.FIELDS_NOT_QUERYABLE.getErrorCode());
-    assertTrue(e.getMessage().contains("newmeasure"));
-
     e = getSemanticExceptionInRewrite("select msr11 + msr2 from basecube" + " where " + TWO_DAYS_RANGE, conf);
     assertEquals(e.getCanonicalErrorMsg().getErrorCode(),
       ErrorMsg.EXPRESSION_NOT_IN_ANY_FACT.getErrorCode());
@@ -141,8 +92,6 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
         }
       }
     );
-
-
   }
 
 
