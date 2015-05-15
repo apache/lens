@@ -341,7 +341,7 @@
     <profile>
       <id>enunciate</id>
       <activation>
-        <jdk>[1.6,1.7,1.8)</jdk>
+        <jdk>[1.7,1.8)</jdk>
       </activation>
       <build>
         <plugins>

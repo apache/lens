@@ -67,7 +67,7 @@ Developer Documentation : How to contribute to Apache Lens?
 
 ** Build tools
 
-  * A Java Development Kit. You can use java6 or java7. Build does not pass with java8 yet.
+  * A Java Development Kit. You can use java7. Build does not pass with JDK(1.8) yet.
 
   * Apache maven (3.x+)
 

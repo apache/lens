@@ -21,7 +21,7 @@ Version: [[project.version]]
 Section:  misc
 Priority: high
 Architecture: all 
-Depends: sun-java6-jre | java2-runtime
+Depends: sun-java7-jre | java2-runtime
 Maintainer: dev@lens.incubator.apache.org
 Description: Apache Lens Client Distribution
 Distribution: alpha
