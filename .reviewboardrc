@@ -1,3 +1,5 @@
 REVIEWBOARD_URL = "https://reviews.apache.org/"
 REPOSITORY = "lens"
 BRANCH = "master"
+TARGET_GROUPS = 'lens'
+GUESS_FIELDS = True
