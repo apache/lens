@@ -47,6 +47,8 @@ import org.testng.Assert;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /*
@@ -119,6 +121,8 @@ public class CubeTestSetup {
   private static String c3 = "C3";
   private static String c4 = "C4";
   private static String c99 = "C99";
+  @Getter
+  private static Map<String, String> storageToUpdatePeriodMap = new LinkedHashMap<String, String>();
 
   static {
     Calendar cal = Calendar.getInstance();
@@ -195,8 +199,6 @@ public class CubeTestSetup {
   public static String getExpectedQuery(String cubeName, String selExpr, String whereExpr, String postWhereExpr,
     Map<String, String> storageTableToWhereClause, List<String> notLatestConditions) {
     StringBuilder expected = new StringBuilder();
-    int numTabs = storageTableToWhereClause.size();
-    Assert.assertEquals(1, numTabs);
     for (Map.Entry<String, String> entry : storageTableToWhereClause.entrySet()) {
       String storageTable = entry.getKey();
       expected.append(selExpr);
@@ -316,11 +318,21 @@ public class CubeTestSetup {
     return getWhereForDailyAndHourly2daysWithTimeDim(cubeName, timedDimension, TWODAYS_BACK, NOW, storageTables);
   }
 
+
   public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDim(String cubeName, String timedDimension,
     Date from, Date to, String... storageTables) {
     Map<String, String> storageTableToWhereClause = new LinkedHashMap<String, String>();
-    String whereClause = getWhereForDailyAndHourly2daysWithTimeDim(cubeName, timedDimension, from, to);
-    storageTableToWhereClause.put(getStorageTableString(storageTables), whereClause);
+    if (storageToUpdatePeriodMap.isEmpty()) {
+      String whereClause = getWhereForDailyAndHourly2daysWithTimeDim(cubeName, timedDimension, from, to);
+      storageTableToWhereClause.put(getStorageTableString(storageTables), whereClause);
+    } else {
+      for (String tbl : storageTables) {
+        String updatePeriod = storageToUpdatePeriodMap.get(tbl);
+        String whereClause = getWhereForDailyAndHourly2daysWithTimeDimUnionQuery(cubeName, timedDimension, from, to)
+            .get(updatePeriod);
+        storageTableToWhereClause.put(getStorageTableString(tbl), whereClause);
+      }
+    }
     return storageTableToWhereClause;
   }
 
@@ -355,6 +367,26 @@ public class CubeTestSetup {
     parts.addAll(dailyparts);
     Collections.sort(parts);
     return StorageUtil.getWherePartClause(timedDimension, cubeName, parts);
+  }
+
+  public static Map<String, String> getWhereForDailyAndHourly2daysWithTimeDimUnionQuery(String cubeName,
+      String timedDimension, Date from, Date to) {
+    Map<String, String> updatePeriodToWhereMap = new HashMap<String, String>();
+    List<String> hourlyparts = new ArrayList<String>();
+    List<String> dailyparts = new ArrayList<String>();
+    Date dayStart;
+    if (!CubeTestSetup.isZerothHour()) {
+      addParts(hourlyparts, UpdatePeriod.HOURLY, from, DateUtil.getCeilDate(from, UpdatePeriod.DAILY));
+      addParts(hourlyparts, UpdatePeriod.HOURLY, DateUtil.getFloorDate(to, UpdatePeriod.DAILY),
+          DateUtil.getFloorDate(to, UpdatePeriod.HOURLY));
+      dayStart = DateUtil.getCeilDate(from, UpdatePeriod.DAILY);
+    } else {
+      dayStart = from;
+    }
+    addParts(dailyparts, UpdatePeriod.DAILY, dayStart, DateUtil.getFloorDate(to, UpdatePeriod.DAILY));
+    updatePeriodToWhereMap.put("DAILY", StorageUtil.getWherePartClause(timedDimension, cubeName, dailyparts));
+    updatePeriodToWhereMap.put("HOURLY", StorageUtil.getWherePartClause(timedDimension, cubeName, hourlyparts));
+    return updatePeriodToWhereMap;
   }
 
   // storageTables[0] is hourly
@@ -409,6 +441,52 @@ public class CubeTestSetup {
     Collections.sort(parts);
     storageTableToWhereClause.put(tables.toString(), StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, parts));
     return storageTableToWhereClause;
+  }
+
+  public static Map<String, String> getWhereForMonthlyDailyAndHourly2monthsUnionQuery(String storageTable) {
+    Map<String, List<String>> updatePeriodToPart = new LinkedHashMap<String, List<String>>();
+    List<String> hourlyparts = new ArrayList<String>();
+    List<String> dailyparts = new ArrayList<String>();
+    List<String> monthlyparts = new ArrayList<String>();
+
+    Date dayStart = TWO_MONTHS_BACK;
+    Date monthStart = TWO_MONTHS_BACK;
+    if (!CubeTestSetup.isZerothHour()) {
+      addParts(hourlyparts, UpdatePeriod.HOURLY, TWO_MONTHS_BACK,
+          DateUtil.getCeilDate(TWO_MONTHS_BACK, UpdatePeriod.DAILY));
+      addParts(hourlyparts, UpdatePeriod.HOURLY, DateUtil.getFloorDate(NOW, UpdatePeriod.DAILY),
+          DateUtil.getFloorDate(NOW, UpdatePeriod.HOURLY));
+      dayStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, UpdatePeriod.DAILY);
+      monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, UpdatePeriod.MONTHLY);
+    }
+    Calendar cal = new GregorianCalendar();
+    cal.setTime(dayStart);
+    if (cal.get(Calendar.DAY_OF_MONTH) != 1) {
+      addParts(dailyparts, UpdatePeriod.DAILY, dayStart, DateUtil.getCeilDate(TWO_MONTHS_BACK, UpdatePeriod.MONTHLY));
+      monthStart = DateUtil.getCeilDate(TWO_MONTHS_BACK, UpdatePeriod.MONTHLY);
+    }
+    addParts(dailyparts, UpdatePeriod.DAILY, DateUtil.getFloorDate(NOW, UpdatePeriod.MONTHLY),
+        DateUtil.getFloorDate(NOW, UpdatePeriod.DAILY));
+    addParts(monthlyparts, UpdatePeriod.MONTHLY, monthStart, DateUtil.getFloorDate(NOW, UpdatePeriod.MONTHLY));
+
+    updatePeriodToPart.put("HOURLY", hourlyparts);
+    updatePeriodToPart.put("DAILY", dailyparts);
+    updatePeriodToPart.put("MONTHLY", monthlyparts);
+
+    List<String> unionParts = new ArrayList<String>();
+    for (Map.Entry<String, String> entry : storageToUpdatePeriodMap.entrySet()) {
+      String uperiod = entry.getKey();
+      String table = entry.getValue();
+      if (table.equals(storageTable) && updatePeriodToPart.containsKey(uperiod)) {
+        unionParts.addAll(updatePeriodToPart.get(uperiod));
+        Collections.sort(unionParts);
+      }
+    }
+
+    HashMap<String, String> tabWhere = new LinkedHashMap<String, String>();
+    tabWhere.put(getStorageTableString(storageTable), StorageUtil.getWherePartClause("dt", TEST_CUBE_NAME, unionParts));
+
+    return tabWhere;
   }
 
   public static Map<String, String> getWhereForMonthly2months(String monthlyTable) {

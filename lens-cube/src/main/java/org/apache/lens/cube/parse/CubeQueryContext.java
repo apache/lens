@@ -840,8 +840,11 @@ public class CubeQueryContext {
     Map<CandidateFact, Set<Dimension>> factDimMap, CubeQueryContext query) throws SemanticException {
     if (facts == null || facts.size() == 0) {
       return new DimOnlyHQLContext(dimsToQuery, query);
-    } else if (facts.size() == 1) {
-      // create singlefact context
+    } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() > 1) {
+      //create single fact with multiple storage context
+      return new SingleFactMultiStorageHQLContext(facts.iterator().next(), dimsToQuery, query);
+    } else if (facts.size() == 1 && facts.iterator().next().getStorageTables().size() == 1) {
+      // create single fact context
       return new SingleFactHQLContext(facts.iterator().next(), dimsToQuery, query);
     } else {
       return new MultiFactHQLContext(facts, dimsToQuery, factDimMap, query);

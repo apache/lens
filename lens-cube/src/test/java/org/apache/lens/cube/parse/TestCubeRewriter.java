@@ -359,46 +359,76 @@ public class TestCubeRewriter extends TestQueryRewrite {
   }
 
   @Test
+  public void testCubeWhereQueryDuplicatePartitionElimination() throws Exception {
+    Configuration conf = getConf();
+    conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
+    conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "DAILY,HOURLY");
+    conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
+    conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,DAILY");
+
+    try {
+      CubeTestSetup.getStorageToUpdatePeriodMap().put("HOURLY", "c1_testfact");
+      CubeTestSetup.getStorageToUpdatePeriodMap().put("DAILY", "c1_testfact");
+      CubeTestSetup.getStorageToUpdatePeriodMap().put("MONTHLY", "c2_testfact");
+
+      // Union query
+      String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+      System.out.println("HQL: " + hqlQuery);
+
+      String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
+      String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
+
+      System.out.println("Expected1 : " + expected1);
+      System.out.println("Expected2 : " + expected2);
+
+      TestCubeRewriter.compareContains(expected1, hqlQuery);
+      TestCubeRewriter.compareContains(expected2, hqlQuery);
+      TestCubeRewriter.compareContains("UNION ALL", hqlQuery);
+    } finally {
+      CubeTestSetup.getStorageToUpdatePeriodMap().clear();
+    }
+
+  }
+
+  @Test
   public void testCubeWhereQueryWithMultipleTables() throws Exception {
     Configuration conf = getConf();
+    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, false);
     conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "DAILY");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C2"), "HOURLY");
-    String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
 
-    String expected = null;
-    if (!CubeTestSetup.isZerothHour()) {
-      expected =
-        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForDailyAndHourly2days(cubeName, "c1_testfact", "C2_testfact"));
-    } else {
-      expected =
-        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForDailyAndHourly2days(cubeName, "c1_testfact"));
-    }
-    compareQueries(expected, hqlQuery);
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("c1_testfact", "DAILY");
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("c2_testfact", "HOURLY");
 
-    // Union query
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, false);
     try {
-      // rewrite to union query
-      hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
-      System.out.println("Union hql query:" + hqlQuery);
+      // Union query
+      String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_DAYS_RANGE, conf);
+      System.out.println("HQL:" + hqlQuery);
 
-      // TODO: uncomment the following once union query
-      // rewriting has been done
-      // expected = // write expected union query
-      // compareQueries(expected, hqlQuery);
-    } catch (Exception e) {
-      e.printStackTrace();
+      String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForDailyAndHourly2days(cubeName, "c1_testfact"));
+      String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForDailyAndHourly2days(cubeName, "c2_testfact"));
+
+      System.out.println("Expected1 : " + expected1);
+      System.out.println("Expected2 : " + expected2);
+
+      TestCubeRewriter.compareContains(expected1, hqlQuery);
+      TestCubeRewriter.compareContains(expected2, hqlQuery);
+      TestCubeRewriter.compareContains("UNION ALL", hqlQuery);
+    } finally {
+      CubeTestSetup.getStorageToUpdatePeriodMap().clear();
     }
   }
 
   @Test
   public void testCubeWhereQueryWithMultipleTablesForMonth() throws Exception {
     Configuration conf = getConf();
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, true);
+    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, false);
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
     conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY");
@@ -407,33 +437,32 @@ public class TestCubeRewriter extends TestQueryRewrite {
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C2"), "DAILY");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C3"), "MONTHLY");
 
-    String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-    String expected;
-    if (!CubeTestSetup.isZerothHour()) {
-      expected =
-        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2months("c1_testfact", "c2_testFact", "C3_testfact"));
-    } else {
-      expected =
-        getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
-          getWhereForMonthlyDailyAndHourly2months("c1_testfact", "c2_testfact", "c3_testFact"));
-    }
-    compareQueries(hqlQuery, expected);
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("HOURLY", "c1_testfact");
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("DAILY", "c2_testfact");
+    CubeTestSetup.getStorageToUpdatePeriodMap().put("MONTHLY", "c3_testfact");
 
-    // monthly - c1,c2; daily - c1, hourly -c2
-    conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
-    conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "MONTHLY,DAILY");
-    conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C2"), "MONTHLY,HOURLY");
     try {
-      hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
-      System.out.println("union query:" + hqlQuery);
-      // TODO: uncomment the following once union query rewriting has been done
-      // expected = getExpectedQuery(cubeName,
-      // "select sum(testcube.msr2) FROM ", null, null,
-      // getWhereForMonthlyDailyAndHourly2months("C1_testfact"));
-      // compareQueries(expected, hqlQuery);
-    } catch (Exception e) {
-      e.printStackTrace();
+      // Union query
+      String hqlQuery = rewrite("select SUM(msr2) from testCube" + " where " + TWO_MONTHS_RANGE_UPTO_HOURS, conf);
+      System.out.println("HQL:" + hqlQuery);
+
+      String expected1 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c1_testfact"));
+      String expected2 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c2_testfact"));
+      String expected3 = getExpectedQuery(cubeName, "select sum(testcube.msr2) FROM ", null, null,
+          getWhereForMonthlyDailyAndHourly2monthsUnionQuery("c3_testfact"));
+
+      System.out.println("Expected1 : " + expected1);
+      System.out.println("Expected2 : " + expected2);
+      System.out.println("Expected3 : " + expected3);
+
+      TestCubeRewriter.compareContains(expected1, hqlQuery);
+      TestCubeRewriter.compareContains(expected2, hqlQuery);
+      TestCubeRewriter.compareContains(expected3, hqlQuery);
+      TestCubeRewriter.compareContains("UNION ALL", hqlQuery);
+    } finally {
+      CubeTestSetup.getStorageToUpdatePeriodMap().clear();
     }
   }
 

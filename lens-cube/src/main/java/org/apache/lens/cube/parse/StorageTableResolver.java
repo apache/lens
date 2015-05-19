@@ -352,6 +352,7 @@ class StorageTableResolver implements ContextRewriter {
   private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws SemanticException {
     // Find candidate tables wrt supported storages
     Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator();
+    Map<TimeRange, String> whereClasueForFallback = new LinkedHashMap<TimeRange, String>();
     while (i.hasNext()) {
       CandidateFact cfact = i.next();
       List<FactPartition> answeringParts = new ArrayList<FactPartition>();
@@ -386,11 +387,26 @@ class StorageTableResolver implements ContextRewriter {
             break;
           }
         }
+        whereClasueForFallback.put(range, extraWhereClause.toString());
         if (rangeParts.isEmpty()) {
           LOG.info("No partitions for fallback range:" + range);
           noPartsForRange = true;
           continue;
         }
+        // If multiple storage tables are part of the same fact,
+        // capture range->storage->partitions
+        Map<String, LinkedHashSet<FactPartition>> tablePartMap = new HashMap<String, LinkedHashSet<FactPartition>>();
+        for (FactPartition factPart : rangeParts) {
+          for (String table : factPart.getStorageTables()) {
+            if (!tablePartMap.containsKey(table)) {
+              tablePartMap.put(table, new LinkedHashSet<FactPartition>(Arrays.asList(factPart)));
+            } else {
+              LinkedHashSet<FactPartition> storagePart = tablePartMap.get(table);
+              storagePart.add(factPart);
+            }
+          }
+        }
+        cfact.getRangeToStoragePartMap().put(range, tablePartMap);
         cfact.incrementPartsQueried(rangeParts.size());
         answeringParts.addAll(rangeParts);
         cfact.getPartsQueried().addAll(rangeParts);
@@ -436,6 +452,28 @@ class StorageTableResolver implements ContextRewriter {
       Set<String> storageTables = new LinkedHashSet<String>();
       storageTables.addAll(minimalStorageTables.keySet());
       cfact.setStorageTables(storageTables);
+
+      // Update range->storage->partitions with time range where clause
+      for (TimeRange trange : cfact.getRangeToStoragePartMap().keySet()) {
+        Map<String, String> rangeToWhere = new HashMap<String, String>();
+        for (Map.Entry<String, Set<FactPartition>> entry : minimalStorageTables.entrySet()) {
+          String table = entry.getKey();
+          Set<FactPartition> minimalParts = entry.getValue();
+
+          LinkedHashSet<FactPartition> rangeParts = cfact.getRangeToStoragePartMap().get(trange).get(table);
+          LinkedHashSet<FactPartition> minimalPartsCopy = new LinkedHashSet<FactPartition>(minimalParts);
+          minimalPartsCopy.retainAll(rangeParts);
+          if (!StringUtils.isEmpty(whereClasueForFallback.get(trange))) {
+            rangeToWhere.put(
+                rangeWriter.getTimeRangeWhereClause(cubeql, cubeql.getAliasForTableName(cubeql.getCube().getName()),
+                    minimalPartsCopy) + " and  " + whereClasueForFallback.get(trange), table);
+          } else {
+            rangeToWhere.put(rangeWriter.getTimeRangeWhereClause(cubeql,
+                cubeql.getAliasForTableName(cubeql.getCube().getName()), minimalPartsCopy), table);
+          }
+        }
+        cfact.getRangeToStorageWhereMap().put(trange, rangeToWhere);
+      }
       // multi table select is already false, do not alter it
       if (cfact.isEnabledMultiTableSelect()) {
         cfact.setEnabledMultiTableSelect(enabledMultiTableSelect);

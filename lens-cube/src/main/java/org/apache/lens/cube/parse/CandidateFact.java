@@ -55,7 +55,6 @@ public class CandidateFact implements CandidateTable {
   public static final Log LOG = LogFactory.getLog(CandidateFact.class.getName());
   final CubeFactTable fact;
   @Getter
-  @Setter
   private Set<String> storageTables;
   // flag to know if querying multiple storage tables is enabled for this fact
   @Getter
@@ -68,7 +67,6 @@ public class CandidateFact implements CandidateTable {
   @Getter
   private final Map<TimeRange, String> rangeToWhereClause = Maps.newHashMap();
 
-  private boolean dbResolved = false;
   private CubeInterface baseTable;
   private ASTNode selectAST;
   private ASTNode whereAST;
@@ -78,6 +76,14 @@ public class CandidateFact implements CandidateTable {
   private final List<Integer> selectIndices = Lists.newArrayList();
   private final List<Integer> dimFieldIndices = Lists.newArrayList();
   private Collection<String> columns;
+  @Getter
+  private final Map<String, String> storgeWhereClauseMap = new HashMap<String, String>();
+  @Getter
+  private final Map<TimeRange, Map<String, LinkedHashSet<FactPartition>>> rangeToStoragePartMap =
+      new HashMap<TimeRange, Map<String, LinkedHashSet<FactPartition>>>();
+  @Getter
+  private final Map<TimeRange, Map<String, String>> rangeToStorageWhereMap =
+      new HashMap<TimeRange, Map<String, String>>();
 
   CandidateFact(CubeFactTable fact, CubeInterface cube) {
     this.fact = fact;
@@ -143,6 +149,10 @@ public class CandidateFact implements CandidateTable {
     }
     // copy timeranges
     updateTimeRanges(this.whereAST, null, 0);
+  }
+
+  public String getWhereClause(String storageTable) {
+    return getStorgeWhereClauseMap().get(storageTable);
   }
 
   public void updateTimeranges(CubeQueryContext cubeql) throws SemanticException {
@@ -243,21 +253,24 @@ public class CandidateFact implements CandidateTable {
     return cubeColsInExpr;
   }
 
+  @Override
   public String getStorageString(String alias) {
-    if (!dbResolved) {
-      String database = SessionState.get().getCurrentDatabase();
-      // Add database name prefix for non default database
-      if (StringUtils.isNotBlank(database) && !"default".equalsIgnoreCase(database)) {
-        Set<String> storageTbls = new HashSet<String>();
-        Iterator<String> names = storageTables.iterator();
-        while (names.hasNext()) {
-          storageTbls.add(database + "." + names.next());
-        }
-        this.storageTables = storageTbls;
-      }
-      dbResolved = true;
-    }
     return StringUtils.join(storageTables, ",") + " " + alias;
+  }
+
+  public void setStorageTables(Set<String> storageTables) {
+    String database = SessionState.get().getCurrentDatabase();
+    // Add database name prefix for non default database
+    if (StringUtils.isNotBlank(database) && !"default".equalsIgnoreCase(database)) {
+      Set<String> storageTbls = new HashSet<String>();
+      Iterator<String> names = storageTables.iterator();
+      while (names.hasNext()) {
+        storageTbls.add(database + "." + names.next());
+      }
+      this.storageTables = storageTbls;
+    } else {
+      this.storageTables = storageTables;
+    }
   }
 
   @Override
@@ -394,9 +407,6 @@ public class CandidateFact implements CandidateTable {
     Set<String> cubeTimeDimensions = baseTable.getTimedDimensions();
     Set<String> timePartDimensions = new HashSet<String>();
     String singleStorageTable = storageTables.iterator().next();
-    if (!dbResolved) {
-      singleStorageTable = SessionState.get().getCurrentDatabase() + "." + singleStorageTable;
-    }
     List<FieldSchema> partitionKeys = null;
     try {
       partitionKeys = query.getMetastoreClient().getTable(singleStorageTable).getPartitionKeys();

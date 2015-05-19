@@ -43,6 +43,12 @@ class DimOnlyHQLContext extends DimHQLContext {
       query.getHavingTree(), query.getLimitValue());
   }
 
+  DimOnlyHQLContext(Map<Dimension, CandidateDim> dimsToQuery, CubeQueryContext query, String whereClause)
+    throws SemanticException {
+    super(query, dimsToQuery, dimsToQuery.keySet(), query.getSelectTree(), whereClause, query.getGroupByTree(), query
+        .getOrderByTree(), query.getHavingTree(), query.getLimitValue());
+  }
+
   public String toHQL() throws SemanticException {
     return query.getInsertClause() + super.toHQL();
   }
