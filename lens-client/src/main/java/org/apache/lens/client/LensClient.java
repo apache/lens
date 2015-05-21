@@ -88,6 +88,11 @@ public class LensClient {
     return mc.getLatestDateOfCube(cubeName, timePartition);
   }
 
+  public List<String> getPartitionTimelines(String factName, String storageName, String updatePeriod,
+    String timeDimension) {
+    return mc.getPartitionTimelines(factName, storageName, updatePeriod, timeDimension);
+  }
+
   public static class LensClientResultSetWithStats {
     private final LensClientResultSet resultSet;
     private final LensQuery query;
@@ -216,10 +221,12 @@ public class LensClient {
     LOG.debug("Getting all fact table");
     return mc.getAllFactTables(cubeName);
   }
+
   public List<String> getAllDimensionTables() {
     LOG.debug("Getting all dimension table");
     return mc.getAllDimensionTables();
   }
+
   public List<String> getAllDimensionTables(String dimensionName) {
     LOG.debug("Getting all dimension table");
     return mc.getAllDimensionTables(dimensionName);

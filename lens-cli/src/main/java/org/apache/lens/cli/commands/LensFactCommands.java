@@ -237,6 +237,17 @@ public class LensFactCommands extends LensCRUDStoragePartitionCommand<XFactTable
     return addPartitions(tableName, storageName, path);
   }
 
+  @CliCommand(value = "fact timelines",
+    help = "get timelines for fact. Can optionally specify storage, update period and time dimension to filter by."
+      + " Instead of time dimension, partition column can be directly passed as <time_dimension>")
+  public List<String> getTimelines(
+    @CliOption(key = {"", "fact_name"}, mandatory = true, help = "<fact_name>") String factName,
+    @CliOption(key = {"storage_name"}, mandatory = false, help = "<storage_name>") String storageName,
+    @CliOption(key = {"update_period"}, mandatory = false, help = "<update_period>") String updatePeriod,
+    @CliOption(key = {"time_dimension"}, mandatory = false, help = "<time_dimension>") String timeDimension) {
+    return getClient().getPartitionTimelines(factName, storageName, updatePeriod, timeDimension);
+  }
+
   @Override
   protected XStorageTableElement readStorage(String tableName, String storage) {
     return getClient().getStorageFromFact(tableName, storage);

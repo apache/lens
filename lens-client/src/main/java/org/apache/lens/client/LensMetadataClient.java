@@ -954,4 +954,15 @@ public class LensMetadataClient {
       .request(MediaType.APPLICATION_XML)
       .get(DateTime.class).getDate();
   }
+
+  public List<String> getPartitionTimelines(String factName, String storageName, String updatePeriod,
+    String timeDimension) {
+    return getMetastoreWebTarget().path("facts").path(factName).path("timelines")
+      .queryParam("storage", storageName)
+      .queryParam("updatePeriod", updatePeriod)
+      .queryParam("timeDimension", timeDimension)
+      .queryParam("sessionid", this.connection.getSessionHandle())
+      .request(MediaType.APPLICATION_XML)
+      .get(StringList.class).getElements();
+  }
 }

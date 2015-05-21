@@ -723,15 +723,16 @@ public class TestQueryService extends LensJerseyTest {
     APIResult result = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request()
       .delete(APIResult.class);
     // cancel would fail query is already successful
-    Assert.assertTrue(result.getStatus().equals(APIResult.Status.SUCCEEDED)
-      || result.getStatus().equals(APIResult.Status.FAILED));
-
     LensQuery ctx2 = target.path(handle2.toString()).queryParam("sessionid", lensSessionId).request()
       .get(LensQuery.class);
     if (result.getStatus().equals(APIResult.Status.FAILED)) {
-      Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.SUCCESSFUL);
+      Assert.assertEquals(ctx2.getStatus().getStatus(), QueryStatus.Status.SUCCESSFUL,
+        "cancel failed without query having been succeeded");
+    } else if (result.getStatus().equals(APIResult.Status.SUCCEEDED)) {
+      Assert.assertEquals(ctx2.getStatus().getStatus(), QueryStatus.Status.CANCELED,
+        "cancel succeeded but query wasn't cancelled");
     } else {
-      Assert.assertTrue(ctx2.getStatus().getStatus() == QueryStatus.Status.CANCELED);
+      Assert.fail("unexpected cancel status: " + result.getStatus());
     }
 
     // Test http download end point

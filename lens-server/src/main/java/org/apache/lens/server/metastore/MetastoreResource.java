@@ -1552,4 +1552,31 @@ public class MetastoreResource {
       throw new WebApplicationException(exc);
     }
   }
+
+  /**
+   * Get the partition timelines.
+   *
+   * @param sessionid     The sessionid in which user is working
+   * @param factName      name of the fact
+   * @param storage       storage Name
+   * @param updatePeriod  update period
+   * @param timeDimension time dimension name
+   * @return List os partition timelines.
+   */
+  @GET
+  @Path("/facts/{factName}/timelines")
+  public StringList getPartitionTimelines(@QueryParam("sessionid") LensSessionHandle sessionid,
+    @PathParam("factName") String factName, @QueryParam("storage") String storage,
+    @QueryParam("updatePeriod") String updatePeriod, @QueryParam("timeDimension") String timeDimension)
+    throws LensException, HiveException {
+    checkSessionId(sessionid);
+    try {
+      return new StringList(getSvc().getPartitionTimelines(sessionid, factName, storage,
+        updatePeriod, timeDimension));
+    } catch (LensException exc) {
+      checkTableNotFound(exc, factName);
+      LOG.error("Error finding partition timelines for fact: " + factName);
+      throw exc;
+    }
+  }
 }

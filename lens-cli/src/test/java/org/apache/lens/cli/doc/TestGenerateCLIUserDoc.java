@@ -21,7 +21,10 @@ package org.apache.lens.cli.doc;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.TreeSet;
 
 import org.apache.lens.cli.commands.*;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
@@ -32,8 +35,11 @@ import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class TestGenerateCLIUserDoc {
   public static final String APT_FILE = "../src/site/apt/user/cli.apt";
 
@@ -42,10 +48,17 @@ public class TestGenerateCLIUserDoc {
     BufferedWriter bw = new BufferedWriter(new FileWriter(new File(APT_FILE)));
     StringBuilder sb = new StringBuilder();
     sb.append(getCLIIntroduction()).append("\n\n\n");
-    Class[] classes =
-      new Class[]{LensConnectionCommands.class, LensDatabaseCommands.class, LensStorageCommands.class,
-        LensCubeCommands.class, LensDimensionCommands.class, LensFactCommands.class, LensDimensionTableCommands.class,
-        LensNativeTableCommands.class, LensQueryCommands.class, };
+    ArrayList<Class<? extends BaseLensCommand>> classes = Lists.newArrayList(
+      LensConnectionCommands.class,
+      LensDatabaseCommands.class,
+      LensStorageCommands.class,
+      LensCubeCommands.class,
+      LensDimensionCommands.class,
+      LensFactCommands.class,
+      LensDimensionTableCommands.class,
+      LensNativeTableCommands.class,
+      LensQueryCommands.class
+    );
     for (Class claz : classes) {
       UserDocumentation doc = (UserDocumentation) claz.getAnnotation(UserDocumentation.class);
       if (doc != null && StringUtils.isNotBlank(doc.title())) {
@@ -54,11 +67,23 @@ public class TestGenerateCLIUserDoc {
       sb.append("*--+--+\n"
         + "|<<Command>>|<<Description>>|\n"
         + "*--+--+\n");
-      for (Method method : claz.getMethods()) {
-        CliCommand annot = method.getAnnotation(CliCommand.class);
-        if (annot == null) {
-          continue;
+      TreeSet<Method> methods = Sets.newTreeSet(new Comparator<Method>() {
+        @Override
+        public int compare(Method o1, Method o2) {
+          return o1.getAnnotation(CliCommand.class).value()[0].compareTo(o2.getAnnotation(CliCommand.class).value()[0]);
         }
+      });
+
+      for (Method method : claz.getMethods()) {
+        if (method.getAnnotation(CliCommand.class) != null) {
+          methods.add(method);
+        } else {
+          log.info("Not adding " + method.getDeclaringClass().getSimpleName() + "#" + method.getName());
+        }
+      }
+
+      for (Method method : methods) {
+        CliCommand annot = method.getAnnotation(CliCommand.class);
         sb.append("|");
         String sep = "";
         for (String value : annot.value()) {
@@ -114,7 +139,7 @@ public class TestGenerateCLIUserDoc {
       new BufferedReader(new InputStreamReader(TestGenerateCLIUserDoc.class.getResourceAsStream("/cli-intro.apt")));
     StringBuilder sb = new StringBuilder();
     String line;
-    while((line = br.readLine()) != null) {
+    while ((line = br.readLine()) != null) {
       sb.append(line).append("\n");
     }
     return sb;

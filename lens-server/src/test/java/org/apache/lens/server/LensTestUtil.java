@@ -255,7 +255,6 @@ public final class LensTestUtil {
     Hive hive = Hive.get(conf);
     File testJarFile = new File("testdata/test.jar");
     File serdeJarFile = new File("testdata/serde.jar");
-
     for (String db : testDatabases) {
       Database database = new Database();
       database.setName(db);

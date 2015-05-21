@@ -33,7 +33,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NonNull;
-import lombok.ToString;
 import lombok.extern.apachecommons.CommonsLog;
 
 /**
@@ -44,7 +43,6 @@ import lombok.extern.apachecommons.CommonsLog;
  * @see org.apache.lens.cube.metadata.timeline.StoreAllPartitionTimeline
  */
 @Data
-@ToString(exclude = {"client"})
 @CommonsLog
 public abstract class PartitionTimeline implements Iterable<TimePartition> {
   private final String storageTableName;
@@ -89,9 +87,10 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
         props.put(entry.getKey().substring(prefix.length()), entry.getValue());
       }
     }
-    log.info("initializing timeline: " + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
+    log.info("initializing timeline from table properties: "
+      + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
     initFromProperties(props);
-    log.info("initialized to " + toProperties());
+    log.info("initialized to: " + this);
   }
 
   /**
@@ -116,9 +115,11 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     if (getAll() == null) {
       return true;
     }
+    log.info("initializing timeline from batch addition: "
+      + getStorageTableName() + ", " + getUpdatePeriod() + ", " + getPartCol());
     boolean result = add(getAll());
     all = null;
-    log.info("after commit batch additions, timeline is: " + this);
+    log.info("initialized to: " + this);
     return result;
   }
 
@@ -147,6 +148,7 @@ public abstract class PartitionTimeline implements Iterable<TimePartition> {
     // Can also return the failed to add items.
     return result;
   }
+
   /**
    * Add partition range to the timeline. Default implementation is to iterate over the range and add
    * each time partition belonging to the given range. Implementing classes can override.

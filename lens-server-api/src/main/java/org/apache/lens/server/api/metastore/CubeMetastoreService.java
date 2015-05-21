@@ -551,4 +551,6 @@ public interface CubeMetastoreService {
   Date getLatestDateOfCube(LensSessionHandle sessionid, String cubeName, String timeDimension)
     throws LensException, HiveException;
 
+  List<String> getPartitionTimelines(LensSessionHandle sessionid, String factName, String storage,
+    String updatePeriod, String timeDimension) throws LensException, HiveException;
 }

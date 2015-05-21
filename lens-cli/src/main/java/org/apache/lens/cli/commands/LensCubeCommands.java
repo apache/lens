@@ -103,10 +103,11 @@ public class LensCubeCommands extends LensCRUDCommand<XCube> {
    * @return the string
    */
   @CliCommand(value = "cube latestdate",
-    help = "get latest date of data available in cube <cube_name> for time dimension <time_dimension_name>")
+    help = "get latest date of data available in cube <cube_name> for time dimension <time_dimension_name>. "
+      + " Instead of time dimension, partition column can be directly passed as <time_dimension>")
   public String getLatest(
     @CliOption(key = {"", "cube"}, mandatory = true, help = "<cube_name>") String cube,
-    @CliOption(key = {"", "timeDimension"}, mandatory = true, help = "<time_dimension_name>") String timeDim) {
+    @CliOption(key = {"", "time_dimension"}, mandatory = true, help = "<time_dimension>") String timeDim) {
     Date dt = getClient().getLatestDateOfCube(cube, timeDim);
     return dt == null ? "No Data Available" : formatDate(dt);
   }

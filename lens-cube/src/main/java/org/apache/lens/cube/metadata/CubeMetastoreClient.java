@@ -134,8 +134,46 @@ public class CubeMetastoreClient {
     allHiveTables.clear();
   }
 
+  public List<PartitionTimeline> getTimelines(String factName, String storage, String updatePeriodStr,
+    String timeDimension)
+    throws LensException, HiveException {
+    UpdatePeriod updatePeriod = updatePeriodStr == null ? null : UpdatePeriod.valueOf(updatePeriodStr.toUpperCase());
+    List<PartitionTimeline> ret = Lists.newArrayList();
+    CubeFactTable fact = getCubeFact(factName);
+    List<String> keys = Lists.newArrayList();
+    if (storage != null) {
+      keys.add(storage);
+    } else {
+      keys.addAll(fact.getStorages());
+    }
+    String partCol = null;
+    if (timeDimension != null) {
+      Cube baseCube;
+      CubeInterface cube = getCube(fact.getCubeName());
+      if (cube instanceof Cube) {
+        baseCube = (Cube) cube;
+      } else {
+        baseCube = ((DerivedCube) cube).getParent();
+      }
+      partCol = baseCube.getPartitionColumnOfTimeDim(timeDimension);
+    }
+    for (String key : keys) {
+      for (Map.Entry<UpdatePeriod, CaseInsensitiveStringHashMap<PartitionTimeline>> entry : partitionTimelineCache
+        .get(factName, key).entrySet()) {
+        if (updatePeriod == null || entry.getKey().equals(updatePeriod)) {
+          for (Map.Entry<String, PartitionTimeline> entry1 : entry.getValue().entrySet()) {
+            if (partCol == null || partCol.equals(entry1.getKey())) {
+              ret.add(entry1.getValue());
+            }
+          }
+        }
+      }
+    }
+    return ret;
+  }
+
   /**
-   * In-memory storage of {@link org.apache.lens.cube.metadata.timeline.PartitionTimeline} objects for each valid
+   * In-memory storage of {@link PartitionTimeline} objects for each valid
    * storagetable-updateperiod-partitioncolumn tuple. also simultaneously stored in metastore table of the
    * storagetable.
    */

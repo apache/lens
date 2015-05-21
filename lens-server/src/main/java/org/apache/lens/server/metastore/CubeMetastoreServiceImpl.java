@@ -26,6 +26,7 @@ import javax.ws.rs.NotFoundException;
 import org.apache.lens.api.LensSessionHandle;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.cube.metadata.*;
+import org.apache.lens.cube.metadata.timeline.PartitionTimeline;
 import org.apache.lens.server.LensService;
 import org.apache.lens.server.api.error.LensException;
 import org.apache.lens.server.api.metastore.CubeMetastoreService;
@@ -43,6 +44,8 @@ import org.apache.hive.service.cli.HiveSQLException;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.thrift.TException;
+
+import com.google.common.collect.Lists;
 
 public class CubeMetastoreServiceImpl extends LensService implements CubeMetastoreService {
   public static final Logger LOG = LogManager.getLogger(CubeMetastoreServiceImpl.class);
@@ -1356,5 +1359,15 @@ public class CubeMetastoreServiceImpl extends LensService implements CubeMetasto
     Date latest = msClient.getLatestDateOfCube(c, timeDimension);
     release(sessionid);
     return latest;
+  }
+
+  public List<String> getPartitionTimelines(LensSessionHandle sessionid, String factName, String storage,
+    String updatePeriod, String timeDimension) throws LensException, HiveException {
+    CubeMetastoreClient client = getClient(sessionid);
+    List<String> ret = Lists.newArrayList();
+    for (PartitionTimeline timeline : client.getTimelines(factName, storage, updatePeriod, timeDimension)) {
+      ret.add(timeline.toString());
+    }
+    return ret;
   }
 }
