@@ -105,12 +105,15 @@ public class CubeTestSetup {
   public static final Date BEFORE_4_DAYS_END;
   public static final Date THIS_YEAR_START;
   public static final Date THIS_YEAR_END;
+  public static final Date LAST_YEAR_START;
+  public static final Date LAST_YEAR_END;
 
   // Time Ranges
   public static final String LAST_HOUR_TIME_RANGE;
   public static final String TWO_DAYS_RANGE;
   public static final String TWO_DAYS_RANGE_TTD;
   public static final String THIS_YEAR_RANGE;
+  public static final String LAST_YEAR_RANGE;
   public static final String TWO_MONTHS_RANGE_UPTO_MONTH;
   public static final String TWO_MONTHS_RANGE_UPTO_HOURS;
   public static final String TWO_DAYS_RANGE_BEFORE_4_DAYS;
@@ -121,6 +124,7 @@ public class CubeTestSetup {
   private static String c3 = "C3";
   private static String c4 = "C4";
   private static String c99 = "C99";
+  private static Map<String, String> factValidityProperties = Maps.newHashMap();
   @Getter
   private static Map<String, String> storageToUpdatePeriodMap = new LinkedHashMap<String, String>();
 
@@ -160,6 +164,8 @@ public class CubeTestSetup {
 
     THIS_YEAR_START = DateUtils.truncate(NOW, UpdatePeriod.YEARLY.calendarField());
     THIS_YEAR_END = DateUtils.addYears(THIS_YEAR_START, 1);
+    LAST_YEAR_START = DateUtils.addYears(THIS_YEAR_START, -1);
+    LAST_YEAR_END = THIS_YEAR_START;
     TWO_DAYS_RANGE_BEFORE_4_DAYS =
       "time_range_in(d_time, '" + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_START) + "','"
         + CubeTestSetup.getDateUptoHours(BEFORE_4_DAYS_END) + "')";
@@ -170,6 +176,8 @@ public class CubeTestSetup {
       + getDateUptoHours(NOW) + "')";
     THIS_YEAR_RANGE =
       "time_range_in(d_time, '" + getDateUptoHours(THIS_YEAR_START) + "','" + getDateUptoHours(THIS_YEAR_END) + "')";
+    LAST_YEAR_RANGE =
+      "time_range_in(d_time, '" + getDateUptoHours(LAST_YEAR_START) + "','" + getDateUptoHours(LAST_YEAR_END) + "')";
     TWO_MONTHS_RANGE_UPTO_MONTH =
       "time_range_in(d_time, '" + getDateUptoMonth(TWO_MONTHS_BACK) + "','" + getDateUptoMonth(NOW) + "')";
     TWO_MONTHS_RANGE_UPTO_HOURS =
@@ -177,6 +185,7 @@ public class CubeTestSetup {
 
     // calculate LAST_HOUR_TIME_RANGE
     LAST_HOUR_TIME_RANGE = getTimeRangeString(getDateUptoHours(LAST_HOUR), getDateUptoHours(NOW));
+    factValidityProperties.put(MetastoreConstants.FACT_RELATIVE_START_TIME, "now.year - 90 days");
   }
 
   public static boolean isZerothHour() {
@@ -880,7 +889,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
 
     // create cube fact
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
 
     // create fact only with extra measures
     factName = "testFact2_BASE";
@@ -896,7 +906,13 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim2", "int", "dim2 id"));
 
     // create cube fact
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
+    Map<String, String> properties = Maps.newHashMap(factValidityProperties);
+    properties.put(MetastoreConstants.FACT_ABSOLUTE_END_TIME, DateUtil.relativeToAbsolute("now.day - 2 days"));
+    properties.put(MetastoreConstants.FACT_ABSOLUTE_START_TIME, DateUtil.relativeToAbsolute("now.day - 3 days"));
+    client.createCubeFactTable(BASE_CUBE_NAME, "testfact_deprecated", factColumns, storageAggregatePeriods, 5L,
+      properties, storageTables);
 
     // create fact only with extra measures
     factName = "testFact3_BASE";
@@ -911,7 +927,8 @@ public class CubeTestSetup {
     factColumns.add(new FieldSchema("dim11", "string", "base dim"));
 
     // create cube fact
-    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
 
     // create raw fact only with extra measures
     factName = "testFact2_RAW_BASE";
@@ -935,7 +952,8 @@ public class CubeTestSetup {
     storageTables.put(c1, s1);
 
     // create cube fact
-    Map<String, String> properties = new HashMap<String, String>();
+    properties.clear();
+    properties.putAll(factValidityProperties);
     properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
 
     client.createCubeFactTable(BASE_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 100L, properties,
@@ -1022,7 +1040,8 @@ public class CubeTestSetup {
     storageTables.put(c2, s1);
     storageTables.put(c3, s1);
     // create cube fact
-    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
     CubeFactTable fact = client.getFactTable(factName);
 
     Table table = client.getTable(MetastoreUtil.getStorageTableName(fact.getName(),
@@ -1157,7 +1176,8 @@ public class CubeTestSetup {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c99, s2);
     // create cube fact
-    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 0L, null, storageTables);
+    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 0L,
+      factValidityProperties, storageTables);
 
     CubeFactTable fact = client.getFactTable(factName);
     // Add all hourly partitions for two days
@@ -1216,7 +1236,8 @@ public class CubeTestSetup {
     Map<String, StorageTableDesc> storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c1, s1);
     // create cube fact
-    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
   }
 
   private void createCubeFactOnlyHourly(CubeMetastoreClient client) throws HiveException, LensException {
@@ -1252,7 +1273,8 @@ public class CubeTestSetup {
 
     // create cube fact
     client
-      .createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 10L, null, storageTables);
+      .createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 10L,
+        factValidityProperties, storageTables);
     CubeFactTable fact2 = client.getFactTable(factName);
     // Add all hourly partitions for two days
     Calendar cal = Calendar.getInstance();
@@ -1323,6 +1345,7 @@ public class CubeTestSetup {
 
     // create cube fact
     Map<String, String> properties = new HashMap<String, String>();
+    properties.putAll(factValidityProperties);
     properties.put(MetastoreConstants.FACT_AGGREGATED_PROPERTY, "false");
 
     client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 100L, properties,
@@ -1373,7 +1396,8 @@ public class CubeTestSetup {
     storageTables.put(c2, s1);
 
     // create cube fact
-    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L, null, storageTables);
+    client.createCubeFactTable(TEST_CUBE_NAME, factName, factColumns, storageAggregatePeriods, 5L,
+      factValidityProperties, storageTables);
   }
 
   // DimWithTwoStorages
@@ -2041,6 +2065,7 @@ public class CubeTestSetup {
 
     // create cube fact summary1
     Map<String, String> properties = new HashMap<String, String>();
+    properties.putAll(factValidityProperties);
     String validColumns = commonCols.toString() + ",dim1,testdim3id";
     properties.put(MetastoreUtil.getValidColumnsKey(factName), validColumns);
     CubeFactTable fact1 =
@@ -2050,7 +2075,6 @@ public class CubeTestSetup {
 
     // create summary2 - same schema, different valid columns
     factName = "summary2";
-    properties = new HashMap<String, String>();
     validColumns = commonCols.toString() + ",dim1,dim2";
     properties.put(MetastoreUtil.getValidColumnsKey(factName), validColumns);
     CubeFactTable fact2 =
@@ -2059,7 +2083,6 @@ public class CubeTestSetup {
     createPIEParts(client, fact2, c2);
 
     factName = "summary3";
-    properties = new HashMap<String, String>();
     validColumns = commonCols.toString() + ",dim1,dim2,cityid,stateid";
     properties.put(MetastoreUtil.getValidColumnsKey(factName), validColumns);
     CubeFactTable fact3 =
@@ -2074,7 +2097,6 @@ public class CubeTestSetup {
     storageTables = new HashMap<String, StorageTableDesc>();
     storageTables.put(c2, s2);
     factName = "summary4";
-    properties = new HashMap<String, String>();
     validColumns = commonCols.toString() + ",dim1,dim2big1,dim2big2,cityid";
     properties.put(MetastoreUtil.getValidColumnsKey(factName), validColumns);
     CubeFactTable fact4 =

@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.CandidateTablePruneCause.CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE;
+
 import static org.apache.hadoop.hive.ql.parse.HiveParser.*;
 
 import java.util.*;
@@ -32,20 +34,20 @@ import org.apache.lens.cube.parse.DenormalizationResolver.ReferencedQueriedColum
 import org.apache.lens.server.api.error.LensException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
 
+import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * Finds all timeranges in the query and does validation wrt the queried field's life and the range queried
  */
+@Slf4j
 class TimerangeResolver implements ContextRewriter {
-  public static final Log LOG = LogFactory.getLog(TimerangeResolver.class.getName());
-
   public TimerangeResolver(Configuration conf) {
   }
 
@@ -56,7 +58,9 @@ class TimerangeResolver implements ContextRewriter {
     }
     extractTimeRange(cubeql);
     doColLifeValidation(cubeql);
+    doFactRangeValidation(cubeql);
   }
+
 
   private void extractTimeRange(CubeQueryContext cubeql) throws SemanticException {
     // get time range -
@@ -140,7 +144,7 @@ class TimerangeResolver implements ContextRewriter {
   }
 
   private void doColLifeValidation(CubeQueryContext cubeql) throws SemanticException,
-      ColUnAvailableInTimeRangeException {
+    ColUnAvailableInTimeRangeException {
     Set<String> cubeColumns = cubeql.getColumnsQueried(cubeql.getCube().getName());
     if (cubeColumns == null || cubeColumns.isEmpty()) {
       // Query doesn't have any columns from cube
@@ -171,7 +175,7 @@ class TimerangeResolver implements ContextRewriter {
         ReferencedQueriedColumn refCol = refColIter.next();
         for (TimeRange range : cubeql.getTimeRanges()) {
           if (!refCol.col.isColumnAvailableInTimeRange(range)) {
-            LOG.debug("The refernced column:" + refCol.col.getName() + " is not in the range queried");
+            log.debug("The refernced column:" + refCol.col.getName() + " is not in the range queried");
             refColIter.remove();
             break;
           }
@@ -195,7 +199,7 @@ class TimerangeResolver implements ContextRewriter {
       CubeColumn column = cubeql.getCube().getColumnByName(col);
       for (TimeRange range : cubeql.getTimeRanges()) {
         if (!column.isColumnAvailableInTimeRange(range)) {
-          LOG.info("Timerange queried is not in column life for " + column
+          log.info("Timerange queried is not in column life for " + column
             + ", Removing join paths containing the column");
           // Remove join paths containing this column
           Map<Aliased<Dimension>, List<SchemaGraph.JoinPath>> allPaths = joinContext.getAllPaths();
@@ -207,7 +211,7 @@ class TimerangeResolver implements ContextRewriter {
             while (joinPathIterator.hasNext()) {
               SchemaGraph.JoinPath path = joinPathIterator.next();
               if (path.containsColumnOfTable(col, (AbstractCubeTable) cubeql.getCube())) {
-                LOG.info("Removing join path:" + path + " as columns :" + col + " is not available in the range");
+                log.info("Removing join path:" + path + " as columns :" + col + " is not available in the range");
                 joinPathIterator.remove();
                 if (joinPaths.isEmpty()) {
                   // This dimension doesn't have any paths left
@@ -224,17 +228,37 @@ class TimerangeResolver implements ContextRewriter {
 
   }
 
+
   private void throwException(CubeColumn column) throws ColUnAvailableInTimeRangeException {
 
     final Long availabilityStartTime = (column.getStartTimeMillisSinceEpoch().isPresent())
-        ? column.getStartTimeMillisSinceEpoch().get() : null;
+      ? column.getStartTimeMillisSinceEpoch().get() : null;
 
     final Long availabilityEndTime = column.getEndTimeMillisSinceEpoch().isPresent()
-        ? column.getEndTimeMillisSinceEpoch().get() : null;
+      ? column.getEndTimeMillisSinceEpoch().get() : null;
 
     ColUnAvailableInTimeRange col = new ColUnAvailableInTimeRange(column.getName(), availabilityStartTime,
-        availabilityEndTime);
+      availabilityEndTime);
 
     throw new ColUnAvailableInTimeRangeException(col);
+  }
+
+  private void doFactRangeValidation(CubeQueryContext cubeql) {
+    Iterator<CandidateFact> iter = cubeql.getCandidateFacts().iterator();
+    while (iter.hasNext()) {
+      CandidateFact cfact = iter.next();
+      List<TimeRange> invalidTimeRanges = Lists.newArrayList();
+      for (TimeRange timeRange : cubeql.getTimeRanges()) {
+        if (!cfact.isValidForTimeRange(timeRange)) {
+          invalidTimeRanges.add(timeRange);
+        }
+      }
+      if (!invalidTimeRanges.isEmpty()){
+        cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.factNotAvailableInRange(invalidTimeRanges));
+        log.info("Not considering " + cfact + " as it's not available for time ranges: " + invalidTimeRanges);
+        iter.remove();
+      }
+    }
+    cubeql.pruneCandidateFactSet(FACT_NOT_AVAILABLE_IN_RANGE);
   }
 }

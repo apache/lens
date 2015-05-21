@@ -80,10 +80,10 @@ public class CandidateFact implements CandidateTable {
   private final Map<String, String> storgeWhereClauseMap = new HashMap<String, String>();
   @Getter
   private final Map<TimeRange, Map<String, LinkedHashSet<FactPartition>>> rangeToStoragePartMap =
-      new HashMap<TimeRange, Map<String, LinkedHashSet<FactPartition>>>();
+    new HashMap<TimeRange, Map<String, LinkedHashSet<FactPartition>>>();
   @Getter
   private final Map<TimeRange, Map<String, String>> rangeToStorageWhereMap =
-      new HashMap<TimeRange, Map<String, String>>();
+    new HashMap<TimeRange, Map<String, String>>();
 
   CandidateFact(CubeFactTable fact, CubeInterface cube) {
     this.fact = fact;
@@ -103,6 +103,10 @@ public class CandidateFact implements CandidateTable {
       }
     }
     return columns;
+  }
+
+  public boolean isValidForTimeRange(TimeRange timeRange) {
+    return (!timeRange.getFromDate().before(fact.getStartTime())) && (!timeRange.getToDate().after(fact.getEndTime()));
   }
 
   static class TimeRangeNode {

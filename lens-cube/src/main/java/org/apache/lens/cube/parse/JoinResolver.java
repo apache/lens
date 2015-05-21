@@ -1056,9 +1056,9 @@ class JoinResolver implements ContextRewriter {
             Set<CandidateTable> candidates = cubeql.getOptionalDimensionMap().get(joinee).requiredForCandidates;
             for (CandidateTable candidate : candidates) {
               if (candidate instanceof CandidateFact) {
-                if (cubeql.getCandidateFactTables().contains(candidate)) {
+                if (cubeql.getCandidateFacts().contains(candidate)) {
                   LOG.info("Not considering fact:" + candidate + " as there is no join path to " + joinee);
-                  cubeql.getCandidateFactTables().remove(candidate);
+                  cubeql.getCandidateFacts().remove(candidate);
                   cubeql.addFactPruningMsgs(((CandidateFact) candidate).fact, new CandidateTablePruneCause(
                     CandidateTablePruneCode.COLUMN_NOT_FOUND));
                 }

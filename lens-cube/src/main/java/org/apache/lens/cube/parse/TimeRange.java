@@ -18,6 +18,8 @@
  */
 package org.apache.lens.cube.parse;
 
+import static org.apache.lens.cube.parse.DateUtil.ABSDATE_PARSER;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TreeSet;
@@ -29,11 +31,16 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.parse.ASTNode;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
+
+import lombok.Data;
 import lombok.Getter;
 
 /**
  * Timerange data structure
  */
+@JsonIgnoreProperties({"astNode", "parent"})
+@Data
 public class TimeRange {
   private String partitionColumn;
   private Date toDate;
@@ -97,30 +104,6 @@ public class TimeRange {
 
   }
 
-  public String getPartitionColumn() {
-    return partitionColumn;
-  }
-
-  public Date getFromDate() {
-    return fromDate;
-  }
-
-  public Date getToDate() {
-    return toDate;
-  }
-
-  public ASTNode getASTNode() {
-    return astNode;
-  }
-
-  public ASTNode getParent() {
-    return parent;
-  }
-
-  public int getChildIndex() {
-    return childIndex;
-  }
-
   public void validate() throws SemanticException {
     if (partitionColumn == null || fromDate == null || toDate == null || fromDate.equals(toDate)) {
       throw new SemanticException(ErrorMsg.INVALID_TIME_RANGE);
@@ -148,7 +131,8 @@ public class TimeRange {
 
   @Override
   public String toString() {
-    return partitionColumn + " [" + fromDate + ":" + toDate + "]";
+    return partitionColumn + " [" + ABSDATE_PARSER.get().format(fromDate) + " to "
+      + ABSDATE_PARSER.get().format(toDate) + ")";
   }
 
   /** iterable from fromDate(including) to toDate(excluding) incrementing increment units of updatePeriod */

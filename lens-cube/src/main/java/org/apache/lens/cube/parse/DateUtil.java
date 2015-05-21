@@ -57,6 +57,7 @@ public final class DateUtil {
   public static final Pattern P_RELATIVE = Pattern.compile(RELATIVE, Pattern.CASE_INSENSITIVE);
 
   public static final String WSPACE = "\\s+";
+  public static final String OPTIONAL_WSPACE = "\\s*";
   public static final Pattern P_WSPACE = Pattern.compile(WSPACE);
 
   public static final String SIGNAGE = "\\+|\\-";
@@ -67,8 +68,8 @@ public final class DateUtil {
 
   public static final Pattern P_UNIT = Pattern.compile(UNIT, Pattern.CASE_INSENSITIVE);
 
-  public static final String RELDATE_VALIDATOR_STR = RELATIVE + "(" + WSPACE + ")?" + "((" + SIGNAGE + ")" + "("
-    + WSPACE + ")?" + "(" + QUANTITY + ")(" + UNIT + ")){0,1}" + "(s?)";
+  public static final String RELDATE_VALIDATOR_STR = RELATIVE + OPTIONAL_WSPACE + "((" + SIGNAGE + ")" + "("
+    + WSPACE + ")?" + "(" + QUANTITY + ")" + OPTIONAL_WSPACE + "(" + UNIT + ")){0,1}" + "(s?)";
 
   public static final Pattern RELDATE_VALIDATOR = Pattern.compile(RELDATE_VALIDATOR_STR, Pattern.CASE_INSENSITIVE);
 
@@ -78,6 +79,7 @@ public final class DateUtil {
   public static final String HOUR_FMT = DAY_FMT + "-[0-9]{2}";
   public static final String MINUTE_FMT = HOUR_FMT + ":[0-9]{2}";
   public static final String SECOND_FMT = MINUTE_FMT + ":[0-9]{2}";
+  public static final String MILLISECOND_FMT = SECOND_FMT + ",[0-9]{3}";
   public static final String ABSDATE_FMT = "yyyy-MM-dd-HH:mm:ss,SSS";
   public static final String HIVE_QUERY_DATE_FMT = "yyyy-MM-dd HH:mm:ss";
 
@@ -113,7 +115,7 @@ public final class DateUtil {
       return str + ":00,000";
     } else if (str.matches(SECOND_FMT)) {
       return str + ",000";
-    } else if (str.matches(ABSDATE_FMT)) {
+    } else if (str.matches(MILLISECOND_FMT)) {
       return str;
     }
     throw new IllegalArgumentException("Unsupported formatting for date" + str);
@@ -123,12 +125,26 @@ public final class DateUtil {
     if (RELDATE_VALIDATOR.matcher(str).matches()) {
       return resolveRelativeDate(str, now);
     } else {
-      try {
-        return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
-      } catch (ParseException e) {
-        LOG.error("Invalid date format. expected only " + ABSDATE_FMT + " date provided:" + str, e);
-        throw new SemanticException(e, ErrorMsg.WRONG_TIME_RANGE_FORMAT, ABSDATE_FMT, str);
-      }
+      return resolveAbsoluteDate(str);
+    }
+  }
+  public static String relativeToAbsolute(String relative) throws SemanticException {
+    return relativeToAbsolute(relative, new Date());
+  }
+  public static String relativeToAbsolute(String relative, Date now) throws SemanticException {
+    if (RELDATE_VALIDATOR.matcher(relative).matches()) {
+      return ABSDATE_PARSER.get().format(resolveRelativeDate(relative, now));
+    } else {
+      return relative;
+    }
+  }
+
+  public static Date resolveAbsoluteDate(String str) throws SemanticException {
+    try {
+      return ABSDATE_PARSER.get().parse(getAbsDateFormatString(str));
+    } catch (ParseException e) {
+      LOG.error("Invalid date format. expected only " + ABSDATE_FMT + " date provided:" + str, e);
+      throw new SemanticException(e, ErrorMsg.WRONG_TIME_RANGE_FORMAT, ABSDATE_FMT, str);
     }
   }
 
@@ -414,8 +430,9 @@ public final class DateUtil {
       this.coverable = coverable;
     }
   }
+
   @EqualsAndHashCode
-  static class TimeDiff{
+  static class TimeDiff {
     int quantity;
     int calendarField;
 
@@ -467,8 +484,10 @@ public final class DateUtil {
     public Date offsetFrom(Date time) {
       return DateUtils.add(time, calendarField, quantity);
     }
+
     public Date negativeOffsetFrom(Date time) {
       return DateUtils.add(time, calendarField, -quantity);
     }
   }
+
 }

@@ -205,8 +205,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     String query = "SELECT cityid, testCube.msr2 FROM testCube WHERE " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf2);
     String hQL = cubeql.toHQL();
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    CandidateFact candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    CandidateFact candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     String expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid," + " testCube.msr2 from ", null, null,
@@ -267,8 +267,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     String query = "SELECT cityid, avg(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE;
     CubeQueryContext cubeql = rewriteCtx(query, conf);
     String hQL = cubeql.toHQL();
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    CandidateFact candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    CandidateFact candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     String expectedQL =
       getExpectedQuery(cubeName, "SELECT testcube.cityid," + " avg(testCube.msr2)) from ", null,
@@ -278,8 +278,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     // query with measure in a where clause
     query = "SELECT cityid, sum(testCube.msr2) FROM testCube WHERE testCube.msr1 < 100 and " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -289,8 +289,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, testCube.msr2 FROM testCube WHERE testCube.msr2 < 100 and " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -300,8 +300,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, sum(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE + " group by testCube.msr1";
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -311,8 +311,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, sum(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE + " group by testCube.msr3";
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -322,8 +322,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, sum(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE + " order by testCube.msr1";
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -333,8 +333,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, sum(testCube.msr2) FROM testCube WHERE " + TWO_DAYS_RANGE + " order by testCube.msr3";
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -344,8 +344,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT distinct cityid, round(testCube.msr2) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -355,8 +355,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, count(distinct(testCube.msr2)) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -367,8 +367,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
     // query with no default aggregate measure
     query = "SELECT cityid, round(testCube.msr1) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -378,8 +378,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT distinct cityid, round(testCube.msr1) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -389,8 +389,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, count(distinct(testCube.msr1)) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =
@@ -400,8 +400,8 @@ public class TestAggregateResolver extends TestQueryRewrite {
 
     query = "SELECT cityid, sum(testCube.msr1) from testCube where " + TWO_DAYS_RANGE;
     cubeql = rewriteCtx(query, conf);
-    Assert.assertEquals(1, cubeql.getCandidateFactTables().size());
-    candidateFact = cubeql.getCandidateFactTables().iterator().next();
+    Assert.assertEquals(1, cubeql.getCandidateFacts().size());
+    candidateFact = cubeql.getCandidateFacts().iterator().next();
     Assert.assertEquals("testFact2_raw".toLowerCase(), candidateFact.fact.getName().toLowerCase());
     hQL = cubeql.toHQL();
     expectedQL =

@@ -127,14 +127,14 @@ class StorageTableResolver implements ContextRewriter {
 
     switch (phase) {
     case FACT_TABLES:
-      if (!cubeql.getCandidateFactTables().isEmpty()) {
+      if (!cubeql.getCandidateFacts().isEmpty()) {
         // resolve storage table names
         resolveFactStorageTableNames(cubeql);
       }
       cubeql.pruneCandidateFactSet(CandidateTablePruneCode.NO_CANDIDATE_STORAGES);
       break;
     case FACT_PARTITIONS:
-      if (!cubeql.getCandidateFactTables().isEmpty()) {
+      if (!cubeql.getCandidateFacts().isEmpty()) {
         // resolve storage partitions
         resolveFactStoragePartitions(cubeql);
       }
@@ -144,7 +144,7 @@ class StorageTableResolver implements ContextRewriter {
       resolveDimStorageTablesAndPartitions(cubeql);
       if (cubeql.getAutoJoinCtx() != null) {
         // After all candidates are pruned after storage resolver, prune join paths.
-        cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(), cubeql.getCandidateFactTables(), null);
+        cubeql.getAutoJoinCtx().pruneAllPaths(cubeql.getCube(), cubeql.getCandidateFacts(), null);
         cubeql.getAutoJoinCtx().pruneAllPathsForCandidateDims(cubeql.getCandidateDimTables());
         cubeql.getAutoJoinCtx().refreshJoinPathColumns();
       }
@@ -231,7 +231,7 @@ class StorageTableResolver implements ContextRewriter {
 
   // Resolves all the storage table names, which are valid for each updatePeriod
   private void resolveFactStorageTableNames(CubeQueryContext cubeql) throws SemanticException {
-    Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator();
+    Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
     while (i.hasNext()) {
       CubeFactTable fact = i.next().fact;
       if (fact.getUpdatePeriods().isEmpty()) {
@@ -351,7 +351,7 @@ class StorageTableResolver implements ContextRewriter {
 
   private void resolveFactStoragePartitions(CubeQueryContext cubeql) throws SemanticException {
     // Find candidate tables wrt supported storages
-    Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator();
+    Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator();
     Map<TimeRange, String> whereClasueForFallback = new LinkedHashMap<TimeRange, String>();
     while (i.hasNext()) {
       CandidateFact cfact = i.next();

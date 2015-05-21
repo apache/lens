@@ -356,8 +356,8 @@ public class DenormalizationResolver implements ContextRewriter {
       // In the second iteration of denorm resolver
       // candidate tables which require denorm fields and the refernces are no
       // more valid will be pruned
-      if (cubeql.getCube() != null && !cubeql.getCandidateFactTables().isEmpty()) {
-        for (Iterator<CandidateFact> i = cubeql.getCandidateFactTables().iterator(); i.hasNext();) {
+      if (cubeql.getCube() != null && !cubeql.getCandidateFacts().isEmpty()) {
+        for (Iterator<CandidateFact> i = cubeql.getCandidateFacts().iterator(); i.hasNext();) {
           CandidateFact cfact = i.next();
           if (denormCtx.tableToRefCols.containsKey(cfact.getName())) {
             for (ReferencedQueriedColumn refcol : denormCtx.tableToRefCols.get(cfact.getName())) {
@@ -369,7 +369,7 @@ public class DenormalizationResolver implements ContextRewriter {
             }
           }
         }
-        if (cubeql.getCandidateFactTables().size() == 0) {
+        if (cubeql.getCandidateFacts().size() == 0) {
           throw new SemanticException(ErrorMsg.NO_FACT_HAS_COLUMN, cubeql.getColumnsQueried(cubeql.getCube().getName())
             .toString());
         }

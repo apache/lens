@@ -87,7 +87,7 @@ public class TestBaseCubeQueries extends TestQueryRewrite {
       new HashMap<String, List<CandidateTablePruneCause>>() {
         {
           put("testfact3_base,testfact3_raw_base", Arrays.asList(CandidateTablePruneCause.columnNotFound("stateid")));
-          put("testfact2_raw_base,testfact2_base",
+          put("testfact_deprecated,testfact2_raw_base,testfact2_base",
             Arrays.asList(CandidateTablePruneCause.columnNotFound("msr3", "msr13")));
         }
       }

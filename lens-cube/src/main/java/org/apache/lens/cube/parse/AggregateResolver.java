@@ -72,12 +72,12 @@ class AggregateResolver implements ContextRewriter {
       || hasMeasuresNotInDefaultAggregates(cubeql, cubeql.getHavingAST(), null, aggregateResolverDisabled)
       || hasMeasures(cubeql, cubeql.getWhereAST()) || hasMeasures(cubeql, cubeql.getGroupByAST())
       || hasMeasures(cubeql, cubeql.getOrderByAST())) {
-      Iterator<CandidateFact> factItr = cubeql.getCandidateFactTables().iterator();
+      Iterator<CandidateFact> factItr = cubeql.getCandidateFacts().iterator();
       while (factItr.hasNext()) {
         CandidateFact candidate = factItr.next();
         if (candidate.fact.isAggregated()) {
           cubeql.addFactPruningMsgs(candidate.fact,
-            CandidateTablePruneCause.missingDefaultAggregate(candidate.fact.getName()));
+            CandidateTablePruneCause.missingDefaultAggregate());
           factItr.remove();
         }
       }

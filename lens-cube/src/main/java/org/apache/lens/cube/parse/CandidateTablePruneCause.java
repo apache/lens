@@ -22,6 +22,7 @@ import java.util.*;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -36,9 +37,20 @@ import lombok.NoArgsConstructor;
 
 public class CandidateTablePruneCause {
 
-
-
   public enum CandidateTablePruneCode {
+    FACT_NOT_AVAILABLE_IN_RANGE("No facts available for all of these time ranges: %s") {
+      @Override
+      Object[] getFormatPlaceholders(Set<CandidateTablePruneCause> causes) {
+        Set<TimeRange> allRanges = Sets.newHashSet();
+        for (CandidateTablePruneCause cause : causes) {
+          allRanges.addAll(cause.getInvalidRanges());
+        }
+        return new Object[]{
+          allRanges.toString(),
+        };
+      }
+    },
+    // least weight not satisfied
     MORE_WEIGHT("Picked table had more weight than minimum."),
     // partial data is enabled, another fact has more data.
     LESS_DATA("Picked table has less data than the maximum"),
@@ -201,12 +213,19 @@ public class CandidateTablePruneCause {
 
   // time covered
   private MaxCoveringFactResolver.TimeCovered maxTimeCovered;
+  // ranges in which fact is invalid
+  private List<TimeRange> invalidRanges;
 
   public CandidateTablePruneCause(CandidateTablePruneCode cause) {
     this.cause = cause;
   }
 
   // Different static constructors for different causes.
+  public static CandidateTablePruneCause factNotAvailableInRange(List<TimeRange> ranges) {
+    CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.FACT_NOT_AVAILABLE_IN_RANGE);
+    cause.invalidRanges = ranges;
+    return cause;
+  }
 
   public static CandidateTablePruneCause columnNotFound(Collection<String> missingColumns) {
     List<String> colList = new ArrayList<String>();
@@ -261,10 +280,7 @@ public class CandidateTablePruneCause {
 
   public static CandidateTablePruneCause missingDefaultAggregate(String... names) {
     CandidateTablePruneCause cause = new CandidateTablePruneCause(CandidateTablePruneCode.MISSING_DEFAULT_AGGREGATE);
-    cause.setColumnsMissingDefaultAggregate(new ArrayList<String>());
-    for (String name : names) {
-      cause.getColumnsMissingDefaultAggregate().add(name);
-    }
+    cause.setColumnsMissingDefaultAggregate(Lists.newArrayList(names));
     return cause;
   }
 }

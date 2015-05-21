@@ -51,6 +51,9 @@ public final class MetastoreConstants {
   public static final String CUBE_NAME_SFX = ".cubename";
   public static final String VALID_COLUMNS_SFX = ".valid.columns";
   public static final String FACT_AGGREGATED_PROPERTY = "cube.fact.is.aggregated";
+  public static final String FACT_ABSOLUTE_START_TIME = "cube.fact.absolute.start.time";
+  public static final String FACT_RELATIVE_START_TIME = "cube.fact.relative.start.time";
+  public static final String FACT_ABSOLUTE_END_TIME = "cube.fact.absolute.end.time";
 
   // dim table constants
   // TODO: remove this and move to "dimtable."

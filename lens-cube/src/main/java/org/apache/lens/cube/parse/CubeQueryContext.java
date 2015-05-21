@@ -379,10 +379,6 @@ public class CubeQueryContext {
     return clauseName;
   }
 
-  public Set<CandidateFact> getCandidateFactTables() {
-    return candidateFacts;
-  }
-
   public Map<Dimension, Set<CandidateDim>> getCandidateDimTables() {
     return candidateDims;
   }

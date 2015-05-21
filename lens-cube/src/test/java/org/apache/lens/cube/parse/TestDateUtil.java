@@ -19,6 +19,7 @@
 package org.apache.lens.cube.parse;
 
 import static java.util.Calendar.DAY_OF_MONTH;
+import static java.util.Calendar.MONTH;
 
 import static org.apache.lens.cube.metadata.UpdatePeriod.*;
 import static org.apache.lens.cube.parse.DateUtil.*;
@@ -27,11 +28,9 @@ import static org.apache.commons.lang.time.DateUtils.addMilliseconds;
 
 import static org.testng.Assert.assertEquals;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
@@ -58,15 +57,6 @@ public class TestDateUtil {
   };
 
   public static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("yyyy-MMM-dd");
-  public static final String ABS_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss:SSS";
-
-  public static final ThreadLocal<DateFormat> ABS_DATE_PARSER =
-    new ThreadLocal<DateFormat>() {
-      @Override
-      protected SimpleDateFormat initialValue() {
-        return new SimpleDateFormat(ABS_DATE_FORMAT);
-      }
-    };
 
   private Date[] pairs;
 
@@ -85,17 +75,17 @@ public class TestDateUtil {
   @Test
   public void testMonthsBetween() throws Exception {
     int i = 0;
-    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], MONTH)),
       new CoveringInfo(1, true),
       "2013-Jan-01 to 2013-Jan-31");
 
     i += 2;
-    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], MONTH)),
       new CoveringInfo(5, true),
       "2013-Jan-01 to 2013-May-31");
 
     i += 2;
-    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    assertEquals(getMonthlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], MONTH)),
       new CoveringInfo(12, true),
       "2013-Jan-01 to 2013-Dec-31");
 
@@ -131,7 +121,7 @@ public class TestDateUtil {
       "2013-Jan-01 to 2013-May-31");
 
     i += 2;
-    assertEquals(getQuarterlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    assertEquals(getQuarterlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], MONTH)),
       new CoveringInfo(4, true),
       "2013-Jan-01 to 2013-Dec-31");
 
@@ -159,7 +149,7 @@ public class TestDateUtil {
       "" + pairs[i] + "->" + pairs[i + 1]);
 
     i += 2;
-    assertEquals(getYearlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], Calendar.MONTH)),
+    assertEquals(getYearlyCoveringInfo(pairs[i], DateUtils.round(pairs[i + 1], MONTH)),
       new CoveringInfo(1, true), ""
         + pairs[i] + "->" + pairs[i + 1]);
 
@@ -233,26 +223,26 @@ public class TestDateUtil {
 
   @Test
   public void testFloorDate() throws ParseException {
-    Date date = ABS_DATE_PARSER.get().parse("2015-01-01T00:00:00:000Z");
+    Date date = ABSDATE_PARSER.get().parse("2015-01-01-00:00:00,000");
     Date curDate = date;
     for (int i = 0; i < 284; i++) {
       assertEquals(getFloorDate(curDate, YEARLY), date);
       curDate = addMilliseconds(curDate, 111111111);
     }
     assertEquals(getFloorDate(curDate, YEARLY), DateUtils.addYears(date, 1));
-    assertEquals(getFloorDate(date, WEEKLY), ABS_DATE_PARSER.get().parse("2014-12-28T00:00:00:000Z"));
+    assertEquals(getFloorDate(date, WEEKLY), ABSDATE_PARSER.get().parse("2014-12-28-00:00:00,000"));
   }
 
   @Test
   public void testCeilDate() throws ParseException {
-    Date date = ABS_DATE_PARSER.get().parse("2015-12-26T06:30:15:040Z");
-    assertEquals(getCeilDate(date, YEARLY), ABS_DATE_PARSER.get().parse("2016-01-01T00:00:00:000Z"));
-    assertEquals(getCeilDate(date, MONTHLY), ABS_DATE_PARSER.get().parse("2016-01-01T00:00:00:000Z"));
-    assertEquals(getCeilDate(date, DAILY), ABS_DATE_PARSER.get().parse("2015-12-27T00:00:00:000Z"));
-    assertEquals(getCeilDate(date, HOURLY), ABS_DATE_PARSER.get().parse("2015-12-26T07:00:00:000Z"));
-    assertEquals(getCeilDate(date, MINUTELY), ABS_DATE_PARSER.get().parse("2015-12-26T06:31:00:000Z"));
-    assertEquals(getCeilDate(date, SECONDLY), ABS_DATE_PARSER.get().parse("2015-12-26T06:30:16:000Z"));
-    assertEquals(getCeilDate(date, WEEKLY), ABS_DATE_PARSER.get().parse("2015-12-27T00:00:00:000Z"));
+    Date date = ABSDATE_PARSER.get().parse("2015-12-26-06:30:15,040");
+    assertEquals(getCeilDate(date, YEARLY), ABSDATE_PARSER.get().parse("2016-01-01-00:00:00,000"));
+    assertEquals(getCeilDate(date, MONTHLY), ABSDATE_PARSER.get().parse("2016-01-01-00:00:00,000"));
+    assertEquals(getCeilDate(date, DAILY), ABSDATE_PARSER.get().parse("2015-12-27-00:00:00,000"));
+    assertEquals(getCeilDate(date, HOURLY), ABSDATE_PARSER.get().parse("2015-12-26-07:00:00,000"));
+    assertEquals(getCeilDate(date, MINUTELY), ABSDATE_PARSER.get().parse("2015-12-26-06:31:00,000"));
+    assertEquals(getCeilDate(date, SECONDLY), ABSDATE_PARSER.get().parse("2015-12-26-06:30:16,000"));
+    assertEquals(getCeilDate(date, WEEKLY), ABSDATE_PARSER.get().parse("2015-12-27-00:00:00,000"));
   }
 
   @Test
@@ -283,5 +273,19 @@ public class TestDateUtil {
     assertEquals(plusFourDaysDiff.offsetFrom(minusFourDaysDiff.offsetFrom(now)), now);
     assertEquals(minusFourDaysDiff.negativeOffsetFrom(now), plusFourDaysDiff.offsetFrom(now));
     assertEquals(minusFourDaysDiff.offsetFrom(now), plusFourDaysDiff.negativeOffsetFrom(now));
+  }
+
+  @Test
+  public void testRelativeToAbsolute() throws SemanticException {
+    Date now = new Date();
+    Date nowDay = DateUtils.truncate(now, DAY_OF_MONTH);
+    Date nowDayMinus2Days = DateUtils.add(nowDay, DAY_OF_MONTH, -2);
+    assertEquals(relativeToAbsolute("now", now), DateUtil.ABSDATE_PARSER.get().format(now));
+    assertEquals(relativeToAbsolute("now.day", now), DateUtil.ABSDATE_PARSER.get().format(nowDay));
+    assertEquals(relativeToAbsolute("now.day - 2 days", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day - 2 day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day - 2day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day -2 day", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
+    assertEquals(relativeToAbsolute("now.day -2 days", now), DateUtil.ABSDATE_PARSER.get().format(nowDayMinus2Days));
   }
 }
