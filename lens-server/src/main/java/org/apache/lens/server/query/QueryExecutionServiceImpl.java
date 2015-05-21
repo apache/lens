@@ -411,8 +411,12 @@ public class QueryExecutionServiceImpl extends LensService implements QueryExecu
      */
     FinishedQuery(QueryContext ctx) {
       this.ctx = ctx;
-      this.finishTime = new Date();
-      ctx.setEndTime(this.finishTime.getTime());
+      if (ctx.getEndTime() == 0) {
+        this.finishTime = new Date();
+        ctx.setEndTime(this.finishTime.getTime());
+      } else {
+        this.finishTime = new Date(ctx.getEndTime());
+      }
     }
 
     /*
