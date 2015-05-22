@@ -1121,18 +1121,22 @@
           <xs:documentation>
             Properties that can be set for a fact are
 
-            1. cube.fact.{fact-name}.valid.columns : comma separated column names which are valid in the fact.
-            2. cube.fact.is.aggregated : Defaults to true. If the fact is a raw fact, this should be set to false,
+            1. cube.fact.{fact-name}.valid.columns.size : This should be set to number of
+              cube.fact.{fact-name}.valid.columns strings.
+            2. cube.fact.{fact-name}.valid.columns{i} : This should be set to comma separated column names which are
+              valid in the fact, such that 0 &lt;= i &lt; cube.fact.{fact-name}.valid.columns.size and each of
+              cube.fact.{fact-name}.valid.columns{i} has maximum length of 3999.
+            3. cube.fact.is.aggregated : Defaults to true. If the fact is a raw fact, this should be set to false,
               otherwise true.
-            3. cube.timedim.relation.{time_dim1}: See the same property in cube. Fact tables can override the property.
-            4. cube.fact.absolute.start.time: start time of the fact. For queries that ask for time before this,
+            4. cube.timedim.relation.{time_dim1}: See the same property in cube. Fact tables can override the property.
+            5. cube.fact.absolute.start.time: start time of the fact. For queries that ask for time before this,
               this fact is not a candidate. Time format can be as you would specify in the time_range_in clause.
               i.e. yyyy[-mm[-dd[-hh[:MM[:ss[,SSS]]]]]]
-            5. cube.fact.relative.start.time: Here you can specify fact's relative validity relative to current time.
+            6. cube.fact.relative.start.time: Here you can specify fact's relative validity relative to current time.
               Useful if you want to specify e.g. this fact is valid for today - 90 days. Can be specified as just
               a time difference e.g. "-90 days". Or can be specified in relative syntax.
               e.g. now.year or now.day - 6 hour etc.
-            6. cube.fact.absolute.end.time: If you're deprecating this fact, put the final date till which the data of
+            7. cube.fact.absolute.end.time: If you're deprecating this fact, put the final date till which the data of
               the fact will be valid here. Format same as absolute start time.
           </xs:documentation>
         </xs:annotation>

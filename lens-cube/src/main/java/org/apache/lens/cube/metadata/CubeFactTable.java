@@ -221,7 +221,8 @@ public final class CubeFactTable extends AbstractCubeTable {
    * @return
    */
   public List<String> getValidColumns() {
-    String validColsStr = getProperties().get(MetastoreUtil.getValidColumnsKey(getName()));
+    String validColsStr =
+        MetastoreUtil.getNamedStringValue(getProperties(), MetastoreUtil.getValidColumnsKey(getName()));
     return validColsStr == null ? null : Arrays.asList(StringUtils.split(validColsStr.toLowerCase(), ','));
   }
 
