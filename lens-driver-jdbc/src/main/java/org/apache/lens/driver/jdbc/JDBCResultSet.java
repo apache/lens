@@ -76,10 +76,11 @@ public class JDBCResultSet extends InMemoryResultSet {
    * @param resultSet       the result set
    * @param closeAfterFetch the close after fetch
    */
-  public JDBCResultSet(QueryResult queryResult, ResultSet resultSet, boolean closeAfterFetch) {
+  public JDBCResultSet(QueryResult queryResult, ResultSet resultSet, boolean closeAfterFetch) throws LensException {
     this.queryResult = queryResult;
     this.resultSet = resultSet;
     this.closeAfterFetch = closeAfterFetch;
+    seekToStart();
   }
 
   private ResultSetMetaData getRsMetadata() throws LensException {
@@ -294,11 +295,23 @@ public class JDBCResultSet extends InMemoryResultSet {
     }
   }
 
+  @Override
+  public boolean seekToStart() throws LensException {
+    try {
+      if (!resultSet.isBeforeFirst()) {
+        resultSet.beforeFirst();
+      }
+      return true;
+    } catch (SQLException e) {
+      throw new LensException(e);
+    }
+  }
+
   /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
+     */
   @Override
   public synchronized boolean hasNext() throws LensException {
     try {

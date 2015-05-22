@@ -31,6 +31,7 @@ import org.apache.lens.server.api.error.LensException;
  */
 public abstract class InMemoryResultSet extends LensResultSet {
 
+  public abstract boolean seekToStart() throws LensException;
   /**
    * Whether there is another result row available.
    *

@@ -18,18 +18,18 @@
  */
 package org.apache.lens.cli.commands;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
+
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.query.*;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
 import org.apache.lens.client.LensClient;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
 import org.springframework.shell.core.annotation.CliCommand;
@@ -40,6 +40,7 @@ import com.google.common.base.Joiner;
 
 /**
  * The Class LensQueryCommands.
+ * SUSPEND CHECKSTYLE CHECK InnerAssignmentCheck
  */
 @Component
 @UserDocumentation(title = "Query Management",
@@ -200,10 +201,10 @@ public class LensQueryCommands extends BaseLensCommand {
       return "Explain FAILED:" + plan.getErrorMsg();
     }
     if (StringUtils.isNotBlank(location)) {
-      String validPath = getValidPath(location);
-      OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(validPath), Charset.defaultCharset());
-      osw.write(plan.getPlanString());
-      osw.close();
+      String validPath = getValidPath(location, false, false);
+      try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(validPath), Charset.defaultCharset())) {
+        osw.write(plan.getPlanString());
+      }
       return "Saved to " + validPath;
     }
     return plan.getPlanString();
@@ -262,13 +263,44 @@ public class LensQueryCommands extends BaseLensCommand {
    * @param qh the qh
    * @return the query results
    */
-  @CliCommand(value = "query results", help = "get results of async query with query handle <query_handle>")
+  @CliCommand(value = "query results",
+    help = "get results of async query with query handle <query_handle>. Can "
+      + "optionally save the results to a file by providing <save_location>")
   public String getQueryResults(
-    @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh) {
+    @CliOption(key = {"", "query_handle"}, mandatory = true, help = "<query_handle>") String qh,
+    @CliOption(key = {"save_location"}, mandatory = false, help = "<save_location>") String location) {
+    QueryHandle queryHandle = new QueryHandle(UUID.fromString(qh));
     try {
-      LensClient.LensClientResultSetWithStats result = getClient()
-        .getAsyncResults(new QueryHandle(UUID.fromString(qh)));
-      return formatResultSet(result);
+      String prefix = "";
+      if (StringUtils.isNotBlank(location)) {
+        location = getValidPath(location, true, true);
+        Response response = getClient().getHttpResults(queryHandle);
+        if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+          String disposition = (String) response.getHeaders().get("content-disposition").get(0);
+          String fileName = disposition.split("=")[1].trim();
+          location = getValidPath(location + File.separator + fileName, false, false);
+          try (InputStream stream = response.readEntity(InputStream.class);
+            FileOutputStream outStream = new FileOutputStream(new File(location))) {
+            IOUtils.copy(stream, outStream);
+          }
+          return "Saved to " + location;
+        } else {
+          LensClient.LensClientResultSetWithStats results = getClient().getAsyncResults(queryHandle);
+          if (results.getResultSet().getResult() instanceof InMemoryQueryResult) {
+            location = getValidPath(location + File.separator + qh + ".csv", false, false);
+            try (OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(location),
+              Charset.defaultCharset())) {
+              osw.write(formatResultSet(results));
+            }
+            return "Saved to " + location;
+          } else {
+            return "Can't download the result because it's available in driver's persistence.\n"
+              + formatResultSet(results);
+          }
+        }
+      } else {
+        return formatResultSet(getClient().getAsyncResults(queryHandle));
+      }
     } catch (Throwable t) {
       return t.getMessage();
     }

@@ -61,6 +61,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
 
   /** The num columns. */
   int numColumns;
+  private FetchOrientation orientation;
 
   /**
    * Instantiates a new hive in memory result set.
@@ -77,6 +78,7 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     this.closeAfterFecth = closeAfterFecth;
     this.metadata = client.getResultSetMetadata(opHandle);
     this.numColumns = metadata.getColumnDescriptors().size();
+    this.seekToStart();
   }
 
   /*
@@ -98,16 +100,23 @@ public class HiveInMemoryResultSet extends InMemoryResultSet {
     return hrsMeta;
   }
 
+  @Override
+  public boolean seekToStart() {
+    orientation = FetchOrientation.FETCH_FIRST;
+    return true;
+  }
+
   /*
-   * (non-Javadoc)
-   *
-   * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
-   */
+     * (non-Javadoc)
+     *
+     * @see org.apache.lens.server.api.driver.InMemoryResultSet#hasNext()
+     */
   @Override
   public boolean hasNext() throws LensException {
     if (fetchedRowsItr == null || !fetchedRowsItr.hasNext()) {
       try {
-        rowSet = client.fetchResults(opHandle, FetchOrientation.FETCH_NEXT, fetchSize);
+        rowSet = client.fetchResults(opHandle, orientation, fetchSize);
+        orientation = FetchOrientation.FETCH_NEXT;
         noMoreResults = rowSet.numRows() == 0;
         if (noMoreResults) {
           if (closeAfterFecth) {

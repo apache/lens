@@ -38,7 +38,7 @@ public abstract class LensCRUDCommand<T> extends BaseLensCommand {
   }
 
   public String create(String path, boolean ignoreIfExists) {
-    return doCreate(getValidPath(path), ignoreIfExists).getStatus().toString().toLowerCase();
+    return doCreate(getValidPath(path, false, true), ignoreIfExists).getStatus().toString().toLowerCase();
   }
 
   public String describe(String name) {
@@ -50,7 +50,7 @@ public abstract class LensCRUDCommand<T> extends BaseLensCommand {
   }
 
   public String update(String entity, String path) {
-    return doUpdate(entity, getValidPath(path)).getStatus().toString().toLowerCase();
+    return doUpdate(entity, getValidPath(path, false, true)).getStatus().toString().toLowerCase();
   }
 
   public String drop(String name, boolean cascade) {

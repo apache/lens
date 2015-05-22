@@ -140,13 +140,20 @@ public class BaseLensCommand implements ExecutionProcessor {
       .replaceAll("]", "\n").replaceAll(",", "").replaceAll("\"", "").replaceAll("\n\n", "\n");
   }
 
-  public String getValidPath(String path) {
+  public String getValidPath(String path, boolean shouldBeDirectory, boolean shouldExist) {
+    path = path.replaceAll("/$", "");
     if (path.startsWith("~")) {
       path = path.replaceFirst("~", System.getProperty("user.home"));
     }
     File f = new File(path);
-    if (!f.exists()) {
+    if (shouldExist && !f.exists()) {
       throw new RuntimeException("Path " + path + " doesn't exist.");
+    }
+    if (shouldBeDirectory && !f.isDirectory()) {
+      throw new RuntimeException("Path " + path + " is not a directory");
+    }
+    if (!shouldBeDirectory && f.isDirectory()) {
+      throw new RuntimeException("Path " + path + " is a directory");
     }
     return f.getAbsolutePath();
   }

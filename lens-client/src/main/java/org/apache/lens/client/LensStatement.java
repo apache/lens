@@ -26,6 +26,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.query.*;
@@ -268,7 +269,7 @@ public class LensStatement {
     }
 
     Client client = ClientBuilder.newBuilder().register(MultiPartFeature.class).register(LensJAXBContextResolver.class)
-        .build();
+      .build();
 
     FormDataMultiPart mp = new FormDataMultiPart();
     mp.bodyPart(new FormDataBodyPart(FormDataContentDisposition.name("sessionid").build(), connection
@@ -281,7 +282,7 @@ public class LensStatement {
     WebTarget target = getQueryWebTarget(client);
 
     return target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryHandle, NoErrorPayload>>(){}).getData();
+      new GenericType<LensResponse<QueryHandle, NoErrorPayload>>() {}).getData();
   }
 
   /**
@@ -332,7 +333,7 @@ public class LensStatement {
     WebTarget target = getQueryWebTarget(client);
 
     QueryPlan handle = target.request().post(Entity.entity(mp, MediaType.MULTIPART_FORM_DATA_TYPE),
-        new GenericType<LensResponse<QueryPlan, NoErrorPayload>>() {}).getData();
+      new GenericType<LensResponse<QueryPlan, NoErrorPayload>>() {}).getData();
     return handle;
   }
 
@@ -405,6 +406,10 @@ public class LensStatement {
     return this.getResultSet(this.query);
   }
 
+  public Response getHttpResultSet() {
+    return this.getHttpResultSet(this.query);
+  }
+
   /**
    * Gets the result set.
    *
@@ -421,6 +426,27 @@ public class LensStatement {
       WebTarget target = getQueryWebTarget(client);
       return target.path(query.getQueryHandle().toString()).path("resultset")
         .queryParam("sessionid", connection.getSessionHandle()).request().get(QueryResult.class);
+    } catch (Exception e) {
+      throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
+    }
+  }
+
+  /**
+   * Gets the http result set.
+   *
+   * @param query the query
+   * @return the http result set
+   */
+  public Response getHttpResultSet(LensQuery query) {
+    if (query.getStatus().getStatus() != QueryStatus.Status.SUCCESSFUL) {
+      throw new IllegalArgumentException("Result set metadata " + "can be only queries for successful queries");
+    }
+    Client client = ClientBuilder.newClient();
+
+    try {
+      WebTarget target = getQueryWebTarget(client);
+      return target.path(query.getQueryHandle().toString()).path("httpresultset")
+        .queryParam("sessionid", connection.getSessionHandle()).request().get();
     } catch (Exception e) {
       throw new IllegalStateException("Failed to get resultset, cause:" + e.getMessage());
     }

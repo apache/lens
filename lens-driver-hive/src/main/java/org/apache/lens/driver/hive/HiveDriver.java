@@ -801,12 +801,10 @@ public class HiveDriver implements LensDriver {
     OperationHandle op = getHiveHandle(context.getQueryHandle());
     LOG.info("Creating result set for hiveHandle:" + op);
     try {
-      if (op.hasResultSet() || context.isDriverPersistent()) {
-        if (context.isDriverPersistent()) {
-          return new HivePersistentResultSet(new Path(context.getHdfsoutPath()), op, getClient());
-        } else {
-          return new HiveInMemoryResultSet(op, getClient(), closeAfterFetch);
-        }
+      if (context.isDriverPersistent()) {
+        return new HivePersistentResultSet(new Path(context.getHdfsoutPath()), op, getClient());
+      } else if (op.hasResultSet()) {
+        return new HiveInMemoryResultSet(op, getClient(), closeAfterFetch);
       } else {
         // queries that do not have result
         return null;

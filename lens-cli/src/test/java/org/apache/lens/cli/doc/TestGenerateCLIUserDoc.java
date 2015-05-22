@@ -21,10 +21,7 @@ package org.apache.lens.cli.doc;
 import java.io.*;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.TreeSet;
+import java.util.*;
 
 import org.apache.lens.cli.commands.*;
 import org.apache.lens.cli.commands.annotations.UserDocumentation;
@@ -48,7 +45,7 @@ public class TestGenerateCLIUserDoc {
     BufferedWriter bw = new BufferedWriter(new FileWriter(new File(APT_FILE)));
     StringBuilder sb = new StringBuilder();
     sb.append(getCLIIntroduction()).append("\n\n\n");
-    ArrayList<Class<? extends BaseLensCommand>> classes = Lists.newArrayList(
+    List<Class<? extends BaseLensCommand>> classes = Lists.newArrayList(
       LensConnectionCommands.class,
       LensDatabaseCommands.class,
       LensStorageCommands.class,

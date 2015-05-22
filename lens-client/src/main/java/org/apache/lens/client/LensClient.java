@@ -22,6 +22,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.ws.rs.core.Response;
+
 import org.apache.lens.api.APIResult;
 import org.apache.lens.api.metastore.*;
 import org.apache.lens.api.query.*;
@@ -30,15 +32,18 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import com.google.common.collect.Maps;
+import lombok.Getter;
 
 
 public class LensClient {
   private static final Log LOG = LogFactory.getLog(LensClient.class);
   private static final String DEFAULT_PASSWORD = "";
   private final LensClientConfig conf;
+  @Getter
   private final LensMetadataClient mc;
   private String password;
-  private LensConnection conn;
+  @Getter
+  private LensConnection connection;
   private final HashMap<QueryHandle, LensStatement> statementMap =
     Maps.newHashMap();
   private final LensStatement statement;
@@ -63,8 +68,8 @@ public class LensClient {
       this.conf.set(LensClientConfig.SESSION_CLUSTER_USER, System.getProperty("user.name"));
     }
     connectToLensServer();
-    mc = new LensMetadataClient(conn);
-    statement = new LensStatement(conn);
+    mc = new LensMetadataClient(connection);
+    statement = new LensStatement(connection);
   }
 
   public LensClient(Credentials cred) {
@@ -78,10 +83,6 @@ public class LensClient {
     LOG.debug("Adding query to statementMap " + query.getQueryHandle());
     statementMap.put(query.getQueryHandle(), statement);
     return query.getQueryHandle();
-  }
-
-  public LensConnection getConnection() {
-    return conn;
   }
 
   public Date getLatestDateOfCube(String cubeName, String timePartition) {
@@ -150,16 +151,24 @@ public class LensClient {
     return getResultsFromHandle(q);
   }
 
+  public Response getHttpResults() {
+    return statement.getHttpResultSet();
+  }
+
+  public Response getHttpResults(QueryHandle q) {
+    return statement.getHttpResultSet(statement.getQuery(q));
+  }
+
   public LensStatement getLensStatement(QueryHandle query) {
     return this.statementMap.get(query);
   }
 
   public QueryStatus getQueryStatus(QueryHandle query) {
-    return new LensStatement(conn).getQuery(query).getStatus();
+    return new LensStatement(connection).getQuery(query).getStatus();
   }
 
   public LensQuery getQueryDetails(QueryHandle handle) {
-    return new LensStatement(conn).getQuery(handle);
+    return new LensStatement(connection).getQuery(handle);
   }
 
   public QueryStatus getQueryStatus(String q) {
@@ -171,7 +180,7 @@ public class LensClient {
   }
 
   public QueryPlan getQueryPlan(String q) {
-    return new LensStatement(conn).explainQuery(q);
+    return new LensStatement(connection).explainQuery(q);
   }
 
   public boolean killQuery(QueryHandle q) {
@@ -190,15 +199,15 @@ public class LensClient {
   }
 
   public List<QueryHandle> getQueries(String state, String queryName, String user, long fromDate, long toDate) {
-    return new LensStatement(conn).getAllQueries(state, queryName, user, fromDate, toDate);
+    return new LensStatement(connection).getAllQueries(state, queryName, user, fromDate, toDate);
   }
 
 
   private void connectToLensServer() {
     LOG.debug("Connecting to lens server " + new LensConnectionParams(conf));
-    conn = new LensConnection(new LensConnectionParams(conf));
-    conn.open(password);
-    LOG.debug("Successfully connected to server " + conn);
+    connection = new LensConnection(new LensConnectionParams(conf));
+    connection.open(password);
+    LOG.debug("Successfully connected to server " + connection);
   }
 
 
@@ -269,36 +278,36 @@ public class LensClient {
   }
 
   public APIResult setConnectionParam(String key, String val) {
-    return this.conn.setConnectionParams(key, val);
+    return this.connection.setConnectionParams(key, val);
   }
 
   public List<String> getConnectionParam() {
-    return this.conn.getConnectionParams();
+    return this.connection.getConnectionParams();
   }
 
   public List<String> getConnectionParam(String key) {
-    return this.conn.getConnectionParams(key);
+    return this.connection.getConnectionParams(key);
   }
 
   public APIResult closeConnection() {
     LOG.debug("Closing lens connection: " + new LensConnectionParams(conf));
-    return this.conn.close();
+    return this.connection.close();
   }
 
   public APIResult addJarResource(String path) {
-    return this.conn.addResourceToConnection("jar", path);
+    return this.connection.addResourceToConnection("jar", path);
   }
 
   public APIResult removeJarResource(String path) {
-    return this.conn.removeResourceFromConnection("jar", path);
+    return this.connection.removeResourceFromConnection("jar", path);
   }
 
   public APIResult addFileResource(String path) {
-    return this.conn.addResourceToConnection("file", path);
+    return this.connection.addResourceToConnection("file", path);
   }
 
   public APIResult removeFileResource(String path) {
-    return this.conn.removeResourceFromConnection("file", path);
+    return this.connection.removeResourceFromConnection("file", path);
   }
 
   public APIResult createFactTable(String factSpec) {
@@ -523,11 +532,11 @@ public class LensClient {
   }
 
   public boolean isConnectionOpen() {
-    return this.conn.isOpen();
+    return this.connection.isOpen();
   }
 
   public List<String> listResources(String type) {
-    return this.conn.listResourcesFromConnection(type);
+    return this.connection.listResourcesFromConnection(type);
   }
 
 }

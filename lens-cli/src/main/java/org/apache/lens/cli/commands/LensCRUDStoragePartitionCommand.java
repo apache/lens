@@ -53,7 +53,7 @@ public abstract class LensCRUDStoragePartitionCommand<T> extends LensCRUDCommand
   }
 
   public String addStorage(String tableName, String path) {
-    return doAddStorage(tableName, getValidPath(path)).toString().toLowerCase();
+    return doAddStorage(tableName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
   public String getStorage(String tableName, String storage) {
@@ -81,11 +81,11 @@ public abstract class LensCRUDStoragePartitionCommand<T> extends LensCRUDCommand
   }
 
   public String addPartition(String tableName, String storageName, String path) {
-    return doAddPartition(tableName, storageName, getValidPath(path)).toString().toLowerCase();
+    return doAddPartition(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
   public String addPartitions(String tableName, String storageName, String path) {
-    return doAddPartitions(tableName, storageName, getValidPath(path)).toString().toLowerCase();
+    return doAddPartitions(tableName, storageName, getValidPath(path, false, true)).toString().toLowerCase();
   }
 
   public String dropPartitions(String tableName, String storageName, String filter) {
