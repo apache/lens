@@ -442,7 +442,7 @@ class StorageTableResolver implements ContextRewriter {
       }
       // Map from storage to covering parts
       Map<String, Set<FactPartition>> minimalStorageTables = new LinkedHashMap<String, Set<FactPartition>>();
-      boolean enabledMultiTableSelect = StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
+      StorageUtil.getMinimalAnsweringTables(answeringParts, minimalStorageTables);
       if (minimalStorageTables.isEmpty()) {
         LOG.info("Not considering fact table:" + cfact + " as it does not" + " have any storage tables");
         cubeql.addFactPruningMsgs(cfact.fact, CandidateTablePruneCause.noCandidateStorages(skipStorageCauses));
@@ -473,10 +473,6 @@ class StorageTableResolver implements ContextRewriter {
           }
         }
         cfact.getRangeToStorageWhereMap().put(trange, rangeToWhere);
-      }
-      // multi table select is already false, do not alter it
-      if (cfact.isEnabledMultiTableSelect()) {
-        cfact.setEnabledMultiTableSelect(enabledMultiTableSelect);
       }
       LOG.info("Resolved partitions for fact " + cfact + ": " + answeringParts + " storageTables:" + storageTables);
     }

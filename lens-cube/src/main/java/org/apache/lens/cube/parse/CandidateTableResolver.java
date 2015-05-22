@@ -45,7 +45,6 @@ import org.apache.hadoop.hive.ql.parse.SemanticException;
 class CandidateTableResolver implements ContextRewriter {
 
   private static final Log LOG = LogFactory.getLog(CandidateTableResolver.class.getName());
-  private boolean qlEnabledMultiTableSelect;
   private boolean checkForQueriedColumns = true;
 
   public CandidateTableResolver(Configuration conf) {
@@ -53,9 +52,6 @@ class CandidateTableResolver implements ContextRewriter {
 
   @Override
   public void rewriteContext(CubeQueryContext cubeql) throws SemanticException {
-    qlEnabledMultiTableSelect =
-      cubeql.getConf().getBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT,
-        CubeQueryConfUtil.DEFAULT_MULTI_TABLE_SELECT);
     if (checkForQueriedColumns) {
       LOG.debug("Dump queried columns:" + cubeql.getTblAliasToColumns());
       populateCandidateTables(cubeql);
@@ -96,7 +92,6 @@ class CandidateTableResolver implements ContextRewriter {
         }
         for (CubeFactTable fact : factTables) {
           CandidateFact cfact = new CandidateFact(fact, cubeql.getCube());
-          cfact.setEnabledMultiTableSelect(qlEnabledMultiTableSelect);
           cubeql.getCandidateFacts().add(cfact);
         }
         LOG.info("Populated candidate facts:" + cubeql.getCandidateFacts());

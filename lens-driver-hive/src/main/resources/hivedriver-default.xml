@@ -95,12 +95,6 @@
   </property>
 
   <property>
-    <name>lens.cube.query.enable.multi.table.select</name>
-    <value>false</value>
-    <description>Tells whether multiple tables are allowed in from clause of final HQL query</description>
-  </property>
-
-  <property>
     <name>lens.cube.query.replace.timedim</name>
     <value>true</value>
     <description>Tells whether timedim attribute queried in the time range should be replaced

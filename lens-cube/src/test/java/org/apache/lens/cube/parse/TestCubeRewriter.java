@@ -395,7 +395,6 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testCubeWhereQueryWithMultipleTables() throws Exception {
     Configuration conf = getConf();
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, false);
     conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "C1_testFact,C2_testFact");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "DAILY");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact2", "C1"), "YEARLY");
@@ -428,7 +427,6 @@ public class TestCubeRewriter extends TestQueryRewrite {
   @Test
   public void testCubeWhereQueryWithMultipleTablesForMonth() throws Exception {
     Configuration conf = getConf();
-    conf.setBoolean(CubeQueryConfUtil.ENABLE_MULTI_TABLE_SELECT, false);
     conf.set(CubeQueryConfUtil.DRIVER_SUPPORTED_STORAGES, "");
     conf.set(CubeQueryConfUtil.getValidStorageTablesKey("testfact"), "");
     conf.set(CubeQueryConfUtil.getValidUpdatePeriodsKey("testfact", "C1"), "HOURLY");

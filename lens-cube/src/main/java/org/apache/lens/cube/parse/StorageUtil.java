@@ -101,13 +101,11 @@ public final class StorageUtil {
    *
    * @param answeringParts       Map from partition to set of answering storage tables
    * @param minimalStorageTables from storage to covering parts
-   * @return true if multi table select is enabled, false otherwise
    */
-  static boolean getMinimalAnsweringTables(List<FactPartition> answeringParts,
+  static void getMinimalAnsweringTables(List<FactPartition> answeringParts,
     Map<String, Set<FactPartition>> minimalStorageTables) {
     // map from storage table to the partitions it covers
     Map<String, Set<FactPartition>> invertedMap = new HashMap<String, Set<FactPartition>>();
-    boolean enableMultiTableSelect = true;
     // invert the answering tables map and put in inverted map
     for (FactPartition part : answeringParts) {
       for (String table : part.getStorageTables()) {
@@ -128,18 +126,11 @@ public final class StorageUtil {
         Map<String, Set<FactPartition>> maxCoveringStorage = getMaxCoveringStorage(invertedMap, remaining);
         minimalStorageTables.putAll(maxCoveringStorage);
         Set<FactPartition> coveringSet = maxCoveringStorage.values().iterator().next();
-        if (enableMultiTableSelect) {
-          if (!coveringSet.containsAll(invertedMap.get(maxCoveringStorage.keySet().iterator().next()))) {
-            LOG.info("Disabling multi table select" + " because the partitions are not mutually exclusive");
-            enableMultiTableSelect = false;
-          }
-        }
         remaining.removeAll(coveringSet);
       }
     } else {
       minimalStorageTables.putAll(invertedMap);
     }
-    return enableMultiTableSelect;
   }
 
   private static Map<String, Set<FactPartition>> getMaxCoveringStorage(

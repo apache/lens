@@ -46,7 +46,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Holds context of a candidate fact table.
@@ -56,10 +55,6 @@ public class CandidateFact implements CandidateTable {
   final CubeFactTable fact;
   @Getter
   private Set<String> storageTables;
-  // flag to know if querying multiple storage tables is enabled for this fact
-  @Getter
-  @Setter
-  private boolean enabledMultiTableSelect;
   @Getter
   private int numQueriedParts = 0;
   @Getter

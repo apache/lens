@@ -115,12 +115,6 @@
   </property>
 
   <property>
-    <name>lens.cube.query.enable.multi.table.select</name>
-    <value>true</value>
-    <description>Tells whether multiple tables are allowed in from clause of final HQL query</description>
-  </property>
-
-  <property>
     <name>lens.cube.query.max.interval</name>
     <value></value>
     <description>Maximum value of the update period that the query timed dimensions can take values of. For example, if
